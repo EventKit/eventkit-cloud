@@ -12,15 +12,12 @@ import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import MockAdapter from 'axios-mock-adapter';
 import BaseDialog from '../components/BaseDialog';
 import Banner from '../components/Banner';
 import { Application } from '../components/Application';
 
 describe('Application component', () => {
-    injectTapEventPlugin();
-
     const getProps = () => {
         return {
             openDrawer: () => {},

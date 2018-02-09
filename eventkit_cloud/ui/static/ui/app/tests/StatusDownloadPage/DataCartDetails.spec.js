@@ -2,7 +2,6 @@ import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import raf from 'raf';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import moment from 'moment';
 import Map from 'ol/map';
@@ -29,7 +28,6 @@ import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails
 raf.polyfill();
 
 describe('DataCartDetails component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const didMount = DataCartDetails.prototype.componentDidMount;

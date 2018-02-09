@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import Checkbox from 'material-ui/Checkbox';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
@@ -11,7 +10,6 @@ import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import isEqual from 'lodash/isEqual';
 
 describe('StatusFilter component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

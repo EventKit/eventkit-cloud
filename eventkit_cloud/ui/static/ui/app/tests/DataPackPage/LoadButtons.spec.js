@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import ReactDOM from 'react-dom';
@@ -10,7 +9,6 @@ import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import LoadButtons from '../../components/DataPackPage/LoadButtons';
 
 describe('LoadButtons component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

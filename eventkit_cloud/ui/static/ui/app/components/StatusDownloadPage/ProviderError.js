@@ -66,7 +66,12 @@ export class ProviderError extends Component {
         );
 
         const errorData = errors.slice(0, 3).map(error => (
-            <div style={{ marginTop: '15px', width: '100%' }} key={error} id="error-data">
+            <div
+                key={error}
+                className="qa-ProviderError-errorData"
+                style={{ marginTop: '15px', width: '100%' }}
+                id="error-data"
+            >
                 <Warning
                     className="qa-ProviderError-Warning-icon"
                     style={styles.warningIcon}

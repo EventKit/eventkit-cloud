@@ -2,12 +2,10 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import PermissionsFilter from '../../components/DataPackPage/PermissionsFilter';
 
 describe('PermissionsFilter component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => (
         {

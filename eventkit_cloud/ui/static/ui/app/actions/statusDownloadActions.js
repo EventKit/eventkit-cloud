@@ -30,6 +30,10 @@ export const getDatacartDetails = jobuid => (dispatch) => {
     });
 };
 
+export function clearDataCartDetails() {
+    return { type: types.CLEAR_DATACART_DETAILS };
+}
+
 export function deleteRun(uid) {
     return (dispatch) => {
         dispatch({ type: types.DELETING_RUN });

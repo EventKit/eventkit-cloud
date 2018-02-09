@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import BaseDialog from '../../components/BaseDialog';
@@ -9,7 +8,6 @@ import DeleteDialog from '../../components/DeleteDialog';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 
 describe('DataPackOptions component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => (

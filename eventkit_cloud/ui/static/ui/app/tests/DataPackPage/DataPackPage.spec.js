@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
 import { mount, shallow } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import AppBar from 'material-ui/AppBar';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
@@ -25,7 +24,6 @@ raf.polyfill();
 jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
         {

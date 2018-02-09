@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import TimerMixin from 'react-timer-mixin';
 import { browserHistory } from 'react-router';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -122,6 +121,7 @@ describe('StatusDownload component', () => {
                 },
             },
             getDatacartDetails: () => {},
+            clearDataCartDetails: () => {},
             deleteRun: () => {},
             rerunExport: () => {},
             clearReRunInfo: () => {},
@@ -269,8 +269,9 @@ describe('StatusDownload component', () => {
         const props = getProps();
         props.getDatacartDetails = sinon.spy();
         const stateStub = sinon.stub(StatusDownload.prototype, 'setState');
-        const clearStub = sinon.stub(TimerMixin, 'clearInterval');
+        const clearStub = sinon.stub(global.window, 'clearInterval');
         const wrapper = getWrapper(props);
+        const { timer } = wrapper.instance();
         const setStub = sinon.stub(global.window, 'setTimeout');
         setStub.onFirstCall().callsFake(callback => callback());
         const nextProps = getProps();
@@ -280,7 +281,7 @@ describe('StatusDownload component', () => {
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ isLoading: false })).toBe(true);
         expect(clearStub.calledOnce).toBe(true);
-        expect(clearStub.calledWith(wrapper.instance().timer)).toBe(true);
+        expect(clearStub.calledWith(timer)).toBe(true);
         expect(setStub.called).toBe(true);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         setStub.restore();
@@ -291,7 +292,7 @@ describe('StatusDownload component', () => {
     it('componentWillReceiveProps should handle fetched datacartDetails and not clear interval zipfile_url is null', () => {
         jest.useFakeTimers();
         const props = getProps();
-        const clearStub = sinon.stub(TimerMixin, 'clearInterval');
+        const clearStub = sinon.stub(global.window, 'clearInterval');
         const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.datacartDetails.fetched = true;
@@ -308,7 +309,7 @@ describe('StatusDownload component', () => {
     it('componentWillReceiveProps should handle fetched datacartDetails and not clear interval when tasks are not completed', () => {
         jest.useFakeTimers();
         const props = getProps();
-        const clearStub = sinon.stub(TimerMixin, 'clearInterval');
+        const clearStub = sinon.stub(global.window, 'clearInterval');
         const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.datacartDetails.fetched = true;
@@ -323,27 +324,22 @@ describe('StatusDownload component', () => {
         clearStub.restore();
     });
 
-    it('componentWillUnmount should clearInterval', () => {
+    it('componentWillUnmount should clear cart details and timers', () => {
         const props = getProps();
-        const timerSpy = sinon.spy(TimerMixin, 'clearInterval');
+        props.clearDataCartDetails = sinon.spy();
         const wrapper = getWrapper(props);
         const { timer } = wrapper.instance();
+        const { timeout } = wrapper.instance();
+        const timerStub = sinon.spy(global.window, 'clearInterval');
+        const timeoutStub = sinon.stub(global.window, 'clearTimeout');
         wrapper.unmount();
-        expect(timerSpy.calledOnce).toBe(true);
-        expect(timerSpy.calledWith(timer)).toBe(true);
-        timerSpy.restore();
-    });
-
-    it('componentWillUnmount should clearTimeout', () => {
-        const props = getProps();
-        const clearSpy = sinon.stub(global.window, 'clearTimeout');
-        const timer = setTimeout(() => {}, 10000);
-        const wrapper = getWrapper(props);
-        wrapper.instance().timeout = timer;
-        wrapper.unmount();
-        expect(clearSpy.called).toBe(true);
-        expect(clearSpy.calledWith(timer)).toBe(true);
-        clearSpy.restore();
+        expect(timerStub.called).toBe(true);
+        expect(timerStub.calledWith(timer)).toBe(true);
+        expect(timeoutStub.called).toBe(true);
+        expect(timeoutStub.calledWith(timeout)).toBe(true);
+        expect(props.clearDataCartDetails.calledOnce).toBe(true);
+        timerStub.restore();
+        timeoutStub.restore();
     });
 
     it('getMarginPadding should return 0px if window size is <= 767', () => {
@@ -391,7 +387,7 @@ describe('StatusDownload component', () => {
         const props = getProps();
         props.getDatacartDetails = sinon.spy();
         const wrapper = getWrapper(props);
-        TimerMixin.setInterval = setIntMock;
+        global.window.setInterval = setIntMock;
         wrapper.instance().startTimer();
         expect(setIntMock.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledOnce).toBe(true);

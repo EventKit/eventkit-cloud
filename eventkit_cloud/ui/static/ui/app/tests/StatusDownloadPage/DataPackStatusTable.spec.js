@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import DatePicker from 'material-ui/DatePicker';
@@ -10,7 +9,6 @@ import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableR
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 
 describe('DataPackStatusTable component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => (

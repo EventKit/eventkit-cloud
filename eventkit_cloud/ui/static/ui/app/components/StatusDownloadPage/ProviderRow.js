@@ -21,7 +21,6 @@ export class ProviderRow extends Component {
         super(props);
         this.handleSingleDownload = this.handleSingleDownload.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
-        this.onChangeCheck = this.onChangeCheck.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.state = {
@@ -57,15 +56,6 @@ export class ProviderRow extends Component {
         if (nextProps.selectedProviders !== this.state.selectedRows) {
             this.setState({ selectedRows: nextProps.selectedProviders });
         }
-    }
-
-    onChangeCheck(e, checked) {
-        const selectedRows = { ...this.state.selectedRows };
-        selectedRows[e.target.name] = checked;
-
-        // update state
-        this.setState({ selectedRows });
-        this.props.onSelectionToggle(selectedRows);
     }
 
     getTextFontSize() {
@@ -163,7 +153,6 @@ export class ProviderRow extends Component {
         }
     }
 
-
     getTaskLink(task) {
         if (!task.result.hasOwnProperty('url')) {
             return (
@@ -204,74 +193,8 @@ export class ProviderRow extends Component {
         return (
             <CloudDownload
                 className="qa-ProviderRow-CloudDownload-taskLinkEnabled"
-                onClick={() => { this.handleSingleDownload(task.result.url); }}
+                onClick={() => { this.handleSingleDownload(task.result.url); }}//
                 key={task.result.url}
-                style={{
-                    marginLeft: '10px',
-                    cursor: 'pointer',
-                    display: 'inlineBlock',
-                    fill: '#4598bf',
-                    verticalAlign: 'middle',
-                }}
-            />
-        );
-    }
-
-    getProviderLink(provider) {
-        if (provider.status !== 'COMPLETED') {
-            return (
-                <span
-                    className="qa-ProviderRow-span-providerLinkDisabled"
-                    style={{
-                        display: 'inlineBlock',
-                        borderTopWidth: '10px',
-                        borderBottomWidth: '10px',
-                        borderLeftWidth: '10px',
-                        color: 'gray',
-                    }}
-                >
-                    {provider.name}
-                </span>
-            );
-        }
-        return (
-            <a
-                className="qa-ProviderRow-a-providerLinkEnabled"
-                onClick={this.handleProviderCloudDownload}
-                style={{
-                    display: 'inlineBlock',
-                    borderTopWidth: '10px',
-                    borderBottomWidth: '10px',
-                    borderLeftWidth: '10px',
-                    color: '#4598bf',
-                    cursor: 'pointer',
-                }}
-            >
-                {provider.name}
-            </a>
-        );
-    }
-
-    getProviderDownloadIcon(provider) {
-        if (provider.status !== 'COMPLETED') {
-            return (
-                <CloudDownload
-                    key={provider.uid}
-                    className="qa-ProviderRow-CloudDownload-providerLinkDisabled"
-                    style={{
-                        marginLeft: '10px',
-                        display: 'inlineBlock',
-                        fill: 'gray',
-                        verticalAlign: 'middle',
-                    }}
-                />
-            );
-        }
-        return (
-            <CloudDownload
-                className="qa-ProviderRow-CloudDownload-providerLinkEnabled"
-                onClick={this.handleProviderCloudDownload}
-                key={provider.uid}
                 style={{
                     marginLeft: '10px',
                     cursor: 'pointer',
@@ -298,25 +221,13 @@ export class ProviderRow extends Component {
         window.open(url, '_blank');
     }
 
-    handleProviderCloudDownload() {
-        const downloadUrls = [];
-        this.props.provider.tasks.forEach((column) => {
-            if (column.display === true) {
-                const { url } = column.result;
-                downloadUrls.push(url);
-            }
-        });
-        downloadUrls.forEach((value) => {
-            window.open(value, '_blank');
-        });
-    }
-
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen(runProviders) {
-        const propsProvider = this.props.providers.find(x => x.slug === runProviders.slug);
+    handleProviderOpen() {
+        const { provider } = this.props;
+        const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
         const providerDesc = propsProvider.service_description;
         this.setState({ providerDesc, providerDialogOpen: true });
     }
@@ -415,7 +326,7 @@ export class ProviderRow extends Component {
                 key="viewProviderData"
                 style={{ fontSize: '12px' }}
                 primaryText="View Data Source"
-                onClick={() => { this.handleProviderOpen(provider); }}
+                onClick={this.handleProviderOpen}
             />,
         );
 
