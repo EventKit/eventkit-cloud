@@ -6,13 +6,10 @@ import MenuItem from 'material-ui/MenuItem';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import UncheckedBox from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import CheckedBox from 'material-ui/svg-icons/toggle/check-box';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import Check from 'material-ui/svg-icons/navigation/check';
 import IconButton from 'material-ui/IconButton';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
-import Checkbox from 'material-ui/Checkbox';
 import LinearProgress from 'material-ui/LinearProgress';
 import TaskError from './TaskError';
 import ProviderError from './ProviderError';
@@ -93,7 +90,7 @@ export class ProviderRow extends Component {
                     style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
                 />
             );
-        case 'INCOMPLETE':
+        case 'FAILED':
             return <TaskError task={task} />;
         case 'PENDING':
             return 'WAITING';
@@ -393,7 +390,7 @@ export class ProviderRow extends Component {
         const { provider } = this.props;
 
         const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
-        const licenseData = propsProvider.license ?
+        const licenseData = propsProvider && propsProvider.license ?
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
             :
             null;
@@ -487,22 +484,6 @@ export class ProviderRow extends Component {
                     enableSelectAll={false}
                 >
                     <TableRow className="qa-ProviderRow-TableRow-provider" displayBorder>
-                        {/*
-                            <TableHeaderColumn style={{paddingRight: '12px', paddingLeft: '12px', width:'12px'}}>
-                                <Checkbox
-                                    disabled={this.props.provider.status != "COMPLETED"}
-                                    checked={this.props.selectedProviders[this.props.provider.uid] ? true : false}
-                                    name={this.props.provider.uid}
-                                    onCheck={this.onChangeCheck}
-                                    checkedIcon={<CheckedBox style={{fill: '#4598bf'}}/>}
-                                    uncheckedIcon={<UncheckedBox style={{fill: '#4598bf'}}/>}
-                                />
-                            </TableHeaderColumn>
-                            <TableHeaderColumn style={{ paddingRight: '12px', paddingLeft: '12px', whiteSpace: 'normal', color: 'black', fontWeight: 'bold', fontSize: textFontSize}}>
-                                {this.getProviderLink(this.props.provider)}
-                                {this.getProviderDownloadIcon(this.props.provider)}
-                            </TableHeaderColumn>
-                        */}
                         <TableHeaderColumn
                             className="qa-ProviderRow-TableRowColumn-providerName"
                             style={styles.providerColumn}

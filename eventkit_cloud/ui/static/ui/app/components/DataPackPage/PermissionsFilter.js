@@ -87,8 +87,12 @@ export class PermissionsFilter extends Component {
     }
 }
 
+PermissionsFilter.defaultProps = {
+    valueSelected: null,
+};
+
 PermissionsFilter.propTypes = {
-    valueSelected: PropTypes.oneOf(['True', 'False']).isRequired,
+    valueSelected: PropTypes.oneOf(['True', 'False']),
     onChange: PropTypes.func.isRequired,
 };
 

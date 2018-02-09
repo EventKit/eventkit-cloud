@@ -74,7 +74,7 @@ export class StatusDownload extends React.Component {
 
                 if (clearTimer === 0) {
                     TimerMixin.clearInterval(this.timer);
-                    this.timeout = setTimeout(() => {
+                    this.timeout = window.setTimeout(() => {
                         this.props.getDatacartDetails(this.props.params.jobuid);
                     }, 270000);
                 }
@@ -89,7 +89,7 @@ export class StatusDownload extends React.Component {
     componentWillUnmount() {
         TimerMixin.clearInterval(this.timer);
         if (this.timeout) {
-            clearTimeout(this.timeout);
+            window.clearTimeout(this.timeout);
         }
     }
 

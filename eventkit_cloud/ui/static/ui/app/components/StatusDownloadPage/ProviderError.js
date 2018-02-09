@@ -1,26 +1,25 @@
-import React, {PropTypes, Component} from 'react'
+import React, { PropTypes, Component } from 'react';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
-import CustomScrollbar from '../CustomScrollbar';
 import BaseDialog from '../BaseDialog';
 
-export class ProviderError extends React.Component {
+export class ProviderError extends Component {
     constructor(props) {
-        super(props)
+        super(props);
+        this.handleProviderErrorOpen = this.handleProviderErrorOpen.bind(this);
         this.handleProviderErrorClose = this.handleProviderErrorClose.bind(this);
         this.state = {
             providerErrorDialogOpen: false,
-        }
+        };
     }
 
     handleProviderErrorOpen() {
-        this.setState({providerErrorDialogOpen: true});
-    };
+        this.setState({ providerErrorDialogOpen: true });
+    }
 
     handleProviderErrorClose() {
-        this.setState({providerErrorDialogOpen: false});
-    };
-
+        this.setState({ providerErrorDialogOpen: false });
+    }
 
     render() {
         const styles = {
@@ -31,66 +30,70 @@ export class ProviderError extends React.Component {
                 borderLeftWidth: '10px',
                 color: '#ce4427',
                 cursor: 'pointer',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
             },
             warning: {
-                marginLeft:'10px', 
-                cursor: 'pointer', 
-                display:'inlineBlock', 
-                fill:'#ce4427', 
-                verticalAlign: 'bottom'
-            }
-        }
-        let provider = this.props.provider;
-        let errors = [];
+                marginLeft: '10px',
+                cursor: 'pointer',
+                display: 'inlineBlock',
+                fill: '#ce4427',
+                verticalAlign: 'bottom',
+            },
+            warningIcon: {
+                marginRight: '10px',
+                display: 'inlineBlock',
+                fill: '#e8ac90',
+                verticalAlign: 'bottom',
+            },
+        };
 
-        provider.tasks.forEach((column) => {
-            if(column.display == true) {
-                if(column.errors.length != 0) {
-                    let error = column.errors[0].exception;
-                    errors.push(error);
+        const { provider } = this.props;
+        const errors = [];
+
+        provider.tasks.forEach((task) => {
+            if (task.display === true) {
+                if (task.errors.length !== 0) {
+                    task.errors.forEach(error => errors.push(error.exception));
                 }
             }
         });
 
-        let errorTitle;
-        let errorData;
-        if(errors.length > 3){
-            errorTitle = <strong id='error-title'>{provider.name} has <strong style={{color:'#ce4427'}}>{errors.length} error(s).</strong></strong>;
-            errorData = errors.slice(0,3).map((error, index) => (
-                <div style={{marginTop:'15px', width:'100%'}} key={index} id='error-data'>
-                    <Warning className={'qa-ProviderError-Warning->3'} style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
-                    {error}
-                    <Divider className={'qa-ProviderError-Divider->3'} style={{marginTop: '5px'}}/>
-                </div>
-            ))
-        }
-        else {
-            errorTitle = <strong id='error-title'>{provider.name} has <strong style={{color:'#ce4427'}}> {errors.length} error(s) </strong></strong>
-            errorData = errors.map((error, index) => (
-                <div style={{marginTop:'15px', width:'100%'}} key={index} id='error-data'>
-                    <Warning className={'qa-ProviderError-Warning-<3'} style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
-                    {error}
-                    <Divider className={'qa-ProviderError-Warning-<3'} style={{marginTop: '15px'}}/>
-                </div>
-            ))
-        }
+        const errorTitle = (
+            <strong id="error-title">
+                {provider.name} has
+                <strong style={{ color: '#ce4427' }}> {errors.length} error(s).</strong>
+            </strong>
+        );
+
+        const errorData = errors.slice(0, 3).map(error => (
+            <div style={{ marginTop: '15px', width: '100%' }} key={error} id="error-data">
+                <Warning
+                    className="qa-ProviderError-Warning-icon"
+                    style={styles.warningIcon}
+                />
+                {error}
+                <Divider
+                    className="qa-ProviderError-Divider"
+                    style={{ marginTop: '15px' }}
+                />
+            </div>
+        ));
 
         return (
-            <span  className={'qa-ProviderError-span-errorText'}>
+            <span className="qa-ProviderError-span-errorText">
                 <a 
-                    onClick={() => {this.handleProviderErrorOpen()}} 
+                    onClick={this.handleProviderErrorOpen}
                     style={styles.errorText}
                 >
                     ERROR
                 </a>
                 <Warning
-                    className={'qa-ProviderError-Warning'}
-                    onClick={() => {this.handleProviderErrorOpen()}} 
+                    className="qa-ProviderError-Warning"
+                    onClick={this.handleProviderErrorOpen}
                     style={styles.warning}
                 />
                 <BaseDialog
-                    className={'qa-ProviderError-BaseDialog'}
+                    className="qa-ProviderError-BaseDialog"
                     show={this.state.providerErrorDialogOpen}
                     title={errorTitle}
                     onClose={this.handleProviderErrorClose}
@@ -98,14 +101,12 @@ export class ProviderError extends React.Component {
                     {errorData}
                 </BaseDialog>
             </span>
-        )
+        );
     }
 }
 
 ProviderError.propTypes = {
     provider: PropTypes.object.isRequired,
-}
+};
 
 export default ProviderError;
-
-

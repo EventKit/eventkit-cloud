@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
+import raf from 'raf';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import moment from 'moment';
@@ -12,6 +13,7 @@ import XYZ from 'ol/source/xyz';
 import GeoJSON from 'ol/format/geojson';
 import VectorLayer from 'ol/layer/vector';
 import Tile from 'ol/layer/tile';
+import Feature from 'ol/feature';
 import Attribution from 'ol/control/attribution';
 import ScaleLine from 'ol/control/scaleline';
 import Zoom from 'ol/control/zoom';
@@ -21,19 +23,23 @@ import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackSta
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
-import BaseDialog from '../../components/BaseDialog';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
+
+// this polyfills requestAnimationFrame in the test browser, required for ol3
+raf.polyfill();
 
 describe('DataCartDetails component', () => {
     injectTapEventPlugin();
     const muiTheme = getMuiTheme();
+
+    const didMount = DataCartDetails.prototype.componentDidMount;
 
     beforeAll(() => {
         DataCartDetails.prototype.componentDidMount = sinon.spy();
     });
 
     afterAll(() => {
-        DataCartDetails.prototype.componentDidMount.restore();
+        DataCartDetails.prototype.componentDidMount = didMount;
     });
 
     const getProps = () => (
@@ -54,9 +60,15 @@ describe('DataCartDetails component', () => {
 
     const getWrapper = props => (
         mount(<DataCartDetails {...props} />, {
-            context: { muiTheme },
+            context: {
+                muiTheme,
+                config: {
+                    BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
+                    BASEMAP_COPYRIGHT: 'my copyright',
+                },
+            },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -64,211 +76,129 @@ describe('DataCartDetails component', () => {
     it('should render elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-DataCartDetails-name')).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-name')).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-status')).toHaveLength(1);
+        expect(wrapper.find(DataPackStatusTable)).toHaveLength(1);
+        expect(wrapper.find(DataPackDetails)).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-otherOptions')).toHaveLength(1);
+        expect(wrapper.find(DataPackOptions)).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-generalInfo')).toHaveLength(1);
+        expect(wrapper.find(DataPackGeneralTable)).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-aoi')).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-map')).toHaveLength(1);
+        expect(wrapper.find('.qa-DataCartDetails-div-exportInfo')).toHaveLength(1);
+        expect(wrapper.find(DataCartInfoTable)).toHaveLength(1);
     });
 
-//     it('should have the correct menu item labels', () => {
-//         const props = getProps();
-//         const wrapper = shallow(<DataCartDetails {...props} />, {
-//             context: { muiTheme },
-//             childContextTypes: { muiTheme: React.PropTypes.object },
-//         });
-//         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
-//         const menu = shallow(wrapper.find(DropDownMenu).node, { context: { muiTheme } });
-//         expect(menu.childAt(1).childAt(0).childAt(0).node.props.primaryText).toEqual('Public');
-//         expect(menu.childAt(1).childAt(0).childAt(1).node.props.primaryText).toEqual('Private');
-//     });
+    it('should change the status colors based on cart status', () => {
+        const props = getProps();
+        props.cartDetails.status = 'COMPLETED';
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('rgba(188,223,187, 0.4)');
+        expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#55ba63');
 
-//     it('should only render "Finished" table data if run has finished', () => {
-//         const props = getProps();
-//         props.cartDetails.finished_at = '';
-//         const wrapper = getWrapper(props);
-//         let table = wrapper.find('table').at(7);
-//         expect(table.find('tr')).toHaveLength(3);
-//         const nextProps = getProps();
-//         wrapper.setProps(nextProps);
-//         table = wrapper.find('table').at(7);
-//         expect(table.find('tr')).toHaveLength(4);
-//         expect(table.find('tr').at(3).find('td').first().text()).toEqual('Finished');
-//         expect(table.find('tr').at(3).find('td').last().text()).toEqual('6:35:22 pm, May 22nd 2017');
-//     });
+        const nextProps = getProps();
+        nextProps.cartDetails.status = 'SUBMITTED';
+        wrapper.setProps(nextProps);
+        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('rgba(250,233,173, 0.4)');
+        expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#f4d225');
 
+        const lastProps = getProps();
+        lastProps.cartDetails.status = 'INCOMPLETE';
+        wrapper.setProps(lastProps);
+        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('rgba(232,172,144, 0.4)');
+        expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
+    });
 
-//     it('should handle setting state of datacartDetails when component updates', () => {
-//         const props = getProps();
-//         props.cartDetails.status = 'SUBMITTED';
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         let nextProps = getProps();
-//         nextProps.cartDetails.status = 'COMPLETED';
-//         const propsSpy = sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         wrapper.setProps(nextProps);
-//         expect(propsSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledWith({ status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)', statusFontColor: '#55ba63' })).toBe(true);
+    it('should call initializeOpenLayers, setPermission, and setMaxDate set on mount', () => {
+        const props = getProps();
+        const initStub = sinon.stub(DataCartDetails.prototype, 'initializeOpenLayers');
+        const permissionStub = sinon.stub(DataCartDetails.prototype, 'setPermission');
+        const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
+        DataCartDetails.prototype.componentDidMount = didMount;
+        const wrapper = getWrapper(props);
+        expect(initStub.calledOnce).toBe(true);
+        expect(permissionStub.calledOnce).toBe(true);
+        expect(dateStub.calledOnce).toBe(true);
+        initStub.restore();
+        permissionStub.restore();
+        dateStub.restore();
+        DataCartDetails.prototype.componentDidMount = sinon.spy();
+    });
 
-//         nextProps = getProps();
-//         nextProps.cartDetails.status = 'INCOMPLETE';
-//         wrapper.setProps(nextProps);
-//         expect(propsSpy.calledTwice).toBe(true);
-//         expect(stateSpy.calledTwice).toBe(true);
-//         expect(stateSpy.calledWith({ status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)', statusFontColor: '#ce4427' })).toBe(true);
+    it('setPermission should set the state for published permission', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(DataCartDetails.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().setPermission();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permission: props.cartDetails.job.published })).toBe(true);
+        stateStub.restore();
+    });
 
-//         nextProps = getProps();
-//         nextProps.cartDetails.status = 'SUBMITTED';
-//         wrapper.setProps(nextProps);
-//         expect(propsSpy.calledThrice).toBe(true);
-//         expect(stateSpy.calledThrice).toBe(true);
-//         expect(stateSpy.calledWith({ status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)', statusFontColor: '#f4d225' })).toBe(true);
-        
-//         nextProps = getProps();
-//         nextProps.cartDetails.status = 'INVALID';
-//         wrapper.setProps(nextProps);
-//         expect(propsSpy.callCount).toEqual(4);
-//         expect(stateSpy.callCount).toEqual(4);
-//         expect(stateSpy.calledWith({ status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396' })).toBe(true);
+    it('setMaxDate should set the min and max dates', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(DataCartDetails.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        const minDate = new Date();
+        const clock = sinon.useFakeTimers(minDate.getTime());
+        const today = new Date();
+        const m = moment(today);
+        m.add(props.maxResetExpirationDays, 'days');
+        const maxDate = m.toDate();
+        expect(stateStub.called).toBe(false);
+        wrapper.instance().setDates();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ minDate, maxDate })).toBe(true);
+        stateStub.restore();
+        clock.restore();
+    });
 
-//         stateSpy.restore();
-//         propsSpy.restore();
-//     });
+    it('initializeOpenLayers should construct a map and add it to the DOM', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const fakeFeatures = [new Feature()];
+        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures').returns(fakeFeatures);
+        const fitStub = sinon.stub(View.prototype, 'fit').returns();
+        wrapper.instance().initializeOpenLayers();
+        readStub.restore();
+        fitStub.restore();
+    });
 
-//     it('should handle setting state of zipFileUrl when component updates', () => {
-//         const props = getProps();
-//         props.cartDetails.zipfile_url = null;
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const nextProps = getProps();
-//         nextProps.cartDetails.zipfile_url = 'fakeFileUrl.zip';
-//         const propsSpy = sinon.spy(DataCartDetails.prototype, 'componentWillReceiveProps');
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         wrapper.setProps(nextProps);
-//         expect(propsSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledOnce).toBe(true);
-//         stateSpy.restore();
-//         propsSpy.restore();
-//     });
+    it('handlePermissionChange should state to true and call onUpdatePermission', () => {
+        const props = getProps();
+        props.onUpdatePermission = sinon.spy();
+        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().handlePermissionChange({}, 0, 1);
+        expect(props.onUpdatePermission.calledOnce).toBe(true);
+        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, true)).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permission: true })).toBe(true);
+        stateStub.restore();
+    });
 
-//     it('should call initializeOpenLayers, _setTableColors, _setPermission, _setExpirationDate and _setMaxDate set on mount', () => {
-//         const props = getProps();
-//         const mountSpy = sinon.spy(DataCartDetails.prototype, 'componentDidMount');
-//         const colorsSpy = sinon.spy(DataCartDetails.prototype, '_setTableColors');
-//         const permissionSpy = sinon.spy(DataCartDetails.prototype, '_setPermission');
-//         const expirationSpy = sinon.spy(DataCartDetails.prototype, '_setExpirationDate');
-//         const maxDateSpy = sinon.spy(DataCartDetails.prototype, '_setMaxDate');
-//         const wrapper = getWrapper(props);
-//         expect(mountSpy.calledOnce).toBe(true);
-//         expect(colorsSpy.calledOnce).toBe(true);
-//         expect(permissionSpy.calledOnce).toBe(true);
-//         expect(expirationSpy.calledOnce).toBe(true);
-//         expect(maxDateSpy.calledOnce).toBe(true);
-//         expect(DataCartDetails.prototype._initializeOpenLayers.called).toBe(true);
-//         mountSpy.restore();
-//         colorsSpy.restore();
-//         maxDateSpy.restore();
+    it('handlePermissionChange should state to false and call onUpdatePermission', () => {
+        const props = getProps();
+        props.onUpdatePermission = sinon.spy();
+        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().handlePermissionChange({}, 0, 2);
+        expect(props.onUpdatePermission.calledOnce).toBe(true);
+        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, false)).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ permission: false })).toBe(true);
+        stateStub.restore();
+    });
 
-//     });
-
-//     it('should call setState in _setMaxDate', () => {
-//         const props = getProps();
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const d = new Date();
-//         const m = moment(d);
-//         m.add(props.maxResetExpirationDays, 'days');
-//         const maxDate = m.toDate();
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         expect(stateSpy.called).toBe(false);
-//         wrapper.instance()._setMaxDate();
-//         expect(stateSpy.calledOnce).toBe(true);
-//         stateSpy.restore();
-//     });
-
-
-//     it('_setTableColors should set the state for table color ', () => {
-//         const props = getProps();
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         expect(stateSpy.called).toBe(false);
-//         wrapper.instance()._setTableColors();
-//         expect(stateSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledWith({ status: 'COMPLETED', statusBackgroundColor: 'rgba(188,223,187, 0.4)', statusFontColor: '#55ba63' })).toBe(true);
-
-//         let nextProps = getProps();
-//         nextProps.cartDetails.status = 'SUBMITTED';
-//         wrapper.setProps(nextProps);
-//         wrapper.instance()._setTableColors();
-//         expect(stateSpy.calledWith({ status: 'SUBMITTED', statusBackgroundColor: 'rgba(250,233,173, 0.4)', statusFontColor: '#f4d225' })).toBe(true);
-
-//         nextProps = getProps();
-//         nextProps.cartDetails.status = 'INCOMPLETE';
-//         wrapper.setProps(nextProps);
-//         wrapper.instance()._setTableColors();
-//         expect(stateSpy.calledWith({ status: 'INCOMPLETE', statusBackgroundColor: 'rgba(232,172,144, 0.4)', statusFontColor: '#ce4427' }));
-
-//         nextProps = getProps();
-//         nextProps.cartDetails.status = 'INVALID';
-//         wrapper.setProps(nextProps);
-//         wrapper.instance()._setTableColors();
-//         expect(stateSpy.calledWith({ status: '', statusBackgroundColor: '#f8f8f8', statusFontColor: '#8b9396' })).toBe(true);
-
-//         stateSpy.restore();
-//     });
-
-//     it('_setExpirationDate should set the state for expiration date ', () => {
-//         const props = getProps();
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         expect(stateSpy.called).toBe(false);
-//         wrapper.instance()._setExpirationDate();
-//         expect(stateSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledWith({ expirationDate: '2017-08-01T00:00:00Z' })).toBe(true);
-
-//         let nextProps = getProps();
-//         nextProps.cartDetails.expiration = '2017-08-08T18:35:01.400407Z';
-//         wrapper.setProps(nextProps);
-//         wrapper.instance()._setExpirationDate();
-//         expect(stateSpy.calledWith({ expirationDate: '2017-08-08T18:35:01.400407Z' })).toBe(true);
-//         stateSpy.restore();
-//     });
-
-//     it('_setPermission should set the state for published permission', () => {
-//         const props = getProps();
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         expect(stateSpy.called).toBe(false);
-//         wrapper.instance()._setPermission();
-//         expect(stateSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledWith({ permission: true })).toBe(true);
-
-//         const nextProps = getProps();
-//         nextProps.cartDetails.job.published = false;
-//         wrapper.setProps(nextProps);
-//         wrapper.instance()._setPermission();
-//         expect(stateSpy.calledWith({ permission: false })).toBe(true);
-//         stateSpy.restore();
-//     });
-
-//     it('handlePublishedChange should setState of new published value', () => {
-//         const props = getProps();
-//         props.onUpdatePermission = sinon.spy();
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         wrapper.instance().handlePublishedChange('7838d3b3-160a-4e7d-89cb-91fdcd6eab43', false);
-//         expect(props.onUpdatePermission.calledOnce).toBe(true);
-//         expect(props.onUpdatePermission.calledWith('7838d3b3-160a-4e7d-89cb-91fdcd6eab43', false)).toBe(true);
-//         expect(stateSpy.calledOnce).toBe(true);
-//         expect(stateSpy.calledWith({ permission: false })).toBe(true);
-//         stateSpy.restore();
-//     });
-
-//     it('handleExpirationChange should setState of new expiration date', () => {
-//         const props = getProps();
-//         props.onUpdateExpiration = sinon.spy();
-//         const wrapper = shallow(<DataCartDetails {...props} />);
-//         const stateSpy = sinon.spy(DataCartDetails.prototype, 'setState');
-//         wrapper.instance().handleExpirationChange();
-//         expect(props.onUpdateExpiration.calledOnce).toBe(true);
-//         expect(stateSpy.calledOnce).toBe(true);
-//         stateSpy.restore();
-//     });
+    it('handleExpirationChange should call onUpdateExpiration', () => {
+        const props = getProps();
+        props.onUpdateExpiration = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleExpirationChange({}, 'today');
+        expect(props.onUpdateExpiration.calledOnce).toBe(true);
+        expect(props.onUpdateExpiration.calledWith(props.cartDetails.uid, 'today')).toBe(true);
+    });
 });
 
 const run = {
