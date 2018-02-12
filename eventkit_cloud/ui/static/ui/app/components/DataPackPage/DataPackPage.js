@@ -16,14 +16,13 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import {getGeocode} from '../../actions/searchToolbarActions';
-import {processGeoJSONFile, resetGeoJSONFile} from '../../actions/mapToolActions';
-import {isGeoJSONValid} from '../../utils/mapUtils';
+import { getGeocode } from '../../actions/searchToolbarActions';
+import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
+import { flattenFeatureCollection } from '../../utils/mapUtils';
 import Help from 'material-ui/svg-icons/action/help';
 import Joyride from 'react-joyride';
 
 export class DataPackPage extends React.Component {
-
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
@@ -84,7 +83,6 @@ export class DataPackPage extends React.Component {
     componentDidMount() {
         const steps = this.setJoyRideSteps();
         this.joyrideAddSteps(steps);
-
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -253,7 +251,7 @@ export class DataPackPage extends React.Component {
 
     }
 
-    onSearch(searchText) { 
+    onSearch(searchText) {
         this.setState({search: searchText, loading: true}, this.makeRunRequest);
     }
 
@@ -327,7 +325,11 @@ export class DataPackPage extends React.Component {
     }
 
     handleSpatialFilter(geojson) {
-        this.setState({geojson_geometry: geojson, loading: true}, this.makeRunRequest);
+        let geom = null;
+        if (geojson) {
+            geom = flattenFeatureCollection(geojson).features[0].geometry;
+        }
+        this.setState({ geojson_geometry: geom, loading: true }, this.makeRunRequest);
     }
 
     changeView(view) {
@@ -344,7 +346,6 @@ export class DataPackPage extends React.Component {
                 this.joyrideAddSteps(steps);
             });
         }
-
     }
 
     handleToggle() {
@@ -430,7 +431,7 @@ export class DataPackPage extends React.Component {
 
         this.setState({steps:newSteps});
     }
-    
+
     callback(data) {
         if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
@@ -651,7 +652,7 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
-        },
+        }
     }
 }
 

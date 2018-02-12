@@ -163,7 +163,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
@@ -204,8 +204,8 @@ describe('DataPackPage component', () => {
 
     it('componentWillUnmout should clear interval', () => {
         const props = getProps();
-        const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
-        const intervalSpy = new sinon.spy(global, 'clearInterval');
+        const mountSpy = sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
+        const intervalSpy = sinon.spy(global, 'clearInterval');
         const wrapper = getWrapper(props);
         const fetch = wrapper.instance().fetch;
         wrapper.unmount();
@@ -217,8 +217,8 @@ describe('DataPackPage component', () => {
 
     it('should setOrder and setView if props are different from state', () => {
         const props = getProps();
-        props.setOrder = new sinon.spy();
-        props.setView = new sinon.spy();
+        props.setOrder = sinon.spy();
+        props.setView = sinon.spy();
         const wrapper = getWrapper(props);
         expect(wrapper.props().runsList.order).toEqual('');
         expect(wrapper.props().runsList.view).toEqual('');
@@ -234,7 +234,7 @@ describe('DataPackPage component', () => {
     it('should run getRuns at intervals', () => {
         jest.useFakeTimers();
         let props = getProps();
-        props.getRuns = new sinon.spy();
+        props.getRuns = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
@@ -262,8 +262,8 @@ describe('DataPackPage component', () => {
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
         nextProps.runsList.runs = [{user: 'admin2', uid: '2'}, {user: 'admin', uid: '1'}, {user: 'admin3', uid: '3'}];
-        const propsSpy = new sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
@@ -275,7 +275,7 @@ describe('DataPackPage component', () => {
     it('onSearch should update the state and call makeRunRequest', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().onSearch('test_search', 0);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({search: 'test_search', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
@@ -286,7 +286,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
         wrapper.setState({search: 'some search term'});
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().checkForEmptySearch('');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({search: '', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
@@ -295,8 +295,8 @@ describe('DataPackPage component', () => {
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        const makeRequestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const makeRequestSpy = sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const wrapper = getWrapper(props);
         expect(makeRequestSpy.calledOnce).toBe(true);
         let nextProps = getProps();
@@ -311,7 +311,7 @@ describe('DataPackPage component', () => {
     it('handleSortChange should set state and call makeRunRequest', () => {
         let props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleSortChange('job__name');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({order: 'job__name', loading: true}, wrapper.instance().makeRunRequest))
@@ -321,7 +321,7 @@ describe('DataPackPage component', () => {
     it('makeRunRequest should build a params string and pass it to props.getRuns', () => {
         /// Add things here ///
         let props = getProps();
-        props.getRuns = new sinon.spy();
+        props.getRuns = sinon.spy();
         const wrapper = shallow(<DataPackPage {...props}/>);
         const status = {completed: true, incomplete: true};
         const minDate = new Date(2017, 6, 30, 8,0,0);
@@ -354,7 +354,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const event = {persist: () => {}};
         const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ownerFilter: 'test_value', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
@@ -365,7 +365,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
         const currentState = {...wrapper.state()};
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const newState = {
             published: true, 
             minDate: new Date(), 
@@ -388,7 +388,7 @@ describe('DataPackPage component', () => {
     it('handleFilterClear should setState then re-apply search and sort', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterClear();
@@ -404,30 +404,39 @@ describe('DataPackPage component', () => {
             maxDate: null,
             loading: true,
         }, wrapper.instance().makeRunRequest)).toBe(true);
-        expect(stateSpy.calledWith({open: false})).toBe(true);
+        expect(stateSpy.calledWith({ open: false })).toBe(true);
         stateSpy.restore();
     });
 
     it('handleSpatialFilter should setstate then call make run request', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const geojson = {
-            "type": "LineString",
-            "coordinates": [
-                [69.60937499999999, 60.23981116999893],
-                [46.40625, 55.178867663281984],
-                [26.3671875, 55.97379820507658]
-            ]
-        }
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [
+                            [69.60937499999999, 60.23981116999893],
+                            [46.40625, 55.178867663281984],
+                            [26.3671875, 55.97379820507658],
+                        ],
+                    },
+                },
+            ],
+        };
+        const expected = utils.flattenFeatureCollection(geojson).features[0].geometry;
         wrapper.instance().handleSpatialFilter(geojson);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith(
-            {geojson_geometry: geojson, loading: true},
-            wrapper.instance().makeRunRequest
+            { geojson_geometry: expected, loading: true },
+            wrapper.instance().makeRunRequest,
         )).toBe(true);
         stateSpy.restore();
-    })
+    });
 
     it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
         let props = getProps();
@@ -453,7 +462,7 @@ describe('DataPackPage component', () => {
     it('handleToggle should set state', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleToggle();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({open: false}));
@@ -464,7 +473,7 @@ describe('DataPackPage component', () => {
         let props = getProps();
         props.runsList.nextPage = true;
         const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().loadMore();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({pageSize: 24, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
@@ -475,7 +484,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props}/>);
         wrapper.setState({pageSize: 24});
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().loadLess();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({pageSize: 12, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);

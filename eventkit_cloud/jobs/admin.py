@@ -1,22 +1,27 @@
 from django.contrib import admin
+from django import forms
 from django.template import RequestContext
 from django.conf.urls import url
 from django.contrib import messages
 from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
 from django.contrib.gis.geos import GEOSGeometry
+import logging
 
-from .models import ExportFormat, ExportProfile, Job, Region, ExportProvider, ExportProviderType, \
-    ProviderTask, DatamodelPreset, License, UserLicense
+from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
+    DataProviderTask, DatamodelPreset, License, UserLicense
+
+
+logger = logging.getLogger(__name__)
 
 admin.site.register(ExportFormat)
-admin.site.register(ExportProvider)
 admin.site.register(ExportProfile)
-admin.site.register(ExportProviderType)
-admin.site.register(ProviderTask)
+admin.site.register(DataProviderType)
+admin.site.register(DataProviderTask)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
 admin.site.register(UserLicense)
+
 
 class HOTRegionGeoAdmin(OSMGeoAdmin):
     """
@@ -101,6 +106,64 @@ class ExportConfigAdmin(admin.ModelAdmin):
     list_display = ['uid', 'name', 'user', 'config_type', 'published', 'created_at']
 
 
+class DataProviderForm(forms.ModelForm):
+    """
+    Admin form for editing export providers in the admin interface.
+    """
+    class Meta:
+        model = DataProvider
+        fields = ['name',
+                  'slug',
+                  'url',
+                  'preview_url',
+                  'service_copyright',
+                  'service_description',
+                  'layer',
+                  'export_provider_type',
+                  'level_from',
+                  'level_to',
+                  'config',
+                  'user',
+                  'license',
+                  'zip',
+                  'display',
+                  ]
+
+    def clean_config(self):
+        config = self.cleaned_data.get('config')
+        if not config:
+            return
+
+        service_type = self.cleaned_data.get('export_provider_type').type_name
+
+        if service_type in ['wms', 'wmts']:
+            from ..utils.external_service import ExternalRasterServiceToGeopackage, \
+                                                 ConfigurationError, SeedConfigurationError
+            service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
+            try:
+                conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
+            except (ConfigurationError, SeedConfigurationError) as e:
+                raise forms.ValidationError(e.message)
+
+        elif service_type in ['osm', 'osm-generic']:
+            from ..feature_selection.feature_selection import FeatureSelection
+            try:
+                f = FeatureSelection.example(config)
+            except AssertionError:
+                raise forms.ValidationError("Invalid configuration")
+
+        return config
+
+
+class DataProviderAdmin(admin.ModelAdmin):
+    """
+    Admin model for editing export providers in the admin interface.
+    """
+    form = DataProviderForm
+    list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
+
+
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
+admin.site.register(DataProvider, DataProviderAdmin)

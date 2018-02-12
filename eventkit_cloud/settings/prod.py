@@ -60,6 +60,7 @@ EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
 OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
 GEOCODING_API_URL = os.getenv('GEOCODING_API_URL', 'http://api.geonames.org/searchJSON')
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
+GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
 
 """
 Maximum extent of a Job
@@ -202,8 +203,8 @@ MIDDLEWARE += ['audit_logging.middleware.UserDetailsMiddleware']
 
 AUDIT_MODELS = [
     ('eventkit_cloud.tasks.models.ExportRun', 'ExportRun'),
-    ('eventkit_cloud.tasks.models.ExportProviderTask', 'ExportProviderTask'),
-    ('eventkit_cloud.tasks.models.ExportTask', 'ExportTask'),
+    ('eventkit_cloud.tasks.models.DataProviderTaskRecord', 'DataProviderTaskRecord'),
+    ('eventkit_cloud.tasks.models.ExportTaskRecord', 'ExportTaskRecord'),
 ]
 
 DATABASES = {}
@@ -273,6 +274,7 @@ SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
 SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN', SITE_NAME)
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_USER_LAST_ACTIVE_AT = 'user_last_active_at'
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 STATIC_URL = '/static/'
@@ -280,6 +282,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 UI_CONFIG = {
+    'VERSION': os.environ.get('VERSION', ''),
     'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
@@ -342,3 +345,10 @@ DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
 MAX_EXPORTRUN_EXPIRATION_DAYS = os.environ.get('MAX_EXPORTRUN_EXPIRATION_DAYS', 30)
 
 LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
+
+AUTO_LOGOUT_COOKIE_NAME = 'eventkit_auto_logout'
+
+AUTO_LOGOUT_SECONDS = int(os.getenv('AUTO_LOGOUT_SECONDS', 0))
+AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60))
+if AUTO_LOGOUT_SECONDS:
+    MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']

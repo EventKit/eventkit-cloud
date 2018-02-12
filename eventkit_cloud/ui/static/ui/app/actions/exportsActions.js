@@ -1,29 +1,32 @@
+import axios from 'axios';
+import cookie from 'react-cookie';
 import types from './actionTypes';
-import axios from 'axios'
-import cookie from 'react-cookie'
 
 export function createExportRequest(exportData) {
     return {
         type: types.CREATE_EXPORT_SUCCESS,
-        exportInfo: exportData
-    }
+        exportInfo: exportData,
+    };
 }
 
-export function updateAoiInfo(geojson, geomType, title, description, selectionType) {
+export function updateAoiInfo(aoiInfo) {
     return {
         type: types.UPDATE_AOI_INFO,
-        geojson: geojson,
-        geomType,
-        title,
-        description,
-        selectionType,
-    }
+        geojson: aoiInfo.geojson,
+        originalGeojson: aoiInfo.originalGeojson,
+        geomType: aoiInfo.geomType,
+        title: aoiInfo.title,
+        description: aoiInfo.description,
+        selectionType: aoiInfo.selectionType,
+        buffer: aoiInfo.buffer,
+    };
 }
+
 export function updateExportInfo(exportInfo) {
     return {
         type: types.UPDATE_EXPORT_INFO,
-        exportInfo: exportInfo
-    }
+        exportInfo,
+    };
 }
 
 export function clearExportInfo() {
@@ -35,20 +38,20 @@ export function clearExportInfo() {
 export function stepperNextDisabled() {
     return {
         type: types.MAKE_STEPPER_INACTIVE,
-        stepperNextEnabled: false
-    }
+        stepperNextEnabled: false,
+    };
 }
 
 export function stepperNextEnabled() {
     return {
         type: types.MAKE_STEPPER_ACTIVE,
-        stepperNextEnabled: true
-    }
+        stepperNextEnabled: true,
+    };
 }
 
-export const submitJob = data => dispatch => {
+export const submitJob = data => (dispatch) => {
     dispatch({
-        type: types.SUBMITTING_JOB
+        type: types.SUBMITTING_JOB,
     });
 
     const csrfmiddlewaretoken = cookie.load('csrftoken');
@@ -56,24 +59,25 @@ export const submitJob = data => dispatch => {
         url: '/api/jobs',
         method: 'POST',
         contentType: 'application/json; version=1.0',
-        data: data,
-        headers: {"X-CSRFToken": csrfmiddlewaretoken}
+        data,
+        headers: { 'X-CSRFToken': csrfmiddlewaretoken },
     }).then((response) => {
         dispatch({
             type: types.JOB_SUBMITTED_SUCCESS,
-            jobuid: response.data.uid
+            jobuid: response.data.uid,
 
         });
     }).catch((error) => {
+        console.log(error);
         dispatch({
-            type: types.JOB_SUBMITTED_ERROR, error: error
+            type: types.JOB_SUBMITTED_ERROR, error,
         });
     });
-}
+};
 
-export const getProviders = () => dispatch => {
+export const getProviders = () => (dispatch) => {
     dispatch({
-        type: types.GETTING_PROVIDERS
+        type: types.GETTING_PROVIDERS,
     });
 
     axios.get('/api/providers').catch((error) => {
@@ -86,16 +90,16 @@ export const getProviders = () => dispatch => {
     }).then((response) => {
         dispatch({
             type: types.PROVIDERS_RECEIVED,
-            providers: response.data
+            providers: response.data,
         });
     }).catch((error) => {
         console.log(error);
     });
-}
+};
 
-export const getFormats = () => dispatch => {
+export const getFormats = () => (dispatch) => {
     dispatch({
-        type: types.GETTING_FORMATS
+        type: types.GETTING_FORMATS,
     });
 
     return axios({
@@ -104,71 +108,67 @@ export const getFormats = () => dispatch => {
     }).then((response) => {
         dispatch({
             type: types.FORMATS_RECEIVED,
-            formats: response.data
+            formats: response.data,
         });
     }).catch((error) => {
         console.log(error);
     });
-}
+};
 
 export function clearAoiInfo() {
     return {
         type: types.CLEAR_AOI_INFO,
-    }
+    };
 }
 
 export function clearJobInfo() {
     return {
         type: types.CLEAR_JOB_INFO,
-    }
+    };
 }
 
 // This is probably not the correct way to cancel async actions... but it works.
 let closeDrawerTimeout = null;
 let openDrawerTimeout = null;
 
-export const closeDrawer = () => dispatch => {
+export const closeDrawer = () => (dispatch) => {
     if (openDrawerTimeout !== null) {
         clearTimeout(openDrawerTimeout);
         openDrawerTimeout = null;
     }
 
     dispatch({
-        type: types.CLOSING_DRAWER
+        type: types.CLOSING_DRAWER,
     });
 
     return new Promise((resolve) => {
         closeDrawerTimeout = setTimeout(() => {
             closeDrawerTimeout = null;
             dispatch({
-                type: types.CLOSED_DRAWER
+                type: types.CLOSED_DRAWER,
             });
             resolve();
         }, 450);
     });
-}
+};
 
-export const openDrawer = () => dispatch => {
+export const openDrawer = () => (dispatch) => {
     if (closeDrawerTimeout !== null) {
         clearTimeout(closeDrawerTimeout);
         closeDrawerTimeout = null;
     }
 
     dispatch({
-        type: types.OPENING_DRAWER
+        type: types.OPENING_DRAWER,
     });
 
     return new Promise((resolve) => {
         openDrawerTimeout = setTimeout(() => {
             openDrawerTimeout = null;
             dispatch({
-                type: types.OPENED_DRAWER
+                type: types.OPENED_DRAWER,
             });
             resolve();
         }, 450);
     });
-}
-
-
-
-
+};

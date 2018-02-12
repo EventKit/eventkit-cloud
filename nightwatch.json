@@ -1,6 +1,6 @@
 {
-  "src_folders" : ["eventkit_cloud/ui/static/ui/app/tests/e2e/tests"],
-  "output_folder" : "reports",
+  "src_folders" : ["eventkit_cloud/ui/static/ui/app/tests/e2e/tests", "eventkit_cloud/ui/static/ui/app/tests/e2e/snaptests/tests"],
+  "output_folder" : "e2e_reports",
   "custom_commands_path" : "",
   "custom_assertions_path" : "",
   "page_objects_path" : "",
@@ -9,7 +9,7 @@
   "selenium" : {
     "start_process" : false,
     "server_path" : "",
-    "log_path" : "reports",
+    "log_path" : "e2e_reports",
     "port" : 4444,
     "cli_args" : {
       "webdriver.chrome.driver" : "",
@@ -40,27 +40,6 @@
       },
       "globals": {
         "waitForConditionTimeout": 10000
-      }
-    },
-
-    "chrome-60.0": {
-      "desiredCapabilities": {
-        "browserName": "chrome",
-        "version": "60.0"
-      }
-    },
-
-    "chrome-59.0": {
-      "desiredCapabilities": {
-        "browserName": "chrome",
-        "version": "59.0"
-      }
-    },
-
-    "chrome-58.0": {
-      "desiredCapabilities": {
-        "browserName": "chrome",
-        "version": "58.0"
       }
     },
 

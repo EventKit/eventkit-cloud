@@ -30,7 +30,10 @@ import ol3mapCss from '../../styles/ol3map.css';
 export class DataCartDetails extends Component {
     constructor(props) {
         super(props);
-
+        this.handleDeleteOpen = this.handleDeleteOpen.bind(this);
+        this.handleDeleteClose = this.handleDeleteClose.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+        this.handleExpirationChange = this.handleExpirationChange.bind(this);
         this.state = {
             minDate: null,
             maxDate: null,
@@ -470,7 +473,9 @@ export class DataCartDetails extends Component {
                         <RaisedButton
                             className="qa-DataCartDetails-RaistedButton-rerunExport"
                             style={{ margin: '10px' }}
-                            disabled={this.state.status === 'SUBMITTED'}
+                            disabled={
+                                this.state.status === 'SUBMITTED' || this.props.user.data.user.username !== this.props.cartDetails.user
+                            }
                             backgroundColor="rgba(226,226,226,0.5)"
                             disableTouchRipple
                             labelColor="#4598bf"
@@ -513,7 +518,7 @@ export class DataCartDetails extends Component {
                             disableTouchRipple
                             labelColor="#ff0000"
                             labelStyle={{ fontWeight: 'bold' }}
-                            onTouchTap={this.handleDeleteOpen.bind(this)}
+                            onTouchTap={this.handleDeleteOpen}
                             label="DELETE"
                         />
                         <DeleteDialog
@@ -671,6 +676,7 @@ DataCartDetails.propTypes = {
     maxResetExpirationDays: PropTypes.string.isRequired,
     providers: PropTypes.array.isRequired,
     zipFileProp: PropTypes.string,
+    user: PropTypes.object.isRequired,
 };
 
 export default DataCartDetails;

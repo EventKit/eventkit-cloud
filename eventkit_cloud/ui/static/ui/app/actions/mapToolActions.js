@@ -1,8 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './mapToolActionTypes';
-import { convertGeoJSONtoJSTS, jstsGeomToOlGeom } from '../utils/mapUtils';
-
 
 export function resetGeoJSONFile() {
     return {
@@ -11,7 +9,7 @@ export function resetGeoJSONFile() {
 }
 
 export const processGeoJSONFile = file => (dispatch) => {
-    dispatch({ type: types.FILE_PROCESSING });
+    dispatch({ type: types.FILE_PROCESSING, filename: file.name });
 
     const csrftoken = cookie.load('csrftoken');
 
@@ -26,15 +24,8 @@ export const processGeoJSONFile = file => (dispatch) => {
     }).then((response) => {
         const { data } = response;
         if (data) {
-            try {
-                // Because the UI doesn't support multiple features
-                // combine all polygons into one feature.
-                const multipolygon = convertGeoJSONtoJSTS(data, 1, false);
-                const geom = jstsGeomToOlGeom(multipolygon);
-                dispatch({ type: types.FILE_PROCESSED, geom });
-            } catch (err) {
-                dispatch({ type: types.FILE_ERROR, error: 'There was an error processing the geojson file.' });
-            }
+            const featureCollection = data;
+            dispatch({ type: types.FILE_PROCESSED, featureCollection });
         } else {
             dispatch({ type: types.FILE_ERROR, error: 'No data returned from the api.' });
         }

@@ -2,14 +2,13 @@ import * as reducers from '../../reducers/mapToolReducer';
 
 describe('importGeom reducer', () => {
     it('should handle default', () => {
-        expect(reducers.importGeomReducer(undefined, {})).toEqual(
-            {
-                processing: false,
-                processed: false,
-                geom: {},
-                error: null,
-            }
-        );
+        expect(reducers.importGeomReducer(undefined, {})).toEqual({
+            processing: false,
+            processed: false,
+            featureCollection: {},
+            error: null,
+            filename: '',
+        });
     });
 
     it('should handle FILE_PROCESSING', () => {
@@ -17,18 +16,17 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
             },
-            {type: 'FILE_PROCESSING'}
-        )).toEqual(
-            {
-                processing: true,
-                processed: false,
-                geom: {},
-                error: null,
-            }
-        );
+            { type: 'FILE_PROCESSING', filename: 'file.txt' },
+        )).toEqual({
+            processing: true,
+            processed: false,
+            featureCollection: {},
+            error: null,
+            filename: 'file.txt',
+        });
     });
 
     it('should handle FILE_PROCESSED', () => {
@@ -36,18 +34,18 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
+                filename: '',
             },
-            {type: 'FILE_PROCESSED', geom: {data: 'here'}}
-        )).toEqual(
-            {
-                processing: false,
-                processed: true,
-                geom: {data: 'here'},
-                error: null,
-            }
-        );
+            { type: 'FILE_PROCESSED', featureCollection: { data: 'here' } },
+        )).toEqual({
+            processing: false,
+            processed: true,
+            featureCollection: { data: 'here' },
+            error: null,
+            filename: '',
+        });
     });
 
     it('should handle FILE_ERROR', () => {
@@ -55,18 +53,18 @@ describe('importGeom reducer', () => {
             {
                 processing: true,
                 processed: false,
-                geom: {},
+                featureCollection: {},
                 error: null,
+                filename: '',
             },
-            {type: 'FILE_ERROR', error: 'This is an error'}
-        )).toEqual(
-            {
-                processing: false,
-                processed: false,
-                geom: {},
-                error: 'This is an error',
-            }
-        );
+            { type: 'FILE_ERROR', error: 'This is an error' },
+        )).toEqual({
+            processing: false,
+            processed: false,
+            featureCollection: {},
+            error: 'This is an error',
+            filename: '',
+        });
     });
 
     it('should handle FILE_RESET', () => {
@@ -74,17 +72,17 @@ describe('importGeom reducer', () => {
             {
                 processing: false,
                 processed: true,
-                geom: {},
+                featureCollection: {},
                 error: null,
+                filename: 'some-name.file',
             },
-            {type: 'FILE_RESET'}
-        )).toEqual(
-            {
-                processing: false,
-                processed: false,
-                geom: {},
-                error: null,
-            }
-        );
+            { type: 'FILE_RESET' },
+        )).toEqual({
+            processing: false,
+            processed: false,
+            featureCollection: {},
+            error: null,
+            filename: '',
+        });
     });
 });

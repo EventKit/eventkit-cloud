@@ -8,17 +8,18 @@ import logging
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
-from django.utils import timezone
 from django.utils.translation import ugettext as _
-from django.contrib.gis.geos import Polygon, GEOSException, GEOSGeometry
+from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User
 
 from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, ExportProvider, ProviderTask, DatamodelPreset, License
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
 )
-from eventkit_cloud.tasks.models import ExportRun, ExportTask, ExportProviderTask
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..utils.provider_check import get_provider_checker
+
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
@@ -27,9 +28,9 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
-    ExportTaskSerializer, JobSerializer, RegionMaskSerializer, ExportProviderTaskSerializer,
+    ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    ExportProviderSerializer, LicenseSerializer, UserDataSerializer
+    DataProviderSerializer, LicenseSerializer, UserDataSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
@@ -54,7 +55,7 @@ renderer_classes = (JSONRenderer, HOTExportApiRenderer)
 
 class JobViewSet(viewsets.ModelViewSet):
     """
-    Main endpoint for export creation and managment. Provides endpoints
+    Main endpoint for export creation and management. Provides endpoints
     for creating, listing and deleting export jobs.
 
     Updates to existing jobs are not supported as exports can be cloned.
@@ -181,7 +182,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 }
 
 
-        To monitor the resulting export run retreive the `uid` value from the returned json
+        To monitor the resulting export run retrieve the `uid` value from the returned json
         and call /api/runs?job_uid=[the returned uid]
 
         * Returns: the newly created Job instance.
@@ -286,7 +287,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 if export_providers:
                     for ep in export_providers:
                         ep['user'] = request.user.id
-                    provider_serializer = ExportProviderSerializer(
+                    provider_serializer = DataProviderSerializer(
                         data=export_providers,
                         many=True,
                         context={'request': request}
@@ -466,7 +467,6 @@ class JobViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
 
-
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -514,8 +514,9 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
     """
-    serializer_class = ExportProviderSerializer
+    serializer_class = DataProviderSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    parser_classes = (JSONParser,)
     lookup_field = 'slug'
     ordering = ['name']
 
@@ -524,7 +525,40 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         This view should return a list of all the purchases
         for the currently authenticated user.
         """
-        return ExportProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
+        return DataProvider.objects.filter(Q(user=self.request.user) | Q(user=None))
+
+    @detail_route(methods=['get', 'post'])
+    def status(self, request, slug=None, *args, **kwargs):
+        """
+        :return:
+        """
+        try:
+            provider = ExportProvider.objects.get(slug=slug)
+            provider_type = str(provider.export_provider_type)
+
+            aoi = None
+            if request is not None:
+                aoi = request.data.get('aoi')
+
+            url = str(provider.url)
+            if url == "" and 'osm' in provider_type:
+                url = settings.OVERPASS_API_URL
+
+            checker_type = get_provider_checker(provider_type)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=aoi)
+            response = checker.check()
+
+            logger.info("Status of provider '{}': {}".format(str(provider.name), response))
+
+            return Response(response, status=status.HTTP_200_OK)
+
+        except ExportProvider.DoesNotExist as e:
+            return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            logger.error(e)
+            logger.error(e.message)
+            return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -726,37 +760,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def partial_update(self, request, uid=None, *args, **kwargs):
-
-        """
-        Update the expiration date for an export run
-
-
-        * request: the HTTP request in JSON.
-
-            Example:
-
-                {
-                    "expiration" : "2019-12-31"
-                }
-
-
-
-        * Returns: a copy of the new expiration value on success
-
-            Example:
-
-                {
-                    "expiration": "2019-12-31",
-                    "success": true
-                }
-
-        ** returns: 400 on error
-
-        """
-        payload = request.data
-        run = ExportRun.objects.get(uid=uid)
-
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
 
@@ -825,12 +828,12 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """
-    serializer_class = ExportTaskSerializer
+    serializer_class = ExportTaskRecordSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = 'uid'
 
     def get_queryset(self):
-        return ExportTask.objects.filter(Q(export_provider_task__run__user=self.request.user) | Q(export_provider_task__run__job__published=True)).order_by('-started_at')
+        return ExportTaskRecord.objects.filter(Q(export_provider_task__run__user=self.request.user) | Q(export_provider_task__run__job__published=True)).order_by('-started_at')
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -840,9 +843,9 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
             request: the http request.
             uid: the uid of the export task to GET.
         Returns:
-            the serialized ExportTask data.
+            the serialized ExportTaskRecord data.
         """
-        queryset = ExportTask.objects.filter(uid=uid)
+        queryset = ExportTaskRecord.objects.filter(uid=uid)
         serializer = self.get_serializer(
             queryset,
             many=True,
@@ -851,17 +854,17 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ExportProviderTaskViewSet(viewsets.ModelViewSet):
+class DataProviderTaskViewSet(viewsets.ModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """
-    serializer_class = ExportProviderTaskSerializer
+    serializer_class = DataProviderTaskRecordSerializer
     permission_classes = (permissions.IsAuthenticated,)
     lookup_field = 'uid'
 
     def get_queryset(self):
         """Return all objects user can view."""
-        return ExportProviderTask.objects.filter(Q(run__user=self.request.user) | Q(run__job__published=True))
+        return DataProviderTaskRecord.objects.filter(Q(run__user=self.request.user) | Q(run__job__published=True))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -871,7 +874,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
             request: the http request.
             uid: the uid of the export provider task to GET.
         Returns:
-            the serialized ExportTask data
+            the serialized ExportTaskRecord data
         """
         serializer = self.get_serializer(
             self.get_queryset().filter(uid=uid),
@@ -882,7 +885,7 @@ class ExportProviderTaskViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, uid=None, *args, **kwargs):
 
-        export_provider_task = ExportProviderTask.objects.get(uid=uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
 
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
@@ -901,6 +904,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     parser_classes = (JSONParser,)
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     lookup_field = 'username'
+    lookup_value_regex = '[^/]+'
     search_fields = ('user__username', 'accepted_licenses')
 
     def get_queryset(self):
@@ -995,13 +999,13 @@ def get_provider_task(export_provider, export_formats):
     """
 
     Args:
-        export_provider: An ExportProvider model for the content provider (i.e. osm or wms service)
+        export_provider: An DataProvider model for the content provider (i.e. osm or wms service)
         export_formats: An ExportFormat model for the geospatial data format (i.e. shapefile or geopackage)
 
     Returns:
 
     """
-    provider_task = ProviderTask.objects.create(provider=export_provider)
+    provider_task = DataProviderTask.objects.create(provider=export_provider)
     for export_format in export_formats:
         supported_formats = \
             export_provider.export_provider_type.supported_formats.all()

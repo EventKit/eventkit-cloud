@@ -115,9 +115,18 @@ class TestUIViews(TestCase):
         self.assertEquals(response.status_code, 200)
         self.assertEquals(json.loads(response.content), expected_result)
 
+        expected_result = {"something-else": "value", "bbox": [1, 1, 1, 1]}
+        # test result
+        geocode.add_bbox.return_value = expected_result
+        mock_geocode.return_value = geocode
+        response = self.client.get('/geocode', {"result": '{"something-else": "value"}'})
+        self.assertEquals(response.status_code, 200)
+        self.assertEquals(json.loads(response.content), expected_result)
+
         expected_result = None
         # test result
         geocode.search.return_value = expected_result
         mock_geocode.return_value = geocode
-        response = self.client.get('/geocode', {'search': 'some_search'})
+        response = self.client.get('/geocode', {'wrong-key': 'value'})
         self.assertEquals(response.status_code, 204)
+

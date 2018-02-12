@@ -6,6 +6,7 @@ import subprocess
 import zipfile
 import shutil
 import json
+import re
 
 from django.conf import settings
 from django.utils import timezone
@@ -14,6 +15,8 @@ from celery.utils.log import get_task_logger
 from ..utils.gdalutils import driver_for
 from uuid import uuid4
 from string import Template
+from datetime import datetime
+import pytz
 
 logger = get_task_logger(__name__)
 
@@ -110,9 +113,15 @@ def file_to_geojson(in_memory_file):
     try:
         os.mkdir(dir)
         file_name = in_memory_file.name
+
         file_name, file_extension = os.path.splitext(file_name)
         if not file_name or not file_extension:
             raise Exception('No file type detected')
+
+        # Remove all non-word characters
+        file_name = re.sub(r"[^\w\s]", '', file_name)
+        # Replace all whitespace with a single underscore
+        file_name = re.sub(r"\s+", '_', file_name).lower()
 
         in_path = os.path.join(dir, 'in_{0}{1}'.format(file_name, file_extension))
         out_path = os.path.join(dir, 'out_{0}.geojson'.format(file_name))
@@ -209,3 +218,12 @@ def write_uploaded_file(in_memory_file, write_path):
     except Exception as e:
         logger.debug(e)
         raise Exception('Could not write file to disk')
+
+
+def set_session_user_last_active_at(request):
+    # Set last active time, which is used for auto logout.
+    last_active_at = datetime.utcnow().replace(tzinfo=pytz.utc)
+    request.session[settings.SESSION_USER_LAST_ACTIVE_AT] = last_active_at.isoformat()
+
+    # Return the last active datetime for convenience.
+    return last_active_at

@@ -16,6 +16,7 @@ import download_1 from '../images/AboutPage/download_1.png';
 import download_2 from '../images/AboutPage/download_2.png';
 
 export const Config = {
+    BANNER_TEXT: '',
     REGIONS_URL : '/api/regions.json',
     REGION_MASK_URL : '/api/maskregions.json',
     JOBS_URL : '/api/jobs',

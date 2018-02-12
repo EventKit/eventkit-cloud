@@ -19,7 +19,6 @@ export class BaseDialog extends Component {
                 padding: '25px',
                 fontWeight: 'none',
                 fontSize: '18px',
-                color: 'grey',
                 ...this.props.titleStyle,
             },
             body: {
@@ -44,6 +43,9 @@ export class BaseDialog extends Component {
                 backgroundColor: '#4598bf',
                 borderRadius: '0px',
                 ...this.props.buttonStyle,
+            },
+            overlay: {
+                ...this.props.overlayStyle,
             },
         };
 
@@ -84,6 +86,7 @@ export class BaseDialog extends Component {
                 title={title}
                 titleStyle={styles.title}
                 actionsContainerStyle={styles.actions}
+                overlayStyle={styles.overlay}
             >
                 <CustomScrollbar
                     autoHeight
@@ -106,7 +109,8 @@ BaseDialog.propTypes = {
     bodyStyle: PropTypes.object,
     actionsStyle: PropTypes.object,
     labelStyle: PropTypes.object,
-    buttonStyle: PropTypes.object
+    buttonStyle: PropTypes.object,
+    overlayStyle: PropTypes.object,
 };
 
 export default BaseDialog;

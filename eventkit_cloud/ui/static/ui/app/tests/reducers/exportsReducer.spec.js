@@ -70,30 +70,56 @@ describe('exportAoiInfo reducer', () => {
     }
 
     it('should return initial state', () => {
-        expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({geojson: {}, geomType: null, title: null, description:null, selectionType: null})
+        expect(reducers.exportAoiInfoReducer(undefined, {})).toEqual({
+            geojson: {},
+            originalGeojson: {},
+            geomType: null,
+            title: null,
+            description: null,
+            selectionType: null,
+            buffer: 0,
+        });
     });
 
     it('should handle UPDATE_AOI_INFO', () => {
         expect(reducers.exportAoiInfoReducer(
             {},
-            {type: 'UPDATE_AOI_INFO', geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description', selectionType: 'type'}
-        )).toEqual({geojson: geojson, geomType: 'Polygon', title: 'title', description: 'description', selectionType: 'type'});
+            {
+                type: 'UPDATE_AOI_INFO',
+                geojson,
+                geomType: 'Polygon',
+                title: 'title',
+                description: 'description',
+                selectionType: 'type',
+                buffer: 12,
+            },
+        )).toEqual({
+            geojson,
+            geomType: 'Polygon',
+            title: 'title',
+            description: 'description',
+            selectionType: 'type',
+            buffer: 12,
+        });
     });
 
     it('should handle CLEAR_AOI_INFO', () => {
         expect(reducers.exportAoiInfoReducer(
             {
-                geojson: geojson,
+                geojson,
                 geomType: 'Polygon',
                 title: 'test',
-                description: 'test stuff'
+                description: 'test stuff',
             },
-            {type: 'CLEAR_AOI_INFO'}
+            { type: 'CLEAR_AOI_INFO' },
         )).toEqual({
             geojson: {},
+            originalGeojson: {},
             geomType: null,
             title: null,
-            description: null
+            description: null,
+            selectionType: null,
+            buffer: 0,
         });
     });
 });
@@ -120,7 +146,7 @@ describe('exportInfo reducer', () => {
                 makePublic: false,
                 providers: [],
                 areaStr: '',
-                layers: ''
+                layers: '',
             },
             {
                 type: 'UPDATE_EXPORT_INFO',
@@ -131,9 +157,9 @@ describe('exportInfo reducer', () => {
                     makePublic: true,
                     providers: ['provider'],
                     areaStr: 'string',
-                    layers: 'layer'
-                }
-            }
+                    layers: 'layer',
+                },
+            },
         )).toEqual({
             exportName: 'name',
             datapackDescription: 'description',
@@ -141,7 +167,7 @@ describe('exportInfo reducer', () => {
             makePublic: true,
             providers: ['provider'],
             areaStr: 'string',
-            layers: 'layer'
+            layers: 'layer',
         });
     });
 
@@ -154,20 +180,18 @@ describe('exportInfo reducer', () => {
                 makePublic: true,
                 providers: ['provider'],
                 areaStr: 'string',
-                layers: 'layer'
+                layers: 'layer',
             },
-            {type: 'CLEAR_EXPORT_INFO'}
-        )).toEqual(
-            {
-                exportName: '',
-                datapackDescription: '',
-                projectName: '',
-                makePublic: false,
-                providers: [],
-                areaStr: '',
-                layers: ''
-            }
-        )
+            { type: 'CLEAR_EXPORT_INFO' },
+        )).toEqual({
+            exportName: '',
+            datapackDescription: '',
+            projectName: '',
+            makePublic: false,
+            providers: [],
+            areaStr: '',
+            layers: '',
+        });
     });
 });
 
@@ -179,7 +203,7 @@ describe('getProvidersReducer', () => {
     it('should handle GETTING_PROVIDERS', () => {
         expect(reducers.getProvidersReducer(
             ['one', 'two', 'three'],
-            {type: 'GETTING_PROVIDERS'}
+            { type: 'GETTING_PROVIDERS' },
         )).toEqual([]);
     });
 

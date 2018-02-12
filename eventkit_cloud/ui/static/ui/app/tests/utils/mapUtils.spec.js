@@ -11,6 +11,7 @@ import VectorSource from 'ol/source/vector';
 import VectorLayer from 'ol/layer/vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
+import { WGS84, WEB_MERCATOR } from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -210,10 +211,66 @@ describe('mapUtils', () => {
         expect(returnedGeom.getGeometryType()).toEqual('MultiPolygon');
     });
 
+    it('bufferGeojson should read in feature collection and buffer each feature, then return a new feature collection', () => {
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature1' },
+                    geometry: { type: 'Point', coordinates: [1, 1] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature2' },
+                    geometry: { type: 'Point', coordinates: [2, 2] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature3' },
+                    geometry: { type: 'Point', coordinates: [3, 3] },
+                },
+            ],
+        };
+        const ret = utils.bufferGeojson(featureCollection, 10, false);
+        expect(ret.features[0].geometry.type).toEqual('Polygon');
+        expect(ret.features[0].properties.name).toEqual('feature1');
+        expect(ret.features[1].geometry.type).toEqual('Polygon');
+        expect(ret.features[1].properties.name).toEqual('feature2');
+        expect(ret.features[2].geometry.type).toEqual('Polygon');
+        expect(ret.features[2].properties.name).toEqual('feature3');
+    });
+
+    it('bufferGeojson should not return features with no area', () => {
+        const featureCollection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature1' },
+                    geometry: { type: 'Point', coordinates: [1, 1] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature2' },
+                    geometry: { type: 'Point', coordinates: [2, 2] },
+                },
+                {
+                    type: 'Feature',
+                    properties: { name: 'feature3' },
+                    geometry: { type: 'Point', coordinates: [3, 3] },
+                },
+            ],
+        };
+        const expectedCollection = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        expect(utils.bufferGeojson(featureCollection, -10, true)).toEqual(expectedCollection);
+    });
+
     it('generateDrawBoxInteraction should setup a new interaction', () => {
         const setActiveStub = sinon.stub(Draw.prototype, 'setActive');
-        // const createBoxStub = sinon.stub(Draw.prototype, 'createBox');
-
         const layer = new VectorLayer({
             source: new VectorSource(),
         });
@@ -221,22 +278,17 @@ describe('mapUtils', () => {
         expect(drawInteraction instanceof Draw).toBe(true);
         expect(setActiveStub.called).toBe(true);
         expect(setActiveStub.calledWith(false)).toBe(true);
-        // expect(createBoxStub.called).toBe(true);
-
         setActiveStub.restore();
-        // createBoxStub.restore();
     });
 
     it('generateDrawFreeInteraction should setup a new interaction', () => {
         const setActiveStub = sinon.stub(Draw.prototype, 'setActive');
-
         const layer = new VectorLayer({
             source: new VectorSource(),
         });
         const drawInteraction = utils.generateDrawFreeInteraction(layer);
         expect(drawInteraction instanceof Draw).toBe(true);
         expect(setActiveStub.calledWith(false)).toBe(true);
-
         setActiveStub.restore();
     });
 
@@ -399,30 +451,57 @@ describe('mapUtils', () => {
         expect(clear.calledOnce).toBe(true);
     });
 
-    it('zoomToGeometry should fit view to geom if its not a point type', () => {
-        const geom = { getType: sinon.spy(() => ('Polygon')) };
+    it('zoomToFeature should fit view to geom if its not a point type', () => {
+        const feature = new Feature({
+            geometry: new Polygon([[
+                [-98, -31],
+                [68, -31],
+                [68, 57],
+                [-98, 57],
+                [-98, -31],
+            ]]),
+        });
+        const featureSpy = sinon.spy(Feature.prototype, 'getGeometry');
+        const geomSpy = sinon.spy(Polygon.prototype, 'getType');
         const fit = sinon.spy(() => {});
         const map = { getView: sinon.spy(() => ({ fit })) };
-        utils.zoomToGeometry(geom, map);
-        expect(geom.getType.calledOnce).toBe(true);
+        utils.zoomToFeature(feature, map);
+        expect(featureSpy.calledOnce).toBe(true);
+        expect(geomSpy.calledOnce).toBe(true);
         expect(map.getView.calledOnce).toBe(true);
         expect(fit.calledOnce).toBe(true);
+        featureSpy.restore();
+        geomSpy.restore();
     });
 
-    it('zoomToGeometry should center on geom if it is a point type', () => {
-        const geom = {
-            getType: sinon.spy(() => ('Point')),
-            getCoordinates: sinon.spy(),
-        };
+    it('zoomToFeature should fit bbox if point feature has one', () => {
+        const feature = new Feature({ geometry: new Point([1, 1]) });
+        feature.setProperties({ bbox: [1, 1, 1, 1] });
+        const fitSpy = sinon.spy();
+        const transformStub = sinon.stub(proj, 'transformExtent')
+            .callsFake(ext => (ext));
+        const map = { getView: sinon.spy(() => ({ fit: fitSpy })) };
+        utils.zoomToFeature(feature, map);
+        expect(transformStub.calledOnce).toBe(true);
+        expect(transformStub.calledWith([1, 1, 1, 1], WGS84, WEB_MERCATOR)).toBe(true);
+        expect(fitSpy.calledOnce).toBe(true);
+        expect(fitSpy.calledWith([1, 1, 1, 1])).toBe(true);
+        transformStub.restore();
+    });
+
+    it('zoomToFeature should center on geom if it is a point type', () => {
+        const feature = new Feature({ geometry: new Point([1, 1]) });
+        const getTypeSpy = sinon.spy(Point.prototype, 'getType');
+        const getCoordsSpy = sinon.spy(Point.prototype, 'getCoordinates');
         const center = sinon.spy();
-        const map = {
-            getView: sinon.spy(() => ({ setCenter: center })),
-        };
-        utils.zoomToGeometry(geom, map);
-        expect(geom.getType.calledOnce).toBe(true);
+        const map = { getView: sinon.spy(() => ({ setCenter: center })) };
+        utils.zoomToFeature(feature, map);
+        expect(getTypeSpy.calledOnce).toBe(true);
         expect(map.getView.calledOnce).toBe(true);
         expect(center.calledOnce).toBe(true);
-        expect(geom.getCoordinates.calledOnce).toBe(true);
+        expect(getCoordsSpy.calledOnce).toBe(true);
+        getTypeSpy.restore();
+        getCoordsSpy.restore();
     });
 
     it('featureToPoint should return a point representing the center of a feature\'s extent', () => {
@@ -553,5 +632,186 @@ describe('mapUtils', () => {
         const getPixelStub = sinon.stub().returns([7, 7]);
         const map = { getPixelFromCoordinate: getPixelStub };
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
+    });
+
+    it('hasArea should return false if there are no features', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        expect(utils.hasArea(collection)).toBe(false);
+    });
+
+    it('hasArea should return false if polygon has no area', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                            [0, 0],
+                        ]],
+                    },
+                },
+            ],
+        };
+        expect(utils.hasArea(collection)).toBe(false);
+    });
+
+    it('hasArea should return false for points (no getArea func in ol)', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [
+                            20.3,
+                            24.9,
+                        ],
+                    },
+                },
+            ],
+        };
+        expect(utils.hasArea(collection)).toBe(false);
+    });
+
+    it('hasArea should retunr true', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [1, 1],
+                            [2, 1],
+                            [2, 2],
+                            [1, 2],
+                            [1, 1],
+                        ]],
+                    },
+                },
+            ],
+        };
+        expect(utils.hasArea(collection)).toBe(true);
+    });
+
+    it('getDominantGeometry should return Point', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Point');
+    });
+
+    it('getDominantGeometry should return Line', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'PolyLine',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'PolyLine',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Line');
+    });
+
+    it('getDominantGeometry should return Polygon', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'MultiPolygon',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Polygon');
+    });
+
+    it('getDominantGeometry should return Collection', () => {
+        const collection = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'MultiPolygon',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection)).toEqual('Collection');
+    });
+
+    it('getDominantGeometry should return null', () => {
+        const collection1 = {
+            type: 'FeatureCollection',
+            features: [
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'blah',
+                    },
+                },
+                {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'blah',
+                    },
+                },
+            ],
+        };
+        expect(utils.getDominantGeometry(collection1)).toEqual(null);
+        const collection2 = {
+            type: 'FeatureCollection',
+            features: [],
+        };
+        expect(utils.getDominantGeometry(collection2)).toEqual(null);
     });
 });

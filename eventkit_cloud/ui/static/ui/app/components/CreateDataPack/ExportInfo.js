@@ -23,9 +23,9 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions.js';
+import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../BaseDialog';
-import CustomTextField from "../CustomTextField";
+import CustomTextField from '../CustomTextField';
 import ol3mapCss from '../../styles/ol3map.css';
 import Joyride from 'react-joyride';
 
@@ -48,6 +48,15 @@ export class ExportInfo extends React.Component {
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.callback = this.callback.bind(this);
+        this.setLicenseOpen = this.setLicenseOpen.bind(this);
+        this.handleLicenseClose = this.handleLicenseClose.bind(this);
+        this.handleFormatsClose = this.handleFormatsClose.bind(this);
+        this.handleFormatsOpen = this.handleFormatsOpen.bind(this);
+        this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
+        this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
+        this.expandedChange = this.expandedChange.bind(this);
+        this.toggleCheckbox = this.toggleCheckbox.bind(this);
+        this.onChangeCheck = this.onChangeCheck.bind(this);
     }
 
     componentDidMount() {
@@ -226,12 +235,15 @@ export class ExportInfo extends React.Component {
     setArea() {
         const source = new VectorSource({ wrapX: true });
         const geojson = new GeoJSON();
-        const feature = geojson.readFeature(this.props.geojson.features[0], {
+        const features = geojson.readFeatures(this.props.geojson, {
             featureProjection: 'EPSG:3857',
             dataProjection: 'EPSG:4326',
         });
-        source.addFeature(feature);
-        const area = feature.getGeometry().getArea() / 1000000;
+        source.addFeatures(features);
+        let area = 0;
+        features.forEach((feature) => {
+            area += feature.getGeometry().getArea() / 1000000;
+        });
         const areaStr = numeral(area).format('0,0');
         return `${areaStr} sq km`;
     }
@@ -320,11 +332,11 @@ export class ExportInfo extends React.Component {
         });
         const source = new VectorSource();
         const geojson = new GeoJSON();
-        const feature = geojson.readFeature(this.props.geojson.features[0], {
+        const features = geojson.readFeatures(this.props.geojson, {
             featureProjection: 'EPSG:3857',
             dataProjection: 'EPSG:4326',
         });
-        source.addFeature(feature);
+        source.addFeatures(features);
         const layer = new VectorLayer({
             source,
         });
@@ -398,6 +410,14 @@ export class ExportInfo extends React.Component {
                 width: window.innerWidth < 800 ? '90%' : '60%',
                 height: window.innerHeight - 180,
             },
+            paper: {
+                margin: '0px auto',
+                padding: '20px',
+                marginTop: '30px',
+                marginBottom: '30px',
+                width: '100%',
+                maxWidth: '700px',
+            },
             heading: {
                 fontSize: '18px',
                 fontWeight: 'bold',
@@ -409,6 +429,11 @@ export class ExportInfo extends React.Component {
                 fontSize: '16px',
                 color: 'black',
                 alignContent: 'flex-start',
+            },
+            textField: {
+                backgroundColor: 'whitesmoke',
+                width: '100%',
+                marginTop: '15px',
             },
             sectionBottom: {
                 paddingBottom: '50px',
@@ -451,7 +476,13 @@ export class ExportInfo extends React.Component {
                     run={isRunning}/>
                 <CustomScrollbar>
                     <form id="form" onSubmit={this.onSubmit} style={style.form} className="qa-ExportInfo-form">
-                        <Paper id="paper" className="qa-ExportInfo-Paper" style={{ margin: '0px auto', padding: '20px', marginTop: '30px', marginBottom: '30px', width: '100%', maxWidth: '700px' }} zDepth={2} rounded>
+                        <Paper
+                            id="paper"
+                            className="qa-ExportInfo-Paper"
+                            style={style.paper}
+                            zDepth={2}
+                            rounded
+                        >
                             <div id="mainHeading" className="qa-ExportInfo-mainHeading" style={style.heading}>Enter General Information</div>
                             <CustomTextField
                                 className="qa-ExportInfo-input-name"
@@ -463,7 +494,7 @@ export class ExportInfo extends React.Component {
                                 onChange={this.onNameChange}
                                 defaultValue={this.props.exportInfo.exportName}
                                 hintText="Datapack Name"
-                                style={{ backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px' }}
+                                style={style.textField}
                                 inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 maxLength={100}
@@ -478,7 +509,7 @@ export class ExportInfo extends React.Component {
                                 defaultValue={this.props.exportInfo.datapackDescription}
                                 hintText="Description"
                                 multiLine
-                                style={{ backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px' }}
+                                style={style.textField}
                                 textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 maxLength={1000}
@@ -492,7 +523,7 @@ export class ExportInfo extends React.Component {
                                 onChange={this.onProjectChange}
                                 defaultValue={this.props.exportInfo.projectName}
                                 hintText="Project Name"
-                                style={{ backgroundColor: 'whitesmoke', width: '100%', marginTop: '15px' }}
+                                style={style.textField}
                                 inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 maxLength={100}
@@ -501,7 +532,7 @@ export class ExportInfo extends React.Component {
                                 <Checkbox
                                     className="qa-ExportInfo-CheckBox-publish"
                                     name="makePublic"
-                                    onCheck={this.toggleCheckbox.bind(this)}
+                                    onCheck={this.toggleCheckbox}
                                     defaultChecked={this.props.exportInfo.makePublic}
                                     style={{ left: '0px', paddingLeft: '5px', margin: '30px 0px' }}
                                     label="Make Public"
@@ -525,7 +556,7 @@ export class ExportInfo extends React.Component {
                                                 primaryText={
                                                     <div style={{ whiteSpace: 'pre-wrap' }}>
                                                         <i>
-                                                            Use of this data is governed by
+                                                            Use of this data is governed by&nbsp;
                                                             <a onClick={this.setLicenseOpen} style={{ cursor: 'pointer', color: '#4598bf' }}>
                                                                 {provider.license.name}
                                                             </a>
@@ -563,7 +594,7 @@ export class ExportInfo extends React.Component {
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
                                                 defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true}
-                                                onCheck={this.onChangeCheck.bind(this)}
+                                                onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle
                                                         className="qa-ExportInfo-ActionCheckCircle-provider"
@@ -597,11 +628,11 @@ export class ExportInfo extends React.Component {
                                         style={{ display: 'inlineBlock' }}
                                         disabled
                                         checkedIcon={<ActionCheckCircle className="qa-ExportInfo-ActionCheckCircle-projection" />}
-                                    /><Info className="qa-ExportInfo-Info-projection" onTouchTap={this.handleProjectionsOpen.bind(this)} style={{ marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle' }} />
+                                    /><Info className="qa-ExportInfo-Info-projection" onTouchTap={this.handleProjectionsOpen} style={{ marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle' }} />
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
                                         title="Projection Information"
-                                        onClose={this.handleProjectionsClose.bind(this)}
+                                        onClose={this.handleProjectionsClose}
                                     >
                                         <div style={{ paddingBottom: '10px', wordWrap: 'break-word' }} className="qa-ExportInfo-dialog-projection">
                                             All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection. This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions.
@@ -625,11 +656,11 @@ export class ExportInfo extends React.Component {
                                             defaultChecked
                                             disabled
                                             checkedIcon={<ActionCheckCircle />}
-                                        /><Info onTouchTap={this.handleFormatsOpen.bind(this)} style={{ marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle' }}/>
+                                        /><Info onTouchTap={this.handleFormatsOpen} style={{ marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle' }}/>
                                         <BaseDialog
                                             show={this.state.formatsDialogOpen}
                                             title="Format Information"
-                                            onClose={this.handleFormatsClose.bind(this)}
+                                            onClose={this.handleFormatsClose}
                                         ><div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
                                             EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
                                         </BaseDialog>
@@ -641,7 +672,7 @@ export class ExportInfo extends React.Component {
                                 <Card
                                     expandable
                                     className="qa-ExportInfo-Card-map"
-                                    onExpandChange={this.expandedChange.bind(this)}
+                                    onExpandChange={this.expandedChange}
                                 >
                                     <CardHeader
                                         className="qa-ExportInfo-CardHeader-map"
