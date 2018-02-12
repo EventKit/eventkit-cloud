@@ -66,6 +66,22 @@ describe('StatusDownload reducer', () => {
             error: 'This is an error message',
         });
     });
+    it('should handle CLEAR_DATACART_DETAILS', () => {
+        expect(reducers.getDatacartDetailsReducer(
+            {
+                fetching: false,
+                fetched: true,
+                data: [{ some: 'data' }],
+                error: null,
+            },
+            { type: 'CLEAR_DATACART_DETAILS' },
+        )).toEqual({
+            fetching: false,
+            fetched: false,
+            data: [],
+            error: null,
+        });
+    });
 });
 
 describe('DeleteRuns Reducer', () => {

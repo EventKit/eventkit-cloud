@@ -71,7 +71,6 @@ export class StatusDownload extends React.Component {
                 });
 
                 if (clearTimer === 0) {
-                    console.log('clearing timer');
                     window.clearInterval(this.timer);
                     this.timer = null;
                     this.timeout = window.setTimeout(() => {
@@ -88,7 +87,9 @@ export class StatusDownload extends React.Component {
 
     componentWillUnmount() {
         this.props.clearDataCartDetails();
+        window.clearInterval(this.timer);
         this.timer = null;
+        window.clearTimeout(this.timeout);
         this.timeout = null;
     }
 
