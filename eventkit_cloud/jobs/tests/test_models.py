@@ -13,6 +13,7 @@ from django.test import TestCase
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderTask
 , DatamodelPreset)
+from mock import patch
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,10 @@ class TestJob(TestCase):
     def setUp(self):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = self.group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         export_provider = DataProvider.objects.get(slug='osm-generic')
@@ -193,8 +196,10 @@ class TestRegion(TestCase):
 class TestJobRegionIntersection(TestCase):
     def setUp(self,):
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = self.group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((36.90, 13.54, 48.52, 20.24))  # overlaps africa / central asia
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
@@ -249,8 +254,10 @@ class TestTag(TestCase):
 
     def setUp(self,):
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = self.group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
@@ -298,7 +305,7 @@ class TestTag(TestCase):
 
 class TestExportProfile(TestCase):
     def setUp(self,):
-        self.group = Group.objects.create(name='TestDefaultExportExtentGroup')
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
 
     def test_export_profile(self,):
         profile = ExportProfile.objects.create(name='DefaultExportProfile', max_extent=2500000,

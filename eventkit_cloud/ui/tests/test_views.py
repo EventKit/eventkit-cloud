@@ -2,7 +2,7 @@
 import logging
 import json
 import tempfile
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase, override_settings
 from django.test import Client
 from mock import Mock, patch
@@ -15,7 +15,10 @@ logger = logging.getLogger(__name__)
 class TestUIViews(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create_user(
                         username='user', email='user@email.com', password='pass')
         self.client = Client()
         self.client.login(username='user', password='pass')
