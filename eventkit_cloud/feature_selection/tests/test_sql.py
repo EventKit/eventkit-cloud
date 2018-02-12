@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 
 import unittest
-from feature_selection.sql import SQLValidator, OsmfilterRule
+from ..sql import SQLValidator, OsmfilterRule
 
 class TestSQLValidator(unittest.TestCase):
 
