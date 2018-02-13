@@ -637,7 +637,7 @@ class TestExportRunViewSet(APITestCase):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
 
         today  = datetime.today()
-        max_days = int(getattr(settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30))
+        max_days = int(getattr(settings, 'MAX_DATAPACK_EXPIRATION_DAYS', 30))
         ok_expiration = today + timedelta(max_days-1)
         request_data = {"expiration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')

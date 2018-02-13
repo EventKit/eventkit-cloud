@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Link} from 'react-router';
 import {Card, CardTitle} from 'material-ui/Card'
@@ -17,7 +16,6 @@ import AlertError from 'material-ui/svg-icons/alert/error';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 
 describe('DataPackListItem component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => {

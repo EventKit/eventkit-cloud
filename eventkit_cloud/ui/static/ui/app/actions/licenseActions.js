@@ -1,11 +1,10 @@
-import actions from './actionTypes'
-import axios from 'axios'
-import cookie from 'react-cookie'
+import axios from 'axios';
+import actions from './actionTypes';
 
 export function getLicenses() {
     return (dispatch) => {
         dispatch({
-            type: actions.FETCHING_LICENSES
+            type: actions.FETCHING_LICENSES,
         });
 
         return axios({
@@ -14,15 +13,15 @@ export function getLicenses() {
         }).then((response) => {
             dispatch({
                 type: actions.RECEIVED_LICENSES,
-                licenses: response.data
+                licenses: response.data,
             });
         }).catch((error) => {
             dispatch({
                 type: actions.FETCH_LICENSES_ERROR,
-                error: error.response.status || error
+                error: error.response.data,
             });
         });
-    }
+    };
 }
 
 export default getLicenses;

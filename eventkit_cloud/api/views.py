@@ -765,8 +765,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         """
         Update the expiration date for an export run. If the user is a superuser,
-        then any date may be specified. Otherwise the date must be before  todays_date + MAX_EXPORTRUN_EXPIRATION_DAYS
-        where MAX_EXPORTRUN_EXPIRATION_DAYS is a setting found in prod.py
+        then any date may be specified. Otherwise the date must be before  todays_date + MAX_DATAPACK_EXPIRATION_DAYS
+        where MAX_DATAPACK_EXPIRATION_DAYS is a setting found in prod.py
 
         * request: the HTTP request in JSON.
 
@@ -798,7 +798,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         run = ExportRun.objects.get(uid=uid)
 
         if not request.user.is_superuser:
-            max_days = int(getattr( settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30 ))
+            max_days = int(getattr( settings, 'MAX_DATAPACK_EXPIRATION_DAYS', 30 ))
             now = datetime.today()
             max_date  = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
