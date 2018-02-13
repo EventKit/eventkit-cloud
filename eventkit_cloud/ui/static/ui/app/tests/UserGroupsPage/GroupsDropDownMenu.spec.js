@@ -2,7 +2,6 @@ import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
@@ -12,7 +11,6 @@ import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDo
 import { CustomScrollbar } from '../../components/CustomScrollbar';
 
 describe('GroupsDropDownMenu component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const fakeGroups = [

@@ -2,13 +2,11 @@ import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import Drawer from 'material-ui/Drawer';
 import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-box';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 
 describe('GroupsDrawer component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => (
         {

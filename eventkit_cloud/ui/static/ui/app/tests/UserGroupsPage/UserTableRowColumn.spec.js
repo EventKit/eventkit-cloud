@@ -2,14 +2,12 @@ import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import IconButton from 'material-ui/IconButton';
 import { TableRowColumn } from 'material-ui/Table';
 import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDownMenu';
 import { UserTableRowColumn } from '../../components/UserGroupsPage/UserTableRowColumn';
 
 describe('UserTableRowColumn component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => (

@@ -1,13 +1,11 @@
 import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { BaseDialog } from '../../components/BaseDialog';
 import { CustomTextField } from '../../components/CustomTextField';
 import { CreateGroupDialog } from '../../components/UserGroupsPage/CreateGroupDialog';
 
 describe('CreateGroupDialog component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const props = {

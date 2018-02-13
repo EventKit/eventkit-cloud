@@ -2,7 +2,6 @@ import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { Table } from 'material-ui/Table';
 import UserTableRowColumn from '../../components/UserGroupsPage/UserTableRowColumn';
 import UserTableHeaderColumn from '../../components/UserGroupsPage/UserTableHeaderColumn';
@@ -14,7 +13,6 @@ import BaseDialog from '../../components/BaseDialog';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
 
 describe('UserGroupsPage component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => (
