@@ -7,11 +7,9 @@ import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-o
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
 import UserLicense from '../../components/AccountPage/UserLicense';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 describe('LicenseInfo component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

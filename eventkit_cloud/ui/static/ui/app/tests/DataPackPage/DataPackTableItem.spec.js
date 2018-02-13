@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {shallow, mount} from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Link} from 'react-router';
 import {TableRow, TableRowColumn} from 'material-ui/Table';
@@ -17,7 +16,6 @@ import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 
 describe('DataPackTableItem component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

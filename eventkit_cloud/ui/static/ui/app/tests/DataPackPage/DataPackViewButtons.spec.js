@@ -5,7 +5,6 @@ import ActionViewModule from 'material-ui/svg-icons/action/view-module';
 import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
 import MapsMap from 'material-ui/svg-icons/maps/map';
 import IconButton from 'material-ui/IconButton';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
 
@@ -17,7 +16,6 @@ describe('DataPackViewButtons component', () => {
         }
     };
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
     
     it('should render three icon buttons', () => {
         const props = getProps();

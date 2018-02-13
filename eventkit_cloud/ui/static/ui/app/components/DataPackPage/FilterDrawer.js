@@ -1,19 +1,20 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes, Component } from 'react';
 import Drawer from 'material-ui/Drawer';
 import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
 import FilterHeader from './FilterHeader';
 import CustomScrollbar from '../CustomScrollbar';
-import {ProvidersFilter} from './ProvidersFilter';
+import ProvidersFilter from './ProvidersFilter';
 
-export class FilterDrawer extends React.Component {
-
+export class FilterDrawer extends Component {
     constructor(props) {
         super(props);
+        this.getDefaultState = this.getDefaultState.bind(this);
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
+        this.handleProvidersChange = this.handleProvidersChange.bind(this);
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
@@ -34,60 +35,60 @@ export class FilterDrawer extends React.Component {
         };
     }
 
-    handleFilterApply = () => {
+    handleFilterApply() {
         this.props.onFilterApply(this.state);
     }
 
-    handleFilterClear = () => {
+    handleFilterClear() {
         this.setState(this.getDefaultState());
         this.props.onFilterClear();
     }
 
-    handlePermissionsChange = (event, value) => {
-        this.setState({published: value});
+    handlePermissionsChange(event, value) {
+        this.setState({ published: value });
     }
 
-    handleStatusChange = (stateChange) => {
-        let status = this.state.status;
-        status = Object.assign(status, stateChange)
-        this.setState({status: status});
+    handleStatusChange(stateChange) {
+        let { status } = this.state;
+        status = Object.assign(status, stateChange);
+        this.setState({ status });
     }
 
-    handleProvidersChange = (slug, isSelected) => {
-        let providers = this.state.providers;
+    handleProvidersChange(slug, isSelected) {
+        const { providers } = this.state;
         if (isSelected) {
             providers[slug] = true;
         } else {
             delete providers[slug];
         }
 
-        this.setState({providers: providers});
+        this.setState({ providers });
     }
 
-    handleMinDate = (e, date) => {
-         this.setState({minDate: date});
+    handleMinDate(e, date) {
+        this.setState({ minDate: date });
     }
 
-    handleMaxDate = (e, date) => {
-        this.setState({maxDate: date});
+    handleMaxDate(e, date) {
+        this.setState({ maxDate: date });
     }
 
-    render() { 
+    render() {
         const styles = {
             containerStyle: {
                 backgroundColor: '#fff',
                 top: '221px',
                 height: window.innerHeight - 221,
                 overflowY: 'hidden',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
             },
         };
 
         return (
             <Drawer
-                className={'qa-FilterDrawer-Drawer'}
-                width={200}
-                openSecondary={true} 
+                className="qa-FilterDrawer-Drawer"
+                width={250}
+                openSecondary
                 open={this.props.open}
                 containerStyle={styles.containerStyle}
             >
@@ -124,9 +125,10 @@ export class FilterDrawer extends React.Component {
 }
 
 FilterDrawer.propTypes = {
-    onFilterApply: React.PropTypes.func.isRequired,
-    onFilterClear: React.PropTypes.func.isRequired,
-    open: React.PropTypes.bool.isRequired,
+    onFilterApply: PropTypes.func.isRequired,
+    onFilterClear: PropTypes.func.isRequired,
+    open: PropTypes.bool.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default FilterDrawer;

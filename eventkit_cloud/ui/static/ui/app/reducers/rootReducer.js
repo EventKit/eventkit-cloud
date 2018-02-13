@@ -11,7 +11,7 @@ import {
     getFormatsReducer,
 } from './exportsReducer';
 import { getGeocodeReducer } from './searchToolbarReducer';
-import { DataPackPageReducer, DeleteRunsReducer } from './DataPackPageReducer';
+import { dataPackReducer, DeleteRunsReducer } from './dataPackReducer';
 import { importGeomReducer } from './mapToolReducer';
 import { licenseReducer } from './licenseReducer';
 import authReducer from './authReducer';
@@ -35,7 +35,7 @@ const rootReducer = combineReducers({
     user: userReducer,
     routing: routerReducer,
     drawer: drawerMenuReducer,
-    runsList: DataPackPageReducer,
+    runsList: dataPackReducer,
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,
     submitJob: submitJobReducer,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { mount } from 'enzyme';
+import sinon from 'sinon';
 import { Scrollbars } from 'react-custom-scrollbars';
 import CustomScrollbar from '../components/CustomScrollbar';
 
@@ -17,5 +18,14 @@ describe('Custom Scrollbar component', () => {
             borderRadius: '5px',
             zIndex: 99,
         });
+    });
+
+    it('scrollToTop should call scrollToTop on the scrollbar', () => {
+        const wrapper = mount(<CustomScrollbar />);
+        const scrollSpy = sinon.spy();
+        const scrollbar = { scrollToTop: scrollSpy };
+        wrapper.instance().scrollbar = scrollbar;
+        wrapper.instance().scrollToTop();
+        expect(scrollSpy.calledOnce).toBe(true);
     });
 });

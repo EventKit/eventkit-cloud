@@ -6,7 +6,6 @@ import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import BaseDialog from '../components/BaseDialog';
 import DeleteDialog from '../components/DeleteDialog';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 
 describe('DeleteDialog component', () => {
     const getProps = () => {
@@ -17,7 +16,6 @@ describe('DeleteDialog component', () => {
         }
     };
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
 
     const getWrapper = (props) => {
         return mount(<DeleteDialog {...props}/>, {
