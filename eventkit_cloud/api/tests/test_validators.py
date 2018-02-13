@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
@@ -18,9 +18,12 @@ logger = logging.getLogger(__name__)
 class TestValidators(TestCase):
 
     def setUp(self,):
-        self.user = User.objects.create_user(
-            username='demo1', email='demo@demo.com', password='demo'
-        )
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create_user(
+                username='demo1', email='demo@demo.com', password='demo'
+            )
         self.extents = (13.473475, 7.441068, 24.002661, 23.450369)
         self.selection = bbox_to_geojson(self.extents)
 

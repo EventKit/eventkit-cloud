@@ -10,8 +10,6 @@ staticfiles/
 node_modules/
 .DS_Store
 .flowconfig
-.eslintrc.json
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
