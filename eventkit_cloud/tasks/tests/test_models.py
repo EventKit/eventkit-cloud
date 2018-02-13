@@ -26,8 +26,10 @@ class TestExportRun(TestCase):
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         provider_task = DataProviderTask.objects.create(provider=DataProvider.objects.get(slug='osm-generic'))
@@ -84,7 +86,7 @@ class TestExportRun(TestCase):
         runs = job.runs.all()
         self.assertEquals(0, runs.count())
 
-    @patch('eventkit_cloud.tasks.models.exportrun_delete_exports')
+    @patch('eventkit_cloud.tasks.signals.exportrun_delete_exports')
     def test_soft_delete_export_run(self, mock_run_delete_exports):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
@@ -110,8 +112,10 @@ class TestExportTask(TestCase):
     @classmethod
     def setUpTestData(cls):
         formats = ExportFormat.objects.all()
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo', is_active=True)
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         Job.objects.create(name='TestExportTask', description='Test description', user=user, the_geom=the_geom)
@@ -130,7 +134,7 @@ class TestExportTask(TestCase):
         saved_task = ExportTaskRecord.objects.get(uid=self.task_uid)
         self.assertEqual(saved_task, self.task)
 
-    @patch('eventkit_cloud.tasks.models.exporttaskresult_delete_exports')
+    @patch('eventkit_cloud.tasks.signals.exporttaskresult_delete_exports')
     def test_export_task_result(self, mock_etr_delete_exports):
         """
         Test FileProducingTaskResult.
@@ -149,7 +153,7 @@ class TestExportTask(TestCase):
         self.assertTrue(task.result.deleted)
         mock_etr_delete_exports.assert_called_once()
 
-    @patch('eventkit_cloud.tasks.models.delete_from_s3')
+    @patch('eventkit_cloud.tasks.signals.delete_from_s3')
     def test_exportrun_delete_exports(self, delete_from_s3):
         job = Job.objects.first()
         run = ExportRun.objects.create(job=job, user=job.user)
@@ -162,7 +166,7 @@ class TestExportTask(TestCase):
             delete_from_s3.assert_called_once_with(run_uid=str(run_uid))
 
     @patch('os.remove')
-    @patch('eventkit_cloud.tasks.models.delete_from_s3')
+    @patch('eventkit_cloud.tasks.signals.delete_from_s3')
     def test_exporttaskresult_delete_exports(self, delete_from_s3, remove):
 
         # setup

@@ -236,8 +236,6 @@ def get_config(request):
     :return: a dict of available configurations
     """
     config = getattr(settings, 'UI_CONFIG', {})
-    config["MAX_EXPORTRUN_EXPIRATION_DAYS"] = getattr(settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS')
-
     return HttpResponse(json.dumps(config), status=200)
 
 

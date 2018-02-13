@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import FlatButton from 'material-ui/FlatButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterButton';
 
@@ -15,7 +14,6 @@ describe('DataPackFilterButton component', () => {
         }
     };
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
 
     it('should render a flat button with proper label', () => {
         const props = getProps();
