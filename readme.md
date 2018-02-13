@@ -96,3 +96,22 @@ EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
 ## Building the bundle
 By default, the Eventkit webpack is configured for development, if you need to create bundle and vendor files for production run
 <pre>docker-compose run --rm webpack npm run build</pre>
+
+
+## For Developers
+#### Using ESLint
+To use ESLint while working on the EventKit front-end, first make sure you have Node.js and NPM installed in your local dev environment.
+You can find the instructions for installing them here https://docs.npmjs.com/getting-started/installing-node
+Then in the EventKit root directory (on your local machine, not in the docker container) simply run:
+<pre>npm run-script install-linter</pre>
+
+Next you will need to follow instructions to add ESLint into your IDE of choice.
+For most IDEs that should mean finding and installing (if not already installed) the relevant ESLint plugin, and if needed, adjusting the settings to point to your specific package install location.
+
+For VSCode try the following:
+https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
+
+For WebStorm try the following:
+https://www.jetbrains.com/help/webstorm/eslint.html
+
+Finally, if you would like to adjust any of the linting rules edit the .eslintrc.json file in the EventKit root directory.

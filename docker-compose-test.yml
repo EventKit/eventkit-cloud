@@ -36,7 +36,8 @@ services:
       volumes:
         - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:ro
         - ./scripts:/var/lib/eventkit/scripts
-        - ./eventkit_cloud/management/tests:/var/lib/eventkit_cloud/management/tests
+        - ./eventkit_cloud/management/tests:/var/lib/eventkit/eventkit_cloud/management/tests
+        - ./pytest.ini:/var/lib/eventkit/pytest.ini
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
   celery:
       extends:
