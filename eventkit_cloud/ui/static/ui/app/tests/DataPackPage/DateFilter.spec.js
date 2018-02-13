@@ -2,13 +2,11 @@ import React from 'react';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import TextField from 'material-ui/TextField'
 import DatePicker from 'material-ui/DatePicker';
 import DateFilter from '../../components/DataPackPage/DateFilter';
 
 describe('DateFilter component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

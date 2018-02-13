@@ -133,7 +133,8 @@ export class DataPackList extends Component {
                                 user={this.props.user}
                                 key={run.uid}
                                 onRunDelete={this.props.onRunDelete}
-                                providers={this.props.providers}/>
+                                providers={this.props.providers}
+                            />
                         ))}
                         </GridList>
                     </div>
@@ -234,7 +235,7 @@ DataPackList.propTypes = {
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
-    loadMoreDisabled: PropTypes.bool.isRequired
+    loadMoreDisabled: PropTypes.bool.isRequired,
 };
 
 export default DataPackList;

@@ -60,13 +60,8 @@ def logout(request):
     auth_logout(request)
     response = redirect('login')
     if getattr(settings, "OAUTH_LOGOUT_URL", None):
-        import sys
-        print("USER HAS OAUTH: {0}".format(is_oauth))
-        sys.stdout.flush()
-        logger.error("USER HAS OAUTH: {0}".format(is_oauth))
         if is_oauth:
             response = JsonResponse({'OAUTH_LOGOUT_URL': settings.OAUTH_LOGOUT_URL})
-
     if settings.SESSION_USER_LAST_ACTIVE_AT in request.session:
         del request.session[settings.SESSION_USER_LAST_ACTIVE_AT]
     response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)

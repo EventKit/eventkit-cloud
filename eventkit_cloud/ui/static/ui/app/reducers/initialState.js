@@ -1,4 +1,4 @@
-import { initialState as authInitialState } from './userReducer';
+import { userState as authInitialState } from './userReducer';
 
 export default {
     auth: authInitialState,

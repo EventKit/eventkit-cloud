@@ -7,11 +7,8 @@ import {fakeStore} from '../../__mocks__/fakeStore';
 import {CreateExport} from '../../components/CreateDataPack/CreateExport';
 import {BreadcrumbStepper} from '../../components/BreadcrumbStepper';
 import AppBar from 'material-ui/AppBar';
-import injectTapEventPlugin from 'react-tap-event-plugin';
-
 
 describe('CreateExport component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     it('should render the elements', () => {
         // dont render the full component tree
