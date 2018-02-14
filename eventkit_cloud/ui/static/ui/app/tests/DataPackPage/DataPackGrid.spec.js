@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import {DataPackGridItem} from '../../components/DataPackPage/DataPackGridItem';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {GridList, GridTile} from 'material-ui/GridList'
 import DataPackGrid from '../../components//DataPackPage/DataPackGrid';
@@ -39,7 +38,6 @@ afterAll(() => {
 });
 
 describe('DataPackGrid component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const props = {runs: getRuns(),providers: providers, user: {data: {user: {username: 'admin'}}}, onRunDelete: () => {}};
 

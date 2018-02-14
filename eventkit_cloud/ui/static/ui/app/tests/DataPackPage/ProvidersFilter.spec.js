@@ -1,14 +1,11 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import sinon from 'sinon';
-import {mount} from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import Checkbox from 'material-ui/Checkbox';
-import isEqual from 'lodash/isEqual';
-import {ProvidersFilter} from "../../components/DataPackPage/ProvidersFilter";
+import { ProvidersFilter } from '../../components/DataPackPage/ProvidersFilter';
 
 describe('ProvidersFilter component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
         {
@@ -32,32 +29,42 @@ describe('ProvidersFilter component', () => {
             "export_provider_type": 2
         },
     ];
-    const getProps = () => {
-        return {
-            providers: providers,
+    const getProps = () => (
+        {
+            providers,
             selected: {},
-            onChange: (e, v) => {}
+            onChange: () => {},
         }
-    };
+    );
+
+    const getWrapper = props => (
+        mount(<ProvidersFilter {...props} />, {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: PropTypes.object,
+            },
+        })
+    );
 
     it('should have checkboxes', () => {
         const props = getProps();
-        const wrapper = mount(<ProvidersFilter {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         expect(wrapper.find('p').first().text()).toEqual('Sources');
         expect(wrapper.find(Checkbox).at(0).text()).toEqual(providers[0].name);
         expect(wrapper.find(Checkbox).at(0).props().checked).toEqual(false);
     });
 
+    it('should not have checkboxes', () => {
+        const props = getProps();
+        props.providers = null;
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(Checkbox)).toHaveLength(0);
+    });
+
     it('should call onChange with ("[slug]", true)', () => {
         const props = getProps();
-        props.onChange = new sinon.spy();
-        const wrapper = mount(<ProvidersFilter {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        props.onChange = sinon.spy();
+        const wrapper = getWrapper(props);
         const input = wrapper.find(Checkbox).at(0).find('input');
         input.node.checked = true;
         input.simulate('change');
@@ -68,10 +75,7 @@ describe('ProvidersFilter component', () => {
 
     it('should set source as checked', () => {
         const props = getProps();
-        const wrapper = mount(<ProvidersFilter {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = getWrapper(props);
         const input = wrapper.find(Checkbox).at(0).find('input');
         expect(input.node.checked).toEqual(false);
         const nextProps = getProps();

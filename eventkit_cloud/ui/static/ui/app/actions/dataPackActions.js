@@ -16,7 +16,7 @@ export function getRuns(params, geojson) {
 
         dispatch({ type: types.FETCHING_RUNS, cancelSource: source });
 
-        const url = params ? `/api/runs/filter?${params}` : '/api/runs/filter';
+        const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
         const data = geojson ? { geojson: JSON.stringify(geojson) } : { };
 
@@ -24,6 +24,7 @@ export function getRuns(params, geojson) {
             url,
             method: 'POST',
             data,
+            params,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {

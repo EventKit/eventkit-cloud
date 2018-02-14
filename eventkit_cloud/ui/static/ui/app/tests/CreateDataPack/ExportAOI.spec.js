@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
@@ -33,7 +32,6 @@ raf.polyfill();
 
 
 describe('ExportAOI component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const geojson = {

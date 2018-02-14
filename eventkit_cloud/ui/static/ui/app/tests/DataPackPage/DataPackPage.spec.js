@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
 import { mount, shallow } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import AppBar from 'material-ui/AppBar';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
@@ -27,7 +26,6 @@ raf.polyfill();
 jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
         {
@@ -50,7 +48,8 @@ describe('DataPackPage component', () => {
             "display": true,
             "export_provider_type": 2
         },
-    ]
+    ];
+
     const tooltipStyle = {
         backgroundColor: 'white',
         borderRadius: '0',
@@ -93,17 +92,17 @@ describe('DataPackPage component', () => {
                 order: '',
                 view: '',
             },
-            user: {data: {user: {username: 'admin'}}},
+            user: { data: { user: { username: 'admin' } } },
             getRuns: () => {},
             deleteRuns: () => {},
             getProviders: () => {},
             runsDeletion: {
                 deleting: false,
                 deleted: false,
-                error: null
+                error: null,
             },
             drawer: 'open',
-            providers: providers,
+            providers,
             importGeom: {},
             geocode: {},
             getGeocode: () => {},
@@ -111,17 +110,17 @@ describe('DataPackPage component', () => {
             resetGeoJSONFile: () => {},
             setOrder: () => {},
             setView: () => {},
-        }
+        };
     };
 
-    const getWrapper = (props) => {
-        return mount(<DataPackPage {...props}/>, {
-            context: {muiTheme},
+    const getWrapper = props => (
+        mount(<DataPackPage {...props} />, {
+            context: { muiTheme },
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
-            }
-        });
-    }
+            },
+        })
+    );
 
     it('should render all the basic components', () => {
         const props = getProps();
@@ -145,6 +144,16 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackList)).toHaveLength(0);
     });
 
+    it('DataPackSortDropDown handleChange should call handleSortChange', () => {
+        const props = getProps();
+        const changeStub = sinon.stub(DataPackPage.prototype, 'handleSortChange');
+        const wrapper = getWrapper(props);
+        wrapper.find(DataPackSortDropDown).props().handleChange({}, 0, 'value');
+        expect(changeStub.calledOnce).toBe(true);
+        expect(changeStub.calledWith('value')).toBe(true);
+        changeStub.restore();
+    });
+
     it('should use order and view from props or just default to map and featured', () => {
         const props = getProps();
         props.runsList.order = 'job__featured';
@@ -159,24 +168,33 @@ describe('DataPackPage component', () => {
         expect(nextWrapper.state().view).toEqual('map');
     });
 
-    it('should show MapView instead of progress circle when runs are received', () => {
+    it('componentWillReceiveProps should set PageLoading false when runs are fetched', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(DataPackGrid)).toHaveLength(0);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
-        let nextProps = getProps();
+        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
+        const nextProps = getProps();
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({pageLoading: false})).toBe(true);
-        expect(wrapper.find(MapView)).toHaveLength(1);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);;
-        stateSpy.restore();
+        expect(stateStub.calledWith({ pageLoading: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('componentWillReceiveProps should set loading false when runs are fetched', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({ loading: true, pageLoading: false });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const nextProps = getProps();
+        nextProps.runsList.fetched = true;
+        wrapper.setProps(nextProps);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ loading: false })).toBe(true);
     });
 
     it('should show a progress circle when deleting a datapack', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
@@ -185,20 +203,24 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call makeRunRequest, setJoyRideSteps and setInterval when mounting', () => {
+    it('componentDidMount should make data requests, setJoyRideSteps and setInterval', () => {
         const props = getProps();
-        const mountSpy = new sinon.spy(DataPackPage.prototype, 'componentDidMount');
-        const requestSpy = new sinon.spy(DataPackPage.prototype, 'makeRunRequest');
+        props.getProviders = sinon.spy();
+        props.resetGeoJSONFile = sinon.spy();
+        const mountSpy = sinon.spy(DataPackPage.prototype, 'componentDidMount');
+        const requestStub = sinon.stub(DataPackPage.prototype, 'makeRunRequest');
+        const intervalStub = sinon.stub(global, 'setInterval');
         const joyrideSpy = new sinon.spy(DataPackPage.prototype, 'setJoyRideSteps');
-        const intervalSpy = new sinon.spy(global, 'setInterval');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(requestSpy.calledOnce).toBe(true);
+        expect(props.getProviders.calledOnce).toBe(true);
+        expect(requestStub.calledOnce).toBe(true);
+        expect(intervalStub.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
-        expect(intervalSpy.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
+        expect(props.resetGeoJSONFile.calledOnce).toBe(true);
         mountSpy.restore();
-        requestSpy.restore();
-        intervalSpy.restore();
+        requestStub.restore();
+        intervalStub.restore();
         joyrideSpy.restore();
     });
 
@@ -207,7 +229,7 @@ describe('DataPackPage component', () => {
         const mountSpy = sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
         const intervalSpy = sinon.spy(global, 'clearInterval');
         const wrapper = getWrapper(props);
-        const fetch = wrapper.instance().fetch;
+        const { fetch } = wrapper.instance();
         wrapper.unmount();
         expect(mountSpy.calledOnce).toBe(true);
         expect(intervalSpy.calledWith(fetch)).toBe(true);
@@ -318,36 +340,37 @@ describe('DataPackPage component', () => {
         stateSpy.restore();
     });
 
-    it('makeRunRequest should build a params string and pass it to props.getRuns', () => {
-        /// Add things here ///
-        let props = getProps();
+    it('makeRunRequest should build a params object and pass it to props.getRuns', () => {
+        const props = getProps();
         props.getRuns = sinon.spy();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const status = {completed: true, incomplete: true};
-        const minDate = new Date(2017, 6, 30, 8,0,0);
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const status = { completed: true, incomplete: true };
+        const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
         const owner = 'test_user';
         const published = 'True';
-        const search = 'search_text'
-        const expectedString = 'page_size=12'
-            +'&ordering=-job__featured,-started_at'
-            +'&user=test_user'
-            +'&published=True'
-            +'&status=COMPLETED,INCOMPLETE'
-            +'&min_date=2017-07-30'
-            +'&max_date=2017-08-02'
-            +'&search_term=search_text';
+        const search = 'search_text';
+        const expectedParams = {
+            page_size: 12,
+            ordering: '-job__featured,-started_at',
+            user: 'test_user',
+            published: 'True',
+            status: 'COMPLETED,INCOMPLETE',
+            min_date: '2017-07-30',
+            max_date: '2017-08-02',
+            search_term: 'search_text',
+        };
         wrapper.setState({
-            status: status, 
-            minDate: minDate,
-            maxDate: maxDate,
+            status,
+            minDate,
+            maxDate,
             ownerFilter: owner,
-            published: published,
-            search: search
+            published,
+            search,
         });
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
-        expect(props.getRuns.calledWith(expectedString, null)).toBe(true);
+        expect(props.getRuns.calledWith(expectedParams, null)).toBe(true);
     });
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
@@ -387,7 +410,7 @@ describe('DataPackPage component', () => {
 
     it('handleFilterClear should setState then re-apply search and sort', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
@@ -402,6 +425,7 @@ describe('DataPackPage component', () => {
             },
             minDate: null,
             maxDate: null,
+            providers: {},
             loading: true,
         }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(stateSpy.calledWith({ open: false })).toBe(true);
@@ -493,46 +517,37 @@ describe('DataPackPage component', () => {
 
     it('getView should return null, list, grid, or map component', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        expect(wrapper.instance().getView('list')).toEqual(
+        const wrapper = shallow(<DataPackPage {...props} />);
+
+        const commonProps = {
+            runs: props.runsList.runs,
+            user: props.user,
+            onRunDelete: props.deleteRuns,
+            range: props.runsList.range,
+            handleLoadLess: wrapper.instance().loadLess,
+            handleLoadMore: wrapper.instance().loadMore,
+            loadLessDisabled: props.runsList.runs.length <= 12,
+            loadMoreDisabled: !props.runsList.nextPage,
+            providers,
+        };
+
+        expect(wrapper.instance().getView('list')).toEqual((
             <DataPackList
-                runs={props.runsList.runs}
-                user={props.user}
-                onRunDelete={props.deleteRuns}
+                {...commonProps}
                 onSort={wrapper.instance().handleSortChange}
                 order={wrapper.state().order}
-                range={props.runsList.range}
-                handleLoadLess={wrapper.instance().loadLess}
-                handleLoadMore={wrapper.instance().loadMore}
-                loadLessDisabled={props.runsList.runs.length <= 12}
-                loadMoreDisabled={!props.runsList.nextPage}
-                providers={providers}
             />
-        );
-        expect(wrapper.instance().getView('grid')).toEqual(
+        ));
+
+        expect(wrapper.instance().getView('grid')).toEqual((
             <DataPackGrid
-                runs={props.runsList.runs}
-                user={props.user}
-                onRunDelete={props.deleteRuns}
-                range={props.runsList.range}
-                handleLoadLess={wrapper.instance().loadLess}
-                handleLoadMore={wrapper.instance().loadMore}
-                loadLessDisabled={props.runsList.runs.length <= 12}
-                loadMoreDisabled={!props.runsList.nextPage}
-                providers={providers}
+                {...commonProps}
             />
-        );
-        expect(wrapper.instance().getView('map')).toEqual(
+        ));
+
+        expect(wrapper.instance().getView('map')).toEqual((
             <MapView
-                runs={props.runsList.runs}
-                user={props.user}
-                onRunDelete={props.deleteRuns}
-                range={props.runsList.range}
-                handleLoadLess={wrapper.instance().loadLess}
-                handleLoadMore={wrapper.instance().loadMore}
-                loadLessDisabled={props.runsList.runs.length <= 12}
-                loadMoreDisabled={!props.runsList.nextPage}
-                providers={providers}
+                {...commonProps}
                 geocode={props.geocode}
                 getGeocode={props.getGeocode}
                 importGeom={props.importGeom}
@@ -540,7 +555,7 @@ describe('DataPackPage component', () => {
                 resetGeoJSONFile={props.resetGeoJSONFile}
                 onMapFilter={wrapper.instance().handleSpatialFilter}
             />
-        );
+        ));
         expect(wrapper.instance().getView('bad case')).toEqual(null);
     });
 

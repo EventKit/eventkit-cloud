@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
@@ -26,7 +25,6 @@ raf.polyfill();
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
 
     const tooltipStyle = {
         backgroundColor: 'white',

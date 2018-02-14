@@ -4,11 +4,9 @@ import sinon from 'sinon';
 import SaveButton from '../../components/AccountPage/SaveButton';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import RaisedButton from 'material-ui/RaisedButton';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 describe('SaveButton component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => {

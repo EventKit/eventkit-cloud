@@ -47,7 +47,6 @@ describe('DataPackDetails component', () => {
         expect(table.find(TableHeader)).toHaveLength(1);
         expect(table.find(TableRow)).toHaveLength(1);
         expect(table.find(TableHeaderColumn)).toHaveLength(4);
-        //expect(table.find(TableHeaderColumn).at(0).find(Checkbox)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(0).text()).toEqual('CREATING DATAPACK ZIP');
         expect(table.find(TableHeaderColumn).at(0).find(RaisedButton)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(1).text()).toEqual('FILE SIZE');
@@ -100,96 +99,6 @@ describe('DataPackDetails component', () => {
         expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
-
-    // it('should call checkAll when the checkbox is checked/unchecked', () => {
-    //     const props = getProps();
-    //     const checkAllSpy = new sinon.spy(DataPackDetails.prototype, 'checkAll');
-    //     const wrapper = getWrapper(props);
-    //     expect(checkAllSpy.notCalled).toBe(true);
-    //     wrapper.find(TableHeaderColumn).at(0).find(Checkbox).find('input').simulate('change');
-    //     expect(checkAllSpy.calledOnce).toBe(true);
-    //     checkAllSpy.restore();
-    // });
-
-    // it('should call handleDownload when the download button is clicked', () => {
-    //     const props = getProps();
-    //     const downloadSpy = new sinon.spy(DataPackDetails.prototype, 'handleDownload');
-    //     const wrapper = getWrapper(props);
-    //     expect(downloadSpy.notCalled).toBe(true);
-    //     const button = TestUtils.scryRenderedDOMComponentsWithTag(wrapper.instance(), 'button')[0];
-    //     const node = ReactDOM.findDOMNode(button);
-    //     expect(node.disabled).toBe(true);
-    //     wrapper.setState({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}});
-    //     expect(node.disabled).toBe(false);
-    //     TestUtils.Simulate.touchTap(node);
-    //     expect(downloadSpy.calledOnce).toBe(true);
-    //     downloadSpy.restore();
-    // });
-
-    // it('should call componentDidMount and update the state with selectedProviders', () => {
-    //     const props = getProps();
-    //     const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
-    //     const mountSpy = new sinon.spy(DataPackDetails.prototype, 'componentDidMount');
-    //     const wrapper = getWrapper(props);
-    //     expect(mountSpy.calledOnce).toBe(true);
-    //     expect(stateSpy.calledOnce).toBe(true);
-    //     expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}})).toBe(true);
-    //     stateSpy.restore();
-    //     mountSpy.restore();
-    // });
-
-    // it('checkAll should set all task in selectedProviders state to checked/unchecked and update state of taskCount', () => {
-    //     const props = getProps();
-    //     const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
-    //     const wrapper = getWrapper(props);
-    //     expect(wrapper.state().selectedProviders).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': false});
-    //     wrapper.instance().checkAll({}, true);
-    //     expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}})).toBe(true);
-    //     expect(wrapper.state().selectedProviders).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': true});
-    //     wrapper.instance().checkAll({}, false);
-    //     expect(stateSpy.calledWith({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': false}})).toBe(true);
-    //     let nextProps = {onProviderCancel: () => {}, providerTasks: [{...providerTasks[0]}]};
-    //     // stateSpy.reset();
-    //     nextProps.providerTasks[0].display =  false;
-    //     nextProps.providerTasks[0].uid = 'not-called';
-    //     wrapper.setProps(nextProps);
-    //     wrapper.instance().checkAll({}, true);
-    //     // expect(stateSpy.called).toBe(false);
-    //     expect(stateSpy.calledWith({selectedProviders: {'not-called': true}})).toBe(false);
-    //     stateSpy.restore();
-    // });
-
-    // it('allChecked should return true if all tasks in selectedProviders state are true, else it returns false', () => {
-    //     const props = getProps();
-    //     const wrapper = getWrapper(props);
-    //     expect(wrapper.instance().allChecked()).toBe(false);
-    //     wrapper.setState({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true}});
-    //     expect(wrapper.instance().allChecked()).toBe(true);
-    //     wrapper.setState({selectedProviders: {}});
-    //     expect(wrapper.instance().allChecked()).toBe(false);
-    // });
-    //
-    // it('onSelectionToggle should update the selectedProviders and taskCount state', () => {
-    //     const props = getProps();
-    //     const stateSpy = new sinon.spy(DataPackDetails.prototype, 'setState');
-    //     const wrapper = getWrapper(props);
-    //     expect(wrapper.state().selectedProviders).toEqual({'e261d619-2a02-4ba5-a58c-be0908f97d04': false});
-    //     wrapper.instance().onSelectionToggle({'123-456-789': true, 'e261d619-2a02-4ba5-a58c-be0908f97d04': true})
-    //     expect(stateSpy.calledWith({selectedProviders: {'123-456-789': true, 'e261d619-2a02-4ba5-a58c-be0908f97d04': true}})).toBe(true);
-    //     stateSpy.restore();
-    // });
-
-    // it('isDownloadAllDisabled should return true or false', () => {
-    //     const props = getProps();
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({selectedProviders: {}});
-    //     expect(wrapper.instance().isDownloadAllDisabled()).toEqual(true);
-    //     wrapper.setState({selectedProviders: {one: true, two: false}});
-    //     expect(wrapper.instance().isDownloadAllDisabled()).toEqual(false);
-    //     wrapper.setState({selectedProviders: {one: false, two: false}});
-    //     expect(wrapper.instance().isDownloadAllDisabled()).toEqual(true);
-    // });
-
     it('isZipFileCompleted should return true or false', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -217,30 +126,6 @@ describe('DataPackDetails component', () => {
         wrapper.instance().getCloudDownloadIcon();
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload className={'qa-DataPackDetails-CloudDownload-enabled'} style={{fill:'#4598bf', verticalAlign: 'middle'}}/>);
     });
-    // it('getCheckboxStatus should return true or false depending on providerTask prop', () => {
-    //     let props = {...getProps()};
-    //     props.providerTasks[0].status = 'PENDING';
-    //     const wrapper = getWrapper(props);
-    //     expect(wrapper.instance().getCheckboxStatus()).toBe(true);
-    //     let nextProps = {...props};
-    //     nextProps.providerTasks[0].status = 'COMPLETED';
-    //     wrapper.setProps(nextProps);
-    //     expect(wrapper.instance().getCheckboxStatus()).toBe(false);
-    // });
-    //
-    // it('handDownload should open a tab for each file to be downloaded', () => {
-    //     const openSpy = new sinon.spy(window, 'open');
-    //     let props = getProps();
-    //     let otherTask = JSON.parse(JSON.stringify(providerTasks[0]));
-    //     otherTask.tasks[0].display = false;
-    //     otherTask.uid = '12345';
-    //     props.providerTasks.push(otherTask);
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({selectedProviders: {'e261d619-2a02-4ba5-a58c-be0908f97d04': true, '12345': true, '3': false}});
-    //     wrapper.instance().handleDownload();
-    //     console.log(openSpy.callCount);
-    //     expect(openSpy.calledOnce).toBe(true);
-    // });
 });
 
 const providerTasks = [

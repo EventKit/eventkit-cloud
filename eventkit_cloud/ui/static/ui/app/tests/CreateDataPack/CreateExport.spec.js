@@ -12,7 +12,6 @@ import Help from 'material-ui/svg-icons/action/help';
 
 
 describe('CreateExport component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     it('should render the elements', () => {
         // dont render the full component tree

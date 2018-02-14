@@ -3,12 +3,10 @@ import sinon from 'sinon';
 import {shallow, mount} from 'enzyme';
 import { Link } from 'react-router';
 import RaisedButton from 'material-ui/RaisedButton';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 
 describe('DataPackLinkButton component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     it('should render a linked button', () => {

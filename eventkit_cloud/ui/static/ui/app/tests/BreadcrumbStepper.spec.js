@@ -78,14 +78,10 @@ describe('BreadcrumbStepper component', () => {
         expect(getMessageSpy.called).toBe(false);
         const nextProps = { ...getProps() };
         nextProps.jobError = {
-            response: {
-                data: {
-                    errors: [
-                        { title: 'one', detail: 'one' },
-                        { title: 'two', detail: 'two' },
-                    ],
-                },
-            },
+            errors: [
+                { title: 'one', detail: 'one' },
+                { title: 'two', detail: 'two' },
+            ],
         };
         wrapper.setProps(nextProps);
         expect(getMessageSpy.calledTwice).toBe(true);
@@ -132,11 +128,12 @@ describe('BreadcrumbStepper component', () => {
         const showErrorStub = sinon.stub(BreadcrumbStepper.prototype, 'showError');
         const wrapper = getWrapper(props);
         const nextProps = { ...getProps() };
-        nextProps.jobError = { response: 'response' };
+        const error = { errors: ['one', 'two'] };
+        nextProps.jobError = error;
         wrapper.setProps(nextProps);
         expect(hideStub.calledOnce).toBe(true);
         expect(showErrorStub.calledOnce).toBe(true);
-        expect(showErrorStub.calledWith('response')).toBe(true);
+        expect(showErrorStub.calledWith(error)).toBe(true);
         hideStub.restore();
         showErrorStub.restore();
     });
@@ -359,24 +356,24 @@ describe('BreadcrumbStepper component', () => {
     it('showError should setState and clear job info', () => {
         const props = getProps();
         props.clearJobInfo = sinon.spy();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const stateStub = sinon.stub(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
         const error = { message: 'oh no' };
         wrapper.instance().showError(error);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showError: true, error })).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showError: true, error })).toBe(true);
         expect(props.clearJobInfo.calledOnce).toBe(true);
-        stateSpy.restore();
+        stateStub.restore();
     });
 
     it('hideError should setState', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const stateStub = sinon.stub(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().hideError();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showError: false })).toBe(true);
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showError: false })).toBe(true);
+        stateStub.restore();
     });
 
     it('showLoading should set loading to true', () => {

@@ -918,6 +918,7 @@ export class MapView extends Component {
                             setMapViewButtonSelected={() => { this.setButtonSelected('mapView'); }}
                             setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                             setImportModalState={this.toggleImportModal}
+                            title="FILTERS"
                         />
                         <InvalidDrawWarning
                             show={this.state.showInvalidDrawWarning}

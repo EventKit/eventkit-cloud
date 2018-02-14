@@ -89,6 +89,7 @@
     "collectCoverageFrom": [
       "**/*.{js,jsx}",
       "!**/coverage/**",
+      "!**/setupFile.js",
       "!**/webpack.config.js",
       "!**/build/**",
       "!**/staticfiles/**",
