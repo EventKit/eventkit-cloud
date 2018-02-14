@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Drawer from 'material-ui/Drawer';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
@@ -13,7 +12,6 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 import ProvidersFilter from '../../components/DataPackPage/ProvidersFilter';
 
 describe('FilterDrawer component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
         {

@@ -22,6 +22,9 @@ import { DataCartInfoTable } from './DataCartInfoTable';
 export class DataCartDetails extends Component {
     constructor(props) {
         super(props);
+        this.setPermission = this.setPermission.bind(this);
+        this.setDates = this.setDates.bind(this);
+        this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleExpirationChange = this.handleExpirationChange.bind(this);
         this.handlePermissionChange = this.handlePermissionChange.bind(this);
         this.handleSharedMembersChange = this.handleSharedMembersChange.bind(this);
@@ -35,7 +38,7 @@ export class DataCartDetails extends Component {
 
     componentDidMount() {
         this.initializeOpenLayers();
-        this.setMaxDate();
+        this.setDates();
         this.setPermission();
     }
 
@@ -50,7 +53,7 @@ export class DataCartDetails extends Component {
         this.setState({ permission });
     }
 
-    setMaxDate() {
+    setDates() {
         const minDate = new Date();
         const maxDays = this.props.maxResetExpirationDays;
         const d = new Date();
@@ -101,11 +104,11 @@ export class DataCartDetails extends Component {
         });
         const source = new VectorSource({ wrapX: true });
         const geojson = new GeoJSON();
-        const feature = geojson.readFeatures(this.props.cartDetails.job.extent, {
+        const features = geojson.readFeatures(this.props.cartDetails.job.extent, {
             featureProjection: 'EPSG:3857',
             dataProjection: 'EPSG:4326',
         });
-        source.addFeatures(feature);
+        source.addFeatures(features);
         const layer = new VectorLayer({
             source,
         });
@@ -170,8 +173,9 @@ export class DataCartDetails extends Component {
 
         return (
             <div>
-                <div style={{ marginLeft: '-5px', marginTop: '-5px' }}>
+                <div style={{ marginLeft: '-5px', marginTop: '-5px' }} className="qa-DataCartDetails-div-name">
                     <DataPackTableRow
+                        className="qa-DataCartDetails-name"
                         title="Name"
                         data={this.props.cartDetails.job.name}
                         dataStyle={{ wordBreak: 'break-all' }}
@@ -182,6 +186,7 @@ export class DataCartDetails extends Component {
                         Status
                     </div>
                     <DataPackStatusTable
+                        className="qa-DataCartDetails-DataPackStatusTable"
                         status={this.props.cartDetails.status}
                         expiration={this.props.cartDetails.expiration}
                         permission={this.state.permission}

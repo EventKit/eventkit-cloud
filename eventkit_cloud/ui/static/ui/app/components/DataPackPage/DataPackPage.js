@@ -75,37 +75,81 @@ export class DataPackPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.runsList.fetched !== this.props.runsList.fetched) {
-            if (nextProps.runsList.fetched === true) {
-                if (this.state.pageLoading) {
-                    this.setState({ pageLoading: false });
-                }
-                if (this.state.loading) {
-                    this.setState({ loading: false });
-                }
+        if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
+            if (this.state.pageLoading) {
+                this.setState({ pageLoading: false });
+            }
+            if (this.state.loading) {
+                this.setState({ loading: false });
             }
         }
-        if (nextProps.runsDeletion.deleted !== this.props.runsDeletion.deleted) {
-            if (nextProps.runsDeletion.deleted) {
-                this.setState({ loading: true }, this.makeRunRequest);
-            }
+        if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+            this.setState({ loading: true }, this.makeRunRequest);
         }
     }
 
     componentWillUnmount() {
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
-        if (this.props.runsList.order != this.state.order) {this.props.setOrder(this.state.order)};
-        if (this.props.runsList.view != this.state.view) {this.props.setView(this.state.view)};
+        if (this.props.runsList.order !== this.state.order) {
+            this.props.setOrder(this.state.order);
+        }
+        if (this.props.runsList.view !== this.state.view) {
+            this.props.setView(this.state.view);
+        }
     }
 
-    onSearch(searchText) { 
-        this.setState({search: searchText, loading: true}, this.makeRunRequest);
+    onSearch(searchText) {
+        this.setState({ search: searchText, loading: true }, this.makeRunRequest);
+    }
+
+    getView(view) {
+        const commonProps = {
+            runs: this.props.runsList.runs,
+            user: this.props.user,
+            onRunDelete: this.props.deleteRuns,
+            range: this.props.runsList.range,
+            handleLoadLess: this.loadLess,
+            handleLoadMore: this.loadMore,
+            loadLessDisabled: this.props.runsList.runs.length <= 12,
+            loadMoreDisabled: !this.props.runsList.nextPage,
+            providers: this.props.providers,
+            openShare: this.handleShareOpen,
+        };
+        switch (view) {
+        case 'list':
+            return (
+                <DataPackList
+                    {...commonProps}
+                    onSort={this.handleSortChange}
+                    order={this.state.order}
+                />
+            );
+        case 'grid':
+            return (
+                <DataPackGrid
+                    {...commonProps}
+                />
+            );
+        case 'map':
+            return (
+                <MapView
+                    {...commonProps}
+                    geocode={this.props.geocode}
+                    getGeocode={this.props.getGeocode}
+                    importGeom={this.props.importGeom}
+                    processGeoJSONFile={this.props.processGeoJSONFile}
+                    resetGeoJSONFile={this.props.resetGeoJSONFile}
+                    onMapFilter={this.handleSpatialFilter}
+                />
+            );
+        default: return null;
+        }
     }
 
     checkForEmptySearch(searchText) {
-        if(searchText == '' && this.state.search) {
-            this.setState({search: '', loading: true}, this.makeRunRequest);
+        if (searchText === '' && this.state.search) {
+            this.setState({ search: '', loading: true }, this.makeRunRequest);
         }
     }
 
@@ -189,25 +233,24 @@ export class DataPackPage extends React.Component {
 
     changeView(view) {
         if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
-            this.setState({order: '-started_at', loading: true}, () => {
-                let promise = this.makeRunRequest();
-                promise.then(() => this.setState({view: view}));
+            this.setState({ order: '-started_at', loading: true }, () => {
+                const promise = this.makeRunRequest();
+                promise.then(() => this.setState({ view }));
             });
-        }
-        else {
-            this.setState({view: view});
+        } else {
+            this.setState({ view });
         }
     }
 
     handleToggle() {
-        this.setState({open: !this.state.open});
+        this.setState({ open: !this.state.open });
     }
 
     loadMore() {
         if (this.props.runsList.nextPage) {
             this.setState(
-                {pageSize: this.state.pageSize + 12, loading: true}, 
-                this.makeRunRequest
+                { pageSize: this.state.pageSize + 12, loading: true },
+                this.makeRunRequest,
             );
         }
     }
@@ -215,53 +258,9 @@ export class DataPackPage extends React.Component {
     loadLess() {
         if (this.state.pageSize > 12) {
             this.setState(
-                {pageSize: this.state.pageSize - 12, loading: true},
-                this.makeRunRequest
+                { pageSize: this.state.pageSize - 12, loading: true },
+                this.makeRunRequest,
             );
-        }
-    }
-
-    getView(view) {
-        const commonProps = {
-            runs: this.props.runsList.runs,
-            user: this.props.user,
-            onRunDelete: this.props.deleteRuns,
-            range: this.props.runsList.range,
-            handleLoadLess: this.loadLess,
-            handleLoadMore: this.loadMore,
-            loadLessDisabled: this.props.runsList.runs.length <= 12,
-            loadMoreDisabled: !this.props.runsList.nextPage,
-            providers: this.props.providers,
-            openShare: this.handleShareOpen,
-        };
-        switch (view) {
-        case 'list':
-            return (
-                <DataPackList
-                    {...commonProps}
-                    onSort={this.handleSortChange}
-                    order={this.state.order}
-                />
-            );
-        case 'grid':
-            return (
-                <DataPackGrid
-                    {...commonProps}
-                />
-            );
-        case 'map':
-            return (
-                <MapView
-                    {...commonProps}
-                    geocode={this.props.geocode}
-                    getGeocode={this.props.getGeocode}
-                    importGeom={this.props.importGeom}
-                    processGeoJSONFile={this.props.processGeoJSONFile}
-                    resetGeoJSONFile={this.props.resetGeoJSONFile}
-                    onMapFilter={this.handleSpatialFilter}
-                />
-            );
-        default: return null;
         }
     }
 
@@ -332,17 +331,17 @@ export class DataPackPage extends React.Component {
         return (
             <div style={styles.backgroundStyle}>
                 <AppBar
-                    className={'qa-DataPackPage-AppBar'}
+                    className="qa-DataPackPage-AppBar"
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
-                    iconElementLeft={<p></p>}
+                    iconElementLeft={<p />}
                 >
                     <DataPackLinkButton />
                 </AppBar>
-                
-                <Toolbar className={'qa-DataPackPage-Toolbar-search'} style={styles.toolbarSearch}>
-                    <ToolbarGroup className={'qa-DataPackPage-ToolbarGroup-search'}  style={{width: '100%'}}>
+
+                <Toolbar className="qa-DataPackPage-Toolbar-search" style={styles.toolbarSearch}>
+                    <ToolbarGroup className="qa-DataPackPage-ToolbarGroup-search" style={{ width: '100%' }}>
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
@@ -350,23 +349,30 @@ export class DataPackPage extends React.Component {
                     </ToolbarGroup>
                 </Toolbar>
 
-                <Toolbar className={'qa-DataPackPage-Toolbar-sort'} style={styles.toolbarSort}>
-                        <DataPackOwnerSort handleChange={this.handleOwnerFilter} value={this.state.ownerFilter} owner={this.props.user.data.user.username} />
-                        <DataPackFilterButton 
-                            handleToggle={this.handleToggle}
-                            active={this.state.open}
+                <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
+                    <DataPackOwnerSort
+                        handleChange={this.handleOwnerFilter}
+                        value={this.state.ownerFilter}
+                        owner={this.props.user.data.user.username}
+                    />
+                    <DataPackFilterButton
+                        handleToggle={this.handleToggle}
+                        active={this.state.open}
+                    />
+                    {this.state.view === 'list' && window.innerWidth >= 768 ?
+                        null
+                        :
+                        <DataPackSortDropDown
+                            handleChange={(e, i, v) => { this.handleSortChange(v); }}
+                            value={this.state.order}
                         />
-                        {this.state.view == 'list' && window.innerWidth >= 768 ?
-                            null
-                            : 
-                            <DataPackSortDropDown handleChange={(e, i, v) => {this.handleSortChange(v)}} value={this.state.order} />
-                        }
-                        <DataPackViewButtons 
-                            handleViewChange={this.changeView}
-                            view={this.state.view}
-                        />
+                    }
+                    <DataPackViewButtons
+                        handleViewChange={this.changeView}
+                        view={this.state.view}
+                    />
                 </Toolbar>
-                
+
                 <div style={styles.wholeDiv}>
                     <FilterDrawer
                         onFilterApply={this.handleFilterApply}
@@ -376,27 +382,28 @@ export class DataPackPage extends React.Component {
                         groups={this.props.groups}
                     />
 
-                    {this.state.pageLoading ? 
-                        <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
-                            <CircularProgress 
-                                style={{margin: 'auto', display: 'block'}} 
-                                color={'#4598bf'}
+                    {this.state.pageLoading ?
+                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                            <CircularProgress
+                                style={{ margin: 'auto', display: 'block' }}
+                                color="#4598bf"
                                 size={50}
                             />
                         </div>
                         :
-                        <div style={{position: 'relative'}}  className={'qa-DataPackPage-view'}>
-                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ? 
-                            <div style={{zIndex: 10, position: 'absolute', width: '100%', height: '100%',  backgroundColor: 'rgba(0,0,0,0.2)'}}>
-                                <div style={{width: '100%', height: '100%', display: 'inline-flex'}}>
-                                    <CircularProgress 
-                                        style={{margin: 'auto', display: 'block'}} 
-                                        color={'#4598bf'}
-                                        size={50}
-                                    />
+                        <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
+                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ?
+                                <div style={{ zIndex: 10, position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                                    <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                                        <CircularProgress
+                                            style={{ margin: 'auto', display: 'block' }} 
+                                            color="#4598bf"
+                                            size={50}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                            : null}
+                                : null
+                            }
                             {this.getView(this.state.view)}
                         </div>
                     }

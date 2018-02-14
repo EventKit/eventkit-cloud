@@ -93,4 +93,4 @@ CustomTextField.defaultProps = {
     maxLength: 100,
 };
 
-export default CustomTextField
+export default CustomTextField;

@@ -1,12 +1,10 @@
 import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { BaseDialog } from '../../components/BaseDialog';
 import { LeaveGroupDialog } from '../../components/UserGroupsPage/LeaveGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const props = {

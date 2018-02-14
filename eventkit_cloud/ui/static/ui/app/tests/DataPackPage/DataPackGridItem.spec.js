@@ -6,7 +6,6 @@ import MenuItem from 'material-ui/MenuItem';
 import {DataPackGridItem} from '../../components/DataPackPage/DataPackGridItem';
 import IconButton from 'material-ui/IconButton';
 import { List, ListItem} from 'material-ui/List'
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
@@ -85,9 +84,6 @@ const getWrapper = (props) => {
 }
 
 describe('DataPackGridItem component', () => {
-    injectTapEventPlugin();
-
-    
     const user = {data: {user: {username: 'admin'}}};
 
     it('should display general run information', () => {

@@ -38,7 +38,8 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentDidMount() {
-        // Clone will mount the stepper and we don't want it disabled if there's information in the exportInfo props
+        // Clone will mount the stepper and we don't want it disabled
+        // if there's information in the exportInfo props
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
@@ -126,7 +127,12 @@ export class BreadcrumbStepper extends React.Component {
         case 0:
             return <ExportAOI />;
         case 1:
-            return <ExportInfo providers={this.props.providers} formats={this.props.formats} handlePrev={this.handlePrev} />;
+            return (
+                <ExportInfo
+                    providers={this.props.providers}
+                    formats={this.props.formats}
+                    handlePrev={this.handlePrev}
+                />);
         case 2:
             return <ExportSummary allFormats={this.props.formats} />;
         default:

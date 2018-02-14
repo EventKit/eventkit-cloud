@@ -2,12 +2,10 @@ import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import Checkbox from 'material-ui/Checkbox';
 import { ProvidersFilter } from '../../components/DataPackPage/ProvidersFilter';
 
 describe('ProvidersFilter component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
         {

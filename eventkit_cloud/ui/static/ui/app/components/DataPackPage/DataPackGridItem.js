@@ -39,6 +39,8 @@ export class DataPackGridItem extends Component {
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.handleProviderOpen = this.handleProviderOpen.bind(this);
+        this.handleProviderClose = this.handleProviderClose.bind(this);
         this.state = {
             expanded: false,
             overflow: false,
@@ -118,14 +120,15 @@ export class DataPackGridItem extends Component {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen(runProviders) {
+    handleProviderOpen() {
+        const runProviders = this.props.run.provider_tasks
+            .filter(provider => (provider.display !== false));
         const providerDescs = {};
         runProviders.forEach((runProvider) => {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDescs[a.name] = a.service_description;
         });
         this.setState({ providerDescs, providerDialogOpen: true });
-
     }
 
     toggleExpanded() {
@@ -146,14 +149,16 @@ export class DataPackGridItem extends Component {
     }
 
     render() {
-        const runProviders = this.props.run.provider_tasks
-            .filter(provider => (provider.display !== false));
-
         const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
             return (
                 <ListItem
                     key={key}
-                    style={{ backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontWeight: 'bold', width: '100%', zIndex: 0 }}
+                    style={{
+                        backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                        fontWeight: 'bold',
+                        width: '100%',
+                        zIndex: 0,
+                    }}
                     nestedListStyle={{ padding: '0px' }}
                     primaryText={key}
                     initiallyOpen={false}
@@ -162,7 +167,12 @@ export class DataPackGridItem extends Component {
                         <ListItem
                             key={1}
                             primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{ backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontSize: '14px', width: '100%', zIndex: 0 }}
+                            style={{
+                                backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                                fontSize: '14px',
+                                width: '100%',
+                                zIndex: 0,
+                            }}
                         />,
                     ]}
                 />
@@ -263,6 +273,12 @@ export class DataPackGridItem extends Component {
                 whiteSpace: 'nowrap',
                 margin: '0px',
             },
+            iconMenu: {
+                padding: '0px',
+                width: '24px',
+                height: '24px',
+                verticalAlign: 'middle',
+            },
         };
 
         return (
@@ -282,7 +298,8 @@ export class DataPackGridItem extends Component {
                         <div>
                             <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
                                 <Link
-                                    to={'/status/' + this.props.run.job.uid}
+                                    to={`/status/${this.props.run.job.uid}`}
+                                    href={`/status/${this.props.run.job.uid}`}
                                     style={styles.titleLink}
                                 >
                                     {this.props.run.job.name}
@@ -292,7 +309,7 @@ export class DataPackGridItem extends Component {
                                 style={{ float: 'right', width: '24px', height: '100%' }}
                                 iconButtonElement={
                                     <IconButton
-                                        style={{ padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle' }}
+                                        style={styles.iconMenu}
                                         iconStyle={{ color: '#4598bf' }}
                                     >
                                         <NavigationMoreVert />
@@ -310,13 +327,11 @@ export class DataPackGridItem extends Component {
                                     primaryText="Go to Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
-
                                 <MenuItem
                                     style={{ fontSize: cardTextFontSize }}
                                     primaryText="View Data Sources"
-                                    onClick={this.handleProviderOpen.bind(this, runProviders)}
+                                    onClick={this.handleProviderOpen}
                                 />
-
                                 {this.props.run.user === this.props.user.data.user.username ?
                                     [
                                         <MenuItem
@@ -341,7 +356,7 @@ export class DataPackGridItem extends Component {
                             <BaseDialog
                                 show={this.state.providerDialogOpen}
                                 title="DATA SOURCES"
-                                onClose={this.handleProviderClose.bind(this)}
+                                onClose={this.handleProviderClose}
                             >
                                 <List>{providersList}</List>
                             </BaseDialog>

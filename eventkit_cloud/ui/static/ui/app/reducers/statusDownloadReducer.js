@@ -2,15 +2,37 @@ import types from '../actions/actionTypes';
 import initialState from './initialState';
 
 export function getDatacartDetailsReducer(state = initialState.datacartDetails, action) {
-    switch(action.type) {
-        case types.GETTING_DATACART_DETAILS:
-            return { ...state, fetching: true, fetched: false, error: null };
-        case types.DATACART_DETAILS_RECEIVED:
-            return { fetching: false, fetched: true, data: action.datacartDetails.data, error: null };
-        case types.DATACART_DETAILS_ERROR:
-            return { fetching: false, fetched: false, data: [], error: action.error };
-        default:
-            return state;
+    switch (action.type) {
+    case types.GETTING_DATACART_DETAILS:
+        return {
+            ...state,
+            fetching: true,
+            fetched: false,
+            error: null,
+        };
+    case types.DATACART_DETAILS_RECEIVED:
+        return {
+            fetching: false,
+            fetched: true,
+            data: action.datacartDetails.data,
+            error: null,
+        };
+    case types.DATACART_DETAILS_ERROR:
+        return {
+            fetching: false,
+            fetched: false,
+            data: [],
+            error: action.error,
+        };
+    case types.CLEAR_DATACART_DETAILS:
+        return {
+            fetching: false,
+            fetched: false,
+            data: [],
+            error: null,
+        };
+    default:
+        return state;
     }
 }
 

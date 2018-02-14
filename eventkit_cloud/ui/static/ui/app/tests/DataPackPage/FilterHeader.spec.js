@@ -2,13 +2,11 @@ import React from 'react';
 import sinon from 'sinon';
 import {mount} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import FilterHeader from '../../components/DataPackPage/FilterHeader';
 
 describe('FilterHeader component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

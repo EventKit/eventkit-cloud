@@ -6,7 +6,6 @@ export const getDatacartDetails = jobuid => (dispatch) => {
     dispatch({
         type: types.GETTING_DATACART_DETAILS,
     });
-
     return axios({
         url: `/api/runs?job_uid=${jobuid}`,
         method: 'GET',
@@ -25,12 +24,15 @@ export const getDatacartDetails = jobuid => (dispatch) => {
             },
         });
     }).catch((error) => {
-        console.log(error);
         dispatch({
-            type: types.DATACART_DETAILS_ERROR, error,
+            type: types.DATACART_DETAILS_ERROR, error: error.response.data,
         });
     });
 };
+
+export function clearDataCartDetails() {
+    return { type: types.CLEAR_DATACART_DETAILS };
+}
 
 export function deleteRun(uid) {
     return (dispatch) => {
@@ -48,7 +50,7 @@ export function deleteRun(uid) {
         }).then(() => {
             dispatch({ type: types.DELETED_RUN });
         }).catch((error) => {
-            dispatch({ type: types.DELETE_RUN_ERROR, error });
+            dispatch({ type: types.DELETE_RUN_ERROR, error: error.response.data });
         });
     };
 }
@@ -101,7 +103,7 @@ export function cancelProviderTask(uid) {
         }).then(() => {
             dispatch({ type: types.CANCELED_PROVIDER_TASK });
         }).catch((error) => {
-            dispatch({ type: types.CANCEL_PROVIDER_TASK_ERROR, error });
+            dispatch({ type: types.CANCEL_PROVIDER_TASK_ERROR, error: error.response.data });
         });
     };
 }
@@ -118,7 +120,7 @@ export function updateExpiration(uid, expiration) {
         }).then(() => {
             dispatch({ type: types.UPDATE_EXPIRATION_SUCCESS });
         }).catch((error) => {
-            dispatch({ type: types.UPDATE_EXPIRATION_ERROR, error });
+            dispatch({ type: types.UPDATE_EXPIRATION_ERROR, error: error.response.data });
         });
     };
 }
@@ -136,7 +138,7 @@ export function updatePermission(uid, value) {
         }).then(() => {
             dispatch({ type: types.UPDATE_PERMISSION_SUCCESS });
         }).catch((error) => {
-            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error });
+            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data });
         });
     };
 }

@@ -4,11 +4,9 @@ import sinon from 'sinon';
 import QuickTour from '../../components/About/QuickTour';
 import QuickTourSection from '../../components/About/QuickTourSection';
 import testImg from '../../../images/eventkit_logo.png';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 describe('QuickTour component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => {

@@ -49,8 +49,8 @@ export class DataCartGeneralTable extends Component {
     }
 
     render() {
-        const providers = this.props.dataPack.provider_tasks.filter(provider => (
-            provider.display
+        const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
+            task.display
         ));
 
         const styles = {
@@ -66,28 +66,33 @@ export class DataCartGeneralTable extends Component {
         };
 
         return (
-            <div style={{ marginTop: '-5px', marginLeft: '-5px' }}>
+            <div style={{ marginTop: '-5px', marginLeft: '-5px' }} className="qa-DataPackGeneralTable">
                 <DataPackTableRow
+                    className="qa-DataPackGeneralTable-description"
                     title="Description"
                     data={this.props.dataPack.job.description}
                 />
                 <DataPackTableRow
+                    className="qa-DataPackGeneralTable-project"
                     title="Project / Category"
                     data={this.props.dataPack.job.event}
                 />
                 <DataPackTableRow
+                    className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
                     dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
                     data={
-                        providers.map(provider => (
-                            <div key={provider.name} style={{ margin: '5px 0px' }}>
-                                {provider.name}
+                        providerTasks.map(providerTask => (
+                            <div key={providerTask.name} style={{ margin: '5px 0px' }}>
+                                {providerTask.name}
                                 <Info
-                                    onTouchTap={() => this.handleProviderOpen(provider)}
-                                    key={provider.description}
+                                    className="qa-DataPackGeneralTable-Info-source"
+                                    onClick={() => this.handleProviderOpen(providerTask)}
+                                    key={providerTask.description}
                                     style={styles.tableRowInfoIcon}
                                 />
                                 <BaseDialog
+                                    className="qa-DataPackGeneralTable-BaseDialog-source"
                                     show={this.state.providerDialogOpen}
                                     title={this.state.providerName}
                                     onClose={this.handleProviderClose}
@@ -101,13 +106,15 @@ export class DataCartGeneralTable extends Component {
                     }
                 />
                 <DataPackTableRow
+                    className="qa-DataPackGeneralTable-formats"
                     title="File Formats"
                     data={
                         this.props.dataPack.job.formats.map(format => (
                             <div key={format}>
                                 {format}
                                 <Info
-                                    onTouchTap={this.handleFormatsOpen}
+                                    className="qa-DataPackGeneralTable-Info-formats"
+                                    onClick={this.handleFormatsOpen}
                                     style={styles.tableRowInfoIcon}
                                 />
                                 <BaseDialog
@@ -126,12 +133,14 @@ export class DataCartGeneralTable extends Component {
                     }
                 />
                 <DataPackTableRow
+                    className="qa-DataPackGeneralTable-projection"
                     title="Projection"
                     data={
                         <div>
                             EPSG:4326 - World Geodetic System 1984 (WGS84)
                             <Info
-                                onTouchTap={this.handleProjectionsOpen}
+                                className="qa-DataPackGeneralTable-projection-icon"
+                                onClick={this.handleProjectionsOpen}
                                 style={styles.tableRowInfoIcon}
                             />
                             <BaseDialog

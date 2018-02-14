@@ -1,16 +1,14 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
-import TimerMixin from 'react-timer-mixin';
-import reactMixin from 'react-mixin';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
 import {
-    getDatacartDetails, deleteRun, rerunExport, clearReRunInfo,
-    cancelProviderTask, updateExpiration, updatePermission,
+    getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
+    clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import { getUsers } from '../../actions/userActions.fake.js'; // TODO change this to the real one
@@ -75,8 +73,9 @@ export class StatusDownload extends React.Component {
                 });
 
                 if (clearTimer === 0) {
-                    TimerMixin.clearInterval(this.timer);
-                    this.timeout = setTimeout(() => {
+                    window.clearInterval(this.timer);
+                    this.timer = null;
+                    this.timeout = window.setTimeout(() => {
                         this.props.getDatacartDetails(this.props.params.jobuid);
                     }, 270000);
                 }
@@ -89,10 +88,11 @@ export class StatusDownload extends React.Component {
     }
 
     componentWillUnmount() {
-        TimerMixin.clearInterval(this.timer);
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-        }
+        this.props.clearDataCartDetails();
+        window.clearInterval(this.timer);
+        this.timer = null;
+        window.clearTimeout(this.timeout);
+        this.timeout = null;
     }
 
     getMarginPadding() {
@@ -129,7 +129,7 @@ export class StatusDownload extends React.Component {
     }
 
     startTimer() {
-        this.timer = TimerMixin.setInterval(() => {
+        this.timer = window.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 5000);
     }
@@ -245,8 +245,10 @@ StatusDownload.contextTypes = {
 };
 
 StatusDownload.propTypes = {
+    params: PropTypes.shape({ jobuid: PropTypes.string }).isRequired,
     datacartDetails: PropTypes.object.isRequired,
     getDatacartDetails: PropTypes.func.isRequired,
+    clearDataCartDetails: PropTypes.func.isRequired,
     deleteRun: PropTypes.func.isRequired,
     runDeletion: PropTypes.object.isRequired,
     rerunExport: PropTypes.func.isRequired,
@@ -298,6 +300,9 @@ function mapDispatchToProps(dispatch) {
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid));
         },
+        clearDataCartDetails: () => {
+            dispatch(clearDataCartDetails());
+        },
         deleteRun: (jobuid) => {
             dispatch(deleteRun(jobuid));
         },
@@ -325,6 +330,7 @@ function mapDispatchToProps(dispatch) {
                 title: 'Custom Polygon',
                 description: 'Box',
                 selectionType: 'box',
+                buffer: 0,
             }));
             dispatch(updateExportInfo({
                 exportName: cartDetails.job.name,
@@ -347,8 +353,6 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
-
-reactMixin(StatusDownload.prototype, TimerMixin);
 
 export default connect(
     mapStateToProps,

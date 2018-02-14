@@ -1,7 +1,7 @@
-import { userState as authInitialState, usersState } from './userReducer';
+import { userState, usersState } from './userReducer';
 
 export default {
-    auth: authInitialState,
+    auth: userState,
     aoiInfo: {
         geojson: {},
         originalGeojson: {},
@@ -17,7 +17,7 @@ export default {
         data: [],
         error: null,
     },
-    user: authInitialState,
+    user: userState,
     importGeom: {
         processing: false,
         processed: false,
