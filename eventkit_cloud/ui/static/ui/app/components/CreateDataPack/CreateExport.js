@@ -11,21 +11,21 @@ export class CreateExport extends React.Component {
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.state = {
-            walkthroughClicked : false
-        }
+            walkthroughClicked: false,
+        };
     }
 
     handleWalkthroughReset() {
-        this.setState({walkthroughClicked: false})
+        this.setState({ walkthroughClicked: false });
     }
 
     handleWalkthroughClick() {
-        this.setState({walkthroughClicked: true})
+        this.setState({ walkthroughClicked: true });
     }
 
     render() {
-        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>Create DataPack </div>
-        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
+        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Create DataPack </div>
+        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginLeft: '10px', fontSize: '16px' }}><Help onTouchTap={ this.handleWalkthroughClick.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
         const styles = {
             appBar: {
                 backgroundColor: '#161e2e',
@@ -34,31 +34,32 @@ export class CreateExport extends React.Component {
                 fontSize: '14px',
             },
             pageTitle: {
-                fontSize: '18px', 
-                lineHeight: '35px', 
+                fontSize: '18px',
+                lineHeight: '35px',
                 paddingLeft: '10px',
-                height: '35px'
-            }
-        }
+                height: '35px',
+            },
+        };
 
         return (
             <div>
-                <AppBar 
-                    style={styles.appBar} 
+                <AppBar
+                    style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
-                    iconStyleRight={{marginTop: '2px'}}
+                    iconStyleRight={{ marginTop: '2px' }}
                     iconElementRight={iconElementRight}
-                    iconElementLeft={<p style={{display: 'none'}}/>}
+                    iconElementLeft={<p style={{ display: 'none' }} />}
                 />
                 <BreadcrumbStepper
                     walkthroughClicked={this.state.walkthroughClicked}
-                    onWalkthroughReset={this.handleWalkthroughReset}/>
+                    onWalkthroughReset={this.handleWalkthroughReset}
+                />
                 <div >
                     {this.props.children}
                 </div>
 
-        </div>
+            </div>
         );
     }
 }

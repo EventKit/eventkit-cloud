@@ -17,7 +17,7 @@ services:
         - DJANGO_LOG_LEVEL=ERROR
         - LOG_LEVEL=INFO
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
-        - SITE_NAME
+        - SITE_NAME=cloud.eventkit.test
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
         - USE_S3

@@ -107,6 +107,8 @@ export class DataPackPage extends React.Component {
 
     onSearch(searchText) {
         this.setState({ search: searchText, loading: true }, this.makeRunRequest);
+    }
+
     setJoyRideSteps() {
         const tooltipStyle = {
             backgroundColor: 'white',
@@ -117,7 +119,7 @@ export class DataPackPage extends React.Component {
             header: {
                 textAlign: 'left',
                 fontSize: '20px',
-                borderColor: '#4598bf'
+                borderColor: '#4598bf',
             },
             main: {
                 paddingTop: '20px',
@@ -126,59 +128,59 @@ export class DataPackPage extends React.Component {
 
             button: {
                 color: 'white',
-                backgroundColor: '#4598bf'
+                backgroundColor: '#4598bf',
             },
             skip: {
-                color: '#8b9396'
+                color: '#8b9396',
             },
             back: {
-                color: '#8b9396'
+                color: '#8b9396',
             },
             hole: {
                 backgroundColor: 'rgba(226,226,226, 0.2)',
-            }
+            },
         };
 
         switch (this.state.view) {
             case 'map':
                 return [
-                {
-                    title: 'Create DataPack',
-                    text: 'Click here to Navigate to Create a DataPack.',
-                    selector: '.qa-DataPackLinkButton-RaisedButton',
-                    position: 'bottom',
-                    style: tooltipStyle,
+                    {
+                        title: 'Create DataPack',
+                        text: 'Click here to Navigate to Create a DataPack.',
+                        selector: '.qa-DataPackLinkButton-RaisedButton',
+                        position: 'bottom',
+                        style: tooltipStyle,
 
-                },
-                {
-                    title: 'Search DataPacks',
-                    text: 'Search and Sort the existing DataPack Library.',
-                    selector: '.qa-DataPackSearchBar-TextField',
-                    position: 'bottom',
-                    style: tooltipStyle,
-                },
-                {
-                    title: 'Filter DataPacks',
-                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
-                    selector: '.qa-FilterDrawer-Drawer > div',
-                    position: 'bottom',
-                    style: tooltipStyle,
-                },
-                {
-                    title: 'DataPack Status',
-                    text: 'Check the status of previously created DataPacks',
-                    selector: '.qa-DataPackListItem-subtitle-date',
-                    position: 'bottom',
-                    style: tooltipStyle,
-                },
-                {
-                    title: 'Status and Download',
-                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
-                    selector: '.qa-DataPackListItem-IconMenu',
-                    position: 'bottom',
-                    style: tooltipStyle,
-                },
-            ];
+                    },
+                    {
+                        title: 'Search DataPacks',
+                        text: 'Search and Sort the existing DataPack Library.',
+                        selector: '.qa-DataPackSearchBar-TextField',
+                        position: 'bottom',
+                        style: tooltipStyle,
+                    },
+                    {
+                        title: 'Filter DataPacks',
+                        text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                        selector: '.qa-FilterDrawer-Drawer > div',
+                        position: 'bottom',
+                        style: tooltipStyle,
+                    },
+                    {
+                        title: 'DataPack Status',
+                        text: 'Check the status of previously created DataPacks',
+                        selector: '.qa-DataPackListItem-subtitle-date',
+                        position: 'bottom',
+                        style: tooltipStyle,
+                    },
+                    {
+                        title: 'Status and Download',
+                        text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                        selector: '.qa-DataPackListItem-IconMenu',
+                        position: 'bottom',
+                        style: tooltipStyle,
+                    },
+                ];
             case 'grid':
                 return [
                     {
@@ -258,12 +260,8 @@ export class DataPackPage extends React.Component {
                     },
                 ];
         }
-
     }
 
-    onSearch(searchText) {
-        this.setState({search: searchText, loading: true}, this.makeRunRequest);
-    }
 
     getView(view) {
         const commonProps = {
@@ -394,13 +392,14 @@ export class DataPackPage extends React.Component {
                 const promise = this.makeRunRequest();
                 promise.then(() => this.setState({ view }));
             });
-        }
-        else {
-            this.setState({view: view},
-            function () {
-                const steps = this.setJoyRideSteps();
-                this.joyrideAddSteps(steps);
-            });
+        } else {
+            this.setState(
+                { view },
+                function () {
+                    const steps = this.setJoyRideSteps();
+                    this.joyrideAddSteps(steps);
+                },
+            );
         }
     }
 
@@ -435,36 +434,35 @@ export class DataPackPage extends React.Component {
 
         if (!newSteps.length) return;
 
-        this.setState({steps:newSteps});
+        this.setState({ steps: newSteps });
     }
 
     callback(data) {
-        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
         }
-        if(data.index === 2 && data.type === 'step:before') {
-            if (this.state.open == false){
-                this.setState({open: true})
+        if (data.index === 2 && data.type === 'step:before') {
+            if (this.state.open == false) {
+                this.setState({ open: true });
             }
         }
     }
 
     handleJoyride() {
-        if(this.state.isRunning === true){
-            this.setState({isRunning: false})
+        if (this.state.isRunning === true) {
+            this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
-        }
-        else {
-            this.setState({isRunning: true})
+        } else {
+            this.setState({ isRunning: true });
         }
     }
 
     render() {
-        const {steps, isRunning} = this.state;
-        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>DataPack Library</div>
-        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginRight:'30px', fontSize:'16px'}}><Help onTouchTap={this.handleJoyride.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
+        const { steps, isRunning } = this.state;
+        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>
+        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginRight: '30px', fontSize: '16px' }}><Help onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ?
@@ -538,7 +536,7 @@ export class DataPackPage extends React.Component {
                         next: (<span>Next</span>),
                         skip: (<span>Skip</span>),
                     }}
-                    run={isRunning}/>
+                    run={isRunning} />
                 <AppBar
                     className="qa-DataPackPage-AppBar"
                     style={styles.appBar}

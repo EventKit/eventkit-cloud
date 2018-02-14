@@ -793,32 +793,32 @@ export class ExportAOI extends Component {
             }
         }
 
-        if(data.index === 3 && data.type === 'tooltip:before') {
-            //make the map have a selection, make toolbar have the X
+        if (data.index === 3 && data.type === 'tooltip:before') {
+            //  make the map have a selection, make toolbar have the X
             this.props.setNextEnabled();
         }
     }
 
     handleJoyride() {
-        if(this.state.isRunning === true){
+        if (this.state.isRunning === true) {
             this.refs.joyride.reset(true);
         }
         else {
-            this.setState({isRunning: true})
+            this.setState({ isRunning: true });
         }
     }
 
     drawFakeBbox() {
-        //generate fake coordinates and have the map zoom to them.
+        //  generate fake coordinates and have the map zoom to them.
         clearDraw(this.drawLayer);
-        const coords =[
+        const coords = [
             [
                 [55.25307655334473, 25.256418028713934],
                 [55.32946586608887, 25.256418028713934],
                 [55.32946586608887, 25.296621588996263],
                 [55.25307655334473, 25.296621588996263],
                 [55.25307655334473, 25.256418028713934],
-            ]
+            ],
         ]
         const polygon = new Polygon(coords);
         polygon.transform('EPSG:4326', 'EPSG:3857');
@@ -837,11 +837,11 @@ export class ExportAOI extends Component {
             selectionType: 'box',
         });
         this.props.setNextEnabled();
-        zoomToFeature(feature, this.map)
+        zoomToFeature(feature, this.map);
     }
 
     render() {
-        const {steps, isRunning} = this.state;
+        const { steps, isRunning } = this.state;
 
         const mapStyle = {
             right: '0px',
@@ -874,7 +874,8 @@ export class ExportAOI extends Component {
                         next: (<span>Next</span>),
                         skip: (<span>Skip</span>),
                     }}
-                    run={isRunning}/>
+                    run={isRunning}
+                />
                 <div id="map" className={css.map} style={mapStyle} ref="olmap">
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
