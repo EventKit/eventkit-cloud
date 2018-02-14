@@ -120,6 +120,12 @@ describe('StatusDownload component', () => {
                     },
                 },
             },
+            users: {
+                fetched: false,
+                fetching: false,
+                users: [],
+                error: null,
+            },
             getDatacartDetails: () => {},
             clearDataCartDetails: () => {},
             deleteRun: () => {},
@@ -130,6 +136,7 @@ describe('StatusDownload component', () => {
             cloneExport: () => {},
             cancelProviderTask: () => {},
             getProviders: () => {},
+            getUsers: () => {},
         }
     );
 

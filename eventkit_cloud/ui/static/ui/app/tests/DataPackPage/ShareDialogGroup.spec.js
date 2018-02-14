@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
@@ -10,7 +9,6 @@ import ShareDialogGroup from '../../components/DataPackPage/ShareDialogGroup';
 
 describe('ShareDialogGroup component', () => {
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
 
     const getProps = () => (
         {

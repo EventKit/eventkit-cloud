@@ -45,11 +45,11 @@ describe('DataPackStatusTable component', () => {
         expect(focusSpy.calledOnce).toBe(true);
     });
 
-    it('the value of the drop down menu should be 1', () => {
+    it('the value of the drop down menu should be public', () => {
         const props = getProps();
-        props.permission = true;
+        props.permission = 'public';
         const wrapper = getWrapper(props);
         const val = wrapper.find(DropDownMenu).props().value;
-        expect(val).toEqual(1);
+        expect(val).toEqual('public');
     });
 });

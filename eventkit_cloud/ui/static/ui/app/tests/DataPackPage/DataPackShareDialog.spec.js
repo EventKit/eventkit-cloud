@@ -1,14 +1,12 @@
 import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import BaseDialog from '../../components/BaseDialog';
 import DataPackShareDialog from '../../components/DataPackPage/DataPackShareDialog';
 
 describe('DataPackPage component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => (
