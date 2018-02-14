@@ -23,7 +23,7 @@ from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupAdministrator
+from ...core.models import GroupPermission
 from mock import patch, Mock
 
 
@@ -1253,7 +1253,6 @@ class TestGroupDataViewSet(APITestCase):
         self.assertEquals(len(groupdata["administrators"]), 2)
 
         # remove user_2 from members and remove all users from administrators
-        # admnistrators should still come back with user_1 as a member
 
         groupdata['members'] = ['user_1']
         groupdata['administrators'] = []
@@ -1262,7 +1261,7 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = json.loads(response.content)
         self.assertEquals(len(groupdata["members"]),1)
-        self.assertEquals(len(groupdata["administrators"]), 1)
+        self.assertEquals(len(groupdata["administrators"]), 0)
         self.assertEquals(groupdata["members"][0],"user_1")
 
 

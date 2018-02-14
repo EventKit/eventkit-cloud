@@ -7,7 +7,6 @@ from django.utils import timezone
 from django.contrib.auth.models import User,Group
 
 
-
 class TimeStampedModelMixin(models.Model):
     """
     Mixin for timestamped models.
@@ -68,20 +67,57 @@ class UIDMixin(models.Model):
     class Meta:
         abstract = True
 
+class GroupPermission(TimeStampedModelMixin):
+    """
+    Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
+    """
 
-class GroupAdministrator(TimeStampedModelMixin):
-    """
-    Model associates administrative users with groups
-    """
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group)
-    name  = models.CharField(max_length=100, db_index=True)
-
-    class Meta:
-        db_table = 'groupadministrators'
+    permission  = models.CharField(
+        choices=[('NONE','None'),('MEMBER','Member'),('ADMIN','Admin')],
+        max_length=10)
 
     def __str__(self):
-        return '{0}: {1}'.format(self.user.username, self.group.name)
+        return '{0}: {1}: {2}'.format(self.user, self.group.name, self.permission)
 
     def __unicode__(self):
-        return '{0}: {1}'.format(self.user.username, self.group.name)
+        return '{0}: {1}: {2}'.format(self.user, self.group.name, self.permission)
+
+
+from ..tasks.models import Job
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+
+class JobPermission(TimeStampedModelMixin):
+
+    """
+    Model associates users or groups with jobs
+    """
+
+    job = models.ForeignKey(Job)
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    permission = models.CharField(
+        choices=[('NONE', 'None'), ('READ', 'Read'), ('UPDATE','Update'), ('DELETE', 'Delete'),('SHARE', 'share')],
+        max_length=10)
+
+    def __str__(self):
+        return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
+
+    def __unicode__(self):
+        return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
+
+
+    @property
+    def admin_permissions(self):
+        return ['NONE', 'READ', 'UPDATE', 'DELETE', 'SHARE']
+
+
+    def set_admin(self):
+      for permission in self.admin_permissions():
+            pass
+            # self.get_or_create(user, group, permission)

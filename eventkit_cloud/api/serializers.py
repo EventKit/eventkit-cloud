@@ -17,7 +17,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User,Group
-from ..core.models import GroupAdministrator
+from ..core.models import GroupPermission,JobPermission
 
 
 from eventkit_cloud.jobs.models import (
@@ -302,12 +302,14 @@ class GroupSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_members(instance):
-        return [u.username for u in Group.objects.get(name=instance.name).user_set.all()]
+        user_ids = [permission.user.id  for permission in GroupPermission.objects.filter(group=instance).filter(permission="MEMBER")]
+        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
 
     @staticmethod
     def get_administrators(instance):
-#        them = [user.username for user in GroupAdministrator.objects.filter(group=instance)
-        return [admin.user.username for admin in GroupAdministrator.objects.filter(group=instance)]
+        user_ids = [permission.user.id  for permission in GroupPermission.objects.filter(group=instance).filter(permission="ADMIN")]
+        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+        return []
 
     @staticmethod
     def get_identification(instance):
@@ -385,7 +387,8 @@ class UserDataSerializer(serializers.Serializer):
 
     @staticmethod
     def get_groups(instance):
-        return  [g.id for g in instance.groups.all()]
+        group_ids = [perm.group.id  for perm in GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")]
+        return group_ids
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):

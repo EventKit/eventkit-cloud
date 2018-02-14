@@ -12,7 +12,7 @@ from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User,Group
-from ..core.models import GroupAdministrator
+from ..core.models import GroupPermission, JobPermission
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
@@ -1048,22 +1048,29 @@ class GroupViewSet(viewsets.ModelViewSet):
         """
         response = super(GroupViewSet, self).create(request, *args, **kwargs)
         group_id = response.data["id"]
+        logger.info("Group id %s" % group_id)
         user  = User.objects.all().filter(username=request.user.username)[0]
         group = Group.objects.filter(id=group_id)[0]
         group.user_set.add(user)
-        groupadmin = GroupAdministrator.objects.create(user=user,group=group)
+        groupadmin = GroupPermission.objects.create(user=user,group=group, permission='ADMIN')
+        groupadmin.save()
+        logger.info( "Group admin : %s" % groupadmin)
+        groupmember = GroupPermission.objects.create(user=user,group=group, permission='MEMBER')
+        logger.info( "Group member : %s" % groupmember)
 
         if "members" in request.data:
             for member  in request.data["members"]:
                 if member  != user.username:
                     user  = User.objects.all().filter(username=member)[0]
-                    group.user_set.add(user)
+                    if user:
+                        GroupPermission.objects.create(user=user, group=group, permission='MEMBER')
 
         if "administrators" in request.data:
             for admin in request.data["administrators"]:
                 if admin  != request.user.username:
                     user  = User.objects.all().filter(username=admin)[0]
-                    GroupAdministrator.objects.create(user=user, group=group)
+                    if user:
+                        GroupPermission.objects.create(user=user, group=group, permission='ADMIN')
 
         group  = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
@@ -1094,45 +1101,44 @@ class GroupViewSet(viewsets.ModelViewSet):
                  }
 
          """
+
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
         group = Group.objects.filter(id=id)[0]
 
-        # examine list of supplied administrators and adjust data as needed.
-        # Insure that the original  administrator ( as defined by timestamp ) is ALWAYS
-        # included in the administrators list
 
-        if "administrators" in request.data:
-            groupadministrators = GroupAdministrator.objects.filter(group=group).order_by("created_at")
-            currentadminusers = [ga.user for ga in groupadministrators]
-            owneradmin = currentadminusers[0]
+        # examine provided lists of administrators and members. Adjust as needed.
+
+        for item in [ ("members","MEMBER"),("administrators", "ADMIN")]:
+            permissionlabel = item[0]
+            permission = item[1]
+
+            if not permissionlabel in request.data:
+                continue
+
+            user_ids = [perm.user.id  for perm in GroupPermission.objects.filter(group=group).filter(permission=permission)]
+            currentusers = [user.username for user in User.objects.filter(id__in=user_ids).all()]
+            targetusers  = request.data[permissionlabel]
+            logger.info("..... %s" % permission)
+            logger.info("current %s" % currentusers)
+            logger.info("targetusers %s" % targetusers)
 
 
-            targetadminusernames   = request.data["administrators"]
-            if not owneradmin.username in targetadminusernames: targetadminusernames.append(owneradmin.username)
+            ## Add new users for this permission level
 
-            targetadmins  = []
-            for username in targetadminusernames:
-                user = User.objects.filter(username=username)
-                targetadmins.append(user[0])
+            newusers = list(set(targetusers)-set(currentusers))
+            logger.info("add these %s" % newusers)
+            users = User.objects.filter(username__in=newusers).all()
+            for user in users:
+                GroupPermission.objects.create(user=user, group=group, permission=permission)
 
-            # Add new users:
-            for user in targetadmins:
-                if not user in currentadminusers:
-                    groupadmin = GroupAdministrator.objects.create(user=user, group=group)
+            ## Remove existing users for this permission level
 
-            # Remove users
-            for user in currentadminusers:
-                if not user in targetadmins:
-                    for groupadmin in groupadministrators:
-                        if user == groupadmin.user:
-                            groupadmin.delete()
-
-        # member sets are easier and atomic
-
-        if "members" in request.data:
-            targetmembers = request.data["members"]
-            set = [ User.objects.filter(username=username)[0] for username in targetmembers]
-            group.user_set.set(set)
+            removedusers = list(set(currentusers) - set(targetusers))
+            logger.info("remove these %s" % removedusers)
+            users = User.objects.filter(username__in=removedusers).all()
+            for user in users:
+                perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
+                for perm in perms: perm.delete()
 
         return Response("OK", status=status.HTTP_200_OK)
 
@@ -1148,18 +1154,18 @@ class GroupViewSet(viewsets.ModelViewSet):
                     "groups" : [52,57]
                  }
 
-
         '''
-        allmembers = []
+        targetnames= []
 
         groups = Group.objects.filter(id__in=request.data["groups"])
         for group in groups:
-            for member in group.user_set.all():
-                if  not member.id in allmembers: allmembers.append(member.id)
+            serializer = GroupSerializer(group)
+            for username in serializer.get_members():
+                if  not username in targetnames: targetnames.append(username)
 
 
         payload = []
-        users = User.objects.filter(id__in=allmembers).all()
+        users = User.objects.filter(username__in=targetnames).all()
         for u in users:
             serializer = UserDataSerializer(u)
             logger.info(serializer.data)
