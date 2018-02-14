@@ -19,6 +19,9 @@ import BaseDialog from '../../components/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 
+import axios from 'axios'
+import MockAdapter from 'axios-mock-adapter';
+
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
 
@@ -218,7 +221,7 @@ describe('ExportInfo component', () => {
 
     it('onChangeCheck should add a provider', () => {
         const appProviders = [{ name: 'one' }, { name: 'two' }];
-        const exportProviders = [{ name: 'one' }];
+        const exportProviders = [{ name: 'one', availability: {} }];
         const event = { target: { name: 'two', checked: true } };
         const props = getProps();
         props.updateExportInfo = sinon.spy();
@@ -229,7 +232,7 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            providers: [{ name: 'one' }, { name: 'two' }],
+            providers: [{ name: 'one', availability: {} }, { name: 'two', availability: {} }],
         })).toBe(true);
     });
 

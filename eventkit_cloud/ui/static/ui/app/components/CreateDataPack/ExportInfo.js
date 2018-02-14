@@ -67,7 +67,6 @@ export class ExportInfo extends React.Component {
                 if (provider.availability === undefined)
                     provider.availability = {};
 
-                provider.checked = props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true;
             });
         }
     }
@@ -198,11 +197,9 @@ export class ExportInfo extends React.Component {
             data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
-            // let otherProviders = this.state.providers.filter(p => provider.slug != p.slug)[0];
             provider.availability = JSON.parse(response.data);
             provider.availability.slug = provider.slug;
-            console.log("Response data: " + response.data);
-            this.setState({ providers: [...this.state.providers] });
+            this.setState({ providers: [provider, ...this.state.providers] });
 
         }).catch((error) => {
             console.log(error);
