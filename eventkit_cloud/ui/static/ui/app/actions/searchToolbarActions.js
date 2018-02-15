@@ -17,7 +17,7 @@ export function getGeocode(query) {
             }).then(mgrsResponse => mgrsResponse.data
             ).then(mgrsData => {
                 if(mgrsData.geometry){
-                    let degreeRange = 0.05;
+                    const degreeRange = 0.05;
                     for(const k in mgrsData.properties) mgrsData[k]=mgrsData.properties[k];
                     mgrsData.properties.bbox = [(mgrsData.geometry.coordinates[0])-degreeRange, (mgrsData.geometry.coordinates[1])-degreeRange, (mgrsData.geometry.coordinates[0])+degreeRange, (mgrsData.geometry.coordinates[1])+degreeRange];
                     mgrsData.source = "MGRS";
@@ -40,7 +40,7 @@ export function getGeocode(query) {
                 }
             }).then(reverseResponse => reverseResponse.data
             ).then(reverseData => {
-                let features = reverseData.features || [];
+                const features = reverseData.features || [];
                 features.forEach((feature, i) => {
                         if (feature.geometry) {
                           //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md
@@ -72,7 +72,7 @@ export function getGeocode(query) {
             }).then(response => {
                 return response.data;
             }).then(responseData => {
-                let features = responseData.features || [];
+                const features = responseData.features || [];
                 features.forEach((feature, i) => {
                         if (feature.geometry) {
                             //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md
@@ -102,7 +102,7 @@ export function getGeocode(query) {
             }).then(response => {
                 return response.data;
             }).then(responseData => {
-                let features = responseData.features || [], data = [];
+                const features = responseData.features || [], data = [];
                 features.forEach((feature, i) => {
                         if (feature.geometry) {
                           //prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md

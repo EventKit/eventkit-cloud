@@ -1,5 +1,4 @@
 import detector from 'detect-browser';
-import forEach from 'lodash/forEach';
 
 export function isBrowserValid() {
     const browser = detector.detect();
@@ -37,14 +36,19 @@ export function isLatLon(c) {
     c.indexOf(',') > 0 ? coordArray = c.split(',') : coordArray = c.split(' ');
 
     if (coordArray.length > 2) {
-        _.forEach(coordArray, coord => {
-            if (!_.isNaN(parseFloat(coord))) {
+        coordArray.forEach(coord => {
+            if (!isNaN(parseFloat(coord))) {
+                parsedCoordArray.push(parseFloat(coord));
+            }
+        });
+        coordArray.forEach(coord => {
+            if (!isNaN(parseFloat(coord))) {
                 parsedCoordArray.push(parseFloat(coord));
             }
         });
     } else {
-        if (!_.isNaN(parseFloat(coordArray[0]) && !_.isNaN(parseFloat(coordArray[1])))) {
-            _.forEach(coordArray, coord => {
+        if (!isNaN(parseFloat(coordArray[0]) && !isNaN(parseFloat(coordArray[1])))) {
+            coordArray.forEach(coord => {
                 parsedCoordArray.push(parseFloat(coord));
             });
         }

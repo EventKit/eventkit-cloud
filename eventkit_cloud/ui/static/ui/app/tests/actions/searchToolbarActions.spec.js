@@ -5,10 +5,10 @@ import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
 
 const middlewares = [thunk]
-let mockStore = configureMockStore(middlewares)
+const mockStore = configureMockStore(middlewares)
 
 describe('async searchToolbar actions', () => {
-    let mock = new MockAdapter(axios, {delayResponse: 1000});
+    const mock = new MockAdapter(axios, {delayResponse: 1000});
     const expectedGeocodeReturn = [{bbox: [105.731049, 20.935789, 105.933609, 21.092829],
         name: "Hanoi",
         geometry: "some_geom",
