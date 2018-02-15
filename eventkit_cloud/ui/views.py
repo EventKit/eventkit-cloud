@@ -128,27 +128,34 @@ def geocode(request):
     else:
         return HttpResponse(status=204, content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def convert(request):
     convert = Convert()
-    if request.GET.get('convert'):
-        
-        result = convert.get(request.GET.get('convert'))
-        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+    if getattr(settings, 'CONVERT_API_URL') is not None:
+        if request.GET.get('convert'):
+            result = convert.get(request.GET.get('convert'))
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        else:
+            return HttpResponse(status=204, content_type="application/json")
     else:
-        return HttpResponse(status=204, content_type="application/json")
+        return HttpResponse('No Convert API specified', status=501)
+
 
 @require_http_methods(['GET'])
 def reverse_geocode(request):
     reverseGeocode = ReverseGeocode()
-    if request.GET.get('lat') and request.GET.get('lon'):
-        result = reverseGeocode.search({"point.lat": request.GET.get('lat'), "point.lon": request.GET.get('lon')})
-        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
-    if request.GET.get('result'):
-        result = reverseGeocode.add_bbox(json.loads(request.GET.get('result')))
-        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+    if getattr(settings, 'REVERSE_GEOCODING_API_URL') is not None:
+        if request.GET.get('lat') and request.GET.get('lon'):
+            result = reverseGeocode.search({"point.lat": request.GET.get('lat'), "point.lon": request.GET.get('lon')})
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        if request.GET.get('result'):
+            result = reverseGeocode.add_bbox(json.loads(request.GET.get('result')))
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        else:
+            return HttpResponse(status=204, content_type="application/json")
     else:
-        return HttpResponse(status=204, content_type="application/json")
+        return HttpResponse('No Reverse Geocode API specified', status=501)
 
 
 @require_http_methods(['GET'])

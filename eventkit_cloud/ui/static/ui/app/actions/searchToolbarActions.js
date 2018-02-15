@@ -54,7 +54,7 @@ export function getGeocode(query) {
                 dispatch({type: "RECEIVED_GEOCODE", data: geocodeData});
             }).catch(error => {
                 dispatch({type: "GEOCODE_ERROR", error: error});
-                dispatch({type: "RECEIVED_GEOCODE", data: []});
+                dispatch({type: "RECEIVED_GEOCODE", data: geocodeData});
             });
         }
     }
