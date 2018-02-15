@@ -22,13 +22,15 @@ import GroupsDrawer from './GroupsDrawer';
 import CreateGroupDialog from './CreateGroupDialog';
 import LeaveGroupDialog from './LeaveGroupDialog';
 import DeleteGroupDialog from './DeleteGroupDialog';
+import RenameGroupDialog from './RenameGroupDialog';
 import BaseDialog from '../BaseDialog';
 import {
     getGroups,
     deleteGroup,
     createGroup,
-    addGroupUsers,
-    removeGroupUsers,
+    // addGroupUsers,
+    // removeGroupUsers,
+    updateGroup,
 } from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 
@@ -48,6 +50,10 @@ export class UserGroupsPage extends Component {
         this.handleCreateClose = this.handleCreateClose.bind(this);
         this.handleCreateInput = this.handleCreateInput.bind(this);
         this.handleCreateSave = this.handleCreateSave.bind(this);
+        this.handleRenameOpen = this.handleRenameOpen.bind(this);
+        this.handleRenameClose = this.handleRenameClose.bind(this);
+        this.handleRenameInput = this.handleRenameInput.bind(this);
+        this.handleRenameSave = this.handleRenameSave.bind(this);
         this.handleSingleUserChange = this.handleSingleUserChange.bind(this);
         this.handleMultiUserChange = this.handleMultiUserChange.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
@@ -60,6 +66,8 @@ export class UserGroupsPage extends Component {
         this.handleDeleteClose = this.handleDeleteClose.bind(this);
         this.handleDeleteClick = this.handleDeleteClick.bind(this);
         this.handleDrawerSelectionChange = this.handleDrawerSelectionChange.bind(this);
+        this.handleMakeAdmin = this.handleMakeAdmin.bind(this);
+        this.handleDemoteAdmin = this.handleDemoteAdmin.bind(this);
         this.showErrorDialog = this.showErrorDialog.bind(this);
         this.hideErrorDialog = this.hideErrorDialog.bind(this);
         this.showPageInfoDialog = this.showPageInfoDialog.bind(this);
@@ -74,10 +82,12 @@ export class UserGroupsPage extends Component {
             showCreate: false,
             showLeave: false,
             showDelete: false,
-            targetGroup: {},
+            showRename: false,
+            targetGroup: null,
             usersUpdating: [],
             createInput: '',
             createUsers: [],
+            renameInput: '',
             drawerSelection: 'all',
             errorMessage: '',
             showSharedInfo: false,
@@ -151,28 +161,28 @@ export class UserGroupsPage extends Component {
         if (this.state.search) { params.search = this.state.search; }
 
         switch (this.state.drawerSelection) {
-            case 'all': {
-                // just get all users
-                break;
-            }
-            case 'new': {
-                // get users newer than 2 weeks
-                const date = new Date();
-                date.setDate(date.getDate() - 14);
-                const dateString = date.toISOString().substring(0, 10);
-                params.newer_than = dateString;
-                break;
-            }
-            case 'ungrouped': {
-                // get users not in a group
-                params.ungrouped = true;
-                break;
-            }
-            default: {
-                // get users in a specific group
-                params.group = this.state.drawerSelection;
-                break;
-            }
+        case 'all': {
+            // just get all users
+            break;
+        }
+        case 'new': {
+            // get users newer than 2 weeks
+            const date = new Date();
+            date.setDate(date.getDate() - 14);
+            const dateString = date.toISOString().substring(0, 10);
+            params.newer_than = dateString;
+            break;
+        }
+        case 'ungrouped': {
+            // get users not in a group
+            params.ungrouped = true;
+            break;
+        }
+        default: {
+            // get users in a specific group
+            params.group = this.state.drawerSelection;
+            break;
+        }
         }
         console.log(params);
         this.props.getUsers(params);
@@ -218,7 +228,7 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleSortChange(e, ix, val) {
+    handleSortChange(e, val) {
         this.setState({ sort: val }, this.makeUserRequest);
     }
 
@@ -240,6 +250,25 @@ export class UserGroupsPage extends Component {
         this.handleCreateClose();
     }
 
+    handleRenameOpen(group) {
+        this.setState({ showRename: true, targetGroup: group });
+    }
+
+    handleRenameClose() {
+        this.setState({ showRename: false, renameInput: '', targetGroup: null });
+    }
+
+    handleRenameInput(e, val) {
+        this.setState({ renameInput: val });
+    }
+
+    handleRenameSave() {
+        // const users = this.state.createUsers.map(user => user.username);
+        // this.props.createGroup(this.state.createInput, users);
+        console.log('rename!!', this.state.targetGroup, this.state.renameInput);
+        this.handleRenameClose();
+    }
+
     handleNewGroupClick(users) {
         if (users.length) {
             this.setState({ createUsers: users });
@@ -252,9 +281,9 @@ export class UserGroupsPage extends Component {
         const adding = !user.groups.includes(group.id);
 
         if (!adding) {
-            this.props.removeUsers(group, [user.username]);
+            this.props.removeGroupUsers(group, [user.username]);
         } else {
-            this.props.addUsers(group, [user.username]);
+            this.props.addGroupUsers(group, [user.username]);
         }
     }
 
@@ -276,9 +305,9 @@ export class UserGroupsPage extends Component {
         }
 
         if (!adding) {
-            this.props.removeUsers(group, users);
+            this.props.removeGroupUsers(group, users);
         } else {
-            this.props.addUsers(group, users);
+            this.props.addGroupUsers(group, users);
         }
     }
 
@@ -301,7 +330,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleLeaveClick() {
-        this.props.removeUsers(this.state.targetGroup, [this.props.user.username]);
+        this.props.removeGroupUsers(this.state.targetGroup, [this.props.user.username]);
         this.handleLeaveClose();
     }
 
@@ -327,6 +356,21 @@ export class UserGroupsPage extends Component {
             return;
         }
         this.setState({ drawerSelection: v }, this.makeUserRequest);
+    }
+
+    handleMakeAdmin(user) {
+        const groupId = this.state.drawerSelection;
+        const group = this.props.groups.groups.find(groupx => groupx.id === groupId);
+        console.log(group, user);
+        this.props.addGroupUsers(group, [], [user.id]);
+    }
+
+    handleDemoteAdmin(user) {
+        console.log(user);
+        const groupId = this.state.drawerSelection;
+        const group = this.props.groups.groups.find(groupx => groupx.id === groupId);
+        console.log(group, user);
+        this.props.removeGroupUsers(group, [], [user.id]);
     }
 
     showErrorDialog(message) {
@@ -493,20 +537,20 @@ export class UserGroupsPage extends Component {
             },
         };
 
+        const ownedGroups = [];
+        const sharedGroups = [];
         // split the user group into groups owned by the logged in user,
         // and groups shared with logged in user
-        const ownedGroups = this.props.groups.groups.filter(group => (
-            group.administrators.includes(this.props.user.username)
-        ));
-        const sharedGroups = this.props.groups.groups.filter(group => (
-            !group.administrators.includes(this.props.user.username)
-        ));
-
         // for groups owned by the logged in user, remove their name from the list of members
-        ownedGroups.forEach((group) => {
-            const ix = group.members.indexOf(this.props.user.username);
-            if (ix > -1) {
-                group.members.splice(ix, 1);
+        this.props.groups.groups.forEach((group) => {
+            if (group.administrators.includes(this.props.user.username)) {
+                const ix = group.members.indexOf(this.props.user.username);
+                if (ix > -1) {
+                    group.members.splice(ix, 1);
+                }
+                ownedGroups.push(group);
+            } else {
+                sharedGroups.push(group);
             }
         });
 
@@ -528,6 +572,8 @@ export class UserGroupsPage extends Component {
             });
         }
 
+        const showAdmin = !['all', 'new', 'ungrouped'].includes(this.state.drawerSelection) && !this.props.users.fetching;
+        
         const rows = this.props.users.users.map((user, ix) => (
             // we should be filtering out the logged in user here
             <TableRow
@@ -542,6 +588,14 @@ export class UserGroupsPage extends Component {
                     groupsLoading={this.state.usersUpdating.includes(user.username)}
                     handleGroupItemClick={this.handleSingleUserChange}
                     handleNewGroupClick={this.handleNewGroupClick}
+                    handleMakeAdmin={this.handleMakeAdmin}
+                    handleDemoteAdmin={this.handleDemoteAdmin}
+                    isAdmin={
+                        showAdmin && this.props.groups.groups.find(group => (
+                            group.id === this.state.drawerSelection && group.administrators.includes(user.username)
+                        )) !== undefined
+                    }
+                    showAdminLabel={showAdmin}
                 />
             </TableRow>
         ));
@@ -670,6 +724,7 @@ export class UserGroupsPage extends Component {
                     onSharedInfoClick={this.showSharedInfoDialog}
                     onLeaveGroupClick={this.handleLeaveGroupClick}
                     onDeleteGroupClick={this.handleDeleteGroupClick}
+                    onRenameGroupClick={this.handleRenameOpen}
                 />
                 <CreateGroupDialog
                     show={this.state.showCreate}
@@ -683,15 +738,23 @@ export class UserGroupsPage extends Component {
                     show={this.state.showLeave}
                     onClose={this.handleLeaveClose}
                     onLeave={this.handleLeaveClick}
-                    groupName={this.state.targetGroup.name || ''}
+                    groupName={this.state.targetGroup ? this.state.targetGroup.name : ''}
                     className="qa-UserGroupsPage-leaveGroupDialog"
                 />
                 <DeleteGroupDialog
                     show={this.state.showDelete}
                     onClose={this.handleDeleteClose}
                     onDelete={this.handleDeleteClick}
-                    groupName={this.state.targetGroup.name || ''}
+                    groupName={this.state.targetGroup ? this.state.targetGroup.name : ''}
                     className="qa-UserGroupsPage-deleteGroupDialog"
+                />
+                <RenameGroupDialog
+                    show={this.state.showRename}
+                    onClose={this.handleRenameClose}
+                    onSave={this.handleRenameSave}
+                    onInputChange={this.handleRenameInput}
+                    value={this.state.renameInput}
+                    valid={this.props.groups.groups.find(group => group.name === this.state.renameInput) === undefined}
                 />
                 { this.props.groups.fetching || this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.adding
@@ -786,8 +849,9 @@ UserGroupsPage.propTypes = {
     getGroups: PropTypes.func.isRequired,
     deleteGroup: PropTypes.func.isRequired,
     createGroup: PropTypes.func.isRequired,
-    addUsers: PropTypes.func.isRequired,
-    removeUsers: PropTypes.func.isRequired,
+    // addGroupUsers: PropTypes.func.isRequired,
+    // removeGroupUsers: PropTypes.func.isRequired,
+    updateGroup: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
 };
 
@@ -810,11 +874,14 @@ function mapDispatchToProps(dispatch) {
         createGroup: (name, users) => (
             dispatch(createGroup(name, users))
         ),
-        addUsers: (group, users) => (
-            dispatch(addGroupUsers(group, users))
-        ),
-        removeUsers: (group, users) => (
-            dispatch(removeGroupUsers(group, users))
+        // addGroupUsers: (group, members, administrators) => (
+        //     dispatch(addGroupUsers(group, members, administrators))
+        // ),
+        // removeGroupUsers: (group, members, administrators) => (
+        //     dispatch(removeGroupUsers(group, members, administrators))
+        // ),
+        updateGroup: (groupId, members = members, administrators = administrators) => (
+            dispatch(add)
         ),
         getUsers: params => (
             dispatch(getUsers(params))

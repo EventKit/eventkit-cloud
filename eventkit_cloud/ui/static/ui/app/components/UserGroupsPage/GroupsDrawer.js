@@ -1,8 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import Drawer from 'material-ui/Drawer';
 import Menu from 'material-ui/Menu';
+import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
+import IconButton from 'material-ui/IconButton';
 import Divider from 'material-ui/Divider';
+import Vert from 'material-ui/svg-icons/navigation/more-vert';
 import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
 import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-box';
@@ -39,7 +42,7 @@ export class GroupsDrawer extends Component {
                 textOverflow: 'ellipsis',
             },
             menuItemIcon: {
-                fill: 'ce4427',
+                fill: '#ce4427',
                 width: '17px',
                 cursor: 'pointer',
             },
@@ -119,11 +122,29 @@ export class GroupsDrawer extends Component {
                                 innerDivStyle={{ paddingRight: '48px' }}
                                 style={{ color: '#4598bf' }}
                                 rightIcon={
-                                    <IndeterminateIcon
-                                        style={{ ...styles.menuItemIcon, opacity: '0.7' }}
-                                        onClick={() => { this.props.onDeleteGroupClick(group); }}
-                                        className="qa-GroupsDrawer-groupItem-icon"
-                                    />
+                                    
+                                    <IconMenu
+                                        iconButtonElement={
+                                            <IconButton style={{ padding: '0px', width: '24px', height: '24px' }}>
+                                                <Vert />
+                                            </IconButton>
+                                        }
+                                        menuItemStyle={{ fontSize: '14px' }}
+                                        className="qa-GroupsDrawer-groupOptions"
+                                    >
+                                        <MenuItem
+                                            className="qa-GroupsDrawer-group-rename"
+                                            primaryText="Change Group Name"
+                                            style={{ color: '#707274' }}
+                                            onClick={() => { this.props.onRenameGroupClick(group); }}
+                                        />
+                                        <MenuItem
+                                            className="qa-GroupsDrawer-group-delete"
+                                            primaryText="Delete Group"
+                                            style={{ color: '#ce4427', opacity: '0.7' }}
+                                            onClick={() => { this.props.onDeleteGroupClick(group); }}
+                                        />
+                                    </IconMenu>
                                 }
                                 className="qa-GroupsDrawer-groupItem"
                             />
@@ -191,6 +212,7 @@ GroupsDrawer.propTypes = {
     onSharedInfoClick: PropTypes.func.isRequired,
     onLeaveGroupClick: PropTypes.func.isRequired,
     onDeleteGroupClick: PropTypes.func.isRequired,
+    onRenameGroupClick: PropTypes.func.isRequired,
 };
 
 export default GroupsDrawer;

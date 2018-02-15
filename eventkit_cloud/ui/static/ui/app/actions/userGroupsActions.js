@@ -72,45 +72,78 @@ export function createGroup(groupName, members) {
     };
 }
 
-export function addGroupUsers(group, users) {
+export function updateGroup(groupId, newName = '', members = [], administrators = []) {
     return (dispatch) => {
-        dispatch({ type: types.ADDING_GROUP_USERS });
+        dispatch({ type: types.UPDATING_GROUP });
 
         const csrftoken = cookie.load('csrftoken');
 
-        const members = [...group.members, ...users];
+        const data = {
+            members,
+            administrators,
+        };
+
+        if (newName) {
+            data.name = newName;
+        }
 
         return axios({
-            url: `/api/groups/${group.id}`,
+            url: `/api/groups/${groupId}`,
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ members }),
+            data: JSON.stringify(data),
         }).then(() => {
-            dispatch({ type: types.ADDED_GROUP_USERS });
+            dispatch({ type: types.UPDATED_GROUP });
         }).catch((error) => {
-            dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
+            dispatch({ type: types.UPDATE_GROUP_ERROR, error: error.response.data });
         });
     };
 }
 
-export function removeGroupUsers(group, users) {
-    return (dispatch) => {
-        dispatch({ type: types.REMOVING_GROUP_USERS });
+// export function addGroupUsers(group, addedMembers, addedAdministrators) {
+//     return (dispatch) => {
+//         dispatch({ type: types.ADDING_GROUP_USERS });
 
-        const csrftoken = cookie.load('csrftoken');
+//         const csrftoken = cookie.load('csrftoken');
 
-        const members = group.members.filter(member => (!users.includes(member)));
+//         const members = [...group.members, ...addedMembers];
+//         const administrators = [...group.administrators, ...addedAdministrators];
 
-        return axios({
-            url: `/api/groups/${group.id}`,
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ members }),
-        }).then(() => {
-            dispatch({ type: types.REMOVED_GROUP_USERS });
-        }).catch((error) => {
-            dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
-        });
-    };
-}
+//         return axios({
+//             url: `/api/groups/${group.id}`,
+//             method: 'POST',
+//             headers: { 'X-CSRFToken': csrftoken },
+//             data: JSON.stringify({ members, administrators }),
+//         }).then(() => {
+//             dispatch({ type: types.ADDED_GROUP_USERS });
+//         }).catch((error) => {
+//             dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
+//         });
+//     };
+// }
+
+// export function removeGroupUsers(group, removedMembers, removedAdministrators) {
+//     return (dispatch) => {
+//         dispatch({ type: types.REMOVING_GROUP_USERS });
+
+//         const csrftoken = cookie.load('csrftoken');
+
+//         // remove only members who are in the passed in members array
+//         const members = group.members.filter(member => (!removedMembers.includes(member)));
+
+//         // remove only administrators who are in the passed in admin array
+//         const administrators = group.administrators.filter(admin => (!removedAdministrators.includes(admin)));
+
+//         return axios({
+//             url: `/api/groups/${group.id}`,
+//             method: 'POST',
+//             headers: { 'X-CSRFToken': csrftoken },
+//             data: JSON.stringify({ members, administrators }),
+//         }).then(() => {
+//             dispatch({ type: types.REMOVED_GROUP_USERS });
+//         }).catch((error) => {
+//             dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
+//         });
+//     };
+// }
 

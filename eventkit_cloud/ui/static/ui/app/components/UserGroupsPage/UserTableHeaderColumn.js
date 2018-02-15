@@ -1,9 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import { TableHeaderColumn } from 'material-ui/Table';
 import DropDownMenu from 'material-ui/DropDownMenu';
+import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
-import MoreHorizIcon from 'material-ui/svg-icons/navigation/more-horiz';
+import Group from 'material-ui/svg-icons/social/group';
+import Sort from 'material-ui/svg-icons/content/sort';
+import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 
 export class UserTableHeaderColumn extends Component {
@@ -53,7 +56,6 @@ export class UserTableHeaderColumn extends Component {
             dropDown: {
                 height: '24px',
                 fontSize: '14px',
-                margin: '0px 12px',
                 float: 'right',
             },
             dropDownLabel: {
@@ -92,7 +94,8 @@ export class UserTableHeaderColumn extends Component {
                             onClick={this.handleOpen}
                             className="qa-UserTableHeaderColumn-IconButton-options"
                         >
-                            <MoreHorizIcon />
+                            <Group />
+                            <DropDown />
                         </IconButton>
                         :
                         null
@@ -110,15 +113,13 @@ export class UserTableHeaderColumn extends Component {
                         groupsLoading={this.props.groupsLoading}
                         className="qa-UserTableHeaderColumn-GroupsDropDownMenu"
                     />
-                    <DropDownMenu
+                    <IconMenu
                         value={this.props.sortValue}
                         onChange={this.props.handleSortChange}
+                        iconButtonElement={<IconButton style={{ padding: '0px', height: '24px' }}><Sort /><DropDown /></IconButton>}
                         style={styles.dropDown}
-                        labelStyle={styles.dropDownLabel}
-                        iconStyle={styles.dropDownIcon}
-                        underlineStyle={{ display: 'none' }}
-                        menuItemStyle={{ color: '#707274' }}
-                        selectedMenuItemStyle={{ color: '#4598bf' }}
+                        menuItemStyle={{ color: '#707274', fontSize: '14px' }}
+                        selectedMenuItemStyle={{ color: '#4598bf', fontSize: '14px' }}
                         anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                         className="qa-UserTableHeaderColumn-DropDownMenu-sort"
@@ -143,7 +144,7 @@ export class UserTableHeaderColumn extends Component {
                             primaryText="Oldest"
                             className="qa-UserTableHeaderColumn-MenuItem-sortOldest"
                         />
-                    </DropDownMenu>
+                    </IconMenu>
                 </div>
             </TableHeaderColumn>
         );

@@ -15,15 +15,114 @@ export function getGroups(params) {
             { username: 'U2', name: 'User 2', email: 'user2@email.com', groups: ['id-1', 'id-2', 'id-3', 'id-6', 'id-8', 'id-9', 'id-14', 'id-16', 'id-20'] },
             { username: 'U3', name: 'User 3', email: 'user3@email.com', groups: ['id-1', 'id-2', 'id-4', 'id-7', 'id-9', 'id-11', 'id-13', 'id-17', 'id-20'] },
         ];
-        const fakeGroups = [];
-        for (let i = 0; i < 21; i++) {
-            fakeGroups.push({
-                name: `Group ${i}`,
-                administrators: i === 18 ? [fakeUsers[1].username] : [fakeUsers[0].username],
-                id: `id-${i}`,
-                members: fakeUsers.filter(user => user.groups.includes(`id-${i}`)).map(user => (user.username)),
-            });
-        }
+        const fakeGroups = [
+            {
+                name: 'Group 0',
+                administrators: ['admin', 'JohnD'],
+                id: 'id-0',
+                members: ['JaneD', 'JohnD', 'JoeS', 'U1'],
+            }, {
+                name: 'Group 1',
+                administrators: ['admin', 'JoeS', 'U2'],
+                id: 'id-1',
+                members: ['JoeS', 'U2', 'U3'],
+            }, {
+                name: 'Group 2',
+                administrators: ['admin'],
+                id: 'id-2',
+                members: ['JaneD', 'JohnD', 'JoeS', 'U1', 'U2', 'U3'],
+            }, {
+                name: 'Group 3',
+                administrators: ['admin'],
+                id: 'id-3',
+                members: ['JaneD', 'JohnD', 'JoeS', 'U1', 'U2'],
+            }, {
+                name: 'Group 4',
+                administrators: ['admin'],
+                id: 'id-4',
+                members: ['U3'],
+            }, {
+                name: 'Group 5',
+                administrators: ['admin'],
+                id: 'id-5',
+                members: ['JoeS'],
+            }, {
+                name: 'Group 6',
+                administrators: ['admin'],
+                id: 'id-6',
+                members: ['JaneD', 'JohnD', 'U1', 'U2'],
+            }, {
+                name: 'Group 7',
+                administrators: ['admin'],
+                id: 'id-7',
+                members: ['JohnD', 'U3'],
+            }, {
+                name: 'Group 8',
+                administrators: ['admin'],
+                id: 'id-8',
+                members: ['JaneD', 'JoeS', 'U1', 'U2'],
+            }, {
+                name: 'Group 9',
+                administrators: ['admin'],
+                id: 'id-9',
+                members: ['JoeS', 'U2', 'U3'],
+            }, {
+                name: 'Group 10',
+                administrators: ['admin'],
+                id: 'id-10',
+                members: ['JaneD', 'U1'],
+            }, {
+                name: 'Group 11',
+                administrators: ['admin'],
+                id: 'id-11',
+                members: ['JohnD', 'U3'],
+            }, {
+                name: 'Group 12',
+                administrators: ['admin'],
+                id: 'id-12',
+                members: ['JoeS'],
+            }, {
+                name: 'Group 13',
+                administrators: ['admin'],
+                id: 'id-13',
+                members: ['JohnD', 'JoeS', 'U3'],
+            }, {
+                name: 'Group 14',
+                administrators: ['admin'],
+                id: 'id-14',
+                members: ['JaneD', 'JoeS', 'U1', 'U2'],
+            }, {
+                name: 'Group 15',
+                administrators: ['admin'],
+                id: 'id-15',
+                members: [],
+            }, {
+                name: 'Group 16',
+                administrators: ['admin'],
+                id: 'id-16',
+                members: ['JaneD', 'U1', 'U2'],
+            }, {
+                name: 'Group 17',
+                administrators: ['admin'],
+                id: 'id-17',
+                members: ['JohnD', 'U3'],
+            }, {
+                name: 'Group 18',
+                administrators: ['JaneD'],
+                id: 'id-18',
+                members: ['admin', 'JoeS'],
+            }, {
+                name: 'Group 19',
+                administrators: ['admin'],
+                id: 'id-19',
+                members: ['JohnD', 'JoeS'],
+            }, {
+                name: 'Group 20',
+                administrators: ['admin'],
+                id: 'id-20',
+                members: ['JaneD', 'JoeS', 'U1', 'U2', 'U3'],
+            },
+        ];
 
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
         mock.onGet('/api/groups').reply(200, fakeGroups);
@@ -87,7 +186,7 @@ export function deleteGroup(groupId) {
     };
 }
 
-export function createGroup(groupName, members) {
+export function createGroup(groupName, members = [], administrators = []) {
     return (dispatch) => {
         //////// JUST FOR MOCKING THE API /////////////
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
@@ -102,7 +201,7 @@ export function createGroup(groupName, members) {
             url: '/api/groups',
             method: 'PUT',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ name: groupName, members }),
+            data: JSON.stringify({ name: groupName, members, administrators }),
         }).then(() => {
             mock.restore(); //// JUST FOR MOCKING
             dispatch({ type: types.CREATED_GROUP });
@@ -113,57 +212,93 @@ export function createGroup(groupName, members) {
     };
 }
 
-export function addGroupUsers(group, users) {
+export function updateGroup(groupId, newName = '', members = [], administrators = []) {
     return (dispatch) => {
         //////// JUST FOR MOCKING THE API /////////////
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
-        mock.onPost(`/api/groups/${group.id}`).reply(200);
+        mock.onPost(`/api/groups/${groupId}`).reply(200);
         //////////////////////////////////////////////////////////////
-        dispatch({ type: types.ADDING_GROUP_USERS });
+        dispatch({ type: types.UPDATING_GROUP });
 
         const csrftoken = cookie.load('csrftoken');
 
-        const members = [...group.members, ...users];
+        const data = {
+            members,
+            administrators,
+        };
+
+        if (newName) {
+            data.name = newName;
+        }
 
         return axios({
-            url: `/api/groups/${group.id}`,
+            url: `/api/groups/${groupId}`,
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ members }),
+            data: JSON.stringify(data),
         }).then(() => {
-            mock.restore(); ///// JUST FOR MOCKING
-            dispatch({ type: types.ADDED_GROUP_USERS });
+            mock.restore(); //// JUST FOR MOCKING
+            dispatch({ type: types.UPDATED_GROUP });
         }).catch((error) => {
             mock.restore(); //// JUST FOR MOCKING
-            dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
+            dispatch({ type: types.UPDATE_GROUP_ERROR, error: error.response.data });
         });
     };
 }
 
-export function removeGroupUsers(group, users) {
-    return (dispatch) => {
-        //////// JUST FOR MOCKING THE API /////////////
-        const mock = new MockAdapter(axios, { delayResponse: 3000 });
-        mock.onPost(`/api/groups/${group.id}`).reply(200);
-        //////////////////////////////////////////////////////////////
-        dispatch({ type: types.REMOVING_GROUP_USERS });
+// export function addGroupUsers(group, addedMembers = [], addedAdministrators = []) {
+//     return (dispatch) => {
+//         //////// JUST FOR MOCKING THE API /////////////
+//         const mock = new MockAdapter(axios, { delayResponse: 3000 });
+//         mock.onPost(`/api/groups/${group.id}`).reply(200);
+//         //////////////////////////////////////////////////////////////
+//         dispatch({ type: types.ADDING_GROUP_USERS });
 
-        const csrftoken = cookie.load('csrftoken');
+//         const csrftoken = cookie.load('csrftoken');
 
-        const members = group.members.filter(member => (!users.includes(member)));
+//         const members = [...group.members, ...addedMembers];
+//         const administrators = [...group.administrators, ...addedAdministrators];
 
-        return axios({
-            url: `/api/groups/${group.id}`,
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ members }),
-        }).then(() => {
-            mock.restore(); ///// JUST FOR MOCKING
-            dispatch({ type: types.REMOVED_GROUP_USERS });
-        }).catch((error) => {
-            mock.restore(); ///// JUST FOR MOCKING
-            dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
-        });
-    };
-}
+//         return axios({
+//             url: `/api/groups/${group.id}`,
+//             method: 'POST',
+//             headers: { 'X-CSRFToken': csrftoken },
+//             data: JSON.stringify({ members, administrators }),
+//         }).then(() => {
+//             mock.restore(); ///// JUST FOR MOCKING
+//             dispatch({ type: types.ADDED_GROUP_USERS });
+//         }).catch((error) => {
+//             mock.restore(); //// JUST FOR MOCKING
+//             dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
+//         });
+//     };
+// }
+
+// export function removeGroupUsers(group, removedMembers = [], removedAdministrators = []) {
+//     return (dispatch) => {
+//         //////// JUST FOR MOCKING THE API /////////////
+//         const mock = new MockAdapter(axios, { delayResponse: 3000 });
+//         mock.onPost(`/api/groups/${group.id}`).reply(200);
+//         //////////////////////////////////////////////////////////////
+//         dispatch({ type: types.REMOVING_GROUP_USERS });
+
+//         const csrftoken = cookie.load('csrftoken');
+
+//         const members = group.members.filter(member => (!removedMembers.includes(member)));
+//         const administrators = group.administrators.filter(admin => (!removedAdministrators.includes(admin)));
+
+//         return axios({
+//             url: `/api/groups/${group.id}`,
+//             method: 'POST',
+//             headers: { 'X-CSRFToken': csrftoken },
+//             data: JSON.stringify({ members, administrators }),
+//         }).then(() => {
+//             mock.restore(); ///// JUST FOR MOCKING
+//             dispatch({ type: types.REMOVED_GROUP_USERS });
+//         }).catch((error) => {
+//             mock.restore(); ///// JUST FOR MOCKING
+//             dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
+//         });
+//     };
+// }
 
