@@ -989,6 +989,39 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = UserDataSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @list_route(methods=['post'])
+    def members(self, request, *args, **kwargs):
+        """
+             Member list from list of groups
+
+        parameters
+         - groups: [32,34]
+
+            request: the http request.
+        Returns:
+              Users as json
+        """
+
+        targets= request.data["groups"]
+        targetnames = []
+        payload = []
+        logger.info(request.data)
+
+
+        groups = Group.objects.filter(id__in=targets)
+
+        for group in groups:
+            serializer = GroupSerializer(group)
+            for username in serializer.get_members(group):
+                if  not username in targetnames: targetnames.append(username)
+
+
+        users = User.objects.filter(username__in=targetnames).all()
+        for u in users:
+            serializer = UserDataSerializer(u)
+            payload.append(serializer.data)
+
+        return Response( payload , status=status.HTTP_200_OK)
 
 class GroupViewSet(viewsets.ModelViewSet):
     """
@@ -1048,15 +1081,12 @@ class GroupViewSet(viewsets.ModelViewSet):
         """
         response = super(GroupViewSet, self).create(request, *args, **kwargs)
         group_id = response.data["id"]
-        logger.info("Group id %s" % group_id)
         user  = User.objects.all().filter(username=request.user.username)[0]
         group = Group.objects.filter(id=group_id)[0]
         group.user_set.add(user)
         groupadmin = GroupPermission.objects.create(user=user,group=group, permission='ADMIN')
         groupadmin.save()
-        logger.info( "Group admin : %s" % groupadmin)
         groupmember = GroupPermission.objects.create(user=user,group=group, permission='MEMBER')
-        logger.info( "Group member : %s" % groupmember)
 
         if "members" in request.data:
             for member  in request.data["members"]:
@@ -1118,15 +1148,11 @@ class GroupViewSet(viewsets.ModelViewSet):
             user_ids = [perm.user.id  for perm in GroupPermission.objects.filter(group=group).filter(permission=permission)]
             currentusers = [user.username for user in User.objects.filter(id__in=user_ids).all()]
             targetusers  = request.data[permissionlabel]
-            logger.info("..... %s" % permission)
-            logger.info("current %s" % currentusers)
-            logger.info("targetusers %s" % targetusers)
 
 
             ## Add new users for this permission level
 
             newusers = list(set(targetusers)-set(currentusers))
-            logger.info("add these %s" % newusers)
             users = User.objects.filter(username__in=newusers).all()
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
@@ -1134,7 +1160,6 @@ class GroupViewSet(viewsets.ModelViewSet):
             ## Remove existing users for this permission level
 
             removedusers = list(set(currentusers) - set(targetusers))
-            logger.info("remove these %s" % removedusers)
             users = User.objects.filter(username__in=removedusers).all()
             for user in users:
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
@@ -1143,34 +1168,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response("OK", status=status.HTTP_200_OK)
 
 
-    @list_route(methods=['post'])
-    def members(self, request, *args, **kwargs):
-        '''
-        Get  a de-duplicated list of all members in a list of groups
-
-        Sample input:
-
-                 {
-                    "groups" : [52,57]
-                 }
-
-        '''
-        targetnames= []
-
-        groups = Group.objects.filter(id__in=request.data["groups"])
-        for group in groups:
-            serializer = GroupSerializer(group)
-            for username in serializer.get_members():
-                if  not username in targetnames: targetnames.append(username)
-
-
-        payload = []
-        users = User.objects.filter(username__in=targetnames).all()
-        for u in users:
-            serializer = UserDataSerializer(u)
-            logger.info(serializer.data)
-            payload.append(serializer.data)
-        return Response( payload , status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):

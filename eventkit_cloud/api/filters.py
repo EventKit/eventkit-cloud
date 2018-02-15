@@ -10,6 +10,7 @@ from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 
 from django.contrib.auth.models import User,Group
+from ..core.models import GroupPermission
 
 from rest_framework.filters import BaseFilterBackend
 
@@ -78,16 +79,17 @@ class UserFilter(django_filters.FilterSet):
 
     class Meta:
             model = User
-            fields = []
+            fields = [ "min_date", "max_date", "started_at"]
 
     @staticmethod
     def group_filter( queryset, fieldname, value):
 
         targetusers = []
 
-        groups = Group.objects.filter(id__in=value.split(","))
-        for group in groups:
-            for member in group.user_set.all():
-                if not member.id in targetusers: targetusers.append(member.id)
+
+        perms  = GroupPermission.objects.filter(group__in=value.split(","))
+        for perm in perms:
+            user = perm.user
+            if not user.id in targetusers: targetusers.append(user.id)
 
         return queryset.filter(id__in=targetusers)
