@@ -1,5 +1,5 @@
 import detector from 'detect-browser';
-import _ from 'lodash'
+import forEach from 'lodash/forEach';
 
 export function isBrowserValid() {
     const browser = detector.detect();
