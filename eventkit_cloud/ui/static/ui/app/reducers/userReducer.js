@@ -8,10 +8,15 @@ export const initialState = {
   error: null,
   autoLogoutAt: null,
   autoLogoutWarningAt: null,
-  viewedJobs: [],
+  viewedJobs: {
+    fetching: false,
+    fetched: false,
+    jobs: [],
+    error: null,
+  },
 }
 
-export default (state = initialState, { type, payload, error }) => {
+export default (state = initialState, { type, payload, error, cancelSource }) => {
   switch (type) {
     case types.USER_LOGGING_IN:
       return { ...state, isLoading: true }
@@ -31,13 +36,12 @@ export default (state = initialState, { type, payload, error }) => {
       return { ...state, patching: false, error: error}
     case types.USER_ACTIVE:
       return { ...state, ...payload }
-    case types.VIEWED_JOB:
-      return Object.assign({}, state, {
-        viewedJobs: [
-          ...state.viewedJobs,
-          payload.job.uid,
-        ]
-      });
+    case types.FETCHING_VIEWED_JOBS:
+      return { ...state, viewedJobs: { ...state.viewedJobs, fetching: true, fetched: false, error: null, cancelSource: cancelSource } };
+    case types.RECEIVED_VIEWED_JOBS:
+      return { ...state, viewedJobs: { ...state.viewedJobs, fetching: false, fetched: true, jobs: payload.jobs, error: error, cancelSource: null } };
+    case types.FETCH_VIEWED_JOBS_ERROR:
+      return { ...state, viewedJobs: { ...state.viewedJobs, fetching: false, fetched: false, jobs: [], error: error, cancelSource: null } };
     default:
       return state
   }

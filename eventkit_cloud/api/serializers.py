@@ -27,8 +27,8 @@ from eventkit_cloud.jobs.models import (
     DataProvider,
     DataProviderTask,
     License,
-    UserLicense
-)
+    UserLicense,
+    UserJobActivity)
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -659,3 +659,19 @@ class JobSerializer(serializers.Serializer):
     def get_owner(obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+
+class UserJobActivitySerializer(serializers.ModelSerializer):
+    job = ListJobSerializer()
+    last_export_run = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserJobActivity
+        fields = ('job', 'last_export_run', 'type', 'created_at')
+
+    def get_last_export_run(self, obj):
+        if obj.job.last_export_run:
+            serializer = ExportRunSerializer(obj.job.last_export_run, context={'request': self.context['request']})
+            return serializer.data
+        else:
+            return None

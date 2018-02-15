@@ -210,6 +210,8 @@ def create_run(job_uid, user=None):
             # add the export run to the database
             run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
+            job.last_export_run = run
+            job.save()
             run_uid = run.uid
             logger.debug('Saved run with id: {0}'.format(str(run_uid)))
             return run_uid

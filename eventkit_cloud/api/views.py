@@ -14,8 +14,8 @@ from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.auth.models import User
 
 from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
-)
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License,
+    UserJobActivity)
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from ..utils.provider_check import get_provider_checker
@@ -30,8 +30,7 @@ from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    DataProviderSerializer, LicenseSerializer, UserDataSerializer
-)
+    DataProviderSerializer, LicenseSerializer, UserDataSerializer, UserJobActivitySerializer)
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportRunFilter, JobFilter
@@ -974,6 +973,50 @@ class UserDataViewSet(viewsets.GenericViewSet):
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserJobActivityViewSet(viewsets.ModelViewSet):
+    serializer_class = UserJobActivitySerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        activity_type = self.request.query_params.get('activity', '').lower()
+        if activity_type == 'viewed':
+            activity_ids = UserJobActivity.objects.filter(
+                user=self.request.user,
+                type=UserJobActivity.VIEWED,
+                job__last_export_run__isnull=False,
+                job__last_export_run__deleted=False,
+            ).order_by('job', '-created_at').distinct('job').values_list('id', flat=True)[:10]
+
+            return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
+        else:
+            raise exceptions.ValidationError('User job history not supported for activity %s' % activity_type)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = UserJobActivitySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        activity_type = request.query_params.get('activity', '').lower()
+        job_uid = request.data.get('job_uid')
+
+        # Save the
+        job = Job.objects.get(uid=job_uid)
+        if activity_type == 'viewed':
+            # Don't save consecutive views of the same job.
+            queryset = self.get_queryset()
+            if queryset.count() > 0:
+                last_job_viewed = queryset.latest('created_at')
+                if str(last_job_viewed.job.uid) == job_uid:
+                    return Response({'success': True, 'ignored': True}, content_type='application/json',status=status.HTTP_200_OK)
+
+            UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
+        else:
+            raise exceptions.ValidationError('User job history not supported for activity %s' % activity_type)
+
+        return Response({'success': True}, content_type='application/json', status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):

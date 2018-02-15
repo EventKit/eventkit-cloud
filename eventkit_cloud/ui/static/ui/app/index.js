@@ -13,6 +13,7 @@ import Loading from './components/auth/Loading';
 import Logout from './containers/logoutContainer';
 import About from './components/About/About';
 import Account from './components/AccountPage/Account';
+import DashboardPage from './components/DashboardPage/DashboardPage';
 import DataPackPage from './components/DataPackPage/DataPackPage';
 import CreateExport from './components/CreateDataPack/CreateExport';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
@@ -77,6 +78,10 @@ render(
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
                 <Route path="/logout" component={Logout} />
+                <Route
+                    path="/dashboard"
+                    component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}
+                />
                 <Route
                     path="/exports"
                     component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}

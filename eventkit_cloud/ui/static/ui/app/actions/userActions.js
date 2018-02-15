@@ -101,23 +101,51 @@ export const userActive = () => (dispatch) => {
     });
 };
 
-export const viewedJob = (job) => (dispatch) => {
-    // Add viewed datapack to history locally.
+export const viewedJob = (jobUid) => (dispatch) => {
     dispatch({
         type: actions.VIEWED_JOB,
         payload: {
-            job: job
+            jobUid: jobUid
         }
     });
 
     return axios({
-        url: '/viewed_job',
+        url: '/api/user/activity/jobs?activity=viewed',
         method: 'POST',
-        data: {job_uid: job.uid},
+        data: {job_uid: jobUid},
         headers: {'X-CSRFToken': cookie.load('csrftoken')}
-    }).then((response) => {
-        console.log('response', response);
     }).catch((error) => {
         console.error(error.message);
+    });
+};
+
+export const getViewedJobs = () => (dispatch) => {
+    const cancelSource = axios.CancelToken.source();
+
+    dispatch({
+        type: actions.FETCHING_VIEWED_JOBS,
+        cancelSource: cancelSource,
+    });
+
+    return axios({
+        url: '/api/user/activity/jobs?activity=viewed',
+        method: 'GET',
+        cancelToken: cancelSource.token,
+    }).then((response) => {
+        dispatch({
+            type: actions.RECEIVED_VIEWED_JOBS,
+            payload: {
+                jobs: response.data,
+            },
+        });
+    }).catch((error) => {
+        if (axios.isCancel(error)) {
+            console.log(error.message);
+        } else {
+            dispatch({
+                type: actions.FETCH_VIEWED_JOBS_ERROR,
+                error: error.response.data,
+            });
+        }
     });
 };

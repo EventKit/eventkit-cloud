@@ -13,6 +13,7 @@ require ('../fonts/index.css');
 import Banner from './Banner'
 import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
 import ContentAddBox from 'material-ui/svg-icons/content/add-box';
+import Dashboard from 'material-ui/svg-icons/action/dashboard';
 import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
@@ -369,6 +370,19 @@ export class Application extends Component {
                         docked={true}
                         open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
+                        <MenuItem className={"qa-Application-MenuItem-dashboard"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <IndexLink
+                                className={"qa-Application-Link-dashboard"}
+                                style={{...styles.link, backgroundColor: this.state.hovered == 'dashboard' ? '#161e2e': ''}}
+                                activeStyle={styles.activeLink}
+                                to="/dashboard"
+                                onMouseEnter={() => this.handleMouseOver('dashboard')}
+                                onMouseLeave={this.handleMouseOut}
+                            >
+                                <Dashboard style={styles.icon}/>
+                                Dashboard
+                            </IndexLink>
+                        </MenuItem>
                         <MenuItem className={"qa-Application-MenuItem-exports"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <IndexLink 
                                 className={"qa-Application-Link-exports"} 

@@ -32,6 +32,7 @@ export class StatusDownload extends React.Component {
 
     componentDidMount() {
         this.props.getDatacartDetails(this.props.params.jobuid);
+        this.props.viewedJob(this.props.params.jobuid);
         this.props.getProviders();
         this.startTimer();
         const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
@@ -96,8 +97,6 @@ export class StatusDownload extends React.Component {
                         }, 270000);
                     }
                 }
-
-                this.props.viewedJob(nextProps.datacartDetails.data[0].job);
 
                 if (this.state.isLoading) {
                     this.setState({ isLoading: false });
@@ -319,8 +318,8 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => {
             dispatch(getProviders());
         },
-        viewedJob: (job) => {
-            dispatch(viewedJob(job));
+        viewedJob: (jobUid) => {
+            dispatch(viewedJob(jobUid));
         },
     };
 }

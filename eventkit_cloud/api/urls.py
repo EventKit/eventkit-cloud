@@ -8,7 +8,7 @@ from .views import (
     ExportFormatViewSet, ExportRunViewSet,
     ExportTaskViewSet, JobViewSet, RegionMaskViewSet,
     RegionViewSet, ExportProviderViewSet, SwaggerSchemaView,
-    DataProviderTaskViewSet, UserDataViewSet, LicenseViewSet)
+    DataProviderTaskViewSet, UserDataViewSet, LicenseViewSet, UserJobActivityViewSet)
 
 
 router = DefaultRouter(trailing_slash=False)
@@ -22,6 +22,7 @@ router.register(r'tasks', ExportTaskViewSet, base_name='tasks')
 router.register(r'regions', RegionViewSet, base_name='regions')
 router.register(r'maskregions', RegionMaskViewSet, base_name='mask')
 router.register(r'user', UserDataViewSet, base_name='user')
+router.register(r'user/activity/jobs', UserJobActivityViewSet, base_name='user_job_activity')
 
 schema_view = SwaggerSchemaView.as_view()
 
