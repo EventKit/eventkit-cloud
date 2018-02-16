@@ -85,8 +85,6 @@ class UserFilter(django_filters.FilterSet):
     def group_filter( queryset, fieldname, value):
 
         targetusers = []
-
-
         perms  = GroupPermission.objects.filter(group__in=value.split(","))
         for perm in perms:
             user = perm.user

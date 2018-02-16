@@ -290,6 +290,13 @@ class ExportRunSerializer(serializers.ModelSerializer):
         uri[5] = None  # query
         return urlunparse(uri)
 
+class GroupPermissionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GroupPermission
+        fields = ( 'group', 'user', 'permission')
+
+
 class GroupSerializer(serializers.ModelSerializer):
 
     members = serializers.SerializerMethodField()

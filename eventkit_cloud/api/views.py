@@ -980,33 +980,18 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-    def retrieve(self, request, username=None):
-        """
-             GET a user by username
-        """
-        queryset = self.get_queryset().get(username=username)
-        serializer = UserDataSerializer(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @list_route(methods=['post'])
+    @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):
         """
-             Member list from list of groups
+             Member list from list of group ids
 
-        parameters
-         - groups: [32,34]
-
-            request: the http request.
-        Returns:
-              Users as json
+             Example :  [ 32, 35, 36 ]
+             
         """
 
-        targets= request.data["groups"]
+        targets= request.data
         targetnames = []
         payload = []
-        logger.info(request.data)
-
 
         groups = Group.objects.filter(id__in=targets)
 
@@ -1022,6 +1007,15 @@ class UserDataViewSet(viewsets.GenericViewSet):
             payload.append(serializer.data)
 
         return Response( payload , status=status.HTTP_200_OK)
+
+    def retrieve(self, request, username=None):
+        """
+             GET a user by username
+        """
+        queryset = self.get_queryset().get(username=username)
+        serializer = UserDataSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class GroupViewSet(viewsets.ModelViewSet):
     """
@@ -1262,9 +1256,9 @@ class SwaggerSchemaView(views.APIView):
         generator.get_schema(request=request)
         links = generator.get_links(request=request)
         # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('user', {}).get('partial_update')
+        partial_update_link = links.get('users', {}).get('partial_update')
         if partial_update_link:
-            links['user']['partial_update'] = coreapi.Link(
+            links['users']['partial_update'] = coreapi.Link(
                 url=partial_update_link.url,
                 action=partial_update_link.action,
                 fields=[
@@ -1280,6 +1274,22 @@ class SwaggerSchemaView(views.APIView):
                 ],
                 description=partial_update_link.description
             )
+
+        members_link = links.get('users', {}).get('members')['create']
+        if members_link:
+            links['users']['members'] = coreapi.Link(
+                url=members_link.url,
+                action=members_link.action,
+                fields=[
+                    (coreapi.Field(
+                        name='data',
+                        required=True,
+                        location='form',
+                        )),
+                ],
+                description=members_link.description
+            )
+
         schema = coreapi.Document(
             title='EventKit API',
             url='/api/docs',
