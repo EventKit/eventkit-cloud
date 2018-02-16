@@ -72,45 +72,29 @@ export function createGroup(groupName, members) {
     };
 }
 
-export function addGroupUsers(group, users) {
+export function updateGroup(groupId, options = {}) {
     return (dispatch) => {
-        dispatch({ type: types.ADDING_GROUP_USERS });
+        dispatch({ type: types.UPDATING_GROUP });
 
         const csrftoken = cookie.load('csrftoken');
 
-        const members = [...group.members, ...users];
+        const data = {};
+
+        if (options.name) data.name = options.name;
+        if (options.members) data.members = options.members;
+        if (options.administrators) data.administrators = options.administrators;
+
+        console.log(options);
 
         return axios({
-            url: `/api/groups/${group.id}`,
+            url: `/api/groups/${groupId}`,
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ members }),
+            data: JSON.stringify(data),
         }).then(() => {
-            dispatch({ type: types.ADDED_GROUP_USERS });
+            dispatch({ type: types.UPDATED_GROUP });
         }).catch((error) => {
-            dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
+            dispatch({ type: types.UPDATE_GROUP_ERROR, error: error.response.data });
         });
     };
 }
-
-export function removeGroupUsers(group, users) {
-    return (dispatch) => {
-        dispatch({ type: types.REMOVING_GROUP_USERS });
-
-        const csrftoken = cookie.load('csrftoken');
-
-        const members = group.members.filter(member => (!users.includes(member)));
-
-        return axios({
-            url: `/api/groups/${group.id}`,
-            method: 'POST',
-            headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ members }),
-        }).then(() => {
-            dispatch({ type: types.REMOVED_GROUP_USERS });
-        }).catch((error) => {
-            dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
-        });
-    };
-}
-
