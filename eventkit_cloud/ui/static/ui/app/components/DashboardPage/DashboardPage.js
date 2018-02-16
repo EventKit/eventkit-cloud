@@ -1,5 +1,5 @@
 import React, {PropTypes} from 'react';
-import {deleteRuns} from "../../actions/DataPackPageActions";
+import {deleteRuns} from "../../actions/dataPackActions";
 import {connect} from "react-redux";
 import {getViewedJobs} from "../../actions/userActions";
 import CustomScrollbar from "../CustomScrollbar";

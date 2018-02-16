@@ -4,7 +4,6 @@ import {mount, shallow} from 'enzyme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 
@@ -16,7 +15,6 @@ describe('DataPackOwnerSort component', () => {
             owner: 'test_user'
         }
     }
-    injectTapEventPlugin();
     const muiTheme =  getMuiTheme();
 
     it('should render a dropdown menu', () => {

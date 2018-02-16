@@ -1,7 +1,7 @@
 import types from '../actions/actionTypes';
 import initialState from './initialState';
 
-export function DataPackPageReducer(state = initialState.runsList, action) {
+export function dataPackReducer(state = initialState.runsList, action) {
     switch(action.type) {
         case types.FETCHING_RUNS:
             return { ...state, fetching: true, fetched: false, error: null, cancelSource: action.cancelSource };

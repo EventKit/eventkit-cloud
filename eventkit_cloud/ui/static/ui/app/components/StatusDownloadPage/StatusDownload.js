@@ -1,14 +1,15 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
-import TimerMixin from 'react-timer-mixin';
-import reactMixin from 'react-mixin';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
-import { getDatacartDetails, deleteRun, rerunExport, clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission } from '../../actions/statusDownloadActions';
+import {
+    getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
+    clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission,
+} from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import { viewedJob } from '../../actions/userActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
@@ -22,10 +23,7 @@ export class StatusDownload extends React.Component {
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.state = {
-            datacartDetails: [],
             isLoading: true,
-            maxDays: null,
-            zipFileProp: null,
             error: null,
         };
     }
@@ -35,81 +33,66 @@ export class StatusDownload extends React.Component {
         this.props.viewedJob(this.props.params.jobuid);
         this.props.getProviders();
         this.startTimer();
-        const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
-        this.setState({ maxDays });
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.runDeletion.deleted !== this.props.runDeletion.deleted) {
-            if (nextProps.runDeletion.deleted) {
-                browserHistory.push('/exports');
-            }
+        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
+            browserHistory.push('/exports');
         }
         if (nextProps.exportReRun.error && !this.props.exportReRun.error) {
             this.setState({ error: nextProps.exportReRun.error });
         }
-        if (nextProps.exportReRun.fetched !== this.props.exportReRun.fetched) {
-            if (nextProps.exportReRun.fetched === true) {
-                let datacartDetails = [];
-                datacartDetails[0] = nextProps.exportReRun.data;
-                this.setState({ datacartDetails });
-                this.startTimer();
-            }
+        if (nextProps.exportReRun.fetched && !this.props.exportReRun.fetched) {
+            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.startTimer();
         }
-        if (nextProps.updateExpiration.updated !== this.props.updateExpiration.updated) {
-            if (nextProps.updateExpiration.updated === true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-            }
+        if (nextProps.expirationState.updated && !this.props.expirationState.updated) {
+            this.props.getDatacartDetails(this.props.params.jobuid);
         }
-        if (nextProps.updatePermission.updated !== this.props.updatePermission.updated) {
-            if (nextProps.updatePermission.updated === true) {
-                this.props.getDatacartDetails(this.props.params.jobuid);
-            }
+        if (nextProps.permissionState.updated && !this.props.permissionState.updated) {
+            this.props.getDatacartDetails(this.props.params.jobuid);
         }
-        if (nextProps.datacartDetails.fetched !== this.props.datacartDetails.fetched) {
-            if (nextProps.datacartDetails.fetched === true) {
-                const datacartDetails = nextProps.datacartDetails.data;
-                this.setState({ datacartDetails, zipFileProp: nextProps.datacartDetails.data[0].zipfile_url });
+        if (nextProps.datacartDetails.fetched && !this.props.datacartDetails.fetched) {
+            const datacartDetails = nextProps.datacartDetails.data;
+            let clearTimer = 0;
+            if (nextProps.datacartDetails.data[0].zipfile_url == null) {
+                clearTimer += 1;
+            }
 
-                let clearTimer = 0;
-                if (nextProps.datacartDetails.data[0].zipfile_url == null) {
-                    clearTimer += 1;
-                }
-
-
-                // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
-                // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
-                // means that at least one task is not completed, so do not stop the timer
-                if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
-                    const providerTasks = datacartDetails[0].provider_tasks;
-                    providerTasks.forEach((tasks) => {
-                        tasks.tasks.forEach((task) => {
-                            if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {
-                                clearTimer += 1;
-                            }
-                        });
+            // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
+            // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
+            // means that at least one task is not completed, so do not stop the timer
+            if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
+                const providerTasks = datacartDetails[0].provider_tasks;
+                providerTasks.forEach((tasks) => {
+                    tasks.tasks.forEach((task) => {
+                        if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {
+                            clearTimer += 1;
+                        }
                     });
+                });
 
-                    if (clearTimer === 0) {
-                        TimerMixin.clearInterval(this.timer);
-                        this.timeout = setTimeout(() => {
-                            this.props.getDatacartDetails(this.props.params.jobuid);
-                        }, 270000);
-                    }
+                if (clearTimer === 0) {
+                    window.clearInterval(this.timer);
+                    this.timer = null;
+                    this.timeout = window.setTimeout(() => {
+                        this.props.getDatacartDetails(this.props.params.jobuid);
+                    }, 270000);
                 }
+            }
 
-                if (this.state.isLoading) {
-                    this.setState({ isLoading: false });
-                }
+            if (this.state.isLoading) {
+                this.setState({ isLoading: false });
             }
         }
     }
 
     componentWillUnmount() {
-        TimerMixin.clearInterval(this.timer);
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-        }
+        this.props.clearDataCartDetails();
+        window.clearInterval(this.timer);
+        this.timer = null;
+        window.clearTimeout(this.timeout);
+        this.timeout = null;
     }
 
     getMarginPadding() {
@@ -146,9 +129,9 @@ export class StatusDownload extends React.Component {
     }
 
     startTimer() {
-        this.timer = TimerMixin.setInterval(() => {
+        this.timer = window.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
-        }, 3000);
+        }, 5000);
     }
 
     clearError() {
@@ -221,19 +204,19 @@ export class StatusDownload extends React.Component {
                                     :
                                     null
                                 }
-                                {this.state.datacartDetails.map(cartDetails => (
+                                {this.props.datacartDetails.data.map(cartDetails => (
                                     <DataCartDetails
                                         key={cartDetails.uid}
                                         cartDetails={cartDetails}
                                         onRunDelete={this.props.deleteRun}
                                         onUpdateExpiration={this.props.updateExpirationDate}
                                         onUpdatePermission={this.props.updatePermission}
+                                        permissionState={this.props.permissionState}
                                         onRunRerun={this.props.rerunExport}
                                         onClone={this.props.cloneExport}
                                         onProviderCancel={this.props.cancelProviderTask}
                                         providers={this.props.providers}
-                                        maxResetExpirationDays={this.state.maxDays}
-                                        zipFileProp={this.state.zipFileProp}
+                                        maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
                                     />
                                 ))}
@@ -254,18 +237,50 @@ export class StatusDownload extends React.Component {
     }
 }
 
+StatusDownload.contextTypes = {
+    config: PropTypes.object,
+};
+
+StatusDownload.propTypes = {
+    params: PropTypes.shape({ jobuid: PropTypes.string }).isRequired,
+    datacartDetails: PropTypes.object.isRequired,
+    getDatacartDetails: PropTypes.func.isRequired,
+    clearDataCartDetails: PropTypes.func.isRequired,
+    deleteRun: PropTypes.func.isRequired,
+    runDeletion: PropTypes.object.isRequired,
+    rerunExport: PropTypes.func.isRequired,
+    exportReRun: PropTypes.object.isRequired,
+    updateExpirationDate: PropTypes.func.isRequired,
+    updatePermission: PropTypes.func.isRequired,
+    permissionState: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.string,
+    }).isRequired,
+    expirationState: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.string,
+    }).isRequired,
+    cloneExport: PropTypes.func.isRequired,
+    cancelProviderTask: PropTypes.func.isRequired,
+    getProviders: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    user: PropTypes.object.isRequired,
+};
 
 function mapStateToProps(state) {
     return {
         jobuid: state.submitJob.jobuid,
         datacartDetails: state.datacartDetails,
         runDeletion: state.runDeletion,
-        updateExpiration: state.updateExpiration,
-        updatePermission: state.updatePermission,
+        expirationState: state.updateExpiration,
+        permissionState: state.updatePermission,
         exportReRun: state.exportReRun,
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
+        viewedJob: PropTypes.func.isRequired,
     };
 }
 
@@ -273,6 +288,9 @@ function mapDispatchToProps(dispatch) {
     return {
         getDatacartDetails: (jobuid) => {
             dispatch(getDatacartDetails(jobuid));
+        },
+        clearDataCartDetails: () => {
+            dispatch(clearDataCartDetails());
         },
         deleteRun: (jobuid) => {
             dispatch(deleteRun(jobuid));
@@ -301,6 +319,7 @@ function mapDispatchToProps(dispatch) {
                 title: 'Custom Polygon',
                 description: 'Box',
                 selectionType: 'box',
+                buffer: 0,
             }));
             dispatch(updateExportInfo({
                 exportName: cartDetails.job.name,
@@ -324,27 +343,6 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-StatusDownload.contextTypes = {
-    config: PropTypes.object,
-};
-
-StatusDownload.propTypes = {
-    datacartDetails: PropTypes.object.isRequired,
-    getDatacartDetails: PropTypes.func.isRequired,
-    runDeletion: PropTypes.object.isRequired,
-    rerunExport: PropTypes.func.isRequired,
-    exportReRun: PropTypes.object.isRequired,
-    updateExpirationDate: PropTypes.func.isRequired,
-    updatePermission: PropTypes.func.isRequired,
-    cloneExport: PropTypes.func.isRequired,
-    cancelProviderTask: PropTypes.func.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    viewedJob: PropTypes.func.isRequired,
-    user: PropTypes.object.isRequired,
-
-};
-
-reactMixin(StatusDownload.prototype, TimerMixin);
 
 export default connect(
     mapStateToProps,

@@ -1,0 +1,22 @@
+import React, { PropTypes } from 'react';
+import { mount } from 'enzyme';
+import moment from 'moment';
+import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
+import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
+
+describe('DataCartInfoTable component', () => {
+    const props = {
+        dataPack: {
+            uid: '12345',
+            user: 'admin',
+            started_at: '2017-03-24T15:52:35.637258Z',
+            finished_at: '2017-03-24T15:52:35.637258Z',
+        },
+    };
+
+    const wrapper = mount(<DataCartInfoTable {...props} />);
+
+    it('should render the 4 needed rows', () => {
+        expect(wrapper.find(DataPackTableRow)).toHaveLength(4);
+    });
+});

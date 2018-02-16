@@ -1,7 +1,6 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import AppBar from 'material-ui/AppBar';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import About from '../../components/About/About';
 import InfoParagraph from '../../components/About/InfoParagraph';
@@ -11,7 +10,6 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 
 
 describe('About component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getWrapper = () => {
         return mount(<About />, {

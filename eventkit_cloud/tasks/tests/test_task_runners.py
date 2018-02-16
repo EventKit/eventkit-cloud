@@ -21,32 +21,38 @@ logger = logging.getLogger(__name__)
 
 
 class TestExportTaskRunner(TestCase):
+
     fixtures = ('insert_provider_types', 'osm_provider', 'test_providers')
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
-        # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
+        
+        # This should be loaded by migrations, but fails when using pytest.
+        self.shp_task, _ = ExportFormat.objects.get_or_create(name='ESRI Shapefile Format',
+                                                           description='Esri Shapefile (OSM Schema)',
+                                                           slug='shp')
+
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
-        self.region = Region.objects.get(name='Africa')
+        self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
         self.job.region = self.region
         self.job.save()
         create_run(job_uid=self.job.uid)
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     def test_run_osm_task(self, mock_chain):
-        shp_task = ExportFormat.objects.get(slug='shp')
-
         provider = DataProvider.objects.get(slug='osm')
         provider_task = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
 
         # celery chain mock
-        self.job.provider_tasks.first().formats.add(shp_task)
+        self.job.provider_tasks.first().formats.add(self.shp_task)
         runner = ExportOSMTaskRunner()
 
         # Even though code using pipes seems to be supported here it is throwing an error.
@@ -65,7 +71,7 @@ class TestExportTaskRunner(TestCase):
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
     def test_run_wms_task(self, mock_shp, mock_chain):
-        shp_task = ExportFormat.objects.get(slug='shp')
+
         celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='wms')
         provider_task_record = DataProviderTask.objects.create(provider=provider)
@@ -75,7 +81,7 @@ class TestExportTaskRunner(TestCase):
         type(mock_shp).name = PropertyMock(return_value='Geopackage Export')
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        self.job.provider_tasks.first().formats.add(shp_task)
+        self.job.provider_tasks.first().formats.add(self.shp_task)
         runner = ExportExternalRasterServiceTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
