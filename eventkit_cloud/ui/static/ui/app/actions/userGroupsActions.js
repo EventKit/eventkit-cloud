@@ -72,20 +72,19 @@ export function createGroup(groupName, members) {
     };
 }
 
-export function updateGroup(groupId, newName = '', members = [], administrators = []) {
+export function updateGroup(groupId, options = {}) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_GROUP });
 
         const csrftoken = cookie.load('csrftoken');
 
-        const data = {
-            members,
-            administrators,
-        };
+        const data = {};
 
-        if (newName) {
-            data.name = newName;
-        }
+        if (options.name) data.name = options.name;
+        if (options.members) data.members = options.members;
+        if (options.administrators) data.administrators = options.administrators;
+
+        console.log(options);
 
         return axios({
             url: `/api/groups/${groupId}`,
@@ -99,51 +98,3 @@ export function updateGroup(groupId, newName = '', members = [], administrators 
         });
     };
 }
-
-// export function addGroupUsers(group, addedMembers, addedAdministrators) {
-//     return (dispatch) => {
-//         dispatch({ type: types.ADDING_GROUP_USERS });
-
-//         const csrftoken = cookie.load('csrftoken');
-
-//         const members = [...group.members, ...addedMembers];
-//         const administrators = [...group.administrators, ...addedAdministrators];
-
-//         return axios({
-//             url: `/api/groups/${group.id}`,
-//             method: 'POST',
-//             headers: { 'X-CSRFToken': csrftoken },
-//             data: JSON.stringify({ members, administrators }),
-//         }).then(() => {
-//             dispatch({ type: types.ADDED_GROUP_USERS });
-//         }).catch((error) => {
-//             dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
-//         });
-//     };
-// }
-
-// export function removeGroupUsers(group, removedMembers, removedAdministrators) {
-//     return (dispatch) => {
-//         dispatch({ type: types.REMOVING_GROUP_USERS });
-
-//         const csrftoken = cookie.load('csrftoken');
-
-//         // remove only members who are in the passed in members array
-//         const members = group.members.filter(member => (!removedMembers.includes(member)));
-
-//         // remove only administrators who are in the passed in admin array
-//         const administrators = group.administrators.filter(admin => (!removedAdministrators.includes(admin)));
-
-//         return axios({
-//             url: `/api/groups/${group.id}`,
-//             method: 'POST',
-//             headers: { 'X-CSRFToken': csrftoken },
-//             data: JSON.stringify({ members, administrators }),
-//         }).then(() => {
-//             dispatch({ type: types.REMOVED_GROUP_USERS });
-//         }).catch((error) => {
-//             dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
-//         });
-//     };
-// }
-

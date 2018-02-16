@@ -212,7 +212,7 @@ export function createGroup(groupName, members = [], administrators = []) {
     };
 }
 
-export function updateGroup(groupId, newName = '', members = [], administrators = []) {
+export function updateGroup(groupId, options = {}) {
     return (dispatch) => {
         //////// JUST FOR MOCKING THE API /////////////
         const mock = new MockAdapter(axios, { delayResponse: 3000 });
@@ -222,14 +222,13 @@ export function updateGroup(groupId, newName = '', members = [], administrators 
 
         const csrftoken = cookie.load('csrftoken');
 
-        const data = {
-            members,
-            administrators,
-        };
+        const data = {};
 
-        if (newName) {
-            data.name = newName;
-        }
+        if (options.name) data.name = options.name;
+        if (options.members) data.members = options.members;
+        if (options.administrators) data.administrators = options.administrators;
+
+        console.log(options);
 
         return axios({
             url: `/api/groups/${groupId}`,
@@ -245,60 +244,3 @@ export function updateGroup(groupId, newName = '', members = [], administrators 
         });
     };
 }
-
-// export function addGroupUsers(group, addedMembers = [], addedAdministrators = []) {
-//     return (dispatch) => {
-//         //////// JUST FOR MOCKING THE API /////////////
-//         const mock = new MockAdapter(axios, { delayResponse: 3000 });
-//         mock.onPost(`/api/groups/${group.id}`).reply(200);
-//         //////////////////////////////////////////////////////////////
-//         dispatch({ type: types.ADDING_GROUP_USERS });
-
-//         const csrftoken = cookie.load('csrftoken');
-
-//         const members = [...group.members, ...addedMembers];
-//         const administrators = [...group.administrators, ...addedAdministrators];
-
-//         return axios({
-//             url: `/api/groups/${group.id}`,
-//             method: 'POST',
-//             headers: { 'X-CSRFToken': csrftoken },
-//             data: JSON.stringify({ members, administrators }),
-//         }).then(() => {
-//             mock.restore(); ///// JUST FOR MOCKING
-//             dispatch({ type: types.ADDED_GROUP_USERS });
-//         }).catch((error) => {
-//             mock.restore(); //// JUST FOR MOCKING
-//             dispatch({ type: types.ADDING_GROUP_USERS_ERROR, error: error.response.data });
-//         });
-//     };
-// }
-
-// export function removeGroupUsers(group, removedMembers = [], removedAdministrators = []) {
-//     return (dispatch) => {
-//         //////// JUST FOR MOCKING THE API /////////////
-//         const mock = new MockAdapter(axios, { delayResponse: 3000 });
-//         mock.onPost(`/api/groups/${group.id}`).reply(200);
-//         //////////////////////////////////////////////////////////////
-//         dispatch({ type: types.REMOVING_GROUP_USERS });
-
-//         const csrftoken = cookie.load('csrftoken');
-
-//         const members = group.members.filter(member => (!removedMembers.includes(member)));
-//         const administrators = group.administrators.filter(admin => (!removedAdministrators.includes(admin)));
-
-//         return axios({
-//             url: `/api/groups/${group.id}`,
-//             method: 'POST',
-//             headers: { 'X-CSRFToken': csrftoken },
-//             data: JSON.stringify({ members, administrators }),
-//         }).then(() => {
-//             mock.restore(); ///// JUST FOR MOCKING
-//             dispatch({ type: types.REMOVED_GROUP_USERS });
-//         }).catch((error) => {
-//             mock.restore(); ///// JUST FOR MOCKING
-//             dispatch({ type: types.REMOVING_GROUP_USERS_ERROR, error: error.response.data });
-//         });
-//     };
-// }
-

@@ -74,7 +74,7 @@ RenameGroupDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
     value: PropTypes.string.isRequired,
-    valid: PropTypes.string.isRequired,
+    valid: PropTypes.bool.isRequired,
 };
 
 export default RenameGroupDialog;

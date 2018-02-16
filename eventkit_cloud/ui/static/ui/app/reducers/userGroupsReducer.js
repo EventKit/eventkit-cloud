@@ -53,31 +53,7 @@ export function userGroupsReducer(state = initialState.groups, action) {
             created: false,
             error: action.error,
         };
-
-    // case types.ADDING_GROUP_USERS:
-    //     return { ...state, error: null, adding: true, added: false };
-    // case types.ADDED_GROUP_USERS:
-    //     return { ...state, adding: false, added: true };
-    // case types.ADDING_GROUP_USERS_ERROR:
-    //     return {
-    //         ...state,
-    //         adding: false,
-    //         added: false,
-    //         error: action.error,
-    //     };
-
-    // case types.REMOVING_GROUP_USERS:
-    //     return { ...state, error: null, removing: true, removed: false };
-    // case types.REMOVED_GROUP_USERS:
-    //     return { ...state, removing: false, removed: true };
-    // case types.REMOVING_GROUP_USERS_ERROR:
-    //     return {
-    //         ...state,
-    //         removing: false,
-    //         removed: false,
-    //         error: action.error,
-    //     };
-
+        
     case types.UPDATING_GROUP:
         return { ...state, updating: true, error: null };
     case types.UPDATED_GROUP:

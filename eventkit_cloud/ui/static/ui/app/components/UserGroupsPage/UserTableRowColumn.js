@@ -116,18 +116,28 @@ export class UserTableRowColumn extends Component {
                 <div style={{ display: 'flex' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
                         <div className="qa-UserTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
-                            <strong>{user.name}thatisalsoareallylongnamelikewtfman</strong>
+                            <strong>{user.name}</strong>
                         </div>
                         <div className="qa-UserTableRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
-                            {user.email}blahbalhbalhbalbah
+                            {user.email}
                         </div>
                     </div>
                     {showAdminLabel ?
                         <div style={styles.adminContainer}>
                             {isAdmin ?
-                                <span style={styles.admin} onClick={this.handleDemoteAdminClick}>ADMIN</span>
+                                <span
+                                    style={styles.admin}
+                                    onClick={this.handleDemoteAdminClick}
+                                >
+                                    ADMIN
+                                </span>
                                 :
-                                <span style={styles.notAdmin} onClick={this.handleMakeAdminClick}>ADMIN</span>
+                                <span
+                                    style={styles.notAdmin}
+                                    onClick={this.handleMakeAdminClick}
+                                >
+                                    ADMIN
+                                </span>
                             }
                         </div>
                         :

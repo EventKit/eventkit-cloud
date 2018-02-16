@@ -28,8 +28,6 @@ import {
     getGroups,
     deleteGroup,
     createGroup,
-    // addGroupUsers,
-    // removeGroupUsers,
     updateGroup,
 } from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
 import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
@@ -184,7 +182,6 @@ export class UserGroupsPage extends Component {
             break;
         }
         }
-        console.log(params);
         this.props.getUsers(params);
     }
 
@@ -263,9 +260,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleRenameSave() {
-        // const users = this.state.createUsers.map(user => user.username);
-        // this.props.createGroup(this.state.createInput, users);
-        console.log('rename!!', this.state.targetGroup, this.state.renameInput);
+        this.props.updateGroup(this.state.targetGroup.id, { name: this.state.renameInput });
         this.handleRenameClose();
     }
 
@@ -278,36 +273,30 @@ export class UserGroupsPage extends Component {
 
     handleSingleUserChange(group, user) {
         // if user is not in group, add them. Otherwise remove them
-        const adding = !user.groups.includes(group.id);
-
-        if (!adding) {
-            this.props.removeGroupUsers(group, [user.username]);
+        const members = [...group.members];
+        const ix = members.indexOf(user.username);
+        if (ix > -1) {
+            members.splice(ix, 1);
         } else {
-            this.props.addGroupUsers(group, [user.username]);
+            members.push(user.username);
         }
+        this.props.updateGroup(group.id, { members });
     }
 
     handleMultiUserChange(group) {
-        // assume we are removing all the selected users
-        let adding = false;
-        const users = [];
-        this.state.selectedUsers.forEach((user) => {
-            if (!adding && !user.groups.includes(group.id)) {
-                // if at least one user is not already a member we want to add all the users
-                adding = true;
-            }
-            users.push(user.username);
-        });
-
-        // if no users quit
-        if (!users.length) {
-            return;
-        }
-
-        if (!adding) {
-            this.props.removeGroupUsers(group, users);
+        const members = [...group.members];
+        const notInGroup = this.state.selectedUsers.filter(user => (
+            !members.includes(user.username)
+        ));
+        // if every user is not in the group alread we are adding, otherwise we remove them
+        if (notInGroup.length) {
+            const newMembers = notInGroup.map(user => user.username);
+            this.props.updateGroup(group, { members: [...members, ...newMembers] });
         } else {
-            this.props.addGroupUsers(group, users);
+            this.state.selectedUsers.forEach((member) => {
+                members.splice(members.indexOf(member.username), 1);
+            });
+            this.props.updateGroup(group, { members });
         }
     }
 
@@ -330,7 +319,9 @@ export class UserGroupsPage extends Component {
     }
 
     handleLeaveClick() {
-        this.props.removeGroupUsers(this.state.targetGroup, [this.props.user.username]);
+        const members = [...this.state.targetGroup.members];
+        members.splice(members.indexOf(this.props.user.username), 1);
+        this.props.updateGroup(this.state.targetGroup.id, { members });
         this.handleLeaveClose();
     }
 
@@ -361,16 +352,16 @@ export class UserGroupsPage extends Component {
     handleMakeAdmin(user) {
         const groupId = this.state.drawerSelection;
         const group = this.props.groups.groups.find(groupx => groupx.id === groupId);
-        console.log(group, user);
-        this.props.addGroupUsers(group, [], [user.id]);
+        const administrators = [...group.administrators, user.username];
+        this.props.updateGroup(group.id, { administrators });
     }
 
     handleDemoteAdmin(user) {
-        console.log(user);
         const groupId = this.state.drawerSelection;
         const group = this.props.groups.groups.find(groupx => groupx.id === groupId);
-        console.log(group, user);
-        this.props.removeGroupUsers(group, [], [user.id]);
+        const administrators = [...group.administrators];
+        administrators.splice(administrators.indexOf(user.username), 1);
+        this.props.updateGroup(group.id, { administrators });
     }
 
     showErrorDialog(message) {
@@ -573,7 +564,7 @@ export class UserGroupsPage extends Component {
         }
 
         const showAdmin = !['all', 'new', 'ungrouped'].includes(this.state.drawerSelection) && !this.props.users.fetching;
-        
+
         const rows = this.props.users.users.map((user, ix) => (
             // we should be filtering out the logged in user here
             <TableRow
@@ -592,7 +583,8 @@ export class UserGroupsPage extends Component {
                     handleDemoteAdmin={this.handleDemoteAdmin}
                     isAdmin={
                         showAdmin && this.props.groups.groups.find(group => (
-                            group.id === this.state.drawerSelection && group.administrators.includes(user.username)
+                            group.id === this.state.drawerSelection
+                            && group.administrators.includes(user.username)
                         )) !== undefined
                     }
                     showAdminLabel={showAdmin}
@@ -608,7 +600,10 @@ export class UserGroupsPage extends Component {
                         title={
                             <span>
                                 Members and Groups
-                                <InfoIcon style={styles.pageInfoIcon} onClick={this.showPageInfoDialog} />
+                                <InfoIcon
+                                    style={styles.pageInfoIcon}
+                                    onClick={this.showPageInfoDialog}
+                                />
                             </span>
                         }
                         style={styles.header}
@@ -633,7 +628,10 @@ export class UserGroupsPage extends Component {
                         className="qa-UserGroupsPage-CustomScrollbar"
                     >
                         <div style={styles.bodyContent} className="qa-UserGroupsPage-bodyContent">
-                            <div style={styles.fixedHeader} className="qa-UserGroupsPage-fixedHeader">
+                            <div
+                                style={styles.fixedHeader}
+                                className="qa-UserGroupsPage-fixedHeader"
+                            >
                                 <TextField
                                     style={styles.container}
                                     hintText="Search Users"
@@ -757,8 +755,8 @@ export class UserGroupsPage extends Component {
                     valid={this.props.groups.groups.find(group => group.name === this.state.renameInput) === undefined}
                 />
                 { this.props.groups.fetching || this.props.users.fetching
-                || this.props.groups.creating || this.props.groups.adding
-                || this.props.groups.removing || this.props.groups.deleting ?
+                || this.props.groups.creating || this.props.groups.deleting
+                || this.props.groups.updating ?
                     <div style={styles.loadingBackground}>
                         <div style={styles.loadingContainer}>
                             <CircularProgress color="#4598bf" style={styles.loading} className="qa-UserGroupsPage-loading" />
@@ -833,10 +831,8 @@ UserGroupsPage.propTypes = {
         created: PropTypes.bool,
         deleting: PropTypes.bool,
         deleted: PropTypes.bool,
-        adding: PropTypes.bool,
-        added: PropTypes.bool,
-        removing: PropTypes.bool,
-        removed: PropTypes.bool,
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
         error: PropTypes.string,
     }).isRequired,
     users: PropTypes.shape({
@@ -849,8 +845,6 @@ UserGroupsPage.propTypes = {
     getGroups: PropTypes.func.isRequired,
     deleteGroup: PropTypes.func.isRequired,
     createGroup: PropTypes.func.isRequired,
-    // addGroupUsers: PropTypes.func.isRequired,
-    // removeGroupUsers: PropTypes.func.isRequired,
     updateGroup: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
 };
@@ -874,14 +868,8 @@ function mapDispatchToProps(dispatch) {
         createGroup: (name, users) => (
             dispatch(createGroup(name, users))
         ),
-        // addGroupUsers: (group, members, administrators) => (
-        //     dispatch(addGroupUsers(group, members, administrators))
-        // ),
-        // removeGroupUsers: (group, members, administrators) => (
-        //     dispatch(removeGroupUsers(group, members, administrators))
-        // ),
-        updateGroup: (groupId, members = members, administrators = administrators) => (
-            dispatch(add)
+        updateGroup: (groupId, options) => (
+            dispatch(updateGroup(groupId, options))
         ),
         getUsers: params => (
             dispatch(getUsers(params))
