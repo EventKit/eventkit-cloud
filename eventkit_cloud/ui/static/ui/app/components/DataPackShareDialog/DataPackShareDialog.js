@@ -1,9 +1,10 @@
 import React, { Component, PropTypes } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
+import Divider from 'material-ui/Divider';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
-import BaseDialog from '../BaseDialog';
+import ShareBaseDialog from './ShareBaseDialog';
 import ShareDialogGroup from './ShareDialogGroup';
 
 export class DataPackShareDialog extends Component {
@@ -13,8 +14,9 @@ export class DataPackShareDialog extends Component {
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
         this.handleSave = this.handleSave.bind(this);
         this.updateSelection = this.updateSelection.bind(this);
+        this.toggleView = this.toggleView.bind(this);
         this.state = {
-            dropDownValue: this.props.run.users.length ? 'custom' : 'all',
+            view: 'groups',
             // set the intial selection state to the 'real' values from API
             originalSelection: this.props.run.users,
             currentSelection: this.props.run.users,
@@ -55,6 +57,17 @@ export class DataPackShareDialog extends Component {
         this.setState({ currentSelection: newSelection });
     }
 
+    toggleView(view) {
+        if (view) {
+            this.setState({ view });
+        }
+        if (this.state.view === 'groups') {
+            this.setState({ view: 'members' });
+        } else {
+            this.setState({ view: 'groups' });
+        }
+    }
+
     render() {
         const styles = {
             fixedHeader: {
@@ -63,44 +76,26 @@ export class DataPackShareDialog extends Component {
                 left: 0,
                 backgroundColor: '#fff',
                 zIndex: 15,
-                padding: '0px 6px',
+                padding: '0px 10px',
+            },
+            groupsButton: {
+                flex: '1 1 auto',
+                borderRadius: '0px',
+                backgroundColor: this.state.view === 'groups' ? '#4598bf' : 'whitesmoke',
+                boxShadow: 'none',
+            },
+            membersButton: {
+                flex: '1 1 auto',
+                borderRadius: '0px',
+                backgroundColor: this.state.view === 'members' ? '#4598bf' : 'whitesmoke',
+                boxShadow: 'none',
             },
             rowHeader: {
                 fontSize: '12px',
                 padding: '16px 36px 10px 10px',
                 color: '#707274',
             },
-            dropDownIcon: {
-                right: '0px',
-                fill: '#4598bf',
-                padding: '0px',
-                width: '24px',
-            },
         };
-
-        const createActions = [
-            <RaisedButton
-                className="qa-DataPackShareDialog-save"
-                style={{ margin: '0px' }}
-                labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ borderRadius: '0px' }}
-                backgroundColor="#4598bf"
-                disableTouchRipple
-                label="SAVE"
-                primary={false}
-                onClick={this.handleSave}
-                disabled={false}
-            />,
-            <FlatButton
-                className="qa-DataPackShareDialog-cancel"
-                style={{ margin: '0px', float: 'left' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                backgroundColor="#fff"
-                disableTouchRipple
-                label="CANCEL"
-                onClick={this.props.onClose}
-            />,
-        ];
 
         let rowHeader = null;
         let groups = null;
@@ -127,43 +122,38 @@ export class DataPackShareDialog extends Component {
             );
         }
 
-        const allText = window.innerWidth < 576 ? 'All members and groups' : 'All members and groups can view / edit';
-        const customText = window.innerWidth < 576 ? 'Customized permissions' : 'Customized view / edit permissions';
-
         return (
-            <BaseDialog
+            <ShareBaseDialog
                 show={this.props.show}
                 onClose={this.props.onClose}
-                title="SHARE"
-                actions={createActions}
-                dialogStyle={{ maxWidth: '500px' }}
+                handleSave={this.handleSave}
                 className="qa-DataPackShareDialog"
             >
-                <div style={styles.fixedHeader} className="qa-DataPackShareDialog-dropDownContainer">
-                    <DropDownMenu
-                        value={this.state.dropDownValue}
-                        onChange={this.handleDropDownChange}
-                        autoWidth={false}
-                        style={{ width: '100%' }}
-                        labelStyle={{ padding: '0px', color: '#4598bf', textOverflow: 'customoverflow' }}
-                        iconStyle={styles.dropDownIcon}
-                        underlineStyle={{ margin: '-1px 0px', borderTop: '1px solid #4598bf' }}
-                        className="qa-DataPackShareDialog-DropDownMenu-share"
+                <div style={styles.fixedHeader} className="qa-DataPackShareDialog-container">
+                    <div
+                        className="qa-DataPackShareDialog-headers"
+                        style={{ display: 'flex' }}
                     >
-                        <MenuItem
-                            value="all"
-                            primaryText={allText}
-                            className="qa-DataPackShareDialog-MenuItem-all"
+                        <RaisedButton
+                            label={`GROUPS (${this.props.selectedGroups.length})`}
+                            style={styles.groupsButton}
+                            labelColor={this.state.view === 'groups' ? '#fff' : '#4598bf'}
+                            backgroundColor={this.state.view === 'groups' ? '#4598bf' : 'whitesmoke'}
+                            onClick={this.toggleView}
                         />
-                        <MenuItem
-                            value="custom"
-                            primaryText={customText}
+                        <RaisedButton
+                            label={`MEMBERS (${this.props.selectedUsers.length})`}
+                            style={styles.membersButton}
+                            labelColor={this.state.view === 'members' ? '#fff' : '#4598bf'}
+                            backgroundColor={this.state.view === 'members' ? '#4598bf' : 'whitesmoke'}
+                            onClick={this.toggleView}
                         />
-                    </DropDownMenu>
+                    </div>
+                    <div style={{ height: '2px', width: '100%', backgroundColor: '#4598bf' }} />
                     {rowHeader}
                 </div>
                 {groups}
-            </BaseDialog>
+            </ShareBaseDialog>
         );
     }
 }
@@ -179,6 +169,13 @@ DataPackShareDialog.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    selectedGroups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.string,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.shape({
         username: PropTypes.string,
     }).isRequired,

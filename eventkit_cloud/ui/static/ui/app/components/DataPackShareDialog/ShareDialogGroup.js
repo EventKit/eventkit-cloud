@@ -48,7 +48,7 @@ export class ShareDialogGroup extends Component {
         const styles = {
             card: {
                 backgroundColor: 'whitesmoke',
-                marginBottom: '10px',
+                margin: '0px 10px 10px',
                 boxShadow: 'none',
             },
             groupText: {

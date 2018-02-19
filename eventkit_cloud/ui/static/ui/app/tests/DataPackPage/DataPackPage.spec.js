@@ -18,7 +18,7 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
-import { DataPackShareDialog } from '../../components/DataPackPage/DataPackShareDialog';
+import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();

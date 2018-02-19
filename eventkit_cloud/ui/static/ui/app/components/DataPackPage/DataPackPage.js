@@ -13,7 +13,7 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import DataPackShareDialog from './DataPackShareDialog';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
