@@ -1,9 +1,9 @@
 import React, {PropTypes} from 'react';
-import {deleteRuns} from "../../actions/dataPackActions";
+import {deleteRuns, getRuns} from "../../actions/dataPackActions";
 import {connect} from "react-redux";
 import {getViewedJobs} from "../../actions/userActions";
 import CustomScrollbar from "../CustomScrollbar";
-import {AppBar, GridList} from "material-ui";
+import {AppBar, CircularProgress, GridList} from "material-ui";
 import DataPackGridItem from "../DataPackPage/DataPackGridItem";
 import {getProviders} from "../../actions/exportsActions";
 
@@ -11,7 +11,8 @@ export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            pageLoading: true,
+            loadingMyDataPacks: true,
+            loadingViewedDataPacks: true,
         }
     }
 
@@ -21,20 +22,47 @@ export class DashboardPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.user.viewedJobs.fetched !== this.props.user.viewedJobs.fetched) {
-            if (nextProps.user.viewedJobs.fetched) {
-                if (this.state.pageLoading) {
-                    this.setState({pageLoading: false});
-                }
-            }
+        // My datapacks.
+        if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
+            this.setState({
+                loadingMyDataPacks: false,
+            });
+        }
+
+        // Received viewed datapacks.
+        if (nextProps.user.viewedJobs.fetched && !this.props.user.viewedJobs.fetched) {
+            this.setState({
+                loadingViewedDataPacks: false,
+            });
+        }
+
+        // Deleted datapack.
+        if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+            this.refresh();
         }
     }
 
-    refresh() {
-        this.props.getViewedJobs();
+    pageLoading() {
+        return (
+            this.state.loadingMyDataPacks ||
+            this.state.loadingViewedDataPacks
+        )
     }
 
-    getColumns() {
+    refresh() {
+        this.props.getRuns({
+            pageSize: 10,
+            ordering: '-started_at',
+            ownerFilter: this.props.user.data.username,
+        });
+        this.props.getViewedJobs();
+        this.setState({
+            loadingMyDataPacks: true,
+            loadingViewedDataPacks: true,
+        });
+    }
+
+    getGridColumns() {
         if (window.innerWidth > 1920) {
             return 6;
         } else if (window.innerWidth > 1400) {
@@ -46,6 +74,10 @@ export class DashboardPage extends React.Component {
         }
     }
 
+    getGridPadding() {
+        return window.innerWidth >= 768 ? 7: 2;
+    }
+
     render() {
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
@@ -54,6 +86,12 @@ export class DashboardPage extends React.Component {
                 width: '100%',
                 backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')',
                 color: 'white',
+            },
+            pageLoading: {
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
             },
             section: {
                 display: 'flex',
@@ -82,45 +120,90 @@ export class DashboardPage extends React.Component {
             },
         };
 
-        const viewedJobs = this.props.user.viewedJobs.jobs.slice(0, this.getColumns());
+        // Only show as many items as we have columns.
+        const viewedJobs = this.props.user.viewedJobs.jobs.slice(0, this.getGridColumns());
 
         return (
             <CustomScrollbar style={styles.root}>
-                <AppBar
-                    className={'qa-DataPackPage-AppBar'}
-                    style={styles.appBar}
-                    title={'Recently Viewed'}
-                    titleStyle={styles.pageTitle}
-                    iconElementLeft={<p></p>}
-                >
-                </AppBar>
-                <div style={styles.section}>
-                    {this.state.pageLoading ?
-                        <div>Loading...</div>
-                        :
-                        <GridList
-                            className={'qa-Dashboard-ViewedDataPackGrid'}
-                            cellHeight={'auto'}
-                            style={styles.gridList}
-                            padding={window.innerWidth >= 768 ? 7: 2}
-                            cols={this.getColumns()}
+                {this.pageLoading() ?
+                    <CircularProgress
+                        style={styles.pageLoading}
+                        color={'#4598bf'}
+                        size={50}
+                    />
+                    :
+                    <div>
+                        <AppBar
+                            className={'qa-Dashboard-MyDataPacksHeader'}
+                            style={styles.appBar}
+                            title={'My DataPacks'}
+                            titleStyle={styles.pageTitle}
+                            iconElementLeft={<p></p>}
                         >
-                            {viewedJobs.length > 0 ?
-                                viewedJobs.map((viewedJob) => (
-                                    <DataPackGridItem
-                                        className={'qa-DataPackGrid-GridListItem'}
-                                        run={viewedJob.last_export_run}
-                                        user={this.props.user}
-                                        key={viewedJob.created_at}
-                                        onRunDelete={this.props.deleteRuns}
-                                        providers={this.props.providers}/>
-                                ))
-                                :
-                                <div>You haven't viewed any DataPacks yet...</div>
-                            }
-                        </GridList>
-                    }
-                </div>
+                        </AppBar>
+                        <div style={styles.section}>
+                            <GridList
+                                className={'qa-Dashboard-MyDataPacksHeaderGrid'}
+                                cellHeight={'auto'}
+                                style={styles.gridList}
+                                padding={this.getGridPadding()}
+                                cols={this.getGridColumns()}
+                            >
+                                {this.props.runsList.runs.length > 0 ?
+                                    this.props.runsList.runs.map((run, index) => (
+                                        <DataPackGridItem
+                                            className={'qa-Dashboard-MyDataPacksHeaderGrid-Item'}
+                                            run={run}
+                                            user={this.props.user}
+                                            key={run.created_at}
+                                            onRunDelete={this.props.deleteRuns}
+                                            providers={this.props.providers}
+                                            index={index}
+                                            gridName={'MyDataPacks'}
+                                        />
+                                    ))
+                                    :
+                                    <div>You haven't created any DataPacks yet...</div>
+                                }
+                            </GridList>
+                        </div>
+
+                        <AppBar
+                            className={'qa-Dashboard-ViewedDataPacksHeader'}
+                            style={styles.appBar}
+                            title={'Recently Viewed DataPacks'}
+                            titleStyle={styles.pageTitle}
+                            iconElementLeft={<p></p>}
+                        >
+                        </AppBar>
+                        <div style={styles.section}>
+                            <GridList
+                                className={'qa-Dashboard-RecentlyViewedDataPacksGrid'}
+                                cellHeight={'auto'}
+                                style={styles.gridList}
+                                padding={this.getGridPadding()}
+                                cols={this.getGridColumns()}
+                            >
+                                {viewedJobs.length > 0 ?
+                                    viewedJobs.map((viewedJob, index) => (
+                                        <DataPackGridItem
+                                            className={'qa-Dashboard-RecentlyViewedDataPacksGrid-Item'}
+                                            run={viewedJob.last_export_run}
+                                            user={this.props.user}
+                                            key={viewedJob.created_at}
+                                            onRunDelete={this.props.deleteRuns}
+                                            providers={this.props.providers}
+                                            gridName={'RecentlyViewedDataPacks'}
+                                            index={index}
+                                        />
+                                    ))
+                                    :
+                                    <div>You haven't viewed any DataPacks yet...</div>
+                                }
+                            </GridList>
+                        </div>
+                    </div>
+                }
             </CustomScrollbar>
         );
     }
@@ -131,17 +214,24 @@ DashboardPage.propTypes = {
     user: PropTypes.object.isRequired,
     getProviders: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
+    runsDeletion: PropTypes.object.isRequired,
+    getRuns: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
     return {
         user: state.user,
         providers: state.providers,
+        runsDeletion: state.runsDeletion,
+        runsList: state.runsList,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
+        getRuns: (args) => (
+            dispatch(getRuns(args))
+        ),
         getViewedJobs: () => {
             return dispatch(getViewedJobs());
         },

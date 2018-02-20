@@ -12,6 +12,7 @@ import SocialPerson from 'material-ui/svg-icons/social/person';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
+import isUndefined from 'lodash/isUndefined';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -64,7 +65,7 @@ export class DataPackGridItem extends Component {
 
     initMap() {
         const map = new Map({
-            target: `${this.props.run.uid}_map`,
+            target: this.getMapId(),
             layers: [
                 new Tile({
                     source: new XYZ({
@@ -146,6 +147,20 @@ export class DataPackGridItem extends Component {
     handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
+    }
+
+    getMapId() {
+        let mapId = '';
+        if (!isUndefined(this.props.gridName)) {
+            mapId += `${this.props.gridName}_`;
+        }
+        mapId += `${this.props.run.uid}_`;
+        if (!isUndefined(this.props.index)) {
+            mapId += `${this.props.index}_`;
+        }
+        mapId += 'map';
+
+        return mapId;
     }
 
     render() {
@@ -381,7 +396,7 @@ export class DataPackGridItem extends Component {
                     </span>
                 </CardText>
                 <CardMedia expandable>
-                    <div id={`${this.props.run.uid}_map`} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
+                    <div id={this.getMapId()} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
                 </CardMedia>
                 <CardActions style={{ height: '45px' }}>
                     <span>
@@ -420,6 +435,8 @@ DataPackGridItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    gridName: PropTypes.string.isRequired,
+    index: PropTypes.number.isRequired,
 };
 
 export default DataPackGridItem;

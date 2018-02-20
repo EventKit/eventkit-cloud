@@ -51,7 +51,7 @@ export class DataPackGrid extends Component {
                         padding={window.innerWidth >= 768 ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runs.map(run => (
+                        {this.props.runs.map((run, index) => (
                             <DataPackGridItem
                                 className="qa-DataPackGrid-GridListItem"
                                 run={run}
@@ -59,6 +59,8 @@ export class DataPackGrid extends Component {
                                 key={run.uid}
                                 onRunDelete={this.props.onRunDelete}
                                 providers={this.props.providers}
+                                gridName={this.props.name}
+                                index={index}
                             />
                         ))}
                     </GridList>
@@ -85,6 +87,7 @@ DataPackGrid.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    name: PropTypes.string.isRequired,
 };
 
 export default DataPackGrid;

@@ -2,7 +2,7 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './actionTypes';
 
-export function getRuns(params, geojson) {
+export function getRuns(args) {
     return (dispatch, getState) => {
         const { runsList } = getState();
         if (runsList.fetching && runsList.cancelSource) {
@@ -16,9 +16,40 @@ export function getRuns(params, geojson) {
 
         dispatch({ type: types.FETCHING_RUNS, cancelSource: source });
 
+        const status = [];
+        if (args.status) {
+            Object.keys(args.status).forEach((key) => {
+                if (args.status[key]) {
+                    status.push(key.toUpperCase());
+                }
+            });
+        }
+
+        const providers = (args.providers) ? Object.keys(args.providers) : [];
+
+        const params = {};
+        params.page_size = args.pageSize;
+        params.ordering = args.ordering.includes('featured') ?
+            `${args.ordering},-started_at`
+            :
+            args.ordering;
+        if (args.ownerFilter) params.user = args.ownerFilter;
+        if (args.published) params.published = args.published;
+        if (status.length) params.status = status.join(',');
+        if (args.minDate) {
+            params.min_date = args.minDate.toISOString().substring(0, 10);
+        }
+        if (args.maxDate) {
+            const maxDate = new Date(args.maxDate.getTime());
+            maxDate.setDate(maxDate.getDate() + 1);
+            params.max_date = maxDate.toISOString().substring(0, 10);
+        }
+        if (args.search) params.search_term = args.search.slice(0, 1000);
+        if (providers.length) params.providers = providers.join(',');
+
         const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
-        const data = geojson ? { geojson: JSON.stringify(geojson) } : { };
+        const data = args.geojson ? { geojson: JSON.stringify(args.geojson) } : { };
 
         return axios({
             url,
