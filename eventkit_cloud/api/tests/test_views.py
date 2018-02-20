@@ -1252,18 +1252,21 @@ class TestGroupDataViewSet(APITestCase):
         self.assertEquals(len(groupdata["members"]),2)
         self.assertEquals(len(groupdata["administrators"]), 2)
 
-        # remove user_2 from members and remove all users from administrators
+        # remove user_2 from members
 
         groupdata['members'] = ['user_1']
-        groupdata['administrators'] = []
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = json.loads(response.content)
         self.assertEquals(len(groupdata["members"]),1)
-        self.assertEquals(len(groupdata["administrators"]), 0)
         self.assertEquals(groupdata["members"][0],"user_1")
 
+        # check for a 403 if we remove all administrators
+
+        groupdata['administrators'] = []
+        response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code,status.HTTP_403_FORBIDDEN)
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):

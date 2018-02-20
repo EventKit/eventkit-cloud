@@ -91,3 +91,11 @@ class UserFilter(django_filters.FilterSet):
             if not user.id in targetusers: targetusers.append(user.id)
 
         return queryset.filter(id__in=targetusers)
+
+
+class GroupFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(name="name", lookup_expr="icontains")
+
+    class Meta:
+            model = Group
+            fields = ('id', 'name')

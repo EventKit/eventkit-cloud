@@ -35,7 +35,7 @@ from serializers import (
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter,UserFilter
+from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -943,7 +943,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
 
     def get_queryset(self):
-        return User.objects.filter()
+        return User.objects.all()
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
@@ -1025,9 +1025,13 @@ class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAuthenticated, )
     parser_classes = (JSONParser,)
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    filter_class=GroupFilter
+    filter_backends = ( filters.SearchFilter, filters.OrderingFilter)
     lookup_field = 'id'
+    lookup_value_regex = '[^/]+'
     search_fields = ('name',)
+    ordering_fields = ('name',)
+
 
     def get_queryset(self):
         queryset = Group.objects.all()
@@ -1054,8 +1058,7 @@ class GroupViewSet(viewsets.ModelViewSet):
                 ]
 
         """
-
-        queryset = self.get_queryset()
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = GroupSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -1129,6 +1132,18 @@ class GroupViewSet(viewsets.ModelViewSet):
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
         group = Group.objects.filter(id=id)[0]
 
+        # we are not going anywhere if the requesting user is not an
+        # administrator of the current group or there is an attempt to end up with no administrators
+
+        serializer = GroupSerializer(group)
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        if not user.username in serializer.get_administrators(group):
+            return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
+
+        if "administrators" in request.data:
+            request_admins = request.data["administrators"]
+            if len(request_admins) < 1:
+                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
 
         # examine provided lists of administrators and members. Adjust as needed.
 
