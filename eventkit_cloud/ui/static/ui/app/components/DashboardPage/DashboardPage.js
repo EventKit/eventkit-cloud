@@ -1,11 +1,13 @@
-import React, {PropTypes} from 'react';
-import {deleteRuns, getRuns} from "../../actions/dataPackActions";
-import {connect} from "react-redux";
-import {getViewedJobs} from "../../actions/userActions";
-import CustomScrollbar from "../CustomScrollbar";
-import {AppBar, CircularProgress, GridList} from "material-ui";
-import DataPackGridItem from "../DataPackPage/DataPackGridItem";
-import {getProviders} from "../../actions/exportsActions";
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import { AppBar, CircularProgress, GridList } from 'material-ui';
+import { deleteRuns, getRuns } from '../../actions/dataPackActions';
+import { getViewedJobs } from '../../actions/userActions';
+import CustomScrollbar from '../CustomScrollbar';
+import DataPackGridItem from '../DataPackPage/DataPackGridItem';
+import { getProviders } from '../../actions/exportsActions';
+
+const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
 export class DashboardPage extends React.Component {
     constructor(props) {
@@ -13,7 +15,7 @@ export class DashboardPage extends React.Component {
         this.state = {
             loadingMyDataPacks: true,
             loadingViewedDataPacks: true,
-        }
+        };
     }
 
     componentDidMount() {
@@ -42,11 +44,20 @@ export class DashboardPage extends React.Component {
         }
     }
 
-    pageLoading() {
-        return (
-            this.state.loadingMyDataPacks ||
-            this.state.loadingViewedDataPacks
-        )
+    getGridColumns() {
+        if (window.innerWidth > 1920) {
+            return 6;
+        } else if (window.innerWidth > 1400) {
+            return 5;
+        } else if (window.innerWidth > 1024) {
+            return 4;
+        }
+
+        return 3;
+    }
+
+    getGridPadding() {
+        return window.innerWidth >= 768 ? 7 : 2;
     }
 
     refresh() {
@@ -62,20 +73,11 @@ export class DashboardPage extends React.Component {
         });
     }
 
-    getGridColumns() {
-        if (window.innerWidth > 1920) {
-            return 6;
-        } else if (window.innerWidth > 1400) {
-            return 5;
-        } else if (window.innerWidth > 1024) {
-            return 4;
-        } else {
-            return 3;
-        }
-    }
-
-    getGridPadding() {
-        return window.innerWidth >= 768 ? 7: 2;
+    pageLoading() {
+        return (
+            this.state.loadingMyDataPacks ||
+            this.state.loadingViewedDataPacks
+        );
     }
 
     render() {
@@ -84,7 +86,7 @@ export class DashboardPage extends React.Component {
             root: {
                 height: window.innerHeight - 95,
                 width: '100%',
-                backgroundImage: 'url('+require('../../../images/ek_topo_pattern.png')+')',
+                backgroundImage: `url(${backgroundUrl})`,
                 color: 'white',
             },
             pageLoading: {
@@ -110,7 +112,7 @@ export class DashboardPage extends React.Component {
             pageTitle: {
                 fontSize: '18px',
                 lineHeight: '35px',
-                height: '35px'
+                height: '35px',
             },
             gridList: {
                 border: '1px',
@@ -128,23 +130,22 @@ export class DashboardPage extends React.Component {
                 {this.pageLoading() ?
                     <CircularProgress
                         style={styles.pageLoading}
-                        color={'#4598bf'}
+                        color="#4598bf"
                         size={50}
                     />
                     :
                     <div>
                         <AppBar
-                            className={'qa-Dashboard-MyDataPacksHeader'}
+                            className="qa-Dashboard-MyDataPacksHeader"
                             style={styles.appBar}
-                            title={'My DataPacks'}
+                            title="My DataPacks"
                             titleStyle={styles.pageTitle}
-                            iconElementLeft={<p></p>}
-                        >
-                        </AppBar>
+                            iconElementLeft={<p />}
+                        />
                         <div style={styles.section}>
                             <GridList
-                                className={'qa-Dashboard-MyDataPacksHeaderGrid'}
-                                cellHeight={'auto'}
+                                className="qa-Dashboard-MyDataPacksHeaderGrid"
+                                cellHeight="auto"
                                 style={styles.gridList}
                                 padding={this.getGridPadding()}
                                 cols={this.getGridColumns()}
@@ -152,34 +153,33 @@ export class DashboardPage extends React.Component {
                                 {this.props.runsList.runs.length > 0 ?
                                     this.props.runsList.runs.map((run, index) => (
                                         <DataPackGridItem
-                                            className={'qa-Dashboard-MyDataPacksHeaderGrid-Item'}
+                                            className="qa-Dashboard-MyDataPacksHeaderGrid-Item"
                                             run={run}
                                             user={this.props.user}
                                             key={run.created_at}
                                             onRunDelete={this.props.deleteRuns}
                                             providers={this.props.providers}
                                             index={index}
-                                            gridName={'MyDataPacks'}
+                                            gridName="MyDataPacks"
                                         />
                                     ))
                                     :
-                                    <div>You haven't created any DataPacks yet...</div>
+                                    <div>You haven&#39;t created any DataPacks yet...</div>
                                 }
                             </GridList>
                         </div>
 
                         <AppBar
-                            className={'qa-Dashboard-ViewedDataPacksHeader'}
+                            className="qa-Dashboard-ViewedDataPacksHeader"
                             style={styles.appBar}
-                            title={'Recently Viewed DataPacks'}
+                            title="Recently Viewed DataPacks"
                             titleStyle={styles.pageTitle}
-                            iconElementLeft={<p></p>}
-                        >
-                        </AppBar>
+                            iconElementLeft={<p />}
+                        />
                         <div style={styles.section}>
                             <GridList
-                                className={'qa-Dashboard-RecentlyViewedDataPacksGrid'}
-                                cellHeight={'auto'}
+                                className="qa-Dashboard-RecentlyViewedDataPacksGrid"
+                                cellHeight="auto"
                                 style={styles.gridList}
                                 padding={this.getGridPadding()}
                                 cols={this.getGridColumns()}
@@ -187,18 +187,18 @@ export class DashboardPage extends React.Component {
                                 {viewedJobs.length > 0 ?
                                     viewedJobs.map((viewedJob, index) => (
                                         <DataPackGridItem
-                                            className={'qa-Dashboard-RecentlyViewedDataPacksGrid-Item'}
+                                            className="qa-Dashboard-RecentlyViewedDataPacksGrid-Item"
                                             run={viewedJob.last_export_run}
                                             user={this.props.user}
                                             key={viewedJob.created_at}
                                             onRunDelete={this.props.deleteRuns}
                                             providers={this.props.providers}
-                                            gridName={'RecentlyViewedDataPacks'}
+                                            gridName="RecentlyViewedDataPacks"
                                             index={index}
                                         />
                                     ))
                                     :
-                                    <div>You haven't viewed any DataPacks yet...</div>
+                                    <div>You haven&#39;t viewed any DataPacks yet...</div>
                                 }
                             </GridList>
                         </div>
@@ -216,6 +216,18 @@ DashboardPage.propTypes = {
     deleteRuns: PropTypes.func.isRequired,
     runsDeletion: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    runsList: PropTypes.shape({
+        cancelSource: PropTypes.object,
+        error: PropTypes.string,
+        fetched: PropTypes.bool,
+        fetching: PropTypes.bool,
+        nextPage: PropTypes.bool,
+        order: PropTypes.string,
+        range: PropTypes.string,
+        runs: PropTypes.arrayOf(PropTypes.object),
+        view: PropTypes.string,
+    }).isRequired,
 };
 
 function mapStateToProps(state) {
@@ -229,22 +241,14 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (args) => (
-            dispatch(getRuns(args))
-        ),
-        getViewedJobs: () => {
-            return dispatch(getViewedJobs());
-        },
-        getProviders: () => {
-            dispatch(getProviders())
-        },
-        deleteRuns: (uid) => {
-            dispatch(deleteRuns(uid));
-        },
+        getRuns: args => dispatch(getRuns(args)),
+        getViewedJobs: () => dispatch(getViewedJobs()),
+        getProviders: () => dispatch(getProviders()),
+        deleteRuns: uid => dispatch(deleteRuns(uid)),
     };
 }
 
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    mapDispatchToProps,
 )(DashboardPage);
