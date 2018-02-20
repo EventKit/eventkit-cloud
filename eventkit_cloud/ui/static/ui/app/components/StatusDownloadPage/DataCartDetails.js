@@ -165,7 +165,7 @@ export class DataCartDetails extends Component {
                         dataStyle={{ wordBreak: 'break-all' }}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-otherStatusContainer">
                     <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
                         Status
                     </div>
@@ -182,7 +182,7 @@ export class DataCartDetails extends Component {
                         statusFontColor={statusFontColor}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer">
                     <DataPackDetails
                         providerTasks={this.props.cartDetails.provider_tasks}
                         onProviderCancel={this.props.onProviderCancel}
@@ -190,7 +190,7 @@ export class DataCartDetails extends Component {
                         zipFileProp={this.props.cartDetails.zipfile_url}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-otherOptionsContainer">
                     <div className="qa-DataCartDetails-div-otherOptions" style={styles.subHeading}>
                         Other Options
                     </div>
@@ -202,7 +202,7 @@ export class DataCartDetails extends Component {
                         rerunDisabled={rerunDisabled}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer">
                     <div className="qa-DataCartDetails-div-generalInfo" style={styles.subHeading}>
                         General Information
                     </div>
@@ -217,7 +217,7 @@ export class DataCartDetails extends Component {
                     </div>
                     <div className="qa-DataCartDetails-div-map" id="summaryMap" style={{ maxHeight: '400px' }} />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer">
                     <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>
                         Export Information
                     </div>

@@ -18,7 +18,7 @@ export class CustomScrollbar extends Component {
         );
     }
     scrollToBottom() {
-        return this.refs.scrollBar.scrollToBottom();
+        this.scrollbar.scrollToBottom();
     }
 
 

@@ -80,6 +80,7 @@ export class DataPackStatusTable extends Component {
         return (
             <div style={{ marginLeft: '-5px', marginTop: '-5px' }}>
                 <DataPackTableRow
+                    className="qa-DataPackTableRow-Export"
                     title="Export"
                     data={this.props.status}
                     titleStyle={{ backgroundColor: this.props.statusColor }}

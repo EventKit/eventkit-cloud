@@ -25,6 +25,7 @@ export class StatusDownload extends React.Component {
         this.callback = this.callback.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
+        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.state = {
             isLoading: true,
             error: null,
@@ -37,6 +38,97 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
         this.startTimer();
+
+        const tooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf',
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf',
+            },
+            skip: {
+                color: '#8b9396',
+            },
+            back: {
+                color: '#8b9396',
+            },
+            hole: {
+                backgroundColor: 'rgba(226,226,226, 0.2)',
+            },
+        }
+
+        const steps = [
+            {
+                title: 'DataPack Info',
+                text: 'This is the name of the datapack.',
+                selector: '.qa-DataCartDetails-div-name',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'DataPack Status',
+                text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.',
+                selector: '.qa-DataCartDetails-div-otherStatusContainer',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'DataPack Download Options',
+                text: 'Here you will find download options for the datapack. <br> Each data source has its own table where you can view status of the current downloadable files.',
+                selector: '.qa-DataCartDetails-div-downloadOptionsContainer',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Other Options',
+                text: 'There are options availble to run datapack export again, clone the dataoack or delete the datapack',
+                selector: '.qa-DataCartDetails-div-otherOptionsContainer',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'General Information',
+                text: 'Here you will find general information related to the datapack.  ',
+                selector: '.qa-DataCartDetails-div-generalInfoContainer',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'AIO',
+                text: 'This is the selected area of interest for the datapack.',
+                selector: '.qa-DataCartDetails-div-map',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Export Information',
+                text: 'This contains information specific to the export.',
+                selector: '.qa-DataCartDetails-div-exportInfoContainer',
+                position: 'top',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+        ];
+
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -63,8 +155,10 @@ export class StatusDownload extends React.Component {
                 clearTimer += 1;
             }
 
-            // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
-            // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
+            // If the status of the job is completed, check the provider tasks to
+            // ensure they are all completed as well. If a Provider Task does
+            // not have a successful outcome, add to a counter.
+            // If the counter is greater than 1, that
             // means that at least one task is not completed, so do not stop the timer
             if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
                 const providerTasks = datacartDetails[0].provider_tasks;
@@ -91,112 +185,13 @@ export class StatusDownload extends React.Component {
         }
     }
     handleWalkthroughClick() {
-        this.setState({isRunning: true})
+        this.setState({ isRunning: true });
     }
 
     startTimer() {
         this.timer = TimerMixin.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 3000);
-    }
-
-    componentDidMount() {
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf'
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf'
-            },
-            skip: {
-                color: '#8b9396'
-            },
-            back: {
-                color: '#8b9396'
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            }
-        }
-
-        const steps = [
-            {
-                title: 'DataPack Info',
-                text: 'This is the name of the datapack.',
-                selector: '.qa-DataCartDetails-table-name',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-            {
-                title: 'DataPack Status',
-                text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.',
-                selector: '.qa-DataCartDetails-table-export',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-            {
-                title: 'DataPack Download Options',
-                text: 'Here you will find download options for the datapack. <br> Each data source has its own table where you can view status of the current downloadable files.',
-                selector: '.qa-DatapackDetails-div-downloadOptions',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-            {
-                title: 'Other Options',
-                text: 'There are options availble to run datapack export again, clone the dataoack or delete the datapack',
-                selector: '.qa-DataCartDetails-div-otherOptions',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-            {
-                title: 'General Information',
-                text: 'Here you will find general information related to the datapack.  ',
-                selector: '.qa-DataCartDetails-table-generalInfo',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-            {
-                title: 'AIO',
-                text: 'This is the selected area of interest for the datapack.',
-                selector: '.qa-DataCartDetails-div-map',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-            {
-                title: 'Export Information',
-                text: 'This contains information specific to the export.',
-                selector: '.qa-DataCartDetails-table-exportInfo',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed:true,
-            },
-        ];
-
-        this.joyrideAddSteps(steps);
-
-        this.props.getDatacartDetails(this.props.params.jobuid);
-        this.props.getProviders();
-        this.startTimer();
-        const maxDays = this.context.config.MAX_EXPORTRUN_EXPIRATION_DAYS;
-        this.setState({maxDays});
     }
 
     componentWillUnmount() {
@@ -267,32 +262,31 @@ export class StatusDownload extends React.Component {
 
     callback(data) {
         const { scrollBar } = this.refs;
-        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
         }
-        if(data.index === 0 && data.type === 'tooltip:before') {
 
-        }
-
-        if(data.index === 5 && data.type === 'tooltip:before') {
+        if (data.index === 5 && data.type === 'tooltip:before') {
             scrollBar.scrollToBottom();
+        }
+        if (data.type === 'finished') {
+            scrollBar.scrollToTop();
         }
     }
 
     handleJoyride() {
-        if(this.state.isRunning === true){
+        if (this.state.isRunning === true) {
             this.refs.joyride.reset(true);
-        }
-        else {
-            this.setState({isRunning: true})
+        } else {
+            this.setState({ isRunning: true });
         }
     }
 
     render() {
-        const {steps, isRunning} = this.state;
-        const pageTitle = <div style={{display: 'inline-block', paddingRight: '10px'}}>Status & Download </div>
-        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', display: 'inline-block', marginLeft:'10px', fontSize:'16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{color: '#4598bf', cursor:'pointer', height:'18px', width:'18px', verticalAlign:'middle', marginRight:'5px', marginBottom:'5px'}}/>Page Tour</div>
+        const { steps, isRunning } = this.state;
+        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>
+        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick()} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginLeft: '10px', fontSize: '16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width:'18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
 
         const marginPadding = this.getMarginPadding();
 
@@ -307,7 +301,7 @@ export class StatusDownload extends React.Component {
                 fontSize: '18px',
                 lineHeight: '35px',
                 paddingLeft: '10px',
-                height: '35px'
+                height: '35px',
             },
             root: {
                 height: window.innerHeight - 95,
@@ -350,9 +344,9 @@ export class StatusDownload extends React.Component {
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
-                    iconStyleRight={{marginTop: '2px'}}
+                    iconStyleRight={{ marginTop: '2px' }}
                     iconElementRight={iconElementRight}
-                    iconElementLeft={<p style={{display: 'none'}}/>}
+                    iconElementLeft={<p style={{ display: 'none' }} />}
                 />
                 {this.props.runDeletion.deleting ?
                     <div style={styles.deleting}>
@@ -365,19 +359,19 @@ export class StatusDownload extends React.Component {
                     :
                     null
                 }
-                <CustomScrollbar ref='scrollBar' style={{ height: window.innerHeight - 95, width: '100%' }}>
+                <CustomScrollbar ref="scrollBar" style={{ height: window.innerHeight - 95, width: '100%' }}>
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <Joyride
                             callback={this.callback}
-                            ref={'joyride'}
+                            ref="joyride"
                             debug={false}
                             steps={steps}
-                            scrollToSteps={true}
-                            autoStart={true}
-                            type={'continuous'}
+                            scrollToSteps
+                            autoStart
+                            type="continuous"
                             disableOverlay
-                            showSkipButton={true}
-                            showStepsProgress={true}
+                            showSkipButton
+                            showStepsProgress
                             locale={{
                                 back: (<span>Back</span>),
                                 close: (<span>Close</span>),
@@ -385,7 +379,8 @@ export class StatusDownload extends React.Component {
                                 next: (<span>Next</span>),
                                 skip: (<span>Skip</span>),
                             }}
-                            run={isRunning}/>
+                            run={isRunning}
+                        />
                         <form>
                             <Paper className="qa-Paper" style={{ padding: '20px' }} zDepth={2} >
                                 <div className="qa-StatusDownload-heading" style={styles.heading}>

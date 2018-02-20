@@ -130,7 +130,7 @@ export class ExportAOI extends Component {
             header: {
                 textAlign: 'left',
                 fontSize: '20px',
-                borderColor: '#4598bf'
+                borderColor: '#4598bf',
             },
             main: {
                 paddingTop: '20px',
@@ -138,17 +138,17 @@ export class ExportAOI extends Component {
             },
             button: {
                 color: 'white',
-                backgroundColor: '#4598bf'
+                backgroundColor: '#4598bf',
             },
             skip: {
-                color: '#8b9396'
+                color: '#8b9396',
             },
             back: {
-                color: '#8b9396'
+                color: '#8b9396',
             },
             hole: {
                 backgroundColor: 'rgba(226,226,226, 0.2)',
-            }
+            },
         };
 
         const steps = [
@@ -179,7 +179,7 @@ export class ExportAOI extends Component {
                 selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
                 position: 'left',
                 style: tooltipStyle,
-            }
+            },
         ];
 
         this.joyrideAddSteps(steps);
@@ -190,10 +190,9 @@ export class ExportAOI extends Component {
             this.handleGeoJSONUpload(nextProps.importGeom);
         }
 
-        if(nextProps.walkthroughClicked == true && this.state.isRunning == false)
-        {
+        if (nextProps.walkthroughClicked == true && this.state.isRunning == false) {
             this.refs.joyride.reset(true);
-            this.setState({isRunning: true});
+            this.setState({ isRunning: true });
         }
     }
 
@@ -219,15 +218,6 @@ export class ExportAOI extends Component {
             icons[key] = 'DEFAULT';
         });
         this.setState({ toolbarIcons: icons });
-    }
-
-    toggleImportModal(show) {
-        if (show != undefined) {
-            this.setState({ showImportModal: show });
-        }
-        else {
-            this.setState({ showImportModal: !this.state.showImportModal });
-        }
     }
 
     showInvalidDrawWarning(show) {
@@ -326,6 +316,11 @@ export class ExportAOI extends Component {
         }
     }
 
+    onBufferClick() {
+        this.bufferMapFeature();
+        this.setState({ showBuffer: false, validBuffer: true });
+    }
+
     setMapView() {
         clearDraw(this.drawLayer);
         const extent = this.map.getView().calculateExtent(this.map.getSize());
@@ -351,13 +346,21 @@ export class ExportAOI extends Component {
         this.props.setNextEnabled();
     }
 
+    toggleImportModal(show) {
+        if (show != undefined) {
+            this.setState({ showImportModal: show });
+        } else {
+            this.setState({ showImportModal: !this.state.showImportModal });
+        }
+    }
+
     updateMode(mode) {
         // make sure interactions are deactivated
         this.drawBoxInteraction.setActive(false);
         this.drawFreeInteraction.setActive(false);
         if (isViewOutsideValidExtent(this.map.getView())) {
             // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
-            // when needed, the draw interaction breaks if you wrap too many time, so to 
+            // when needed, the draw interaction breaks if you wrap too many time, so to
             // avoid that issue we go back to the valid extent but maintain the same view
             goToValidExtent(this.map.getView());
         }
@@ -671,11 +674,6 @@ export class ExportAOI extends Component {
         return true;
     }
 
-    onBufferClick() {
-        this.bufferMapFeature();
-        this.setState({ showBuffer: false, validBuffer: true });
-    }
-
     openBufferDialog() {
         this.setState({ showBuffer: true });
     }
@@ -722,7 +720,6 @@ export class ExportAOI extends Component {
 
     resetAoi() {
         const { originalGeojson } = this.props.aoiInfo;
-
         const reader = new GeoJSON();
         const newFeatures = reader.readFeatures(originalGeojson, {
             dataProjection: 'EPSG:4326',
@@ -766,12 +763,11 @@ export class ExportAOI extends Component {
         this.setAllButtonsDefault();
         this.props.setNextDisabled();
 
-        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
-            if (this.state.fakeData === true){
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+            if (this.state.fakeData === true) {
                 this.props.clearAoiInfo();
                 this.handleResetMap();
-            }
-            else {
+            } else {
                 this.setButtonSelected('box');
                 this.props.setNextEnabled();
             }
@@ -781,14 +777,13 @@ export class ExportAOI extends Component {
             this.refs.joyride.reset(true);
         }
 
-        if(data.index === 2 && data.type === 'tooltip:before') {
-            //make the map have a selection, make toolbar have the X
+        if (data.index === 2 && data.type === 'tooltip:before') {
+            //  make the map have a selection, make toolbar have the X
             this.setButtonSelected('box');
             if (this.props.aoiInfo.description === null) {
                 this.drawFakeBbox();
-                this.setState({fakeData : true});
-            }
-            else {
+                this.setState({ fakeData: true });
+            } else {
                 this.handleZoomToSelection();
             }
         }
@@ -802,8 +797,7 @@ export class ExportAOI extends Component {
     handleJoyride() {
         if (this.state.isRunning === true) {
             this.refs.joyride.reset(true);
-        }
-        else {
+        } else {
             this.setState({ isRunning: true });
         }
     }
@@ -859,11 +853,11 @@ export class ExportAOI extends Component {
             <div>
                 <Joyride
                     callback={this.callback}
-                    ref={'joyride'}
+                    ref="joyride"
                     debug={false}
                     steps={steps}
                     autoStart={true}
-                    type={'continuous'}
+                    type="continuous"
                     disableOverlay
                     showSkipButton={true}
                     showStepsProgress={true}

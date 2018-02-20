@@ -63,13 +63,14 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
+        const steps = this.setJoyRideSteps();
+        this.joyrideAddSteps(steps);
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.makeRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
             if (this.state.pageLoading) {
@@ -82,16 +83,6 @@ export class DataPackPage extends React.Component {
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
             this.setState({ loading: true }, this.makeRunRequest);
         }
-    }
-
-    componentDidMount() {
-        const steps = this.setJoyRideSteps();
-        this.joyrideAddSteps(steps);
-        this.props.getProviders();
-        this.makeRunRequest();
-        this.fetch = setInterval(this.makeRunRequest, 10000);
-        // make sure no geojson upload is in the state
-        this.props.resetGeoJSONFile();
     }
 
     componentWillUnmount() {
@@ -142,123 +133,124 @@ export class DataPackPage extends React.Component {
         };
 
         switch (this.state.view) {
-            case 'map':
-                return [
-                    {
-                        title: 'Create DataPack',
-                        text: 'Click here to Navigate to Create a DataPack.',
-                        selector: '.qa-DataPackLinkButton-RaisedButton',
-                        position: 'bottom',
-                        style: tooltipStyle,
+        case 'map':
+            return [
+                {
+                    title: 'Create DataPack',
+                    text: 'Click here to Navigate to Create a DataPack.',
+                    selector: '.qa-DataPackLinkButton-RaisedButton',
+                    position: 'bottom',
+                    style: tooltipStyle,
 
-                    },
-                    {
-                        title: 'Search DataPacks',
-                        text: 'Search and Sort the existing DataPack Library.',
-                        selector: '.qa-DataPackSearchBar-TextField',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'Filter DataPacks',
-                        text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
-                        selector: '.qa-FilterDrawer-Drawer > div',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'DataPack Status',
-                        text: 'Check the status of previously created DataPacks',
-                        selector: '.qa-DataPackListItem-subtitle-date',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'Status and Download',
-                        text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
-                        selector: '.qa-DataPackListItem-IconMenu',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                ];
-            case 'grid':
-                return [
-                    {
-                        title: 'Create DataPack',
-                        text: 'Click here to Navigate to Create a DataPack.',
-                        selector: '.qa-DataPackLinkButton-RaisedButton',
-                        position: 'bottom',
-                        style: tooltipStyle,
+                },
+                {
+                    title: 'Search DataPacks',
+                    text: 'Search and Sort the existing DataPack Library.',
+                    selector: '.qa-DataPackSearchBar-TextField',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'Filter DataPacks',
+                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                    selector: '.qa-FilterDrawer-Drawer > div',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'DataPack Status',
+                    text: 'Check the status of previously created DataPacks',
+                    selector: '.qa-DataPackListItem-subtitle-date',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'Status and Download',
+                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                    selector: '.qa-DataPackListItem-IconMenu',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+            ];
+        case 'grid':
+            return [
+                {
+                    title: 'Create DataPack',
+                    text: 'Click here to Navigate to Create a DataPack.',
+                    selector: '.qa-DataPackLinkButton-RaisedButton',
+                    position: 'bottom',
+                    style: tooltipStyle,
 
-                    },
-                    {
-                        title: 'Search DataPacks',
-                        text: 'Search and Sort the existing DataPack Library.',
-                        selector: '.qa-DataPackSearchBar-TextField',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'Filter DataPacks',
-                        text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
-                        selector: '.qa-FilterDrawer-Drawer > div',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'DataPack Status',
-                        text: 'Check the status of previously created DataPacks',
-                        selector: '.qa-DataPackGridItem-CardActions',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'Status and Download',
-                        text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
-                        selector: '.qa-DataPackGridItem-IconMenu',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                ];
-            case 'list':
-                return [
-                    {
-                        title: 'Create DataPack',
-                        text: 'Click here to Navigate to Create a DataPack.',
-                        selector: '.qa-DataPackLinkButton-RaisedButton',
-                        position: 'bottom',
-                        style: tooltipStyle,
+                },
+                {
+                    title: 'Search DataPacks',
+                    text: 'Search and Sort the existing DataPack Library.',
+                    selector: '.qa-DataPackSearchBar-TextField',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'Filter DataPacks',
+                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                    selector: '.qa-FilterDrawer-Drawer > div',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'DataPack Status',
+                    text: 'Check the status of previously created DataPacks',
+                    selector: '.qa-DataPackGridItem-CardActions',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'Status and Download',
+                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                    selector: '.qa-DataPackGridItem-IconMenu',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+            ];
+        case 'list':
+            return [
+                {
+                    title: 'Create DataPack',
+                    text: 'Click here to Navigate to Create a DataPack.',
+                    selector: '.qa-DataPackLinkButton-RaisedButton',
+                    position: 'bottom',
+                    style: tooltipStyle,
 
-                    },
-                    {
-                        title: 'Search DataPacks',
-                        text: 'Search and Sort the existing DataPack Library.',
-                        selector: '.qa-DataPackSearchBar-TextField',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'Filter DataPacks',
-                        text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
-                        selector: '.qa-FilterDrawer-Drawer > div',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'DataPack Status',
-                        text: 'Check the status of previously created DataPacks',
-                        selector: '.qa-DataPackTableItem-TableRowColumn-status',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                    {
-                        title: 'Status and Download',
-                        text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
-                        selector: '.qa-DataPackTableItem-IconMenu',
-                        position: 'bottom',
-                        style: tooltipStyle,
-                    },
-                ];
+                },
+                {
+                    title: 'Search DataPacks',
+                    text: 'Search and Sort the existing DataPack Library.',
+                    selector: '.qa-DataPackSearchBar-TextField',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'Filter DataPacks',
+                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                    selector: '.qa-FilterDrawer-Drawer > div',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'DataPack Status',
+                    text: 'Check the status of previously created DataPacks',
+                    selector: '.qa-DataPackTableItem-TableRowColumn-status',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+                {
+                    title: 'Status and Download',
+                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                    selector: '.qa-DataPackTableItem-IconMenu',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
+            ];
+        default: return null;
         }
     }
 
@@ -444,7 +436,7 @@ export class DataPackPage extends React.Component {
             this.refs.joyride.reset(true);
         }
         if (data.index === 2 && data.type === 'step:before') {
-            if (this.state.open == false) {
+            if (this.state.open === false) {
                 this.setState({ open: true });
             }
         }
@@ -521,11 +513,11 @@ export class DataPackPage extends React.Component {
             <div style={styles.backgroundStyle}>
                 <Joyride
                     callback={this.callback}
-                    ref={'joyride'}
+                    ref="joyride"
                     debug={false}
                     steps={steps}
                     autoStart={true}
-                    type={'continuous'}
+                    type="continuous"
                     disableOverlay
                     showSkipButton={true}
                     showStepsProgress={true}
@@ -536,7 +528,8 @@ export class DataPackPage extends React.Component {
                         next: (<span>Next</span>),
                         skip: (<span>Skip</span>),
                     }}
-                    run={isRunning} />
+                    run={isRunning}
+                />
                 <AppBar
                     className="qa-DataPackPage-AppBar"
                     style={styles.appBar}
