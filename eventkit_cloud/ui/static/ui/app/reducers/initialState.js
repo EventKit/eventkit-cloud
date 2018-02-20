@@ -37,6 +37,15 @@ export default {
         view: '',
         cancelSource: null,
     },
+    featuredRunsList: {
+        fetching: false,
+        fetched: false,
+        runs: [],
+        error: null,
+        nextPage: false,
+        range: '',
+        cancelSource: null,
+    },
     runsDeletion: {
         deleting: false,
         deleted: false,

@@ -303,7 +303,7 @@ export class DataPackGridItem extends Component {
                 expanded={this.state.expanded}
                 onExpandChange={this.handleExpandChange}
             >
-                <FeaturedFlag show={this.props.run.job.featured} />
+                <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                 <CardTitle
                     titleColor="#4598bf"
                     style={styles.cardTitle}
@@ -437,6 +437,11 @@ DataPackGridItem.propTypes = {
     providers: PropTypes.array.isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
+    showFeaturedFlag: PropTypes.bool,
+};
+
+DataPackGridItem.defaultProps = {
+    showFeaturedFlag: true,
 };
 
 export default DataPackGridItem;

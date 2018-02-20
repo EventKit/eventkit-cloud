@@ -86,6 +86,71 @@ export function getRuns(args) {
     };
 }
 
+export function getFeaturedRuns(args) {
+    return (dispatch, getState) => {
+        const { featuredRunsList } = getState();
+        if (featuredRunsList.fetching && featuredRunsList.cancelSource) {
+            // if there is already a request in process we need to cancel it
+            // before executing the current request
+            featuredRunsList.cancelSource.cancel('Request is no longer valid, cancelling');
+        }
+
+        const { CancelToken } = axios;
+        const source = CancelToken.source();
+
+        dispatch({ type: types.FETCHING_FEATURED_RUNS, cancelSource: source });
+
+        const params = {};
+        params.page_size = args.pageSize;
+        params.ordering = 'featured,-started_at';
+
+        const url = '/api/runs/filter';
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+
+        return axios({
+            url,
+            method: 'POST',
+            data: {},
+            params,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+            cancelToken: source.token,
+        }).then((response) => {
+            let nextPage = false;
+            let links = [];
+
+            if (response.headers.link) {
+                links = response.headers.link.split(',');
+            }
+            for (const i in links) {
+                if (links[i].includes('rel="next"')) {
+                    nextPage = true;
+                }
+            }
+            let range = '';
+            if (response.headers['content-range']) {
+                range = response.headers['content-range'].split('-')[1];
+            }
+
+            const runs = [];
+            for (const run of Object.values(response.data)) {
+                if (run.job.featured) {
+                    runs.push(run);
+                } else {
+                    nextPage = false;
+                }
+            }
+
+            dispatch({ type: types.RECEIVED_FEATURED_RUNS, runs: runs, nextPage, range });
+        }).catch((error) => {
+            if (axios.isCancel(error)) {
+                console.log(error.message);
+            } else {
+                dispatch({ type: types.FETCH_FEATURED_RUNS_ERROR, error: error.response.data });
+            }
+        });
+    };
+}
+
 export function deleteRuns(uid) {
     return (dispatch, getState) => {
         dispatch({ type: types.DELETING_RUN });
