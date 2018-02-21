@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component, PropTypes } from 'react';
 import {TextField} from 'material-ui';
 import clone from 'lodash/clone';
 import uniqueId from 'lodash/uniqueId';
@@ -18,7 +18,8 @@ export class CustomTextField extends Component {
                 bottom: '4px',
                 right: '16px',
                 transform: 'translateY(-50%)',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                ...this.props.charsRemainingStyle,
             }
         }
     }
@@ -48,7 +49,7 @@ export class CustomTextField extends Component {
     }
 
     render() {
-        const { showRemaining, onChange, ...rest } = this.props;
+        const { showRemaining, onChange, charsRemainingStyle, ...rest } = this.props;
         
         const charsRemainingColor = (this.state.charsRemaining > 10) ? '#B4B7B8' : '#CE4427';
 
@@ -74,7 +75,8 @@ export class CustomTextField extends Component {
                 {(this.props.maxLength && this.props.showRemaining && this.state.focused) ?
                 <div
                     className={'qa-CustomTextField-div-charsRemaining'}
-                    style={{...this.styles.charsRemaining, color: charsRemainingColor}}>
+                    style={{...this.styles.charsRemaining, color: charsRemainingColor}}
+                >
                     {this.state.charsRemaining}
                 </div>
                 : null}
@@ -84,13 +86,15 @@ export class CustomTextField extends Component {
 }
 
 CustomTextField.propTypes = {
-    showRemaining: React.PropTypes.bool,
-    maxLength: React.PropTypes.number,
+    showRemaining: PropTypes.bool,
+    maxLength: PropTypes.number,
+    charsRemainingStyle: PropTypes.object,
 };
 
 CustomTextField.defaultProps = {
     showRemaining: true,
     maxLength: 100,
+    charsRemainingStyle: {},
 };
 
 export default CustomTextField;

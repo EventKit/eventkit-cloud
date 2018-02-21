@@ -413,10 +413,10 @@ export class DataPackPage extends React.Component {
                         show
                         onClose={this.handleShareClose}
                         onSave={this.handleShareClose}
-                        groups={this.props.groups}
-                        users={this.props.users}
-                        user={this.props.user.data.user}
-                        run={this.props.runsList.runs.find(run => run.job.uid === this.state.targetJob)}
+                        groups={this.props.groups.filter(group => (group.administrators.includes(this.props.user.data.user.username)))}
+                        members={this.props.users}
+                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
                     />
                     :
                     null
