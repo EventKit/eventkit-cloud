@@ -125,7 +125,7 @@ export const viewedJob = (jobUid) => (dispatch) => {
     });
 };
 
-export const getViewedJobs = () => (dispatch) => {
+export const getViewedJobs = (args = {}) => (dispatch) => {
     const cancelSource = axios.CancelToken.source();
 
     dispatch({
@@ -133,16 +133,34 @@ export const getViewedJobs = () => (dispatch) => {
         cancelSource: cancelSource,
     });
 
+    const pageSize = args.pageSize || 10;
+
     return axios({
-        url: '/api/user/activity/jobs?activity=viewed',
+        url: `/api/user/activity/jobs?activity=viewed&page_size=${pageSize}`,
         method: 'GET',
         cancelToken: cancelSource.token,
     }).then((response) => {
+        let nextPage = false;
+        let links = [];
+
+        if (response.headers.link) {
+            links = response.headers.link.split(',');
+        }
+        for (const i in links) {
+            if (links[i].includes('rel="next"')) {
+                nextPage = true;
+            }
+        }
+        let range = '';
+        if (response.headers['content-range']) {
+            range = response.headers['content-range'].split('-')[1];
+        }
+
         dispatch({
             type: actions.RECEIVED_VIEWED_JOBS,
-            payload: {
-                jobs: response.data,
-            },
+            payload: response.data,
+            nextPage,
+            range,
         });
     }).catch((error) => {
         if (axios.isCancel(error)) {

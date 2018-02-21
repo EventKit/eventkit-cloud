@@ -978,6 +978,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 class UserJobActivityViewSet(viewsets.ModelViewSet):
     serializer_class = UserJobActivitySerializer
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = LinkHeaderPagination
 
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
@@ -987,7 +988,7 @@ class UserJobActivityViewSet(viewsets.ModelViewSet):
                 type=UserJobActivity.VIEWED,
                 job__last_export_run__isnull=False,
                 job__last_export_run__deleted=False,
-            ).order_by('job', '-created_at').distinct('job').values_list('id', flat=True)[:10]
+            ).order_by('job', '-created_at').distinct('job').values_list('id', flat=True)
 
             return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
         else:
@@ -995,8 +996,13 @@ class UserJobActivityViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = UserJobActivitySerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
         activity_type = request.query_params.get('activity', '').lower()

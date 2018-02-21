@@ -12,6 +12,7 @@ const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
+        this.refresh = this.refresh.bind(this);
         this.state = {
             loadingPage: true,
             loadingSections: {
@@ -24,7 +25,12 @@ export class DashboardPage extends React.Component {
 
     componentDidMount() {
         this.props.getProviders();
-        this.refresh();
+        this.refreshIntervalId = setInterval(this.refresh, 10000);
+        this.refresh({ showLoading: true });
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.refreshIntervalId);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -64,7 +70,7 @@ export class DashboardPage extends React.Component {
 
         // Deleted datapack.
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
-            this.refresh();
+            this.refresh({ showLoading: true });
         }
     }
 
@@ -84,26 +90,30 @@ export class DashboardPage extends React.Component {
         return window.innerWidth >= 768 ? 7 : 2;
     }
 
-    refresh() {
+    refresh({ showLoading = false } = {}) {
         this.props.getRuns({
-            pageSize: 10,
+            pageSize: 6,
             ordering: '-started_at',
             ownerFilter: this.props.user.data.user.username,
         });
         this.props.getFeaturedRuns({
-            pageSize: 10,
+            pageSize: 6,
         });
-        this.props.getViewedJobs();
+        this.props.getViewedJobs({
+            pageSize: 6,
+        });
 
-        // Reset all loading flags.
-        const loadingSections = {...this.state.loadingSections};
-        for (const key of Object.keys(loadingSections)) {
-            loadingSections[key] = true
+        if (showLoading) {
+            // Reset all loading flags.
+            const loadingSections = {...this.state.loadingSections};
+            for (const key of Object.keys(loadingSections)) {
+                loadingSections[key] = true
+            }
+
+            this.setState({
+                loadingSections: loadingSections
+            });
         }
-
-        this.setState({
-            loadingSections: loadingSections
-        });
     }
 
     isLoading() {
@@ -350,7 +360,7 @@ function mapDispatchToProps(dispatch) {
     return {
         getRuns: (args) => dispatch(getRuns(args)),
         getFeaturedRuns: (args) => dispatch(getFeaturedRuns(args)),
-        getViewedJobs: () => dispatch(getViewedJobs()),
+        getViewedJobs: (args) => dispatch(getViewedJobs(args)),
         getProviders: () => dispatch(getProviders()),
         deleteRuns: (uid) => dispatch(deleteRuns(uid)),
     };
