@@ -2,7 +2,7 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './actionTypes';
 
-export function getRuns(args) {
+export function getRuns(args = {}) {
     return (dispatch, getState) => {
         const { runsList } = getState();
         if (runsList.fetching && runsList.cancelSource) {
@@ -29,10 +29,14 @@ export function getRuns(args) {
 
         const params = {};
         params.page_size = args.pageSize;
-        params.ordering = args.ordering.includes('featured') ?
+        if (args.ordering) {
+            params.ordering = args.ordering.includes('featured') ?
             `${args.ordering},-started_at`
             :
             args.ordering;
+        } else {
+            params.ordering = '-job__featured';
+        }
         if (args.ownerFilter) params.user = args.ownerFilter;
         if (args.published) params.published = args.published;
         if (status.length) params.status = status.join(',');

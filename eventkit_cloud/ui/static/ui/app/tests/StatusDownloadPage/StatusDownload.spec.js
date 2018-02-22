@@ -130,6 +130,7 @@ describe('StatusDownload component', () => {
             cloneExport: () => {},
             cancelProviderTask: () => {},
             getProviders: () => {},
+            viewedJob: () => {},
         }
     );
 

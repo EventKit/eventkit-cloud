@@ -1,6 +1,6 @@
 import types from '../actions/actionTypes';
 
-export const initialState = {
+export const userState = {
   data: null,
   isLoading: false,
   patching: false,
@@ -16,7 +16,7 @@ export const initialState = {
   },
 }
 
-export function userReducer(state = initialState, { type, payload, error, cancelSource, nextPage, range }) {
+export function userReducer(state = userState, { type, payload, error, cancelSource, nextPage, range }) {
   switch (type) {
     case types.USER_LOGGING_IN:
         return { ...state, isLoading: true };

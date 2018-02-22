@@ -310,30 +310,36 @@ describe('DataPackPage component', () => {
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
-        const owner = 'test_user';
+        const ownerFilter = 'test_user';
         const published = 'True';
         const search = 'search_text';
-        const expectedParams = {
-            page_size: 12,
-            ordering: '-job__featured,-started_at',
-            user: 'test_user',
-            published: 'True',
-            status: 'COMPLETED,INCOMPLETE',
-            min_date: '2017-07-30',
-            max_date: '2017-08-02',
-            search_term: 'search_text',
-        };
+        const providers = ['test_provider'];
+        const geojson = {data: {}};
+        const expectedParams = [{
+            pageSize: 12,
+            ordering: '-job__featured',
+            ownerFilter,
+            published,
+            status,
+            minDate,
+            maxDate,
+            search,
+            providers,
+            geojson,
+        }];
         wrapper.setState({
             status,
             minDate,
             maxDate,
-            ownerFilter: owner,
+            ownerFilter,
             published,
             search,
+            providers,
+            geojson_geometry: geojson,
         });
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
-        expect(props.getRuns.calledWith(expectedParams, null)).toBe(true);
+        expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
@@ -501,6 +507,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.instance().getView('grid')).toEqual((
             <DataPackGrid
                 {...commonProps}
+                name="DataPackLibrary"
             />
         ));
 
