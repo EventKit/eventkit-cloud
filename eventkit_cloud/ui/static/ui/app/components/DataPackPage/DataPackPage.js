@@ -39,6 +39,7 @@ export class DataPackPage extends React.Component {
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
@@ -272,6 +273,11 @@ export class DataPackPage extends React.Component {
         this.setState({ shareOpen: false, targetJob: '' });
     }
 
+    handleShareSave(permissions) {
+        console.log(permissions);
+        this.handleShareClose();
+    }
+
     render() {
         const pageTitle = 'DataPack Library';
         const styles = {
@@ -327,6 +333,8 @@ export class DataPackPage extends React.Component {
                     fontSize: '12px',
                 },
         };
+
+        const groups = this.props.groups.filter(group => (group.administrators.includes(this.props.user.data.user.username)));
 
         return (
             <div style={styles.backgroundStyle}>
@@ -396,7 +404,7 @@ export class DataPackPage extends React.Component {
                                 <div style={{ zIndex: 10, position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                                         <CircularProgress
-                                            style={{ margin: 'auto', display: 'block' }} 
+                                            style={{ margin: 'auto', display: 'block' }}
                                             color="#4598bf"
                                             size={50}
                                         />
@@ -412,11 +420,29 @@ export class DataPackPage extends React.Component {
                     <DataPackShareDialog
                         show
                         onClose={this.handleShareClose}
-                        onSave={this.handleShareClose}
-                        groups={this.props.groups.filter(group => (group.administrators.includes(this.props.user.data.user.username)))}
+                        onSave={this.handleShareSave}
+                        groups={groups}
                         members={this.props.users}
+                        permissions={{
+                            groups: {
+                                'Group 1': ['UPDATE'],
+                                'Group 2': ['UPDATE'],
+                                'Group 4': ['READ'],
+                                'Group 6': ['READ'],
+                                'Group 7': ['READ'],
+                                'Group 8': ['UPDATE'],
+                                'Group 10': ['READ'],
+                            },
+                            members: {
+                                JaneD: ['READ'],
+                                JoeS: ['READ'],
+                                U1: ['READ'],
+                                U2: ['READ'],
+                            },
+                        }}
                         groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
                         membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
+                        canUpdateAdmin
                     />
                     :
                     null

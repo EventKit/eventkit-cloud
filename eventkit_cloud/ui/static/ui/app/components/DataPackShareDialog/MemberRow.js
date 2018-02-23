@@ -6,6 +6,7 @@ import CheckBox from 'material-ui/svg-icons/toggle/check-box';
 export class MemberRow extends Component {
     constructor(props) {
         super(props);
+        this.handleCheck = this.props.handleCheck.bind(this, this.props.member);
     }
 
     render() {
@@ -38,11 +39,11 @@ export class MemberRow extends Component {
         };
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheckBox} />;
+        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} />;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.props.handleCheckBox} />;
+            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} />;
         }
 
         return (
@@ -77,7 +78,7 @@ MemberRow.propTypes = {
         email: PropTypes.string,
     }).isRequired,
     selected: PropTypes.bool.isRequired,
-    handleCheckBox: PropTypes.func.isRequired,
+    handleCheck: PropTypes.func.isRequired,
 };
 
 export default MemberRow;

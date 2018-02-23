@@ -4,11 +4,13 @@ import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blan
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import GroupMemberRow from './GroupMemberRow';
 
 export class GroupRow extends Component {
     constructor(props) {
         super(props);
         this.toggleExpanded = this.toggleExpanded.bind(this);
+        this.handleCheck = this.props.handleCheck.bind(this, this.props.group);
         this.state = {
             expanded: false,
         };
@@ -63,11 +65,11 @@ export class GroupRow extends Component {
         };
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheckBox} />;
+        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} />;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.props.handleCheckBox} />;
+            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} />;
         }
 
         return (
@@ -102,25 +104,20 @@ export class GroupRow extends Component {
                 <CardText expandable style={styles.cardText}>
                     {this.props.group.members.map((groupMember) => {
                         const member = this.props.members.find(propmember => propmember.username === groupMember);
-                        
                         if (!member) {
                             return null;
                         }
-
+                        const isAdmin = this.props.group.administrators.includes(groupMember);
                         return (
-                            <div
+                            <GroupMemberRow
                                 key={member.username}
-                                style={{ padding: '6px 0px 0px' }}
-                                className="qa-GroupRow-memberContainer"
-                            >
-                                <div
-                                    style={{ display: 'inline-block' }}
-                                    className="qa-GroupRow-memberInfo"
-                                >
-                                    <div><strong>{member.name}</strong></div>
-                                    <div>{member.email}</div>
-                                </div>
-                            </div>
+                                member={member}
+                                isGroupAdmin={isAdmin}
+                                isDataPackAdmin={false}
+                                dropDownDisabled={!this.props.selected}
+                                showAdminDropDown={this.props.canUpdateAdmin}
+                                handleAdminChange={this.props.handleAdminChange}
+                            />
                         );
                     })}
                 </CardText>
@@ -128,6 +125,11 @@ export class GroupRow extends Component {
         );
     }
 }
+
+GroupRow.defaultProps = {
+    canUpdateAdmin: false,
+    handleAdminChange: () => {},
+};
 
 GroupRow.propTypes = {
     group: PropTypes.shape({
@@ -138,7 +140,9 @@ GroupRow.propTypes = {
     }).isRequired,
     members: PropTypes.arrayOf(PropTypes.object).isRequired,
     selected: PropTypes.bool.isRequired,
-    handleCheckBox: PropTypes.func.isRequired,
+    handleCheck: PropTypes.func.isRequired,
+    handleAdminChange: PropTypes.func,
+    canUpdateAdmin: PropTypes.bool,
 };
 
 export default GroupRow;

@@ -8,18 +8,6 @@ import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import IndeterminateIcon from '../../components/IndeterminateIcon';
 
 export class GroupsHeaderRow extends Component {
-    constructor(props) {
-        super(props);
-        this.handleUncheckAll = this.handleUncheckAll.bind(this);
-        this.handleCheckAll = this.handleCheckAll.bind(this);
-    }
-
-    handleUncheckAll() {
-    }
-
-    handleCheckAll() {
-    }
-
     render() {
         const styles = {
             card: {
@@ -28,11 +16,9 @@ export class GroupsHeaderRow extends Component {
             },
             group: {
                 flex: '1 1 auto',
-
             },
             share: {
                 display: 'flex',
-                alignItems: 'center',
             },
             check: {
                 position: 'relative',
@@ -46,9 +32,9 @@ export class GroupsHeaderRow extends Component {
         };
 
         const icons = {
-            checked: <CheckBox style={styles.check} onClick={this.handleUncheckAll} />,
-            unchecked: <CheckBoxOutline style={styles.check} onClick={this.handleCheckAll} />,
-            indeterminate: <IndeterminateIcon style={styles.check} onClick={this.handleUncheckAll} />,
+            checked: <CheckBox style={styles.check} onClick={this.props.handleUncheckAll} />,
+            unchecked: <CheckBoxOutline style={styles.check} onClick={this.props.handleCheckAll} />,
+            indeterminate: <IndeterminateIcon style={styles.check} onClick={this.props.handleUncheckAll} />,
         };
 
         // assume no groups are checked by default
@@ -71,21 +57,29 @@ export class GroupsHeaderRow extends Component {
                         <div style={{ display: 'flex', fontSize: '12px', color: '#707274', lineHeight: '28px' }}>
                             <div style={styles.group} className="qa-GroupsHeaderRow-CardHeader-text">
                                 <EnhancedButton
-                                    onClick={() => { console.log('group enhanced'); }}
-                                    style={{ marginRight: '10px' }}
+                                    onClick={this.props.onGroupClick}
+                                    style={{ marginRight: '10px', color: this.props.activeOrder === 'group' ? '#4598bf' : '#707274' }}
                                     disableTouchRipple
                                 >
                                     GROUP
-                                    <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    {this.props.groupOrder === 1 ?
+                                        <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                        :
+                                        <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    }
                                 </EnhancedButton>
                             </div>
                             <div style={styles.share} className="qa-GroupsHeaderRow-CardHeader-icons">
                                 <EnhancedButton
-                                    onClick={() => { console.log('enhanced'); }}
-                                    style={{ marginRight: '10px' }}
+                                    onClick={this.props.onSharedClick}
+                                    style={{ marginRight: '10px', color: this.props.activeOrder === 'shared' ? '#4598bf' : '#707274' }}
                                     disableTouchRipple
                                 >
-                                    <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    {this.props.sharedOrder === 1 ?
+                                        <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                        :
+                                        <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    }
                                     SHARED
                                 </EnhancedButton>
                                 {checkIcon}
@@ -103,6 +97,13 @@ export class GroupsHeaderRow extends Component {
 GroupsHeaderRow.propTypes = {
     groupCount: PropTypes.number.isRequired,
     selectedCount: PropTypes.number.isRequired,
+    onGroupClick: PropTypes.func.isRequired,
+    onSharedClick: PropTypes.func.isRequired,
+    activeOrder: PropTypes.oneOf(['group', 'shared']).isRequired,
+    groupOrder: PropTypes.oneOf([-1, 1]).isRequired,
+    sharedOrder: PropTypes.oneOf([-1, 1]).isRequired,
+    handleCheckAll: PropTypes.func.isRequired,
+    handleUncheckAll: PropTypes.func.isRequired,
 };
 
 export default GroupsHeaderRow;

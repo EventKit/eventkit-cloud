@@ -8,18 +8,38 @@ export class DataPackShareDialog extends Component {
     constructor(props) {
         super(props);
         this.handleSave = this.handleSave.bind(this);
+        this.handleGroupUpdate = this.handleGroupUpdate.bind(this);
+        this.handleMemberUpdate = this.handleMemberUpdate.bind(this);
         this.toggleView = this.toggleView.bind(this);
+        this.forceUpdate = this.forceUpdate.bind(this);
         this.state = {
             view: 'groups',
-            groups: [...this.props.groups],
-            members: [...this.props.members],
-            selectedGroups: [...this.props.groups],
-            selectedMembers: [...this.props.members],
+            // Make a copy of the permissions so we can modify it locally
+            permissions: { ...this.props.permissions },
         };
     }
 
+    componentWillReceiveProps(nextProps) {
+        // If permissions were not ready on mount we need to update them
+        if (nextProps.permissions && !this.props.permissions) {
+            this.setState({ permissions: { ...nextProps.permissions }});
+        }
+    }
+
     handleSave() {
-        this.props.onSave();
+        this.props.onSave(this.state.permissions);
+    }
+
+    handleGroupUpdate(groups) {
+        const permissions = { ...this.state.permissions };
+        permissions.groups = groups;
+        this.setState({ permissions });
+    }
+
+    handleMemberUpdate(members) {
+        const permissions = { ...this.state.permissions };
+        permissions.members = members;
+        this.setState({ permissions });
     }
 
     toggleView(view) {
@@ -85,14 +105,14 @@ export class DataPackShareDialog extends Component {
                         style={{ display: 'flex', flexWrap: 'wrap' }}
                     >
                         <RaisedButton
-                            label={`GROUPS (${this.state.selectedGroups.length})`}
+                            label={`GROUPS (${this.props.groups.length})`}
                             style={styles.groupsButton}
                             labelColor={this.state.view === 'groups' ? '#fff' : '#4598bf'}
                             backgroundColor={this.state.view === 'groups' ? '#4598bf' : 'whitesmoke'}
                             onClick={this.toggleView}
                         />
                         <RaisedButton
-                            label={`MEMBERS (${this.state.selectedMembers.length})`}
+                            label={`MEMBERS (${this.props.members.length})`}
                             style={styles.membersButton}
                             labelColor={this.state.view === 'members' ? '#fff' : '#4598bf'}
                             backgroundColor={this.state.view === 'members' ? '#4598bf' : 'whitesmoke'}
@@ -112,14 +132,20 @@ export class DataPackShareDialog extends Component {
                     <GroupsBody
                         groups={this.props.groups}
                         members={this.props.members}
-                        selectedGroups={this.state.selectedGroups}
+                        selectedGroups={this.state.permissions.groups}
                         groupsText={this.props.groupsText}
+                        update={this.forceUpdate}
+                        onGroupsUpdate={this.handleGroupUpdate}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
                     />
                     :
                     <MembersBody
                         members={this.props.members}
-                        selectedMembers={this.state.selectedMembers}
+                        selectedMembers={this.state.permissions.members}
                         membersText={this.props.membersText}
+                        update={this.forceUpdate}
+                        onMembersUpdate={this.handleMemberUpdate}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
                     />
                 }
             </ShareBaseDialog>
@@ -130,6 +156,7 @@ export class DataPackShareDialog extends Component {
 DataPackShareDialog.defaultProps = {
     groupsText: '',
     membersText: '',
+    canUpdateAdmin: false,
 };
 
 DataPackShareDialog.propTypes = {
@@ -143,13 +170,10 @@ DataPackShareDialog.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     members: PropTypes.arrayOf(PropTypes.object).isRequired,
-    // selectedGroups: PropTypes.arrayOf(PropTypes.shape({
-    //     id: PropTypes.string,
-    //     name: PropTypes.string,
-    //     members: PropTypes.arrayOf(PropTypes.string),
-    //     administrators: PropTypes.arrayOf(PropTypes.string),
-    // })).isRequired,
-    // selectedMembers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    permissions: PropTypes.shape({
+        groups: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
+        members: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
+    }).isRequired,
     groupsText: PropTypes.oneOfType([
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
@@ -160,6 +184,7 @@ DataPackShareDialog.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.string,
     ]),
+    canUpdateAdmin: PropTypes.bool,
 };
 
 export default DataPackShareDialog;

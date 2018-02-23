@@ -8,30 +8,21 @@ import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import IndeterminateIcon from '../../components/IndeterminateIcon';
 
 export class MembersHeaderRow extends Component {
-    constructor(props) {
-        super(props);
-        this.handleUncheckAll = this.handleUncheckAll.bind(this);
-        this.handleCheckAll = this.handleCheckAll.bind(this);
-    }
-
-    handleUncheckAll() {
-    }
-
-    handleCheckAll() {
-    }
-
     render() {
         const styles = {
             card: {
                 boxShadow: 'none',
                 color: '#707274',
+                borderBottom: '1px solid #70727480',
+                marginBottom: '6px',
             },
             member: {
-                flex: '1 1 auto',
-
+                flex: '0 0 auto',
+                marginRight: '5px',
             },
             share: {
                 display: 'flex',
+                flex: '0 0 auto',
                 alignItems: 'center',
             },
             check: {
@@ -43,9 +34,9 @@ export class MembersHeaderRow extends Component {
         };
 
         const icons = {
-            checked: <CheckBox style={styles.check} onClick={this.handleUncheckAll} />,
-            unchecked: <CheckBoxOutline style={styles.check} onClick={this.handleCheckAll} />,
-            indeterminate: <IndeterminateIcon style={styles.check} onClick={this.handleUncheckAll} />,
+            checked: <CheckBox style={styles.check} onClick={this.props.handleUncheckAll} />,
+            unchecked: <CheckBoxOutline style={styles.check} onClick={this.props.handleCheckAll} />,
+            indeterminate: <IndeterminateIcon style={styles.check} onClick={this.props.handleUncheckAll} />,
         };
 
         // assume no users are checked by default
@@ -55,6 +46,13 @@ export class MembersHeaderRow extends Component {
             checkIcon = icons.checked;
         } else if (this.props.selectedCount) {
             checkIcon = icons.indeterminate;
+        }
+
+        let countText = '';
+        if (window.innerWidth < 576) {
+            countText = `(${this.props.selectedCount}/${this.props.memberCount})`;
+        } else {
+            countText = `Shared with ${this.props.selectedCount} of ${this.props.memberCount}`;
         }
 
         return (
@@ -68,21 +66,30 @@ export class MembersHeaderRow extends Component {
                         <div style={{ display: 'flex', fontSize: '12px', color: '#707274', lineHeight: '28px' }}>
                             <div style={styles.member} className="qa-MembersHeaderRow-CardHeader-text">
                                 <EnhancedButton
-                                    onClick={() => { console.log('group enhanced'); }}
-                                    style={{ marginRight: '10px' }}
+                                    onClick={this.props.onMemberClick}
                                     disableTouchRipple
+                                    style={{ color: this.props.activeOrder === 'member' ? '#4598bf' : '#707274' }}
                                 >
                                     MEMBER
-                                    <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    {this.props.memberOrder === 1 ?
+                                        <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                        :
+                                        <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    }
                                 </EnhancedButton>
                             </div>
+                            <div style={{ flex: '1 1 auto' }}>{countText}</div>
                             <div style={styles.share} className="qa-MembersHeaderRow-CardHeader-icons">
                                 <EnhancedButton
-                                    onClick={() => { console.log('enhanced'); }}
-                                    style={{ marginRight: '10px' }}
+                                    onClick={this.props.onSharedClick}
+                                    style={{ marginRight: '10px', color: this.props.activeOrder === 'shared' ? '#4598bf' : '#707274' }}
                                     disableTouchRipple
                                 >
-                                    <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    {this.props.sharedOrder === 1 ?
+                                        <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                        :
+                                        <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
+                                    }
                                     SHARED
                                 </EnhancedButton>
                                 {checkIcon}
@@ -100,6 +107,13 @@ export class MembersHeaderRow extends Component {
 MembersHeaderRow.propTypes = {
     memberCount: PropTypes.number.isRequired,
     selectedCount: PropTypes.number.isRequired,
+    onMemberClick: PropTypes.func.isRequired,
+    onSharedClick: PropTypes.func.isRequired,
+    activeOrder: PropTypes.oneOf(['member', 'shared']).isRequired,
+    memberOrder: PropTypes.oneOf([-1, 1]).isRequired,
+    sharedOrder: PropTypes.oneOf([-1, 1]).isRequired,
+    handleCheckAll: PropTypes.func.isRequired,
+    handleUncheckAll: PropTypes.func.isRequired,
 };
 
 export default MembersHeaderRow;
