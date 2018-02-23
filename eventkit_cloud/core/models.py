@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 import uuid
+from enum import Enum
 from django.contrib.gis.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User,Group
@@ -72,6 +73,12 @@ class GroupPermission(TimeStampedModelMixin):
     Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
     """
 
+    @staticmethod
+    class Permissions(Enum):
+        NONE = "NONE"
+        MEMBER = "MEMBER"
+        ADMIN = "ADMIN"
+
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group)
     permission  = models.CharField(
@@ -91,6 +98,15 @@ from django.contrib.contenttypes.models import ContentType
 
 
 class JobPermission(TimeStampedModelMixin):
+
+    @staticmethod
+    class JobPermissions(object):
+        class MemberTypes(Enum):
+            NONE = "NONE"
+            READ = "READ"
+            UPDATE = "UPDATE"
+            DELETE = "DELETE"
+            SHARE = "SHARE"
 
     """
     Model associates users or groups with jobs
@@ -112,12 +128,3 @@ class JobPermission(TimeStampedModelMixin):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
 
 
-    @property
-    def admin_permissions(self):
-        return ['NONE', 'READ', 'UPDATE', 'DELETE', 'SHARE']
-
-
-    def set_admin(self):
-      for permission in self.admin_permissions():
-            pass
-            # self.get_or_create(user, group, permission)

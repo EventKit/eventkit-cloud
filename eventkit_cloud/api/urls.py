@@ -10,7 +10,6 @@ from .views import (
     RegionViewSet, ExportProviderViewSet, SwaggerSchemaView,
     ExportProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet)
 
-
 router = DefaultRouter(trailing_slash=False)
 router.register(r'jobs', JobViewSet, base_name='jobs')
 router.register(r'formats', ExportFormatViewSet, base_name='formats')

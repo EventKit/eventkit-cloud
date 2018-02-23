@@ -1033,9 +1033,18 @@ class GroupViewSet(viewsets.ModelViewSet):
     ordering_fields = ('name',)
 
 
+    def useradmin(self,group,request):
+        serializer = GroupSerializer(group)
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        return user.username in serializer.get_administrators(group)
+
     def get_queryset(self):
         queryset = Group.objects.all()
         return queryset
+
+    def update(self, request, *args, **kwargs):
+        # we don't support calls to PUT for this viewset.
+        return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         """
@@ -1081,23 +1090,23 @@ class GroupViewSet(viewsets.ModelViewSet):
         user  = User.objects.all().filter(username=request.user.username)[0]
         group = Group.objects.filter(id=group_id)[0]
         group.user_set.add(user)
-        groupadmin = GroupPermission.objects.create(user=user,group=group, permission='ADMIN')
+        groupadmin = GroupPermission.objects.create(user=user,group=group, permission=GroupPermission.Permissions.ADMIN.value)
         groupadmin.save()
-        groupmember = GroupPermission.objects.create(user=user,group=group, permission='MEMBER')
+        groupmember = GroupPermission.objects.create(user=user,group=group, permission=GroupPermission.Permissions.MEMBER.value)
 
         if "members" in request.data:
             for member  in request.data["members"]:
                 if member  != user.username:
                     user  = User.objects.all().filter(username=member)[0]
                     if user:
-                        GroupPermission.objects.create(user=user, group=group, permission='MEMBER')
+                        GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.MEMBER.value)
 
         if "administrators" in request.data:
             for admin in request.data["administrators"]:
                 if admin  != request.user.username:
                     user  = User.objects.all().filter(username=admin)[0]
                     if user:
-                        GroupPermission.objects.create(user=user, group=group, permission='ADMIN')
+                        GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.ADMIN.value)
 
         group  = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
@@ -1112,6 +1121,27 @@ class GroupViewSet(viewsets.ModelViewSet):
         serializer = GroupSerializer(group)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def destroy(self, request, id=None, *args, **kwargs):
+
+        """
+            Destroy a group
+        """
+
+        # Not permitted if the requesting user is not an administrator
+
+        group = Group.objects.filter(id=id)[0]
+
+        if not self.useradmin(group,request):
+            return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
+
+        super(GroupViewSet, self).destroy(request, *args, **kwargs)
+        return Response("OK",  status=status.HTTP_200_OK)
+
+        # instance = self.get_object()
+        # instance.soft_delete(user=request.user)
+        # return Response(status=status.HTTP_204_NO_CONTENT)
 
     @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
@@ -1129,15 +1159,12 @@ class GroupViewSet(viewsets.ModelViewSet):
 
          """
 
-        super(GroupViewSet, self).partial_update(request, *args, **kwargs)
         group = Group.objects.filter(id=id)[0]
 
         # we are not going anywhere if the requesting user is not an
         # administrator of the current group or there is an attempt to end up with no administrators
 
-        serializer = GroupSerializer(group)
-        user  = User.objects.all().filter(username=request.user.username)[0]
-        if not user.username in serializer.get_administrators(group):
+        if not self.useradmin(group,request):
             return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
 
         if "administrators" in request.data:
@@ -1145,9 +1172,11 @@ class GroupViewSet(viewsets.ModelViewSet):
             if len(request_admins) < 1:
                 return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
 
+        super(GroupViewSet, self).partial_update(request, *args, **kwargs)
+
         # examine provided lists of administrators and members. Adjust as needed.
 
-        for item in [ ("members","MEMBER"),("administrators", "ADMIN")]:
+        for item in [ ("members",GroupPermission.Permissions.MEMBER.value),("administrators", GroupPermission.Permissions.ADMIN.value)]:
             permissionlabel = item[0]
             permission = item[1]
 
@@ -1157,7 +1186,6 @@ class GroupViewSet(viewsets.ModelViewSet):
             user_ids = [perm.user.id  for perm in GroupPermission.objects.filter(group=group).filter(permission=permission)]
             currentusers = [user.username for user in User.objects.filter(id__in=user_ids).all()]
             targetusers  = request.data[permissionlabel]
-
 
             ## Add new users for this permission level
 
