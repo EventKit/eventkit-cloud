@@ -231,7 +231,7 @@ export class DashboardPage extends React.Component {
                                         ))}
                                     </GridList>
                                     :
-                                    <div>You haven&#39;t created any DataPacks yet...</div>
+                                    <div className="qa-Dashboard-MyDataPacks-NoData">You haven&#39;t created any DataPacks yet...</div>
                                 }
                             </div>
 
@@ -302,7 +302,7 @@ export class DashboardPage extends React.Component {
                                         ))}
                                     </GridList>
                                     :
-                                    <div>You haven&#39;t viewed any DataPacks yet...</div>
+                                    <div className="qa-Dashboard-RecentlyViewedDataPacks-NoData">You haven&#39;t viewed any DataPacks yet...</div>
                                 }
                             </div>
                         </div>
