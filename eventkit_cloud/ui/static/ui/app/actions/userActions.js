@@ -64,6 +64,7 @@ export function login(data, query) {
 export function patchUser(acceptedLicenses, username) {
     return (dispatch) => {
         const csrftoken = cookie.load('csrftoken');
+
         dispatch({
             type: actions.PATCHING_USER,
         });
