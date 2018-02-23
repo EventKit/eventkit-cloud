@@ -104,9 +104,7 @@ class JobPermission(TimeStampedModelMixin):
         class MemberTypes(Enum):
             NONE = "NONE"
             READ = "READ"
-            UPDATE = "UPDATE"
-            DELETE = "DELETE"
-            SHARE = "SHARE"
+            ADMIN = "ADMIN"
 
     """
     Model associates users or groups with jobs
@@ -118,7 +116,7 @@ class JobPermission(TimeStampedModelMixin):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     permission = models.CharField(
-        choices=[('NONE', 'None'), ('READ', 'Read'), ('UPDATE','Update'), ('DELETE', 'Delete'),('SHARE', 'share')],
+        choices=[('NONE', 'None'), ('READ', 'Read'), ('ADMIN', 'Admin')],
         max_length=10)
 
     def __str__(self):

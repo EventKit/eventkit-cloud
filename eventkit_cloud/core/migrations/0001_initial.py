@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('updated_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('object_id', models.PositiveIntegerField()),
-                ('permission', models.CharField(choices=[('NONE', 'None'), ('READ', 'Read'), ('UPDATE', 'Update'), ('DELETE', 'Delete'), ('SHARE', 'share')], max_length=10)),
+                ('permission', models.CharField(choices=[('NONE', 'None'), ('READ', 'Read'), ('ADMIN', 'Admin') ], max_length=10)),
                 ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
                 ('job', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jobs.Job')),
             ],
