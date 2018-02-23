@@ -2,7 +2,7 @@
 import logging
 import json
 import tempfile
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase, override_settings
 from django.test import Client
 from mock import Mock, patch
@@ -15,7 +15,10 @@ logger = logging.getLogger(__name__)
 class TestUIViews(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create_user(
                         username='user', email='user@email.com', password='pass')
         self.client = Client()
         self.client.login(username='user', password='pass')
@@ -24,7 +27,6 @@ class TestUIViews(TestCase):
         with self.settings(UI_CONFIG={}):
             response = self.client.get('/configuration')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(int(json.loads(response.content).get('MAX_EXPORTRUN_EXPIRATION_DAYS')), 30)
 
         with self.settings(
             UI_CONFIG={
@@ -32,8 +34,8 @@ class TestUIViews(TestCase):
                 'BANNER_BACKGROUND_COLOR': 'red',
                 'BANNER_TEXT_COLOR': 'green',
                 'BANNER_TEXT': 'This is banner text',
+                'MAX_DATAPACK_EXPIRATION_DAYS': '30',
             },
-            MAX_EXPORTRUN_EXPIRATION_DAYS=45
         ):
             response = self.client.get('/configuration')
             self.assertEqual(response.status_code, 200)
@@ -42,7 +44,7 @@ class TestUIViews(TestCase):
                 'BANNER_BACKGROUND_COLOR': 'red',
                 'BANNER_TEXT_COLOR': 'green',
                 'BANNER_TEXT': 'This is banner text',
-                'MAX_EXPORTRUN_EXPIRATION_DAYS': 45,
+                'MAX_DATAPACK_EXPIRATION_DAYS': '30',
             })
 
 

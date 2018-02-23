@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Card} from 'material-ui/Card';
 import Clear from 'material-ui/svg-icons/content/clear';
@@ -12,7 +11,6 @@ import moment from 'moment';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {

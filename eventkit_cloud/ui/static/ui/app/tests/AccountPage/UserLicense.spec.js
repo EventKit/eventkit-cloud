@@ -9,13 +9,11 @@ import HardwareKeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-a
 import HardwareKeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import UserLicense from '../../components/AccountPage/UserLicense';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react-dom/test-utils';
 
 describe('User License component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => {

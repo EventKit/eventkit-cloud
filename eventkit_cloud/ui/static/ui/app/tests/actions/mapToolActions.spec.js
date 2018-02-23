@@ -49,7 +49,7 @@ describe('mapTool actions', () => {
         );
 
         const expectedPayload = [
-            { type: types.FILE_PROCESSING },
+            { type: types.FILE_PROCESSING, filename: 'test.geojson' },
             { type: types.FILE_PROCESSED, featureCollection: geojson },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))
@@ -70,7 +70,7 @@ describe('mapTool actions', () => {
         );
 
         const expectedPayload = [
-            { type: types.FILE_PROCESSING },
+            { type: types.FILE_PROCESSING, filename: 'test.geojson' },
             { type: types.FILE_ERROR, error: 'No data returned from the api.' },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))
@@ -91,7 +91,7 @@ describe('mapTool actions', () => {
         );
 
         const expectedPayload = [
-            { type: types.FILE_PROCESSING },
+            { type: types.FILE_PROCESSING, filename: 'test.geojson' },
             { type: types.FILE_ERROR, error: 'whoops' },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))

@@ -3,20 +3,15 @@ import DrawBoxButton from './DrawBoxButton';
 import DrawFreeButton from './DrawFreeButton';
 import MapViewButton from './MapViewButton';
 import ImportButton from './ImportButton';
-import BufferButton from './BufferButton';
 
 export class DrawAOIToolbar extends Component {
-    componentDidMount() {
-        this.props.setAllButtonsDefault();
-    }
-
     render() {
         const styles = {
             container: {
                 zIndex: 1,
                 position: 'absolute',
                 width: '50px',
-                height: this.props.showBufferButton ? '260px' : '230px',
+                height: '230px',
                 top: '70px',
                 right: '10px',
                 backgroundColor: '#fff',
@@ -34,7 +29,7 @@ export class DrawAOIToolbar extends Component {
         return (
             <div id="container" style={styles.container}>
                 <div className="qa-DrawAOIToolbar-div-title" style={styles.title}>
-                    <strong>TOOLS</strong>
+                    <strong>{this.props.title}</strong>
                 </div>
                 <DrawBoxButton
                     handleCancel={this.props.handleCancel}
@@ -64,11 +59,6 @@ export class DrawAOIToolbar extends Component {
                     setImportModalState={this.props.setImportModalState}
                     setAllButtonsDefault={this.props.setAllButtonsDefault}
                 />
-                {this.props.showBufferButton ?
-                    <BufferButton onBufferClick={this.props.onBufferClick} />
-                    :
-                    null
-                }
             </div>
         );
     }
@@ -78,10 +68,17 @@ DrawAOIToolbar.defaultProps = {
     containerStyle: {},
     showBufferButton: false,
     onBufferClick: null,
+    title: 'TOOLS',
 };
 
 DrawAOIToolbar.propTypes = {
-    toolbarIcons: PropTypes.object.isRequired,
+    toolbarIcons: PropTypes.shape({
+        box: PropTypes.string,
+        free: PropTypes.string,
+        mapView: PropTypes.string,
+        import: PropTypes.string,
+        search: PropTypes.string,
+    }).isRequired,
     updateMode: PropTypes.func.isRequired,
     setMapView: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
@@ -94,6 +91,7 @@ DrawAOIToolbar.propTypes = {
     containerStyle: PropTypes.object,
     showBufferButton: PropTypes.bool,
     onBufferClick: PropTypes.func,
+    title: PropTypes.string,
 };
 
 export default DrawAOIToolbar;

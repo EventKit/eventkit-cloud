@@ -762,43 +762,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def partial_update(self, request, uid=None, *args, **kwargs):
-        """
-        Update the expiration date for an export run
-
-
-        * request: the HTTP request in JSON.
-
-            Example:
-
-                {
-                    "expiration" : "2019-12-31"
-                }
-
-
-
-        * Returns: a copy of the new expiration value on success
-
-            Example:
-
-                {
-                    "expiration": "2019-12-31",
-                    "success": true
-                }
-
-        ** returns: 400 on error
-
-        """
-        payload = request.data
-        run = ExportRun.objects.get(uid=uid)
-
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
 
         """
         Update the expiration date for an export run. If the user is a superuser,
-        then any date may be specified. Otherwise the date must be before  todays_date + MAX_EXPORTRUN_EXPIRATION_DAYS
-        where MAX_EXPORTRUN_EXPIRATION_DAYS is a setting found in prod.py
+        then any date may be specified. Otherwise the date must be before  todays_date + MAX_DATAPACK_EXPIRATION_DAYS
+        where MAX_DATAPACK_EXPIRATION_DAYS is a setting found in prod.py
 
         * request: the HTTP request in JSON.
 
@@ -830,7 +800,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         run = ExportRun.objects.get(uid=uid)
 
         if not request.user.is_superuser:
-            max_days = int(getattr( settings, 'MAX_EXPORTRUN_EXPIRATION_DAYS', 30 ))
+            max_days = int(getattr( settings, 'MAX_DATAPACK_EXPIRATION_DAYS', 30 ))
             now = datetime.today()
             max_date  = now + timedelta(max_days)
             if target_date > max_date.replace(tzinfo=None):
@@ -886,7 +856,7 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class ExportProviderTaskViewSet(viewsets.ModelViewSet):
+class DataProviderTaskViewSet(viewsets.ModelViewSet):
     """
     Provides List and Retrieve endpoints for ExportTasks.
     """

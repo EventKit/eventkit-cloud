@@ -27,8 +27,10 @@ class TestExportTaskFactory(TestCase):
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
@@ -40,7 +42,7 @@ class TestExportTaskFactory(TestCase):
         UserLicense.objects.create(license=self.license, user=self.user)
         provider_task = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task)
-        self.region = Region.objects.get(name='Africa')
+        self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
         self.job.region = self.region
         self.uid = str(provider_task.uid)
         self.job.save()
@@ -97,8 +99,6 @@ class TestExportTaskFactory(TestCase):
 
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
-        finalize_task.si.assert_called()
-        task.on_error.assert_called()
 
     def test_get_invalid_licenses(self):
         # The license should not be returned if the user has agreed to it.

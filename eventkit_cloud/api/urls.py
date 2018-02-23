@@ -8,7 +8,8 @@ from .views import (
     ExportFormatViewSet, ExportRunViewSet,
     ExportTaskViewSet, JobViewSet, RegionMaskViewSet,
     RegionViewSet, ExportProviderViewSet, SwaggerSchemaView,
-    ExportProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet)
+    DataProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet)
+
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'jobs', JobViewSet, base_name='jobs')
@@ -16,7 +17,7 @@ router.register(r'formats', ExportFormatViewSet, base_name='formats')
 router.register(r'providers', ExportProviderViewSet, base_name='providers')
 router.register(r'licenses', LicenseViewSet, base_name='licenses')
 router.register(r'runs', ExportRunViewSet, base_name='runs')
-router.register(r'provider_tasks', ExportProviderTaskViewSet, base_name='provider_tasks')
+router.register(r'provider_tasks', DataProviderTaskViewSet, base_name='provider_tasks')
 router.register(r'tasks', ExportTaskViewSet, base_name='tasks')
 router.register(r'regions', RegionViewSet, base_name='regions')
 router.register(r'users', UserDataViewSet, base_name='users')

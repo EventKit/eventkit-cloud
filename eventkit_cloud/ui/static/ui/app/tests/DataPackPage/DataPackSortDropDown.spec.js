@@ -4,7 +4,6 @@ import {mount, shallow} from 'enzyme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Menu from 'material-ui/Menu';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackSortDropDown from '../../components/DataPackPage/DataPackSortDropDown';
 
@@ -15,7 +14,6 @@ describe('DataPackSortDropDown component', () => {
             value: '-started_at'
         }
     }
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     it('should render a dropdown menu', () => {
