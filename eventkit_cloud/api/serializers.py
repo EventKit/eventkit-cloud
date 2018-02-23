@@ -16,7 +16,9 @@ from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
+from ..core.models import GroupPermission,JobPermission
+
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -288,6 +290,41 @@ class ExportRunSerializer(serializers.ModelSerializer):
         uri[5] = None  # query
         return urlunparse(uri)
 
+class GroupPermissionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GroupPermission
+        fields = ( 'group', 'user', 'permission')
+
+
+class GroupSerializer(serializers.ModelSerializer):
+
+    members = serializers.SerializerMethodField()
+    administrators = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Group
+        fields = ( 'id', 'name', 'members', 'administrators' )
+
+
+    @staticmethod
+    def get_members(instance):
+        user_ids = [permission.user.id  for permission in GroupPermission.objects.filter(group=instance).filter(permission=GroupPermission.Permissions.MEMBER.value)]
+        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+
+    @staticmethod
+    def get_administrators(instance):
+        user_ids = [permission.user.id  for permission in GroupPermission.objects.filter(group=instance).filter(permission=GroupPermission.Permissions.ADMIN.value)]
+        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+        return []
+
+    @staticmethod
+    def get_identification(instance):
+        if hasattr(instance, 'oauth'):
+            return instance.oauth.identification
+        else:
+            return None
+
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -329,6 +366,7 @@ class UserDataSerializer(serializers.Serializer):
     """
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
+    groups = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
@@ -353,6 +391,11 @@ class UserDataSerializer(serializers.Serializer):
             else:
                 licenses[license.slug] = False
         return licenses
+
+    @staticmethod
+    def get_groups(instance):
+        group_ids = [perm.group.id  for perm in GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")]
+        return group_ids
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
