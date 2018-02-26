@@ -14,7 +14,7 @@ import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
 
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 

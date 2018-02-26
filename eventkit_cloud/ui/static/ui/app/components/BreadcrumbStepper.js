@@ -15,7 +15,7 @@ import { flattenFeatureCollection } from '../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
 import { getDatacartDetails } from '../actions/statusDownloadActions';
-import BaseDialog from './BaseDialog';
+import BaseDialog from './Dialog/BaseDialog';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
