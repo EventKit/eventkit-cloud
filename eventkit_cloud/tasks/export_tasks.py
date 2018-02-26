@@ -26,7 +26,7 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files, generate_qgs_style
+from ..ui.helpers import get_style_files, generate_qgs_style, get_mxd
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -738,6 +738,8 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
+            if export_provider_task.slug == 'osm' and os.path.splitext(filename)[1] == '.gpkg':
+                include_files += [get_mxd(run_uid=run_uid)]
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                               export_task.name))
@@ -1011,6 +1013,8 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                                  provider_task.slug, filename)
+                if provider_task.slug == 'osm' and os.path.splitext(filename)[1] == '.gpkg':
+                    include_files += [get_mxd(run_uid=run_uid)]
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                                      export_task.name))
@@ -1112,7 +1116,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
 
-            if filepath.endswith(".qgs"):
+            if filepath.endswith(".qgs") or filepath.endswith(".mxd"):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,

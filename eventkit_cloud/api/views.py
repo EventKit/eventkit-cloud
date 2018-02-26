@@ -533,7 +533,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         :return:
         """
         try:
-            provider = ExportProvider.objects.get(slug=slug)
+            provider = DataProvider.objects.get(slug=slug)
             provider_type = str(provider.export_provider_type)
 
             aoi = None
@@ -552,7 +552,7 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
             return Response(response, status=status.HTTP_200_OK)
 
-        except ExportProvider.DoesNotExist as e:
+        except DataProvider.DoesNotExist as e:
             return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:

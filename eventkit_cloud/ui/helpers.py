@@ -17,6 +17,7 @@ from uuid import uuid4
 from string import Template
 from datetime import datetime
 import pytz
+import requests
 
 logger = get_task_logger(__name__)
 
@@ -38,6 +39,43 @@ def get_style_files():
     """
     style_dir = os.path.join(os.path.dirname(__file__), 'static', 'ui', 'styles')
     return get_file_paths(style_dir)
+
+
+def get_mxd(run_uid=None):
+    # This takes a long time to get a response, but its the easiest thing to do with out persisting the file somewhere,
+    # in the arcgis service or setting up celery on the arcgis host.
+    timeout = 120
+    if getattr(settings, 'EVENTKIT_ARCGIS_SERVICE'):
+        from eventkit_cloud.tasks.models import ExportRun
+        from ..tasks.export_tasks import TaskStates
+        from ..tasks.task_runners import normalize_name
+        try:
+            requests.get("{0}/healthcheck".format(settings.EVENTKIT_ARCGIS_SERVICE.rstrip('/'))).raise_for_status()
+        except Exception as e:
+            logger.error(e)
+            raise Exception("There was an error accessing the ArcGIS service to create the MXD.")
+
+        run = ExportRun.objects.get(uid=run_uid)
+        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
+
+        job_name = run.job.name.lower()
+        mxd_file = os.path.join(stage_dir, '{0}-{1}.mxd'.format(normalize_name(job_name),
+                                                                timezone.now().strftime("%Y%m%d")))
+        gpkg = './data/osm/{0}-osm-{1}.gpkg'.format(normalize_name(job_name),
+                                                    timezone.now().strftime("%Y%m%d"))
+        # Receiving the response via http is not recommended.
+        # This is added if for some reason a volume mount cannot be added.
+        url = "{0}/mxd".format(settings.EVENTKIT_ARCGIS_SERVICE.rstrip('/'))
+        if os.getenv('VCAP_SERVICE'):
+            requests.post(url, json={"mxd": mxd_file, "gpkg": gpkg}, timeout=timeout)
+        else:
+            response = requests.post(url, json={"gpkg": gpkg}, timeout=timeout)
+            logger.info("Recieved ARCGIS response status {0}".format(response.status_code))
+            logger.info("Recieved ARCGIS response headers {0}".format(response.headers))
+            with open(mxd_file, 'wb') as open_mxd_file:
+                logger.info("Writing mxd data to {0}".format(mxd_file))
+                open_mxd_file.write(response.content)
+        return mxd_file
 
 
 def generate_qgs_style(run_uid=None, export_provider_task=None):
