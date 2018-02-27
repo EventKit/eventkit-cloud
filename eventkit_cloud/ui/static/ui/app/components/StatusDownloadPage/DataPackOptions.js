@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
-import BaseDialog from '../BaseDialog';
-import DeleteDialog from '../DeleteDialog';
+import BaseDialog from '../Dialog/BaseDialog';
+import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 
 export class DataPackOptions extends Component {
     constructor(props) {
@@ -157,11 +157,11 @@ export class DataPackOptions extends Component {
                     onTouchTap={this.handleDeleteOpen}
                     label="DELETE"
                 />
-                <DeleteDialog
+                <DeleteDataPackDialog
                     className="qa-DataPackOptions-DeleteDialog-deleteExport"
                     show={this.state.showDeleteDialog}
-                    handleCancel={this.handleDeleteClose}
-                    handleDelete={this.handleDelete}
+                    onCancel={this.handleDeleteClose}
+                    onDelete={this.handleDelete}
                 />
             </div>
         );

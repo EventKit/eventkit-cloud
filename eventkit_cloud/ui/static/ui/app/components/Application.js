@@ -14,10 +14,11 @@ import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Banner from './Banner';
-import BaseDialog from './BaseDialog';
+import BaseDialog from './Dialog/BaseDialog';
 import logo from '../../images/eventkit-logo.1.png';
 import { DrawerTimeout } from '../actions/exportsActions';
 import { userActive } from '../actions/userActions';
+import ConfirmDialog from './Dialog/ConfirmDialog';
 
 require('../fonts/index.css');
 
@@ -48,23 +49,27 @@ export class Application extends Component {
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
-        this.handleClose = this.handleClose.bind(this);
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.getConfig = this.getConfig.bind(this);
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleResize = this.handleResize.bind(this);
+        this.logout = this.logout.bind(this);
         this.startCheckingForAutoLogout = this.startCheckingForAutoLogout.bind(this);
         this.stopCheckingForAutoLogout = this.stopCheckingForAutoLogout.bind(this);
         this.startSendingUserActivePings = this.startSendingUserActivePings.bind(this);
         this.stopSendingUserActivePings = this.stopSendingUserActivePings.bind(this);
         this.handleStayLoggedIn = this.handleStayLoggedIn.bind(this);
         this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
+        this.handleLogoutDialogCancel = this.handleLogoutDialogCancel.bind(this);
+        this.handleLogoutDialogConfirm = this.handleLogoutDialogConfirm.bind(this);
+        this.handleLogoutClick = this.handleLogoutClick.bind(this);
         this.state = {
             config: {},
             hovered: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
+            showLogoutDialog: false,
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
     }
@@ -134,8 +139,9 @@ export class Application extends Component {
         }
     }
 
-    handleClose() {
+    logout() {
         this.props.closeDrawer();
+        this.props.router.push('/logout');
     }
 
     startCheckingForAutoLogout() {
@@ -158,8 +164,7 @@ export class Application extends Component {
                 this.setState({
                     showAutoLoggedOutDialog: true,
                 });
-                this.props.closeDrawer();
-                this.props.router.push('/logout');
+                this.logout();
             } else if (Date.now() >= this.props.autoLogoutWarningAt.getTime()) {
                 if (!this.state.showAutoLogoutWarningDialog) {
                     this.showAutoLogoutWarning();
@@ -283,6 +288,26 @@ export class Application extends Component {
 
     handleMouseOut() {
         this.setState({ hovered: '' });
+    }
+
+    handleLogoutClick() {
+        this.setState({
+            showLogoutDialog: true,
+        });
+    }
+
+    handleLogoutDialogCancel() {
+        this.setState({
+            showLogoutDialog: false,
+        });
+    }
+
+    handleLogoutDialogConfirm() {
+        this.setState({
+            showLogoutDialog: false,
+        });
+
+        this.logout();
     }
 
     render() {
@@ -464,7 +489,6 @@ export class Application extends Component {
                         </MenuItem>
                         <MenuItem
                             className="qa-Application-MenuItem-logout"
-                            onClick={this.handleClose}
                             innerDivStyle={styles.menuItem}
                         >
                             <Link
@@ -473,8 +497,7 @@ export class Application extends Component {
                                 activeStyle={styles.activeLink}
                                 onMouseEnter={() => this.handleMouseOver('logout')}
                                 onMouseLeave={this.handleMouseOut}
-                                to="/logout"
-                                href="/logout"
+                                onClick={this.handleLogoutClick}
                             >
                                 <ActionExitToApp style={styles.icon} />
                                 Log Out
@@ -499,6 +522,16 @@ export class Application extends Component {
                     >
                         <strong>You have been automatically logged out due to inactivity.</strong>
                     </BaseDialog>
+                    <ConfirmDialog
+                        show={this.state.showLogoutDialog}
+                        title="LOG OUT"
+                        confirmLabel="Log Out"
+                        isDestructive={true}
+                        onCancel={this.handleLogoutDialogCancel}
+                        onConfirm={this.handleLogoutDialogConfirm}
+                    >
+                        <strong>Are you sure?</strong>
+                    </ConfirmDialog>
                 </div>
             </MuiThemeProvider>
         );
