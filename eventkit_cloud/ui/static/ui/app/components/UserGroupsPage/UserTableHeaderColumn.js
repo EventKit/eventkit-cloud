@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import { TableHeaderColumn } from 'material-ui/Table';
-import DropDownMenu from 'material-ui/DropDownMenu';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
@@ -14,6 +13,7 @@ export class UserTableHeaderColumn extends Component {
         super(props);
         this.handleOpen = this.handleOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
         this.state = {
             open: false,
@@ -28,6 +28,11 @@ export class UserTableHeaderColumn extends Component {
 
     handleClose() {
         this.setState({ open: false });
+    }
+
+    handleGroupItemClick(group) {
+        this.handleClose();
+        this.props.handleGroupItemClick(group);
     }
 
     handleNewGroupClick() {
@@ -106,7 +111,7 @@ export class UserTableHeaderColumn extends Component {
                         anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'left', vertical: 'top' }}
                         onClose={this.handleClose}
-                        onMenuItemClick={this.props.handleGroupItemClick}
+                        onMenuItemClick={this.handleGroupItemClick}
                         onNewGroupClick={this.handleNewGroupClick}
                         selectedGroups={this.props.selectedGroups}
                         groups={this.props.groups}
@@ -125,22 +130,22 @@ export class UserTableHeaderColumn extends Component {
                         className="qa-UserTableHeaderColumn-DropDownMenu-sort"
                     >
                         <MenuItem
-                            value="user__username"
+                            value="username"
                             primaryText="Username A-Z"
                             className="qa-UserTableHeaderColumn-MenuItem-sortAZ"
                         />
                         <MenuItem
-                            value="-user__username"
+                            value="-username"
                             primaryText="Username Z-A"
                             className="qa-UserTableHeaderColumn-MenuItem-sortZA"
                         />
                         <MenuItem
-                            value="user__date_joined"
+                            value="-date_joined"
                             primaryText="Newest"
                             className="qa-UserTableHeaderColumn-MenuItem-sortNewest"
                         />
                         <MenuItem
-                            value="-user__date_joined"
+                            value="date_joined"
                             primaryText="Oldest"
                             className="qa-UserTableHeaderColumn-MenuItem-sortOldest"
                         />
@@ -155,7 +160,7 @@ UserTableHeaderColumn.propTypes = {
     sortValue: PropTypes.string.isRequired,
     handleSortChange: PropTypes.func.isRequired,
     selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
+    selectedGroups: PropTypes.arrayOf(PropTypes.number).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupsLoading: PropTypes.bool.isRequired,
     handleGroupItemClick: PropTypes.func.isRequired,

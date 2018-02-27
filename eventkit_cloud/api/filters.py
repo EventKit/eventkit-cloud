@@ -83,14 +83,26 @@ class UserFilter(django_filters.FilterSet):
 
     @staticmethod
     def group_filter( queryset, fieldname, value):
+        target_users = []
+        groups = value.split(",")
 
-        targetusers = []
-        perms  = GroupPermission.objects.filter(group__in=value.split(","))
-        for perm in perms:
-            user = perm.user
-            if not user.id in targetusers: targetusers.append(user.id)
+        # Find any users who are not in any groups
+        if "none" in groups:
+            users = User.objects.all()
+            for user in users:
+                perms = GroupPermission.objects.filter(user=user)
+                if not perms:
+                    target_users.append(user.id)
+            groups.remove("none")
 
-        return queryset.filter(id__in=targetusers)
+        # Find users in a specific group
+        if groups:
+            perms  = GroupPermission.objects.filter(group__in=groups)
+            for perm in perms:
+                user = perm.user
+                if not user.id in target_users: target_users.append(user.id)
+
+        return queryset.filter(id__in=target_users)
 
 
 class GroupFilter(django_filters.FilterSet):

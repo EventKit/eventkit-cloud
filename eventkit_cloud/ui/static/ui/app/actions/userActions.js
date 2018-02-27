@@ -124,7 +124,7 @@ export function getUsers(params) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
             // filter out the current user from the list
-            const users = response.data.filter(user => (user.username !== loggedInUser.username));
+            const users = response.data.filter(user => (user.user.username !== loggedInUser.username));
             dispatch({ type: actions.FETCHED_USERS, users });
         }).catch((error) => {
             dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });

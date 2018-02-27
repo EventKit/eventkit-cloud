@@ -125,7 +125,7 @@ GroupsDropDownMenu.propTypes = {
     onClose: PropTypes.func.isRequired,
     onMenuItemClick: PropTypes.func.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
-    selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
+    selectedGroups: PropTypes.arrayOf(PropTypes.number).isRequired,
     groupsLoading: PropTypes.bool.isRequired,
     anchorEl: PropTypes.object,
     anchorOrigin: PropTypes.shape({

@@ -3,7 +3,6 @@ import IconButton from 'material-ui/IconButton';
 import { TableRowColumn } from 'material-ui/Table';
 import Group from 'material-ui/svg-icons/social/group';
 import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 
 export class UserTableRowColumn extends Component {
@@ -116,10 +115,10 @@ export class UserTableRowColumn extends Component {
                 <div style={{ display: 'flex' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
                         <div className="qa-UserTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
-                            <strong>{user.name}</strong>
+                            <strong>{`${user.user.first_name} ${user.user.last_name}`}</strong>
                         </div>
                         <div className="qa-UserTableRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
-                            {user.email}
+                            {user.user.email}
                         </div>
                     </div>
                     {showAdminLabel ?
@@ -179,9 +178,13 @@ UserTableRowColumn.defaultProps = {
 
 UserTableRowColumn.propTypes = {
     user: PropTypes.shape({
-        name: PropTypes.string,
-        username: PropTypes.string,
-        groups: PropTypes.arrayOf(PropTypes.string),
+        user: PropTypes.shape({
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            username: PropTypes.string,
+        }),
+        groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     groupsLoading: PropTypes.bool.isRequired,
