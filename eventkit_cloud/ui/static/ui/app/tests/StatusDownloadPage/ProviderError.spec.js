@@ -5,7 +5,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('ProviderError component', () => {
     const getProps = () => (

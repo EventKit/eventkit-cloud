@@ -64,12 +64,13 @@ export function login(data, query) {
 export function patchUser(acceptedLicenses, username) {
     return (dispatch) => {
         const csrftoken = cookie.load('csrftoken');
+
         dispatch({
             type: actions.PATCHING_USER,
         });
 
         return axios({
-            url: `/api/user/${username}`,
+            url: `/api/users/${username}`,
             method: 'PATCH',
             data: { accepted_licenses: acceptedLicenses },
             headers: { 'X-CSRFToken': csrftoken },

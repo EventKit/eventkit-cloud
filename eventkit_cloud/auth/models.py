@@ -1,5 +1,6 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
 from django.db import models
+from ..core.models import TimeStampedModelMixin, UIDMixin
 
 
 class OAuth(models.Model):
@@ -10,3 +11,4 @@ class OAuth(models.Model):
     class Meta:  # pragma: no cover
         managed = True
         db_table = 'auth_oauth'
+

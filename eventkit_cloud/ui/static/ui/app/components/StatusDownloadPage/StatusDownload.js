@@ -13,7 +13,7 @@ import {
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import { viewedJob } from '../../actions/userActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 
