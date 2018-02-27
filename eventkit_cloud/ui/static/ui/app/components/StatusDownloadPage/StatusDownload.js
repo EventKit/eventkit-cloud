@@ -12,7 +12,7 @@ import {
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 

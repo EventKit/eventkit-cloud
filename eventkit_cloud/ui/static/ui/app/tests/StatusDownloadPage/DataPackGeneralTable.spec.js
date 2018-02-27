@@ -4,7 +4,7 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Info from 'material-ui/svg-icons/action/info';
 import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 

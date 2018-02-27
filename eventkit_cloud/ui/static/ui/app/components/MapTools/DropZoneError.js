@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneError extends Component {
     constructor(props) {

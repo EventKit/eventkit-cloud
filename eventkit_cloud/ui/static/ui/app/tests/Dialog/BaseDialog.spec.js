@@ -4,7 +4,7 @@ import {mount, shallow} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
-import BaseDialog from '../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('BaseDialog component', () => {
     const getProps = () => {

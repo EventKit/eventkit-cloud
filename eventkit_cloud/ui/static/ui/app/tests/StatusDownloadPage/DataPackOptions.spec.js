@@ -3,8 +3,8 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
-import BaseDialog from '../../components/BaseDialog';
-import DeleteDialog from '../../components/DeleteDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
+import DeleteDataPackDialog from '../../components/Dialog/DeleteDataPackDialog';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 
 describe('DataPackOptions component', () => {
@@ -41,7 +41,7 @@ describe('DataPackOptions component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(RaisedButton)).toHaveLength(3);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
-        expect(wrapper.find(DeleteDialog)).toHaveLength(1);
+        expect(wrapper.find(DeleteDataPackDialog)).toHaveLength(1);
     });
 
     it('handleDeleteOpen should set the delete dialog to open', () => {
