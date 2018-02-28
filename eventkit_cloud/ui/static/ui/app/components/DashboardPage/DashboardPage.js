@@ -132,13 +132,31 @@ export class DashboardPage extends React.Component {
 
     render() {
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const mainAppBarHeight = 95;
+        const pageAppBarHeight = 35;
         const styles = {
             root: {
                 position: 'relative',
-                height: window.innerHeight - 95,
+                height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
                 backgroundImage: `url(${backgroundUrl})`,
                 color: 'white',
+            },
+            appBar: {
+                backgroundColor: '#161e2e',
+                height: '35px',
+                color: 'white',
+                fontSize: '14px',
+                zIndex: '0',
+            },
+            customScrollbar: {
+                height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
+            },
+            pageTitle: {
+                fontSize: '18px',
+                lineHeight: '35px',
+                paddingLeft: '10px',
+                height: '35px',
             },
             loadingOverlay: {
                 position: 'absolute',
@@ -153,6 +171,14 @@ export class DashboardPage extends React.Component {
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
             },
+            sectionHeader: {
+                margin: '12px 0 4px',
+                paddingLeft: '14px',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                letterSpacing: '0.6px',
+                textTransform: 'uppercase',
+            },
             section: {
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -160,18 +186,6 @@ export class DashboardPage extends React.Component {
                 marginLeft: spacing,
                 marginRight: spacing,
                 paddingBottom: spacing,
-            },
-            appBar: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
-                zIndex: '0',
-            },
-            pageTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                height: '35px',
             },
             gridList: {
                 border: '1px',
@@ -186,6 +200,13 @@ export class DashboardPage extends React.Component {
 
         return (
             <div style={styles.root}>
+                <AppBar
+                    className="qa-Dashboard-AppBar"
+                    style={styles.appBar}
+                    title="Dashboard"
+                    titleStyle={styles.pageTitle}
+                    iconElementLeft={<p />}
+                />
                 {this.isLoading() ?
                     <div style={styles.loadingOverlay}>
                         <CircularProgress
@@ -197,20 +218,88 @@ export class DashboardPage extends React.Component {
                     :
                     null
                 }
-                <CustomScrollbar>
+                <CustomScrollbar style={styles.customScrollbar}>
                     {!this.state.loadingPage ?
                         <div>
-                            <AppBar
+                            <div
+                                className="qa-Dashboard-RecentlyViewedHeader"
+                                style={styles.sectionHeader}
+                            >
+                                Recently Viewed
+                            </div>
+                            <div style={styles.section}>
+                                {viewedJobs.length > 0 ?
+                                    <GridList
+                                        className="qa-Dashboard-RecentlyViewedGrid"
+                                        cellHeight="auto"
+                                        style={styles.gridList}
+                                        padding={this.getGridPadding()}
+                                        cols={this.getGridColumns()}
+                                    >
+                                        {viewedJobs.map((viewedJob, index) => (
+                                            <DataPackGridItem
+                                                className="qa-Dashboard-RecentlyViewedGrid-Item"
+                                                run={viewedJob.last_export_run}
+                                                user={this.props.user}
+                                                key={viewedJob.created_at}
+                                                onRunDelete={this.props.deleteRuns}
+                                                providers={this.props.providers}
+                                                gridName="RecentlyViewed"
+                                                index={index}
+                                                showFeaturedFlag={false}
+                                            />
+                                        ))}
+                                    </GridList>
+                                    :
+                                    <div className="qa-Dashboard-RecentlyViewed-NoData">{"You haven't viewed any DataPacks yet..."}</div>
+                                }
+                            </div>
+
+                            {this.props.featuredRunsList.runs.length > 0 ?
+                                <div>
+                                    <div
+                                        className="qa-Dashboard-FeaturedHeader"
+                                        style={styles.sectionHeader}
+                                    >
+                                        Featured
+                                    </div>
+                                    <div style={styles.section}>
+                                        <GridList
+                                            className="qa-Dashboard-FeaturedHeaderGrid"
+                                            cellHeight="auto"
+                                            style={styles.gridList}
+                                            padding={this.getGridPadding()}
+                                            cols={this.getGridColumns()}
+                                        >
+                                            {this.props.featuredRunsList.runs.map((run, index) => (
+                                                <DataPackGridItem
+                                                    className="qa-Dashboard-FeaturedHeaderGrid-Item"
+                                                    run={run}
+                                                    user={this.props.user}
+                                                    key={run.created_at}
+                                                    onRunDelete={this.props.deleteRuns}
+                                                    providers={this.props.providers}
+                                                    index={index}
+                                                    gridName="Featured"
+                                                />
+                                            ))}
+                                        </GridList>
+                                    </div>
+                                </div>
+                                :
+                                null
+                            }
+
+                            <div
                                 className="qa-Dashboard-MyDataPacksHeader"
-                                style={styles.appBar}
-                                title="My DataPacks"
-                                titleStyle={styles.pageTitle}
-                                iconElementLeft={<p/>}
-                            />
+                                style={styles.sectionHeader}
+                            >
+                                My DataPacks
+                            </div>
                             <div style={styles.section}>
                                 {this.props.runsList.runs.length > 0 ?
                                     <GridList
-                                        className="qa-Dashboard-MyDataPacksHeaderGrid"
+                                        className="qa-Dashboard-MyDataPacksGrid"
                                         cellHeight="auto"
                                         style={styles.gridList}
                                         padding={this.getGridPadding()}
@@ -218,7 +307,7 @@ export class DashboardPage extends React.Component {
                                     >
                                         {this.props.runsList.runs.map((run, index) => (
                                             <DataPackGridItem
-                                                className="qa-Dashboard-MyDataPacksHeaderGrid-Item"
+                                                className="qa-Dashboard-MyDataPacksGrid-Item"
                                                 run={run}
                                                 user={this.props.user}
                                                 key={run.created_at}
@@ -231,78 +320,7 @@ export class DashboardPage extends React.Component {
                                         ))}
                                     </GridList>
                                     :
-                                    <div className="qa-Dashboard-MyDataPacks-NoData">You haven&#39;t created any DataPacks yet...</div>
-                                }
-                            </div>
-
-                            {this.props.featuredRunsList.runs.length > 0 ?
-                                <div>
-                                    <AppBar
-                                        className="qa-Dashboard-FeaturedDataPacksHeader"
-                                        style={styles.appBar}
-                                        title="Featured DataPacks"
-                                        titleStyle={styles.pageTitle}
-                                        iconElementLeft={<p/>}
-                                    />
-                                    <div style={styles.section}>
-                                        <GridList
-                                            className="qa-Dashboard-FeaturedDataPacksHeaderGrid"
-                                            cellHeight="auto"
-                                            style={styles.gridList}
-                                            padding={this.getGridPadding()}
-                                            cols={this.getGridColumns()}
-                                        >
-                                            {this.props.featuredRunsList.runs.map((run, index) => (
-                                                <DataPackGridItem
-                                                    className="qa-Dashboard-FeaturedDataPacksHeaderGrid-Item"
-                                                    run={run}
-                                                    user={this.props.user}
-                                                    key={run.created_at}
-                                                    onRunDelete={this.props.deleteRuns}
-                                                    providers={this.props.providers}
-                                                    index={index}
-                                                    gridName="FeaturedDataPacks"
-                                                />
-                                            ))}
-                                        </GridList>
-                                    </div>
-                                </div>
-                                :
-                                null
-                            }
-
-                            <AppBar
-                                className="qa-Dashboard-ViewedDataPacksHeader"
-                                style={styles.appBar}
-                                title="Recently Viewed DataPacks"
-                                titleStyle={styles.pageTitle}
-                                iconElementLeft={<p/>}
-                            />
-                            <div style={styles.section}>
-                                {viewedJobs.length > 0 ?
-                                    <GridList
-                                        className="qa-Dashboard-RecentlyViewedDataPacksGrid"
-                                        cellHeight="auto"
-                                        style={styles.gridList}
-                                        padding={this.getGridPadding()}
-                                        cols={this.getGridColumns()}
-                                    >
-                                        {viewedJobs.map((viewedJob, index) => (
-                                            <DataPackGridItem
-                                                className="qa-Dashboard-RecentlyViewedDataPacksGrid-Item"
-                                                run={viewedJob.last_export_run}
-                                                user={this.props.user}
-                                                key={viewedJob.created_at}
-                                                onRunDelete={this.props.deleteRuns}
-                                                providers={this.props.providers}
-                                                gridName="RecentlyViewedDataPacks"
-                                                index={index}
-                                                showFeaturedFlag={false}
-                                            />
-                                        ))}
-                                    </GridList>
-                                    :
-                                    <div className="qa-Dashboard-RecentlyViewedDataPacks-NoData">You haven&#39;t viewed any DataPacks yet...</div>
+                                    <div className="qa-Dashboard-MyDataPacks-NoData">{"You haven't created any DataPacks yet..."}</div>
                                 }
                             </div>
                         </div>
