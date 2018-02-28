@@ -187,7 +187,6 @@ def create_run(job_uid, user=None):
         # https://docs.djangoproject.com/en/1.10/topics/db/transactions/#django.db.transaction.atomic
         # enforce max runs
         with transaction.atomic():
-            max_runs = settings.EXPORT_MAX_RUNS
             # get the number of existing runs for this job
             job = Job.objects.get(uid=job_uid)
             invalid_licenses = get_invalid_licenses(job)
@@ -201,12 +200,12 @@ def create_run(job_uid, user=None):
                 raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                     job.user.username, job.name
                 ))
-            run_count = job.runs.count()
-            if run_count > 0:
-                while run_count > max_runs - 1:
-                    # delete the earliest runs
-                    job.runs.earliest(field_name='started_at').soft_delete(user=user)  # delete earliest
-                    run_count -= 1
+
+            # delete the previous run(s)
+            previous_runs = job.runs.filter(deleted=False)
+            for run in previous_runs:
+                run.soft_delete(user=user)
+
             # add the export run to the database
             run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
