@@ -3,8 +3,11 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Drawer from 'material-ui/Drawer';
+import IconMenu from 'material-ui/IconMenu';
+import IconButton from 'material-ui/IconButton';
 import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-box';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
+
 
 describe('GroupsDrawer component', () => {
     const muiTheme = getMuiTheme();
@@ -14,13 +17,13 @@ describe('GroupsDrawer component', () => {
             onSelectionChange: () => {},
             open: true,
             ownedGroups: [{
-                id: '1',
+                id: 1,
                 name: 'group1',
                 members: ['user1', 'user2'],
                 administrators: ['user1'],
             }],
             sharedGroups: [{
-                id: '2',
+                id: 2,
                 name: 'group2',
                 members: ['user1', 'user2'],
                 administrators: ['user2'],
@@ -30,6 +33,7 @@ describe('GroupsDrawer component', () => {
             onSharedInfoClick: () => {},
             onLeaveGroupClick: () => {},
             onDeleteGroupClick: () => {},
+            onRenameGroupClick: () => {},
         }
     );
     const getWrapper = props => (
@@ -54,15 +58,30 @@ describe('GroupsDrawer component', () => {
         expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
     });
 
-    it('clicking on indeterminate icon should call delete group', () => {
+    it('Change Group Name should call onRenameGroupClick', () => {
+        const props = getProps();
+        props.onRenameGroupClick = sinon.spy();
+        const wrapper = getWrapper(props);
+        const item = wrapper.find('.qa-GroupsDrawer-groupItem');
+        expect(item.find(IconButton)).toHaveLength(1);
+        item.find(IconButton).simulate('click');
+        expect(item.find(IconMenu)).toHaveLength(1);
+        expect(props.onRenameGroupClick.calledOnce).toBe(false);
+        item.find(IconMenu).props().children[0].props.onClick();
+        expect(props.onRenameGroupClick.calledOnce).toBe(true);
+    });
+
+    it('Delete Group Name should call onDeleteGroupClick', () => {
         const props = getProps();
         props.onDeleteGroupClick = sinon.spy();
         const wrapper = getWrapper(props);
-        expect(props.onDeleteGroupClick.called).toBe(false);
-        expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
-        wrapper.find('.qa-GroupsDrawer-groupItem').find(IndeterminateIcon).simulate('click');
+        const item = wrapper.find('.qa-GroupsDrawer-groupItem');
+        expect(item.find(IconButton)).toHaveLength(1);
+        item.find(IconButton).simulate('click');
+        expect(item.find(IconMenu)).toHaveLength(1);
+        expect(props.onDeleteGroupClick.calledOnce).toBe(false);
+        item.find(IconMenu).props().children[1].props.onClick();
         expect(props.onDeleteGroupClick.calledOnce).toBe(true);
-        expect(props.onDeleteGroupClick.calledWith(props.ownedGroups[0])).toBe(true);
     });
 
     it('clicking on indeterminate icon should call leave group', () => {

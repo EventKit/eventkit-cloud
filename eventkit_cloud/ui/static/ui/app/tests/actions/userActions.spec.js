@@ -1,5 +1,6 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+import sinon from 'sinon';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import * as userActions from '../../actions/userActions';
@@ -24,6 +25,24 @@ describe('userActions actions', () => {
         return store.dispatch(userActions.logout())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('logout should change href if OAUTH in response', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onGet('/logout').reply(200, { OAUTH_LOGOUT_URL: 'www.oauth.com' });
+
+        const expectedActions = [
+            { type: types.USER_LOGGED_OUT },
+        ];
+        const store = mockStore({ user: { username: '' } });
+        const assignStub = sinon.stub(global.window.location, 'assign');
+        return store.dispatch(userActions.logout())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                expect(assignStub.calledOnce).toBe(true);
+                expect(assignStub.calledWith('www.oauth.com'));
+                assignStub.restore();
             });
     });
 
@@ -81,6 +100,23 @@ describe('userActions actions', () => {
         const store = mockStore({ user: { username: 'ExampleUser' } });
         return store.dispatch(userActions.login({ username: 'username', password: 'bad_password' }))
             .catch(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('login should not log the user in if there is no response data', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+
+        mock.onPost('/auth').reply(200, null);
+
+        const expectedActions = [
+            { type: types.USER_LOGGING_IN },
+            { type: types.USER_LOGGED_OUT },
+        ];
+
+        const store = mockStore({ user: {} });
+        return store.dispatch(userActions.login({ username: 'username', password: 'password' }))
+            .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
@@ -165,9 +201,9 @@ describe('userActions actions', () => {
     it('getUsers should fetch users from the api', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         const users = [
-            { name: 'user1', username: 'user1' },
-            { name: 'user2', username: 'user2' },
-            { name: 'user3', username: 'user3' },
+            { user: { name: 'user1', username: 'user1' } },
+            { user: { name: 'user2', username: 'user2' } },
+            { user: { name: 'user3', username: 'user3' } },
         ];
         mock.onGet('/api/users').reply(200, users);
 

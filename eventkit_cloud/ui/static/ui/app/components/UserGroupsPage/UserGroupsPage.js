@@ -23,7 +23,7 @@ import CreateGroupDialog from './CreateGroupDialog';
 import LeaveGroupDialog from './LeaveGroupDialog';
 import DeleteGroupDialog from './DeleteGroupDialog';
 import RenameGroupDialog from './RenameGroupDialog';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 import {
     getGroups,
     deleteGroup,
@@ -866,7 +866,18 @@ UserGroupsPage.propTypes = {
         ]),
     }).isRequired,
     users: PropTypes.shape({
-        users: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.shape({
+            user: PropTypes.shape({
+                username: PropTypes.string,
+                first_name: PropTypes.string,
+                last_name: PropTypes.string,
+                email: PropTypes.string,
+                last_login: PropTypes.string,
+                date_joined: PropTypes.string,
+            }),
+            groups: PropTypes.arrayOf(PropTypes.number),
+            accepted_licenses: PropTypes.object,
+        })),
         fetching: PropTypes.bool,
         fetched: PropTypes.bool,
         error: PropTypes.string,

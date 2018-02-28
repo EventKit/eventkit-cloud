@@ -11,7 +11,7 @@ export function logout() {
                 type: actions.USER_LOGGED_OUT,
             });
             if (response.data.OAUTH_LOGOUT_URL) {
-                window.location.href = response.data.OAUTH_LOGOUT_URL;
+                window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
                 dispatch(push({ pathname: '/login' }));
             }
