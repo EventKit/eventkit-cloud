@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
@@ -15,7 +14,7 @@ import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
 
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 
@@ -28,7 +27,6 @@ raf.polyfill();
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
     const getProps = () => (
         {
             geojson: {

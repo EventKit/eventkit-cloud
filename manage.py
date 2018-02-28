@@ -6,11 +6,16 @@ import sys
 import logging
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 
     from django.core.management import execute_from_command_line
 
     if 'test' in sys.argv:
+
+        import time
+
+        start_time = time.time()
+
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.tests")
 
         logging.disable(logging.CRITICAL)
 
@@ -37,7 +42,12 @@ if __name__ == "__main__":
         if os.getenv("COVERAGE") and not os.getenv("TRAVIS"):
             cov.html_report(directory=os.path.join('.', 'coverage'))
 
+        end_time = time.time()
+
         logging.disable(logging.NOTSET)
 
+        print("Testing completed in {0} seconds".format(round(end_time-start_time, 2)))
+
     else:
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
         execute_from_command_line(sys.argv)

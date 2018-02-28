@@ -10,10 +10,6 @@ from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.core.serializers import serialize
 from django.db.models.fields import CharField
-from django.db.models.signals import (
-    post_save,
-)
-from django.dispatch.dispatcher import receiver
 from django.contrib.postgres.fields.jsonb import JSONField
 from ..core.models import TimeStampedModelMixin, UIDMixin
 
@@ -351,17 +347,6 @@ class ExportProfile(models.Model):
 
     def __str__(self):
         return '{0}'.format(self.name)
-
-
-@receiver(post_save, sender=User)
-def user_post_save(sender, instance, created, **kwargs):
-    """
-    This method is executed whenever a User object is created.
-
-    Adds the new user to DefaultExportExtentGroup.
-    """
-    if created:
-        instance.groups.add(Group.objects.get(name='DefaultExportExtentGroup'))
 
 
 def user_owns_job(user=None, job_uid=None):

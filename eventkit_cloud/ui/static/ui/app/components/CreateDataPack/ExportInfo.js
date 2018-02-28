@@ -27,7 +27,7 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import ProviderStatusIcon from './ProviderStatusIcon'
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import ol3mapCss from '../../styles/ol3map.css';
 import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh'

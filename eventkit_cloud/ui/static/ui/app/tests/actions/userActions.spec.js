@@ -1,14 +1,12 @@
-import configureMockStore from 'redux-mock-store'
-import thunk from 'redux-thunk'
-import * as userActions from '../../actions/userActions'
-import types from '../../actions/actionTypes'
-import React from 'react'
-import axios from 'axios'
-import expect from 'expect'
+import configureMockStore from 'redux-mock-store';
+import thunk from 'redux-thunk';
+import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import * as userActions from '../../actions/userActions';
+import types from '../../actions/actionTypes';
 
-const middlewares = [ thunk]
-const mockStore = configureMockStore(middlewares)
+const middlewares = [thunk];
+const mockStore = configureMockStore(middlewares);
 
 describe('userActions actions', () => {
 
@@ -76,23 +74,53 @@ describe('userActions actions', () => {
     });
 
     it('invalid credentials should not log the user in', () => {
-        const mock = new MockAdapter(axios, {delayResponse: 1000});
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
 
         mock.onPost('/auth/').reply(401, {});
         mock.onGet('/logout').reply(200, {});
 
-        const expectedActions = [{type: types.USER_LOGGING_IN}, {type: types.USER_LOGGED_OUT}];
+        const expectedActions = [{ type: types.USER_LOGGING_IN }, { type: types.USER_LOGGED_OUT }];
 
-        const store = mockStore({user: {username: "ExampleUser"}});
-        return store.dispatch(userActions.login({username: 'username', password: 'bad_password'}))
+        const store = mockStore({ user: { username: 'ExampleUser' } });
+        return store.dispatch(userActions.login({ username: 'username', password: 'bad_password' }))
             .catch(() => {
-                expect(store.getActions()).toEqual(expectedActions)
-            })
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('patchUser should handle patch request success', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        const user = { username: 'user1', name: 'user1' };
+        mock.onPatch(`/api/users/${user.username}`).reply(200, user);
+        const expectedActions = [
+            { type: types.PATCHING_USER },
+            { type: types.PATCHED_USER, payload: user },
+        ];
+        const store = mockStore({});
+        return store.dispatch(userActions.patchUser([], user.username))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('patchUser should handle a request error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        const user = { username: 'user1' };
+        const error = 'oh no an error';
+        mock.onPatch(`/api/users/${user.username}`).reply(400, error);
+        const expectedActions = [
+            { type: types.PATCHING_USER },
+            { type: types.PATCHING_USER_ERROR, error },
+        ];
+        const store = mockStore({});
+        return store.dispatch(userActions.patchUser([], user.username))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
     });
 
     it('userActive should set auto logout and auto logout warning times', () => {
-        const mock = new MockAdapter(axios, {delayResponse: 1000});
-
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
         const autoLogoutAtMS = Date.now() + (30 * 60 * 1000);
         const autoLogoutWarningAtMS = Date.now() + (5 * 60 * 1000);
 
@@ -105,7 +133,7 @@ describe('userActions actions', () => {
             type: types.USER_ACTIVE,
             payload: {
                 autoLogoutAt: new Date(autoLogoutAtMS),
-                autoLogoutWarningAt: new Date(autoLogoutWarningAtMS)
+                autoLogoutWarningAt: new Date(autoLogoutWarningAtMS),
             },
         }];
 
@@ -113,13 +141,27 @@ describe('userActions actions', () => {
             user: {
                 autoLogoutAt: null,
                 autoLogoutWarningat: null,
-            }
+            },
         });
 
         return store.dispatch(userActions.userActive())
             .then(() => {
-                expect(store.getActions()).toEqual(expectedActions)
-            })
+                expect(store.getActions()).toEqual(expectedActions);
+            });
     });
-})
 
+    it('userActive should handle an error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+
+        mock.onGet('/user_active').reply(400, 'Oh no an error');
+
+        const expectedActions = [];
+
+        const store = mockStore({});
+
+        return store.dispatch(userActions.userActive())
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+});

@@ -4,8 +4,7 @@ import {mount, shallow} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
-import BaseDialog from '../components/BaseDialog';
-import injectTapEventPlugin from 'react-tap-event-plugin';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('BaseDialog component', () => {
     const getProps = () => {
@@ -16,7 +15,6 @@ describe('BaseDialog component', () => {
         }
     };
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
 
     const getWrapper = (props) => {
         return mount(<BaseDialog {...props}/>, {

@@ -2,7 +2,7 @@ import {DropZoneError} from '../../components/MapTools/DropZoneError';
 import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 const Dropzone = require('react-dropzone');
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 

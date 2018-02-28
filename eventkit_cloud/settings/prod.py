@@ -217,7 +217,7 @@ if os.environ.get('VCAP_SERVICES'):
             try:
                 if ('pg_95' in service) or ('postgres' in service):
                     DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
-                    DATABASES['default']['CONN_MAX_AGE'] = 500
+                    DATABASES['default']['CONN_MAX_AGE'] = 180
             except (KeyError, TypeError) as e:
                 print("Could not configure information for service: {0}".format(service))
                 print(e)
@@ -289,6 +289,7 @@ UI_CONFIG = {
     'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
     'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
     'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', 'Map data © OpenStreetMap contributors'),
+    'MAX_DATAPACK_EXPIRATION_DAYS': os.environ.get('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
 }
 
 if os.environ.get('USE_S3'):
@@ -341,8 +342,6 @@ LOGGING = {
 }
 
 DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
-
-MAX_EXPORTRUN_EXPIRATION_DAYS = os.environ.get('MAX_EXPORTRUN_EXPIRATION_DAYS', 30)
 
 LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
 

@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import {shallow, mount} from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow} from 'material-ui/Table';
 import {GridList} from 'material-ui/GridList'
@@ -13,7 +12,6 @@ import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 import CustomScrollbar from '../../components/CustomScrollbar';
 
 describe('DataPackList component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const providers = [
         {

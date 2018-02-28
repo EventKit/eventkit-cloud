@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from django.conf import settings
+from mock import patch
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
@@ -23,8 +23,10 @@ class TestOSMConf(TestCase):
         self.assertIsNotNone(self.tags)
         self.assertEquals(259, len(self.tags))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description',

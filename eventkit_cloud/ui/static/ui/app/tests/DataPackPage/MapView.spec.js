@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
 import { mount, shallow } from 'enzyme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { GridList } from 'material-ui/GridList';
 import axios from 'axios';
@@ -58,7 +57,6 @@ const providers = [
 ]
 
 describe('MapView component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
     const getProps = () => {
         return {
