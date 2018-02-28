@@ -144,14 +144,17 @@ describe('DashboardPage component', () => {
     it('should render basic components after page has loaded', () => {
         const wrapper = getShallowWrapper();
         loadDataPacks(wrapper);
-        expect(wrapper.find(AppBar)).toHaveLength(3);
+        expect(wrapper.find(AppBar)).toHaveLength(1);
+        expect(wrapper.find('.qa-Dashboard-RecentlyViewedHeader')).toHaveLength(1);
+        expect(wrapper.find('.qa-Dashboard-FeaturedHeader')).toHaveLength(1);
+        expect(wrapper.find('.qa-Dashboard-MyDataPacksHeader')).toHaveLength(1);
     });
 
     it('should render messages when data is not available', () => {
         const wrapper = getShallowWrapper();
         loadNoDataPacks(wrapper);
         expect(wrapper.find('.qa-Dashboard-MyDataPacks-NoData')).toHaveLength(1);
-        expect(wrapper.find('.qa-Dashboard-RecentlyViewedDataPacks-NoData')).toHaveLength(1);
+        expect(wrapper.find('.qa-Dashboard-RecentlyViewed-NoData')).toHaveLength(1);
         expect(wrapper.find(GridList)).toHaveLength(0);
     });
 
@@ -159,7 +162,7 @@ describe('DashboardPage component', () => {
         const wrapper = getShallowWrapper();
         loadDataPacks(wrapper);
         expect(wrapper.find('.qa-Dashboard-MyDataPacks-NoData')).toHaveLength(0);
-        expect(wrapper.find('.qa-Dashboard-RecentlyViewedDataPacks-NoData')).toHaveLength(0);
+        expect(wrapper.find('.qa-Dashboard-RecentlyViewed-NoData')).toHaveLength(0);
         expect(wrapper.find(GridList)).toHaveLength(3);
         expect(wrapper.find(GridList).at(0).find(DataPackGridItem)).toHaveLength(2);
         expect(wrapper.find(GridList).at(1).find(DataPackGridItem)).toHaveLength(2);
@@ -168,12 +171,12 @@ describe('DashboardPage component', () => {
 
     it('should refresh the page periodically', () => {
         jest.useFakeTimers();
-        const refreshSpy = new sinon.spy(DashboardPage.prototype, 'refresh');
+        const refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
         const wrapper = getMountedWrapper();
         loadNoDataPacks(wrapper);
         expect(refreshSpy.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
-        expect(setInterval.mock.calls[0][1]).toEqual(10000);
+        expect(setInterval.mock.calls[0][1]).toEqual(wrapper.instance().refreshInterval);
         jest.runOnlyPendingTimers();
         expect(refreshSpy.calledTwice).toBe(true);
         jest.runOnlyPendingTimers();
@@ -185,30 +188,11 @@ describe('DashboardPage component', () => {
         const instance = wrapper.instance();
         instance.refresh = sinon.spy();
         loadDataPacks(wrapper);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
         wrapper.setProps({
             runsDeletion: {
                 deleted: true,
             },
         });
         expect(instance.refresh.calledOnce).toBe(true);
-    });
-
-    it('should show loading indicator on refresh({ showLoading: true })', () => {
-        const wrapper = getMountedWrapper();
-        const instance = wrapper.instance();
-        loadNoDataPacks(wrapper);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        instance.refresh({ showLoading: true });
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
-    });
-
-    it('should not show loading indicator on refresh()', () => {
-        const wrapper = getMountedWrapper();
-        const instance = wrapper.instance();
-        loadNoDataPacks(wrapper);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        instance.refresh();
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
     });
 });

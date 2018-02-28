@@ -12,21 +12,28 @@ const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
+        this.getGridColumns = this.getGridColumns.bind(this);
+        this.getGridPadding = this.getGridPadding.bind(this);
+        this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
+        this.refreshFeatured = this.refreshFeatured.bind(this);
+        this.refreshRecentlyViewed = this.refreshRecentlyViewed.bind(this);
         this.refresh = this.refresh.bind(this);
+        this.isLoading = this.isLoading.bind(this);
         this.state = {
             loadingPage: true,
             loadingSections: {
                 myDataPacks: true,
-                featuredDataPacks: true,
-                viewedDataPacks: true,
+                featured: true,
+                recentlyViewed: true,
             },
         };
+        this.refreshInterval = 10000;
     }
 
     componentDidMount() {
         this.props.getProviders();
-        this.refreshIntervalId = setInterval(this.refresh, 10000);
-        this.refresh({ showLoading: true });
+        this.refreshIntervalId = setInterval(this.refresh, this.refreshInterval);
+        this.refresh();
     }
 
     componentWillUnmount() {
@@ -43,12 +50,12 @@ export class DashboardPage extends React.Component {
 
         // Featured datapacks.
         if (nextProps.featuredRunsList.fetched && !this.props.featuredRunsList.fetched) {
-            loadingSections.featuredDataPacks = false;
+            loadingSections.featured = false;
         }
 
         // Received viewed datapacks.
         if (nextProps.user.viewedJobs.fetched && !this.props.user.viewedJobs.fetched) {
-            loadingSections.viewedDataPacks = false;
+            loadingSections.recentlyViewed = false;
         }
 
         // Only show page loading once, before all sections have initially loaded.
@@ -70,7 +77,7 @@ export class DashboardPage extends React.Component {
 
         // Deleted datapack.
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
-            this.refresh({ showLoading: true });
+            this.refresh();
         }
     }
 
@@ -90,30 +97,44 @@ export class DashboardPage extends React.Component {
         return window.innerWidth >= 768 ? 7 : 2;
     }
 
-    refresh({ showLoading = false } = {}) {
+    refreshMyDataPacks({ showLoading = true } = {}) {
         this.props.getRuns({
             pageSize: 6,
             ordering: '-started_at',
             ownerFilter: this.props.user.data.user.username,
         });
-        this.props.getFeaturedRuns({
-            pageSize: 6,
-        });
-        this.props.getViewedJobs({
-            pageSize: 6,
-        });
 
         if (showLoading) {
-            // Reset all loading flags.
             const loadingSections = {...this.state.loadingSections};
-            for (const key of Object.keys(loadingSections)) {
-                loadingSections[key] = true
-            }
-
-            this.setState({
-                loadingSections: loadingSections
-            });
+            loadingSections.myDataPacks = true;
+            this.setState({ loadingSection: loadingSections });
         }
+    }
+
+    refreshFeatured({ showLoading = true } = {}) {
+        this.props.getFeaturedRuns({ pageSize: 6 });
+
+        if (showLoading) {
+            const loadingSections = {...this.state.loadingSections};
+            loadingSections.featured = true;
+            this.setState({ loadingSection: loadingSections });
+        }
+    }
+
+    refreshRecentlyViewed({ showLoading = true } = {}) {
+        this.props.getViewedJobs({ pageSize: 6 });
+
+        if (showLoading) {
+            const loadingSections = {...this.state.loadingSections};
+            loadingSections.recentlyViewed = true;
+            this.setState({ loadingSection: loadingSections });
+        }
+    }
+
+    refresh({ showLoading = true } = {}) {
+        this.refreshMyDataPacks({ showLoading: showLoading });
+        this.refreshFeatured({ showLoading: showLoading });
+        this.refreshRecentlyViewed({ showLoading: showLoading });
     }
 
     isLoading() {
