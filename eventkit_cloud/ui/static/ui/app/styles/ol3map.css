@@ -37,6 +37,24 @@ div.map {
     background-color: white;
 }
 
+.olZoomSlider {
+    z-index: 3;
+    top: 108px;
+    left: 10px;
+    height: 200px;
+    color: #66a3ff;
+    background-color: white;
+}
+
+.olZoomSlider button {
+    position: relative;
+    height: 15px;
+
+    /* Fix issue where slider button scrolls down too far */
+    transform: scaleY(0.75);
+    transform-origin: top center;
+}
+
 .olControlTopLeft {
     top: 15px !important;
     left: 10px !important;
