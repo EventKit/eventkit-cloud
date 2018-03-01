@@ -2,8 +2,10 @@
 
 from __future__ import unicode_literals
 import uuid
+from enum import Enum
 from django.contrib.gis.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User,Group
 
 
 class TimeStampedModelMixin(models.Model):
@@ -65,3 +67,62 @@ class UIDMixin(models.Model):
 
     class Meta:
         abstract = True
+
+class GroupPermission(TimeStampedModelMixin):
+    """
+    Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
+    """
+
+    @staticmethod
+    class Permissions(Enum):
+        NONE = "NONE"
+        MEMBER = "MEMBER"
+        ADMIN = "ADMIN"
+
+    user = models.ForeignKey(User)
+    group = models.ForeignKey(Group)
+    permission  = models.CharField(
+        choices=[('NONE','None'),('MEMBER','Member'),('ADMIN','Admin')],
+        max_length=10)
+
+    def __str__(self):
+        return '{0}: {1}: {2}'.format(self.user, self.group.name, self.permission)
+
+    def __unicode__(self):
+        return '{0}: {1}: {2}'.format(self.user, self.group.name, self.permission)
+
+
+from ..tasks.models import Job
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+
+class JobPermission(TimeStampedModelMixin):
+
+    @staticmethod
+    class JobPermissions(object):
+        class MemberTypes(Enum):
+            NONE = "NONE"
+            READ = "READ"
+            ADMIN = "ADMIN"
+
+    """
+    Model associates users or groups with jobs
+    """
+
+    job = models.ForeignKey(Job)
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    permission = models.CharField(
+        choices=[('NONE', 'None'), ('READ', 'Read'), ('ADMIN', 'Admin')],
+        max_length=10)
+
+    def __str__(self):
+        return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
+
+    def __unicode__(self):
+        return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
+
+

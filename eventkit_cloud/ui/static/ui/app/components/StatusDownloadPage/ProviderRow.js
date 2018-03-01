@@ -13,7 +13,7 @@ import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
 import LinearProgress from 'material-ui/LinearProgress';
 import TaskError from './TaskError';
 import ProviderError from './ProviderError';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 
 export class ProviderRow extends Component {
