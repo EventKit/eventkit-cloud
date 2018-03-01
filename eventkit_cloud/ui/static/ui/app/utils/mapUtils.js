@@ -19,6 +19,7 @@ import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
 import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
+import ZoomSlider from 'ol/control/zoomslider';
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
 export const MODE_NORMAL = 'MODE_NORMAL';
@@ -449,7 +450,7 @@ export function isBox(feature) {
 
 // check if the pixel in question lies over a feature vertex, if it does, return the vertex coords
 export function isVertex(pixel, feature, tolarance, map) {
-    // check target pixel with pixel for each corner of the box, 
+    // check target pixel with pixel for each corner of the box,
     // if within tolerance or equal, we have a vertex
     tolarance = tolarance || 3;
     const geomType = feature.getGeometry().getType();
@@ -527,4 +528,36 @@ export function getDominantGeometry(featureCollection) {
         return 'Point';
     }
     return null;
+}
+
+export function zoomSliderCreate(options) {
+    const zoomSlider = new ZoomSlider(options);
+
+    // Let the user continue dragging the slider if they drag outside the left and right of the scrollbar.
+    zoomSlider.eventkitZoomSliderDrag = (ev) => {
+        const rect = zoomSlider.element.getBoundingClientRect();
+        if (ev.clientY > rect.top && ev.clientY < rect.bottom) {
+            zoomSlider.handleDraggerDrag_(ev);
+        }
+    };
+
+    // Fix issue with zoom slider where dragging doesn't end when mouse up occurs outside of slider.
+    // https://github.com/openlayers/openlayers/issues/7485
+    zoomSlider.eventKitZoomSliderDragEnd = (ev) => {
+        zoomSlider.handleDraggerEnd_(ev);
+    };
+
+    window.addEventListener('mousemove', zoomSlider.eventkitZoomSliderDrag);
+    window.addEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
+
+    return zoomSlider;
+}
+
+export function zoomSliderCleanup(zoomSlider) {
+    if (!zoomSlider) {
+        return;
+    }
+
+    window.removeEventListener('mousemove', zoomSlider.eventkitZoomSliderDrag);
+    window.removeEventListener('mouseup', zoomSlider.eventKitZoomSliderDragEnd);
 }
