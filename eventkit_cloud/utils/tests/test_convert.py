@@ -9,6 +9,7 @@ import json
 from ..convert import Convert
 
 logger = logging.getLogger(__name__)
+mockURL = "http://192.168.20.1"
 
 class TestConvert(TestCase):
 
@@ -16,9 +17,12 @@ class TestConvert(TestCase):
         self.mock_requests = requests_mock.Mocker()
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
+        
+        settings.CONVERT_API_URL = mockURL
 
     def convert_test_success(self, api_response):
-        self.mock_requests.get(settings.CONVERT_API_URL, text=json.dumps(api_response), status_code=200)
+        
+        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
         convert = Convert()
         result = convert.get("18S TJ 97100 03003")
         self.assertIsNotNone(result.get("geometry"))
@@ -50,7 +54,7 @@ class TestConvert(TestCase):
         self.convert_test_success(convert_response_success)
 
     def convert_test_fail(self, api_response):
-        self.mock_requests.get(settings.CONVERT_API_URL, text=json.dumps(api_response), status_code=200)
+        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
         convert = Convert()
         result = convert.get("12UUA844")
         self.assertIsNone(result.get("geometry"))

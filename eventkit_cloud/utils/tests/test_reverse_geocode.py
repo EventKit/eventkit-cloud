@@ -9,6 +9,7 @@ import json
 from ..reverse import ReverseGeocode, ReverseGeocodeAdapter, expand_bbox, is_valid_bbox
 
 logger = logging.getLogger(__name__)
+mockURL = "http://192.168.20.1"
 
 class TestReverseGeoCode(TestCase):
 
@@ -16,9 +17,11 @@ class TestReverseGeoCode(TestCase):
         self.mock_requests = requests_mock.Mocker()
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
+        settings.REVERSE_GEOCODING_API_URL = mockURL;
+        
 
     def reverse_geocode_test(self, api_response):
-        self.mock_requests.get(settings.REVERSE_GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
         reverseGeocode = ReverseGeocode()
         result = reverseGeocode.search({ "lat": 38.960327927982796, "lon": -77.422182})
         self.assertIsNotNone(result.get("features"))
@@ -36,6 +39,7 @@ class TestReverseGeoCode(TestCase):
 
 
     def test_pelias_success(self):
+        
         pelias_response = {"geocoding": {"version": "0.2", "attribution": "127.0.0.1:/v1/attribution",
                                          "query": {"text": "Boston", "size": 10, "private": False,
                                                    "lang": {"name": "English", "iso6391": "en", "iso6393": "eng",
@@ -66,9 +70,9 @@ class TestReverseGeoCode(TestCase):
 
         self.reverse_geocode_test(pelias_response)
 
-    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+    @override_settings(GEOCODING_API_URL=mockURL,
                        GEOCODING_API_TYPE="pelias",
-                       GEOCODING_UPDATE_URL='http://pelias.url/place')
+                       GEOCODING_UPDATE_URL=mockURL)
     def test_pelias_add_bbox(self):
         in_result = {
             "type": "Feature",
@@ -112,7 +116,7 @@ class TestReverseGeoCode(TestCase):
 	        ],
 	        "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
         }
-        self.mock_requests.get(settings.GEOCODING_UPDATE_URL, text=json.dumps(api_response), status_code=200)
+        self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
         expected_bbox = api_response.get('bbox')
         reverse_geocode = ReverseGeocode()
         result = reverse_geocode.add_bbox(in_result)
@@ -120,7 +124,7 @@ class TestReverseGeoCode(TestCase):
         self.assertEquals(result.get('bbox'), expected_bbox)
         self.assertEquals(result.get('properties').get('bbox'), expected_bbox)
 
-    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+    @override_settings(GEOCODING_API_URL=mockURL,
                        GEOCODING_API_TYPE="pelias",
                        GEOCODING_UPDATE_URL="")
     def test_geocode_no_update_url(self):
