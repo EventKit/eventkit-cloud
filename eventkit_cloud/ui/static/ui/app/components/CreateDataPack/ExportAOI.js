@@ -43,6 +43,7 @@ import {
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, hasArea,
     getDominantGeometry, zoomSliderCreate, zoomSliderCleanup
 } from '../../utils/mapUtils';
+import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -91,6 +92,7 @@ export class ExportAOI extends Component {
             validBuffer: true,
             mode: MODE_NORMAL,
             showReset: false,
+            zoomLevel: 2,
         };
     }
 
@@ -435,8 +437,8 @@ export class ExportAOI extends Component {
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: 2.5,
-                minZoom: 2.5,
+                zoom: this.state.zoomLevel,
+                minZoom: 2,
                 maxZoom: 22,
             }),
         });
@@ -454,6 +456,13 @@ export class ExportAOI extends Component {
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
+
+        const updateZoomLevel = () => {
+            this.setState({ zoomLevel: this.map.getView().getZoom() });
+        };
+
+        updateZoomLevel();
+        this.map.getView().on('propertychange', updateZoomLevel);
     }
 
     upEvent() {
@@ -726,6 +735,9 @@ export class ExportAOI extends Component {
                         setMapViewButtonSelected={() => { this.setButtonSelected('mapView'); }}
                         setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                         setImportModalState={this.toggleImportModal}
+                    />
+                    <ZoomLevelLabel
+                        zoomLevel={this.state.zoomLevel}
                     />
                     <BufferDialog
                         show={this.state.showBuffer}
