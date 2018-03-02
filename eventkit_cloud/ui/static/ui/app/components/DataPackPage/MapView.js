@@ -44,6 +44,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
     isBox, isVertex, zoomSliderCreate, zoomSliderCleanup } from '../../utils/mapUtils';
+import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -108,6 +109,7 @@ export class MapView extends Component {
             showInvalidDrawWarning: false,
             mode: MODE_NORMAL,
             disableMapClick: false,
+            zoomLevel: 2,
         };
     }
 
@@ -159,6 +161,13 @@ export class MapView extends Component {
             this.map.getView().fit(this.source.getExtent(), this.map.getSize());
         }
         this.clickListener = this.map.on('singleclick', this.onMapClick);
+
+        const updateZoomLevel = () => {
+            this.setState({ zoomLevel: this.map.getView().getZoom() });
+        };
+
+        updateZoomLevel();
+        this.map.getView().on('propertychange', updateZoomLevel);
     }
 
     componentWillUnmount() {
@@ -289,7 +298,7 @@ export class MapView extends Component {
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: 2,
+                zoom: this.state.zoomLevel,
                 minZoom: 2,
                 maxZoom: 22,
             }),
@@ -927,6 +936,9 @@ export class MapView extends Component {
                             setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                             setImportModalState={this.toggleImportModal}
                             title="FILTERS"
+                        />
+                        <ZoomLevelLabel
+                            zoomLevel={this.state.zoomLevel}
                         />
                         <InvalidDrawWarning
                             show={this.state.showInvalidDrawWarning}
