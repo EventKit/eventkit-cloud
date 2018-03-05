@@ -398,7 +398,7 @@ export class ExportInfo extends React.Component {
             },
             providerListHeading: {
                 position: 'absolute',
-                left: 'calc(20% + ('+formWidth+' - 700px) / 2 + 65px)',
+                marginLeft: '50px',
             },
             refreshIcon: {
                 marginBottom: '-4px',

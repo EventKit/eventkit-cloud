@@ -57,6 +57,7 @@ export class ProviderStatusIcon extends Component {
         let StatusIcon;
         let title;
         let messagePrefix;
+        let otherProps = {};
         switch (statusStr.slice(0, statusStr.indexOf("_"))) {
             case 'SUCCESS':
                 style.icon['color'] = 'rgba(0, 192, 0, 0.87)';
@@ -81,11 +82,13 @@ export class ProviderStatusIcon extends Component {
                 StatusIcon = CircularProgress;
                 title = "Checking Availability"
                 messagePrefix = "";
+                otherProps = {thickness: 2};
             default:
                 break;
         }
 
         let message = messagePrefix + avail.message;
+        const tooltipOffset = window.innerWidth<777 ? (777-window.innerWidth)/3+'px' : '0px'
 
         return (
             <div style={style.base} className='qa-ProviderStatusIcon' >
@@ -97,15 +100,20 @@ export class ProviderStatusIcon extends Component {
                     onMouseOut={this.handleTooltipClose.bind(this)}
                     onTouchStart={this.handleTooltipOpen.bind(this)}
                     onTouchEnd={this.handleTooltipClose.bind(this)}
-                    size={20} thickness={2} color={style.icon['color']}
+                    size={20}  color={style.icon['color']}
+                    {...otherProps}
                 />
                 <BaseTooltip
                     show={this.state.tooltipOpen}
                     title={title}
                     tooltipStyle={{
                         bottom: '36px',
-                        left: '-157px',
+                        left: 'calc(-157px - '+ tooltipOffset + ')',
                         ...this.props.tooltipStyle,
+                    }}
+                    arrowStyle={{
+                        left: 'calc(50% + '+tooltipOffset + ')',
+                        ...this.props.arrowStyle,
                     }}
                     onMouseOver={this.handleTooltipOpen.bind(this)}
                     onMouseOut={this.handleTooltipClose.bind(this)}
