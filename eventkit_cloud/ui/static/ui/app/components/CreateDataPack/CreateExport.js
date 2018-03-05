@@ -21,7 +21,7 @@ export class CreateExport extends React.Component {
         // Show warning dialog if we try to navigate away with changes.
         const route = this.props.routes[this.props.routes.length - 1];
         this.props.router.setRouteLeaveHook(route, (info) => {
-            if (!this.state.modified || this.leaveRoute) {
+            if (!this.state.modified || this.leaveRoute || info.pathname.indexOf('/status') === 0) {
                 // No changes to lose, or we confirmed we want to leave.
                 return true;
             }
