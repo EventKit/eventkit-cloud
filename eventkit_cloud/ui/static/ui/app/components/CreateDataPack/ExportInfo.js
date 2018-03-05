@@ -203,6 +203,12 @@ export class ExportInfo extends React.Component {
 
         }).catch((error) => {
             console.log(error);
+            provider.availability = {
+                status: "WARN_CHECK_FAILURE",
+                message: "An error occurred while checking this provider's availability."
+            };
+            provider.availability.slug = provider.slug;
+            this.setState({ providers: [provider, ...this.state.providers] });
         });
     }
 
@@ -495,7 +501,7 @@ export class ExportInfo extends React.Component {
                                     uncheckedIcon={<UncheckedCircle className="qa-ExportInfo-UncheckedCircle" style={{ fill: '4598bf' }} />}
                                 />
                             </div>
-                            
+
                             <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
