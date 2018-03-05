@@ -150,17 +150,56 @@ export class ExportAOI extends Component {
                 backgroundColor: 'rgba(226,226,226, 0.2)',
             },
         };
+        const welcomeTooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf',
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf',
+            },
+            skip: {
+                color: '#8b9396',
+            },
+            back: {
+                color: '#8b9396',
+            },
+            arrow: {
+                display: 'none',
+            },
+            hole: {
+                display: 'none',
+            },
+        };
 
         const steps = [
             {
+                title: 'Welcome to the Create Datapack page.',
+                text: 'Creating DataPacks is the core function of EventKit. The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.',
+                selector: '.qa-BreadcrumbStepper-div-content',
+                position: 'bottom',
+                style: welcomeTooltipStyle,
+            },
+            {
                 title: 'Search for location',
-                text: 'Type in location name to set area of interest.',
+                text: 'EventKit has several gazetteers that are searchable from the location search box, just start typing a location name and options appear. MGRS coordinates can also be used. Once a location is selected, the map automatically navigates to that location.',
                 selector: '.bootstrap-typeahead-input',
                 position: 'bottom',
                 style: tooltipStyle,
             },
             {
-                title: 'Select location',
+                title: 'Define',
                 text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.',
                 selector: '.qa-DrawAOIToolbar-div',
                 position: 'left',
@@ -777,7 +816,7 @@ export class ExportAOI extends Component {
             this.refs.joyride.reset(true);
         }
 
-        if (data.index === 2 && data.type === 'tooltip:before') {
+        if (data.index === 3 && data.type === 'tooltip:before') {
             //  make the map have a selection, make toolbar have the X
             this.setButtonSelected('box');
             if (this.props.aoiInfo.description === null) {
@@ -788,7 +827,7 @@ export class ExportAOI extends Component {
             }
         }
 
-        if (data.index === 3 && data.type === 'tooltip:before') {
+        if (data.index === 4 && data.type === 'tooltip:before') {
             //  make the map have a selection, make toolbar have the X
             this.props.setNextEnabled();
         }

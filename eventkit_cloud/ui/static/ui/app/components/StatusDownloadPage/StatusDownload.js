@@ -67,7 +67,7 @@ export class StatusDownload extends React.Component {
             hole: {
                 backgroundColor: 'rgba(226,226,226, 0.2)',
             },
-        }
+        };
 
         const steps = [
             {
@@ -81,7 +81,7 @@ export class StatusDownload extends React.Component {
             {
                 title: 'DataPack Status',
                 text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.',
-                selector: '.qa-DataCartDetails-div-otherStatusContainer',
+                selector: '.qa-DataCartDetails-div-StatusContainer',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
@@ -184,15 +184,6 @@ export class StatusDownload extends React.Component {
             }
         }
     }
-    handleWalkthroughClick() {
-        this.setState({ isRunning: true });
-    }
-
-    startTimer() {
-        this.timer = TimerMixin.setInterval(() => {
-            this.props.getDatacartDetails(this.props.params.jobuid);
-        }, 3000);
-    }
 
     componentWillUnmount() {
         this.props.clearDataCartDetails();
@@ -231,6 +222,10 @@ export class StatusDownload extends React.Component {
         return messages;
     }
 
+    handleWalkthroughClick() {
+        this.setState({ isRunning: true });
+    }
+
     handleClone(cartDetails, providerArray) {
         this.props.cloneExport(cartDetails, providerArray);
     }
@@ -254,7 +249,7 @@ export class StatusDownload extends React.Component {
 
         if (!newSteps.length) return;
 
-        this.setState(currentState => {
+        this.setState((currentState) => {
             currentState.steps = currentState.steps.concat(newSteps);
             return currentState;
         });
@@ -285,8 +280,13 @@ export class StatusDownload extends React.Component {
 
     render() {
         const { steps, isRunning } = this.state;
-        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>
-        const iconElementRight = <div onTouchTap={this.handleWalkthroughClick()} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginLeft: '10px', fontSize: '16px'}}><Help onTouchTap={this.handleWalkthroughClick.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width:'18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
+        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>;
+        const iconElementRight = (<div
+            onTouchTap={this.handleWalkthroughClick}
+            style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginLeft: '10px', fontSize: '16px'}} >
+            <Help onTouchTap={this.handleWalkthroughClick} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />
+            Page Tour
+        </div>)
 
         const marginPadding = this.getMarginPadding();
 

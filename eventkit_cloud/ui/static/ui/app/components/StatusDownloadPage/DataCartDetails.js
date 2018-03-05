@@ -165,7 +165,7 @@ export class DataCartDetails extends Component {
                         dataStyle={{ wordBreak: 'break-all' }}
                     />
                 </div>
-                <div style={styles.container} className="qa-DataCartDetails-div-otherStatusContainer">
+                <div style={styles.container} className="qa-DataCartDetails-div-StatusContainer">
                     <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
                         Status
                     </div>

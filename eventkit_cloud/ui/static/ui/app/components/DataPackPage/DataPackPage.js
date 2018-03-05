@@ -71,6 +71,7 @@ export class DataPackPage extends React.Component {
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
+
     componentWillReceiveProps(nextProps) {
         if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
             if (this.state.pageLoading) {
@@ -84,6 +85,7 @@ export class DataPackPage extends React.Component {
             this.setState({ loading: true }, this.makeRunRequest);
         }
     }
+
 
     componentWillUnmount() {
         clearInterval(this.fetch);
@@ -116,13 +118,12 @@ export class DataPackPage extends React.Component {
                 paddingTop: '20px',
                 paddingBottom: '20px',
             },
-
             button: {
                 color: 'white',
                 backgroundColor: '#4598bf',
             },
             skip: {
-                color: '#8b9396',
+                display: 'none',
             },
             back: {
                 color: '#8b9396',
@@ -132,12 +133,53 @@ export class DataPackPage extends React.Component {
             },
         };
 
+        const welcomeTooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf',
+            },
+            arrow: {
+                display: 'none',
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf',
+            },
+            skip: {
+                display: 'none',
+            },
+            back: {
+                color: '#8b9396',
+            },
+            hole: {
+                display: 'none',
+            },
+        };
+
         switch (this.state.view) {
         case 'map':
             return [
                 {
+                    title: 'Welcome to the DataPack Library.',
+                    text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                    selector: '.qa-DataPackPage-Toolbar-sort',
+                    style: welcomeTooltipStyle,
+                    position: 'top',
+                },
+                {
                     title: 'Create DataPack',
-                    text: 'Click here to Navigate to Create a DataPack.',
+                    text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
                     selector: '.qa-DataPackLinkButton-RaisedButton',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -145,21 +187,21 @@ export class DataPackPage extends React.Component {
                 },
                 {
                     title: 'Search DataPacks',
-                    text: 'Search and Sort the existing DataPack Library.',
+                    text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.',
                     selector: '.qa-DataPackSearchBar-TextField',
                     position: 'bottom',
                     style: tooltipStyle,
                 },
                 {
                     title: 'Filter DataPacks',
-                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                    text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.',
                     selector: '.qa-FilterDrawer-Drawer > div',
                     position: 'bottom',
                     style: tooltipStyle,
                 },
                 {
                     title: 'DataPack Status',
-                    text: 'Check the status of previously created DataPacks',
+                    text: 'Check the status (success, error, fail) of previously created DataPacks',
                     selector: '.qa-DataPackListItem-subtitle-date',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -171,12 +213,26 @@ export class DataPackPage extends React.Component {
                     position: 'bottom',
                     style: tooltipStyle,
                 },
+                {
+                    title: 'Change Views',
+                    text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                    selector: '.qa-DataPackViewButtons-Icons',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
             ];
         case 'grid':
             return [
                 {
+                    title: 'Welcome to the DataPack Library.',
+                    text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                    selector: '.qa-DataPackPage-Toolbar-sort',
+                    style: welcomeTooltipStyle,
+                    position: 'top',
+                },
+                {
                     title: 'Create DataPack',
-                    text: 'Click here to Navigate to Create a DataPack.',
+                    text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
                     selector: '.qa-DataPackLinkButton-RaisedButton',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -184,21 +240,21 @@ export class DataPackPage extends React.Component {
                 },
                 {
                     title: 'Search DataPacks',
-                    text: 'Search and Sort the existing DataPack Library.',
+                    text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.',
                     selector: '.qa-DataPackSearchBar-TextField',
                     position: 'bottom',
                     style: tooltipStyle,
                 },
                 {
                     title: 'Filter DataPacks',
-                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                    text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.',
                     selector: '.qa-FilterDrawer-Drawer > div',
                     position: 'bottom',
                     style: tooltipStyle,
                 },
                 {
                     title: 'DataPack Status',
-                    text: 'Check the status of previously created DataPacks',
+                    text: 'Check the status (success, error, fail) of previously created DataPacks',
                     selector: '.qa-DataPackGridItem-CardActions',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -210,27 +266,40 @@ export class DataPackPage extends React.Component {
                     position: 'bottom',
                     style: tooltipStyle,
                 },
+                {
+                    title: 'Change Views',
+                    text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                    selector: '.qa-DataPackViewButtons-Icons',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
             ];
         case 'list':
             return [
                 {
+                    title: 'Welcome to the DataPack Library.',
+                    text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                    selector: '.qa-DataPackPage-Toolbar-sort',
+                    style: welcomeTooltipStyle,
+                    position: 'top',
+                },
+                {
                     title: 'Create DataPack',
-                    text: 'Click here to Navigate to Create a DataPack.',
+                    text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
                     selector: '.qa-DataPackLinkButton-RaisedButton',
                     position: 'bottom',
                     style: tooltipStyle,
-
                 },
                 {
                     title: 'Search DataPacks',
-                    text: 'Search and Sort the existing DataPack Library.',
+                    text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.',
                     selector: '.qa-DataPackSearchBar-TextField',
                     position: 'bottom',
                     style: tooltipStyle,
                 },
                 {
                     title: 'Filter DataPacks',
-                    text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                    text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.',
                     selector: '.qa-FilterDrawer-Drawer > div',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -249,11 +318,17 @@ export class DataPackPage extends React.Component {
                     position: 'bottom',
                     style: tooltipStyle,
                 },
+                {
+                    title: 'Change Views',
+                    text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                    selector: '.qa-DataPackViewButtons-Icons',
+                    position: 'bottom',
+                    style: tooltipStyle,
+                },
             ];
         default: return null;
         }
     }
-
 
     getView(view) {
         const commonProps = {
@@ -435,9 +510,14 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
         }
-        if (data.index === 2 && data.type === 'step:before') {
+        if (data.index === 3 && data.type === 'step:before') {
             if (this.state.open === false) {
                 this.setState({ open: true });
+            }
+        }
+        if (data.index === 3 && data.type === 'step:after') {
+            if (this.state.view === 'list' && this.state.open === true) {
+                this.setState({ open: false });
             }
         }
     }
@@ -448,6 +528,58 @@ export class DataPackPage extends React.Component {
             this.refs.joyride.reset(true);
         } else {
             this.setState({ isRunning: true });
+
+            //  Need to figure out a way to add a step if a featured datapack is shown.
+            //  Below adds a step, but we aren't checking for featured yet.
+
+            let hasMatch = false;
+
+            for (let index = 0; index < this.props.runsList.runs.length; index += 1) {
+
+                const run = this.props.runsList.runs[index];
+
+                if (run.job.featured === true) {
+                    hasMatch = true;
+                    const newStep = {
+                        title: 'Featured DataPacks',
+                        text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
+                        selector: '.qa-FeaturedFlag-div',
+                        style: {
+                            backgroundColor: 'white',
+                            borderRadius: '0',
+                            color: 'black',
+                            mainColor: '#ff4456',
+                            textAlign: 'left',
+                            header: {
+                                textAlign: 'left',
+                                fontSize: '20px',
+                                borderColor: '#4598bf',
+                            },
+                            main: {
+                                paddingTop: '20px',
+                                paddingBottom: '20px',
+                            },
+                            button: {
+                                color: 'white',
+                                backgroundColor: '#4598bf',
+                            },
+                            skip: {
+                                display: 'none',
+                            },
+                            back: {
+                                color: '#8b9396',
+                            },
+                            hole: {
+                                backgroundColor: 'rgba(226,226,226, 0.2)',
+                            },
+                        },
+                        position: 'top',
+                    };
+                    this.setState({ steps: [...this.state.steps, newStep] });
+                    break;
+                }
+            }
+            console.log('hasmatch = ' + hasMatch);
         }
     }
 

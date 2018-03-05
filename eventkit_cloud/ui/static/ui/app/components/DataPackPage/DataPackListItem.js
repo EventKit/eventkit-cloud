@@ -27,13 +27,13 @@ export class DataPackListItem extends Component {
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
-            deleteDialogOpen: false
+            deleteDialogOpen: false,
         };
     }
-    handleProviderClose() {
-        this.setState({providerDialogOpen: false});
 
-    };
+    handleProviderClose() {
+        this.setState({ providerDialogOpen: false });
+    }
 
     handleProviderOpen(runProviders) {
         let providerDesc = {};
