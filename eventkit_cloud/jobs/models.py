@@ -64,7 +64,7 @@ class DatamodelPreset(TimeStampedModelMixin):
 
 class License(TimeStampedModelMixin):
     """
-    Model to hold license information to be used with ExportProviders.
+    Model to hold license information to be used with DataProviders.
     """
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
     name = models.CharField(max_length=100, db_index=True)
