@@ -194,7 +194,7 @@ export class DashboardPage extends React.Component {
             },
             sectionHeader: {
                 margin: '12px 0 4px',
-                paddingLeft: '14px',
+                paddingLeft: '13px',
                 fontSize: '24px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
