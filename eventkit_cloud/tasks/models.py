@@ -19,7 +19,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
 
     A Job provides information for the ExportRun.
     Many ExportRuns can map to a Job.
-    Many ExportProviderTasks can map to an ExportRun.
+    Many DataProviderTasks can map to an ExportRun.
     Many ExportTasks can map to an DataProviderTaskRecord.
     """
     job = models.ForeignKey(Job, related_name='runs')
