@@ -105,7 +105,7 @@ class ExternalRasterServiceToGeopackage(object):
         for source in conf_dict.get('sources') or []:
             if 'wmts' in source:
                 conf_dict['sources'][source]['transparent'] = True
-                conf_dict['sources'][source]['on_error'] = {"other": {"response": "transparent", "cache": False}}
+                conf_dict['sources'][source]['on_error'] = {404: {"response": "transparent", "cache": False}}
 
         # disable SSL cert checks
         if getattr(settings, "DISABLE_SSL_VERIFICATION", False):
