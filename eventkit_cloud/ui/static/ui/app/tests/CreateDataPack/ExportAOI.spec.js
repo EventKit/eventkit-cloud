@@ -26,6 +26,7 @@ import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js'
 import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
+import MapView from '../../components/DataPackPage/MapView';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -97,6 +98,14 @@ describe('ExportAOI component', () => {
             },
         });
     };
+
+    beforeEach(() => {
+        sinon.stub(ExportAOI.prototype, 'updateZoomLevel');
+    });
+
+    afterEach(() => {
+        ExportAOI.prototype.updateZoomLevel.restore();
+    });
 
     it('should render the basic elements', () => {
         const props = getProps();

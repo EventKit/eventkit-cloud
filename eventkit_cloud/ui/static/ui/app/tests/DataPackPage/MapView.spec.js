@@ -98,12 +98,14 @@ describe('MapView component', () => {
         const stub2 = sinon.stub(utils, 'generateDrawFreeInteraction')
             .callsFake(() => ({ on: () => {}, setActive: () => {} }));
         Map.prototype.addInteraction = sinon.spy();
+        sinon.stub(MapView.prototype, 'updateZoomLevel');
     });
 
     afterEach(() => {
         MapView.prototype.initOverlay = initOverlay;
         utils.generateDrawBoxInteraction.restore();
         utils.generateDrawFreeInteraction.restore();
+        MapView.prototype.updateZoomLevel.restore();
     });
 
     it('should render all the basic components', () => {        

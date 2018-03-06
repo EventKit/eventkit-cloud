@@ -94,6 +94,7 @@ export class MapView extends Component {
         this.handleDrag = this.handleDrag.bind(this);
         this.handleDown = this.handleDown.bind(this);
         this.doesMapHaveDrawFeature = this.doesMapHaveDrawFeature.bind(this);
+        this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
@@ -162,12 +163,9 @@ export class MapView extends Component {
         }
         this.clickListener = this.map.on('singleclick', this.onMapClick);
 
-        const updateZoomLevel = () => {
-            this.setState({ zoomLevel: this.map.getView().getZoom() });
-        };
 
-        updateZoomLevel();
-        this.map.getView().on('propertychange', updateZoomLevel);
+        this.updateZoomLevel();
+        this.map.getView().on('propertychange', this.updateZoomLevel);
     }
 
     componentWillUnmount() {
@@ -209,6 +207,10 @@ export class MapView extends Component {
     // update map size so it doesnt look like crap after page resize
     componentDidUpdate() {
         this.map.updateSize();
+    }
+    
+    updateZoomLevel() {
+        this.setState({ zoomLevel: this.map.getView().getZoom() });
     }
 
     hasNewRuns(prevRuns, nextRuns) {

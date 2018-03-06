@@ -78,6 +78,7 @@ export class ExportAOI extends Component {
         this.closeResetDialog = this.closeResetDialog.bind(this);
         this.openResetDialog = this.openResetDialog.bind(this);
         this.resetAoi = this.resetAoi.bind(this);
+        this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.state = {
             toolbarIcons: {
                 box: 'DEFAULT',
@@ -457,12 +458,12 @@ export class ExportAOI extends Component {
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
 
-        const updateZoomLevel = () => {
-            this.setState({ zoomLevel: this.map.getView().getZoom() });
-        };
+        this.updateZoomLevel();
+        this.map.getView().on('propertychange', this.updateZoomLevel);
+    }
 
-        updateZoomLevel();
-        this.map.getView().on('propertychange', updateZoomLevel);
+    updateZoomLevel() {
+        this.setState({ zoomLevel: this.map.getView().getZoom() });
     }
 
     upEvent() {
