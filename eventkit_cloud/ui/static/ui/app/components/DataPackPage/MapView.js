@@ -43,7 +43,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex, } from '../../utils/mapUtils';
+    isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const RED_STYLE = new Style({
@@ -243,7 +243,6 @@ export class MapView extends Component {
     initMap() {
         const icon = document.createElement('i');
         icon.className = 'fa fa-globe';
-
         return new Map({
             controls: [
                 new ScaleLine({
