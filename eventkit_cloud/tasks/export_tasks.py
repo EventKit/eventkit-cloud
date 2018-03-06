@@ -1348,7 +1348,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
                                 error=False, *args, **kwargs):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
-    Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
+    Checks if all DataProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
 
     #There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all

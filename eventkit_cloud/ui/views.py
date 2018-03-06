@@ -15,6 +15,8 @@ from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
 from logging import getLogger
 from ..utils.geocode import Geocode
+from ..utils.reverse import ReverseGeocode
+from ..utils.convert import Convert
 from .helpers import file_to_geojson, set_session_user_last_active_at
 from datetime import datetime, timedelta
 import pytz
@@ -125,6 +127,35 @@ def geocode(request):
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
         return HttpResponse(status=204, content_type="application/json")
+
+
+@require_http_methods(['GET'])
+def convert(request):
+    convert = Convert()
+    if getattr(settings, 'CONVERT_API_URL') is not None:
+        if request.GET.get('convert'):
+            result = convert.get(request.GET.get('convert'))
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        else:
+            return HttpResponse(status=204, content_type="application/json")
+    else:
+        return HttpResponse('No Convert API specified', status=501)
+
+
+@require_http_methods(['GET'])
+def reverse_geocode(request):
+    reverseGeocode = ReverseGeocode()
+    if getattr(settings, 'REVERSE_GEOCODING_API_URL') is not None:
+        if request.GET.get('lat') and request.GET.get('lon'):
+            result = reverseGeocode.search({"point.lat": request.GET.get('lat'), "point.lon": request.GET.get('lon')})
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        if request.GET.get('result'):
+            result = reverseGeocode.add_bbox(json.loads(request.GET.get('result')))
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        else:
+            return HttpResponse(status=204, content_type="application/json")
+    else:
+        return HttpResponse('No Reverse Geocode API specified', status=501)
 
 
 @require_http_methods(['GET'])
