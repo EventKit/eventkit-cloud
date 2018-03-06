@@ -163,7 +163,6 @@ export class MapView extends Component {
         }
         this.clickListener = this.map.on('singleclick', this.onMapClick);
 
-
         this.updateZoomLevel();
         this.map.getView().on('propertychange', this.updateZoomLevel);
     }
