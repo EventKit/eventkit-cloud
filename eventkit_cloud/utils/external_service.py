@@ -105,6 +105,11 @@ class ExternalRasterServiceToGeopackage(object):
         for source in conf_dict.get('sources') or []:
             if 'wmts' in source:
                 conf_dict['sources'][source]['transparent'] = True
+                # You can set any number of error codes here, and mapproxy will ignore them any time they appear and
+                # just skip the tile instead (normally it retries the tile for a very long time before finally erroring
+                # out and quitting the job). Putting the string "other" as an additional error code will cause mapproxy
+                # to skip tiles with ANY retrieval error. For now, we want to have mapproxy skip 404 tiles, and retry
+                # everything else.
                 conf_dict['sources'][source]['on_error'] = {404: {"response": "transparent", "cache": False}}
 
         # disable SSL cert checks
