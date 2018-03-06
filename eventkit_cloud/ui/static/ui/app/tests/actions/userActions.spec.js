@@ -91,7 +91,7 @@ describe('userActions actions', () => {
     it('patchUser should handle patch request success', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         const user = { username: 'user1', name: 'user1' };
-        mock.onPatch(`/api/user/${user.username}`).reply(200, user);
+        mock.onPatch(`/api/users/${user.username}`).reply(200, user);
         const expectedActions = [
             { type: types.PATCHING_USER },
             { type: types.PATCHED_USER, payload: user },
@@ -107,7 +107,7 @@ describe('userActions actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         const user = { username: 'user1' };
         const error = 'oh no an error';
-        mock.onPatch(`/api/user/${user.username}`).reply(400, error);
+        mock.onPatch(`/api/users/${user.username}`).reply(400, error);
         const expectedActions = [
             { type: types.PATCHING_USER },
             { type: types.PATCHING_USER_ERROR, error },

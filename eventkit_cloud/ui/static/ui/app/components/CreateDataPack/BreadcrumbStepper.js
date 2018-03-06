@@ -8,14 +8,14 @@ import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import ExportAOI from './CreateDataPack/ExportAOI';
-import ExportInfo from './CreateDataPack/ExportInfo';
-import ExportSummary from './CreateDataPack/ExportSummary';
-import { flattenFeatureCollection } from '../utils/mapUtils';
+import ExportAOI from './ExportAOI';
+import ExportInfo from './ExportInfo';
+import ExportSummary from './ExportSummary';
+import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
-    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
-import { getDatacartDetails } from '../actions/statusDownloadActions';
-import BaseDialog from './BaseDialog';
+    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
+import { getDatacartDetails } from '../../actions/statusDownloadActions';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -124,15 +124,17 @@ export class BreadcrumbStepper extends React.Component {
 
     getStepContent(stepIndex) {
         switch (stepIndex) {
-            case 0:
-                return <ExportAOI walkthroughClicked={this.props.walkthroughClicked}
-                                  onWalkthroughReset={this.props.onWalkthroughReset}/>;
-            case 1:
-                return <ExportInfo providers={this.props.providers}
+        case 0:
+            return (<ExportAOI walkthroughClicked={this.props.walkthroughClicked}
+                onWalkthroughReset={this.props.onWalkthroughReset}
+            />);
+        case 1:
+            return (<ExportInfo providers={this.props.providers}
                                    formats={this.props.formats}
                                    handlePrev={this.handlePrev}
                                    walkthroughClicked={this.props.walkthroughClicked}
-                                   onWalkthroughReset={this.props.onWalkthroughReset}/>
+                                   onWalkthroughReset={this.props.onWalkthroughReset}
+            />)
             case 2:
                 return <ExportSummary
                                    allFormats={this.props.formats}
@@ -352,7 +354,7 @@ export class BreadcrumbStepper extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 className="qa-BreadcrumbStepper-CircularProgress"
-                                style={{ margin: 'auto', display: 'block' }} 
+                                style={{ margin: 'auto', display: 'block' }}
                                 color={'#4598bf'}
                                 size={50}
                             />

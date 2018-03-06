@@ -15,7 +15,7 @@ import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exp
 import CustomScrollbar from '../../components/CustomScrollbar';
 import Joyride from 'react-joyride';
 import Help from 'material-ui/svg-icons/action/help';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 
@@ -155,10 +155,8 @@ export class StatusDownload extends React.Component {
                 clearTimer += 1;
             }
 
-            // If the status of the job is completed, check the provider tasks to
-            // ensure they are all completed as well. If a Provider Task does
-            // not have a successful outcome, add to a counter.
-            // If the counter is greater than 1, that
+            // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
+            // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
             // means that at least one task is not completed, so do not stop the timer
             if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
                 const providerTasks = datacartDetails[0].provider_tasks;
@@ -384,7 +382,7 @@ export class StatusDownload extends React.Component {
                         <form>
                             <Paper className="qa-Paper" style={{ padding: '20px' }} zDepth={2} >
                                 <div className="qa-StatusDownload-heading" style={styles.heading}>
-                                    DataPack Info
+                                    Status & Download
                                 </div>
                                 {this.state.isLoading ?
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>

@@ -25,8 +25,8 @@ import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 import ScaleLine from 'ol/control/scaleline';
 
-import BaseDialog from '../BaseDialog';
-import DeleteDialog from '../DeleteDialog';
+import BaseDialog from '../Dialog/BaseDialog';
+import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
 
@@ -359,11 +359,11 @@ export class DataPackGridItem extends Component {
                             >
                                 <List>{providersList}</List>
                             </BaseDialog>
-                            <DeleteDialog
+                            <DeleteDataPackDialog
                                 className="qa-DataPackGridItem-DeleteDialog"
                                 show={this.state.deleteDialogOpen}
-                                handleCancel={this.hideDeleteDialog}
-                                handleDelete={this.handleDelete}
+                                onCancel={this.hideDeleteDialog}
+                                onDelete={this.handleDelete}
                             />
                         </div>
                     }
