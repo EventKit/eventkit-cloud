@@ -43,7 +43,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isGeoJSONValid, createGeoJSON, createGeoJSONGeometry, clearDraw,
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
-    isBox, isVertex, zoomSliderCreate, zoomSliderCleanup } from '../../utils/mapUtils';
+    isBox, isVertex, } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const RED_STYLE = new Style({
@@ -168,10 +168,6 @@ export class MapView extends Component {
         this.map.getView().on('propertychange', this.updateZoomLevel);
     }
 
-    componentWillUnmount() {
-        zoomSliderCleanup(this.zoomSlider);
-    }
-
     componentWillReceiveProps(nextProps) {
         // if the runs have changed, clear out old features and re-add with new features
         if (this.hasNewRuns(this.props.runs, nextProps.runs)) {
@@ -249,8 +245,6 @@ export class MapView extends Component {
         const icon = document.createElement('i');
         icon.className = 'fa fa-globe';
 
-        this.zoomSlider = zoomSliderCreate({ className: css.olZoomSlider });
-
         return new Map({
             controls: [
                 new ScaleLine({
@@ -264,7 +258,6 @@ export class MapView extends Component {
                 new Zoom({
                     className: css.olZoom,
                 }),
-                this.zoomSlider,
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
                     label: icon,

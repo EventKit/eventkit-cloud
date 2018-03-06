@@ -41,7 +41,7 @@ import {
     serialize, isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, hasArea,
-    getDominantGeometry, zoomSliderCreate, zoomSliderCleanup
+    getDominantGeometry
 } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
@@ -120,10 +120,6 @@ export class ExportAOI extends Component {
             }
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
-    }
-
-    componentWillUnmount() {
-        zoomSliderCleanup(this.zoomSlider);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -392,8 +388,6 @@ export class ExportAOI extends Component {
         const icon = document.createElement('i');
         icon.className = 'fa fa-globe';
 
-        this.zoomSlider = zoomSliderCreate({ className: css.olZoomSlider });
-
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -407,7 +401,6 @@ export class ExportAOI extends Component {
                 new Zoom({
                     className: css.olZoom,
                 }),
-                this.zoomSlider,
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
                     label: icon,
