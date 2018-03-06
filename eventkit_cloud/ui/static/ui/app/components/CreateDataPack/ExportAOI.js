@@ -41,8 +41,7 @@ import {
     serialize, isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, hasArea,
-    getDominantGeometry
-} from '../../utils/mapUtils';
+    getDominantGeometry } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const WGS84 = 'EPSG:4326';
@@ -387,7 +386,6 @@ export class ExportAOI extends Component {
 
         const icon = document.createElement('i');
         icon.className = 'fa fa-globe';
-
         this.map = new Map({
             controls: [
                 new ScaleLine({
