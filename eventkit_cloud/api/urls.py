@@ -7,14 +7,14 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ExportFormatViewSet, ExportRunViewSet,
     ExportTaskViewSet, JobViewSet, RegionMaskViewSet,
-    RegionViewSet, ExportProviderViewSet, SwaggerSchemaView,
+    RegionViewSet, DataProviderViewSet, SwaggerSchemaView,
     DataProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet)
 
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'jobs', JobViewSet, base_name='jobs')
 router.register(r'formats', ExportFormatViewSet, base_name='formats')
-router.register(r'providers', ExportProviderViewSet, base_name='providers')
+router.register(r'providers', DataProviderViewSet, base_name='providers')
 router.register(r'licenses', LicenseViewSet, base_name='licenses')
 router.register(r'runs', ExportRunViewSet, base_name='runs')
 router.register(r'provider_tasks', DataProviderTaskViewSet, base_name='provider_tasks')
