@@ -95,7 +95,7 @@ def get_user(user_data):
                          "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key.")
             raise e
         try:
-            OAuth.objects.create(user=user, identification=identification, commonname=commonname)
+            OAuth.objects.create(user=user, identification=identification, commonname=commonname, user_info=user_data)
         except Exception as e:
             logger.error("The user data provided by the resource server could not be used to create a user, "
                          "it most likely caused by OAUTH_PROFILE_SCHEMA mapping is incorrect and/or not providing "
