@@ -69,12 +69,13 @@ def fetch_user_from_token(access_token):
         raise OAuthError(status_code)
 
     user_data = get_user_data_from_schema(response.json())
+    orig_data = response.json()
 
-    return get_user(user_data)
+    return get_user(user_data, orig_data)
 
 
 
-def get_user(user_data):
+def get_user(user_data, orig_data):
     """
     A helper function for retrieving or creating a user given a user_data dictionary.
     :param user_data: A dict containg user data.
@@ -95,7 +96,7 @@ def get_user(user_data):
                          "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key.")
             raise e
         try:
-            OAuth.objects.create(user=user, identification=identification, commonname=commonname, user_info=user_data)
+            OAuth.objects.create(user=user, identification=identification, commonname=commonname, user_info=orig_data)
         except Exception as e:
             logger.error("The user data provided by the resource server could not be used to create a user, "
                          "it most likely caused by OAUTH_PROFILE_SCHEMA mapping is incorrect and/or not providing "
