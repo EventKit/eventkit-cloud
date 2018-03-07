@@ -382,7 +382,7 @@ export class StatusDownload extends React.Component {
                         <form>
                             <Paper className="qa-Paper" style={{ padding: '20px' }} zDepth={2} >
                                 <div className="qa-StatusDownload-heading" style={styles.heading}>
-                                    Status & Download
+                                    DataPack Details
                                 </div>
                                 {this.state.isLoading ?
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
