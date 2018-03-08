@@ -155,90 +155,44 @@ describe('userGroupsReducer', () => {
         });
     });
 
-    it('ADDING_GROUP_USERS should return adding true', () => {
+    it('UPDATING_GROUP should return updating true', () => {
         expect(userGroupsReducer(
             {
                 ...state,
             },
             {
-                type: types.ADDING_GROUP_USERS,
+                type: types.UPDATING_GROUP,
             },
         )).toEqual({
             ...state,
-            adding: true,
+            updating: true,
         });
     });
 
-    it('ADDED_GROUP_USERS should return added true', () => {
+    it('UPDATED_GROUP should return updated true', () => {
         expect(userGroupsReducer(
             {
                 ...state,
-                adding: true,
+                updating: true,
             },
             {
-                type: types.ADDED_GROUP_USERS,
+                type: types.UPDATED_GROUP,
             },
         )).toEqual({
             ...state,
-            added: true,
+            updated: true,
         });
     });
 
-    it('ADDING_GROUP_USERS_ERROR should return the error', () => {
+    it('UPDATING_GROUP_ERROR should return the error', () => {
         const error = 'oh no an error';
         expect(userGroupsReducer(
             {
                 ...state,
-                adding: true,
+                updating: true,
             },
             {
-                type: types.ADDING_GROUP_USERS_ERROR,
-                error,
-            },
-        )).toEqual({
-            ...state,
-            error,
-        });
-    });
-
-    it('REMOVING_GROUP_USERS should return removing true', () => {
-        expect(userGroupsReducer(
-            {
-                ...state,
-            },
-            {
-                type: types.REMOVING_GROUP_USERS,
-            },
-        )).toEqual({
-            ...state,
-            removing: true,
-        });
-    });
-
-    it('REMOVED_GROUP_USERS should return removed true', () => {
-        expect(userGroupsReducer(
-            {
-                ...state,
-                removing: true,
-            },
-            {
-                type: types.REMOVED_GROUP_USERS,
-            },
-        )).toEqual({
-            ...state,
-            removed: true,
-        });
-    });
-
-    it('REMOVING_GROUP_USERS_ERROR should return the error', () => {
-        const error = 'oh no an error';
-        expect(userGroupsReducer(
-            {
-                ...state,
-                removing: true,
-            },
-            {
-                type: types.REMOVING_GROUP_USERS_ERROR,
+                type: types.UPDATING_GROUP_ERROR,
                 error,
             },
         )).toEqual({

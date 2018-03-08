@@ -61,9 +61,9 @@ export function createGroup(groupName, members) {
 
         return axios({
             url: '/api/groups',
-            method: 'PUT',
+            method: 'POST',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify({ name: groupName, members }),
+            data: { name: groupName, members },
         }).then(() => {
             dispatch({ type: types.CREATED_GROUP });
         }).catch((error) => {
@@ -84,17 +84,15 @@ export function updateGroup(groupId, options = {}) {
         if (options.members) data.members = options.members;
         if (options.administrators) data.administrators = options.administrators;
 
-        console.log(options);
-
         return axios({
             url: `/api/groups/${groupId}`,
-            method: 'POST',
+            method: 'PATCH',
             headers: { 'X-CSRFToken': csrftoken },
-            data: JSON.stringify(data),
+            data,
         }).then(() => {
             dispatch({ type: types.UPDATED_GROUP });
         }).catch((error) => {
-            dispatch({ type: types.UPDATE_GROUP_ERROR, error: error.response.data });
+            dispatch({ type: types.UPDATING_GROUP_ERROR, error: error.response.data });
         });
     };
 }

@@ -13,7 +13,7 @@ import {
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import { getUsers } from '../../actions/userActions.fake.js'; // TODO change this to the real one
 import CustomScrollbar from '../../components/CustomScrollbar';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 

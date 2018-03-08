@@ -13,13 +13,17 @@ describe('UserTableRowColumn component', () => {
     const getProps = () => (
         {
             user: {
-                name: 'user1',
-                username: 'user1',
-                groups: ['group1'],
+                user: {
+                    username: 'user_one',
+                    first_name: 'user',
+                    last_name: 'one',
+                    email: 'user.one@email.com',
+                },
+                groups: [1],
             },
             groups: [
-                { name: 'group1', id: 'group1' },
-                { name: 'group2', id: 'group2' },
+                { name: 'group1', id: 1 },
+                { name: 'group2', id: 2 },
             ],
             groupsLoading: false,
             handleGroupItemClick: () => {},
@@ -91,5 +95,38 @@ describe('UserTableRowColumn component', () => {
         wrapper.instance().handleGroupItemClick(fakeGroup);
         expect(props.handleGroupItemClick.calledOnce).toBe(true);
         expect(props.handleGroupItemClick.calledWith(fakeGroup, props.user)).toBe(true);
+    });
+
+    it('handleMakeAdminClick should stopPropagation and call handleMakeAdmin', () => {
+        const props = getProps();
+        props.handleMakeAdmin = sinon.spy();
+        const wrapper = getWrapper(props);
+        const event = { stopPropagation: sinon.spy() };
+        wrapper.instance().handleMakeAdminClick(event);
+        expect(event.stopPropagation.calledOnce).toBe(true);
+        expect(props.handleMakeAdmin.calledOnce).toBe(true);
+        expect(props.handleMakeAdmin.calledWith(props.user)).toBe(true);
+    });
+
+    it('handleDemoteAdminClick should stop propagation and call handleDemoteAdmin', () => {
+        const props = getProps();
+        props.handleDemoteAdmin = sinon.spy();
+        const wrapper = getWrapper(props);
+        const event = { stopPropagation: sinon.spy() };
+        wrapper.instance().handleDemoteAdminClick(event);
+        expect(event.stopPropagation.calledOnce).toBe(true);
+        expect(props.handleDemoteAdmin.calledOnce).toBe(true);
+        expect(props.handleDemoteAdmin.calledWith(props.user)).toBe(true);
+    });
+
+    it('make or demote admin should log a warning if functions are not supplied', () => {
+        const consoleStub = sinon.stub(console, 'error');
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const e = { stopPropagation: sinon.spy() };
+        wrapper.instance().handleMakeAdminClick(e);
+        wrapper.instance().handleDemoteAdminClick(e);
+        expect(consoleStub.calledTwice).toBe(true);
+        consoleStub.restore();
     });
 });

@@ -46,6 +46,12 @@ export class GroupsDrawer extends Component {
                 width: '17px',
                 cursor: 'pointer',
             },
+            ownedGroupName: {
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+                flex: '0 1 auto',
+                paddingRight: '5px',
+            },
             sharedGroupsHeading: {
                 padding: '10px 24px 5px',
                 color: '#707274',
@@ -113,16 +119,20 @@ export class GroupsDrawer extends Component {
                         {this.props.ownedGroups.map(group => (
                             <MenuItem
                                 key={group.name}
-                                value={`${group.id}`}
+                                value={group.id}
                                 primaryText={
-                                    <div style={styles.menuItemText}>
-                                        {`${group.name} (${group.members.length})`}
+                                    <div style={{ display: 'flex', maxWidth: '178px' }}>
+                                        <div style={styles.ownedGroupName}>
+                                            {group.name}
+                                        </div>
+                                        <div style={{ flex: '0 0 auto' }}>
+                                            ({group.members.length - 1})
+                                        </div>
                                     </div>
                                 }
                                 innerDivStyle={{ paddingRight: '48px' }}
                                 style={{ color: '#4598bf' }}
                                 rightIcon={
-                                    
                                     <IconMenu
                                         iconButtonElement={
                                             <IconButton style={{ padding: '0px', width: '24px', height: '24px' }}>
@@ -192,17 +202,20 @@ export class GroupsDrawer extends Component {
 }
 
 GroupsDrawer.propTypes = {
-    selectedValue: PropTypes.string.isRequired,
+    selectedValue: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.string,
+    ]).isRequired,
     onSelectionChange: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     ownedGroups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     sharedGroups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),

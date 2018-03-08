@@ -158,7 +158,7 @@ describe('userGroups actions', () => {
     it('createGroup should handle create success', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         
-        mock.onPut('/api/groups').reply(200);
+        mock.onPost('/api/groups').reply(200);
 
         const expectedActions = [
             { type: types.CREATING_GROUP },
@@ -166,7 +166,7 @@ describe('userGroups actions', () => {
         ];
         const store = mockStore({});
 
-        return store.dispatch(actions.createGroup())
+        return store.dispatch(actions.createGroup('Group name', []))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -176,7 +176,7 @@ describe('userGroups actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         const error = 'oh no an error';
 
-        mock.onPut('/api/groups').reply(400, error);
+        mock.onPost('/api/groups').reply(400, error);
 
         const expectedActions = [
             { type: types.CREATING_GROUP },
@@ -190,75 +190,44 @@ describe('userGroups actions', () => {
             });
     });
 
-    it('addGroupUsers should handle success', () => {
+    it('updateGroup should handle success', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const group = { id: 'group1', members: [] };
+        const group = { id: 1 };
 
-        mock.onPost(`/api/groups/${group.id}`).reply(200);
+        mock.onPatch(`/api/groups/${group.id}`).reply(200);
 
         const expectedActions = [
-            { type: types.ADDING_GROUP_USERS },
-            { type: types.ADDED_GROUP_USERS },
+            { type: types.UPDATING_GROUP },
+            { type: types.UPDATED_GROUP },
         ];
         const store = mockStore({});
 
-        return store.dispatch(actions.addGroupUsers(group, []))
+        const options = {
+            name: 'new name',
+            members: ['member_one'],
+            administrators: ['member_one'],
+        };
+
+        return store.dispatch(actions.updateGroup(group.id, options))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
 
-    it('addGroupUsers should handle request error', () => {
+    it('updateGroup should handle request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const group = { id: 'group1', members: [] };
+        const group = { id: 1, members: [] };
         const error = 'oh no an error';
 
-        mock.onPost(`/api/groups/${group.id}`).reply(400, error);
+        mock.onPatch(`/api/groups/${group.id}`).reply(400, error);
 
         const expectedActions = [
-            { type: types.ADDING_GROUP_USERS },
-            { type: types.ADDING_GROUP_USERS_ERROR, error },
+            { type: types.UPDATING_GROUP },
+            { type: types.UPDATING_GROUP_ERROR, error },
         ];
         const store = mockStore({});
 
-        return store.dispatch(actions.addGroupUsers(group, []))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('removeGroupUsers should handle success', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const group = { id: 'group1', members: [] };
-
-        mock.onPost(`/api/groups/${group.id}`).reply(200);
-
-        const expectedActions = [
-            { type: types.REMOVING_GROUP_USERS },
-            { type: types.REMOVED_GROUP_USERS },
-        ];
-        const store = mockStore({});
-
-        return store.dispatch(actions.removeGroupUsers(group, []))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('removeGroupUsers should handle request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const group = { id: 'group1', members: [] };
-        const error = 'oh no an error';
-
-        mock.onPost(`/api/groups/${group.id}`).reply(400, error);
-
-        const expectedActions = [
-            { type: types.REMOVING_GROUP_USERS },
-            { type: types.REMOVING_GROUP_USERS_ERROR, error },
-        ];
-        const store = mockStore({});
-
-        return store.dispatch(actions.removeGroupUsers(group, []))
+        return store.dispatch(actions.updateGroup(group.id))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });

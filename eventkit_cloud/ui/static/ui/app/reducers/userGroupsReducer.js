@@ -31,7 +31,12 @@ export function userGroupsReducer(state = initialState.groups, action) {
         };
 
     case types.DELETING_GROUP:
-        return { ...state, error: null, deleting: true, deleted: false };
+        return {
+            ...state,
+            error: null,
+            deleting: true,
+            deleted: false,
+        };
     case types.DELETED_GROUP:
         return { ...state, deleting: false, deleted: true };
     case types.DELETE_GROUP_ERROR:
@@ -43,7 +48,12 @@ export function userGroupsReducer(state = initialState.groups, action) {
         };
 
     case types.CREATING_GROUP:
-        return { ...state, error: null, creating: true, created: false };
+        return {
+            ...state,
+            error: null,
+            creating: true,
+            created: false,
+        };
     case types.CREATED_GROUP:
         return { ...state, creating: false, created: true };
     case types.CREATE_GROUP_ERROR:
@@ -53,9 +63,14 @@ export function userGroupsReducer(state = initialState.groups, action) {
             created: false,
             error: action.error,
         };
-        
+
     case types.UPDATING_GROUP:
-        return { ...state, updating: true, error: null };
+        return {
+            ...state,
+            updating: true,
+            updated: false,
+            error: null,
+        };
     case types.UPDATED_GROUP:
         return { ...state, updated: true, updating: false };
     case types.UPDATING_GROUP_ERROR:

@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 
 export class CreateGroupDialog extends Component {

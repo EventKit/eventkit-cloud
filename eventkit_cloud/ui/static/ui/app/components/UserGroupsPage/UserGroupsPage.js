@@ -23,20 +23,21 @@ import CreateGroupDialog from './CreateGroupDialog';
 import LeaveGroupDialog from './LeaveGroupDialog';
 import DeleteGroupDialog from './DeleteGroupDialog';
 import RenameGroupDialog from './RenameGroupDialog';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 import {
     getGroups,
     deleteGroup,
     createGroup,
     updateGroup,
-} from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
-import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
+} from '../../actions/userGroupsActions';
+import { getUsers } from '../../actions/userActions';
 
 export class UserGroupsPage extends Component {
     constructor(props) {
         super(props);
         this.onDrawerIconMouseOver = this.onDrawerIconMouseOver.bind(this);
         this.onDrawerIconMouseOut = this.onDrawerIconMouseOut.bind(this);
+        this.getHeaderTitle = this.getHeaderTitle.bind(this);
         this.makeUserRequest = this.makeUserRequest.bind(this);
         this.toggleDrawer = this.toggleDrawer.bind(this);
         this.handleSelectAll = this.handleSelectAll.bind(this);
@@ -76,7 +77,7 @@ export class UserGroupsPage extends Component {
             drawerOpen: !(window.innerWidth < 768),
             selectedUsers: [],
             search: '',
-            sort: 'user__username',
+            sort: 'username',
             showCreate: false,
             showLeave: false,
             showDelete: false,
@@ -108,7 +109,7 @@ export class UserGroupsPage extends Component {
             if (this.state.selectedUsers.length) {
                 const fixedSelection = [];
                 this.state.selectedUsers.forEach((user) => {
-                    const newUser = nextProps.users.users.find(nextUser => nextUser.username === user.username);
+                    const newUser = nextProps.users.users.find(nextUser => nextUser.user.username === user.user.username);
                     if (newUser) {
                         fixedSelection.push(newUser);
                     }
@@ -116,11 +117,7 @@ export class UserGroupsPage extends Component {
                 this.setState({ selectedUsers: fixedSelection });
             }
         }
-        if (nextProps.groups.added && !this.props.groups.added) {
-            this.makeUserRequest();
-            this.props.getGroups();
-        }
-        if (nextProps.groups.removed && !this.props.groups.removed) {
+        if (nextProps.groups.updated && !this.props.groups.updated) {
             this.makeUserRequest();
             this.props.getGroups();
         }
@@ -151,34 +148,56 @@ export class UserGroupsPage extends Component {
         this.setState({ drawerIconHover: false });
     }
 
+    getUpdatedGroupMembers(group, members) {
+        // check if any of the members are not already in the group
+        const notInGroupMembers = members.filter(m => (!group.members.includes(m.user.username)));
+        let updatedMembers = [...group.members];
+        const updatedAdmins = [...group.administrators];
+        // if at least one member is not in the group we will add them all
+        if (notInGroupMembers.length > 0) {
+            updatedMembers = [...updatedMembers, ...members.map(m => m.user.username)];
+        // if all members are in the group we remove them and also remove them from admin list
+        } else {
+            members.forEach((m) => {
+                updatedMembers.splice(updatedMembers.indexOf(m.user.username), 1);
+                const adminIX = updatedAdmins.indexOf(m.user.username);
+                if (adminIX !== -1) updatedAdmins.splice(adminIX, 1);
+            });
+        }
+        // create the new group and replace members and admins
+        const newGroup = { ...group };
+        newGroup.members = updatedMembers;
+        newGroup.administrators = updatedAdmins;
+        return newGroup;
+    }
+
+    getHeaderTitle() {
+        const selection = this.state.drawerSelection;
+        if (selection === 'all') return 'All Members';
+        else if (selection === 'new') return 'New Members';
+        else if (selection === 'ungrouped') return 'Not Grouped Members';
+        return `${this.props.groups.groups.find(group => group.id === this.state.drawerSelection).name} Members`;
+    }
+
     makeUserRequest() {
         const params = {};
-        
         params.ordering = this.state.sort;
-        
         if (this.state.search) { params.search = this.state.search; }
-
         switch (this.state.drawerSelection) {
-        case 'all': {
-            // just get all users
-            break;
-        }
-        case 'new': {
-            // get users newer than 2 weeks
+        case 'all': { break; } // just get all users
+        case 'new': { // get users newer than 2 weeks
             const date = new Date();
             date.setDate(date.getDate() - 14);
             const dateString = date.toISOString().substring(0, 10);
-            params.newer_than = dateString;
+            params.min_date = dateString;
             break;
         }
-        case 'ungrouped': {
-            // get users not in a group
-            params.ungrouped = true;
+        case 'ungrouped': { // get users not in a group
+            params.groups = 'none';
             break;
         }
-        default: {
-            // get users in a specific group
-            params.group = this.state.drawerSelection;
+        default: { // get users in a specific group
+            params.groups = this.state.drawerSelection;
             break;
         }
         }
@@ -242,7 +261,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleCreateSave() {
-        const users = this.state.createUsers.map(user => user.username);
+        const users = this.state.createUsers.map(user => user.user.username);
         this.props.createGroup(this.state.createInput, users);
         this.handleCreateClose();
     }
@@ -272,32 +291,19 @@ export class UserGroupsPage extends Component {
     }
 
     handleSingleUserChange(group, user) {
-        // if user is not in group, add them. Otherwise remove them
-        const members = [...group.members];
-        const ix = members.indexOf(user.username);
-        if (ix > -1) {
-            members.splice(ix, 1);
-        } else {
-            members.push(user.username);
-        }
-        this.props.updateGroup(group.id, { members });
+        const newGroup = this.getUpdatedGroupMembers(group, [user]);
+        this.props.updateGroup(newGroup.id, {
+            members: newGroup.members,
+            administrators: newGroup.administrators,
+        });
     }
 
     handleMultiUserChange(group) {
-        const members = [...group.members];
-        const notInGroup = this.state.selectedUsers.filter(user => (
-            !members.includes(user.username)
-        ));
-        // if every user is not in the group alread we are adding, otherwise we remove them
-        if (notInGroup.length) {
-            const newMembers = notInGroup.map(user => user.username);
-            this.props.updateGroup(group, { members: [...members, ...newMembers] });
-        } else {
-            this.state.selectedUsers.forEach((member) => {
-                members.splice(members.indexOf(member.username), 1);
-            });
-            this.props.updateGroup(group, { members });
-        }
+        const newGroup = this.getUpdatedGroupMembers(group, [...this.state.selectedUsers]);
+        this.props.updateGroup(newGroup.id, {
+            members: newGroup.members,
+            administrators: newGroup.administrators,
+        });
     }
 
     handleLeaveGroupClick(group) {
@@ -319,9 +325,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleLeaveClick() {
-        const members = [...this.state.targetGroup.members];
-        members.splice(members.indexOf(this.props.user.username), 1);
-        this.props.updateGroup(this.state.targetGroup.id, { members });
+        this.props.updateGroup(this.state.targetGroup.id);
         this.handleLeaveClose();
     }
 
@@ -352,7 +356,7 @@ export class UserGroupsPage extends Component {
     handleMakeAdmin(user) {
         const groupId = this.state.drawerSelection;
         const group = this.props.groups.groups.find(groupx => groupx.id === groupId);
-        const administrators = [...group.administrators, user.username];
+        const administrators = [...group.administrators, user.user.username];
         this.props.updateGroup(group.id, { administrators });
     }
 
@@ -360,12 +364,20 @@ export class UserGroupsPage extends Component {
         const groupId = this.state.drawerSelection;
         const group = this.props.groups.groups.find(groupx => groupx.id === groupId);
         const administrators = [...group.administrators];
-        administrators.splice(administrators.indexOf(user.username), 1);
+        administrators.splice(administrators.indexOf(user.user.username), 1);
         this.props.updateGroup(group.id, { administrators });
     }
 
     showErrorDialog(message) {
-        this.setState({ errorMessage: message });
+        if (typeof message === 'string') {
+            this.setState({ errorMessage: message });
+        } else {
+            let errorMessage = 'An unknown error has occured';
+            if (message.errors && message.errors.detail) {
+                errorMessage = message.errors.detail;
+            }
+            this.setState({ errorMessage });
+        }
     }
 
     hideErrorDialog() {
@@ -450,13 +462,20 @@ export class UserGroupsPage extends Component {
                 paddingTop: 15,
                 backgroundColor: '#fff',
             },
+            membersTitle: {
+                margin: '0px 24px 10px',
+                fontWeight: 700,
+                fontSize: '17px',
+                height: '35px',
+                lineHeight: '35px',
+            },
             container: {
                 color: 'white',
                 height: '36px',
-                width: mobile ? 'calc(100% - 72px)' : 'calc(100% - 48px)',
+                width: 'calc(100% - 48px)',
                 backgroundColor: '#F8F8F8',
                 lineHeight: '36px',
-                margin: '0px auto 10px 24px',
+                margin: '0px 24px 10px',
             },
             hint: {
                 color: '#5a5a5a',
@@ -519,7 +538,7 @@ export class UserGroupsPage extends Component {
                 backgroundColor: '#e8eef5',
                 transitionProperty: 'right',
                 transitionDuration: '450ms',
-                transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',                                        
+                transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
             },
             drawerIcon: {
                 fill: '#4598bf',
@@ -532,15 +551,10 @@ export class UserGroupsPage extends Component {
         const sharedGroups = [];
         // split the user group into groups owned by the logged in user,
         // and groups shared with logged in user
-        // for groups owned by the logged in user, remove their name from the list of members
         this.props.groups.groups.forEach((group) => {
             if (group.administrators.includes(this.props.user.username)) {
-                const ix = group.members.indexOf(this.props.user.username);
-                if (ix > -1) {
-                    group.members.splice(ix, 1);
-                }
                 ownedGroups.push(group);
-            } else {
+            } else if (group.members.includes(this.props.user.username)) {
                 sharedGroups.push(group);
             }
         });
@@ -564,11 +578,10 @@ export class UserGroupsPage extends Component {
         }
 
         const showAdmin = !['all', 'new', 'ungrouped'].includes(this.state.drawerSelection) && !this.props.users.fetching;
-
         const rows = this.props.users.users.map((user, ix) => (
             // we should be filtering out the logged in user here
             <TableRow
-                key={user.username}
+                key={user.user.username}
                 style={styles.tableRow}
                 selected={this.state.selectedUsers.includes(user)}
                 rowNumber={ix}
@@ -576,7 +589,7 @@ export class UserGroupsPage extends Component {
                 <UserTableRowColumn
                     user={user}
                     groups={ownedGroups}
-                    groupsLoading={this.state.usersUpdating.includes(user.username)}
+                    groupsLoading={this.state.usersUpdating.includes(user.user.username)}
                     handleGroupItemClick={this.handleSingleUserChange}
                     handleNewGroupClick={this.handleNewGroupClick}
                     handleMakeAdmin={this.handleMakeAdmin}
@@ -584,7 +597,7 @@ export class UserGroupsPage extends Component {
                     isAdmin={
                         showAdmin && this.props.groups.groups.find(group => (
                             group.id === this.state.drawerSelection
-                            && group.administrators.includes(user.username)
+                            && group.administrators.includes(user.user.username)
                         )) !== undefined
                     }
                     showAdminLabel={showAdmin}
@@ -632,6 +645,9 @@ export class UserGroupsPage extends Component {
                                 style={styles.fixedHeader}
                                 className="qa-UserGroupsPage-fixedHeader"
                             >
+                                <div style={styles.membersTitle}>
+                                    {this.getHeaderTitle()}
+                                </div>
                                 <TextField
                                     style={styles.container}
                                     hintText="Search Users"
@@ -816,10 +832,17 @@ export class UserGroupsPage extends Component {
 }
 
 UserGroupsPage.propTypes = {
-    user: PropTypes.object.isRequired,
+    user: PropTypes.shape({
+        username: PropTypes.string,
+        first_name: PropTypes.string,
+        last_name: PropTypes.string,
+        email: PropTypes.string,
+        last_login: PropTypes.string,
+        date_joined: PropTypes.string,
+    }).isRequired,
     groups: PropTypes.shape({
         groups: PropTypes.arrayOf(PropTypes.shape({
-            id: PropTypes.string,
+            id: PropTypes.number,
             name: PropTypes.string,
             members: PropTypes.arrayOf(PropTypes.string),
             administrators: PropTypes.arrayOf(PropTypes.string),
@@ -833,10 +856,28 @@ UserGroupsPage.propTypes = {
         deleted: PropTypes.bool,
         updating: PropTypes.bool,
         updated: PropTypes.bool,
-        error: PropTypes.string,
+        error: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.shape({
+                status: PropTypes.number,
+                detail: PropTypes.string,
+                title: PropTypes.string,
+            }),
+        ]),
     }).isRequired,
     users: PropTypes.shape({
-        users: PropTypes.arrayOf(PropTypes.object),
+        users: PropTypes.arrayOf(PropTypes.shape({
+            user: PropTypes.shape({
+                username: PropTypes.string,
+                first_name: PropTypes.string,
+                last_name: PropTypes.string,
+                email: PropTypes.string,
+                last_login: PropTypes.string,
+                date_joined: PropTypes.string,
+            }),
+            groups: PropTypes.arrayOf(PropTypes.number),
+            accepted_licenses: PropTypes.object,
+        })),
         fetching: PropTypes.bool,
         fetched: PropTypes.bool,
         error: PropTypes.string,

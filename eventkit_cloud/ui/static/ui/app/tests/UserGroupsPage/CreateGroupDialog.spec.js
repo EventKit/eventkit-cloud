@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { BaseDialog } from '../../components/BaseDialog';
+import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import { CustomTextField } from '../../components/CustomTextField';
 import { CreateGroupDialog } from '../../components/UserGroupsPage/CreateGroupDialog';
 

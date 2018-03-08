@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import Info from 'material-ui/svg-icons/action/info';
 import DataPackTableRow from './DataPackTableRow';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class DataCartGeneralTable extends Component {
     constructor(props) {

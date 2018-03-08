@@ -14,8 +14,8 @@ import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import { List, ListItem} from 'material-ui/List'
 import moment from 'moment';
 import CustomScrollbar from '../CustomScrollbar';
-import BaseDialog from '../BaseDialog';
-import DeleteDialog from '../DeleteDialog';
+import BaseDialog from '../Dialog/BaseDialog';
+import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
@@ -190,11 +190,11 @@ export class DataPackTableItem extends Component {
                     >
                         <List className={'qa-DataPackTableItem-List-dataSources'} >{providersList}</List>
                     </BaseDialog>
-                    <DeleteDialog
+                    <DeleteDataPackDialog
                         className={'qa-DataPackTableItem-DeleteDialog'}
                         show={this.state.deleteDialogOpen}
-                        handleCancel={this.hideDeleteDialog}
-                        handleDelete={this.handleDelete}
+                        onCancel={this.hideDeleteDialog}
+                        onDelete={this.handleDelete}
                     />
                 </TableRowColumn>
             </TableRow>

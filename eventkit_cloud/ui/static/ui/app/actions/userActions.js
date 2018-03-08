@@ -11,7 +11,7 @@ export function logout() {
                 type: actions.USER_LOGGED_OUT,
             });
             if (response.data.OAUTH_LOGOUT_URL) {
-                window.location.href = response.data.OAUTH_LOGOUT_URL;
+                window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
                 dispatch(push({ pathname: '/login' }));
             }
@@ -64,6 +64,7 @@ export function login(data, query) {
 export function patchUser(acceptedLicenses, username) {
     return (dispatch) => {
         const csrftoken = cookie.load('csrftoken');
+
         dispatch({
             type: actions.PATCHING_USER,
         });
@@ -123,7 +124,7 @@ export function getUsers(params) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
             // filter out the current user from the list
-            const users = response.data.filter(user => (user.username !== loggedInUser.username));
+            const users = response.data.filter(user => (user.user.username !== loggedInUser.username));
             dispatch({ type: actions.FETCHED_USERS, users });
         }).catch((error) => {
             dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
