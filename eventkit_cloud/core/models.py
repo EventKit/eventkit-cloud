@@ -100,11 +100,10 @@ from django.contrib.contenttypes.models import ContentType
 class JobPermission(TimeStampedModelMixin):
 
     @staticmethod
-    class JobPermissions(object):
-        class MemberTypes(Enum):
-            NONE = "NONE"
-            READ = "READ"
-            ADMIN = "ADMIN"
+    class Permissions(Enum):
+        NONE = "NONE"
+        READ = "READ"
+        ADMIN = "ADMIN"
 
     """
     Model associates users or groups with jobs

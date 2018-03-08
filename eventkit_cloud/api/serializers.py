@@ -17,6 +17,8 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User,Group
+from django.contrib.contenttypes.models import ContentType
+
 from ..core.models import GroupPermission,JobPermission
 
 
@@ -235,6 +237,7 @@ class SimpleJobSerializer(serializers.Serializer):
         return [format.name for format in obj.provider_tasks.first().formats.all()]
 
 
+
 class LicenseSerializer(serializers.ModelSerializer):
     """Serialize Licenses."""
 
@@ -296,6 +299,12 @@ class GroupPermissionSerializer(serializers.ModelSerializer):
         model = GroupPermission
         fields = ( 'group', 'user', 'permission')
 
+
+class JobPermissionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = JobPermission
+        fields = ( 'job', 'content_type','object_id', 'permission')
 
 class GroupSerializer(serializers.ModelSerializer):
 
@@ -523,6 +532,7 @@ class ListJobSerializer(serializers.Serializer):
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
     featured  = serializers.BooleanField()
+    permissions = serializers.SerializerMethodField(read_only=True)
 
 
     @staticmethod
@@ -562,6 +572,20 @@ class ListJobSerializer(serializers.Serializer):
     def get_owner(obj):
         return obj.user.username
 
+    @staticmethod
+    def get_permissions(obj):
+        permissions = { 'groups' : { }, 'users' : {} }
+        for jp in JobPermission.objects.filter(job=obj):
+            item = None
+            if jp.content_type == ContentType.objects.get_for_model(obj.user):
+                user = User.objects.get(pk=jp.object_id)
+                permissions['users'][user.username] = jp.permission
+            else:
+                group = Group.objects.get(pk=jp.object_id)
+                permissions['groups'][group.name] = jp.permission
+
+        return permissions
+
 
 class JobSerializer(serializers.Serializer):
     """
@@ -591,6 +615,7 @@ class JobSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
@@ -702,3 +727,17 @@ class JobSerializer(serializers.Serializer):
     def get_owner(obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+    @staticmethod
+    def get_permissions(obj):
+        permissions = { 'groups' : { }, 'users' : {} }
+        for jp in JobPermission.objects.filter(job=obj):
+            item = None
+            if jp.content_type == ContentType.objects.get_for_model(obj.user):
+                user = User.objects.get(pk=jp.object_id)
+                permissions['users'][user.username] = jp.permission
+            else:
+                group = Group.objects.get(pk=jp.object_id)
+                permissions['groups'][group.name] = jp.permission
+
+        return permissions
