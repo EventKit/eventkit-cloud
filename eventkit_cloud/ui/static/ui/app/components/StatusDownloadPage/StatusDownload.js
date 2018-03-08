@@ -8,10 +8,10 @@ import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
 import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
-    clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission,
+    clearReRunInfo, cancelProviderTask, updateExpiration, updateDataCartPermissions,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
-import { getUsers } from '../../actions/userActions.fake.js'; // TODO change this to the real one
+import { getUsers } from '../../actions/userActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
@@ -210,7 +210,7 @@ export class StatusDownload extends React.Component {
                                         cartDetails={cartDetails}
                                         onRunDelete={this.props.deleteRun}
                                         onUpdateExpiration={this.props.updateExpirationDate}
-                                        onUpdatePermission={this.props.updatePermission}
+                                        onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
                                         updatingExpiration={this.props.expirationState.updating}
                                         updatingPermission={this.props.permissionState.updating}
                                         permissionState={this.props.permissionState}
@@ -220,7 +220,7 @@ export class StatusDownload extends React.Component {
                                         providers={this.props.providers}
                                         maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
-                                        users={this.props.users.users}
+                                        members={this.props.users.users}
                                     />
                                 ))}
                                 <BaseDialog
@@ -254,7 +254,7 @@ StatusDownload.propTypes = {
     rerunExport: PropTypes.func.isRequired,
     exportReRun: PropTypes.object.isRequired,
     updateExpirationDate: PropTypes.func.isRequired,
-    updatePermission: PropTypes.func.isRequired,
+    updateDataCartPermissions: PropTypes.func.isRequired,
     permissionState: PropTypes.shape({
         updating: PropTypes.bool,
         updated: PropTypes.bool,
@@ -312,8 +312,8 @@ function mapDispatchToProps(dispatch) {
         updateExpirationDate: (uid, expiration) => {
             dispatch(updateExpiration(uid, expiration));
         },
-        updatePermission: (uid, value) => {
-            dispatch(updatePermission(uid, value));
+        updateDataCartPermissions: (uid, options) => {
+            dispatch(updateDataCartPermissions(uid, options));
         },
         clearReRunInfo: () => {
             dispatch(clearReRunInfo());

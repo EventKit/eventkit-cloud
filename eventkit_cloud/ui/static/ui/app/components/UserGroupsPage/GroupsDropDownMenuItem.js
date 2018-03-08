@@ -59,7 +59,7 @@ export class GroupsDropDownMenuItem extends Component {
 
 GroupsDropDownMenuItem.propTypes = {
     group: PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),

@@ -7,29 +7,26 @@ import Check from 'material-ui/svg-icons/navigation/check';
 import Edit from 'material-ui/svg-icons/image/edit';
 import Lock from 'material-ui/svg-icons/action/lock-outline';
 import Public from 'material-ui/svg-icons/social/public';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import moment from 'moment';
 import DataPackTableRow from './DataPackTableRow';
-import GroupsDropDownMenu from '../UserGroupsPage/GroupsDropDownMenu';
-import GroupsDropDownMenuItem from '../UserGroupsPage/GroupsDropDownMenuItem';
+import ShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackStatusTable extends Component {
     constructor(props) {
         super(props);
-        this.handleMembersOpen = this.handleMembersOpen.bind(this);
-        this.handleMembersClose = this.handleMembersClose.bind(this);
+        this.handleShareDialogOpen = this.handleShareDialogOpen.bind(this);
+        this.handleShareDialogClose = this.handleShareDialogClose.bind(this);
         this.state = {
-            membersOpen: false,
-            anchor: null,
+            shareDialogOpen: false,
         };
     }
 
-    handleMembersOpen(e) {
-        this.setState({ membersOpen: true, anchor: e.currentTarget });
+    handleShareDialogOpen() {
+        this.setState({ shareDialogOpen: true });
     }
 
-    handleMembersClose() {
-        this.setState({ membersOpen: false });
+    handleShareDialogClose() {
+        this.setState({ shareDialogOpen: false });
     }
 
     render() {
@@ -89,11 +86,6 @@ export class DataPackStatusTable extends Component {
                 height: '24px',
                 verticalAlign: 'middle',
             },
-            members: {
-                display: 'flex',
-                cursor: 'pointer',
-                outline: 'none',
-            },
         };
 
         const checkIcon = <Check style={styles.permissionsIcon} />;
@@ -105,55 +97,6 @@ export class DataPackStatusTable extends Component {
             publicCheck: this.props.permission === 'public' ? checkIcon : null,
             membersCheck: this.props.permission === 'members' ? checkIcon : null,
         };
-
-        let membersDropdown = null;
-        let membersDropdownButton = null;
-        if (this.props.permission === 'members') {
-            membersDropdown = (
-                <GroupsDropDownMenu
-                    key="membersMenu"
-                    open={this.state.membersOpen}
-                    anchorEl={this.state.anchor}
-                    onClose={this.handleMembersClose}
-                    width={200}
-                    loading={this.props.updatingPermission}
-                >
-                    {this.props.users.map(user => (
-                        <GroupsDropDownMenuItem
-                            key={user.username}
-                            group={{ id: user.username, name: user.username }}
-                            onClick={this.props.handleSharedMembersChange}
-                            selected={this.props.sharedUsers.includes(user.username)}
-                        />
-                    ))}
-                </GroupsDropDownMenu>
-            );
-            const selectedString = `${this.props.sharedUsers.length || 'No'} Member${this.props.sharedUsers.length === 1 ? '' : 's'}`;
-            membersDropdownButton = (
-                <div style={{ position: 'relative', margin: '0px 5px', display: 'flex' }} key="membersButton">
-                    <span style={{ marginRight: '12px', lineHeight: '24px', fontStyle: 'italic' }}>with</span>
-                    <div
-                        tabIndex={0}
-                        role="button"
-                        onKeyPress={this.handleMembersOpen}
-                        style={styles.members}
-                        onClick={this.handleMembersOpen}
-                        className="qa-PermissionsFilter-members-button"
-                    >
-                        <div
-                            style={{ flex: '1 1 auto', fontWeight: 600, color: '#8b9396', lineHeight: '24px' }}
-                            className="qa-PermissionsFilter-members-selection"
-                        >
-                            {selectedString}
-                        </div>
-                        <ArrowDown
-                            style={{ fill: '#4598bf', flex: '0 0 auto', height: '24px' }}
-                            className="qa-PermissionsFilter-members-ArrowDown"
-                        />
-                    </div>
-                </div>
-            );
-        }
 
         return (
             <div style={{ marginLeft: '-5px', marginTop: '-5px' }}>
@@ -245,8 +188,6 @@ export class DataPackStatusTable extends Component {
                                 style={{ color: '#8b9396' }}
                             />
                         </DropDownMenu>,
-                        membersDropdownButton,
-                        membersDropdown,
                     ]}
                 />
             </div>
@@ -260,7 +201,6 @@ DataPackStatusTable.defaultProps = {
     maxDate: null,
     statusColor: null,
     statusFontColor: null,
-    updatingPermissions: false,
 };
 
 DataPackStatusTable.propTypes = {
@@ -271,18 +211,14 @@ DataPackStatusTable.propTypes = {
     maxDate: PropTypes.instanceOf(Date),
     handleExpirationChange: PropTypes.func.isRequired,
     handlePermissionsChange: PropTypes.func.isRequired,
-    handleSharedMembersChange: PropTypes.func.isRequired,
     statusColor: PropTypes.string,
     statusFontColor: PropTypes.string,
     users: PropTypes.arrayOf(PropTypes.shape({
         username: PropTypes.string,
         name: PropTypes.string,
-        groups: PropTypes.arrayOf(PropTypes.string),
+        groups: PropTypes.arrayOf(PropTypes.number),
         email: PropTypes.string,
     })).isRequired,
-    sharedUsers: PropTypes.arrayOf(PropTypes.string).isRequired,
-    // updatingExpiration: PropTypes.bool,
-    updatingPermission: PropTypes.bool,
 };
 
 export default DataPackStatusTable;

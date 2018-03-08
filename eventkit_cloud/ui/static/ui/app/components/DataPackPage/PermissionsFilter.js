@@ -184,7 +184,7 @@ export class PermissionsFilter extends Component {
                 >
                     <GroupsDropDownMenuItem
                         key="all"
-                        group={{ id: 'all', name: 'All Groups' }}
+                        group={{ id: -1, name: 'All Groups' }}
                         onClick={this.props.onAllGroupSelect}
                         selected={selectedCount === 'All'}
                     />
@@ -205,12 +205,12 @@ export class PermissionsFilter extends Component {
 
 PermissionsFilter.propTypes = {
     valueSelected: PropTypes.oneOf(['public', 'private', 'group']).isRequired,
-    selectedGroups: PropTypes.arrayOf(PropTypes.string).isRequired,
+    selectedGroups: PropTypes.arrayOf(PropTypes.number).isRequired,
     onGroupSelect: PropTypes.func.isRequired,
     onAllGroupSelect: PropTypes.func.isRequired,
     onChange: PropTypes.func.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),

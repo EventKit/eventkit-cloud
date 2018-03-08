@@ -22,7 +22,7 @@ export class DataPackShareDialog extends Component {
     componentWillReceiveProps(nextProps) {
         // If permissions were not ready on mount we need to update them
         if (nextProps.permissions && !this.props.permissions) {
-            this.setState({ permissions: { ...nextProps.permissions }});
+            this.setState({ permissions: { ...nextProps.permissions } });
         }
     }
 
@@ -164,15 +164,26 @@ DataPackShareDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
-    members: PropTypes.arrayOf(PropTypes.object).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    })).isRequired,
     permissions: PropTypes.shape({
-        groups: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
-        members: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)),
+        groups: PropTypes.objectOf(PropTypes.string),
+        members: PropTypes.objectOf(PropTypes.string),
     }).isRequired,
     groupsText: PropTypes.oneOfType([
         PropTypes.node,

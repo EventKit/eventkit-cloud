@@ -27,7 +27,6 @@ export class DataCartDetails extends Component {
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleExpirationChange = this.handleExpirationChange.bind(this);
         this.handlePermissionChange = this.handlePermissionChange.bind(this);
-        this.handleSharedMembersChange = this.handleSharedMembersChange.bind(this);
         this.state = {
             minDate: null,
             maxDate: null,
@@ -46,7 +45,7 @@ export class DataCartDetails extends Component {
         let permission = 'private';
         if (this.props.cartDetails.job.published) {
             permission = 'public';
-            if (this.props.cartDetails.members.length) {
+            if (this.props.cartDetails.job.permissions) {
                 permission = 'members';
             }
         }
@@ -121,23 +120,11 @@ export class DataCartDetails extends Component {
         // hit the API and change published to the new value
         const published = !(value === 'private');
         this.setState({ permission: value });
-        this.props.onUpdatePermission(this.props.cartDetails.job.uid, published, []);
+        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, { published });
     }
 
     handleExpirationChange(e, date) {
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
-    }
-
-    handleSharedMembersChange(member) {
-        console.log(member.id);
-        const members = [...this.props.cartDetails.members];
-        const ix = members.indexOf(member.id);
-        if (ix > -1) {
-            members.splice(ix, 1);
-        } else {
-            members.push(member.id);
-        }
-        this.props.onUpdatePermission(this.props.cartDetails.job.uid, true, members);
     }
 
     render() {
@@ -194,13 +181,11 @@ export class DataCartDetails extends Component {
                         maxDate={this.state.maxDate}
                         handleExpirationChange={this.handleExpirationChange}
                         handlePermissionsChange={this.handlePermissionChange}
-                        handleSharedMembersChange={this.handleSharedMembersChange}
                         updatingExpiration={this.props.updatingExpiration}
                         updatingPermission={this.props.updatingPermission}
                         statusColor={statusBackgroundColor}
                         statusFontColor={statusFontColor}
-                        users={this.props.users}
-                        sharedUsers={this.props.cartDetails.members}
+                        users={this.props.members}
                     />
                 </div>
                 <div style={styles.container}>
@@ -265,7 +250,16 @@ DataCartDetails.propTypes = {
         uid: PropTypes.string,
         status: PropTypes.string,
         user: PropTypes.string,
-        job: PropTypes.object,
+        job: PropTypes.shape({
+            uid: PropTypes.string,
+            name: PropTypes.string,
+            published: PropTypes.bool,
+            permissions: PropTypes.shape({
+                groups: PropTypes.objectOf(PropTypes.string),
+                members: PropTypes.objectOf(PropTypes.string),
+            }),
+            extent: PropTypes.object,
+        }),
         provider_tasks: PropTypes.arrayOf(PropTypes.object),
         created_at: PropTypes.string,
         finished_at: PropTypes.string,
@@ -275,12 +269,11 @@ DataCartDetails.propTypes = {
         url: PropTypes.string,
         zipfile_url: PropTypes.string,
         deleted: PropTypes.bool,
-        members: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onRunRerun: PropTypes.func.isRequired,
     onUpdateExpiration: PropTypes.func.isRequired,
-    onUpdatePermission: PropTypes.func.isRequired,
+    onUpdateDataCartPermissions: PropTypes.func.isRequired,
     updatingExpiration: PropTypes.bool,
     updatingPermission: PropTypes.bool,
     onClone: PropTypes.func.isRequired,
@@ -288,11 +281,17 @@ DataCartDetails.propTypes = {
     maxResetExpirationDays: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
-    users: PropTypes.arrayOf(PropTypes.shape({
-        username: PropTypes.string,
-        name: PropTypes.string,
-        groups: PropTypes.arrayOf(PropTypes.string),
-        email: PropTypes.string,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        groups: PropTypes.arrayOf(PropTypes.number),
+        accepted_licenses: PropTypes.object,
     })).isRequired,
 };
 

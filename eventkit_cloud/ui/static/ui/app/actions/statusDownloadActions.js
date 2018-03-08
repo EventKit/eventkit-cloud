@@ -125,20 +125,24 @@ export function updateExpiration(uid, expiration) {
     };
 }
 
-export function updatePermission(uid, value) {
+export function updateDataCartPermissions(uid, options = {}) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_PERMISSION });
         const csrftoken = cookie.load('csrftoken');
 
+        const data = {};
+        if (options.published) data.published = options.published;
+        if (options.permissions) data.permissions = options.permissions;
+
         return axios({
             url: `/api/jobs/${uid}`,
             method: 'PATCH',
-            data: { published: value },
+            data,
             headers: { 'X-CSRFToken': csrftoken },
-        }).then(() => {
-            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS });
-        }).catch((error) => {
-            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data });
-        });
+        }).then(() => (
+            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS })
+        )).catch(error => (
+            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data })
+        ));
     };
 }

@@ -1,5 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
+import People from 'material-ui/svg-icons/social/people';
+import PeopleOutline from 'material-ui/svg-icons/social/people-outline';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
@@ -11,9 +13,22 @@ export class GroupRow extends Component {
         super(props);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleCheck = this.props.handleCheck.bind(this, this.props.group);
+        this.handleAdminCheck = this.handleAdminCheck.bind(this);
+        this.onKeyDown = this.onKeyDown.bind(this);
         this.state = {
             expanded: false,
         };
+    }
+
+    onKeyDown(e) {
+        const key = e.which || e.keyCode;
+        if (key === 13) this.handleAdminCheck();
+    }
+
+    handleAdminCheck() {
+        if (this.props.showAdmin && this.props.selected) {
+            this.props.handleAdminCheck(this.props.group);
+        }
     }
 
     toggleExpanded() {
@@ -57,6 +72,15 @@ export class GroupRow extends Component {
                 float: 'right',
                 cursor: 'pointer',
             },
+            adminCheckIcon: {
+                position: 'relative',
+                display: 'inline-block',
+                width: '28px',
+                height: '28px',
+                float: 'right',
+                cursor: 'pointer',
+                marginRight: '5px',
+            },
             cardText: {
                 backgroundColor: '#fff',
                 color: '#707274',
@@ -70,6 +94,21 @@ export class GroupRow extends Component {
         // Check if group is selected
         if (this.props.selected) {
             groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} />;
+        }
+
+        if (this.props.showAdmin && !this.props.selected) {
+            styles.adminCheckIcon.color = '#707274';
+            styles.adminCheckIcon.opacity = 0.2;
+            styles.adminCheckIcon.cursor = 'default';
+        }
+
+        let adminButton = null;
+        if (this.props.showAdmin) {
+            if (this.props.admin) {
+                adminButton = <People onClick={this.handleAdminCheck} style={styles.adminCheckIcon} />;
+            } else {
+                adminButton = <PeopleOutline onClick={this.handleAdminCheck} style={styles.adminCheckIcon} />;
+            }
         }
 
         return (
@@ -88,6 +127,7 @@ export class GroupRow extends Component {
                                     {this.props.group.name}
                                 </span>
                             </div>
+                            {adminButton}
                             <div style={styles.groupIcons} className="qa-GroupRow-CardHeader-icons">
                                 {this.state.expanded ?
                                     <ArrowUp style={styles.expandIcon} onClick={this.toggleExpanded} />
@@ -103,20 +143,16 @@ export class GroupRow extends Component {
                 />
                 <CardText expandable style={styles.cardText}>
                     {this.props.group.members.map((groupMember) => {
-                        const member = this.props.members.find(propmember => propmember.username === groupMember);
+                        const member = this.props.members.find(propmember => propmember.user.username === groupMember);
                         if (!member) {
                             return null;
                         }
                         const isAdmin = this.props.group.administrators.includes(groupMember);
                         return (
                             <GroupMemberRow
-                                key={member.username}
+                                key={member.user.username}
                                 member={member}
                                 isGroupAdmin={isAdmin}
-                                isDataPackAdmin={false}
-                                dropDownDisabled={!this.props.selected}
-                                showAdminDropDown={this.props.canUpdateAdmin}
-                                handleAdminChange={this.props.handleAdminChange}
                             />
                         );
                     })}
@@ -127,22 +163,35 @@ export class GroupRow extends Component {
 }
 
 GroupRow.defaultProps = {
-    canUpdateAdmin: false,
-    handleAdminChange: () => {},
+    admin: false,
+    showAdmin: false,
+    handleAdminCheck: () => {},
 };
 
 GroupRow.propTypes = {
     group: PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     }).isRequired,
-    members: PropTypes.arrayOf(PropTypes.object).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    })).isRequired,
     selected: PropTypes.bool.isRequired,
     handleCheck: PropTypes.func.isRequired,
-    handleAdminChange: PropTypes.func,
-    canUpdateAdmin: PropTypes.bool,
+    handleAdminCheck: PropTypes.func,
+    showAdmin: PropTypes.bool,
+    admin: PropTypes.bool,
 };
 
 export default GroupRow;

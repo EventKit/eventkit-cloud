@@ -47,7 +47,7 @@ describe('DataCartDetails component', () => {
             maxResetExpirationDays: '30',
             zipFileProp: null,
             onUpdateExpiration: () => {},
-            onUpdatePermission: () => {},
+            onUpdateDataCartPermissions: () => {},
             onRunDelete: () => {},
             onRunRerun: () => {},
             onClone: () => {},
@@ -163,27 +163,27 @@ describe('DataCartDetails component', () => {
         fitStub.restore();
     });
 
-    it('handlePermissionChange should set state to public and call onUpdatePermission', () => {
+    it('handlePermissionChange should set state to public and call onUpdateDataCartPermissions', () => {
         const props = getProps();
-        props.onUpdatePermission = sinon.spy();
+        props.onUpdateDataCartPermissions = sinon.spy();
         const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().handlePermissionChange({}, 0, 'public');
-        expect(props.onUpdatePermission.calledOnce).toBe(true);
-        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, true)).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, { published: true })).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ permission: 'public' })).toBe(true);
         stateStub.restore();
     });
 
-    it('handlePermissionChange should state to private and call onUpdatePermission', () => {
+    it('handlePermissionChange should state to private and call onUpdateDataCartPermissions', () => {
         const props = getProps();
-        props.onUpdatePermission = sinon.spy();
+        props.onUpdateDataCartPermissions = sinon.spy();
         const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().handlePermissionChange({}, 0, 'private');
-        expect(props.onUpdatePermission.calledOnce).toBe(true);
-        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, false)).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, { published: false })).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ permission: 'private' })).toBe(true);
         stateStub.restore();

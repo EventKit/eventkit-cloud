@@ -9,6 +9,7 @@ export class MembersBody extends Component {
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
         this.handleCheckAll = this.handleCheckAll.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
+        this.handleAdminCheck = this.handleAdminCheck.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
         this.reverseMemberOrder = this.reverseMemberOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
@@ -23,7 +24,7 @@ export class MembersBody extends Component {
     handleUncheckAll() {
         if (this.state.search) {
             const members = [...this.props.members];
-            const shownUsernames = this.searchMembers(members, this.state.search).map(m => m.username);
+            const shownUsernames = this.searchMembers(members, this.state.search).map(m => m.user.username);
             const selectedMembers = { ...this.props.selectedMembers };
             shownUsernames.forEach((name) => {
                 selectedMembers[name] = null;
@@ -39,27 +40,42 @@ export class MembersBody extends Component {
         if (this.state.search) {
             const members = this.searchMembers(this.props.members, this.state.search);
             const selectedMembers = { ...this.props.selectedMembers };
-            members.forEach((m) => { selectedMembers[m.username] = ['READ']; });
+            members.forEach((m) => { selectedMembers[m.user.username] = 'READ'; });
             this.props.onMembersUpdate(selectedMembers);
         } else {
             const selectedMembers = {};
-            this.props.members.forEach((m) => { selectedMembers[m.username] = ['READ']; });
+            this.props.members.forEach((m) => { selectedMembers[m.user.username] = 'READ'; });
             this.props.onMembersUpdate(selectedMembers);
         }
     }
 
     handleCheck(member) {
-        const permission = this.props.selectedMembers[member.username];
+        const permission = this.props.selectedMembers[member.user.username];
         if (permission) {
             // we need to remove from the selection
             const selectedMembers = { ...this.props.selectedMembers };
-            selectedMembers[member.username] = null;
-            delete selectedMembers[member.username];
+            selectedMembers[member.user.username] = null;
+            delete selectedMembers[member.user.username];
             this.props.onMembersUpdate(selectedMembers);
         } else {
             // we need to add to the selection
             const selectedMembers = { ...this.props.selectedMembers };
-            selectedMembers[member.username] = ['READ'];
+            selectedMembers[member.user.username] = 'READ';
+            this.props.onMembersUpdate(selectedMembers);
+        }
+    }
+
+    handleAdminCheck(member) {
+        const permission = this.props.selectedMembers[member.user.username];
+        if (permission && permission === 'ADMIN') {
+            // we need to demote this member from admin status
+            const selectedMembers = { ...this.props.selectedMembers };
+            selectedMembers[member.user.username] = 'READ';
+            this.props.onMembersUpdate(selectedMembers);
+        } else {
+            // we need to make this member an admin
+            const selectedMembers = { ...this.props.selectedMembers };
+            selectedMembers[member.user.username] = 'ADMIN';
             this.props.onMembersUpdate(selectedMembers);
         }
     }
@@ -87,8 +103,8 @@ export class MembersBody extends Component {
     searchMembers(members, search) {
         const SEARCH = search.toUpperCase();
         return members.filter((member) => {
-            if (member.username.toUpperCase().includes(SEARCH)) return true;
-            if (member.email.toUpperCase().includes(SEARCH)) return true;
+            if (member.user.username.toUpperCase().includes(SEARCH)) return true;
+            if (member.user.email.toUpperCase().includes(SEARCH)) return true;
             return false;
         });
     }
@@ -96,16 +112,16 @@ export class MembersBody extends Component {
     sortByMember(members, order) {
         if (order === 1) {
             members.sort((a, b) => {
-                const A = a.username.toUpperCase();
-                const B = b.username.toUpperCase();
+                const A = a.user.username.toUpperCase();
+                const B = b.user.username.toUpperCase();
                 if (A < B) return -1;
                 if (A > B) return 1;
                 return 0;
             });
         } else {
             members.sort((a, b) => {
-                const A = a.username.toUpperCase();
-                const B = b.username.toUpperCase();
+                const A = a.user.username.toUpperCase();
+                const B = b.user.username.toUpperCase();
                 if (A > B) return -1;
                 if (A < B) return 1;
                 return 0;
@@ -117,16 +133,16 @@ export class MembersBody extends Component {
     sortByShared(members, selectedMembers, order) {
         if (order === 1) {
             members.sort((a, b) => {
-                const aSelected = a.username in selectedMembers;
-                const bSelected = b.username in selectedMembers;
+                const aSelected = a.user.username in selectedMembers;
+                const bSelected = b.user.username in selectedMembers;
                 if (aSelected && !bSelected) return -1;
                 if (!aSelected && bSelected) return 1;
                 return 0;
             });
         } else {
             members.sort((a, b) => {
-                const aSelected = a.username in selectedMembers;
-                const bSelected = b.username in selectedMembers;
+                const aSelected = a.user.username in selectedMembers;
+                const bSelected = b.user.username in selectedMembers;
                 if (!aSelected && bSelected) return -1;
                 if (aSelected && !bSelected) return 1;
                 return 0;
@@ -173,7 +189,7 @@ export class MembersBody extends Component {
             members = this.sortByMember(members, this.state.memberOrder);
         }
 
-        const selectedCount = members.filter(m => m.username in this.props.selectedMembers).length;
+        const selectedCount = members.filter(m => m.user.username in this.props.selectedMembers).length;
 
         return (
             <div>
@@ -206,15 +222,23 @@ export class MembersBody extends Component {
                         handleUncheckAll={this.handleUncheckAll}
                     />
                 </div>
-                {members.map(member => (
-                    <MemberRow
-                        key={member.username}
-                        member={member}
-                        selected={member.username in this.props.selectedMembers}
-                        handleCheck={this.handleCheck}
-                        className="qa-MembersBody-MemberRow"
-                    />
-                ))}
+                {members.map((member) => {
+                    const selected = this.props.selectedMembers[member.user.username];
+                    console.log(selected);
+                    const admin = selected === 'ADMIN';
+                    return (
+                        <MemberRow
+                            key={member.user.username}
+                            showAdmin={this.props.canUpdateAdmin}
+                            member={member}
+                            selected={!!selected}
+                            admin={admin}
+                            handleCheck={this.handleCheck}
+                            handleAdminCheck={this.handleAdminCheck}
+                            className="qa-MembersBody-MemberRow"
+                        />
+                    );
+                })}
             </div>
         );
     }
@@ -222,11 +246,23 @@ export class MembersBody extends Component {
 
 MembersBody.defaultProps = {
     membersText: '',
+    canUpdateAdmin: false,
 };
 
 MembersBody.propTypes = {
-    members: PropTypes.arrayOf(PropTypes.object).isRequired,
-    selectedMembers: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    })).isRequired,
+    selectedMembers: PropTypes.objectOf(PropTypes.string).isRequired,
     membersText: PropTypes.oneOfType([
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
@@ -234,6 +270,7 @@ MembersBody.propTypes = {
     ]),
     update: PropTypes.func.isRequired,
     onMembersUpdate: PropTypes.func.isRequired,
+    canUpdateAdmin: PropTypes.bool,
 };
 
 export default MembersBody;

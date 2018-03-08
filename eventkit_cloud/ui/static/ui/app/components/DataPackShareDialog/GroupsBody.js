@@ -9,6 +9,7 @@ export class GroupsBody extends Component {
         this.handleUncheckAll = this.handleUncheckAll.bind(this);
         this.handleCheckAll = this.handleCheckAll.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
+        this.handleAdminCheck = this.handleAdminCheck.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
         this.reverseGroupOrder = this.reverseGroupOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
@@ -23,11 +24,11 @@ export class GroupsBody extends Component {
     handleUncheckAll() {
         if (this.state.search) {
             const groups = [...this.props.groups];
-            const shownGroupNames = this.searchGroups(groups, this.state.search).map(g => g.name);
+            const shownGroupNames = this.searchGroups(groups, this.state.search).map(g => g.id);
             const selectedGroups = { ...this.props.selectedGroups };
-            shownGroupNames.forEach((name) => {
-                selectedGroups[name] = null;
-                delete selectedGroups[name];
+            shownGroupNames.forEach((id) => {
+                selectedGroups[id] = null;
+                delete selectedGroups[id];
             });
             this.props.onGroupsUpdate(selectedGroups);
         } else {
@@ -39,29 +40,40 @@ export class GroupsBody extends Component {
         if (this.state.search) {
             const groups = this.searchGroups(this.props.groups, this.state.search);
             const selectedGroups = { ...this.props.selectedGroups };
-            groups.forEach((group) => { selectedGroups[group.name] = ['READ']; });
+            groups.forEach((group) => { selectedGroups[group.id] = 'READ'; });
             this.props.onGroupsUpdate(selectedGroups);
         } else {
             const selectedGroups = {};
-            this.props.groups.forEach((group) => { selectedGroups[group.name] = ['READ']; });
+            this.props.groups.forEach((group) => { selectedGroups[group.id] = 'READ'; });
             this.props.onGroupsUpdate(selectedGroups);
         }
     }
 
     handleCheck(group) {
-        const permissions = this.props.selectedGroups[group.name];
+        const permissions = this.props.selectedGroups[group.id];
+        const newSelection = { ...this.props.selectedGroups };
         if (permissions) {
             // we need to remove from the selection
-            const newSelection = { ...this.props.selectedGroups };
-            newSelection[group.name] = null;
-            delete newSelection[group.name];
-            this.props.onGroupsUpdate(newSelection);
+            newSelection[group.id] = null;
+            delete newSelection[group.id];
         } else {
             // we need to add to the selection
-            const newSelection = { ...this.props.selectedGroups };
-            newSelection[group.name] = ['READ'];
-            this.props.onGroupsUpdate(newSelection);
+            newSelection[group.id] = 'READ';
         }
+        this.props.onGroupsUpdate(newSelection);
+    }
+
+    handleAdminCheck(group) {
+        const permissions = this.props.selectedGroups[group.id];
+        const newSelection = { ...this.props.selectedGroups };
+        if (permissions && permissions === 'ADMIN') {
+            // we need to demote the group from admin status
+            newSelection[group.id] = 'READ';
+        } else {
+            // we need to make the group an admin
+            newSelection[group.id] = 'ADMIN';
+        }
+        this.props.onGroupsUpdate(newSelection);
     }
 
     handleSearchInput(e) {
@@ -169,7 +181,7 @@ export class GroupsBody extends Component {
             groups = this.sortByGroup(groups, this.state.groupOrder);
         }
 
-        const selectedCount = groups.filter(group => group.name in this.props.selectedGroups).length;
+        const selectedCount = groups.filter(group => group.id in this.props.selectedGroups).length;
 
         return (
             <div>
@@ -202,18 +214,23 @@ export class GroupsBody extends Component {
                         handleUncheckAll={this.handleUncheckAll}
                     />
                 </div>
-                {groups.map(group => (
-                    <GroupRow
-                        key={group.id}
-                        group={group}
-                        members={this.props.members}
-                        selected={group.name in this.props.selectedGroups}
-                        handleCheck={this.handleCheck}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                        handleAdminChange={member => console.log(member)}
-                        className="qa-GroupsBody-GroupRow"
-                    />
-                ))}
+                {groups.map((group) => {
+                    const selected = this.props.selectedGroups[group.id];
+                    const admin = selected === 'ADMIN';
+                    return (
+                        <GroupRow
+                            key={group.id}
+                            group={group}
+                            members={this.props.members}
+                            selected={!!selected}
+                            admin={admin}
+                            showAdmin={this.props.canUpdateAdmin}
+                            handleCheck={this.handleCheck}
+                            handleAdminCheck={this.handleAdminCheck}
+                            className="qa-GroupsBody-GroupRow"
+                        />
+                    );
+                })}
             </div>
         );
     }
@@ -226,13 +243,24 @@ GroupsBody.defaultProps = {
 
 GroupsBody.propTypes = {
     groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
-    members: PropTypes.arrayOf(PropTypes.object).isRequired,
-    selectedGroups: PropTypes.objectOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    })).isRequired,
+    selectedGroups: PropTypes.objectOf(PropTypes.string).isRequired,
     groupsText: PropTypes.oneOfType([
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),

@@ -18,8 +18,9 @@ import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/da
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
-import { getGroups } from '../../actions/userGroupsActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
-import { getUsers } from '../../actions/userActions.fake.js'; // TODO: REPLACE THIS WITH THE REAL FILE
+import { getGroups } from '../../actions/userGroupsActions';
+import { getUsers } from '../../actions/userActions';
+import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 
 export class DataPackPage extends React.Component {
@@ -276,6 +277,7 @@ export class DataPackPage extends React.Component {
     handleShareSave(permissions) {
         console.log(permissions);
         this.handleShareClose();
+        this.props.updateDataCartPermissions(this.state.targetJob, permissions);
     }
 
     render() {
@@ -401,7 +403,15 @@ export class DataPackPage extends React.Component {
                         :
                         <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
                             {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ?
-                                <div style={{ zIndex: 10, position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                                <div
+                                    style={{
+                                        zIndex: 10,
+                                        position: 'absolute',
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(0,0,0,0.2)',
+                                    }}
+                                >
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                                         <CircularProgress
                                             style={{ margin: 'auto', display: 'block' }}
@@ -425,19 +435,19 @@ export class DataPackPage extends React.Component {
                         members={this.props.users}
                         permissions={{
                             groups: {
-                                'Group 1': ['UPDATE'],
-                                'Group 2': ['UPDATE'],
-                                'Group 4': ['READ'],
-                                'Group 6': ['READ'],
-                                'Group 7': ['READ'],
-                                'Group 8': ['UPDATE'],
-                                'Group 10': ['READ'],
+                                5: 'ADMIN',
+                                6: 'ADMIN',
+                                8: 'READ',
+                                10: 'READ',
+                                11: 'READ',
+                                14: 'ADMIN',
+                                17: 'READ',
                             },
                             members: {
-                                JaneD: ['READ'],
-                                JoeS: ['READ'],
-                                U1: ['READ'],
-                                U2: ['READ'],
+                                old_user: 'ADMIN',
+                                user_four: 'READ',
+                                user_one: 'READ',
+                                user_two: 'READ',
                             },
                         }}
                         groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
@@ -479,7 +489,7 @@ DataPackPage.propTypes = {
     setView: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
@@ -487,6 +497,7 @@ DataPackPage.propTypes = {
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     getGroups: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
+    updateDataCartPermissions: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -534,6 +545,9 @@ function mapDispatchToProps(dispatch) {
         },
         getUsers: () => {
             dispatch(getUsers());
+        },
+        updateDataCartPermissions: (uid, permissions) => {
+            dispatch(updateDataCartPermissions(uid, { permissions }));
         },
     };
 }
