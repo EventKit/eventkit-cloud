@@ -19,6 +19,12 @@ div.map {
     right: 10px;
 }
 
+@media (max-width: 640px) {
+    .olScaleLine {
+        right: 92px;
+    }
+}
+
 .olScaleLine > div {
     color: #707274;
     border: 1px solid #707274;
@@ -115,6 +121,12 @@ div.map {
     right: 12px;
     color: #707274;
     font-size: 10px;
+}
+
+@media (max-width: 640px) {
+    .olZoomLevel {
+        bottom: 14px;
+    }
 }
 
 .olPopup {
