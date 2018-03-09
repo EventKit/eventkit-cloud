@@ -1135,7 +1135,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         # administrator of the current group or there is an attempt to end up with no administrators
 
         if not self.useradmin(group,request):
-            user = User.objects.all().filter(username=request.user.username)[0]
+            user = User.objects.filter(username=request.user.username)[0]
             perms = GroupPermission.objects.filter(
                 user=user,
                 group=group,

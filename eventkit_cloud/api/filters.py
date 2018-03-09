@@ -83,6 +83,14 @@ class UserFilter(django_filters.FilterSet):
 
     @staticmethod
     def group_filter( queryset, fieldname, value):
+        """
+        Filter users by what group they are in.
+        The value can be a comma separated string of group ids and optionally the keyword "none"
+        
+        The value "none" will return any users who are not in any groups
+        The value "1" will return any users in group 1
+        And value "none,1,4,7" will return users in no groups, users in group 1, users in group 4, and users in group 7
+        """
         target_users = []
         groups = value.split(",")
 
