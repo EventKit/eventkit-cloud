@@ -12,7 +12,6 @@ import shutil
 from contextlib import contextmanager
 from multiprocessing import Pool
 import json
-import arcpy
 import argparse
 
 logger = logging.getLogger('create_mxd')
@@ -27,6 +26,12 @@ try:
 except Exception:
     BASE_DIR = os.path.dirname(__file__)
 
+try:
+    import arcpy
+except Exception:
+    print("Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script.  Please ensure that it is installed.  If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS.")
+    raise
+
 
 @contextmanager
 def get_temp_mxd(gpkg, verify=False):
@@ -35,39 +40,64 @@ def get_temp_mxd(gpkg, verify=False):
     temp_file.name = "{0}.mxd".format(temp_file.name)
     ext = arcpy.Extent(0, 0, 0, 0)  # default to global
     try:
-        template_file = os.path.abspath(os.path.join(BASE_DIR, "support", "template.mxd"))
+        try:
+            version = arcpy.GetInstallInfo().get('Version')
+        except:
+            print('Unable to determine ArcGIS version.  This script only supports versions 10.4 and 10.5.')
+            raise
+        if '10.5' in version:
+            template_file_name = "template-10-5.mxd"
+        elif '10.4' in version:
+            template_file_name = "template-10-4.mxd"
+        else:
+            print('The current version of ArcGIS is {0} however this script only supports versions 10.4 and 10.5.'.format(version))
+            raise Exception("Invalid Version")
+        template_file = os.path.abspath(os.path.join(BASE_DIR, "support", template_file_name))
         print('Opening MXD: {0}'.format(template_file))
         print('Updating with new filepath: {0}'.format(gpkg))
-        logger.debug('Opening MXD: {0}'.format(template_file))
-        logger.debug('Updating with new filepath: {0}'.format(gpkg))
+        if not os.path.isfile(template_file):
+            print('This script requires an mxd template file which was not found.')
+            raise Exception("File Not Found: {0}".format(template_file))
+        # logger.debug('Opening MXD: {0}'.format(template_file))
+        # logger.debug('Updating with new filepath: {0}'.format(gpkg))
         shutil.copyfile(template_file, temp_file.name)
         mxd = arcpy.mapping.MapDocument(temp_file.name)
         logger.debug('Gettings Layers...')
+        boundary_layer = None
         for lyr in arcpy.mapping.ListLayers(mxd):
-            try:
-                logging.debug("layer: {0}".format(lyr))
-                logger.debug("updating layer workspacePath: {0}".format(lyr.workspacePath))
-            except Exception:
-                # Skip layers that don't have paths.
-                continue
-            try:
-                # Try to update the extents based on the layers
-                lyr.findAndReplaceWorkspacePath(lyr.workspacePath, gpkg, verify)
-                if lyr.isFeatureLayer and lyr.name != "main.boundary":
-                    arcpy.RecalculateFeatureClassExtent_management(lyr)
-                    lyr_ext = lyr.getExtent()
-                    if lyr_ext:
-                        ext = expand_extents(ext, lyr_ext)
-            except AttributeError:
-                raise
-        #    except Exception as e:
-        #       logger.warning(e)
+            if lyr.supports("DATASOURCE"):
+                try:
+                    logging.debug("layer: {0}".format(lyr))
+                    logger.debug("removing old layer workspacePath: {0}".format(lyr.workspacePath))
+                except Exception:
+                    # Skip layers that don't have paths.
+                    continue
+                try:
+                    # Try to update the extents based on the layers
+                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, gpkg, verify)
+                    if lyr.isFeatureLayer:
+                        logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
+                        lyr_ext = lyr.getExtent()
+                        if lyr_ext:
+                            ext = expand_extents(ext, lyr_ext)
+                except AttributeError as ae:
+                    raise
+                # except Exception as e:
+                #     logger.warning(e)
+                #     raise e
+            if lyr.name != "main.boundary":
+                boundary_layer = lyr
         logger.debug('Getting dataframes...')
-        df = arcpy.mapping.ListDataFrames(mxd, "Layers")[0]
+        df = mxd.activeDataFrame
         # if extent not updated then use global bounds
         if extent2bbox(ext) == [0, 0, 0, 0]:
             ext = arcpy.Extent(-180, -90, 180, 90)
-        df.extent = ext
+        df.extent
+        if boundary_layer:
+            df.extent = boundary_layer.getExtent()
+        # df.zoomToSelectedFeatures()
+        mxd.activeView = df.name
+        arcpy.RefreshActiveView()
         mxd.save()
         del mxd  # remove handle on file
         yield temp_file.name
@@ -151,14 +181,20 @@ if __name__ == "__main__":
     #  parser.add_argument('--metadata', default='metadata.json', type=bool, help='a metadata file to provide information')
 
     #  args = parser.parse_args()
+    try:
+        metadata_file = os.path.join(os.path.dirname(__file__), 'metadata.json')
 
-    metadata_file = os.path.join(os.path.dirname(__file__), 'metadata.json')
+        with open(metadata_file, 'r') as open_metadata_file:
+            metadata = json.load(open_metadata_file)
 
-    with open(metadata_file, 'r') as open_metadata_file:
-        metadata = json.load(open_metadata_file)
-
-    # mxd_output = os.path.abspath('{0}.mxd'.format(metadata['name']))
-    mxd_output = os.path.join(os.path.dirname(__file__), '{0}.mxd'.format(metadata['name']))
-    # gpkg_path = os.path.abspath(metadata['data_sources']['osm']['file_path']))
-    gpkg_path = os.path.join(os.path.dirname(__file__), metadata['data_sources']['osm']['file_path'])
-    create_mxd(mxd=mxd_output, gpkg=gpkg_path, verify=True)
+        # mxd_output = os.path.abspath('{0}.mxd'.format(metadata['name']))
+        mxd_output = os.path.join(os.path.dirname(__file__), '{0}.mxd'.format(metadata['name']))
+        # gpkg_path = os.path.abspath(metadata['data_sources']['osm']['file_path']))
+        gpkg_path = os.path.join(os.path.dirname(__file__), metadata['data_sources']['osm']['file_path'])
+        create_mxd(mxd=mxd_output, gpkg=gpkg_path, verify=True)
+    except Exception as e:
+        try:
+            raw_input("Press enter to exit.")
+        except Exception:
+            input("Press enter to exit.")
+        raise

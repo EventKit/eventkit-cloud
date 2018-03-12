@@ -739,7 +739,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
-            if export_provider_task.slug == 'osm' and os.path.splitext(filename)[1] == '.gpkg':
+            if os.path.splitext(filename)[1] == '.gpkg':
                 gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
                     export_provider_task.slug,
                     os.path.splitext(os.path.basename(filename))[0],
@@ -1020,7 +1020,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
     metadata = {"name": normalize_name(run.job.name), "data_sources": {}}
 
     for provider_task in provider_tasks:
-        metadata['data_sources'] = {provider_task.slug: {"name": provider_task.name}}
+        metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
             for export_task in provider_task.tasks.all():
                 try:
@@ -1029,7 +1029,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                               provider_task.slug, filename)
-                if provider_task.slug == 'osm' and os.path.splitext(filename)[1] == '.gpkg':
+                if os.path.splitext(filename)[1] == '.gpkg':
                     gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
@@ -1133,11 +1133,14 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         if static_files:
             for absolute_file_path, relative_file_path in static_files.iteritems():
                 filename = relative_file_path
+                # Support files should go in the correct directory.  It might make sense to break these files up
+                # by directory and then just put each directory in the correct location so that we don't have to
+                # list all support files in the future.
                 if absolute_file_path.endswith("create_mxd.py"):
                     # put the style file in the root of the zip
                     filename = os.path.basename(absolute_file_path)
-                elif os.path.basename(absolute_file_path) in ['template.gpkg', 'template.mxd']:
-                    # put the style file in the root of the zip
+                elif os.path.basename(absolute_file_path) in ['template.gpkg', 'template-10-4.mxd', 'template-10-5.mxd']:
+                    # Put the support files in the correct directory.
                     filename = 'support/{0}'.format(os.path.basename(absolute_file_path))
                 zipfile.write(
                     absolute_file_path,
