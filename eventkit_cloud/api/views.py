@@ -4,14 +4,15 @@ from collections import OrderedDict
 from datetime import datetime,timedelta
 from dateutil import parser
 import logging
-
+import json
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User,Group
+from ..core.models import GroupPermission, JobPermission
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
@@ -30,11 +31,11 @@ from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    DataProviderSerializer, LicenseSerializer, UserDataSerializer
+    DataProviderSerializer, LicenseSerializer, UserDataSerializer,GroupSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter
+from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -510,7 +511,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
 
-class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
+class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
     """
@@ -536,16 +537,14 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
             provider = DataProvider.objects.get(slug=slug)
             provider_type = str(provider.export_provider_type)
 
-            aoi = None
-            if request is not None:
-                aoi = request.data.get('aoi')
+            geojson = self.request.data.get('geojson', None)
 
             url = str(provider.url)
             if url == "" and 'osm' in provider_type:
                 url = settings.OVERPASS_API_URL
 
             checker_type = get_provider_checker(provider_type)
-            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=aoi)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson)
             response = checker.check()
 
             logger.info("Status of provider '{}': {}".format(str(provider.name), response))
@@ -657,6 +656,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         *Returns:
             the serialized run data.
         """
+
         from ..tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
         try:
@@ -695,7 +695,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         else:
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
-
 
     @list_route(methods=['post', 'get'])
     def filter(self, request, *args, **kwargs):
@@ -896,23 +895,22 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
 
 class UserDataViewSet(viewsets.GenericViewSet):
     """
-    This endpoint is used to retrieve information about a user. Post is  
+    User Data
 
     """
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    filter_class = UserFilter
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter,filters.OrderingFilter)
     lookup_field = 'username'
     lookup_value_regex = '[^/]+'
-    search_fields = ('user__username', 'accepted_licenses')
+    search_fields = ('username', 'last_name', 'first_name', 'email')
+    ordering_fields = ('username', 'last_name', 'first_name', 'email', 'date_joined')
+
 
     def get_queryset(self):
-        """
-        This view should return a list of all the purchases
-        for the currently authenticated user.
-        """
-        return User.objects.filter(username=self.request.user.username)
+        return User.objects.all()
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
@@ -933,6 +931,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
                         }
                   }
         """
+
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset, data=request.data, context={'request': request})
 
@@ -943,37 +942,256 @@ class UserDataViewSet(viewsets.GenericViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def list(self, request, *args, **kwargs):
-        """
-             * GET request
-
-                Example:
-
-                    [
-                      {
-                        "user": {
-                          "username": "admin",
-                          "first_name": "",
-                          "last_name": "",
-                          "email": "admin@eventkit.dev",
-                          "last_login": "2017-05-01T17:33:33.845698Z",
-                          "date_joined": "2016-06-15T14:25:19Z"
-                        },
-                        "accepted_licenses": {
-                          "odbl": true,
-                        }
-                      }
-                    ]
-        """
-
-        queryset = self.get_queryset()
+    def list(self, request,  *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @list_route(methods=['post','get'])
+    def members(self, request, *args, **kwargs):
+        """
+             Member list from list of group ids
+
+             Example :  [ 32, 35, 36 ]
+             
+        """
+
+        targets= request.data
+        targetnames = []
+        payload = []
+
+        groups = Group.objects.filter(id__in=targets)
+
+        for group in groups:
+            serializer = GroupSerializer(group)
+            for username in serializer.get_members(group):
+                if  not username in targetnames: targetnames.append(username)
+
+
+        users = User.objects.filter(username__in=targetnames).all()
+        for u in users:
+            serializer = UserDataSerializer(u)
+            payload.append(serializer.data)
+
+        return Response( payload , status=status.HTTP_200_OK)
+
     def retrieve(self, request, username=None):
+        """
+             GET a user by username
+        """
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """
+    Api components for viewing, creating, and editing groups
+
+    """
+    serializer_class = GroupSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+    parser_classes = (JSONParser,)
+    filter_class=GroupFilter
+    filter_backends = ( filters.SearchFilter, filters.OrderingFilter)
+    lookup_field = 'id'
+    lookup_value_regex = '[^/]+'
+    search_fields = ('name',)
+    ordering_fields = ('name',)
+
+
+    def useradmin(self,group,request):
+        serializer = GroupSerializer(group)
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        return user.username in serializer.get_administrators(group)
+
+    def get_queryset(self):
+        queryset = Group.objects.all()
+        return queryset
+
+    def update(self, request, *args, **kwargs):
+        # we don't support calls to PUT for this viewset.
+        return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        """
+            GET all groups
+
+            Sample result:
+
+                 [
+                    {
+                        "id": 54,
+                        "name": "Omaha 319",
+                        "members": [
+                          "user2",
+                          "admin"
+                        ],
+                        "administrators": [
+                          "admin"
+                        ]
+                      }
+                ]
+
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = GroupSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """
+            create a new group and place  the current logged in user in the group and its administrators.
+            optionally, provide additional group members
+
+
+            Sample input:
+
+                {
+                    "name": "Omaha 319"
+                }
+
+        """
+        response = super(GroupViewSet, self).create(request, *args, **kwargs)
+        group_id = response.data["id"]
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        group = Group.objects.filter(id=group_id)[0]
+        group.user_set.add(user)
+        groupadmin = GroupPermission.objects.create(user=user,group=group, permission=GroupPermission.Permissions.ADMIN.value)
+        groupadmin.save()
+        groupmember = GroupPermission.objects.create(user=user,group=group, permission=GroupPermission.Permissions.MEMBER.value)
+
+        if "members" in request.data:
+            for member  in request.data["members"]:
+                if member  != user.username:
+                    user  = User.objects.all().filter(username=member)[0]
+                    if user:
+                        GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.MEMBER.value)
+
+        if "administrators" in request.data:
+            for admin in request.data["administrators"]:
+                if admin  != request.user.username:
+                    user  = User.objects.all().filter(username=admin)[0]
+                    if user:
+                        GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.ADMIN.value)
+
+        group  = Group.objects.filter(id=group_id)[0]
+        serializer = GroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, id=None):
+        """
+            * get a group with a specific ID.  Return its data, including users in the group
+        """
+        group  = Group.objects.filter(id=id)[0]
+        serializer = GroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def destroy(self, request, id=None, *args, **kwargs):
+
+        """
+            Destroy a group
+        """
+
+        # Not permitted if the requesting user is not an administrator
+
+        group = Group.objects.filter(id=id)[0]
+
+        if not self.useradmin(group,request):
+            return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
+
+        super(GroupViewSet, self).destroy(request, *args, **kwargs)
+        return Response("OK",  status=status.HTTP_200_OK)
+
+        # instance = self.get_object()
+        # instance.soft_delete(user=request.user)
+        # return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @transaction.atomic
+    def partial_update(self, request, id=None, *args, **kwargs):
+        """
+             Change the group's name, members, and administrators
+
+
+             Sample input:
+
+                 {
+                    "name": "Omaha 319"
+                    "members": [ "user2", "user3", "admin"],
+                    "administrators": [ "admin" ]
+                 }
+                 
+            If a member wishes to remove themselves from a group they can make an patch request with no body.
+            However, this will not work if they are a admin of the group.
+
+         """
+
+        group = Group.objects.filter(id=id)[0]
+
+        # we are not going anywhere if the requesting user is not an
+        # administrator of the current group or there is an attempt to end up with no administrators
+
+        if not self.useradmin(group,request):
+            user = User.objects.filter(username=request.user.username)[0]
+            perms = GroupPermission.objects.filter(
+                user=user,
+                group=group,
+                permission=GroupPermission.Permissions.MEMBER.value
+            )
+            # if the user is not an admin but is a member we remove them from the group
+            if perms:
+                perms.delete()
+                return Response("OK", status=status.HTTP_200_OK)
+
+            return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
+
+        if "administrators" in request.data:
+            request_admins = request.data["administrators"]
+            if len(request_admins) < 1:
+                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
+
+        super(GroupViewSet, self).partial_update(request, *args, **kwargs)
+
+        # if name in request we need to change the group name
+        if "name" in request.data:
+            name = request.data["name"]
+            if name:
+                group.name = name
+                group.save()
+
+        # examine provided lists of administrators and members. Adjust as needed.
+        for item in [ ("members",GroupPermission.Permissions.MEMBER.value),("administrators", GroupPermission.Permissions.ADMIN.value)]:
+            permissionlabel = item[0]
+            permission = item[1]
+
+            if not permissionlabel in request.data:
+                continue
+
+            user_ids = [perm.user.id  for perm in GroupPermission.objects.filter(group=group).filter(permission=permission)]
+            currentusers = [user.username for user in User.objects.filter(id__in=user_ids).all()]
+            targetusers  = request.data[permissionlabel]
+
+            ## Add new users for this permission level
+
+            newusers = list(set(targetusers)-set(currentusers))
+            users = User.objects.filter(username__in=newusers).all()
+            for user in users:
+                GroupPermission.objects.create(user=user, group=group, permission=permission)
+
+            ## Remove existing users for this permission level
+
+            removedusers = list(set(currentusers) - set(targetusers))
+            users = User.objects.filter(username__in=removedusers).all()
+            for user in users:
+                perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
+                for perm in perms: perm.delete()
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+
 
 
 def get_models(model_list, model_object, model_index):
@@ -1068,9 +1286,9 @@ class SwaggerSchemaView(views.APIView):
         generator.get_schema(request=request)
         links = generator.get_links(request=request)
         # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('user', {}).get('partial_update')
+        partial_update_link = links.get('users', {}).get('partial_update')
         if partial_update_link:
-            links['user']['partial_update'] = coreapi.Link(
+            links['users']['partial_update'] = coreapi.Link(
                 url=partial_update_link.url,
                 action=partial_update_link.action,
                 fields=[
@@ -1086,6 +1304,22 @@ class SwaggerSchemaView(views.APIView):
                 ],
                 description=partial_update_link.description
             )
+
+        members_link = links.get('users', {}).get('members')['create']
+        if members_link:
+            links['users']['members'] = coreapi.Link(
+                url=members_link.url,
+                action=members_link.action,
+                fields=[
+                    (coreapi.Field(
+                        name='data',
+                        required=True,
+                        location='form',
+                        )),
+                ],
+                description=members_link.description
+            )
+
         schema = coreapi.Document(
             title='EventKit API',
             url='/api/docs',

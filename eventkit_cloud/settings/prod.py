@@ -59,8 +59,14 @@ EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
 # OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
 OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
 GEOCODING_API_URL = os.getenv('GEOCODING_API_URL', 'http://api.geonames.org/searchJSON')
+REVERSE_GEOCODING_API_URL = os.getenv('REVERSE_GEOCODING_API_URL', None)
+REVERSE_GEOCODING_API_TYPE = os.getenv('REVERSE_GEOCODING_API_TYPE', 'PELIAS')
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
+CONVERT_API_URL = os.getenv('CONVERT_API_URL', None)
+
+# zoom extents of reverse geocode point result (in degrees)
+REVERSE_GEOCODE_ZOOM = 0.1;
 
 """
 Maximum extent of a Job

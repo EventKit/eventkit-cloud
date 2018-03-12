@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class TaskError extends Component {
     constructor(props) {

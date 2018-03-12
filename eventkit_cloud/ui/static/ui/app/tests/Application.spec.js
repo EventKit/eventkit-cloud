@@ -10,12 +10,14 @@ import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
 import ContentAddBox from 'material-ui/svg-icons/content/add-box';
 import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
 import SocialPerson from 'material-ui/svg-icons/social/person';
+import SocialGroup from 'material-ui/svg-icons/social/group';
 import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import MockAdapter from 'axios-mock-adapter';
-import BaseDialog from '../components/BaseDialog';
+import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
 import { Application } from '../components/Application';
+import ConfirmDialog from '../components/Dialog/ConfirmDialog';
 
 describe('Application component', () => {
     const getProps = () => {
@@ -51,23 +53,27 @@ describe('Application component', () => {
         expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(2);
-        expect(wrapper.find(MenuItem)).toHaveLength(5);
+        expect(wrapper.find(BaseDialog)).toHaveLength(3);
+        expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
+        expect(wrapper.find(MenuItem)).toHaveLength(6);
         expect(wrapper.find(MenuItem).at(0).text()).toEqual('DataPack Library');
         expect(wrapper.find(MenuItem).at(0).find(AVLibraryBooks)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(0).find(IndexLink)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(1).text()).toEqual('Create DataPack');
         expect(wrapper.find(MenuItem).at(1).find(ContentAddBox)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(1).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(2).text()).toEqual('About EventKit');
-        expect(wrapper.find(MenuItem).at(2).find(ActionInfoOutline)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(2).text()).toEqual('Members and Groups');
+        expect(wrapper.find(MenuItem).at(2).find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(2).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(3).text()).toEqual('Account Settings');
-        expect(wrapper.find(MenuItem).at(3).find(SocialPerson)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(3).text()).toEqual('About EventKit');
+        expect(wrapper.find(MenuItem).at(3).find(ActionInfoOutline)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(3).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(4).text()).toEqual('Log Out');
-        expect(wrapper.find(MenuItem).at(4).find(ActionExitToApp)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(4).text()).toEqual('Account Settings');
+        expect(wrapper.find(MenuItem).at(4).find(SocialPerson)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(4).find(Link)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(5).text()).toEqual('Log Out');
+        expect(wrapper.find(MenuItem).at(5).find(ActionExitToApp)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(5).find(Link)).toHaveLength(1);
     });
 
     it('the menu items should call handleMouseOver with the route name', () => {
@@ -163,18 +169,10 @@ describe('Application component', () => {
         expect(props.openDrawer.calledOnce).toBe(true);
     });
 
-    it('handleClose should call closeDrawer', () => {
-        let props = getProps();
-        props.closeDrawer = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleClose();
-        expect(props.closeDrawer.calledOnce).toBe(true);
-    });
-
     it('onMenuItemClick should call handleToggle if screen size is smaller than 1200', () => {
         const props = getProps();
         const toggleSpy = sinon.spy(Application.prototype, 'handleToggle');
-        const wrapper = getWrapper(props); 
+        const wrapper = getWrapper(props);
         window.resizeTo(1300, 900);
         expect(window.innerWidth).toEqual(1300);
         wrapper.instance().onMenuItemClick();
@@ -266,5 +264,32 @@ describe('Application component', () => {
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLoggedOutDialog).toBe(true);
+    });
+
+    it('handleLogoutClick should set showLogoutDialog to true', () => {
+        const wrapper = getWrapper(getProps());
+        expect(wrapper.state().showLogoutDialog).toBe(false);
+        wrapper.instance().handleLogoutClick();
+        expect(wrapper.state().showLogoutDialog).toBe(true);
+    });
+
+    it('handleLogoutDialogCancel should set showLogoutDialog to false', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.setState({
+            showLogoutDialog: true,
+        });
+        wrapper.instance().handleLogoutDialogCancel();
+        expect(wrapper.state().showLogoutDialog).toBe(false);
+    });
+
+    it('handleLogoutDialogConfirm should set showLogoutDialog to false and call logout()', () => {
+        const logoutSpy = sinon.spy(Application.prototype, 'logout');
+        const wrapper = getWrapper(getProps());
+        wrapper.setState({
+            showLogoutDialog: true,
+        });
+        wrapper.instance().handleLogoutDialogConfirm();
+        expect(wrapper.state().showLogoutDialog).toBe(false);
+        expect(logoutSpy.calledOnce).toBe(true);
     });
 });

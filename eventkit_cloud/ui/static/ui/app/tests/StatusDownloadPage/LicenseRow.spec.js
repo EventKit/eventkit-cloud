@@ -4,7 +4,7 @@ import {mount, shallow} from 'enzyme';
 import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {TableRow, TableRowColumn} from 'material-ui/Table';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('LicenseRow component', () => {
     const muiTheme = getMuiTheme();

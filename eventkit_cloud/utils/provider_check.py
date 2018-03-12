@@ -16,37 +16,44 @@ class CheckResults(Enum):
     """
     Enum describing possible results of the provider check. Returns are in JSON format, with a status field
     containing an error code, and a message field containing more detailed information. Status may be one of:
-        ERR_CONNECTION - Could not connect to endpoint (requests.get raised ConnectionError)
-        ERR_UNAUTHORIZED - Not authorized to connect (response status 401 or 403)
-        WARN_UNAVAILABLE - Server returned a status other than 200; service may not be available
-        WARN_UNKNOWN_FORMAT - GetCapabilities returned blank, or unrecognized metadata format
-        WARN_LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
-        WARN_NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
+        TIMEOUT - The connection timed out (requests.get raised ConnectionTimeout)
+        CONNECTION - Could not connect to endpoint (requests.get raised a different ConnectionError)
+        UNAUTHORIZED - Not authorized to connect (response status 401 or 403)
+        UNAVAILABLE - Server returned a status other than 200; service may not be available
+        UNKNOWN_FORMAT - GetCapabilities returned blank, or unrecognized metadata format
+        LAYER_NOT_AVAILABLE - The requested layer wasn't found among those listed by GetCapabilities reply
+        NO_INTERSECT - The given AOI doesn't intersect the response's bounding box for the given layer
         SUCCESS - No problems: export should proceed without issues
+        (NB: for OWS sources in some cases, GetCapabilities may return 200 while GetMap/Coverage/Feature returns 403.
+        In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
+    TIMEOUT = {"status": "ERR_TIMEOUT",
+               "message": _("Your connection has timed out; the provider may be offline. Refresh to try again.")},
+
     CONNECTION = {"status": "ERR_CONNECTION",
-                  "message": _("A connection to the provider could not be established")},
+                  "message": _("A connection to this data provider could not be established.")},
 
     UNAUTHORIZED = {"status": "ERR_UNAUTHORIZED",
-                    "message": _("Authorization is required to connect to this provider")},
+                    "message": _("Authorization is required to connect to this data provider.")},
+
+    NOT_FOUND = {"status": "ERR_NOT_FOUND",
+                    "message": _("The data provider was not found on the server (status 404).")},
 
     UNAVAILABLE = {"status": "WARN_UNAVAILABLE",
-                   "message": _("The provider may be unavailable (status %(status)s)")},
+                   "message": _("This data provider may be unavailable (status %(status)s).")},
 
     UNKNOWN_FORMAT = {"status": "WARN_UNKNOWN_FORMAT",
-                      "message": _("The provider returned metadata in an unexpected format; "
-                                   "errors may occur when creating the DataPack")},
+                      "message": _("This data provider returned metadata in an unexpected format; "
+                                   "errors may occur when creating the DataPack.")},
 
     LAYER_NOT_AVAILABLE = {"status": "WARN_LAYER_NOT_AVAILABLE",
-                           "message": _("The provider does not offer the requested layer; "
-                                        "errors may occur when creating the DataPack")},
+                           "message": _("This data provider does not offer the requested layer.")},
 
     NO_INTERSECT = {"status": "WARN_NO_INTERSECT",
-                    "message": _("The selected AOI does not intersect the provider's layer. "
-                                 "The DataPack will contain no data from this provider")},
+                    "message": _("The selected AOI does not intersect the data provider's layer.")},
 
     SUCCESS = {"status": "SUCCESS",
-               "message": ""},
+               "message": "Export should proceed without issues."},
 
 
 class ProviderCheck(object):
@@ -72,11 +79,18 @@ class ProviderCheck(object):
         self.query = None
         self.layer = layer
         self.result = CheckResults.SUCCESS
+        self.timeout = 10
 
         if aoi_geojson is not None and aoi_geojson is not "":
-            self.aoi = ogr.CreateGeometryFromJson(aoi_geojson)
+            if isinstance(aoi_geojson, str):
+                aoi_geojson = json.loads(aoi_geojson)
+
+            aoi_geom = aoi_geojson['features'][0]['geometry']
+            logger.debug("AOI Geometry: {}".format(json.dumps(aoi_geom)))
+            self.aoi = ogr.CreateGeometryFromJson(json.dumps(aoi_geom))
         else:
             self.aoi = None
+            logger.debug("AOI was not given")
 
         self.token_dict = {}  # Parameters to include in message field of response
 
@@ -86,7 +100,7 @@ class ProviderCheck(object):
         """
 
         try:
-            response = requests.get(self.service_url, params=self.query)
+            response = requests.get(self.service_url, params=self.query, timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
@@ -94,9 +108,18 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAUTHORIZED
                 return None
 
+            if response.status_code == 404:
+                self.result = CheckResults.NOT_FOUND
+                return None
+
             if not response.ok:
                 self.result = CheckResults.UNAVAILABLE
                 return None
+
+        except requests.exceptions.ConnectTimeout as ex:
+            logger.error("Provider check timed out for URL {}".format(self.service_url))
+            self.result = CheckResults.TIMEOUT
+            return None
 
         except requests.exceptions.ConnectionError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
@@ -141,7 +164,7 @@ class OverpassProviderCheck(ProviderCheck):
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
-            response = requests.post(url=self.service_url, data="out meta;")
+            response = requests.post(url=self.service_url, data="out meta;", timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
@@ -149,9 +172,18 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.UNAUTHORIZED
                 return None
 
+            if response.status_code == 404:
+                self.result = CheckResults.NOT_FOUND
+                return None
+
             if not response.ok:
                 self.result = CheckResults.UNAVAILABLE
                 return None
+
+        except requests.exceptions.ConnectTimeout as ex:
+            logger.error("Provider check timed out for URL {}".format(self.service_url))
+            self.result = CheckResults.TIMEOUT
+            return None
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
@@ -197,6 +229,7 @@ class OWSProviderCheck(ProviderCheck):
         Given a bounding box, set result to NO_INTERSECT if it doesn't intersect the DataPack's AOI.
         :param bbox: Bounding box array: [minx, miny, maxx, maxy] in EPSG:4326
         """
+        logger.debug("Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(bbox)))
         minx, miny, maxx, maxy = bbox
 
         bbox_ring = ogr.Geometry(ogr.wkbLinearRing)
@@ -205,7 +238,6 @@ class OWSProviderCheck(ProviderCheck):
         bbox_ring.AddPoint(maxx, maxy)
         bbox_ring.AddPoint(minx, maxy)
         bbox_ring.AddPoint(minx, miny)
-
         bbox = ogr.Geometry(ogr.wkbPolygon)
         bbox.AddGeometry(bbox_ring)
 
@@ -215,9 +247,16 @@ class OWSProviderCheck(ProviderCheck):
     def validate_response(self, response):
 
         try:
-            xml = response.content.lower()
-            xml = xml.replace("![cdata[", "![CDATA[")
-            root = ET.fromstring(xml)
+            xml = response.content
+            xmll = xml.lower()
+
+            doctype = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml)
+            if doctype is not None:
+                doctype_pos = doctype.end()
+                xmll = xml[:doctype_pos] + xml[doctype_pos+1:].lower()
+
+            xmll = xmll.replace("![cdata[", "![CDATA[")
+            root = ET.fromstring(xmll)
             # Check for namespace
             m = re.search(r"^{.*?}", root.tag)
             self.ns = m.group() if m else ""

@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
 import Clear from 'material-ui/svg-icons/content/clear';
-import CustomScrollbar from './CustomScrollbar';
+import CustomScrollbar from '../CustomScrollbar';
 
 export class BaseDialog extends Component {
     render() {

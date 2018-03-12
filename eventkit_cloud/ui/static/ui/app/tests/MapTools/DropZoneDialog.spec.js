@@ -3,7 +3,7 @@ import React from 'react';
 import sinon from 'sinon';
 import {mount, shallow} from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import RaisedButton from 'material-ui/RaisedButton';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 const Dropzone = require('react-dropzone');
