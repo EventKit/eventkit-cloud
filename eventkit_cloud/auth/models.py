@@ -14,5 +14,10 @@ class OAuth(models.Model):
         managed = True
         db_table = 'auth_oauth'
 
+    # https://stackoverflow.com/questions/12754024/onetoonefield-and-deleting
+    def delete(self, *args, **kwargs):
+        self.user.delete()
+        return super(self.__class__, self).delete(*args, **kwargs)
+
     def __str__(self):
         return '{0}'.format(self.commonname)
