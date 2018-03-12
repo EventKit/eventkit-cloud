@@ -23,15 +23,10 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import axios from 'axios';
-import cookie from 'react-cookie';
-import ProviderStatusIcon from './ProviderStatusIcon'
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import ol3mapCss from '../../styles/ol3map.css';
-import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh'
-import BaseTooltip from '../BaseTooltip';
 
 
 export class ExportInfo extends React.Component {
@@ -42,8 +37,6 @@ export class ExportInfo extends React.Component {
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
-            providers: props.providers,
-            refreshTooltipOpen: false,
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -59,16 +52,6 @@ export class ExportInfo extends React.Component {
         this.expandedChange = this.expandedChange.bind(this);
         this.toggleCheckbox = this.toggleCheckbox.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
-
-        // Populate provider state attributes specific to this component
-        if (this.state.providers) {
-            this.state.providers.forEach((provider,pi) => {
-
-                if (provider.availability === undefined)
-                    provider.availability = {};
-
-            });
-        }
     }
 
     componentDidMount() {
@@ -111,14 +94,6 @@ export class ExportInfo extends React.Component {
                 projectName: event.target.value,
             });
         }, 250);
-
-        // make requests to check provider availability
-        if (this.state.providers) {
-            this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
-                if (provider.display === false) return;
-                this.checkAvailability(provider);
-            }), 30000);
-        }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -188,41 +163,6 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    checkAvailability(provider) {
-        const data = {'geojson': this.props.geojson};
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
-        axios({
-            url: '/api/providers/' + provider.slug + '/status',
-            method: 'POST',
-            data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        }).then((response) => {
-            provider.availability = JSON.parse(response.data);
-            provider.availability.slug = provider.slug;
-            this.setState({ providers: [provider, ...this.state.providers] });
-
-        }).catch((error) => {
-            console.log(error);
-            provider.availability = {
-                status: "WARN_CHECK_FAILURE",
-                message: "An error occurred while checking this provider's availability."
-            };
-            provider.availability.slug = provider.slug;
-            this.setState({ providers: [provider, ...this.state.providers] });
-        });
-    }
-
-    onRefresh() {
-        this.state.providers.forEach((provider, ix) => {
-            provider.availability = {};
-        });
-        this.setState({ providers: [...this.state.providers] });
-
-        this.state.providers.forEach((provider, ix) => {
-            this.checkAvailability(provider);
-        });
-    }
-
     setArea() {
         const source = new VectorSource({ wrapX: true });
         const geojson = new GeoJSON();
@@ -261,16 +201,6 @@ export class ExportInfo extends React.Component {
 
     handleLicenseClose() {
         this.setState({ licenseDialogOpen: false });
-    }
-
-    handleRefreshTooltipOpen(e) {
-        this.setState({ refreshTooltipOpen: true });
-        return false;
-    }
-
-    handleRefreshTooltipClose(e) {
-        this.setState({ refreshTooltipOpen: false });
-        return false;
     }
 
     toggleCheckbox(event, checked) {
@@ -347,7 +277,6 @@ export class ExportInfo extends React.Component {
     }
 
     render() {
-        const formWidth = window.innerWidth < 800 ? '90%' : '60%';
         const style = {
             underlineStyle: {
                 width: 'calc(100% - 10px)',
@@ -367,7 +296,7 @@ export class ExportInfo extends React.Component {
             },
             form: {
                 margin: '0 auto',
-                width: formWidth,
+                width: window.innerWidth < 800 ? '90%' : '60%',
                 height: window.innerHeight - 180,
             },
             paper: {
@@ -384,34 +313,16 @@ export class ExportInfo extends React.Component {
                 color: 'black',
                 alignContent: 'flex-start',
                 paddingBottom: '10px',
-                display: 'inline-block',
             },
             subHeading: {
                 fontSize: '16px',
                 color: 'black',
                 alignContent: 'flex-start',
-                display: 'inline-block',
-                marginLeft: '20px',
             },
             textField: {
                 backgroundColor: 'whitesmoke',
                 width: '100%',
                 marginTop: '15px',
-            },
-            listHeading: {
-                height: '20px',
-                fontSize: '13px',
-            },
-            providerListHeading: {
-                position: 'absolute',
-                marginLeft: '50px',
-            },
-            refreshIcon: {
-                marginBottom: '-4px',
-                height: '18px',
-                marginLeft: '5px',
-                color: '#4999BD',
-                cursor: 'pointer',
             },
             sectionBottom: {
                 paddingBottom: '50px',
@@ -501,42 +412,10 @@ export class ExportInfo extends React.Component {
                                     uncheckedIcon={<UncheckedCircle className="qa-ExportInfo-UncheckedCircle" style={{ fill: '4598bf' }} />}
                                 />
                             </div>
-
+                            
                             <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
-                                <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
-                                    <span className="qa-ExportInfo-ListHeaderItem"
-                                    style={style.providerListHeading}>
-                                        DATA PROVIDERS
-                                    </span>
-                                    <span className="qa-ExportInfo-ListHeaderItem"
-                                    style={{ position: 'absolute', left: '60%' }}
-                                    >
-                                        AVAILABILITY
-                                        <NavigationRefresh
-                                            style={style.refreshIcon}
-                                            onMouseOver={this.handleRefreshTooltipOpen.bind(this)}
-                                            onMouseOut={this.handleRefreshTooltipClose.bind(this)}
-                                            onTouchStart={this.handleRefreshTooltipOpen.bind(this)}
-                                            onTouchEnd={this.handleRefreshTooltipClose.bind(this)}
-                                            onTouchTap={this.onRefresh.bind(this)}
-                                        />
-                                        <BaseTooltip
-                                            show={this.state.refreshTooltipOpen}
-                                            title="RUN AVAILABILITY CHECK AGAIN"
-                                            tooltipStyle={{
-                                                left: '-69px',
-                                                bottom: '33px',
-                                            }}
-                                            onMouseOver={this.handleRefreshTooltipOpen.bind(this)}
-                                            onMouseOut={this.handleRefreshTooltipClose.bind(this)}
-                                            onTouchTap={this.onRefresh.bind(this)}
-                                        >
-                                    <div>You may try to resolve errors by running the availability check again.</div>
-                                </BaseTooltip>
-                                    </span>
-                                </div>
                                 <List className="qa-ExportInfo-List" style={{ width: '100%', fontSize: '16px' }}>
                                     {providers.map((provider, ix) => {
                                         // Show license if one exists.
@@ -580,18 +459,7 @@ export class ExportInfo extends React.Component {
                                             key={provider.uid}
                                             style={{ backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom: '0' }}
                                             nestedListStyle={{ padding: '0px', backgroundColor }}
-                                            primaryText={
-                                                <div>
-                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
-                                                        {provider.name}
-                                                    </span>
-                                                    <ProviderStatusIcon
-                                                        baseStyle={{ 'left': '80%' }}
-                                                        tooltipStyle={{ zIndex: '1' }}
-                                                        availability={provider.availability}
-                                                    />
-                                                </div>
-                                            }
+                                            primaryText={provider.name}
                                             leftCheckbox={<Checkbox
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}

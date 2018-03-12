@@ -578,7 +578,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
 
-class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
     """
@@ -601,24 +601,26 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         :return:
         """
         try:
-            provider = DataProvider.objects.get(slug=slug)
+            provider = ExportProvider.objects.get(slug=slug)
             provider_type = str(provider.export_provider_type)
 
-            geojson = self.request.data.get('geojson', None)
+            aoi = None
+            if request is not None:
+                aoi = request.data.get('aoi')
 
             url = str(provider.url)
             if url == "" and 'osm' in provider_type:
                 url = settings.OVERPASS_API_URL
 
             checker_type = get_provider_checker(provider_type)
-            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=aoi)
             response = checker.check()
 
             logger.info("Status of provider '{}': {}".format(str(provider.name), response))
 
             return Response(response, status=status.HTTP_200_OK)
 
-        except DataProvider.DoesNotExist as e:
+        except ExportProvider.DoesNotExist as e:
             return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
@@ -762,6 +764,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         else:
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     @list_route(methods=['post', 'get'])
     def filter(self, request, *args, **kwargs):
