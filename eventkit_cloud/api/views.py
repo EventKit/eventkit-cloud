@@ -472,14 +472,15 @@ class JobViewSet(viewsets.ModelViewSet):
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
 
-        job.save()
 
         # update permissions if present
 
         if "permissions" in payload:
             serializer = JobSerializer(job, context={'request': request})
-            users = payload["permissions"]["users"]
-            groups = payload["permissions"]["groups"]
+            users = []
+            groups = []
+            if "users" in payload["permissions"] :  users = payload["permissions"]["users"]
+            if "groups" in payload["permissions"]: groups = payload["permissions"]["groups"]
 
 
             #make sure all user names, group names, and permissions are valid, and insure there is at least one admn
@@ -526,6 +527,10 @@ class JobViewSet(viewsets.ModelViewSet):
                 jp.save()
 
 
+            response['permissions'] = payload["permissions"]
+
+
+        job.save()
         response['success'] = True
         return Response(response, status=status.HTTP_200_OK)
 
@@ -1477,7 +1482,6 @@ def get_user_details(request):
         'is_superuser': logged_in_user.is_superuser,
         'is_staff': logged_in_user.is_staff
     }
-
 def geojson_to_geos(geojson_geom, srid=None):
     """
     :param geojson_geom: A stringified geojson geometry
