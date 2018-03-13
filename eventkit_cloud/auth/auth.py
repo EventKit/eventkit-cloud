@@ -124,13 +124,22 @@ def get_user_data_from_schema(data):
         raise
     except ValueError:
         raise Error("An invalid json string was added to OAUTH_PROFILE_SCHEMA, please ensure names and values are "
-                     "quoted properly, that quotes are terminated, and that it is surrounded by braces.")
+                    "quoted properly, that quotes are terminated, and that it is surrounded by braces.")
     except TypeError:
-        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid mapping.")
+        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid "
+                    "mapping.")
     if not mapping:
-        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a valid mapping.")
-    for key, value in mapping.iteritems():
-        user_data[key] = data.get(value)
+        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a "
+                    "valid mapping.")
+    for key, value_list in mapping.iteritems():
+        if value_list is not list:
+            value_list = [value_list]
+        for value in value_list:
+            try:
+                user_data[key] = data[value]
+                break
+            except KeyError:
+                continue
     return user_data
 
 
