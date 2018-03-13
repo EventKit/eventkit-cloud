@@ -25,6 +25,7 @@ class TestAuthResult(TransactionTestCase):
         # Test: normal response without cert
         response = MagicMock()
         response.content = "test"
+        req_patch.side_effect = None
         req_patch.return_value = response
 
         result = req(self.url, data=42)
