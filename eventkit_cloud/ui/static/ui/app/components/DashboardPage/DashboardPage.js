@@ -6,6 +6,7 @@ import { getViewedJobs } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import { getProviders } from '../../actions/exportsActions';
+import DataPackWideItem from './DataPackWideItem';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -13,6 +14,7 @@ export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
         this.getGridColumns = this.getGridColumns.bind(this);
+        this.getGridWideColumns = this.getGridWideColumns.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
         this.refreshFeatured = this.refreshFeatured.bind(this);
@@ -91,6 +93,14 @@ export class DashboardPage extends React.Component {
         }
 
         return 3;
+    }
+
+    getGridWideColumns() {
+        if (window.innerWidth > 1500) {
+            return 2;
+        }
+
+        return 1;
     }
 
     getGridPadding() {
@@ -218,6 +228,8 @@ export class DashboardPage extends React.Component {
 
         // Only show as many items as we have columns.
         const viewedJobs = this.props.user.viewedJobs.jobs.slice(0, this.getGridColumns());
+        const myDataPacks = this.props.runsList.runs.slice(0, this.getGridColumns());
+        const featuredDataPacks = this.props.featuredRunsList.runs.slice(0, this.getGridWideColumns());
 
         return (
             <div style={styles.root}>
@@ -276,7 +288,7 @@ export class DashboardPage extends React.Component {
                                 }
                             </div>
 
-                            {this.props.featuredRunsList.runs.length > 0 ?
+                            {featuredDataPacks.length > 0 ?
                                 <div>
                                     <div
                                         className="qa-Dashboard-FeaturedHeader"
@@ -287,13 +299,13 @@ export class DashboardPage extends React.Component {
                                     <div style={styles.section}>
                                         <GridList
                                             className="qa-Dashboard-FeaturedHeaderGrid"
-                                            cellHeight="auto"
+                                            cellHeight={335}
                                             style={styles.gridList}
                                             padding={this.getGridPadding()}
-                                            cols={this.getGridColumns()}
+                                            cols={this.getGridWideColumns()}
                                         >
-                                            {this.props.featuredRunsList.runs.map((run, index) => (
-                                                <DataPackGridItem
+                                            {featuredDataPacks.map((run, index) => (
+                                                <DataPackWideItem
                                                     className="qa-Dashboard-FeaturedHeaderGrid-Item"
                                                     run={run}
                                                     user={this.props.user}
@@ -302,6 +314,7 @@ export class DashboardPage extends React.Component {
                                                     providers={this.props.providers}
                                                     index={index}
                                                     gridName="Featured"
+                                                    height={'335px'}
                                                 />
                                             ))}
                                         </GridList>
@@ -318,7 +331,7 @@ export class DashboardPage extends React.Component {
                                 My DataPacks
                             </div>
                             <div style={styles.section}>
-                                {this.props.runsList.runs.length > 0 ?
+                                {myDataPacks.length > 0 ?
                                     <GridList
                                         className="qa-Dashboard-MyDataPacksGrid"
                                         cellHeight="auto"
@@ -326,7 +339,7 @@ export class DashboardPage extends React.Component {
                                         padding={this.getGridPadding()}
                                         cols={this.getGridColumns()}
                                     >
-                                        {this.props.runsList.runs.map((run, index) => (
+                                        {myDataPacks.map((run, index) => (
                                             <DataPackGridItem
                                                 className="qa-Dashboard-MyDataPacksGrid-Item"
                                                 run={run}
