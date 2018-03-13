@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 import argparse
 import logging
-import shutil
-import subprocess
-from ..tasks.task_process import TaskProcess
 from auth_request import AuthRequest
 from datetime import datetime
 from string import Template
 import os
-from tempfile import NamedTemporaryFile
 
-import requests
 from requests import exceptions
 
 from django.conf import settings

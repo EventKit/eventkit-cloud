@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
-import os
 import requests
-from django.conf import settings
 from django.test import TransactionTestCase
 from mock import Mock, patch, MagicMock
 
