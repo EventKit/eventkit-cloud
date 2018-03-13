@@ -75,7 +75,14 @@ To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
 
 If an Overpass API endpoint requires a client certificate, you can provide it as an environment variable in PEM format:
-<pre><SLUG>_CERT</pre>
+```
+<provider slug>_CERT = '-----BEGIN CERTIFICATE-----
+[certificate contents]
+-----END CERTIFICATE-----
+-----BEGIN PRIVATE KEY-----
+[private key contents]
+-----END PRIVATE KEY-----'
+```
 
 
 #### Geocoder
