@@ -73,11 +73,12 @@ class TestAuth(TestCase):
 
     def test_get_user_data_from_schema(self):
 
-        example_schema = {"identification": "DN", "commonname": "username", "username": "username", "email": "email",
-                          "first_name": "firstname", "last_name": "lastname"}
+        example_schema = {"identification": ["DN"], "commonname": "username", "username": "username",
+                          "email": ["email", "mail", "email_address"], "first_name": ["firstname", "first_name"],
+                          "last_name": ["lastname", "surname", "last_name"]}
 
-        example_data = {"DN": "long_dn", "username": "test", "email": "test@email.dev",
-                        "firstname": "test", "lastname": "user"}
+        example_data = {"DN": "long_dn", "username": "test", "mail": "test@email.dev",
+                        "email_address": "othertest@email.dev", "first_name": "test", "lastname": "user"}
 
         expected_response = {"identification": "long_dn", "commonname": "test", "username": "test",
                              "email": "test@email.dev", "first_name": "test", "last_name": "user"}
