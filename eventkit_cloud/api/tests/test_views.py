@@ -486,7 +486,7 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEquals(expected, url)
 
-        request_data = {"published": False}
+        request_data = {"published": True}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['published'])
@@ -510,12 +510,12 @@ class TestJobViewSet(APITestCase):
         msg = result[0].get('detail')
         self.assertEquals(msg, 'unidentified user or group : badusername')
 
-        request_data = {"permissions" : { "users" :  { self.user.username : "NONE"}, "groups" : { }}}
+        request_data = { "published" : False, "permissions" : { "users" :  { self.user.username : "NONE"}, "groups" : { }}}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
         result = response.data
         msg = result[0].get('detail')
-        self.assertEquals(msg, 'There must be at least one administrator')
+        self.assertEquals(msg, 'There must be at least one administrator for a private job.')
 
 class TestBBoxSearch(APITestCase):
     """

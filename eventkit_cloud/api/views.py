@@ -475,6 +475,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
         # update permissions if present
 
+        admins = 0
         if "permissions" in payload:
             serializer = JobSerializer(job, context={'request': request})
             users = []
@@ -484,8 +485,8 @@ class JobViewSet(viewsets.ModelViewSet):
 
 
             #make sure all user names, group names, and permissions are valid, and insure there is at least one admn
+            #if the job is made private
 
-            admins = 0
             for index,set in enumerate( [users,groups]):
                 for key in set:
                     if index == 0 :
@@ -501,8 +502,8 @@ class JobViewSet(viewsets.ModelViewSet):
 
                     if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
 
-            if admins == 0:
-                return Response([{'detail': "There must be at least one administrator"}], status.HTTP_400_BAD_REQUEST)
+        if  admins == 0 and job.published == False:
+            return Response([{'detail': "There must be at least one administrator for a private job."}], status.HTTP_400_BAD_REQUEST)
 
 
             # throw out all current permissions
