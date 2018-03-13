@@ -21,7 +21,11 @@ class AuthRequest(object):
 
     def with_cert(self, method, url, **kwargs):
         try:
-            cert_env = os.getenv(self.slug + "_CERT") or os.getenv(self.slug.upper() + "_CERT")
+            if self.slug:
+                cert_env = os.getenv(self.slug + "_CERT") or os.getenv(self.slug.upper() + "_CERT")
+            else:
+                cert_env = None
+
             if self.slug and cert_env:
                 logger.info("Requesting {} with cert for {}".format(url, self.slug))
                 with NamedTemporaryFile() as f:

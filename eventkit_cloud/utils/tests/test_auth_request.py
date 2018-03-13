@@ -18,8 +18,7 @@ class TestAuthResult(TransactionTestCase):
         self.requester = AuthRequest("test_slug")
         self.url = "http://example.test/"
 
-    @patch('eventkit_cloud.utils.auth_request.os.getenv')
-    def test_general(self, req, req_patch, getenv):
+    def do_tests(self, req, req_patch, getenv):
         # Test: exception propagation
         getenv.return_value = None
         req_patch.side_effect = requests.exceptions.ConnectionError()
@@ -52,10 +51,12 @@ class TestAuthResult(TransactionTestCase):
         req_patch.assert_called_once_with(self.url, data=42, cert="temp filename")
         self.assertEqual("test", result.content)
 
+    @patch('eventkit_cloud.utils.auth_request.os.getenv')
     @patch('eventkit_cloud.utils.auth_request.requests.get')
-    def test_get(self, get):
-        self.test_general(self.requester.get, get)
+    def test_get(self, get, getenv):
+        self.do_tests(self.requester.get, get, getenv)
 
+    @patch('eventkit_cloud.utils.auth_request.os.getenv')
     @patch('eventkit_cloud.utils.auth_request.requests.post')
-    def test_post(self, post):
-        self.test_general(self.requester.post, post)
+    def test_post(self, post, getenv):
+        self.do_tests(self.requester.post, post, getenv)
