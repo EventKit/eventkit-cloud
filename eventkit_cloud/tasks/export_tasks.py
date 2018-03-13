@@ -1136,12 +1136,13 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 # Support files should go in the correct directory.  It might make sense to break these files up
                 # by directory and then just put each directory in the correct location so that we don't have to
                 # list all support files in the future.
-                if absolute_file_path.endswith("create_mxd.py"):
+                basename = os.path.basename(absolute_file_path)
+                if basename == "create_mxd.py":
                     # put the style file in the root of the zip
-                    filename = os.path.basename(absolute_file_path)
-                elif os.path.basename(absolute_file_path) in ['template.gpkg', 'template-10-4.mxd', 'template-10-5.mxd']:
+                    filename = basename
+                elif basename in ['template.gpkg', 'template-10-4.mxd', 'template-10-5.mxd']:
                     # Put the support files in the correct directory.
-                    filename = 'support/{0}'.format(os.path.basename(absolute_file_path))
+                    filename = 'support/{0}'.format(basename)
                 zipfile.write(
                     absolute_file_path,
                     arcname=filename
