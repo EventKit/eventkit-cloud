@@ -131,12 +131,12 @@ class DataProviderForm(forms.ModelForm):
 
     def clean_config(self):
         config = self.cleaned_data.get('config')
-        if not config:
-            return
 
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
         if service_type in ['wms', 'wmts']:
+            if not config:
+                return
             from ..utils.external_service import ExternalRasterServiceToGeopackage, \
                                                  ConfigurationError, SeedConfigurationError
             service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
@@ -146,9 +146,11 @@ class DataProviderForm(forms.ModelForm):
                 raise forms.ValidationError(e.message)
 
         elif service_type in ['osm', 'osm-generic']:
+            if not config:
+                raise forms.ValidationError("Configuration is required for OSM data providers")
             from ..feature_selection.feature_selection import FeatureSelection
             try:
-                f = FeatureSelection.example(config)
+                FeatureSelection.example(config)
             except AssertionError:
                 raise forms.ValidationError("Invalid configuration")
 

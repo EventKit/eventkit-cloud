@@ -88,16 +88,16 @@ class ExportOSMTaskRunner(TaskRunner):
                 logger.debug(msg)
 
         # run the tasks
-        export_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
-                                                                            name=provider_task.provider.name,
-                                                                            slug=provider_task.provider.slug,
-                                                                            status=TaskStates.PENDING.value,
-                                                                            display=True)
+        data_provider_task_record = DataProviderTaskRecord.objects.create(run=run,
+                                                                          name=provider_task.provider.name,
+                                                                          slug=provider_task.provider.slug,
+                                                                          status=TaskStates.PENDING.value,
+                                                                          display=True)
 
         for format, task in export_tasks.iteritems():
             export_task = create_export_task_record(
                 task_name=task.get('obj').name,
-                export_provider_task=export_provider_task_record, worker=worker,
+                export_provider_task=data_provider_task_record, worker=worker,
                 display=getattr(task.get('obj'), "display", False)
             )
             export_tasks[format]['task_uid'] = export_task.uid
@@ -109,7 +109,7 @@ class ExportOSMTaskRunner(TaskRunner):
             format_tasks = chain(
                 task.get('obj').s(
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
-                    user_details=user_details, locking_task_key=export_provider_task_record.uid
+                    user_details=user_details, locking_task_key=data_provider_task_record.uid
                 ).set(queue=worker, routing_key=worker)
                 for format_ignored, task in export_tasks.iteritems()
             )
@@ -120,15 +120,15 @@ class ExportOSMTaskRunner(TaskRunner):
 
         osm_data_collection_task_record = create_export_task_record(
             task_name=osm_data_collection_task.name,
-            export_provider_task=export_provider_task_record, worker=worker,
+            export_provider_task=data_provider_task_record, worker=worker,
             display=getattr(osm_data_collection_task, "display", False)
         )
 
         osm_gpkg_task = osm_data_collection_task.s(
-            run_uid=run.uid, provider_slug=provider_task.provider.slug, stage_dir=stage_dir,
-            export_provider_task_record_uid=export_provider_task_record.uid, worker=worker,
+            run_uid=run.uid, provider_slug=provider_task.provider.slug, overpass_url=provider_task.provider.url,
+            stage_dir=stage_dir, export_provider_task_record_uid=data_provider_task_record.uid, worker=worker,
             job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,
-            config=provider_task.provider.config, locking_task_key=export_provider_task_record.uid
+            config=provider_task.provider.config, locking_task_key=data_provider_task_record.uid
         )
 
         if format_tasks:
@@ -136,7 +136,7 @@ class ExportOSMTaskRunner(TaskRunner):
         else:
             tasks = osm_gpkg_task
 
-        return export_provider_task_record.uid, tasks
+        return data_provider_task_record.uid, tasks
 
 
 class ExportWFSTaskRunner(TaskRunner):

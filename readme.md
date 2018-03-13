@@ -74,6 +74,10 @@ EMAIL_HOST_PASSWORD='email-password'</pre>
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
 
+If an Overpass API endpoint requires a client certificate, you can provide it as an environment variable in PEM format:
+<pre><SLUG>_CERT</pre>
+
+
 #### Geocoder
 By default EventKit will use geonames.org. However it also supports pelias. If wishing to change the geocoder add:
 <pre>GEOCODING_API_URL = 'http://my-pelias.com/api/v1'</pre>
