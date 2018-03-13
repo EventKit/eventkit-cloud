@@ -389,7 +389,7 @@ export class ExportAOI extends Component {
         this.map = new Map({
             controls: [
                 new ScaleLine({
-                    className: css.olScaleLine,
+                    className: css.olScaleLineLargeMap,
                 }),
                 new Attribution({
                     className: ['ol-attribution', css['ol-attribution']].join(' '),
