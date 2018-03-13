@@ -29,7 +29,7 @@ class TestAuthResult(TransactionTestCase):
 
         result = req(self.url, data=42)
 
-        getenv.assert_has_calls(["test_slug_CERT", "TEST_SLUG_CERT"], any_order=True)
+        getenv.assert_called_once_with("test_slug_CERT")
         req_patch.assert_called_once_with(self.url, data=42)
         self.assertEqual("test", result.content)
 
