@@ -68,8 +68,8 @@ def fetch_user_from_token(access_token):
         logger.error('OAuth Resource Server returned HTTP {0} {1}'.format(status_code, err.response.text))
         raise OAuthError(status_code)
 
-    user_data = get_user_data_from_schema(response.json())
     orig_data = response.json()
+    user_data = get_user_data_from_schema(orig_data)
 
     return get_user(user_data, orig_data)
 
