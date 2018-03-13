@@ -134,7 +134,7 @@ def get_user_data_from_schema(data):
         raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a "
                     "valid mapping.")
     for key, value_list in mapping.iteritems():
-        if value_list is not list:
+        if type(value_list) is not list:
             value_list = [value_list]
         for value in value_list:
             try:
