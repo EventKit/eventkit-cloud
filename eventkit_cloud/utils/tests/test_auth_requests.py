@@ -27,7 +27,7 @@ class TestAuthResult(TransactionTestCase):
         req_patch.side_effect = None
         req_patch.return_value = response
 
-        result = req(self.url, data=42)
+        result = req(self.url, slug="test_slug", data=42)
 
         getenv.assert_called_once_with("test_slug_CERT")
         req_patch.assert_called_once_with(self.url, data=42)
@@ -41,7 +41,7 @@ class TestAuthResult(TransactionTestCase):
         cert_tempfile.flush = MagicMock()
 
         with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=cert_tempfile, create=True):
-            result = req(self.url, data=42)
+            result = req(self.url, slug="test_slug", data=42)
 
         cert_tempfile.write.assert_called_once_with("test cert content")
         cert_tempfile.flush.assert_called()
