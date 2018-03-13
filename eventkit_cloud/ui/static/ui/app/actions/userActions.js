@@ -11,7 +11,7 @@ export function logout() {
                 type: actions.USER_LOGGED_OUT,
             });
             if (response.data.OAUTH_LOGOUT_URL) {
-                window.location.href = response.data.OAUTH_LOGOUT_URL;
+                window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
                 dispatch(push({ pathname: '/login' }));
             }
@@ -106,4 +106,28 @@ export function userActive() {
             console.error(error.message);
         })
     );
+}
+
+export function getUsers(params) {
+    return (dispatch, getState) => {
+        // get the current user information
+        const loggedInUser = getState().user.data.user;
+
+        dispatch({ type: actions.FETCHING_USERS });
+
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+
+        return axios({
+            url: '/api/users',
+            params,
+            method: 'GET',
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            // filter out the current user from the list
+            const users = response.data.filter(user => (user.user.username !== loggedInUser.username));
+            dispatch({ type: actions.FETCHED_USERS, users });
+        }).catch((error) => {
+            dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
+        });
+    };
 }
