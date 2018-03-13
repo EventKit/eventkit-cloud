@@ -27,7 +27,10 @@ class TestAuth(TestCase):
         # create new user
         user_data = {"username": "test1", "email": "test1@email.com",
                      "identification": "test_ident", "commonname": "test_common"}
-        user = get_user(user_data)
+        orig_user_data = {"username": "test1", "email": "test1@email.com",
+                          "identification": "test_ident", "commonname": "test_common",
+                          "additional_field_1": "sample_value", "additional_field_2": 5}
+        user = get_user(user_data, orig_user_data)
         self.assertIsInstance(user, User)
 
         # get existing user
@@ -120,7 +123,7 @@ class TestAuth(TestCase):
         mock_get_user_data.return_value = example_user_data
         fetch_user_from_token(example_token)
         mock_get_user_data.assert_called_with(user_data)
-        mock_get_user.assert_called_with(example_user_data)
+        mock_get_user.assert_called_with(example_user_data, user_data)
 
         # Test invalid token
         self.mock_requests.get(settings.OAUTH_PROFILE_URL, status_code=401)
