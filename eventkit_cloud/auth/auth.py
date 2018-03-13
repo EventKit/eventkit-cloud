@@ -74,15 +74,17 @@ def fetch_user_from_token(access_token):
     return get_user(user_data, orig_data)
 
 
-
-def get_user(user_data, orig_data):
+def get_user(user_data, orig_data=None):
     """
     A helper function for retrieving or creating a user given a user_data dictionary.
     :param user_data: A dict containg user data.
+    :param orig_data: The original dictionary returned from the OAuth response, not modified to fit our User model.
     :return: 
     """
     oauth = OAuth.objects.filter(identification=user_data.get('identification')).first()
     if not oauth:
+        if orig_data is None:
+            orig_data = {}
         try:
             identification = user_data.pop('identification')
             commonname = user_data.pop('commonname')
