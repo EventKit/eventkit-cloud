@@ -4,7 +4,7 @@ import requests
 from django.test import TransactionTestCase
 from mock import Mock, patch, MagicMock
 
-from ..auth_request import AuthRequest
+from ..auth_requests import get, post
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 class TestAuthResult(TransactionTestCase):
 
     def setUp(self):
-        self.requester = AuthRequest("test_slug")
         self.url = "http://example.test/"
 
     def do_tests(self, req, req_patch, getenv):
@@ -51,10 +50,10 @@ class TestAuthResult(TransactionTestCase):
 
     @patch('eventkit_cloud.utils.auth_request.os.getenv')
     @patch('eventkit_cloud.utils.auth_request.requests.get')
-    def test_get(self, get, getenv):
-        self.do_tests(self.requester.get, get, getenv)
+    def test_get(self, get_patch, getenv):
+        self.do_tests(get, get_patch, getenv)
 
     @patch('eventkit_cloud.utils.auth_request.os.getenv')
     @patch('eventkit_cloud.utils.auth_request.requests.post')
-    def test_post(self, post, getenv):
-        self.do_tests(self.requester.post, post, getenv)
+    def test_post(self, post_patch, getenv):
+        self.do_tests(post, post_patch, getenv)

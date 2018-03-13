@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import argparse
 import logging
-from auth_request import AuthRequest
 from datetime import datetime
 from string import Template
 import os
-
 from requests import exceptions
+
+import auth_requests
 
 from django.conf import settings
 
@@ -89,8 +89,7 @@ class Overpass(object):
         logger.debug(q)
         logger.debug('Query started at: %s'.format(datetime.now()))
         try:
-            requester = AuthRequest(self.slug)
-            req = requester.post(self.url, data=q, stream=True, verify=self.verify_ssl)
+            req = auth_requests.post(self.url, slug=self.slug, data=q, stream=True, verify=self.verify_ssl)
 
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
             update_progress(self.task_uid, progress=50, subtask_percentage=subtask_percentage)

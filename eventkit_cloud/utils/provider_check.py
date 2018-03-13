@@ -3,12 +3,13 @@ from __future__ import absolute_import
 from django.utils.translation import ugettext as _
 from enum import Enum
 import json
-from eventkit_cloud.utils.auth_request import AuthRequest
 import logging
 from osgeo import ogr
 import re
 import requests
 import xml.etree.ElementTree as ET
+
+import eventkit_cloud.utils.auth_requests as auth_requests
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +103,7 @@ class ProviderCheck(object):
         """
 
         try:
-            requester = AuthRequest(self.slug)
-            response = requester.get(self.service_url, params=self.query, timeout=self.timeout)
+            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
@@ -167,8 +167,7 @@ class OverpassProviderCheck(ProviderCheck):
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
-            requester = AuthRequest(self.slug)
-            response = requester.post(url=self.service_url, data="out meta;", timeout=self.timeout)
+            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
