@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
 import GroupsHeaderRow from './GroupsHeaderRow';
+import GroupBodyTooltip from './ShareBodyTooltip';
 
 export class GroupsBody extends Component {
     constructor(props) {
@@ -10,6 +11,9 @@ export class GroupsBody extends Component {
         this.handleCheckAll = this.handleCheckAll.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
+        this.handleAdminMouseOver = this.handleAdminMouseOver.bind(this);
+        this.handleAdminMouseOut = this.handleAdminMouseOut.bind(this);
+        this.handleScroll = this.handleScroll.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
         this.reverseGroupOrder = this.reverseGroupOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
@@ -18,7 +22,19 @@ export class GroupsBody extends Component {
             groupOrder: 1,
             sharedOrder: 1,
             activeOrder: 'group',
+            tooltip: {
+                target: null,
+                admin: false,
+            },
         };
+    }
+
+    componentDidMount() {
+        window.addEventListener('wheel', this.handleScroll);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('wheel', this.handleScroll);
     }
 
     handleUncheckAll() {
@@ -76,6 +92,20 @@ export class GroupsBody extends Component {
         this.props.onGroupsUpdate(newSelection);
     }
 
+    handleAdminMouseOver(target, admin) {
+        this.setState({ tooltip: { target, admin } });
+    }
+
+    handleAdminMouseOut() {
+        this.setState({ tooltip: { target: null, admin: false } });
+    }
+
+    handleScroll() {
+        if (this.state.tooltip.target !== null) {
+            this.handleAdminMouseOut();
+        }
+    }
+
     handleSearchInput(e) {
         this.setState({ search: e.target.value }, this.props.update);
     }
@@ -125,16 +155,16 @@ export class GroupsBody extends Component {
     sortByShared(groups, selectedGroups, order) {
         if (order === 1) {
             groups.sort((a, b) => {
-                const aSelected = a.name in selectedGroups;
-                const bSelected = b.name in selectedGroups;
+                const aSelected = a.id in selectedGroups;
+                const bSelected = b.id in selectedGroups;
                 if (aSelected && !bSelected) return -1;
                 if (!aSelected && bSelected) return 1;
                 return 0;
             });
         } else {
             groups.sort((a, b) => {
-                const aSelected = a.name in selectedGroups;
-                const bSelected = b.name in selectedGroups;
+                const aSelected = a.id in selectedGroups;
+                const bSelected = b.id in selectedGroups;
                 if (!aSelected && bSelected) return -1;
                 if (aSelected && !bSelected) return 1;
                 return 0;
@@ -181,10 +211,21 @@ export class GroupsBody extends Component {
             groups = this.sortByGroup(groups, this.state.groupOrder);
         }
 
+        let tooltip = null;
+        if (this.state.tooltip.target !== null) {
+            tooltip = (
+                <GroupBodyTooltip
+                    target={this.state.tooltip.target}
+                    body={this.body}
+                    text={`${this.state.tooltip.admin ? 'Unshare' : 'Share'} administrative rights with group administrators`}
+                />
+            );
+        }
+
         const selectedCount = groups.filter(group => group.id in this.props.selectedGroups).length;
 
         return (
-            <div>
+            <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
                 <div style={styles.fixedHeader}>
                     <div style={{ fontSize: '14px', padding: '10px 0px' }} className="qa-GroupsBody-groupsText">
                         {this.props.groupsText}
@@ -227,10 +268,13 @@ export class GroupsBody extends Component {
                             showAdmin={this.props.canUpdateAdmin}
                             handleCheck={this.handleCheck}
                             handleAdminCheck={this.handleAdminCheck}
+                            handleAdminMouseOut={this.handleAdminMouseOut}
+                            handleAdminMouseOver={this.handleAdminMouseOver}
                             className="qa-GroupsBody-GroupRow"
                         />
                     );
                 })}
+                {tooltip}
             </div>
         );
     }

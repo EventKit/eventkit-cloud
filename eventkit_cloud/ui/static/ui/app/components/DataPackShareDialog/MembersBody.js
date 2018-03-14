@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import CustomTextField from '../CustomTextField';
 import MembersHeaderRow from './MembersHeaderRow';
 import MemberRow from './MemberRow';
+import MembersBodyTooltip from './ShareBodyTooltip';
 
 export class MembersBody extends Component {
     constructor(props) {
@@ -10,6 +11,9 @@ export class MembersBody extends Component {
         this.handleCheckAll = this.handleCheckAll.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
+        this.handleAdminMouseOver = this.handleAdminMouseOver.bind(this);
+        this.handleAdminMouseOut = this.handleAdminMouseOut.bind(this);
+        this.handleScroll = this.handleScroll.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
         this.reverseMemberOrder = this.reverseMemberOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
@@ -18,7 +22,19 @@ export class MembersBody extends Component {
             memberOrder: 1,
             sharedOrder: 1,
             activeOrder: 'member',
+            tooltip: {
+                target: null,
+                admin: false,
+            },
         };
+    }
+
+    componentDidMount() {
+        window.addEventListener('wheel', this.handleScroll);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('wheel', this.handleScroll);
     }
 
     handleUncheckAll() {
@@ -77,6 +93,20 @@ export class MembersBody extends Component {
             const selectedMembers = { ...this.props.selectedMembers };
             selectedMembers[member.user.username] = 'ADMIN';
             this.props.onMembersUpdate(selectedMembers);
+        }
+    }
+
+    handleAdminMouseOver(target, admin) {
+        this.setState({ tooltip: { target, admin } });
+    }
+
+    handleAdminMouseOut() {
+        this.setState({ tooltip: { target: null, admin: false } });
+    }
+
+    handleScroll() {
+        if (this.state.tooltip.target !== null) {
+            this.handleAdminMouseOut();
         }
     }
 
@@ -189,10 +219,22 @@ export class MembersBody extends Component {
             members = this.sortByMember(members, this.state.memberOrder);
         }
 
+        let tooltip = null;
+        if (this.state.tooltip.target !== null) {
+            tooltip = (
+                <MembersBodyTooltip
+                    target={this.state.tooltip.target}
+                    body={this.body}
+                    text={`${this.state.tooltip.admin ? 'Unshare' : 'Share'} administrative rights with group administrators`}
+                    textContainerStyle={{ justifyContent: 'flex-end' }}
+                />
+            );
+        }
+
         const selectedCount = members.filter(m => m.user.username in this.props.selectedMembers).length;
 
         return (
-            <div>
+            <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
                 <div style={styles.fixedHeader}>
                     <div style={{ fontSize: '14px', padding: '10px 0px' }} className="qa-MembersBody-membersText">
                         {this.props.membersText}
@@ -224,7 +266,6 @@ export class MembersBody extends Component {
                 </div>
                 {members.map((member) => {
                     const selected = this.props.selectedMembers[member.user.username];
-                    console.log(selected);
                     const admin = selected === 'ADMIN';
                     return (
                         <MemberRow
@@ -235,10 +276,13 @@ export class MembersBody extends Component {
                             admin={admin}
                             handleCheck={this.handleCheck}
                             handleAdminCheck={this.handleAdminCheck}
+                            handleAdminMouseOut={this.handleAdminMouseOut}
+                            handleAdminMouseOver={this.handleAdminMouseOver}
                             className="qa-MembersBody-MemberRow"
                         />
                     );
                 })}
+                {tooltip}
             </div>
         );
     }

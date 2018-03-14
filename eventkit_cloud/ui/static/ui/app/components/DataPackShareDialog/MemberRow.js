@@ -11,7 +11,20 @@ export class MemberRow extends Component {
         this.handleCheck = this.props.handleCheck.bind(this, this.props.member);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
+        this.onAdminMouseOut = this.onAdminMouseOut.bind(this);
+        this.onAdminMouseOver = this.onAdminMouseOver.bind(this);
     }
+
+    onAdminMouseOver() {
+        if (this.props.selected) {
+            this.props.handleAdminMouseOver(this.tooltip, this.props.admin);
+        }
+    }
+
+    onAdminMouseOut() {
+        this.props.handleAdminMouseOut();
+    }
+
 
     onKeyDown(e) {
         const key = e.which || e.keyCode;
@@ -76,9 +89,31 @@ export class MemberRow extends Component {
         let adminButton = null;
         if (this.props.showAdmin) {
             if (this.props.admin) {
-                adminButton = <People onClick={this.handleAdminCheck} style={styles.adminCheckIcon} />;
+                adminButton = (
+                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                        <People
+                            onClick={this.handleAdminCheck}
+                            onMouseOver={this.onAdminMouseOver}
+                            onMouseOut={this.onAdminMouseOut}
+                            onFocus={this.onAdminMouseOver}
+                            onBlur={this.onAdminMouseOut}
+                            style={styles.adminCheckIcon}
+                        />
+                    </div>
+                );
             } else {
-                adminButton = <PeopleOutline onClick={this.handleAdminCheck} style={styles.adminCheckIcon} />;
+                adminButton = (
+                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                        <PeopleOutline
+                            onClick={this.handleAdminCheck}
+                            onMouseOver={this.onAdminMouseOver}
+                            onMouseOut={this.onAdminMouseOut}
+                            onFocus={this.onAdminMouseOver}
+                            onBlur={this.onAdminMouseOut}
+                            style={styles.adminCheckIcon}
+                        />
+                    </div>
+                );
             }
         }
 
@@ -91,7 +126,7 @@ export class MemberRow extends Component {
             >
                 <CardHeader
                     title={
-                        <div style={{ display: 'flex' }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.text} className="qa-MemberRow-CardHeader-text">
                                 <div><strong>{this.props.member.user.first_name} {this.props.member.user.last_name}</strong></div>
                                 <div>{this.props.member.user.email}</div>
@@ -112,6 +147,8 @@ MemberRow.defaultProps = {
     showAdmin: false,
     admin: false,
     handleAdminCheck: () => {},
+    handleAdminMouseOver: () => {},
+    handleAdminMouseOut: () => {},
 };
 
 MemberRow.propTypes = {
@@ -132,6 +169,8 @@ MemberRow.propTypes = {
     showAdmin: PropTypes.bool,
     handleCheck: PropTypes.func.isRequired,
     handleAdminCheck: PropTypes.func,
+    handleAdminMouseOut: PropTypes.func,
+    handleAdminMouseOver: PropTypes.func,
 };
 
 export default MemberRow;

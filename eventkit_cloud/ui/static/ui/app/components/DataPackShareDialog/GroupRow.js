@@ -6,6 +6,7 @@ import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blan
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import Eye from 'material-ui/svg-icons/image/remove-red-eye';
 import GroupMemberRow from './GroupMemberRow';
 
 export class GroupRow extends Component {
@@ -15,9 +16,21 @@ export class GroupRow extends Component {
         this.handleCheck = this.props.handleCheck.bind(this, this.props.group);
         this.handleAdminCheck = this.handleAdminCheck.bind(this);
         this.onKeyDown = this.onKeyDown.bind(this);
+        this.onAdminMouseOut = this.onAdminMouseOut.bind(this);
+        this.onAdminMouseOver = this.onAdminMouseOver.bind(this);
         this.state = {
             expanded: false,
         };
+    }
+
+    onAdminMouseOver() {
+        if (this.props.selected) {
+            this.props.handleAdminMouseOver(this.tooltip, this.props.admin);
+        }
+    }
+
+    onAdminMouseOut() {
+        this.props.handleAdminMouseOut();
     }
 
     onKeyDown(e) {
@@ -65,19 +78,13 @@ export class GroupRow extends Component {
                 cursor: 'pointer',
             },
             checkIcon: {
-                position: 'relative',
-                display: 'inline-block',
                 width: '28px',
                 height: '28px',
-                float: 'right',
                 cursor: 'pointer',
             },
             adminCheckIcon: {
-                position: 'relative',
-                display: 'inline-block',
                 width: '28px',
                 height: '28px',
-                float: 'right',
                 cursor: 'pointer',
                 marginRight: '5px',
             },
@@ -105,12 +112,49 @@ export class GroupRow extends Component {
         let adminButton = null;
         if (this.props.showAdmin) {
             if (this.props.admin) {
-                adminButton = <People onClick={this.handleAdminCheck} style={styles.adminCheckIcon} />;
+                adminButton = (
+                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                        <People
+                            onClick={this.handleAdminCheck}
+                            onMouseOver={this.onAdminMouseOver}
+                            onMouseOut={this.onAdminMouseOut}
+                            onFocus={this.onAdminMouseOver}
+                            onBlur={this.onAdminMouseOut}
+                            style={styles.adminCheckIcon}
+                        />
+                    </div>
+                );
             } else {
-                adminButton = <PeopleOutline onClick={this.handleAdminCheck} style={styles.adminCheckIcon} />;
+                adminButton = (
+                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                        <PeopleOutline
+                            onClick={this.handleAdminCheck}
+                            onMouseOver={this.onAdminMouseOver}
+                            onMouseOut={this.onAdminMouseOut}
+                            onFocus={this.onAdminMouseOver}
+                            onBlur={this.onAdminMouseOut}
+                            style={styles.adminCheckIcon}
+                        />
+                    </div>
+                );
             }
         }
 
+        const groupMembers = [];
+        this.props.group.members.forEach((groupMember) => {
+            const member = this.props.members.find(propmember => propmember.user.username === groupMember);
+            if (member) groupMembers.push(member);
+        });
+        groupMembers.sort((a, b) => {
+            const aAdmin = this.props.group.administrators.includes(a.user.username);
+            const bAdmin = this.props.group.administrators.includes(b.user.username);
+            if (!aAdmin && bAdmin) return 1;
+            if (aAdmin && !bAdmin) return -1;
+            return 0;
+        });
+
+        const firstFour = groupMembers.splice(0, 4);
+        console.log(firstFour, groupMembers);
         return (
             <Card
                 key={this.props.group.id}
@@ -121,7 +165,7 @@ export class GroupRow extends Component {
             >
                 <CardHeader
                     title={
-                        <div style={{ display: 'flex' }}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.groupText} className="qa-GroupRow-CardHeader-text">
                                 <span style={styles.groupName}>
                                     {this.props.group.name}
@@ -142,12 +186,8 @@ export class GroupRow extends Component {
                     textStyle={{ padding: '0px', width: '100%' }}
                 />
                 <CardText expandable style={styles.cardText}>
-                    {this.props.group.members.map((groupMember) => {
-                        const member = this.props.members.find(propmember => propmember.user.username === groupMember);
-                        if (!member) {
-                            return null;
-                        }
-                        const isAdmin = this.props.group.administrators.includes(groupMember);
+                    {firstFour.map((member) => {
+                        const isAdmin = this.props.group.administrators.includes(member.user.username);
                         return (
                             <GroupMemberRow
                                 key={member.user.username}
@@ -156,6 +196,14 @@ export class GroupRow extends Component {
                             />
                         );
                     })}
+                    {groupMembers.length ?
+                        <div style={{ lineHeight: '20px', paddingTop: '10px' }}>
+                            <Eye style={{ height: '20px', verticalAlign: 'text-top' }} />
+                            <a href="/groups">View all on Members and Groups Page</a>
+                        </div>
+                        :
+                        null
+                    }
                 </CardText>
             </Card>
         );
@@ -166,6 +214,8 @@ GroupRow.defaultProps = {
     admin: false,
     showAdmin: false,
     handleAdminCheck: () => {},
+    handleAdminMouseOver: () => {},
+    handleAdminMouseOut: () => {},
 };
 
 GroupRow.propTypes = {
@@ -190,6 +240,8 @@ GroupRow.propTypes = {
     selected: PropTypes.bool.isRequired,
     handleCheck: PropTypes.func.isRequired,
     handleAdminCheck: PropTypes.func,
+    handleAdminMouseOut: PropTypes.func,
+    handleAdminMouseOver: PropTypes.func,
     showAdmin: PropTypes.bool,
     admin: PropTypes.bool,
 };
