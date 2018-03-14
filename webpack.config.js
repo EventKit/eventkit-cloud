@@ -1,7 +1,6 @@
 var webpack = require('webpack');
 var path = require('path');
 var WriteFilePlugin = require('write-file-webpack-plugin');
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 var BASE_DIR = path.resolve('/var', 'lib', 'eventkit', 'eventkit_cloud', 'ui', 'static', 'ui')
@@ -11,8 +10,6 @@ var APP_DIR = path.resolve(BASE_DIR, 'app');
 var PROD = JSON.parse(process.env.PROD || false);
 var devtool = 'source-map';
 var plugins = [
-    new WriteFilePlugin(),
-    new ExtractTextPlugin('styles.css'),
     new webpack.optimize.CommonsChunkPlugin({
         name:'node-modules', 
         filename: 'node-modules.js', 
@@ -50,10 +47,10 @@ var config = {
             },
             {
                 test: /\.css$/,
-                loader: 'style-loader'
-            }, {
-                test: /\.css$/,
-                loader: 'css-loader?modules=true,localIdentName=[name]__[local]___[hash:base64:5]',
+                use: [
+                    { loader: 'style-loader' },
+                    { loader: 'css-loader?modules=true,localIdentName=[name]__[local]___[hash:base64:5]' }
+                ]
             },
             {
                 test: /\.(woff2?|ttf|eot)$/,
@@ -80,7 +77,6 @@ var config = {
         },
         inline: true
     },
-
 };
 
 if (PROD) {
@@ -90,7 +86,8 @@ if (PROD) {
         sourceMap: false,
     }));
 } else {
-    config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080')
+    config.plugins.push(new WriteFilePlugin());
+    config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'inline-source-map';
 }

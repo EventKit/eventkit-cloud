@@ -1,7 +1,6 @@
 import React, {Component} from 'react';
 import css from '../../styles/typeahead.css';
 import {MenuItem} from 'react-bootstrap-typeahead';
-import isEqual from 'lodash/isEqual';
 import ImageCropDin from 'material-ui/svg-icons/image/crop-din';
 import ActionRoom from 'material-ui/svg-icons/action/room';
 
