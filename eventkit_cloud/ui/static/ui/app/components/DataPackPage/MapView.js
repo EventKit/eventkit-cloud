@@ -44,6 +44,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     MODE_DRAW_BBOX, MODE_DRAW_FREE, MODE_NORMAL, zoomToFeature, featureToPoint,
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
     isBox, isVertex } from '../../utils/mapUtils';
+import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -93,6 +94,7 @@ export class MapView extends Component {
         this.handleDrag = this.handleDrag.bind(this);
         this.handleDown = this.handleDown.bind(this);
         this.doesMapHaveDrawFeature = this.doesMapHaveDrawFeature.bind(this);
+        this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.state = {
             selectedFeature: null,
             groupedFeatures: [],
@@ -108,6 +110,7 @@ export class MapView extends Component {
             showInvalidDrawWarning: false,
             mode: MODE_NORMAL,
             disableMapClick: false,
+            zoomLevel: 2,
         };
     }
 
@@ -159,6 +162,9 @@ export class MapView extends Component {
             this.map.getView().fit(this.source.getExtent(), this.map.getSize());
         }
         this.clickListener = this.map.on('singleclick', this.onMapClick);
+
+        this.updateZoomLevel();
+        this.map.getView().on('propertychange', this.updateZoomLevel);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -196,6 +202,10 @@ export class MapView extends Component {
     // update map size so it doesnt look like crap after page resize
     componentDidUpdate() {
         this.map.updateSize();
+    }
+    
+    updateZoomLevel() {
+        this.setState({ zoomLevel: this.map.getView().getZoom() });
     }
 
     hasNewRuns(prevRuns, nextRuns) {
@@ -236,7 +246,7 @@ export class MapView extends Component {
         return new Map({
             controls: [
                 new ScaleLine({
-                    className: css.olScaleLine,
+                    className: css.olScaleLineLargeMap,
                 }),
                 new Attribution({
                     className: ['ol-attribution', css['ol-attribution']].join(' '),
@@ -281,7 +291,7 @@ export class MapView extends Component {
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: 2,
+                zoom: this.state.zoomLevel,
                 minZoom: 2,
                 maxZoom: 22,
             }),
@@ -919,6 +929,9 @@ export class MapView extends Component {
                             setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                             setImportModalState={this.toggleImportModal}
                             title="FILTERS"
+                        />
+                        <ZoomLevelLabel
+                            zoomLevel={this.state.zoomLevel}
                         />
                         <InvalidDrawWarning
                             show={this.state.showInvalidDrawWarning}
