@@ -29,23 +29,27 @@ class TestAuthResult(TransactionTestCase):
 
         result = req(self.url, slug="test_slug", data=42)
 
-        getenv.assert_called_with("test_slug_CERT")
-        req_patch.assert_called_once_with(self.url, data=42)
+        getenv.assert_called_with("TEST_SLUG_CERT")
+        req_patch.assert_called_with(self.url, data=42)
         self.assertEqual("test", result.content)
 
         # Test: normal response with cert
+        getenv.return_value = "test cert content"
+
+        named_tempfile = MagicMock()
         cert_tempfile = MagicMock()
         cert_tempfile.name = "temp filename"
-        getenv.return_value = "test cert content"
+        named_tempfile.__enter__ = MagicMock(return_value=cert_tempfile)
         cert_tempfile.write = MagicMock()
         cert_tempfile.flush = MagicMock()
 
-        with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=cert_tempfile, create=True):
+        with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=named_tempfile, create=True):
             result = req(self.url, slug="test_slug", data=42)
 
+        getenv.assert_called_with("test_slug_CERT")
         cert_tempfile.write.assert_called_once_with("test cert content")
         cert_tempfile.flush.assert_called()
-        req_patch.assert_called_once_with(self.url, data=42, cert="temp filename")
+        req_patch.assert_called_with(self.url, data=42, cert="temp filename")
         self.assertEqual("test", result.content)
 
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
