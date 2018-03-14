@@ -98,7 +98,10 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return all objects user can view."""
-        return Job.objects.filter(Q(user=self.request.user) | Q(published=True))
+
+        perms,job_ids = JobPermission.userjobs(self.request.user, "READ")
+
+        return Job.objects.filter(Q(user=self.request.user) | Q(published=True) | Q(pk__in=job_ids))
 
     def list(self, request, *args, **kwargs):
         """
@@ -455,10 +458,13 @@ class JobViewSet(viewsets.ModelViewSet):
 
            """
 
+        perms,job_ids = JobPermission.userjobs(request.user, "READ")
+
         job = Job.objects.get(uid=uid)
         if job.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
+        # Does the user have permission to do Anything to this job?
         response = {}
         payload = request.data
 
@@ -502,8 +508,8 @@ class JobViewSet(viewsets.ModelViewSet):
 
                     if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
 
-        if  admins == 0 and job.published == False:
-            return Response([{'detail': "There must be at least one administrator for a private job."}], status.HTTP_400_BAD_REQUEST)
+            if  admins == 0 and job.published == False:
+                return Response([{'detail': "There must be at least one administrator for a private job."}], status.HTTP_400_BAD_REQUEST)
 
 
             # throw out all current permissions
@@ -708,7 +714,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
+        perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
+
+        return ExportRun.objects.filter((Q(user=self.request.user) | Q(pk__in=job_ids) | Q(job__published=True)) & Q(deleted=False))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """

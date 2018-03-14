@@ -97,5 +97,3 @@ def load_land_vectors(db_conn=None, url=None):
     finally:
         logger.info("Finished loading land data.")
 
-
-

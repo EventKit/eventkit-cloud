@@ -118,6 +118,43 @@ class JobPermission(TimeStampedModelMixin):
         choices=[('NONE', 'None'), ('READ', 'Read'), ('ADMIN', 'Admin')],
         max_length=10)
 
+    @staticmethod
+    def jobpermissions(job):
+        permissions = { 'groups' : { }, 'users' : {}, 'test' : True }
+        for jp in JobPermission.objects.filter(job=job):
+            item = None
+            if jp.content_type == ContentType.objects.get_for_model(User):
+                user = User.objects.get(pk=jp.object_id)
+                permissions['users'][user.username] = jp.permission
+            else:
+                group = Group.objects.get(pk=jp.object_id)
+                permissions['groups'][group.name] = jp.permission
+
+        return permissions
+
+    @staticmethod
+    def userjobs(user,level):
+        perms = []
+        job_ids = []
+        # get all the jobs this user has been explicitly assigned to
+
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
+            if level == JobPermission.Permissions.ADMIN.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        # Now do the same for groups that the user belongs to
+
+        group_ids = []
+        for gp in GroupPermission.objects.filter(user=user):
+            group_ids.append(gp.group.id)
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group), object_id__in=group_ids):
+            if level == JobPermission.Permissions.ADMIN.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        return (perms,job_ids)
+
     def __str__(self):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
 

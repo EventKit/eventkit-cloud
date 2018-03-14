@@ -199,7 +199,7 @@ class SimpleJobSerializer(serializers.Serializer):
     published = serializers.BooleanField()
     featured = serializers.BooleanField()
     formats = serializers.SerializerMethodField('get_provider_tasks')
-    job_permissions = serializers.SerializerMethodField(read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -234,22 +234,13 @@ class SimpleJobSerializer(serializers.Serializer):
             feature_collection['features'].append(feature)
         return feature_collection
 
+    @staticmethod
+    def get_permissions(obj):
+        return JobPermission.jobpermissions(obj)
+
     def get_provider_tasks(self, obj):
         return [format.name for format in obj.provider_tasks.first().formats.all()]
 
-    @staticmethod
-    def get_job_permissions(obj):
-        permissions = { 'groups' : { }, 'users' : {} }
-        for jp in JobPermission.objects.filter(job=obj):
-            item = None
-            if jp.content_type == ContentType.objects.get_for_model(obj.user):
-                user = User.objects.get(pk=jp.object_id)
-                permissions['users'][user.username] = jp.permission
-            else:
-                group = Group.objects.get(pk=jp.object_id)
-                permissions['groups'][group.name] = jp.permission
-
-        return permissions
 
 class LicenseSerializer(serializers.ModelSerializer):
     """Serialize Licenses."""
@@ -587,17 +578,7 @@ class ListJobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_permissions(obj):
-        permissions = { 'groups' : { }, 'users' : {} }
-        for jp in JobPermission.objects.filter(job=obj):
-            item = None
-            if jp.content_type == ContentType.objects.get_for_model(obj.user):
-                user = User.objects.get(pk=jp.object_id)
-                permissions['users'][user.username] = jp.permission
-            else:
-                group = Group.objects.get(pk=jp.object_id)
-                permissions['groups'][group.name] = jp.permission
-
-        return permissions
+        return JobPermission.jobpermissions(obj)
 
 
 class JobSerializer(serializers.Serializer):
@@ -743,14 +724,4 @@ class JobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_permissions(obj):
-        permissions = { 'groups' : { }, 'users' : {} }
-        for jp in JobPermission.objects.filter(job=obj):
-            item = None
-            if jp.content_type == ContentType.objects.get_for_model(obj.user):
-                user = User.objects.get(pk=jp.object_id)
-                permissions['users'][user.username] = jp.permission
-            else:
-                group = Group.objects.get(pk=jp.object_id)
-                permissions['groups'][group.name] = jp.permission
-
-        return permissions
+        return JobPermission.jobpermissions(obj)
