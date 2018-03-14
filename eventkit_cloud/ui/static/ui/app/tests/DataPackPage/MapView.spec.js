@@ -29,6 +29,7 @@ import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js'
 import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
 import MapView, { RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
+import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -97,12 +98,14 @@ describe('MapView component', () => {
         const stub2 = sinon.stub(utils, 'generateDrawFreeInteraction')
             .callsFake(() => ({ on: () => {}, setActive: () => {} }));
         Map.prototype.addInteraction = sinon.spy();
+        sinon.stub(MapView.prototype, 'updateZoomLevel');
     });
 
     afterEach(() => {
         MapView.prototype.initOverlay = initOverlay;
         utils.generateDrawBoxInteraction.restore();
         utils.generateDrawFreeInteraction.restore();
+        MapView.prototype.updateZoomLevel.restore();
     });
 
     it('should render all the basic components', () => {        
@@ -115,6 +118,7 @@ describe('MapView component', () => {
         expect(wrapper.find('#map')).toHaveLength(1);
         expect(wrapper.find(SearchAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
+        expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
         expect(wrapper.find('#popup')).toHaveLength(1);
