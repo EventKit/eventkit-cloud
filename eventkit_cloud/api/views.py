@@ -534,8 +534,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         Checks the status of a data provider to confirm that it is available.
 
         * slug: The DataProvider object slug.
-        :return: The HTTP response of the data provider health check, in cases where there is no error. If the data
-                 provider does not exist, returns status 400 bad request.
+        * return: The HTTP response of the data provider health check, in cases where there is no error. If the data provider does not exist, returns status 400 bad request.
         """
         try:
             provider = DataProvider.objects.get(slug=slug)
@@ -889,12 +888,8 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
         Cancels an export provider task.
-        :param request:
-        :param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
-        :param args:
-        :param kwargs:
-        :return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser,
-                 they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
+        * param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
+        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
         export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
@@ -958,10 +953,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     def list(self, request,  *args, **kwargs):
         """
         Get a list of users.
-        :param request:
-        :param args:
-        :param kwargs:
-        :return: A list of all users.
+        * return: A list of all users.
         """
         queryset = self.filter_queryset(self.get_queryset())
         serializer = UserDataSerializer(queryset, many=True)
@@ -1032,7 +1024,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """
         We don't support calls to PUT for this viewset.
-        :returns: 400 bad request
+        * returns: 400 bad request
         """
         return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
 
