@@ -9,6 +9,8 @@ import re
 import requests
 import xml.etree.ElementTree as ET
 
+import eventkit_cloud.utils.auth_requests as auth_requests
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +55,7 @@ class CheckResults(Enum):
                     "message": _("The selected AOI does not intersect the data provider's layer.")},
 
     SUCCESS = {"status": "SUCCESS",
-               "message": "Export should proceed without issues."},
+               "message": _("Export should proceed without issues.")},
 
 
 class ProviderCheck(object):
@@ -67,7 +69,7 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url, layer, aoi_geojson):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
         """
         Initialize this ProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
@@ -78,6 +80,7 @@ class ProviderCheck(object):
         self.service_url = service_url
         self.query = None
         self.layer = layer
+        self.slug = slug
         self.result = CheckResults.SUCCESS
         self.timeout = 10
 
@@ -100,7 +103,7 @@ class ProviderCheck(object):
         """
 
         try:
-            response = requests.get(self.service_url, params=self.query, timeout=self.timeout)
+            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
@@ -156,15 +159,15 @@ class OverpassProviderCheck(ProviderCheck):
     """
     Implementation of ProviderCheck for Overpass providers.
     """
-    def __init__(self, service_url, layer, aoi_geojson):
-        super(self.__class__, self).__init__(service_url, layer, aoi_geojson)
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
 
     def get_check_response(self):
         """
         Sends a POST request for metadata to Overpass URL and returns its response if status code is ok
         """
         try:
-            response = requests.post(url=self.service_url, data="out meta;", timeout=self.timeout)
+            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout)
 
             self.token_dict['status'] = response.status_code
 
@@ -195,14 +198,14 @@ class OWSProviderCheck(ProviderCheck):
     """
     Implementation of ProviderCheck for OWS (WMS, WMTS, WFS, WCS) providers.
     """
-    def __init__(self, service_url, layer, aoi_geojson):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
         """
         Initialize this OWSProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
         :param layer: Layer or coverage to check for
         :param aoi_geojson: (Optional) AOI to check for layer intersection
         """
-        super(OWSProviderCheck, self).__init__(service_url, layer, aoi_geojson)
+        super(OWSProviderCheck, self).__init__(service_url, layer, aoi_geojson, slug)
 
         self.query = {
             "VERSION": "1.0.0",
@@ -281,8 +284,8 @@ class WCSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WCS providers
     """
 
-    def __init__(self, service_url, layer, aoi_geojson):
-        super(self.__class__, self).__init__(service_url, layer, aoi_geojson)
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WCS"
 
     def find_layer(self, root):
@@ -337,8 +340,8 @@ class WFSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WFS providers
     """
 
-    def __init__(self, service_url, layer, aoi_geojson):
-        super(self.__class__, self).__init__(service_url, layer, aoi_geojson)
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WFS"
 
     def find_layer(self, root):
@@ -381,8 +384,8 @@ class WMSProviderCheck(OWSProviderCheck):
     Implementation of OWSProviderCheck for WMS providers
     """
 
-    def __init__(self, service_url, layer, aoi_geojson):
-        super(self.__class__, self).__init__(service_url, layer, aoi_geojson)
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
         self.query["SERVICE"] = "WMS"
 
         # 1.3.0 will work as well, if that's returned. 1.0.0 isn't widely supported.
