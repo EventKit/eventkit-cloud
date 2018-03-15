@@ -12,7 +12,6 @@ import Point from 'ol/geom/point';
 import Polygon from 'ol/geom/polygon';
 
 import isEqual from 'lodash/isEqual';
-import toString from 'lodash/toString';
 import Reader from 'jsts/org/locationtech/jts/io/GeoJSONReader';
 import GeoJSONWriter from 'jsts/org/locationtech/jts/io/GeoJSONWriter';
 import BufferOp from 'jsts/org/locationtech/jts/operation/buffer/BufferOp';
@@ -433,16 +432,16 @@ export function isBox(feature) {
     // there is probably a better way to compare arrays with different order of sub arrays,
     // but this is what ive got for now
     featCoords = [
-        toString(featCoords[0][0]),
-        toString(featCoords[0][1]),
-        toString(featCoords[0][2]),
-        toString(featCoords[0][3]),
+        String(featCoords[0][0]),
+        String(featCoords[0][1]),
+        String(featCoords[0][2]),
+        String(featCoords[0][3]),
     ].sort();
     extentCoords = [
-        toString(extentCoords[0][0]),
-        toString(extentCoords[0][1]),
-        toString(extentCoords[0][2]),
-        toString(extentCoords[0][3]),
+        String(extentCoords[0][0]),
+        String(extentCoords[0][1]),
+        String(extentCoords[0][2]),
+        String(extentCoords[0][3]),
     ].sort();
 
     return isEqual(featCoords, extentCoords);
