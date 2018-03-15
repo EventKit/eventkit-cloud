@@ -15,7 +15,7 @@ describe('ProviderError component', () => {
                 status: 'COMPLETED',
                 tasks,
                 uid: 'e261d619-2a02-4ba5-a58c-be0908f97d04',
-                url: 'http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
+                url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
                 display: true,
             },
         }

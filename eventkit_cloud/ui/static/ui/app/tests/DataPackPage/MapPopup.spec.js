@@ -25,7 +25,7 @@ describe('LoadButtons component', () => {
                 expiration: '2017-03-10T15:52:27.500Z',
                 user: 'test user',
             },
-            detailUrl: 'cloud.eventkit.dev',
+            detailUrl: 'cloud.eventkit.test',
             handleZoom: () => {},
             handlePopupClose: () => {}
         }
