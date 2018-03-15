@@ -33,4 +33,4 @@ script:
 #      scripts/check_container_exited.sh celery 0
 
 env:
-  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.dev SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+  - DOCKER_COMPOSE_VERSION=1.9.0 SITE_NAME=cloud.eventkit.test SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
