@@ -531,7 +531,10 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     @detail_route(methods=['get', 'post'])
     def status(self, request, slug=None, *args, **kwargs):
         """
-        :return:
+        Checks the status of a data provider to confirm that it is available.
+
+        * slug: The DataProvider object slug.
+        * return: The HTTP response of the data provider health check, in cases where there is no error. If the data provider does not exist, returns status 400 bad request.
         """
         try:
             provider = DataProvider.objects.get(slug=slug)
@@ -669,7 +672,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
-            Destroy a model instance.
+        Destroy a model instance.
         """
         instance = self.get_object()
         instance.soft_delete(user=request.user)
@@ -679,8 +682,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
         List the ExportRuns
         :param request: the http request
-        :param args: 
-        :param kwargs: 
+        :param args:
+        :param kwargs:
         :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
@@ -883,6 +886,11 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
+        """
+        Cancels an export provider task.
+        * param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
+        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
+        """
 
         export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
 
@@ -914,22 +922,22 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
-            Update user data. 
+        Update user data.
 
-            User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
-            with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to 
-            download data.
+        User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
+        with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to
+        download data.
 
-            Request data can be posted as `application/json`.
+        Request data can be posted as `application/json`.
 
-            * request: the HTTP request in JSON.
+        * request: the HTTP request in JSON.
 
-            Example:
+        Example:
 
-                    {"accepted_licenses": {
-                        "odbl": true
-                        }
-                  }
+                {"accepted_licenses": {
+                    "odbl": true
+                    }
+              }
         """
 
         queryset = self.get_queryset().get(username=username)
@@ -943,6 +951,10 @@ class UserDataViewSet(viewsets.GenericViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request,  *args, **kwargs):
+        """
+        Get a list of users.
+        * return: A list of all users.
+        """
         queryset = self.filter_queryset(self.get_queryset())
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -950,9 +962,9 @@ class UserDataViewSet(viewsets.GenericViewSet):
     @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):
         """
-             Member list from list of group ids
+        Member list from list of group ids
 
-             Example :  [ 32, 35, 36 ]
+        Example :  [ 32, 35, 36 ]
              
         """
 
@@ -977,7 +989,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, username=None):
         """
-             GET a user by username
+        GET a user by username
         """
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
@@ -1002,7 +1014,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def useradmin(self,group,request):
         serializer = GroupSerializer(group)
-        user  = User.objects.all().filter(username=request.user.username)[0]
+        user = User.objects.all().filter(username=request.user.username)[0]
         return user.username in serializer.get_administrators(group)
 
     def get_queryset(self):
@@ -1010,28 +1022,31 @@ class GroupViewSet(viewsets.ModelViewSet):
         return queryset
 
     def update(self, request, *args, **kwargs):
-        # we don't support calls to PUT for this viewset.
+        """
+        We don't support calls to PUT for this viewset.
+        * returns: 400 bad request
+        """
         return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         """
-            GET all groups
+        GET all groups
 
-            Sample result:
+        Sample result:
 
-                 [
-                    {
-                        "id": 54,
-                        "name": "Omaha 319",
-                        "members": [
-                          "user2",
-                          "admin"
-                        ],
-                        "administrators": [
-                          "admin"
-                        ]
-                      }
-                ]
+             [
+                {
+                    "id": 54,
+                    "name": "Omaha 319",
+                    "members": [
+                      "user2",
+                      "admin"
+                    ],
+                    "administrators": [
+                      "admin"
+                    ]
+                  }
+            ]
 
         """
         queryset = self.filter_queryset(self.get_queryset())
@@ -1041,15 +1056,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
-            create a new group and place  the current logged in user in the group and its administrators.
-            optionally, provide additional group members
+        create a new group and place  the current logged in user in the group and its administrators.
+        optionally, provide additional group members
 
 
-            Sample input:
+        Sample input:
 
-                {
-                    "name": "Omaha 319"
-                }
+            {
+                "name": "Omaha 319"
+            }
 
         """
         response = super(GroupViewSet, self).create(request, *args, **kwargs)
@@ -1070,19 +1085,19 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         if "administrators" in request.data:
             for admin in request.data["administrators"]:
-                if admin  != request.user.username:
-                    user  = User.objects.all().filter(username=admin)[0]
+                if admin != request.user.username:
+                    user = User.objects.all().filter(username=admin)[0]
                     if user:
                         GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.ADMIN.value)
 
-        group  = Group.objects.filter(id=group_id)[0]
+        group = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def retrieve(self, request, id=None):
         """
-            * get a group with a specific ID.  Return its data, including users in the group
+        * get a group with a specific ID.  Return its data, including users in the group
         """
         group  = Group.objects.filter(id=id)[0]
         serializer = GroupSerializer(group)
@@ -1093,7 +1108,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     def destroy(self, request, id=None, *args, **kwargs):
 
         """
-            Destroy a group
+        Destroy a group
         """
 
         # Not permitted if the requesting user is not an administrator
@@ -1113,21 +1128,21 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
         """
-             Change the group's name, members, and administrators
+        Change the group's name, members, and administrators
 
 
-             Sample input:
+        Sample input:
 
-                 {
-                    "name": "Omaha 319"
-                    "members": [ "user2", "user3", "admin"],
-                    "administrators": [ "admin" ]
-                 }
-                 
-            If a member wishes to remove themselves from a group they can make an patch request with no body.
-            However, this will not work if they are a admin of the group.
+            {
+               "name": "Omaha 319"
+               "members": [ "user2", "user3", "admin"],
+               "administrators": [ "admin" ]
+            }
 
-         """
+        If a member wishes to remove themselves from a group they can make an patch request with no body.
+        However, this will not work if they are a admin of the group.
+
+        """
 
         group = Group.objects.filter(id=id)[0]
 
