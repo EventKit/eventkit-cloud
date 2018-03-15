@@ -1,18 +1,68 @@
 import React, { Component, PropTypes } from 'react';
 import { Card, CardHeader } from 'material-ui/Card';
+import Popover from 'material-ui/Popover';
+import Menu from 'material-ui/Menu';
+import MenuItem from 'material-ui/MenuItem';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
 import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import ArrowUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import IndeterminateIcon from '../../components/IndeterminateIcon';
+import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 
 export class GroupsHeaderRow extends Component {
+    constructor(props) {
+        super(props);
+        this.handleClick = this.handleClick.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.handleGroupChange = this.handleGroupChange.bind(this);
+        this.state = {
+            open: false,
+            anchor: null,
+        };
+    }
+
+    handleClick(e) {
+        if (this.props.canUpdateAdmin) {
+            this.setState({ open: true, anchor: e.currentTarget });
+        } else if (!this.props.activeOrder.includes('shared')) {
+            this.props.onSharedClick(this.props.sharedOrder);
+        } else {
+            const v = this.props.sharedOrder === 'shared' ? '-shared' : 'shared';
+            this.props.onSharedClick(v);
+        }
+    }
+
+    handleClose() {
+        this.setState({ open: false });
+    }
+
+    handleChange(e, v) {
+        this.props.onSharedClick(v);
+        this.handleClose();
+    }
+
+    handleGroupChange() {
+        if (!this.props.activeOrder.includes('group')) {
+            this.props.onGroupClick(this.props.groupOrder);
+        } else {
+            const v = this.props.groupOrder === 'group' ? '-group' : 'group';
+            this.props.onGroupClick(v);
+        }
+    }
+
     render() {
         const styles = {
             card: {
                 boxShadow: 'none',
                 color: '#707274',
+            },
+            cardHeader: {
+                display: 'flex',
+                fontSize: '12px',
+                color: '#707274',
+                lineHeight: '28px',
             },
             group: {
                 flex: '1 1 auto',
@@ -28,6 +78,13 @@ export class GroupsHeaderRow extends Component {
                 float: 'right',
                 marginRight: '39px',
                 cursor: 'pointer',
+            },
+            menuItem: {
+                fontSize: '12px',
+                padding: 0,
+                minHeight: '36px',
+                lineHeight: '36px',
+                color: '#707274',
             },
         };
 
@@ -46,6 +103,34 @@ export class GroupsHeaderRow extends Component {
             checkIcon = icons.indeterminate;
         }
 
+        const LABELS = {
+            shared: 'SHARED',
+            '-shared': 'NOT SHARED',
+            'admin-shared': 'ADMIN SHARED',
+            '-admin-shared': 'NOT ADMIN SHARED',
+        };
+
+        let sharedSort = null;
+        if (this.props.canUpdateAdmin) {
+            sharedSort = (
+                <div>
+                    <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                    {LABELS[this.props.sharedOrder]}
+                </div>
+            );
+        } else {
+            sharedSort = (
+                <div>
+                    {this.props.sharedOrder === 'shared' ?
+                        <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
+                        :
+                        <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
+                    }
+                    SHARED
+                </div>
+            );
+        }
+
         return (
             <Card
                 style={styles.card}
@@ -54,15 +139,15 @@ export class GroupsHeaderRow extends Component {
             >
                 <CardHeader
                     title={
-                        <div style={{ display: 'flex', fontSize: '12px', color: '#707274', lineHeight: '28px' }}>
+                        <div style={styles.cardHeader}>
                             <div style={styles.group} className="qa-GroupsHeaderRow-CardHeader-text">
                                 <EnhancedButton
-                                    onClick={this.props.onGroupClick}
-                                    style={{ marginRight: '10px', color: this.props.activeOrder === 'group' ? '#4598bf' : '#707274' }}
+                                    onClick={this.handleGroupChange}
+                                    style={{ marginRight: '10px', color: this.props.activeOrder.includes('group') ? '#4598bf' : '#707274' }}
                                     disableTouchRipple
                                 >
                                     GROUP
-                                    {this.props.groupOrder === 1 ?
+                                    {this.props.groupOrder === 'group' ?
                                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                                         :
                                         <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
@@ -71,19 +156,33 @@ export class GroupsHeaderRow extends Component {
                             </div>
                             <div style={styles.share} className="qa-GroupsHeaderRow-CardHeader-icons">
                                 <EnhancedButton
-                                    onClick={this.props.onSharedClick}
-                                    style={{ marginRight: '10px', color: this.props.activeOrder === 'shared' ? '#4598bf' : '#707274' }}
+                                    onClick={this.handleClick}
+                                    style={{ marginRight: '10px', color: !this.props.activeOrder.includes('group') ? '#4598bf' : '#707274' }}
                                     disableTouchRipple
                                 >
-                                    {this.props.sharedOrder === 1 ?
-                                        <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
-                                        :
-                                        <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
-                                    }
-                                    SHARED
+                                    {sharedSort}
                                 </EnhancedButton>
                                 {checkIcon}
                             </div>
+                            <Popover
+                                open={this.state.open}
+                                anchorEl={this.state.anchor}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                onRequestClose={this.handleClose}
+                            >
+                                <Menu
+                                    value={this.props.activeOrder}
+                                    onChange={this.handleChange}
+                                    menuItemStyle={styles.menuItem}
+                                    style={{ padding: 0 }}
+                                >
+                                    <MenuItem primaryText="SHARED" value="shared" />
+                                    <MenuItem primaryText="NOT SHARED" value="-shared" />
+                                    <MenuItem primaryText="ADMIN SHARED" value="admin-shared" />
+                                    <MenuItem primaryText="NOT ADMIN SHARED" value="-admin-shared" />
+                                </Menu>
+                            </Popover>
                         </div>
                     }
                     style={{ padding: '12px' }}
@@ -94,16 +193,33 @@ export class GroupsHeaderRow extends Component {
     }
 }
 
+GroupsHeaderRow.defaultProps = {
+    canUpdateAdmin: false,
+};
+
 GroupsHeaderRow.propTypes = {
     groupCount: PropTypes.number.isRequired,
     selectedCount: PropTypes.number.isRequired,
     onGroupClick: PropTypes.func.isRequired,
     onSharedClick: PropTypes.func.isRequired,
-    activeOrder: PropTypes.oneOf(['group', 'shared']).isRequired,
-    groupOrder: PropTypes.oneOf([-1, 1]).isRequired,
-    sharedOrder: PropTypes.oneOf([-1, 1]).isRequired,
+    groupOrder: PropTypes.oneOf(['group', '-group']).isRequired,
+    sharedOrder: PropTypes.oneOf([
+        'shared',
+        '-shared',
+        'admin-shared',
+        '-admin-shared',
+    ]).isRequired,
+    activeOrder: PropTypes.oneOf([
+        'group',
+        '-group',
+        'shared',
+        '-shared',
+        'admin-shared',
+        '-admin-shared',
+    ]).isRequired,
     handleCheckAll: PropTypes.func.isRequired,
     handleUncheckAll: PropTypes.func.isRequired,
+    canUpdateAdmin: PropTypes.bool,
 };
 
 export default GroupsHeaderRow;

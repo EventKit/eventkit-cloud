@@ -19,8 +19,8 @@ export class GroupsBody extends Component {
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
         this.state = {
             search: '',
-            groupOrder: 1,
-            sharedOrder: 1,
+            groupOrder: 'group',
+            sharedOrder: 'shared',
             activeOrder: 'group',
             tooltip: {
                 target: null,
@@ -110,20 +110,12 @@ export class GroupsBody extends Component {
         this.setState({ search: e.target.value }, this.props.update);
     }
 
-    reverseGroupOrder() {
-        if (this.state.activeOrder !== 'group') {
-            this.setState({ activeOrder: 'group' });
-        } else {
-            this.setState({ groupOrder: this.state.groupOrder * -1 });
-        }
+    reverseGroupOrder(v) {
+        this.setState({ groupOrder: v, activeOrder: v });
     }
 
-    reverseSharedOrder() {
-        if (this.state.activeOrder !== 'shared') {
-            this.setState({ activeOrder: 'shared' });
-        } else {
-            this.setState({ sharedOrder: this.state.sharedOrder * -1 });
-        }
+    reverseSharedOrder(v) {
+        this.setState({ sharedOrder: v, activeOrder: v });
     }
 
     searchGroups(groups, search) {
@@ -131,8 +123,8 @@ export class GroupsBody extends Component {
         return groups.filter(group => group.name.toUpperCase().includes(SEARCH));
     }
 
-    sortByGroup(groups, order) {
-        if (order === 1) {
+    sortByGroup(groups, descending) {
+        if (descending === true) {
             groups.sort((a, b) => {
                 const A = a.name.toUpperCase();
                 const B = b.name.toUpperCase();
@@ -152,8 +144,8 @@ export class GroupsBody extends Component {
         return groups;
     }
 
-    sortByShared(groups, selectedGroups, order) {
-        if (order === 1) {
+    sortByShared(groups, selectedGroups, descending) {
+        if (descending === true) {
             groups.sort((a, b) => {
                 const aSelected = a.id in selectedGroups;
                 const bSelected = b.id in selectedGroups;
@@ -167,6 +159,27 @@ export class GroupsBody extends Component {
                 const bSelected = b.id in selectedGroups;
                 if (!aSelected && bSelected) return -1;
                 if (aSelected && !bSelected) return 1;
+                return 0;
+            });
+        }
+        return groups;
+    }
+
+    sortByAdmin(groups, selectedGroups, descending) {
+        if (descending === true) {
+            groups.sort((a, b) => {
+                const aAdmin = selectedGroups[a.id] === 'ADMIN';
+                const bAdmin = selectedGroups[b.id] === 'ADMIN';
+                if (aAdmin && !bAdmin) return -1;
+                if (!aAdmin && bAdmin) return 1;
+                return 0;
+            });
+        } else {
+            groups.sort((a, b) => {
+                const aAdmin = selectedGroups[a.id] === 'ADMIN';
+                const bAdmin = selectedGroups[b.id] === 'ADMIN';
+                if (!aAdmin && bAdmin) return -1;
+                if (aAdmin && !bAdmin) return 1;
                 return 0;
             });
         }
@@ -205,10 +218,14 @@ export class GroupsBody extends Component {
             groups = this.searchGroups(groups, this.state.search);
         }
 
-        if (this.state.activeOrder === 'shared') {
-            groups = this.sortByShared(groups, this.props.selectedGroups, this.state.sharedOrder);
-        } else {
-            groups = this.sortByGroup(groups, this.state.groupOrder);
+        if (this.state.activeOrder.includes('group')) {
+            groups = this.sortByGroup([...groups], !this.state.groupOrder.includes('-'));
+        } else if (this.state.activeOrder.includes('shared')) {
+            if (this.state.activeOrder.includes('admin')) {
+                groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
+            } else {
+                groups = this.sortByShared([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-'));
+            }
         }
 
         let tooltip = null;
@@ -248,11 +265,12 @@ export class GroupsBody extends Component {
                         selectedCount={selectedCount}
                         onGroupClick={this.reverseGroupOrder}
                         onSharedClick={this.reverseSharedOrder}
-                        activeOrder={this.state.activeOrder}
                         groupOrder={this.state.groupOrder}
                         sharedOrder={this.state.sharedOrder}
+                        activeOrder={this.state.activeOrder}
                         handleCheckAll={this.handleCheckAll}
                         handleUncheckAll={this.handleUncheckAll}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
                     />
                 </div>
                 {groups.map((group) => {

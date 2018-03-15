@@ -4,6 +4,7 @@ import People from 'material-ui/svg-icons/social/people';
 import PeopleOutline from 'material-ui/svg-icons/social/people-outline';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
+import AdminShare from '../icons/AdminShareIcon';
 
 export class MemberRow extends Component {
     constructor(props) {
@@ -88,10 +89,18 @@ export class MemberRow extends Component {
 
         let adminButton = null;
         if (this.props.showAdmin) {
+            if (!this.props.selected) {
+                styles.adminCheckIcon.color = '#707274';
+                styles.adminCheckIcon.opacity = 0.2;
+                styles.adminCheckIcon.cursor = 'default';
+            } else if (!this.props.admin) {
+                styles.adminCheckIcon.opacity = 0.55;
+            }
+
             if (this.props.admin) {
                 adminButton = (
                     <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <People
+                        <AdminShare
                             onClick={this.handleAdminCheck}
                             onMouseOver={this.onAdminMouseOver}
                             onMouseOut={this.onAdminMouseOut}
@@ -104,7 +113,7 @@ export class MemberRow extends Component {
             } else {
                 adminButton = (
                     <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <PeopleOutline
+                        <AdminShare
                             onClick={this.handleAdminCheck}
                             onMouseOver={this.onAdminMouseOver}
                             onMouseOut={this.onAdminMouseOut}

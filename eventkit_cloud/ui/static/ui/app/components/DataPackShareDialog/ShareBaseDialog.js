@@ -48,7 +48,7 @@ export class ShareBaseDialog extends Component {
                 buttonStyle={{ borderRadius: '0px' }}
                 backgroundColor="#4598bf"
                 disableTouchRipple
-                label="SAVE"
+                label={this.props.submitButtonLabel}
                 primary={false}
                 onClick={this.props.handleSave}
                 disabled={false}
@@ -101,6 +101,7 @@ export class ShareBaseDialog extends Component {
 
 ShareBaseDialog.defaultProps = {
     children: [],
+    submitButtonLabel: 'SAVE',
 };
 
 ShareBaseDialog.propTypes = {
@@ -111,6 +112,7 @@ ShareBaseDialog.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.node,
     ]),
+    submitButtonLabel: PropTypes.string,
 };
 
 export default ShareBaseDialog;

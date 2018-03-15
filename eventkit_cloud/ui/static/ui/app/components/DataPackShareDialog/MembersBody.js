@@ -19,8 +19,8 @@ export class MembersBody extends Component {
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
         this.state = {
             search: '',
-            memberOrder: 1,
-            sharedOrder: 1,
+            memberOrder: 'member',
+            sharedOrder: 'shared',
             activeOrder: 'member',
             tooltip: {
                 target: null,
@@ -114,20 +114,12 @@ export class MembersBody extends Component {
         this.setState({ search: e.target.value }, this.props.update);
     }
 
-    reverseMemberOrder() {
-        if (this.state.activeOrder !== 'member') {
-            this.setState({ activeOrder: 'member' });
-        } else {
-            this.setState({ memberOrder: this.state.memberOrder * -1 });
-        }
+    reverseMemberOrder(v) {
+        this.setState({ memberOrder: v, activeOrder: v });
     }
 
-    reverseSharedOrder() {
-        if (this.state.activeOrder !== 'shared') {
-            this.setState({ activeOrder: 'shared' });
-        } else {
-            this.setState({ sharedOrder: this.state.sharedOrder * -1 });
-        }
+    reverseSharedOrder(v) {
+        this.setState({ sharedOrder: v, activeOrder: v });
     }
 
     searchMembers(members, search) {
@@ -139,8 +131,8 @@ export class MembersBody extends Component {
         });
     }
 
-    sortByMember(members, order) {
-        if (order === 1) {
+    sortByMember(members, descending) {
+        if (descending === true) {
             members.sort((a, b) => {
                 const A = a.user.username.toUpperCase();
                 const B = b.user.username.toUpperCase();
@@ -160,8 +152,8 @@ export class MembersBody extends Component {
         return members;
     }
 
-    sortByShared(members, selectedMembers, order) {
-        if (order === 1) {
+    sortByShared(members, selectedMembers, descending) {
+        if (descending === true) {
             members.sort((a, b) => {
                 const aSelected = a.user.username in selectedMembers;
                 const bSelected = b.user.username in selectedMembers;
@@ -175,6 +167,27 @@ export class MembersBody extends Component {
                 const bSelected = b.user.username in selectedMembers;
                 if (!aSelected && bSelected) return -1;
                 if (aSelected && !bSelected) return 1;
+                return 0;
+            });
+        }
+        return members;
+    }
+
+    sortByAdmin(members, selectedMembers, descending) {
+        if (descending === true) {
+            members.sort((a, b) => {
+                const aAdmin = selectedMembers[a.user.username] === 'ADMIN';
+                const bAdmin = selectedMembers[b.user.username] === 'ADMIN';
+                if (aAdmin && !bAdmin) return -1;
+                if (!aAdmin && bAdmin) return 1;
+                return 0;
+            });
+        } else {
+            members.sort((a, b) => {
+                const aAdmin = selectedMembers[a.user.username] === 'ADMIN';
+                const bAdmin = selectedMembers[b.user.username] === 'ADMIN';
+                if (!aAdmin && bAdmin) return -1;
+                if (aAdmin && !bAdmin) return 1;
                 return 0;
             });
         }
@@ -213,10 +226,14 @@ export class MembersBody extends Component {
             members = this.searchMembers(members, this.state.search);
         }
 
-        if (this.state.activeOrder === 'shared') {
-            members = this.sortByShared(members, this.props.selectedMembers, this.state.sharedOrder);
-        } else {
-            members = this.sortByMember(members, this.state.memberOrder);
+        if (this.state.activeOrder.includes('member')) {
+            members = this.sortByMember([...members], !this.state.memberOrder.includes('-'));
+        } else if (this.state.activeOrder.includes('shared')) {
+            if (this.state.activeOrder.includes('admin')) {
+                members = this.sortByAdmin([...members], this.props.selectedMembers, !this.state.sharedOrder.includes('-admin'));
+            } else {
+                members = this.sortByShared([...members], this.props.selectedMembers, !this.state.sharedOrder.includes('-'));
+            }
         }
 
         let tooltip = null;
@@ -262,6 +279,7 @@ export class MembersBody extends Component {
                         sharedOrder={this.state.sharedOrder}
                         handleCheckAll={this.handleCheckAll}
                         handleUncheckAll={this.handleUncheckAll}
+                        canUpdateAdmin={this.props.canUpdateAdmin}
                     />
                 </div>
                 {members.map((member) => {

@@ -4,6 +4,7 @@ import People from 'material-ui/svg-icons/social/people';
 import PeopleOutline from 'material-ui/svg-icons/social/people-outline';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
+import AdminShare from '../icons/AdminShareIcon';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import Eye from 'material-ui/svg-icons/image/remove-red-eye';
@@ -103,18 +104,20 @@ export class GroupRow extends Component {
             groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} />;
         }
 
-        if (this.props.showAdmin && !this.props.selected) {
-            styles.adminCheckIcon.color = '#707274';
-            styles.adminCheckIcon.opacity = 0.2;
-            styles.adminCheckIcon.cursor = 'default';
-        }
-
         let adminButton = null;
         if (this.props.showAdmin) {
+            if (!this.props.selected) {
+                styles.adminCheckIcon.color = '#707274';
+                styles.adminCheckIcon.opacity = 0.15;
+                styles.adminCheckIcon.cursor = 'default';
+            } else if (!this.props.admin) {
+                styles.adminCheckIcon.opacity = 0.55;
+            }
+
             if (this.props.admin) {
                 adminButton = (
                     <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <People
+                        <AdminShare
                             onClick={this.handleAdminCheck}
                             onMouseOver={this.onAdminMouseOver}
                             onMouseOut={this.onAdminMouseOut}
@@ -127,7 +130,7 @@ export class GroupRow extends Component {
             } else {
                 adminButton = (
                     <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <PeopleOutline
+                        <AdminShare
                             onClick={this.handleAdminCheck}
                             onMouseOver={this.onAdminMouseOver}
                             onMouseOut={this.onAdminMouseOut}
@@ -154,7 +157,7 @@ export class GroupRow extends Component {
         });
 
         const firstFour = groupMembers.splice(0, 4);
-        console.log(firstFour, groupMembers);
+
         return (
             <Card
                 key={this.props.group.id}

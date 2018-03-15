@@ -97,6 +97,7 @@ export class DataPackShareDialog extends Component {
                 show={this.props.show}
                 onClose={this.props.onClose}
                 handleSave={this.handleSave}
+                submitButtonLabel={this.props.submitButtonLabel}
                 className="qa-DataPackShareDialog"
             >
                 <div style={styles.fixedHeader} className="qa-DataPackShareDialog-container">
@@ -154,6 +155,7 @@ export class DataPackShareDialog extends Component {
 }
 
 DataPackShareDialog.defaultProps = {
+    submitButtonLabel: 'SAVE',
     groupsText: '',
     membersText: '',
     canUpdateAdmin: false,
@@ -196,6 +198,7 @@ DataPackShareDialog.propTypes = {
         PropTypes.string,
     ]),
     canUpdateAdmin: PropTypes.bool,
+    submitButtonLabel: PropTypes.string,
 };
 
 export default DataPackShareDialog;

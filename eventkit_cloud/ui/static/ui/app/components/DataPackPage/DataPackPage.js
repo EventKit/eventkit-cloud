@@ -453,6 +453,7 @@ export class DataPackPage extends React.Component {
                         groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
                         membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
                         canUpdateAdmin
+                        // submitButtonLabel="SET FILTER"
                     />
                     :
                     null
