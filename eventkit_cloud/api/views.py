@@ -200,7 +200,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     }
                   ],
                   "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
-                  "url": "http://cloud.eventkit.dev/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "url": "http://cloud.eventkit.test/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
                   "name": "test",
                   "description": "test",
                   "event": "test",
@@ -211,7 +211,7 @@ class JobViewSet(viewsets.ModelViewSet):
                       "formats": [
                         {
                           "uid": "167fbc03-83b3-41c9-8034-8566257cb2e8",
-                          "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+                          "url": "http://cloud.eventkit.test/api/formats/gpkg",
                           "slug": "gpkg",
                           "name": "Geopackage",
                           "description": "GeoPackage"
