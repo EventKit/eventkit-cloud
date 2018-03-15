@@ -12,7 +12,7 @@ describe('statusDownload actions', () => {
     const expectedRuns = [
         {
             uid: '123',
-            url: 'http://cloud.eventkit.dev/api/runs/123',
+            url: 'http://cloud.eventkit.test/api/runs/123',
             started_at: '2017-03-10T15:52:35.637331Z',
             finished_at: '2017-03-10T15:52:39.837Z',
             duration: '0:00:04.199825',
@@ -23,13 +23,13 @@ describe('statusDownload actions', () => {
                 name: 'Test1',
                 event: 'Test1 event',
                 description: 'Test1 description',
-                url: 'http://cloud.eventkit.dev/api/jobs/123',
+                url: 'http://cloud.eventkit.test/api/jobs/123',
                 extent: {},
                 selection: '',
                 published: false,
             },
             provider_tasks: [],
-            zipfile_url: 'http://cloud.eventkit.dev/downloads/123/test.zip',
+            zipfile_url: 'http://cloud.eventkit.test/downloads/123/test.zip',
             expiration: '2017-03-24T15:52:35.637258Z',
         },
     ];

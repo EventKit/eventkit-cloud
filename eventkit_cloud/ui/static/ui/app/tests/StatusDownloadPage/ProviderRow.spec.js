@@ -47,7 +47,7 @@ describe('ProviderRow component', () => {
             result: {
                 file: 'osm.pkg',
                 size: '1.234 MB',
-                url: 'http://cloud.eventkit.dev/api/tasks/123',
+                url: 'http://cloud.eventkit.test/api/tasks/123',
             },
             display: true,
         },
@@ -56,7 +56,7 @@ describe('ProviderRow component', () => {
     const providers = [
         {
             id: 2,
-            model_url: 'http://cloud.eventkit.dev/api/providers/osm',
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
             type: 'osm',
             license: {
                 slug: 'osm',
@@ -87,7 +87,7 @@ describe('ProviderRow component', () => {
                 status: 'COMPLETED',
                 tasks,
                 uid: '123',
-                url: 'http://cloud.eventkit.dev/api/provider_tasks/123',
+                url: 'http://cloud.eventkit.test/api/provider_tasks/123',
                 display: true,
                 slug: 'osm',
             },

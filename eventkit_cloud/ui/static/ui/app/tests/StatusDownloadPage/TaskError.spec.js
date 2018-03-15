@@ -12,7 +12,7 @@ describe('TaskError component', () => {
         {
             task: {
                 uid: '1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
-                url: 'http://cloud.eventkit.dev/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
+                url: 'http://cloud.eventkit.test/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
                 name: 'OSM Data (.gpkg)',
                 status: 'CANCELED',
                 progress: 0,
