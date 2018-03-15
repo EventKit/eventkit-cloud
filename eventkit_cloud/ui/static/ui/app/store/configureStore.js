@@ -1,36 +1,32 @@
-import {applyMiddleware, createStore, combineReducers, compose} from 'redux'
-import thunkMiddleware from 'redux-thunk'
-import createLogger from 'redux-logger'
-import rootReducer from '../reducers/rootReducer'
-import { browserHistory } from 'react-router'
-import { routerMiddleware } from 'react-router-redux'
-import createDebounce from 'redux-debounced';
+import { applyMiddleware, createStore } from 'redux';
+import thunkMiddleware from 'redux-thunk';
+import createLogger from 'redux-logger';
+import { browserHistory } from 'react-router';
+import { routerMiddleware } from 'react-router-redux';
+import rootReducer from '../reducers/rootReducer';
 
-const bouncer = createDebounce();
 const baseHistory = browserHistory;
 const routingMiddleware = routerMiddleware(baseHistory);
 
-const crashReporter = store => next => action => {
-  try {
-    return next(action);
-  } catch (err) {
-    console.error('Caught an exception!', err);
-    throw err;
-  }
-}
+const crashReporter = store => next => (action) => {
+    try {
+        return next(action);
+    } catch (err) {
+        console.error('Caught an exception!', err);
+        throw err;
+    }
+};
 
-let middleware = [bouncer, thunkMiddleware, crashReporter, routingMiddleware];
+let middleware = [thunkMiddleware, crashReporter, routingMiddleware];
 
 if (process.env.NODE_ENV !== 'production') {
-  const logger = createLogger();
-  middleware = [...middleware, logger];
+    const logger = createLogger();
+    middleware = [...middleware, logger];
 }
 
-export default () => {
-    return createStore(
+export default () => (
+    createStore(
         rootReducer,
-        applyMiddleware(...middleware)
-   );
-}
-
-
+        applyMiddleware(...middleware),
+    )
+);
