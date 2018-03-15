@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 import json
 import logging
 import uuid
+from enum import Enum
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
@@ -224,11 +225,20 @@ class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
     """
+
+    @staticmethod
+    class Visibility(Enum):
+        PRIVATE = "PRIVATE"
+        PUBLIC  = "PUBLIC"
+        SHARED  = "SHARED"
+
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
         kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
+
+
 
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
@@ -238,6 +248,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
+    visibility = models.CharField(max_length=10,default="PRIVATE")
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')

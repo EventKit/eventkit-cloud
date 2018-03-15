@@ -226,6 +226,7 @@ class JobViewSet(viewsets.ModelViewSet):
                   ],
                   "configurations": [],
                   "published": false,
+                  "visibility" : "PRIVATE",
                   "feature_save": false,
                   "feature_pub": false,
                   "region": null,
@@ -458,17 +459,26 @@ class JobViewSet(viewsets.ModelViewSet):
 
            """
 
-        perms,job_ids = JobPermission.userjobs(request.user, "READ")
 
         job = Job.objects.get(uid=uid)
         if job.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        # Does the user have permission to do Anything to this job?
+        # Does the user have admin permission to make changes to this job?
+
+        perms,job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        if not job.id in job_ids:
+            return Response([{'detail': 'ADMIN permission is required to update this job.'}], status.HTTP_400_BAD_REQUEST)
+
         response = {}
         payload = request.data
 
         for attribute, value in payload.iteritems():
+            if attribute == 'visibility' and value not in Job.Visibility.__members__:
+                msg = "unknown visibility value - %s" % value
+                return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
+
+
             if hasattr(job, attribute):
                 setattr(job, attribute, value)
                 response[attribute] = value

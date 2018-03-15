@@ -120,7 +120,7 @@ class JobPermission(TimeStampedModelMixin):
 
     @staticmethod
     def jobpermissions(job):
-        permissions = { 'groups' : { }, 'users' : {}, 'test' : True }
+        permissions = { 'groups' : { }, 'users' : {} }
         for jp in JobPermission.objects.filter(job=job):
             item = None
             if jp.content_type == ContentType.objects.get_for_model(User):

@@ -197,6 +197,7 @@ class SimpleJobSerializer(serializers.Serializer):
     original_selection = serializers.SerializerMethodField(read_only=True)
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
+    visibility = serializers.CharField()
     featured = serializers.BooleanField()
     formats = serializers.SerializerMethodField('get_provider_tasks')
     permissions = serializers.SerializerMethodField(read_only=True)
@@ -535,6 +536,7 @@ class ListJobSerializer(serializers.Serializer):
     original_selection = serializers.SerializerMethodField(read_only=True)
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
+    visibility = serializers.CharField()
     featured  = serializers.BooleanField()
     permissions = serializers.SerializerMethodField(read_only=True)
 
@@ -613,6 +615,7 @@ class JobSerializer(serializers.Serializer):
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
+    visibility = serializers.CharField()
     featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
