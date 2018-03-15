@@ -294,7 +294,7 @@ UI_CONFIG = {
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
     'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
     'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
-    'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', 'Map data © OpenStreetMap contributors'),
+    'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', '© OpenStreetMap'),
     'MAX_DATAPACK_EXPIRATION_DAYS': os.environ.get('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
 }
 

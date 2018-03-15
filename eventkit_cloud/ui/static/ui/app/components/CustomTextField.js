@@ -1,6 +1,5 @@
 import React, { Component, PropTypes } from 'react';
 import { TextField } from 'material-ui';
-import uniqueId from 'lodash/uniqueId';
 import * as ReactDOM from 'react-dom';
 
 export class CustomTextField extends Component {
@@ -64,7 +63,7 @@ export class CustomTextField extends Component {
             <div style={{ position: 'relative' }}>
                 <TextField
                     className="qa-CustomTextField-TextField"
-                    id={uniqueId()}
+                    id="custom-text-field"
                     ref={(textField) => {
                         if (!textField) {
                             return;
