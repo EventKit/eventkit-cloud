@@ -1,13 +1,11 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { AppBar, CircularProgress, GridList, Tab, Tabs } from 'material-ui';
+import { AppBar, CircularProgress } from 'material-ui';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
-import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import { getProviders } from '../../actions/exportsActions';
-import DataPackWideItem from './DataPackWideItem';
-import SwipeableViews from 'react-swipeable-views';
+import { DashboardSection } from './DashboardSection';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -16,15 +14,11 @@ export class DashboardPage extends React.Component {
         super(props);
         this.getGridColumns = this.getGridColumns.bind(this);
         this.getGridWideColumns = this.getGridWideColumns.bind(this);
-        this.getGridPadding = this.getGridPadding.bind(this);
         this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
         this.refreshFeatured = this.refreshFeatured.bind(this);
         this.refreshRecentlyViewed = this.refreshRecentlyViewed.bind(this);
         this.refresh = this.refresh.bind(this);
         this.isLoading = this.isLoading.bind(this);
-        this.handleRecentlyViewedPageChange = this.handleRecentlyViewedPageChange.bind(this);
-        this.handleFeaturedPageChange = this.handleFeaturedPageChange.bind(this);
-        this.handleMyDataPacksPageChange = this.handleMyDataPacksPageChange.bind(this);
         this.state = {
             loadingPage: true,
             loadingSections: {
@@ -32,9 +26,6 @@ export class DashboardPage extends React.Component {
                 featured: true,
                 recentlyViewed: true,
             },
-            recentlyViewedPageIndex: 0,
-            featuredPageIndex: 0,
-            myDataPacksPageIndex: 0,
         };
         this.refreshInterval = 10000;
     }
@@ -110,10 +101,6 @@ export class DashboardPage extends React.Component {
         return 1;
     }
 
-    getGridPadding() {
-        return window.innerWidth >= 768 ? 7 : 2;
-    }
-
     refreshMyDataPacks({ showLoading = true } = {}) {
         this.props.getRuns({
             pageSize: 6,
@@ -168,26 +155,7 @@ export class DashboardPage extends React.Component {
         return false;
     }
 
-    handleRecentlyViewedPageChange(index) {
-        this.setState({
-            recentlyViewedPageIndex: index,
-        });
-    }
-
-    handleFeaturedPageChange(index) {
-        this.setState({
-            featuredPageIndex: index,
-        });
-    }
-
-    handleMyDataPacksPageChange(index) {
-        this.setState({
-            myDataPacksPageIndex: index,
-        });
-    }
-
     render() {
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
         let styles = {
@@ -227,66 +195,6 @@ export class DashboardPage extends React.Component {
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
             },
-            sectionHeader: {
-                margin: '12px 0 13px',
-                paddingLeft: '13px',
-                fontSize: '27px',
-                fontWeight: 'bold',
-                letterSpacing: '0.6px',
-                textTransform: 'uppercase',
-            },
-            tabButtonsContainer: {
-                position: 'absolute',
-                height: '35px',
-                top: '-46px',
-                right: '-50px',
-                width: '200px',
-                backgroundColor: 'rgba(0, 0, 0, 0)',
-            },
-            tabButton: {
-                borderRadius: '50%',
-                width: '16px',
-                height: '16px',
-                backgroundColor: 'white',
-                border: '3px solid rgb(68, 152, 192)',
-                margin: '0',
-                transition: 'border 0.25s',
-            },
-            tab: {
-                width: 'auto',
-                margin: '0 4px',
-                padding: '0 4px',
-            },
-            tabContent: {
-                marginLeft: spacing,
-                marginRight: spacing,
-                paddingBottom: spacing,
-            },
-            swipeableViews: {
-                width: '100%',
-            },
-            gridList: {
-                border: '1px',
-                width: '100%',
-                height: 'auto',
-                margin: '0',
-                paddingLeft: spacing,
-                paddingRight: spacing,
-            },
-        };
-
-        // Inherited styles.
-        styles = {
-            ...styles,
-            tabDisabled: {
-                ...styles.tab,
-                pointerEvents: 'none',
-            },
-            tabButtonDisabled: {
-                ...styles.tabButton,
-                backgroundColor: 'lightgray',
-                border: '3px solid gray',
-            },
         };
 
         const buildPagedArray = (array, itemsPerPage, maxPages = 3) => {
@@ -301,13 +209,10 @@ export class DashboardPage extends React.Component {
             return pagedArray;
         };
 
-        const tabButtonBorderStyle = (selected) => {
-            return selected ? '8px solid rgb(68, 152, 192)' : '3px solid rgb(68, 152, 192)';
-        };
-
         // Split datapacks into pages based on the screen width.
-        const viewedJobsPages = buildPagedArray(this.props.user.viewedJobs.jobs, this.getGridColumns());
-        const featuredDataPacksPages = buildPagedArray(this.props.featuredRunsList.runs, this.getGridWideColumns());
+        const viewedJobsRuns = this.props.user.viewedJobs.jobs.map((job) => job.last_export_run);
+        const recentlyViewedPages = buildPagedArray(viewedJobsRuns, this.getGridColumns());
+        const featuredPages = buildPagedArray(this.props.featuredRunsList.runs, this.getGridWideColumns());
         const myDataPacksPages = buildPagedArray(this.props.runsList.runs, this.getGridColumns());
 
         return (
@@ -333,217 +238,44 @@ export class DashboardPage extends React.Component {
                 <CustomScrollbar style={styles.customScrollbar}>
                     {!this.state.loadingPage ?
                         <div style={{marginBottom: '12px'}}>
-                            {/* Recently Viewed */}
-                            <div
-                                className="qa-Dashboard-RecentlyViewedHeader"
-                                style={styles.sectionHeader}
-                            >
-                                Recently Viewed
-                            </div>
-                            <div style={{marginBottom: '35px'}}>
-                                {viewedJobsPages.length > 0 ?
-                                    <div>
-                                        <Tabs
-                                            style={{position: 'relative', width: '100%'}}
-                                            tabItemContainerStyle={styles.tabButtonsContainer}
-                                            inkBarStyle={{display: 'none'}}
-                                            onChange={this.handleRecentlyViewedPageChange}
-                                            value={this.state.recentlyViewedPageIndex}
-                                        >
-                                            {[...Array(3)].map((nothing, pageIndex) => (
-                                                <Tab
-                                                    key={`RecentlyViewedTab${pageIndex}`}
-                                                    value={pageIndex}
-                                                    style={(pageIndex < viewedJobsPages.length) ? styles.tab : styles.tabDisabled}
-                                                    disableTouchRipple={true}
-                                                    buttonStyle={(pageIndex < viewedJobsPages.length) ?
-                                                        {
-                                                            ...styles.tabButton,
-                                                            border: tabButtonBorderStyle(pageIndex === this.state.recentlyViewedPageIndex)
-                                                        }
-                                                        :
-                                                        styles.tabButtonDisabled
-                                                    }
-                                                >
-                                                </Tab>
-                                            ))}
-                                        </Tabs>
-                                        <SwipeableViews
-                                            style={styles.swipeableViews}
-                                            index={this.state.recentlyViewedPageIndex}
-                                            onChangeIndex={this.handleRecentlyViewedPageChange}
-                                        >
-                                            {viewedJobsPages.map((viewedJobsPage, pageIndex) => (
-                                                <GridList
-                                                    key={`RecentlyViewedGridList${pageIndex}`}
-                                                    className="qa-Dashboard-RecentlyViewedGrid"
-                                                    cellHeight="auto"
-                                                    style={styles.gridList}
-                                                    padding={this.getGridPadding()}
-                                                    cols={this.getGridColumns()}
-                                                >
-                                                    {viewedJobsPage.map((viewedJob, index) => (
-                                                        <DataPackGridItem
-                                                            className="qa-Dashboard-RecentlyViewedGrid-Item"
-                                                            run={viewedJob.last_export_run}
-                                                            user={this.props.user}
-                                                            key={viewedJob.created_at}
-                                                            onRunDelete={this.props.deleteRuns}
-                                                            providers={this.props.providers}
-                                                            gridName="RecentlyViewed"
-                                                            index={index}
-                                                            showFeaturedFlag={false}
-                                                        />
-                                                    ))}
-                                                </GridList>
-                                            ))}
-                                        </SwipeableViews>
-                                    </div>
-                                    :
-                                    <div className="qa-Dashboard-RecentlyViewed-NoData">{"You haven't viewed any DataPacks yet..."}</div>
-                                }
-                            </div>
+                            <DashboardSection
+                                style={{marginBottom: '35px'}}
+                                title="Recently Viewed"
+                                name="RecentlyViewed"
+                                user={this.props.user}
+                                providers={this.props.providers}
+                                dataPackPages={recentlyViewedPages}
+                                deleteRuns={this.props.deleteRuns}
+                                noDataMessage="You haven't viewed any DataPacks yet..."
+                                columns={this.getGridColumns()}
+                            />
 
-                            {/* Featured */}
-                            {featuredDataPacksPages.length > 0 ?
-                                <div>
-                                    <div
-                                        className="qa-Dashboard-FeaturedHeader"
-                                        style={styles.sectionHeader}
-                                    >
-                                        Featured
-                                    </div>
-                                    <div style={{marginBottom: '35px'}}>
-                                        <Tabs
-                                            style={{position: 'relative', width: '100%'}}
-                                            tabItemContainerStyle={styles.tabButtonsContainer}
-                                            inkBarStyle={{display: 'none'}}
-                                            onChange={this.handleFeaturedPageChange}
-                                            value={this.state.featuredPageIndex}
-                                        >
-                                            {[...Array(3)].map((nothing, pageIndex) => (
-                                                <Tab
-                                                    key={`FeaturedTab${pageIndex}`}
-                                                    value={pageIndex}
-                                                    style={(pageIndex < featuredDataPacksPages.length) ? styles.tab : styles.tabDisabled}
-                                                    disableTouchRipple={true}
-                                                    buttonStyle={(pageIndex < featuredDataPacksPages.length) ?
-                                                        {
-                                                            ...styles.tabButton,
-                                                            border: tabButtonBorderStyle(pageIndex === this.state.featuredPageIndex)
-                                                        }
-                                                        :
-                                                        styles.tabButtonDisabled
-                                                    }
-                                                >
-                                                </Tab>
-                                            ))}
-                                        </Tabs>
-                                        <SwipeableViews
-                                            style={styles.swipeableViews}
-                                            index={this.state.featuredPageIndex}
-                                            onChangeIndex={this.handleFeaturedPageChange}
-                                        >
-                                            {featuredDataPacksPages.map((featuredDataPacksPage, pageIndex) => (
-                                                <GridList
-                                                    key={`FeaturedGridList${pageIndex}`}
-                                                    className="qa-Dashboard-FeaturedGrid"
-                                                    cellHeight={335}
-                                                    style={styles.gridList}
-                                                    padding={this.getGridPadding()}
-                                                    cols={this.getGridWideColumns()}
-                                                >
-                                                    {featuredDataPacksPage.map((run, index) => (
-                                                        <DataPackWideItem
-                                                            className="qa-Dashboard-FeaturedGrid-Item"
-                                                            run={run}
-                                                            user={this.props.user}
-                                                            key={run.created_at}
-                                                            providers={this.props.providers}
-                                                            gridName="Featured"
-                                                            index={index}
-                                                            height={'335px'}
-                                                        />
-                                                    ))}
-                                                </GridList>
-                                            ))}
-                                        </SwipeableViews>
-                                    </div>
-                                </div>
+                            {featuredPages.length > 0 ?
+                                <DashboardSection
+                                    style={{marginBottom: '35px'}}
+                                    title="Featured"
+                                    name="Featured"
+                                    user={this.props.user}
+                                    providers={this.props.providers}
+                                    dataPackPages={featuredPages}
+                                    wide={true}
+                                    itemHeight={335}
+                                    columns={this.getGridWideColumns()}
+                                />
                                 :
                                 null
                             }
 
-                            {/* My DataPacks */}
-                            <div
-                                className="qa-Dashboard-MyDataPacksHeader"
-                                style={styles.sectionHeader}
-                            >
-                                My DataPacks
-                            </div>
-                            <div>
-                                {myDataPacksPages.length > 0 ?
-                                    <div>
-                                        <Tabs
-                                            style={{position: 'relative', width: '100%'}}
-                                            tabItemContainerStyle={styles.tabButtonsContainer}
-                                            inkBarStyle={{display: 'none'}}
-                                            onChange={this.handleMyDataPacksPageChange}
-                                            value={this.state.myDataPacksPageIndex}
-                                        >
-                                            {[...Array(3)].map((nothing, pageIndex) => (
-                                                <Tab
-                                                    key={`MyDataPacksTab${pageIndex}`}
-                                                    value={pageIndex}
-                                                    style={(pageIndex < myDataPacksPages.length) ? styles.tab : styles.tabDisabled}
-                                                    disableTouchRipple={true}
-                                                    buttonStyle={(pageIndex < myDataPacksPages.length) ?
-                                                        {
-                                                            ...styles.tabButton,
-                                                            border: tabButtonBorderStyle(pageIndex === this.state.myDataPacksPageIndex)
-                                                        }
-                                                        :
-                                                        styles.tabButtonDisabled
-                                                    }
-                                                >
-                                                </Tab>
-                                            ))}
-                                        </Tabs>
-                                        <SwipeableViews
-                                            style={styles.swipeableViews}
-                                            index={this.state.myDataPacksPageIndex}
-                                            onChangeIndex={this.handleMyDataPacksPageChange}
-                                        >
-                                            {myDataPacksPages.map((myDataPacksPage, pageIndex) => (
-                                                <GridList
-                                                    key={`MyDataPacksGridList${pageIndex}`}
-                                                    className="qa-Dashboard-MyDataPacksGrid"
-                                                    cellHeight="auto"
-                                                    style={styles.gridList}
-                                                    padding={this.getGridPadding()}
-                                                    cols={this.getGridColumns()}
-                                                >
-                                                    {myDataPacksPage.map((run, index) => (
-                                                        <DataPackGridItem
-                                                            className="qa-Dashboard-MyDataPacksGrid-Item"
-                                                            run={run}
-                                                            user={this.props.user}
-                                                            key={run.created_at}
-                                                            onRunDelete={this.props.deleteRuns}
-                                                            providers={this.props.providers}
-                                                            gridName="MyDataPacks"
-                                                            index={index}
-                                                            showFeaturedFlag={false}
-                                                        />
-                                                    ))}
-                                                </GridList>
-                                            ))}
-                                        </SwipeableViews>
-                                    </div>
-                                    :
-                                    <div className="qa-Dashboard-MyDataPacks-NoData">{"You haven't created any DataPacks yet..."}</div>
-                                }
-                            </div>
+                            <DashboardSection
+                                title="My DataPacks"
+                                name="MyDataPacks"
+                                user={this.props.user}
+                                providers={this.props.providers}
+                                dataPackPages={myDataPacksPages}
+                                deleteRuns={this.props.deleteRuns}
+                                noDataMessage="You haven't created any DataPacks yet..."
+                                columns={this.getGridColumns()}
+                            />
                         </div>
                         :
                         null
