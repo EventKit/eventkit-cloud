@@ -24,7 +24,7 @@ from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission
+from ...core.models import GroupPermission,JobPermission
 from mock import patch, Mock
 
 
@@ -75,6 +75,9 @@ class TestJobViewSet(APITestCase):
         hdm_presets = DatamodelPreset.objects.get(name='hdm')
         self.job.preset = hdm_presets
         self.job.save()
+
+        self.jp = JobPermission(job=self.job,content_object=self.user,permission=JobPermission.Permissions.ADMIN.value);
+        self.jp.save()
 
         self.tags = [
             {
@@ -486,7 +489,7 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEquals(expected, url)
 
-        request_data = {"published": True}
+        request_data = {"published": False}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['published'])
@@ -498,24 +501,13 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['featured'])
         self.assertTrue(response.data['success'])
 
-        request_data = {"permissions" : { "users" :  { self.user.username : "ADMIN"}, "groups" : { }}}
+        request_data = {"featured": True, "published" : False, "visibility" : Job.Visibility.SHARED.value }
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertIsNotNone(response.data['featured'])
+        self.assertIsNotNone(response.data['published'])
+        self.assertIsNotNone(response.data['visibility'])
         self.assertTrue(response.data['success'])
-
-        request_data = {"permissions" : { "users" :  { "badusername": "ADMIN"}, "groups" : { }}}
-        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        result = response.data
-        msg = result[0].get('detail')
-        self.assertEquals(msg, 'unidentified user or group : badusername')
-
-        request_data = { "published" : False, "permissions" : { "users" :  { self.user.username : "NONE"}, "groups" : { }}}
-        response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        result = response.data
-        msg = result[0].get('detail')
-        self.assertEquals(msg, 'There must be at least one administrator for a private job.')
 
 class TestBBoxSearch(APITestCase):
     """
@@ -657,7 +649,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['expiration'])
         self.assertTrue(response.data['success'])
-
 
         not_ok_expiration = ok_expiration  - timedelta(1)
         request_data = {"expiration": not_ok_expiration.isoformat()}
@@ -931,6 +922,7 @@ class TestExportRunViewSet(APITestCase):
 
         # test significant content
         self.assertEquals(response.data, [])
+
 
 class TestExportTaskViewSet(APITestCase):
     """
@@ -1238,22 +1230,20 @@ class TestGroupDataViewSet(APITestCase):
                                 HTTP_HOST='testserver')
 
         self.testName = "Omaha 319"
+        group, created = Group.objects.get_or_create(name=self.testName)
+        self.groupid = group.id
+        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermission.Permissions.ADMIN.value)
 
-    def insert_test_group(self):
+    def test_insert_group(self):
         expected = '/api/groups'
         url = reverse('api:groups-list')
         self.assertEquals(expected, url)
-        payload = {'name' : self.testName}
+        payload = {'name' : "Any group"}
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
-        self.groupid = response.data["id"]
 
-
-    def test_insert_group(self):
-        self.insert_test_group()
 
     def test_get_list(self):
-        self.insert_test_group()
         url = reverse('api:groups-list')
         response = self.client.get(url)
         self.assertIsNotNone(response)
@@ -1263,17 +1253,15 @@ class TestGroupDataViewSet(APITestCase):
 
 
     def test_get_group(self):
-        self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         data= json.loads(response.content)
         self.groupid = data["id"]
         self.assertEquals(data["name"], self.testName)
-        self.assertEquals(len(data["members"]),1)
+        self.assertEquals(len(data["members"]),0)
         self.assertEquals(len(data["administrators"]), 1)
 
     def test_set_membership(self):
-        self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_200_OK)
@@ -1281,6 +1269,8 @@ class TestGroupDataViewSet(APITestCase):
 
         # add a user to group members and to group administrators
 
+        groupdata['members'].append( 'user_1')
+        groupdata['administrators'].append( 'user_1')
         groupdata['members'].append( 'user_2')
         groupdata['administrators'].append( 'user_2')
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
@@ -1293,6 +1283,7 @@ class TestGroupDataViewSet(APITestCase):
         # remove user_2 from members
 
         groupdata['members'] = ['user_1']
+        groupdata['administrators'] = ['user_1']
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
@@ -1305,6 +1296,8 @@ class TestGroupDataViewSet(APITestCase):
         groupdata['administrators'] = []
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_403_FORBIDDEN)
+
+  
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):

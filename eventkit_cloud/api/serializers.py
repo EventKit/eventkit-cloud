@@ -615,7 +615,7 @@ class JobSerializer(serializers.Serializer):
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
-    visibility = serializers.CharField()
+    visibility = serializers.CharField(required=False)
     featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
