@@ -1,33 +1,56 @@
 import React, { PropTypes, Component } from 'react';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
-import Divider from 'material-ui/Divider';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import Lock from 'material-ui/svg-icons/action/lock';
 import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPublic from 'material-ui/svg-icons/social/public';
 import CheckCircle from 'material-ui/svg-icons/action/check-circle';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import GroupsDropDownMenu from '../../components/UserGroupsPage/GroupsDropDownMenu';
-import GroupsDropDownMenuItem from '../../components/UserGroupsPage/GroupsDropDownMenuItem';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class PermissionsFilter extends Component {
     constructor(props) {
         super(props);
-        this.handleGroupsOpen = this.handleGroupsOpen.bind(this);
-        this.handleGroupsClose = this.handleGroupsClose.bind(this);
+        this.handleOpen = this.handleOpen.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.handleSave = this.handleSave.bind(this);
+        this.handleSelection = this.handleSelection.bind(this);
         this.state = {
             open: false,
-            popoverAnchor: null,
         };
     }
 
-    handleGroupsOpen(e) {
+    handleOpen(e) {
         e.preventDefault();
         e.stopPropagation();
-        this.setState({ open: true, popoverAnchor: e.currentTarget });
+        this.setState({ open: true });
     }
 
-    handleGroupsClose() {
+    handleClose() {
         this.setState({ open: false });
+    }
+
+    handleSave(permissions) {
+        this.props.onChange({ ...permissions });
+        this.handleClose();
+    }
+
+    handleSelection(e, v) {
+        // if filtering by shared, add all members and groups by default
+        if (v === 'SHARED') {
+            const permissions = {
+                value: v,
+                groups: {},
+                members: {},
+            };
+            this.props.groups.forEach((group) => {
+                permissions.groups[group.id] = 'READ';
+            });
+            this.props.members.forEach((member) => {
+                permissions.members[member.user.username] = 'READ';
+            });
+            this.props.onChange({ ...permissions });
+        } else {
+            this.props.onChange({ value: v });
+        }
     }
 
     render() {
@@ -63,27 +86,64 @@ export class PermissionsFilter extends Component {
             },
         };
 
-        let selectedCount = null;
-        if (this.props.selectedGroups.length) {
-            if (this.props.selectedGroups.length === this.props.groups.length) {
-                selectedCount = 'All';
-            } else {
-                selectedCount = this.props.selectedGroups.length;
-            }
-        } else {
-            selectedCount = 'No';
-        }
-
-        let selectionText = `${selectedCount} Groups`;
-        if (selectedCount === 1) {
-            selectionText = selectionText.slice(0, -1);
-        }
-
-        if (selectedCount === 'All' && this.dropdown) {
-            this.dropdown.scrollToTop();
-        }
-
         const checkIcon = (<CheckCircle style={{ fill: '#4598bf' }} />);
+
+        let dialog = null;
+        let sharedButton = null;
+        if (this.props.permissions.value === 'SHARED') {
+            const groupCount = Object.keys(this.props.permissions.groups).length;
+            const memberCount = Object.keys(this.props.permissions.members).length;
+
+            let groupText = '';
+            if (groupCount === 0) {
+                groupText = 'No Groups';
+            } else if (groupCount === this.props.groups.length) {
+                groupText = 'All Groups';
+            } else if (groupCount === 1) {
+                groupText = '1 Group';
+            } else {
+                groupText = `${groupCount} Groups`;
+            }
+
+            let memberText = '';
+            if (memberCount === 0) {
+                memberText = 'No Members';
+            } else if (memberCount === this.props.members.length) {
+                memberText = 'All Members';
+            } else if (memberCount === 1) {
+                memberText = '1 Members';
+            } else {
+                memberText = `${memberCount} Members`;
+            }
+
+            sharedButton = (
+                <EnhancedButton
+                    onClick={this.handleOpen}
+                    style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
+                >
+                    {memberText} / {groupText}
+                </EnhancedButton>
+            );
+
+            if (this.state.open) {
+                dialog = (
+                    <DataPackShareDialog
+                        show={this.state.open}
+                        onClose={this.handleClose}
+                        onSave={this.handleSave}
+                        groups={this.props.groups}
+                        members={this.props.members}
+                        permissions={this.props.permissions}
+                        groupsText="You may filter DataPacks by shared groups exclusively.
+                         Group filtering is managed seperately from member filtering."
+                        membersText="You may filter DataPacks by shared members exclusively.
+                         Member filtering is managed seperately from group filtering."
+                        title="FILTER SHARED DATAPACKS"
+                        submitButtonLabel="SET DATAPACK FILTER"
+                    />
+                );
+            }
+        }
 
         return (
             <div style={styles.drawerSection}>
@@ -96,8 +156,8 @@ export class PermissionsFilter extends Component {
                 <RadioButtonGroup
                     className="qa-PermissionsFilter-RadioButtonGroup"
                     name="permissions"
-                    onChange={this.props.onChange}
-                    valueSelected={this.props.valueSelected}
+                    onChange={this.handleSelection}
+                    valueSelected={this.props.permissions.value}
                     style={{ width: '100%' }}
                 >
                     <RadioButton
@@ -105,7 +165,7 @@ export class PermissionsFilter extends Component {
                         style={styles.radioButton}
                         iconStyle={styles.radioIcon}
                         labelStyle={styles.radioLabel}
-                        value="private"
+                        value="PRIVATE"
                         checkedIcon={checkIcon}
                         label={
                             <div style={{ display: 'flex' }}>
@@ -117,103 +177,53 @@ export class PermissionsFilter extends Component {
                         }
                     />
                     <RadioButton
-                        className="qa-PermissionsFilter-RadioButton-public"
-                        style={styles.radioButton}
-                        iconStyle={styles.radioIcon}
-                        labelStyle={styles.radioLabel}
-                        value="public"
-                        checkedIcon={checkIcon}
-                        label={
-                            <div style={{ display: 'flex' }}>
-                                <div style={{ flex: '1 1 auto' }}>
-                                    Public (everyone)
-                                </div>
-                                <SocialPublic style={styles.icon} />
-                            </div>
-                        }
-                    />
-                    <RadioButton
                         className="qa-PermissionsFilter-RadioButton-group"
                         style={styles.radioButton}
                         iconStyle={styles.radioIcon}
                         labelStyle={styles.radioLabel}
-                        value="group"
+                        value="SHARED"
                         checkedIcon={checkIcon}
                         label={
                             <div style={{ display: 'flex' }}>
                                 <div style={{ flex: '1 1 auto' }}>
-                                    Group Shared (only)
+                                    Shared
                                 </div>
                                 <SocialGroup style={styles.icon} />
                             </div>
                         }
                     />
                 </RadioButtonGroup>
-                {this.props.valueSelected === 'group' ?
-                    <div style={{ position: 'relative', margin: '0px 5px' }}>
-                        <div
-                            tabIndex={0}
-                            role="button"
-                            onKeyPress={this.handleGroupsOpen}
-                            style={styles.groups}
-                            onClick={this.handleGroupsOpen}
-                            className="qa-PermissionsFilter-groups-button"
-                        >
-                            <div
-                                style={{ flex: '1 1 auto', fontWeight: 700, color: 'grey' }}
-                                className="qa-PermissionsFilter-groups-selection"
-                            >
-                                {selectionText}
-                            </div>
-                            <ArrowDown
-                                style={{ fill: '#4598bf', flex: '0 0 auto', height: '36px' }}
-                                className="qa-PermissionsFilter-groups-ArrowDown"
-                            />
-                        </div>
-                    </div>
-                    :
-                    null
-                }
-                <GroupsDropDownMenu
-                    ref={(instance) => { this.dropdown = instance; }}
-                    open={this.state.open}
-                    anchorEl={this.state.popoverAnchor}
-                    onClose={this.handleGroupsClose}
-                    width={220}
-                    className="qa-UserTableRowColumn-GroupsDropDownMenu"
-                >
-                    <GroupsDropDownMenuItem
-                        key="all"
-                        group={{ id: -1, name: 'All Groups' }}
-                        onClick={this.props.onAllGroupSelect}
-                        selected={selectedCount === 'All'}
-                    />
-                    <Divider className="qa-PermissionsFilter-Divider" />
-                    {this.props.groups.map(group => (
-                        <GroupsDropDownMenuItem
-                            key={group.id}
-                            group={group}
-                            onClick={this.props.onGroupSelect}
-                            selected={selectedCount !== 'All' && this.props.selectedGroups.includes(group.id)}
-                        />
-                    ))}
-                </GroupsDropDownMenu>
+                {sharedButton}
+                {dialog}
             </div>
         );
     }
 }
 
 PermissionsFilter.propTypes = {
-    valueSelected: PropTypes.oneOf(['public', 'private', 'group']).isRequired,
-    selectedGroups: PropTypes.arrayOf(PropTypes.number).isRequired,
-    onGroupSelect: PropTypes.func.isRequired,
-    onAllGroupSelect: PropTypes.func.isRequired,
+    permissions: PropTypes.shape({
+        value: PropTypes.oneOf(['PRIVATE', 'PUBLIC', 'SHARED']),
+        groups: PropTypes.objectOf(PropTypes.string),
+        members: PropTypes.objectOf(PropTypes.string),
+    }).isRequired,
     onChange: PropTypes.func.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
     })).isRequired,
 };
 

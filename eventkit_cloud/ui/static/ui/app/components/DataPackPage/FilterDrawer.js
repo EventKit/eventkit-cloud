@@ -18,20 +18,16 @@ export class FilterDrawer extends Component {
         this.handleStatusChange = this.handleStatusChange.bind(this);
         this.handleMinDate = this.handleMinDate.bind(this);
         this.handleMaxDate = this.handleMaxDate.bind(this);
-        this.handleGroupSelect = this.handleGroupSelect.bind(this);
-        this.handleAllGroupSelect = this.handleAllGroupSelect.bind(this);
         this.state = this.getDefaultState();
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.groups.length !== 0 && this.props.groups.length === 0) {
-            this.setState({ selectedGroups: nextProps.groups.map(group => group.id) });
-        }
     }
 
     getDefaultState() {
         return {
-            permissions: 'public',
+            permissions: {
+                value: 'PUBLIC',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -40,7 +36,6 @@ export class FilterDrawer extends Component {
                 submitted: false,
             },
             providers: {},
-            selectedGroups: this.props.groups.map(group => group.id),
         };
     }
 
@@ -53,8 +48,8 @@ export class FilterDrawer extends Component {
         this.props.onFilterClear();
     }
 
-    handlePermissionsChange(event, value) {
-        this.setState({ permissions: value });
+    handlePermissionsChange(permissions) {
+        this.setState({ permissions: { ...this.state.permissions, ...permissions } });
     }
 
     handleStatusChange(stateChange) {
@@ -80,33 +75,6 @@ export class FilterDrawer extends Component {
 
     handleMaxDate(e, date) {
         this.setState({ maxDate: date });
-    }
-
-    handleGroupSelect(group) {
-        // if all are already selected, remove everything except for the target group
-        if (this.state.selectedGroups.length === this.props.groups.length) {
-            const newGroups = [group.id];
-            this.setState({ selectedGroups: newGroups });
-        } else if (this.state.selectedGroups.includes(group.id)) {
-            const newGroups = [...this.state.selectedGroups];
-            newGroups.splice(
-                this.state.selectedGroups.indexOf(group.id),
-                1,
-            );
-            this.setState({ selectedGroups: newGroups });
-        } else {
-            const newGroups = [...this.state.selectedGroups, group.id];
-            this.setState({ selectedGroups: newGroups });
-        }
-    }
-
-    handleAllGroupSelect() {
-        if (this.props.groups.length === this.state.selectedGroups.length) {
-            this.setState({ selectedGroups: [] });
-        } else {
-            const newGroups = this.props.groups.map(group => group.id);
-            this.setState({ selectedGroups: newGroups });
-        }
     }
 
     render() {
@@ -135,11 +103,9 @@ export class FilterDrawer extends Component {
                     />
                     <PermissionFilter
                         onChange={this.handlePermissionsChange}
-                        valueSelected={this.state.permissions}
-                        selectedGroups={this.state.selectedGroups}
-                        onGroupSelect={this.handleGroupSelect}
-                        onAllGroupSelect={this.handleAllGroupSelect}
+                        permissions={this.state.permissions}
                         groups={this.props.groups}
+                        members={this.props.members}
                     />
                     <StatusFilter
                         onChange={this.handleStatusChange}
@@ -174,6 +140,18 @@ FilterDrawer.propTypes = {
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
     })).isRequired,
 };
 

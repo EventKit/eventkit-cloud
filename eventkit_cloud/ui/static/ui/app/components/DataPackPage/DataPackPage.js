@@ -44,7 +44,11 @@ export class DataPackPage extends React.Component {
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
-            permissions: 'public',
+            permissions: {
+                value: 'PUBLIC',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -53,7 +57,6 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            selectedGroups: [],
             view: props.runsList.view || 'map',
             pageLoading: true,
             order: props.runsList.order || '-job__featured',
@@ -176,10 +179,7 @@ export class DataPackPage extends React.Component {
             :
             this.state.order;
         if (this.state.ownerFilter) params.user = this.state.ownerFilter;
-        if (this.state.permissions) params.published = this.state.permissions;
-        if (this.state.selectedGroups.length && this.state.permissions === 'group') {
-            params.groups = this.state.selectedGroups.join(',');
-        }
+        if (this.state.permissions) params.permissions = this.state.permissions;
         if (status.length) params.status = status.join(',');
         if (this.state.minDate) {
             params.min_date = this.state.minDate.toISOString().substring(0, 10);
@@ -191,6 +191,7 @@ export class DataPackPage extends React.Component {
         }
         if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
         if (providers.length) params.providers = providers.join(',');
+        console.log(params);
 
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
@@ -208,7 +209,11 @@ export class DataPackPage extends React.Component {
 
     handleFilterClear() {
         this.setState({
-            permissions: 'public',
+            permissions: {
+                value: 'PUBLIC',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -217,7 +222,6 @@ export class DataPackPage extends React.Component {
                 submitted: false,
             },
             providers: {},
-            selectedGroups: [],
             loading: true,
         }, this.makeRunRequest);
         if (window.innerWidth < 1200) {
@@ -275,7 +279,6 @@ export class DataPackPage extends React.Component {
     }
 
     handleShareSave(permissions) {
-        console.log(permissions);
         this.handleShareClose();
         this.props.updateDataCartPermissions(this.state.targetJob, permissions);
     }
@@ -336,8 +339,6 @@ export class DataPackPage extends React.Component {
                 },
         };
 
-        const groups = this.props.groups.filter(group => (group.administrators.includes(this.props.user.data.user.username)));
-
         return (
             <div style={styles.backgroundStyle}>
                 <AppBar
@@ -390,6 +391,7 @@ export class DataPackPage extends React.Component {
                         open={this.state.open}
                         providers={this.props.providers}
                         groups={this.props.groups}
+                        members={this.props.users}
                     />
 
                     {this.state.pageLoading ?
@@ -431,7 +433,7 @@ export class DataPackPage extends React.Component {
                         show
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
-                        groups={groups}
+                        groups={this.props.groups}
                         members={this.props.users}
                         permissions={{
                             groups: {
@@ -453,7 +455,6 @@ export class DataPackPage extends React.Component {
                         groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
                         membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
                         canUpdateAdmin
-                        // submitButtonLabel="SET FILTER"
                     />
                     :
                     null
@@ -510,7 +511,9 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
-        groups: state.groups.groups,
+        groups: state.groups.groups.filter(group => (
+            group.administrators.includes(state.user.data.user.username)
+        )),
         users: state.users.users,
     };
 }

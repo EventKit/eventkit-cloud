@@ -15,15 +15,8 @@ export class DataPackShareDialog extends Component {
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
-            permissions: { ...this.props.permissions },
+            permissions: this.props.permissions,
         };
-    }
-
-    componentWillReceiveProps(nextProps) {
-        // If permissions were not ready on mount we need to update them
-        if (nextProps.permissions && !this.props.permissions) {
-            this.setState({ permissions: { ...nextProps.permissions } });
-        }
     }
 
     handleSave() {
@@ -97,6 +90,7 @@ export class DataPackShareDialog extends Component {
                 show={this.props.show}
                 onClose={this.props.onClose}
                 handleSave={this.handleSave}
+                title={this.props.title}
                 submitButtonLabel={this.props.submitButtonLabel}
                 className="qa-DataPackShareDialog"
             >
@@ -156,6 +150,7 @@ export class DataPackShareDialog extends Component {
 
 DataPackShareDialog.defaultProps = {
     submitButtonLabel: 'SAVE',
+    title: 'SHARE',
     groupsText: '',
     membersText: '',
     canUpdateAdmin: false,
@@ -199,6 +194,10 @@ DataPackShareDialog.propTypes = {
     ]),
     canUpdateAdmin: PropTypes.bool,
     submitButtonLabel: PropTypes.string,
+    title: PropTypes.oneOfType([
+        PropTypes.node,
+        PropTypes.string,
+    ]),
 };
 
 export default DataPackShareDialog;

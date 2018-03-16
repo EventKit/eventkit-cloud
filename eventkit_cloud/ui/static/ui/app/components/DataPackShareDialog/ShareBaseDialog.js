@@ -67,7 +67,7 @@ export class ShareBaseDialog extends Component {
         // display passed in title and a clear button which calls props.onClose
         const title = (
             <div className="qa-ShareBaseDialog-div">
-                <strong>SHARE</strong>
+                <strong>{this.props.title}</strong>
                 <Clear style={styles.clear} onClick={this.props.onClose} />
             </div>
         );
@@ -93,13 +93,13 @@ export class ShareBaseDialog extends Component {
                 >
                     {this.props.children}
                 </CustomScrollbar>
-
             </Dialog>
         );
     }
 }
 
 ShareBaseDialog.defaultProps = {
+    title: 'SHARE',
     children: [],
     submitButtonLabel: 'SAVE',
 };
@@ -108,6 +108,10 @@ ShareBaseDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     handleSave: PropTypes.func.isRequired,
+    title: PropTypes.oneOfType([
+        PropTypes.node,
+        PropTypes.string,
+    ]),
     children: PropTypes.oneOfType([
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.node,
