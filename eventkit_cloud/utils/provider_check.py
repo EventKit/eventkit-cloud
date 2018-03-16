@@ -214,9 +214,7 @@ class OWSProviderCheck(ProviderCheck):
         }
 
         # If service or version parameters are left in query string, it can lead to a protocol error and false negative
-        self.service_url = service_url
-        if "?" in service_url:
-            self.service_url = service_url.split("?")[0]
+        self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", service_url)
 
         self.ns = ""  # Common namespace for XML parsing
         self.layer = self.layer.lower()
