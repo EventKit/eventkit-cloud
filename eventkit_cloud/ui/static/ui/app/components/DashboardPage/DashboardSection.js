@@ -93,9 +93,14 @@ export class DashboardSection extends React.Component {
             return selected ? '8px solid rgb(68, 152, 192)' : '3px solid rgb(68, 152, 192)';
         };
 
-        let cellHeight = 'auto';
-        if (this.props.wide && this.props.itemHeight) {
-            cellHeight = this.props.itemHeight;
+        const maxPages = 3;
+        const itemsPerPage = this.props.columns * this.props.rows;
+        const childrenPages = [];
+        for (let i = 0; i < this.props.children.length; i += itemsPerPage) {
+            childrenPages.push(this.props.children.slice(i, i + itemsPerPage));
+            if (childrenPages.length === maxPages) {
+                break;
+            }
         }
 
         return (
@@ -106,79 +111,53 @@ export class DashboardSection extends React.Component {
                 >
                     {this.props.title}
                 </div>
-                {this.props.dataPackPages.length === 0 ?
-                    <div className={`qa-DashboardSection-${this.props.name}-NoData`}>{this.props.noDataMessage}</div>
-                    :
-                    <div>
-                        <Tabs
-                            style={{position: 'relative', width: '100%'}}
-                            tabItemContainerStyle={styles.tabButtonsContainer}
-                            inkBarStyle={{display: 'none'}}
-                            onChange={this.handlePageChange}
-                            value={this.state.pageIndex}
+                <Tabs
+                    style={{position: 'relative', width: '100%'}}
+                    tabItemContainerStyle={styles.tabButtonsContainer}
+                    inkBarStyle={{display: 'none'}}
+                    onChange={this.handlePageChange}
+                    value={this.state.pageIndex}
+                >
+                    {[...Array(maxPages)].map((nothing, pageIndex) => (
+                        <Tab
+                            key={`${this.props.name}Tab${pageIndex}`}
+                            value={pageIndex}
+                            style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
+                            disableTouchRipple={true}
+                            buttonStyle={(pageIndex < childrenPages.length) ?
+                                {
+                                    ...styles.tabButton,
+                                    border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
+                                }
+                                :
+                                styles.tabButtonDisabled
+                            }
                         >
-                            {[...Array(3)].map((nothing, pageIndex) => (
-                                <Tab
-                                    key={`${this.props.name}Tab${pageIndex}`}
-                                    value={pageIndex}
-                                    style={(pageIndex < this.props.dataPackPages.length) ? styles.tab : styles.tabDisabled}
-                                    disableTouchRipple={true}
-                                    buttonStyle={(pageIndex < this.props.dataPackPages.length) ?
-                                        {
-                                            ...styles.tabButton,
-                                            border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
-                                        }
-                                        :
-                                        styles.tabButtonDisabled
-                                    }
-                                >
-                                </Tab>
-                            ))}
-                        </Tabs>
-                        <SwipeableViews
-                            style={styles.swipeableViews}
-                            index={this.state.pageIndex}
-                            onChangeIndex={this.handlePageChange}
+                        </Tab>
+                    ))}
+                </Tabs>
+                <SwipeableViews
+                    style={styles.swipeableViews}
+                    index={this.state.pageIndex}
+                    onChangeIndex={this.handlePageChange}
+                >
+                    {childrenPages.map((childrenPage, pageIndex) => (
+                        <GridList
+                            key={`${this.props.name}GridList${pageIndex}`}
+                            className={`qa-DashboardSection-${this.props.name}Grid`}
+                            cellHeight={this.props.cellHeight || 'auto'}
+                            style={styles.gridList}
+                            padding={this.getGridPadding()}
+                            cols={this.props.columns}
                         >
-                            {this.props.dataPackPages.map((page, pageIndex) => (
-                                <GridList
-                                    key={`${this.props.name}GridList${pageIndex}`}
-                                    className={`qa-DashboardSection-${this.props.name}Grid`}
-                                    cellHeight={cellHeight}
-                                    style={styles.gridList}
-                                    padding={this.getGridPadding()}
-                                    cols={this.props.columns}
-                                >
-                                    {page.map((run, index) => (
-                                        this.props.wide ?
-                                            <DataPackWideItem
-                                                className={`qa-DashboardSection-${this.props.name}Grid-WideItem`}
-                                                run={run}
-                                                user={this.props.user}
-                                                key={run.created_at}
-                                                providers={this.props.providers}
-                                                gridName={this.props.name}
-                                                index={index}
-                                                height={(this.props.itemHeight) ? `${this.props.itemHeight}px` : 'auto'}
-                                            />
-                                            :
-                                            <DataPackGridItem
-                                                className={`qa-DashboardSection-${this.props.name}Grid-Item`}
-                                                run={run}
-                                                user={this.props.user}
-                                                key={run.created_at}
-                                                onRunDelete={this.props.deleteRuns}
-                                                providers={this.props.providers}
-                                                gridName={this.props.name}
-                                                index={index}
-                                                showFeaturedFlag={false}
-                                            />
-                                    ))}
-                                </GridList>
+                            {childrenPage.map((child, index) => (
+                                <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
+                                    {child}
+                                </div>
                             ))}
-                        </SwipeableViews>
-                    </div>
-                }
+                        </GridList>
+                    ))}
+                </SwipeableViews>
             </div>
         )
     }
@@ -187,19 +166,16 @@ export class DashboardSection extends React.Component {
 DashboardSection.propTypes = {
     user: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    dataPackPages: PropTypes.array.isRequired,
     title: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     columns: PropTypes.number.isRequired,
-    deleteRuns: PropTypes.func,
-    noDataMessage: PropTypes.string,
-    wide: PropTypes.bool,
-    itemHeight: PropTypes.number,
+    rows: PropTypes.number,
+    cellHeight: PropTypes.number,
     style: PropTypes.object,
 };
 
 DashboardSection.defaultProps = {
-    wide: false,
+    rows: 1,
 };
 
 export default DashboardSection;

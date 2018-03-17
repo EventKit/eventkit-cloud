@@ -6,6 +6,8 @@ import { getViewedJobs } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
 import { getProviders } from '../../actions/exportsActions';
 import { DashboardSection } from './DashboardSection';
+import DataPackGridItem from '../DataPackPage/DataPackGridItem';
+import DataPackWideItem from './DataPackWideItem';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -197,24 +199,6 @@ export class DashboardPage extends React.Component {
             },
         };
 
-        const buildPagedArray = (array, itemsPerPage, maxPages = 3) => {
-            const pagedArray = [];
-            for (let i = 0; i < array.length; i += itemsPerPage) {
-                pagedArray.push(array.slice(i, i + itemsPerPage));
-                if (pagedArray.length === maxPages) {
-                    break;
-                }
-            }
-
-            return pagedArray;
-        };
-
-        // Split datapacks into pages based on the screen width.
-        const viewedJobsRuns = this.props.user.viewedJobs.jobs.map((job) => job.last_export_run);
-        const recentlyViewedPages = buildPagedArray(viewedJobsRuns, this.getGridColumns());
-        const featuredPages = buildPagedArray(this.props.featuredRunsList.runs, this.getGridWideColumns());
-        const myDataPacksPages = buildPagedArray(this.props.runsList.runs, this.getGridColumns());
-
         return (
             <div style={styles.root}>
                 <AppBar
@@ -236,49 +220,96 @@ export class DashboardPage extends React.Component {
                     null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
-                    {!this.state.loadingPage ?
+                    {this.state.loadingPage ?
+                        null
+                        :
                         <div style={{marginBottom: '12px'}}>
                             <DashboardSection
+                                className="qa-DashboardSection-RecentlyViewed"
                                 style={{marginBottom: '35px'}}
                                 title="Recently Viewed"
                                 name="RecentlyViewed"
                                 user={this.props.user}
                                 providers={this.props.providers}
-                                dataPackPages={recentlyViewedPages}
-                                deleteRuns={this.props.deleteRuns}
-                                noDataMessage="You haven't viewed any DataPacks yet..."
                                 columns={this.getGridColumns()}
-                            />
+                            >
+                                {this.props.user.viewedJobs.jobs.length === 0 ?
+                                    <div className="qa-DashboardSection-RecentlyViewed-NoData">
+                                        {"You haven't viewed any DataPacks yet..."}
+                                    </div>
+                                    :
+                                    this.props.user.viewedJobs.jobs.map((job, index) => (
+                                        <DataPackGridItem
+                                            className={`qa-DashboardSection-RecentlyViewedGrid-Item`}
+                                            run={job.last_export_run}
+                                            user={this.props.user}
+                                            key={`RecentlyViewedDataPack-${job.created_at}`}
+                                            onRunDelete={this.props.deleteRuns}
+                                            providers={this.props.providers}
+                                            gridName="RecentlyViewed"
+                                            index={index}
+                                            showFeaturedFlag={false}
+                                        />
+                                    ))
+                                }
+                            </DashboardSection>
 
-                            {featuredPages.length > 0 ?
+                            {this.props.featuredRunsList.runs.length === 0 ?
+                                null
+                                :
                                 <DashboardSection
                                     style={{marginBottom: '35px'}}
                                     title="Featured"
                                     name="Featured"
                                     user={this.props.user}
                                     providers={this.props.providers}
-                                    dataPackPages={featuredPages}
-                                    wide={true}
-                                    itemHeight={335}
+                                    cellHeight={335}
                                     columns={this.getGridWideColumns()}
-                                />
-                                :
-                                null
+                                >
+                                    {this.props.featuredRunsList.runs.map((run, index) => (
+                                        <DataPackWideItem
+                                            className={`qa-DashboardSection-${this.props.name}Grid-WideItem`}
+                                            run={run}
+                                            user={this.props.user}
+                                            key={`RecentlyViewedDataPack-${run.created_at}`}
+                                            providers={this.props.providers}
+                                            gridName="Featured"
+                                            index={index}
+                                            height={'335px'}
+                                        />
+                                    ))}
+                                </DashboardSection>
                             }
 
                             <DashboardSection
+                                className="qa-DashboardSection-MyDataPacks"
                                 title="My DataPacks"
                                 name="MyDataPacks"
                                 user={this.props.user}
                                 providers={this.props.providers}
-                                dataPackPages={myDataPacksPages}
-                                deleteRuns={this.props.deleteRuns}
-                                noDataMessage="You haven't created any DataPacks yet..."
                                 columns={this.getGridColumns()}
-                            />
+                            >
+                                {this.props.runsList.runs.length === 0 ?
+                                    <div className="qa-DashboardSection-MyDataPacks-NoData">
+                                        {"You haven't created any DataPacks yet..."}
+                                    </div>
+                                    :
+                                    this.props.runsList.runs.map((run, index) => (
+                                        <DataPackGridItem
+                                            className={`qa-DashboardSection-MyDataPacksGrid-Item`}
+                                            run={run}
+                                            user={this.props.user}
+                                            key={`MyDataPacksDataPack-${run.created_at}`}
+                                            onRunDelete={this.props.deleteRuns}
+                                            providers={this.props.providers}
+                                            gridName="MyDataPacks"
+                                            index={index}
+                                            showFeaturedFlag={false}
+                                        />
+                                    ))
+                                }
+                            </DashboardSection>
                         </div>
-                        :
-                        null
                     }
                 </CustomScrollbar>
             </div>
