@@ -404,7 +404,10 @@ export class DataPackPage extends React.Component {
                         </div>
                         :
                         <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
-                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ?
+                            {this.state.loading ||
+                            this.props.runsDeletion.deleting ||
+                            this.props.updatePermissions.updating ||
+                            this.props.importGeom.processing ?
                                 <div
                                     style={{
                                         zIndex: 10,
@@ -500,6 +503,11 @@ DataPackPage.propTypes = {
     getGroups: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
     updateDataCartPermissions: PropTypes.func.isRequired,
+    updatePermissions: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.array,
+    }).isRequired,
 };
 
 function mapStateToProps(state) {
@@ -515,6 +523,7 @@ function mapStateToProps(state) {
             group.administrators.includes(state.user.data.user.username)
         )),
         users: state.users.users,
+        updatePermissions: state.updatePermission,
     };
 }
 

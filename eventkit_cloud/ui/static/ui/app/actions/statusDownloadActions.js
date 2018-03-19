@@ -15,7 +15,12 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         // However we leave it in an array for future proofing.
         const data = [{ ...response.data[0] }];
 
-        data[0].members = ['JaneD', 'JohnD', 'U2', 'U3']; // TODO dont mock when api is ready
+        // TODO dont mock when api is ready
+        data[0].job.permissions = {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
+        };
 
         dispatch({
             type: types.DATACART_DETAILS_RECEIVED,

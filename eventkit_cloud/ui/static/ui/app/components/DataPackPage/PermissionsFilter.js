@@ -151,7 +151,7 @@ export class PermissionsFilter extends Component {
                     className="qa-PermissionsFilter-p"
                     style={{ width: '100%', margin: '0px' }}
                 >
-                    <strong >Permissions</strong>
+                    <strong>Permissions</strong>
                 </p>
                 <RadioButtonGroup
                     className="qa-PermissionsFilter-RadioButtonGroup"

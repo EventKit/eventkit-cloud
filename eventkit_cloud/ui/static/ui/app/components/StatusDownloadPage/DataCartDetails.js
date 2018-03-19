@@ -22,15 +22,13 @@ import { DataCartInfoTable } from './DataCartInfoTable';
 export class DataCartDetails extends Component {
     constructor(props) {
         super(props);
-        this.setPermission = this.setPermission.bind(this);
         this.setDates = this.setDates.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleExpirationChange = this.handleExpirationChange.bind(this);
-        this.handlePermissionChange = this.handlePermissionChange.bind(this);
+        this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
         this.state = {
             minDate: null,
             maxDate: null,
-            permission: 'private',
             status: '',
         };
     }
@@ -38,18 +36,6 @@ export class DataCartDetails extends Component {
     componentDidMount() {
         this.initializeOpenLayers();
         this.setDates();
-        this.setPermission();
-    }
-
-    setPermission() {
-        let permission = 'private';
-        if (this.props.cartDetails.job.published) {
-            permission = 'public';
-            if (this.props.cartDetails.job.permissions) {
-                permission = 'members';
-            }
-        }
-        this.setState({ permission });
     }
 
     setDates() {
@@ -116,11 +102,8 @@ export class DataCartDetails extends Component {
         this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
-    handlePermissionChange(event, index, value) { // TODO
-        // hit the API and change published to the new value
-        const published = !(value === 'private');
-        this.setState({ permission: value });
-        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, { published });
+    handlePermissionsChange(permissions) {
+        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, permissions);
     }
 
     handleExpirationChange(e, date) {
@@ -176,16 +159,17 @@ export class DataCartDetails extends Component {
                         className="qa-DataCartDetails-DataPackStatusTable"
                         status={this.props.cartDetails.status}
                         expiration={this.props.cartDetails.expiration}
-                        permission={this.state.permission}
+                        permissions={this.props.cartDetails.job.permissions}
                         minDate={this.state.minDate}
                         maxDate={this.state.maxDate}
                         handleExpirationChange={this.handleExpirationChange}
-                        handlePermissionsChange={this.handlePermissionChange}
+                        handlePermissionsChange={this.handlePermissionsChange}
                         updatingExpiration={this.props.updatingExpiration}
                         updatingPermission={this.props.updatingPermission}
                         statusColor={statusBackgroundColor}
                         statusFontColor={statusFontColor}
-                        users={this.props.members}
+                        members={this.props.members}
+                        groups={this.props.groups}
                     />
                 </div>
                 <div style={styles.container}>
@@ -255,6 +239,11 @@ DataCartDetails.propTypes = {
             name: PropTypes.string,
             published: PropTypes.bool,
             permissions: PropTypes.shape({
+                value: PropTypes.oneOf([
+                    'PUBLIC',
+                    'PRIVATE',
+                    'SHARED',
+                ]),
                 groups: PropTypes.objectOf(PropTypes.string),
                 members: PropTypes.objectOf(PropTypes.string),
             }),
@@ -292,6 +281,12 @@ DataCartDetails.propTypes = {
         }),
         groups: PropTypes.arrayOf(PropTypes.number),
         accepted_licenses: PropTypes.object,
+    })).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
 };
 

@@ -12,6 +12,7 @@ import {
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
 import { getUsers } from '../../actions/userActions';
+import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
@@ -32,6 +33,7 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
         this.props.getUsers();
+        this.props.getGroups();
         this.startTimer();
     }
 
@@ -221,6 +223,7 @@ export class StatusDownload extends React.Component {
                                         maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
                                         members={this.props.users.users}
+                                        groups={this.props.groups}
                                     />
                                 ))}
                                 <BaseDialog
@@ -276,8 +279,14 @@ StatusDownload.propTypes = {
         fetching: PropTypes.bool,
         users: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
     getUsers: PropTypes.func.isRequired,
-
+    getGroups: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -292,6 +301,9 @@ function mapStateToProps(state) {
         providers: state.providers,
         user: state.user,
         users: state.users,
+        groups: state.groups.groups.filter(group => (
+            group.administrators.includes(state.user.data.user.username)
+        )),
     };
 }
 
@@ -350,6 +362,9 @@ function mapDispatchToProps(dispatch) {
         },
         getUsers: () => {
             dispatch(getUsers());
+        },
+        getGroups: () => {
+            dispatch(getGroups());
         },
     };
 }

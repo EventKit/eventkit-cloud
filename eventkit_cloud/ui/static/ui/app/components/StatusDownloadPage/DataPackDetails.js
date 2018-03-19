@@ -71,13 +71,6 @@ export class DataPackDetails extends Component {
         return false;
     }
 
-    isZipFileCompleted() {
-        if (this.props.zipFileProp === null) {
-            return true;
-        }
-        return false;
-    }
-
     render() {
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
@@ -169,7 +162,7 @@ export class DataPackDetails extends Component {
                         key={provider.uid}
                         onSelectionToggle={this.onSelectionToggle}
                         onProviderCancel={this.props.onProviderCancel}
-                        updateSelectionNumber={this.updateSelectionNumber} 
+                        updateSelectionNumber={this.updateSelectionNumber}
                         provider={provider}
                         selectedProviders={this.state.selectedProviders}
                         providers={this.props.providers}
