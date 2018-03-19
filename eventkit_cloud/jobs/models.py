@@ -135,7 +135,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(verbose_name="Service Name", unique=True, max_length=100)
     slug = LowerCaseCharField(max_length=40, unique=True, default='')
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True,
-                           help_text='The URL response time will affect the speed of data availability checks.')
+                           help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is '
+                                     'also used to check availability for all OGC services.')
     preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
                                    help_text="This url will be served to the front end for displaying in the map.")
     service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
