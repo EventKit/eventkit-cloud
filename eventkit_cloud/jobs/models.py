@@ -244,7 +244,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
-    region = models.ForeignKey(Region, null=True, on_delete=models.SET_NULL)
+    region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.SET_NULL)
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export

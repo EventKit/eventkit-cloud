@@ -362,7 +362,7 @@ class FormatTask(ExportTask):
 
 
 def osm_data_collection_pipeline(
-        export_task_record_uid, stage_dir, job_name='no_job_name_specified',
+        export_task_record_uid, stage_dir, job_name='no_job_name_specified', url=None, slug=None,
         bbox=None, user_details=None, config=None):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
@@ -370,7 +370,7 @@ def osm_data_collection_pipeline(
     """
     # --- Overpass Query
     op = overpass.Overpass(
-        bbox=bbox, stage_dir=stage_dir,
+        bbox=bbox, stage_dir=stage_dir, slug=slug, url=url,
         job_name=job_name, task_uid=export_task_record_uid,
         raw_data_filename='{}_query.osm'.format(job_name)
     )
@@ -385,9 +385,12 @@ def osm_data_collection_pipeline(
     # --- Generate thematic gpkg from PBF
     geopackage_filepath = os.path.join(stage_dir, '{}.gpkg'.format(job_name))
 
+    if config is None:
+        logger.error("No configuration was provided for OSM export")
+        raise RuntimeError("The configuration field is required for OSM data providers")
+
     feature_selection = FeatureSelection.example(config)
     update_progress(export_task_record_uid, progress=75)
-
     geom = Polygon.from_bbox(bbox)
     g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
     g.run()
@@ -411,7 +414,7 @@ def osm_data_collection_pipeline(
 
 @app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
 def osm_data_collection_task(
-        self, result=None, stage_dir=None, run_uid=None, provider_slug=None, task_uid=None,
+        self, result=None, stage_dir=None, run_uid=None, provider_slug=None, overpass_url=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
         config=None, *args, **kwargs):
     """
@@ -430,8 +433,8 @@ def osm_data_collection_task(
         user_details = {'username': 'username not set in osm_data_collection_task'}
 
     gpkg_filepath = osm_data_collection_pipeline(
-        task_uid, stage_dir, job_name=job_name, bbox=bbox, user_details=user_details,
-        config=config
+        task_uid, stage_dir, slug=provider_slug, job_name=job_name, bbox=bbox, user_details=user_details,
+        url=overpass_url, config=config
     )
 
     selection = parse_result(result, 'selection')

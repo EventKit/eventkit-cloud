@@ -37,7 +37,7 @@ def eventkit_exception_handler(exc, context):
             'detail': error
         }
 
-        if (error.get('id')) and (error.get('message')):
+        if isinstance(error, dict) and error.get('id') and error.get('message'):
             # if both id and message are present we can assume that this error was generated from validators.py
             # and use them as the title and detail
             error_response['title'] = stringify(error.get('id'))
