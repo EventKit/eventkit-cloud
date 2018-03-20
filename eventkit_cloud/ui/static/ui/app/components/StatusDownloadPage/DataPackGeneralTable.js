@@ -55,13 +55,14 @@ export class DataCartGeneralTable extends Component {
 
         const styles = {
             tableRowInfoIcon: {
-                marginLeft: '10px',
+                marginLeft: '5px',
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
                 display: 'inlineBlock',
                 fill: '#4598bf',
                 verticalAlign: 'middle',
+                marginRight: '10px',
             },
         };
 
