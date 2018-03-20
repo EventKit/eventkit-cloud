@@ -78,7 +78,7 @@ class JobViewSet(viewsets.ModelViewSet):
     * preset: One of the published preset files ([html](/api/configurations) or [json](/api/configurations.json)).
         * Use the `uid` as the value of the preset parameter, eg `preset=eed84023-6874-4321-9b48-2f7840e76257`.
         * If no preset parameter is provided, then the default HDM tags will be used for the export.
-    * published: `true` if this export is to be published globally, `false` otherwise.
+    * visibility : PUBLIC  PRIVATE or SHARED
         * Unpublished exports will be purged from the system 48 hours after they are created.
 
     """
@@ -90,7 +90,7 @@ class JobViewSet(viewsets.ModelViewSet):
     pagination_class = LinkHeaderPagination
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
-    search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
+    search_fields = ('name', 'description', 'visibility', 'event', 'user__username', 'region__name')
 
 
     def dispatch(self, request, *args, **kwargs):
@@ -101,7 +101,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
         perms,job_ids = JobPermission.userjobs(self.request.user, "READ")
 
-        return Job.objects.filter(Q(user=self.request.user) | Q(published=True) | Q(pk__in=job_ids))
+        return Job.objects.filter(Q(user=self.request.user) | Q(visibility=Job.Visibility.PUBLIC.value) | Q(pk__in=job_ids))
 
     def list(self, request, *args, **kwargs):
         """
@@ -225,7 +225,6 @@ class JobViewSet(viewsets.ModelViewSet):
                     }
                   ],
                   "configurations": [],
-                  "published": false,
                   "visibility" : "PRIVATE",
                   "feature_save": false,
                   "feature_pub": false,
@@ -442,7 +441,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
                Examples:
 
-                   { "published" : false, "featured" : true }
+                   { "visibility" : 'SHARED', "featured" : true }
                    { "featured" : false }
 
            * Returns: a copy of the new  values on success
@@ -450,7 +449,7 @@ class JobViewSet(viewsets.ModelViewSet):
                Example:
 
                    {
-                       "published": false,
+                       "visibility": 'SHARED',
                        "featured" : true,
                        "success": true
                    }
@@ -518,8 +517,8 @@ class JobViewSet(viewsets.ModelViewSet):
 
                     if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
 
-            if  admins == 0 and job.published == False:
-                return Response([{'detail': "There must be at least one administrator for a private job."}], status.HTTP_400_BAD_REQUEST)
+            if  admins == 0 and job.visibility in [Job.Visibility.PRIVATE.value, Job.Visibility.SHARED.value]:
+                return Response([{'detail': "There must be at least one administrator for a private or shared job."}], status.HTTP_400_BAD_REQUEST)
 
 
             # throw out all current permissions

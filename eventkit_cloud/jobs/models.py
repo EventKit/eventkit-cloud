@@ -359,17 +359,6 @@ class ExportProfile(models.Model):
     def __str__(self):
         return '{0}'.format(self.name)
 
-
-def user_owns_job(user=None, job_uid=None):
-    if not job_uid or not user:
-        return False
-    job = Job.objects.get(uid=job_uid)
-    if job.user == user or job.published:
-        return True
-    else:
-        return False
-
-
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
         return MultiPolygon(geom, srid=geom.srid)

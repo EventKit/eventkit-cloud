@@ -952,7 +952,7 @@ class TestExportTaskViewSet(APITestCase):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom)
+                                      the_geom=the_geom, visibility='PUBLIC')
 
         formats = ExportFormat.objects.all()
         provider = DataProvider.objects.first()
@@ -1299,12 +1299,11 @@ class TestGroupDataViewSet(APITestCase):
 
     def test_leave_group(self):
         # ensure the group is created
-        self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        # check add user_2 as member and only admin
+        # check add user_2 as member and only one admin
         group_data = json.loads(response.content)
         group_data['members'] = ['user_1', 'user_2']
         group_data['administrators'] = ['user_2']
