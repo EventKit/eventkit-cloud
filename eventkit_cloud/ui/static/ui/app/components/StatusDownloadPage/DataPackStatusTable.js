@@ -35,6 +35,7 @@ export class DataPackStatusTable extends Component {
 
     setPermissions() {
         if (this.props.permissions) {
+            // Add the DataPack permissions to local state so we can modify without saving each change
             // Because we have no "public" button, public is grouped in with shared
             const value = this.props.permissions.value === 'PRIVATE' ? 'PRIVATE' : 'SHARED';
             this.setState({ permissions: { ...this.props.permissions, value } });
@@ -68,23 +69,8 @@ export class DataPackStatusTable extends Component {
     handleDropDownChange(e, k, value) {
         // update the value in permissions
         const permissions = { ...this.state.permissions, value };
-        if (permissions.value === 'PRIVATE') {
-            // if the new value is private we can make the api call to update
-            this.props.handlePermissionsChange(permissions);
-        } else {
-            // if the new value is not private (shared) we default to shared with all (public)
-            // then the user has the ability to change the share settings to something else
-            const groups = {};
-            const members = {};
-            this.props.groups.forEach((group) => {
-                groups[group.id] = 'READ';
-            });
-            this.props.members.forEach((member) => {
-                members[member.user.username] = 'READ';
-            });
-            permissions.groups = groups;
-            permissions.members = members;
-        }
+        // update api and local state
+        this.props.handlePermissionsChange(permissions);
         this.setState({ permissions });
     }
 
@@ -162,7 +148,7 @@ export class DataPackStatusTable extends Component {
         };
 
         let membersAndGroups = null;
-        if (this.state.permissions.value !== 'PRIVATE') {
+        if (this.state.permissions.value === 'SHARED') {
             const groupCount = Object.keys(this.state.permissions.groups).length;
             const memberCount = Object.keys(this.state.permissions.members).length;
 
@@ -285,8 +271,10 @@ export class DataPackStatusTable extends Component {
                         groups={this.props.groups}
                         members={this.props.members}
                         permissions={this.state.permissions}
-                        groupsText="hello"
-                        membersText="hello"
+                        groupsText="You may share view and edit rights with groups exclusively.
+                         Group sharing is managed separately from member sharing"
+                        membersText="You may share view and edit rights with members exclusively.
+                         Member sharing is managed separately from group sharing"
                         canUpdateAdmin
                     />
                     :

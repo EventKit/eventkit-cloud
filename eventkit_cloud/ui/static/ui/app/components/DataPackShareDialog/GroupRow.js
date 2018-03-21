@@ -114,33 +114,19 @@ export class GroupRow extends Component {
                 styles.adminCheckIcon.opacity = 0.55;
             }
 
-            if (this.props.admin) {
-                adminButton = (
-                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <AdminShare
-                            onClick={this.handleAdminCheck}
-                            onMouseOver={this.onAdminMouseOver}
-                            onMouseOut={this.onAdminMouseOut}
-                            onFocus={this.onAdminMouseOver}
-                            onBlur={this.onAdminMouseOut}
-                            style={styles.adminCheckIcon}
-                        />
-                    </div>
-                );
-            } else {
-                adminButton = (
-                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <AdminShare
-                            onClick={this.handleAdminCheck}
-                            onMouseOver={this.onAdminMouseOver}
-                            onMouseOut={this.onAdminMouseOut}
-                            onFocus={this.onAdminMouseOver}
-                            onBlur={this.onAdminMouseOut}
-                            style={styles.adminCheckIcon}
-                        />
-                    </div>
-                );
-            }
+            adminButton = (
+                <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                    <AdminShare
+                        className="qa-GroupRow-AdminShare"
+                        onClick={this.handleAdminCheck}
+                        onMouseOver={this.onAdminMouseOver}
+                        onMouseOut={this.onAdminMouseOut}
+                        onFocus={this.onAdminMouseOver}
+                        onBlur={this.onAdminMouseOut}
+                        style={styles.adminCheckIcon}
+                    />
+                </div>
+            );
         }
 
         const groupMembers = [];
@@ -167,6 +153,7 @@ export class GroupRow extends Component {
                 className="qa-GroupRow-Card"
             >
                 <CardHeader
+                    className="qa-GroupRow-CardHeader"
                     title={
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.groupText} className="qa-GroupRow-CardHeader-text">
@@ -200,7 +187,7 @@ export class GroupRow extends Component {
                         );
                     })}
                     {groupMembers.length ?
-                        <div style={{ lineHeight: '20px', paddingTop: '10px' }}>
+                        <div style={{ lineHeight: '20px', paddingTop: '10px' }} className="qa-GroupRow-viewMore">
                             <Eye style={{ height: '20px', verticalAlign: 'text-top' }} />
                             <a href="/groups">View all on Members and Groups Page</a>
                         </div>

@@ -122,14 +122,14 @@ export class MembersHeaderRow extends Component {
         let sharedSort = null;
         if (this.props.canUpdateAdmin) {
             sharedSort = (
-                <div>
+                <div className="qa-MembersHeaderRow-sortLabel">
                     <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                     {LABELS[this.props.sharedOrder]}
                 </div>
             );
         } else {
             sharedSort = (
-                <div>
+                <div className="qa-MembersHeaderRow-sortLabel">
                     {this.props.sharedOrder === 'shared' ?
                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                         :
@@ -175,6 +175,7 @@ export class MembersHeaderRow extends Component {
                                 {checkIcon}
                             </div>
                             <Popover
+                                className="qa-MembersHeaderRow-Popover"
                                 open={this.state.open}
                                 anchorEl={this.state.anchor}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
@@ -182,6 +183,7 @@ export class MembersHeaderRow extends Component {
                                 onRequestClose={this.handleClose}
                             >
                                 <Menu
+                                    className="qa-MembersHeaderRow-Menu"
                                     value={this.props.activeOrder}
                                     onChange={this.handleChange}
                                     menuItemStyle={styles.menuItem}

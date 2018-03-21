@@ -1,8 +1,11 @@
 import React, { Component, PropTypes } from 'react';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
 import GroupsHeaderRow from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
+
 
 export class GroupsBody extends Component {
     constructor(props) {
@@ -107,7 +110,7 @@ export class GroupsBody extends Component {
     }
 
     handleSearchInput(e) {
-        this.setState({ search: e.target.value }, this.props.update);
+        this.setState({ search: e.target.value });
     }
 
     reverseGroupOrder(v) {
@@ -211,6 +214,28 @@ export class GroupsBody extends Component {
                 alignItems: 'center',
                 fontSize: '14px',
             },
+            shareInfo: {
+                display: 'flex',
+                flexWrap: 'wrap',
+                padding: '10px 0px', 
+                lineHeight: '20px',
+            },
+            shareInfoButton: {
+                color: '#4598bf',
+                fontSize: '13px',
+                flex: '0 0 auto',
+            },
+            shareInfoIcon: {
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'bottom',
+                marginRight: '5px',
+            },
+            shareInfoText: {
+                fontSize: '13px',
+                flex: '1 0 auto',
+                textAlign: 'right',
+            },
         };
 
         let { groups } = this.props;
@@ -228,18 +253,40 @@ export class GroupsBody extends Component {
             }
         }
 
+        const selectedGroups = groups.filter(group => group.id in this.props.selectedGroups);
+        const selectedCount = selectedGroups.length;
+        const adminCount = selectedGroups.filter(group => this.props.selectedGroups[group.id] === 'ADMIN').length;
+
+        let shareInfo = null;
+        if (this.props.canUpdateAdmin) {
+            shareInfo = (
+                <div style={styles.shareInfo} className="qa-GroupsBody-shareInfo">
+                    <EnhancedButton
+                        className="qa-GroupsBody-shareInfo-button"
+                        onClick={this.props.handleShowShareInfo}
+                        style={styles.shareInfoButton}
+                    >
+                        <InfoIcon style={styles.shareInfoIcon} className="qa-GroupsBody-shareInfo-icon" />
+                        Sharing Rights
+                    </EnhancedButton>
+                    <span style={styles.shareInfoText} className="qa-GroupsBody-shareInfo-text">
+                        Shared: {selectedCount} Groups plus {adminCount} Admin Groups
+                    </span>
+                </div>
+            );
+        }
+
         let tooltip = null;
         if (this.state.tooltip.target !== null) {
             tooltip = (
                 <GroupBodyTooltip
+                    className="qa-GroupsBody-GroupBodyTooltip"
                     target={this.state.tooltip.target}
                     body={this.body}
                     text={`${this.state.tooltip.admin ? 'Unshare' : 'Share'} administrative rights with group administrators`}
                 />
             );
         }
-
-        const selectedCount = groups.filter(group => group.id in this.props.selectedGroups).length;
 
         return (
             <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
@@ -260,7 +307,9 @@ export class GroupsBody extends Component {
                         hintStyle={{ paddingLeft: '16px', bottom: '0px', color: '#707274' }}
                         charsRemainingStyle={styles.characterLimit}
                     />
+                    {shareInfo}
                     <GroupsHeaderRow
+                        className="qa-GroupsBody-GroupsHeaderRow"
                         groupCount={groups.length}
                         selectedCount={selectedCount}
                         onGroupClick={this.reverseGroupOrder}
@@ -301,6 +350,7 @@ export class GroupsBody extends Component {
 GroupsBody.defaultProps = {
     groupsText: '',
     canUpdateAdmin: false,
+    handleShowShareInfo: () => {},
 };
 
 GroupsBody.propTypes = {
@@ -328,9 +378,9 @@ GroupsBody.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.string,
     ]),
-    update: PropTypes.func.isRequired,
     onGroupsUpdate: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
+    handleShowShareInfo: PropTypes.func,
 };
 
 export default GroupsBody;

@@ -97,33 +97,19 @@ export class MemberRow extends Component {
                 styles.adminCheckIcon.opacity = 0.55;
             }
 
-            if (this.props.admin) {
-                adminButton = (
-                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <AdminShare
-                            onClick={this.handleAdminCheck}
-                            onMouseOver={this.onAdminMouseOver}
-                            onMouseOut={this.onAdminMouseOut}
-                            onFocus={this.onAdminMouseOver}
-                            onBlur={this.onAdminMouseOut}
-                            style={styles.adminCheckIcon}
-                        />
-                    </div>
-                );
-            } else {
-                adminButton = (
-                    <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
-                        <AdminShare
-                            onClick={this.handleAdminCheck}
-                            onMouseOver={this.onAdminMouseOver}
-                            onMouseOut={this.onAdminMouseOut}
-                            onFocus={this.onAdminMouseOver}
-                            onBlur={this.onAdminMouseOut}
-                            style={styles.adminCheckIcon}
-                        />
-                    </div>
-                );
-            }
+            adminButton = (
+                <div ref={(input) => { this.tooltip = input; }} style={{ display: 'flex', alignItems: 'center' }}>
+                    <AdminShare
+                        className="qa-MemberRow-AdminShare"
+                        onClick={this.handleAdminCheck}
+                        onMouseOver={this.onAdminMouseOver}
+                        onMouseOut={this.onAdminMouseOut}
+                        onFocus={this.onAdminMouseOver}
+                        onBlur={this.onAdminMouseOut}
+                        style={styles.adminCheckIcon}
+                    />
+                </div>
+            );
         }
 
         return (
@@ -134,6 +120,7 @@ export class MemberRow extends Component {
                 className="qa-MemberRow-Card"
             >
                 <CardHeader
+                    className="qa-MemberRow-CardHeader"
                     title={
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.text} className="qa-MemberRow-CardHeader-text">

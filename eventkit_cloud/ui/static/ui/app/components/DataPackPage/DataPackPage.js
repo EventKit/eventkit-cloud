@@ -280,7 +280,7 @@ export class DataPackPage extends React.Component {
 
     handleShareSave(permissions) {
         this.handleShareClose();
-        this.props.updateDataCartPermissions(this.state.targetJob, permissions);
+        this.props.updateDataCartPermissions(this.state.targetJob, { permissions });
     }
 
     render() {
@@ -440,17 +440,12 @@ export class DataPackPage extends React.Component {
                         members={this.props.users}
                         permissions={{
                             groups: {
-                                5: 'ADMIN',
-                                6: 'ADMIN',
-                                8: 'READ',
-                                10: 'READ',
-                                11: 'READ',
-                                14: 'ADMIN',
-                                17: 'READ',
+                                2: 'ADMIN',
+                                3: 'ADMIN',
+                                4: 'READ',
                             },
                             members: {
-                                old_user: 'ADMIN',
-                                user_four: 'READ',
+                                user_three: 'READ',
                                 user_one: 'READ',
                                 user_two: 'READ',
                             },
@@ -559,8 +554,8 @@ function mapDispatchToProps(dispatch) {
         getUsers: () => {
             dispatch(getUsers());
         },
-        updateDataCartPermissions: (uid, permissions) => {
-            dispatch(updateDataCartPermissions(uid, { permissions }));
+        updateDataCartPermissions: (uid, options) => {
+            dispatch(updateDataCartPermissions(uid, options));
         },
     };
 }

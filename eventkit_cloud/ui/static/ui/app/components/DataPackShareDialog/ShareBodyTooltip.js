@@ -54,7 +54,7 @@ export class ShareBodyTooltip extends Component {
             text: {
                 background: 'white',
                 border: '1px solid rgba(0, 0, 0, 0.2)',
-                padding: '15px 25px',
+                padding: '15px 45px',
                 textAlign: 'center',
                 fontSize: '14px',
                 fontWeight: 700,

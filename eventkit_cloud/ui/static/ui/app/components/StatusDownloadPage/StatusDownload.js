@@ -261,12 +261,12 @@ StatusDownload.propTypes = {
     permissionState: PropTypes.shape({
         updating: PropTypes.bool,
         updated: PropTypes.bool,
-        error: PropTypes.string,
+        error: PropTypes.array,
     }).isRequired,
     expirationState: PropTypes.shape({
         updating: PropTypes.bool,
         updated: PropTypes.bool,
-        error: PropTypes.string,
+        error: PropTypes.array,
     }).isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,

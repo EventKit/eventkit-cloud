@@ -1,8 +1,11 @@
 import React, { Component, PropTypes } from 'react';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import CustomTextField from '../CustomTextField';
 import MembersHeaderRow from './MembersHeaderRow';
 import MemberRow from './MemberRow';
 import MembersBodyTooltip from './ShareBodyTooltip';
+
 
 export class MembersBody extends Component {
     constructor(props) {
@@ -111,7 +114,7 @@ export class MembersBody extends Component {
     }
 
     handleSearchInput(e) {
-        this.setState({ search: e.target.value }, this.props.update);
+        this.setState({ search: e.target.value });
     }
 
     reverseMemberOrder(v) {
@@ -219,6 +222,28 @@ export class MembersBody extends Component {
                 alignItems: 'center',
                 fontSize: '14px',
             },
+            shareInfo: {
+                display: 'flex',
+                flexWrap: 'wrap',
+                padding: '10px 0px',
+                lineHeight: '20px',
+            },
+            shareInfoButton: {
+                color: '#4598bf',
+                fontSize: '13px',
+                flex: '0 0 auto',
+            },
+            shareInfoIcon: {
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'bottom',
+                marginRight: '5px',
+            },
+            shareInfoText: {
+                fontSize: '13px',
+                flex: '1 0 auto',
+                textAlign: 'right',
+            },
         };
 
         let { members } = this.props;
@@ -236,10 +261,34 @@ export class MembersBody extends Component {
             }
         }
 
+        const selectedMembers = members.filter(m => m.user.username in this.props.selectedMembers);
+        const selectedCount = selectedMembers.length;
+        const adminCount = selectedMembers.filter(m => this.props.selectedMembers[m.user.username] === 'ADMIN').length;
+
+        let shareInfo = null;
+        if (this.props.canUpdateAdmin) {
+            shareInfo = (
+                <div style={styles.shareInfo} className="qa-MembersBody-shareInfo">
+                    <EnhancedButton
+                        className="qa-MembersBody-shareInfo-button"
+                        onClick={this.props.handleShowShareInfo}
+                        style={styles.shareInfoButton}
+                    >
+                        <InfoIcon style={styles.shareInfoIcon} className="qa-MembersBody-shareInfo-icon" />
+                        Sharing Rights
+                    </EnhancedButton>
+                    <span style={styles.shareInfoText} className="qa-MembersBody-shareInfo-text">
+                        Shared: {selectedCount} Members plus {adminCount} Admins
+                    </span>
+                </div>
+            );
+        }
+        
         let tooltip = null;
         if (this.state.tooltip.target !== null) {
             tooltip = (
                 <MembersBodyTooltip
+                    className="qa-MembersBody-MembersBodyTooltip"
                     target={this.state.tooltip.target}
                     body={this.body}
                     text={`${this.state.tooltip.admin ? 'Unshare' : 'Share'} administrative rights with group administrators`}
@@ -247,8 +296,6 @@ export class MembersBody extends Component {
                 />
             );
         }
-
-        const selectedCount = members.filter(m => m.user.username in this.props.selectedMembers).length;
 
         return (
             <div style={{ position: 'relative' }} ref={(input) => { this.body = input; }}>
@@ -269,7 +316,9 @@ export class MembersBody extends Component {
                         hintStyle={{ paddingLeft: '16px', bottom: '0px', color: '#707274' }}
                         charsRemainingStyle={styles.characterLimit}
                     />
+                    {shareInfo}
                     <MembersHeaderRow
+                        className="qa-MembersBody-MembersHeaderRow"
                         memberCount={members.length}
                         selectedCount={selectedCount}
                         onMemberClick={this.reverseMemberOrder}
@@ -309,6 +358,7 @@ export class MembersBody extends Component {
 MembersBody.defaultProps = {
     membersText: '',
     canUpdateAdmin: false,
+    handleShowShareInfo: () => {},
 };
 
 MembersBody.propTypes = {
@@ -330,9 +380,9 @@ MembersBody.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
         PropTypes.string,
     ]),
-    update: PropTypes.func.isRequired,
     onMembersUpdate: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
+    handleShowShareInfo: PropTypes.func,
 };
 
 export default MembersBody;

@@ -113,14 +113,14 @@ export class GroupsHeaderRow extends Component {
         let sharedSort = null;
         if (this.props.canUpdateAdmin) {
             sharedSort = (
-                <div>
+                <div className="qa-GroupsHeaderRow-sortLabel">
                     <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                     {LABELS[this.props.sharedOrder]}
                 </div>
             );
         } else {
             sharedSort = (
-                <div>
+                <div className="qa-GroupsHeaderRow-sortLabel">
                     {this.props.sharedOrder === 'shared' ?
                         <ArrowDown style={{ height: '28px', verticalAlign: 'bottom' }} />
                         :
@@ -138,6 +138,7 @@ export class GroupsHeaderRow extends Component {
                 className="qa-GroupsHeaderRow-Card"
             >
                 <CardHeader
+                    className="qa-GroupsHeaderRow-CardHeader"
                     title={
                         <div style={styles.cardHeader}>
                             <div style={styles.group} className="qa-GroupsHeaderRow-CardHeader-text">
@@ -165,6 +166,7 @@ export class GroupsHeaderRow extends Component {
                                 {checkIcon}
                             </div>
                             <Popover
+                                className="qa-GroupsHeaderRow-Popover-sort"
                                 open={this.state.open}
                                 anchorEl={this.state.anchor}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
@@ -172,6 +174,7 @@ export class GroupsHeaderRow extends Component {
                                 onRequestClose={this.handleClose}
                             >
                                 <Menu
+                                    className="qa-GroupsHeaderRow-Menu-sort"
                                     value={this.props.activeOrder}
                                     onChange={this.handleChange}
                                     menuItemStyle={styles.menuItem}

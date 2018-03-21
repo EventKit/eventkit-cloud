@@ -3,6 +3,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
 import MembersBody from './MembersBody';
+import ShareInfoBody from './ShareInfoBody';
 
 export class DataPackShareDialog extends Component {
     constructor(props) {
@@ -10,12 +11,15 @@ export class DataPackShareDialog extends Component {
         this.handleSave = this.handleSave.bind(this);
         this.handleGroupUpdate = this.handleGroupUpdate.bind(this);
         this.handleMemberUpdate = this.handleMemberUpdate.bind(this);
+        this.showShareInfo = this.showShareInfo.bind(this);
+        this.hideShareInfo = this.hideShareInfo.bind(this);
         this.toggleView = this.toggleView.bind(this);
         this.forceUpdate = this.forceUpdate.bind(this);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
             permissions: this.props.permissions,
+            showShareInfo: false,
         };
     }
 
@@ -33,6 +37,14 @@ export class DataPackShareDialog extends Component {
         const permissions = { ...this.state.permissions };
         permissions.members = members;
         this.setState({ permissions });
+    }
+
+    showShareInfo() {
+        this.setState({ showShareInfo: true });
+    }
+
+    hideShareInfo() {
+        this.setState({ showShareInfo: false });
     }
 
     toggleView(view) {
@@ -85,6 +97,49 @@ export class DataPackShareDialog extends Component {
             },
         };
 
+        let body = null;
+        if (this.state.showShareInfo) {
+            body = (
+                <ShareInfoBody
+                    view={this.state.view}
+                    onReturn={this.hideShareInfo}
+                />
+            );
+        } else if (this.state.view === 'groups') {
+            body = (
+                <GroupsBody
+                    groups={this.props.groups}
+                    members={this.props.members}
+                    selectedGroups={this.state.permissions.groups}
+                    groupsText={this.props.groupsText}
+                    onGroupsUpdate={this.handleGroupUpdate}
+                    canUpdateAdmin={this.props.canUpdateAdmin}
+                    handleShowShareInfo={this.showShareInfo}
+                />
+            );
+        } else {
+            body = (
+                <MembersBody
+                    members={this.props.members}
+                    selectedMembers={this.state.permissions.members}
+                    membersText={this.props.membersText}
+                    onMembersUpdate={this.handleMemberUpdate}
+                    canUpdateAdmin={this.props.canUpdateAdmin}
+                    handleShowShareInfo={this.showShareInfo}
+                />
+            );
+        }
+
+        let groupCount = Object.keys(this.state.permissions.groups).length;
+        if (groupCount === this.props.groups.length) {
+            groupCount = 'ALL';
+        }
+
+        let memberCount = Object.keys(this.state.permissions.members).length;
+        if (memberCount === this.props.members.length) {
+            memberCount = 'ALL';
+        }
+
         return (
             <ShareBaseDialog
                 show={this.props.show}
@@ -100,20 +155,23 @@ export class DataPackShareDialog extends Component {
                         style={{ display: 'flex', flexWrap: 'wrap' }}
                     >
                         <RaisedButton
-                            label={`GROUPS (${this.props.groups.length})`}
+                            className="qa-DataPackShareDialog-RaisedButton-groups"
+                            label={`GROUPS (${groupCount})`}
                             style={styles.groupsButton}
                             labelColor={this.state.view === 'groups' ? '#fff' : '#4598bf'}
                             backgroundColor={this.state.view === 'groups' ? '#4598bf' : 'whitesmoke'}
                             onClick={this.toggleView}
                         />
                         <RaisedButton
-                            label={`MEMBERS (${this.props.members.length})`}
+                            className="qa-DataPackShareDialog-RaisedButton-members"
+                            label={`MEMBERS (${memberCount})`}
                             style={styles.membersButton}
                             labelColor={this.state.view === 'members' ? '#fff' : '#4598bf'}
                             backgroundColor={this.state.view === 'members' ? '#4598bf' : 'whitesmoke'}
                             onClick={this.toggleView}
                         />
                         <div
+                            className="qa-DataPackShareDialog-buttonUnderline"
                             style={{
                                 height: '2px',
                                 width: '100%',
@@ -123,26 +181,7 @@ export class DataPackShareDialog extends Component {
                         />
                     </div>
                 </div>
-                {this.state.view === 'groups' ?
-                    <GroupsBody
-                        groups={this.props.groups}
-                        members={this.props.members}
-                        selectedGroups={this.state.permissions.groups}
-                        groupsText={this.props.groupsText}
-                        update={this.forceUpdate}
-                        onGroupsUpdate={this.handleGroupUpdate}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                    />
-                    :
-                    <MembersBody
-                        members={this.props.members}
-                        selectedMembers={this.state.permissions.members}
-                        membersText={this.props.membersText}
-                        update={this.forceUpdate}
-                        onMembersUpdate={this.handleMemberUpdate}
-                        canUpdateAdmin={this.props.canUpdateAdmin}
-                    />
-                }
+                {body}
             </ShareBaseDialog>
         );
     }
