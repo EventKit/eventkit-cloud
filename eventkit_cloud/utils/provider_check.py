@@ -434,9 +434,7 @@ class TMSProviderCheck(ProviderCheck):
 
     def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
         super(TMSProviderCheck, self).__init__(service_url, layer, aoi_geojson, slug)
-        if not self.service_url.endswith('/'):
-            self.service_url += '/'
-        self.service_url += '0/0/0.png'
+        self.service_url = '{0}/0/0/0.png'.format(self.service_url.rstrip('/'))
 
 
 PROVIDER_CHECK_MAP = {
