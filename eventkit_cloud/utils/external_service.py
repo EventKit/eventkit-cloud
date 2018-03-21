@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 
-from datetime import datetime
+from ..utils import auth_requests
 from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
-from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError
-from mapproxy.seed.spec import validate_seed_conf
+from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
-from mapproxy.config.spec import validate_options
 
 from mapproxy.config.config import load_config, base_config, load_default_config
 from mapproxy.seed import seeder
@@ -22,6 +20,7 @@ from .geopackage import (get_tile_table_names, get_zoom_levels_table,
                          get_table_tile_matrix_information, set_gpkg_contents_bounds)
 
 logger = logging.getLogger(__name__)
+
 
 class CustomLogger(ProgressLog):
 
@@ -157,7 +156,8 @@ class ExternalRasterServiceToGeopackage(object):
 
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
-            check_service(conf_dict)
+            auth_requests.patch_https(self.name)
+            check_service(conf_dict, self.name)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
@@ -245,12 +245,13 @@ def create_conf_from_url(service_url):
     return conf_dict
 
 
-def check_service(conf_dict):
+def check_service(conf_dict, provider_name=None):
     """
     Used to verify the state of the service before running the seed task. This is used to prevent an invalid url from
     being seeded.  MapProxy's default behavior is to either cache a blank tile or to retry, that behavior can be altered,
     in the cache settings (i.e. `get_cache_template`).
     :param conf_dict: A MapProxy configuration as a dict.
+    :param provider_name: (optional) Provider slug, used for client cert authentication if available
     :return: None if valid, otherwise exception is raised.
     """
 
@@ -259,7 +260,7 @@ def check_service(conf_dict):
             continue
         tile = {'x': '1', 'y': '1', 'z': '1'}
         url = conf_dict['sources'][source].get('url') % tile
-        response = requests.get(url, verify=False)
+        response = auth_requests.get(url, slug=provider_name, verify=False)
         if response.status_code in [401, 403]:
             logger.error("The provider has invalid credentials with status code {0} and the text: \n{1}".format(
                 response.status_code, response.text))

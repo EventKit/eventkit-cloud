@@ -138,11 +138,11 @@ class DataProviderForm(forms.ModelForm):
             if not config:
                 return
             from ..utils.external_service import ExternalRasterServiceToGeopackage, \
-                                                 ConfigurationError, SeedConfigurationError
+                                                 ConfigurationError
             service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
                 conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
-            except (ConfigurationError, SeedConfigurationError) as e:
+            except ConfigurationError as e:
                 raise forms.ValidationError(e.message)
 
         elif service_type in ['osm', 'osm-generic']:
