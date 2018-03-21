@@ -400,11 +400,12 @@ export class ExportInfo extends React.Component {
             },
             listHeading: {
                 height: '20px',
-                fontSize: '13px',
+                fontSize: '16px',
+                fontWeight: 300,
             },
             providerListHeading: {
                 position: 'absolute',
-                marginLeft: '50px',
+                marginLeft: '10px',
             },
             refreshIcon: {
                 marginBottom: '-4px',
@@ -507,11 +508,12 @@ export class ExportInfo extends React.Component {
                             <div style={style.sectionBottom}>
                                 <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
                                     <span className="qa-ExportInfo-ListHeaderItem"
-                                    style={style.providerListHeading}>
+                                        style={style.providerListHeading}
+                                    >
                                         DATA PROVIDERS
                                     </span>
                                     <span className="qa-ExportInfo-ListHeaderItem"
-                                    style={{ position: 'absolute', left: '60%' }}
+                                        style={{ marginLeft: '75%' }}
                                     >
                                         AVAILABILITY
                                         <NavigationRefresh
