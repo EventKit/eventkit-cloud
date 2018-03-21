@@ -163,6 +163,17 @@ export class DataPackGridItem extends Component {
         return mapId;
     }
 
+    mapContainerRef(element) {
+        if (!element) {
+            return;
+        }
+
+        // Absorb touch move events.
+        element.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        });
+    }
+
     render() {
         const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
             return (
@@ -396,7 +407,11 @@ export class DataPackGridItem extends Component {
                     </span>
                 </CardText>
                 <CardMedia expandable>
-                    <div id={this.getMapId()} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
+                    <div
+                        id={this.getMapId()}
+                        style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }}
+                        ref={this.mapContainerRef}
+                    />
                 </CardMedia>
                 <CardActions style={{ height: '45px' }}>
                     <span>

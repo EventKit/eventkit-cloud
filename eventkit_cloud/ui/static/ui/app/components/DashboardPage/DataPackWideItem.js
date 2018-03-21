@@ -96,6 +96,17 @@ export class DataPackWideItem extends Component {
         return mapId;
     }
 
+    mapContainerRef(element) {
+        if (!element) {
+            return;
+        }
+
+        // Absorb touch move events.
+        element.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        });
+    }
+
     render() {
         const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
             return (
@@ -207,7 +218,11 @@ export class DataPackWideItem extends Component {
                 key={this.props.run.uid}
             >
                 <div style={{display: 'flex', flexWrap: 'nowrap', height: cardHeight}}>
-                    <div id={this.getMapId()} style={styles.map} />
+                    <div
+                        id={this.getMapId()}
+                        style={styles.map}
+                        ref={this.mapContainerRef}
+                    />
                     <div style={styles.info}>
                         <CardTitle
                             titleColor="#4598bf"
