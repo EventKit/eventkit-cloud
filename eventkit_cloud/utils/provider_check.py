@@ -441,7 +441,8 @@ class WMSProviderCheck(OWSProviderCheck):
         logger.debug("WMS layers offered: {}".format([n.text for l,n in layer_names if n]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
         if len(layer) == 0:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
+            self.result = CheckResults.SUCCESS
             return None
 
         layer = layer[0]
@@ -489,7 +490,8 @@ class WMTSProviderCheck(OWSProviderCheck):
         logger.debug("WMTS layers offered: {}".format([n.text for l,n in layer_names if n is not None]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
         if len(layer) == 0:
-            self.result = CheckResults.LAYER_NOT_AVAILABLE
+            # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
+            self.result = CheckResults.SUCCESS
             return None
 
         layer = layer[0]
