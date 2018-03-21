@@ -137,7 +137,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     url = models.CharField(verbose_name="Service URL", max_length=1000, null=True, default='', blank=True,
                            help_text='The SERVICE_URL is used as the endpoint for WFS, OSM, and WCS services. It is '
                                      'also used to check availability for all OGC services. If you are adding a TMS '
-                                     'service, please use the format http(s)://host/tiles/default')
+                                     'service, please provide a link to a single tile, but with the coordinate numbers '
+                                     'replaced by {z}, {y}, and {x}.')
     preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
                                    help_text="This url will be served to the front end for displaying in the map.")
     service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
