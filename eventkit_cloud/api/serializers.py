@@ -16,9 +16,10 @@ from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
-from django.contrib.auth.models import User,Group
-from ..core.models import GroupPermission,JobPermission
+from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 
+from ..core.models import GroupPermission, JobPermission
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -42,7 +43,6 @@ from eventkit_cloud.utils.s3 import get_presigned_url
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 import validators
-
 
 try:
     from collections import OrderedDict
@@ -132,6 +132,7 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
         return str(exc_info[1])
 
+
 class ExportTaskRecordSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
     result = serializers.SerializerMethodField()
@@ -177,6 +178,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
         model = DataProviderTaskRecord
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
 
+
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
 
@@ -195,8 +197,10 @@ class SimpleJobSerializer(serializers.Serializer):
     original_selection = serializers.SerializerMethodField(read_only=True)
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
+    visibility = serializers.CharField()
     featured = serializers.BooleanField()
     formats = serializers.SerializerMethodField('get_provider_tasks')
+    permissions = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -230,6 +234,10 @@ class SimpleJobSerializer(serializers.Serializer):
             feature['geometry'] = geojson_geom
             feature_collection['features'].append(feature)
         return feature_collection
+
+    @staticmethod
+    def get_permissions(obj):
+        return JobPermission.jobpermissions(obj)
 
     def get_provider_tasks(self, obj):
         return [format.name for format in obj.provider_tasks.first().formats.all()]
@@ -290,31 +298,37 @@ class ExportRunSerializer(serializers.ModelSerializer):
         uri[5] = None  # query
         return urlunparse(uri)
 
-class GroupPermissionSerializer(serializers.ModelSerializer):
 
+class GroupPermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupPermission
-        fields = ( 'group', 'user', 'permission')
+        fields = ('group', 'user', 'permission')
+
+
+class JobPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobPermission
+        fields = ('job', 'content_type', 'object_id', 'permission')
 
 
 class GroupSerializer(serializers.ModelSerializer):
-
     members = serializers.SerializerMethodField()
     administrators = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ( 'id', 'name', 'members', 'administrators' )
-
+        fields = ('id', 'name', 'members', 'administrators')
 
     @staticmethod
     def get_members(instance):
-        user_ids = [permission.user.id  for permission in GroupPermission.objects.filter(group=instance).filter(permission=GroupPermission.Permissions.MEMBER.value)]
+        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
+            permission=GroupPermission.Permissions.MEMBER.value)]
         return [user.username for user in User.objects.filter(id__in=user_ids).all()]
 
     @staticmethod
     def get_administrators(instance):
-        user_ids = [permission.user.id  for permission in GroupPermission.objects.filter(group=instance).filter(permission=GroupPermission.Permissions.ADMIN.value)]
+        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
+            permission=GroupPermission.Permissions.ADMIN.value)]
         return [user.username for user in User.objects.filter(id__in=user_ids).all()]
         return []
 
@@ -327,7 +341,6 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     username = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -362,7 +375,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.Serializer):
     """
         Return a GeoJSON representation of the user data.
-        
+
     """
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
@@ -394,7 +407,8 @@ class UserDataSerializer(serializers.Serializer):
 
     @staticmethod
     def get_groups(instance):
-        group_ids = [perm.group.id  for perm in GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")]
+        group_ids = [perm.group.id for perm in
+                     GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")]
         return group_ids
 
     def update(self, instance, validated_data):
@@ -522,8 +536,9 @@ class ListJobSerializer(serializers.Serializer):
     original_selection = serializers.SerializerMethodField(read_only=True)
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
-    featured  = serializers.BooleanField()
-
+    visibility = serializers.CharField()
+    featured = serializers.BooleanField()
+    permissions = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -562,6 +577,10 @@ class ListJobSerializer(serializers.Serializer):
     def get_owner(obj):
         return obj.user.username
 
+    @staticmethod
+    def get_permissions(obj):
+        return JobPermission.jobpermissions(obj)
+
 
 class JobSerializer(serializers.Serializer):
     """
@@ -591,9 +610,11 @@ class JobSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
+    visibility = serializers.CharField(required=False)
     featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
@@ -702,3 +723,7 @@ class JobSerializer(serializers.Serializer):
     def get_owner(obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+    @staticmethod
+    def get_permissions(obj):
+        return JobPermission.jobpermissions(obj)
