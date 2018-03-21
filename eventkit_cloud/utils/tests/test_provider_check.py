@@ -6,7 +6,8 @@ import requests
 from django.conf import settings
 from django.test import TransactionTestCase
 from mock import Mock, patch, MagicMock
-from ..provider_check import WCSProviderCheck, WFSProviderCheck, WMSProviderCheck, OverpassProviderCheck, CheckResults
+from ..provider_check import WCSProviderCheck, WFSProviderCheck, WMSProviderCheck, WMTSProviderCheck,\
+    OverpassProviderCheck, CheckResults
 
 logger = logging.getLogger(__name__)
 
@@ -40,12 +41,23 @@ class TestProviderCheck(TransactionTestCase):
         result_status = json.loads(pc.check())['status']
         self.assertEquals(get_status(CheckResults.CONNECTION), result_status)
 
+        # Test: server throws SSL exception
+        get.side_effect = requests.exceptions.SSLError()
+        result_status = json.loads(pc.check())['status']
+        self.assertEquals(get_status(CheckResults.SSL_EXCEPTION), result_status)
+
         # Test: server returns unauthorized response code
         get.side_effect = None
         response = MagicMock()
         response.content = ""
         response.status_code = 403
         response.ok = False
+        get.return_value = response
+        result_status = json.loads(pc.check())['status']
+        self.assertEquals(get_status(CheckResults.UNAUTHORIZED), result_status)
+
+        # Test: server returns 404 response code
+        response.status_code = 404
         get.return_value = response
         result_status = json.loads(pc.check())['status']
         self.assertEquals(get_status(CheckResults.UNAUTHORIZED), result_status)
@@ -75,6 +87,11 @@ class TestProviderCheck(TransactionTestCase):
         get.return_value = response
         result_status = json.loads(pc.check())['status']
         self.assertEquals(get_status(CheckResults.SUCCESS), result_status)
+
+        # Test: no service_url was provided
+        pc.service_url = ""
+        result_status = json.loads(pc.check())['status']
+        self.assertEquals(get_status(CheckResults.NO_URL), result_status)
 
     @patch('eventkit_cloud.utils.provider_check.requests.get')
     def test_check_wfs(self, get):
@@ -174,6 +191,46 @@ class TestProviderCheck(TransactionTestCase):
                                    </Layer>
                                </Capability>
                            </WMT_MS_Capabilities>"""
+
+        self.check_ows(get, pc, invalid_content, empty_content, no_intersect_content, valid_content)
+
+    @patch('eventkit_cloud.utils.provider_check.requests.get')
+    def test_check_wmts(self, get):
+        url = "http://example.com/wmts?"
+        layer = "exampleLayer"
+        pc = WMTSProviderCheck(url, layer, self.aoi_geojson)
+
+        invalid_content = ""
+        empty_content = """<Capabilities version="1.0.0">
+                               <Contents>
+                               </Contents>
+                           </Capabilities>"""
+
+        no_intersect_content = """<Capabilities version="1.0.0">
+                                      <Contents>
+                                          <Layer>
+                                              <Layer>
+                                                  <Title>exampleLayer</Title>
+                                                  <WGS84BoundingBox>
+                                                       <LowerCorner>10 10</LowerCorner>
+                                                       <UpperCorner>11 11</UpperCorner>
+                                                  </WGS84BoundingBox>
+                                              </Layer>
+                                          </Layer>
+                                      </Contents>
+                                  </Capabilities>"""
+
+        valid_content = """<Capabilities version="1.0.0">
+                               <Contents>
+                                   <Layer>
+                                       <Title>exampleLayer</Title>
+                                       <WGS84BoundingBox>
+                                            <LowerCorner>10 10</LowerCorner>
+                                            <UpperCorner>11 11</UpperCorner>
+                                       </WGS84BoundingBox>
+                                   </Layer>
+                               </Contents>
+                           </Capabilities>"""
 
         self.check_ows(get, pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
