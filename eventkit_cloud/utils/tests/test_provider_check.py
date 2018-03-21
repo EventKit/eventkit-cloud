@@ -60,7 +60,7 @@ class TestProviderCheck(TransactionTestCase):
         response.status_code = 404
         get.return_value = response
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.UNAUTHORIZED), result_status)
+        self.assertEquals(get_status(CheckResults.NOT_FOUND), result_status)
 
         # Test: server does not return recognizable xml
         response.content = invalid_content
