@@ -49,7 +49,7 @@ class TestExpireRunsTask(TestCase):
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
         created_at = timezone.now() - timezone.timedelta(days=7)
-        Job.objects.create(name="TestJob", created_at=created_at, published=False,
+        Job.objects.create(name="TestJob", created_at=created_at, visibility=Job.Visibility.PRIVATE.value,
                                  description='Test description', user=self.user, the_geom=the_geom)
 
 

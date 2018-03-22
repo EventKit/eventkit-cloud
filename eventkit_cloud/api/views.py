@@ -12,6 +12,7 @@ from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
 from django.contrib.auth.models import User,Group
+from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, JobPermission
 
 from eventkit_cloud.jobs.models import (
@@ -77,7 +78,7 @@ class JobViewSet(viewsets.ModelViewSet):
     * preset: One of the published preset files ([html](/api/configurations) or [json](/api/configurations.json)).
         * Use the `uid` as the value of the preset parameter, eg `preset=eed84023-6874-4321-9b48-2f7840e76257`.
         * If no preset parameter is provided, then the default HDM tags will be used for the export.
-    * published: `true` if this export is to be published globally, `false` otherwise.
+    * visibility : PUBLIC  PRIVATE or SHARED
         * Unpublished exports will be purged from the system 48 hours after they are created.
 
     """
@@ -89,7 +90,7 @@ class JobViewSet(viewsets.ModelViewSet):
     pagination_class = LinkHeaderPagination
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
-    search_fields = ('name', 'description', 'event', 'user__username', 'region__name', 'published')
+    search_fields = ('name', 'description', 'visibility', 'event', 'user__username', 'region__name')
 
 
     def dispatch(self, request, *args, **kwargs):
@@ -97,7 +98,10 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Return all objects user can view."""
-        return Job.objects.filter(Q(user=self.request.user) | Q(published=True))
+
+        perms,job_ids = JobPermission.userjobs(self.request.user, "READ")
+
+        return Job.objects.filter(Q(user=self.request.user) | Q(visibility=Job.Visibility.PUBLIC.value) | Q(pk__in=job_ids))
 
     def list(self, request, *args, **kwargs):
         """
@@ -221,7 +225,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     }
                   ],
                   "configurations": [],
-                  "published": false,
+                  "visibility" : "PRIVATE",
                   "feature_save": false,
                   "feature_pub": false,
                   "region": null,
@@ -350,6 +354,12 @@ class JobViewSet(viewsets.ModelViewSet):
                                               }]}
                     return Response(error_data, status=status_code)
 
+
+                # assign ADMIN permission to user
+
+                jp = JobPermission.objects.create(job=job, content_object=job.user, permission=JobPermission.Permissions.ADMIN.value)
+                jp.save()
+
             # run the tasks
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
@@ -422,7 +432,7 @@ class JobViewSet(viewsets.ModelViewSet):
         else:
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
-
+    @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
         """
            Update one or more attributes for the given job
@@ -431,7 +441,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
                Examples:
 
-                   { "published" : false, "featured" : true }
+                   { "visibility" : 'SHARED', "featured" : true }
                    { "featured" : false }
 
            * Returns: a copy of the new  values on success
@@ -439,7 +449,7 @@ class JobViewSet(viewsets.ModelViewSet):
                Example:
 
                    {
-                       "published": false,
+                       "visibility": 'SHARED',
                        "featured" : true,
                        "success": true
                    }
@@ -448,20 +458,93 @@ class JobViewSet(viewsets.ModelViewSet):
 
            """
 
+
         job = Job.objects.get(uid=uid)
         if job.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
+
+        # Does the user have admin permission to make changes to this job?
+
+        perms,job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        if not job.id in job_ids:
+            return Response([{'detail': 'ADMIN permission is required to update this job.'}], status.HTTP_400_BAD_REQUEST)
 
         response = {}
         payload = request.data
 
         for attribute, value in payload.iteritems():
+            if attribute == 'visibility' and value not in Job.Visibility.__members__:
+                msg = "unknown visibility value - %s" % value
+                return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
+
+
             if hasattr(job, attribute):
                 setattr(job, attribute, value)
                 response[attribute] = value
+            elif attribute == 'permissions':
+                pass
             else:
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{'detail': msg }], status.HTTP_400_BAD_REQUEST)
+
+
+        # update permissions if present
+
+        admins = 0
+        if "permissions" in payload:
+            serializer = JobSerializer(job, context={'request': request})
+            users = []
+            groups = []
+            if "users" in payload["permissions"] :  users = payload["permissions"]["users"]
+            if "groups" in payload["permissions"]: groups = payload["permissions"]["groups"]
+
+
+            #make sure all user names, group names, and permissions are valid, and insure there is at least one admn
+            #if the job is made private
+
+            for index,set in enumerate( [users,groups]):
+                for key in set:
+                    if index == 0 :
+                        record = User.objects.filter(username=key)
+                    else:
+                        record = Group.objects.filter(name=key)
+
+                    if not record.exists():
+                        return Response([{'detail': "unidentified user or group : %s" % key }], status.HTTP_400_BAD_REQUEST)
+                    perm = set[key]
+                    if not perm  in JobPermission.Permissions.__members__:
+                        return Response([{'detail': "invalid permission value : %s" % perm }], status.HTTP_400_BAD_REQUEST)
+
+                    if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
+
+            if  admins == 0 and job.visibility in [Job.Visibility.PRIVATE.value, Job.Visibility.SHARED.value]:
+                return Response([{'detail': "There must be at least one administrator for a private or shared job."}], status.HTTP_400_BAD_REQUEST)
+
+
+            # throw out all current permissions
+
+            for jp in JobPermission.objects.filter(job=job):
+                jp.delete()
+
+            # write out users
+
+            for key in users:
+                perm = users[key]
+                user = User.objects.filter(username=key).all()[0]
+                jp = JobPermission.objects.create(job=job, content_object=user, permission=perm)
+                jp.save()
+
+            # write out groups
+
+            for key in groups:
+                perm = groups[key]
+                group = Group.objects.filter(name=key).all()[0]
+                jp = JobPermission.objects.create(job=job, content_object=group, permission=perm)
+                jp.save()
+
+
+            response['permissions'] = payload["permissions"]
+
 
         job.save()
         response['success'] = True
@@ -511,7 +594,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
 
-class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
+class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
     """
@@ -534,24 +617,26 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         :return:
         """
         try:
-            provider = DataProvider.objects.get(slug=slug)
+            provider = ExportProvider.objects.get(slug=slug)
             provider_type = str(provider.export_provider_type)
 
-            geojson = self.request.data.get('geojson', None)
+            aoi = None
+            if request is not None:
+                aoi = request.data.get('aoi')
 
             url = str(provider.url)
             if url == "" and 'osm' in provider_type:
                 url = settings.OVERPASS_API_URL
 
             checker_type = get_provider_checker(provider_type)
-            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=aoi, slug=provider.slug)
             response = checker.check()
 
             logger.info("Status of provider '{}': {}".format(str(provider.name), response))
 
             return Response(response, status=status.HTTP_200_OK)
 
-        except DataProvider.DoesNotExist as e:
+        except ExportProvider.DoesNotExist as e:
             return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
@@ -638,7 +723,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
+        perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
+
+        return ExportRun.objects.filter((Q(user=self.request.user) | Q(pk__in=job_ids) | Q(job__published=True)) & Q(deleted=False))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -695,6 +782,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         else:
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
+
 
     @list_route(methods=['post', 'get'])
     def filter(self, request, *args, **kwargs):
@@ -1075,6 +1163,194 @@ class GroupViewSet(viewsets.ModelViewSet):
                     if user:
                         GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.ADMIN.value)
 
+        group  = Group.objects.get(pk=group_id)
+        serializer = GroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, id=None):
+        """
+            * get a group with a specific ID.  Return its data, including users in the group
+        """
+        group  = Group.objects.get(pk=id)
+        serializer = GroupSerializer(group)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def destroy(self, request, id=None, *args, **kwargs):
+
+        """
+            Destroy a group
+        """
+
+        # Not permitted if the requesting user is not an administrator
+
+        group = Group.objects.get(pk=id)
+
+        if not self.useradmin(group,request):
+            return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
+
+        super(GroupViewSet, self).destroy(request, *args, **kwargs)
+        return Response("OK",  status=status.HTTP_200_OK)
+
+        # instance = self.get_object()
+        # instance.soft_delete(user=request.user)
+        # return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @transaction.atomic
+    def partial_update(self, request, id=None, *args, **kwargs):
+        """
+             Change the group's name, members, and admnistrators
+
+
+             Sample input:
+
+                 {
+                    "name": "Omaha 319"
+                    "members": [ "user2", "user3", "admin"],
+                    "administrators": [ "admin" ]
+                 }
+
+         """
+
+        group = Group.objects.get(pk=id)
+
+        # we are not going anywhere if the requesting user is not an
+        # administrator of the current group or there is an attempt to end up with no administrators
+
+        if not self.useradmin(group,request):
+            return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
+
+        if "administrators" in request.data:
+            request_admins = request.data["administrators"]
+            if len(request_admins) < 1:
+                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
+
+        super(GroupViewSet, self).partial_update(request, *args, **kwargs)
+
+        # examine provided lists of administrators and members. Adjust as needed.
+
+        for item in [ ("members",GroupPermission.Permissions.MEMBER.value),("administrators", GroupPermission.Permissions.ADMIN.value)]:
+            permissionlabel = item[0]
+            permission = item[1]
+
+            if not permissionlabel in request.data:
+                continue
+
+            user_ids = [perm.user.id  for perm in GroupPermission.objects.filter(group=group).filter(permission=permission)]
+            currentusers = [user.username for user in User.objects.filter(id__in=user_ids).all()]
+            targetusers  = request.data[permissionlabel]
+
+            ## Add new users for this permission level
+
+            newusers = list(set(targetusers)-set(currentusers))
+            users = User.objects.filter(username__in=newusers).all()
+            for user in users:
+                GroupPermission.objects.create(user=user, group=group, permission=permission)
+
+            ## Remove existing users for this permission level
+
+            removedusers = list(set(currentusers) - set(targetusers))
+            users = User.objects.filter(username__in=removedusers).all()
+            for user in users:
+                perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
+                for perm in perms: perm.delete()
+
+        return Response("OK", status=status.HTTP_200_OK)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """
+    Api components for viewing, creating, and editing groups
+
+    """
+    serializer_class = GroupSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+    parser_classes = (JSONParser,)
+    filter_class=GroupFilter
+    filter_backends = ( filters.SearchFilter, filters.OrderingFilter)
+    lookup_field = 'id'
+    lookup_value_regex = '[^/]+'
+    search_fields = ('name',)
+    ordering_fields = ('name',)
+
+
+    def useradmin(self,group,request):
+        serializer = GroupSerializer(group)
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        return user.username in serializer.get_administrators(group)
+
+    def get_queryset(self):
+        queryset = Group.objects.all()
+        return queryset
+
+    def update(self, request, *args, **kwargs):
+        # we don't support calls to PUT for this viewset.
+        return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        """
+            GET all groups
+
+            Sample result:
+
+                 [
+                    {
+                        "id": 54,
+                        "name": "Omaha 319",
+                        "members": [
+                          "user2",
+                          "admin"
+                        ],
+                        "administrators": [
+                          "admin"
+                        ]
+                      }
+                ]
+
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = GroupSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        """
+            create a new group and place  the current logged in user in the group and its administrators.
+            optionally, provide additional group members
+
+
+            Sample input:
+
+                {
+                    "name": "Omaha 319"
+                }
+
+        """
+        response = super(GroupViewSet, self).create(request, *args, **kwargs)
+        group_id = response.data["id"]
+        user  = User.objects.all().filter(username=request.user.username)[0]
+        group = Group.objects.get(pk=group_id)
+        group.user_set.add(user)
+        groupadmin = GroupPermission.objects.create(user=user,group=group, permission=GroupPermission.Permissions.ADMIN.value)
+        groupadmin.save()
+        groupmember = GroupPermission.objects.create(user=user,group=group, permission=GroupPermission.Permissions.MEMBER.value)
+
+        if "members" in request.data:
+            for member  in request.data["members"]:
+                if member  != user.username:
+                    user  = User.objects.all().filter(username=member)[0]
+                    if user:
+                        GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.MEMBER.value)
+
+        if "administrators" in request.data:
+            for admin in request.data["administrators"]:
+                if admin  != request.user.username:
+                    user  = User.objects.all().filter(username=admin)[0]
+                    if user:
+                        GroupPermission.objects.create(user=user, group=group, permission=GroupPermission.Permissions.ADMIN.value)
+
         group  = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
 
@@ -1193,7 +1469,6 @@ class GroupViewSet(viewsets.ModelViewSet):
 
 
 
-
 def get_models(model_list, model_object, model_index):
     models = []
     if not model_list:
@@ -1245,7 +1520,6 @@ def get_user_details(request):
         'is_superuser': logged_in_user.is_superuser,
         'is_staff': logged_in_user.is_staff
     }
-
 def geojson_to_geos(geojson_geom, srid=None):
     """
     :param geojson_geom: A stringified geojson geometry
