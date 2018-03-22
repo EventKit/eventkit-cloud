@@ -6,8 +6,8 @@
     <layer-tree-group expanded="1" checked="Qt::Checked" name="EventKit - {{ job_name }}">
       <customproperties/>
       {% for provider in provider_details %}
-      {% if provider.provider_slug == "osm" %}
-      <layer-tree-group expanded="1" checked="Qt::Checked" name="OSM">
+      {% if provider.provider_slug == "osm" or provider.provider_slug == "nome" %}
+      <layer-tree-group expanded="1" checked="Qt::Checked" name="{{ provider.provider_slug }}">
         <customproperties/>
         <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any{{ job_date_time }}" name="place label">
           <customproperties/>
@@ -67,7 +67,7 @@
           <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygons{{ job_date_time }}" name="land">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="1" checked="Qt::Checked" id="osm_bounds_osm_{{ job_date_time }}" name="boundary">
+          <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ provider.provider_slug }}_bounds_{{ provider.provider_slug }}_{{ job_date_time }}" name="boundary">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
@@ -77,7 +77,7 @@
       <layer-tree-group expanded="1" checked="Qt::Checked" name="Rasters">
         <customproperties/>
         {% for provider in provider_details %}
-          {% if provider.provider_slug != "osm" %}
+          {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
           <layer-tree-layer expanded="1" checked="Qt::Checked" id="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" name="{{ provider.provider_slug }}">
             <customproperties/>
           </layer-tree-layer>
@@ -112,7 +112,7 @@
     <rendermaptile>0</rendermaptile>
     <layer_coordinate_transform_info>
       {% for provider in provider_details %}
-      {% if provider.provider_slug != "osm" %}
+      {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
         <layer_coordinate_transform destAuthId="EPSG:3857" srcAuthId="EPSG:4326" srcDatumTransform="-1" destDatumTransform="-1" layerid="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}"/>
       {% endif %}
       {% endfor %}
@@ -121,7 +121,7 @@
   <layer-tree-canvas>
     <custom-order enabled="0">
     {% for provider in provider_details %}
-    {% if provider.provider_slug == "osm" %}
+    {% if provider.provider_slug == "osm" or provider.provider_slug == "nome" %}
       <item>{{ job_name.split|join:"_" }}_places_points_any{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_aviation_points_any{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_points_any{{ job_date_time }}</item>
@@ -139,10 +139,10 @@
       <item>{{ job_name.split|join:"_" }}_aviation_polygons_any{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_natural_polygons_water{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygons{{ job_date_time }}</item>
-      <item>osm_bounds_osm_{{ job_date_time }}</item>
+      <item>{{ provider.provider_slug }}_bounds_{{ provider.provider_slug }}_{{ job_date_time }}</item>
       {% endif %}{% endfor %}
       {% for provider in provider_details %}
-        {% if provider.provider_slug != "osm" %}
+        {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
         <item>{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}</item>
         {% endif %}
       {% endfor %}
@@ -151,8 +151,8 @@
   <legend updateDrawingOrder="true">
     <legendgroup open="true" checked="Qt::Checked" name="EventKit - {{ job_name }}">
     {% for provider in provider_details %}
-    {% if provider.provider_slug == "osm" %}
-      <legendgroup open="true" checked="Qt::Checked" name="OSM">
+    {% if provider.provider_slug == "osm" or provider.provider_slug == "nome" %}
+      <legendgroup open="true" checked="Qt::Checked" name="{{ provider.provider_slug }}">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
             <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_places_points_any{{ job_date_time }}" visible="1"/>
@@ -243,7 +243,7 @@
           </legendlayer>
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="boundary" showFeatureCount="0">
             <filegroup open="true" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="osm_bounds_osm_{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ provider.provider_slug }}_bounds_{{ provider.provider_slug }}_{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
@@ -251,7 +251,7 @@
       {% endif %}
       {% endfor %}
       {% for provider in provider_details %}
-      {% if provider.provider_slug != "osm" %}
+      {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ provider.provider_slug }}" showFeatureCount="0">
           <filegroup open="true" hidden="false">
             <legendlayerfile isInOverview="0" layerid="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" visible="1"/>
@@ -263,7 +263,7 @@
   </legend>
   <projectlayers>
   {% for provider in provider_details %}
-  {% if provider.provider_slug == "osm" %}
+  {% if provider.provider_slug == "osm" or provider.provider_slug == "nome" %}
     <maplayer minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" geometry="Point" simplifyMaxScale="1" type="vector" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
       <extent>
       <xmin>{{ bbox.0 }}</xmin>
@@ -272,7 +272,7 @@
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_points_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -2764,7 +2764,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3150,7 +3150,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_lines_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3487,7 +3487,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_points_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -3781,7 +3781,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_polygons_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4135,7 +4135,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_buildings_polygons_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4426,7 +4426,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_land_polygons{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4693,7 +4693,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_landuse_polygons_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5390,7 +5390,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_natural_polygons_grassland{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5667,7 +5667,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_natural_polygons_water{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5952,7 +5952,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_places_points_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6403,7 +6403,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_rail_lines_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=rail_lines</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=rail_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -6715,7 +6715,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_roads_lines_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -8642,7 +8642,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_waterways_lines_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -9046,7 +9046,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ job_date_time }}-poi1</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -11495,7 +11495,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ job_date_time }}-poi2</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12234,7 +12234,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_leisure_polygons_any{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12543,8 +12543,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>osm_bounds_osm_{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary</datasource>
+      <id>{{ provider.provider_slug }}_bounds_{{ provider.provider_slug }}_{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12799,7 +12799,7 @@ def my_form_open(dialog, layer, feature):
     </maplayer>
        {% endif %}{% endfor %}
        {% for provider in provider_details %}
-       {% if provider.provider_slug != "osm" %}
+       {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
        <maplayer minimumScale="0" maximumScale="1e+08" type="raster" hasScaleBasedVisibilityFlag="0">
          <extent>
          <xmin>{{ bbox.0 }}</xmin>
@@ -12922,7 +12922,7 @@ def my_form_open(dialog, layer, feature):
         <value>{{ job_name.split|join:"_" }}_roads_lines_any{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_waterways_lines_any{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_leisure_polygons_any{{ job_date_time }}</value>
-        <value>osm_bounds_osm_{{ job_date_time }}</value>
+        <value>{{ provider.provider_slug }}_bounds_{{ provider.provider_slug }}_{{ job_date_time }}</value>
       </LayerSnappingList>
       <LayerSnappingEnabledList type="QStringList">
         <value>disabled</value>

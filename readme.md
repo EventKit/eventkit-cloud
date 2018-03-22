@@ -15,9 +15,9 @@ _Note: the RabbitMQ configuration provided here is the Official Docker version a
 There are several options that may be set, however prior to using the EventKit docker setup, two variables must be set
 in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
-Typically `SITE_NAME` is set to 'cloud.eventkit.dev' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
+Typically `SITE_NAME` is set to 'cloud.eventkit.test' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
 then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
-This is usually done by using `export SITE_NAME=cloud.eventkit.dev` on mac/linux or `setx SITE_NAME cloud.eventkit.dev`. 
+This is usually done by using `export SITE_NAME=cloud.eventkit.test` on mac/linux or `setx SITE_NAME cloud.eventkit.test`. 
 Usually docker-compose will need to be run as sudo.  In which case you want to make sure that the environment variables are made available as sudo won't always use the shell environment.
 
 
@@ -29,12 +29,12 @@ After installing docker open an elevated shell/command prompt and enter:
 cd eventkit-cloud
 docker-compose run --rm eventkit python manage.py runinitial setup
 docker-compose up</pre>
-In a different elevated shell/command prompt add the cloud.eventkit.dev to the hosts file:
+In a different elevated shell/command prompt add the cloud.eventkit.test to the hosts file:
 On linux:
-<code> echo "127.0.0.1  cloud.eventkit.dev" > /etc/hosts </code>
+<code> echo "127.0.0.1  cloud.eventkit.test" > /etc/hosts </code>
 On windows:
-<code> echo "127.0.0.1  cloud.eventkit.dev" > "C:\Windows\System32\drivers\etc\hosts"</code>
-Then open a browser and navigate to http://cloud.eventkit.dev
+<code> echo "127.0.0.1  cloud.eventkit.test" > "C:\Windows\System32\drivers\etc\hosts"</code>
+Then open a browser and navigate to http://cloud.eventkit.test
 
 Linux users have indicated issues with the docker setup.  That is because it mounts directories in the containers, and on linux the container user and host user permissions are mapped. To solve this problem run:
 <pre>groupadd -g 880 eventkit
@@ -73,6 +73,17 @@ EMAIL_HOST_PASSWORD='email-password'</pre>
 #### Overpass API
 To use your own instance of an Overpass API add:
 <pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
+
+If an Overpass API endpoint requires a client certificate, you can provide it as an environment variable in PEM format:
+```
+<provider slug>_CERT = '-----BEGIN CERTIFICATE-----
+[certificate contents]
+-----END CERTIFICATE-----
+-----BEGIN PRIVATE KEY-----
+[private key contents]
+-----END PRIVATE KEY-----'
+```
+
 
 #### Geocoder
 By default EventKit will use geonames.org. However it also supports pelias. If wishing to change the geocoder add:
