@@ -487,15 +487,18 @@ class JobViewSet(viewsets.ModelViewSet):
                 msg = "unidentified job attribute - %s" % attribute
                 return Response([{'detail': msg}], status.HTTP_400_BAD_REQUEST)
 
-        # update permissions if present
+        # update permissions if present.  Insure we are not left with 0 admministrators
+        # users and / or groups may be updated.  If no update info is provided, maintain
+        # the current set of permissions.
 
         admins = 0
         if "permissions" in payload:
             serializer = JobSerializer(job, context={'request': request})
-            users = []
-            groups = []
-            if "users" in payload["permissions"]:  users = payload["permissions"]["users"]
-            if "groups" in payload["permissions"]: groups = payload["permissions"]["groups"]
+            current_permissions = serializer.get_permissions(job)
+            if not "users" in payload["permissions"]: payload["permissions"]["users"] =  current_permissions["users"]
+            if not "groups" in payload["permissions"]: payload["permissions"]["groups"] = current_permissions["groups"]
+            users = payload["permissions"]["users"]
+            groups = payload["permissions"]["groups"]
 
             # make sure all user names, group names, and permissions are valid, and insure there is at least one admn
             # if the job is made private
@@ -521,20 +524,16 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response([{'detail': "There must be at least one administrator for a private or shared job."}],
                                 status.HTTP_400_BAD_REQUEST)
 
-            # throw out all current permissions
+            # throw out all current permissions and rewrite them
 
             for jp in JobPermission.objects.filter(job=job):
                 jp.delete()
-
-            # write out users
 
             for key in users:
                 perm = users[key]
                 user = User.objects.filter(username=key).all()[0]
                 jp = JobPermission.objects.create(job=job, content_object=user, permission=perm)
                 jp.save()
-
-            # write out groups
 
             for key in groups:
                 perm = groups[key]
