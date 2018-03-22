@@ -8,7 +8,7 @@ import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import { BreadcrumbStepper } from '../components/BreadcrumbStepper';
+import { BreadcrumbStepper } from '../components/CreateDataPack/BreadcrumbStepper';
 import ExportAOI from '../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../components/CreateDataPack/ExportSummary';
@@ -31,7 +31,6 @@ describe('BreadcrumbStepper component', () => {
             formats: ['gpkg'],
         },
         formats,
-        createExportRequest: () => {},
         submitJob: () => {},
         getProviders: () => {},
         setNextDisabled: () => {},
@@ -76,14 +75,10 @@ describe('BreadcrumbStepper component', () => {
         expect(getMessageSpy.called).toBe(false);
         const nextProps = { ...getProps() };
         nextProps.jobError = {
-            response: {
-                data: {
-                    errors: [
-                        { title: 'one', detail: 'one' },
-                        { title: 'two', detail: 'two' },
-                    ],
-                },
-            },
+            errors: [
+                { title: 'one', detail: 'one' },
+                { title: 'two', detail: 'two' },
+            ],
         };
         wrapper.setProps(nextProps);
         expect(getMessageSpy.calledTwice).toBe(true);
@@ -130,11 +125,12 @@ describe('BreadcrumbStepper component', () => {
         const showErrorStub = sinon.stub(BreadcrumbStepper.prototype, 'showError');
         const wrapper = getWrapper(props);
         const nextProps = { ...getProps() };
-        nextProps.jobError = { response: 'response' };
+        const error = { errors: ['one', 'two'] };
+        nextProps.jobError = error;
         wrapper.setProps(nextProps);
         expect(hideStub.calledOnce).toBe(true);
         expect(showErrorStub.calledOnce).toBe(true);
-        expect(showErrorStub.calledWith('response')).toBe(true);
+        expect(showErrorStub.calledWith(error)).toBe(true);
         hideStub.restore();
         showErrorStub.restore();
     });
@@ -348,24 +344,24 @@ describe('BreadcrumbStepper component', () => {
     it('showError should setState and clear job info', () => {
         const props = getProps();
         props.clearJobInfo = sinon.spy();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const stateStub = sinon.stub(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
         const error = { message: 'oh no' };
         wrapper.instance().showError(error);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showError: true, error })).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showError: true, error })).toBe(true);
         expect(props.clearJobInfo.calledOnce).toBe(true);
-        stateSpy.restore();
+        stateStub.restore();
     });
 
     it('hideError should setState', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(BreadcrumbStepper.prototype, 'setState');
+        const stateStub = sinon.stub(BreadcrumbStepper.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().hideError();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ showError: false })).toBe(true);
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showError: false })).toBe(true);
+        stateStub.restore();
     });
 
     it('showLoading should set loading to true', () => {
@@ -393,7 +389,7 @@ const providers = [
     {
         "display":true,
         "id": 1,
-        "model_url": "http://cloud.eventkit.dev/api/providers/1",
+        "model_url": "http://cloud.eventkit.test/api/providers/1",
         "type": "osm-generic",
         "created_at": "2017-03-24T17:44:22.940611Z",
         "updated_at": "2017-03-24T17:44:22.940629Z",
@@ -413,35 +409,35 @@ const providers = [
 const formats = [
     {
         "uid": "fa94240a-14d1-469f-8b31-335cab6b682a",
-        "url": "http://cloud.eventkit.dev/api/formats/shp",
+        "url": "http://cloud.eventkit.test/api/formats/shp",
         "slug": "shp",
         "name": "ESRI Shapefile Format",
         "description": "Esri Shapefile (OSM Schema)"
     },
     {
         "uid": "381e8529-b6d8-46f4-b6d1-854549ae652c",
-        "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+        "url": "http://cloud.eventkit.test/api/formats/gpkg",
         "slug": "gpkg",
         "name": "Geopackage",
         "description": "GeoPackage"
     },
     {
         "uid": "db36b559-bbca-4322-b059-048dabeceb67",
-        "url": "http://cloud.eventkit.dev/api/formats/gtiff",
+        "url": "http://cloud.eventkit.test/api/formats/gtiff",
         "slug": "gtiff",
         "name": "GeoTIFF Format",
         "description": "GeoTIFF Raster"
     },
     {
         "uid": "79f1d574-ca37-4011-a99c-0484dd331dc3",
-        "url": "http://cloud.eventkit.dev/api/formats/kml",
+        "url": "http://cloud.eventkit.test/api/formats/kml",
         "slug": "kml",
         "name": "KML Format",
         "description": "Google Earth KMZ"
     },
     {
         "uid": "20a6ba89-e03d-4610-b61f-158a74f963c4",
-        "url": "http://cloud.eventkit.dev/api/formats/sqlite",
+        "url": "http://cloud.eventkit.test/api/formats/sqlite",
         "slug": "sqlite",
         "name": "SQLITE Format",
         "description": "SQlite SQL"

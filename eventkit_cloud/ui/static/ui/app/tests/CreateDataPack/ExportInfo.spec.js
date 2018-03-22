@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
@@ -15,9 +14,12 @@ import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
 
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
+
+import axios from 'axios'
+import MockAdapter from 'axios-mock-adapter';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -25,7 +27,6 @@ raf.polyfill();
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
-    injectTapEventPlugin();
     const getProps = () => (
         {
             geojson: {
@@ -65,14 +66,14 @@ describe('ExportInfo component', () => {
     const formats = [
         {
             "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
-            "url": "http://cloud.eventkit.dev/api/formats/shp",
+            "url": "http://cloud.eventkit.test/api/formats/shp",
             "slug": "shp",
             "name": "ESRI Shapefile Format",
             "description": "Esri Shapefile (OSM Schema)"
         },
         {
             "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
-            "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+            "url": "http://cloud.eventkit.test/api/formats/gpkg",
             "slug": "gpkg",
             "name": "Geopackage",
             "description": "GeoPackage"
@@ -218,7 +219,7 @@ describe('ExportInfo component', () => {
 
     it('onChangeCheck should add a provider', () => {
         const appProviders = [{ name: 'one' }, { name: 'two' }];
-        const exportProviders = [{ name: 'one' }];
+        const exportProviders = [{ name: 'one', availability: {} }];
         const event = { target: { name: 'two', checked: true } };
         const props = getProps();
         props.updateExportInfo = sinon.spy();
@@ -229,7 +230,7 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            providers: [{ name: 'one' }, { name: 'two' }],
+            providers: [{ name: 'one', availability: {} }, { name: 'two', availability: {} }],
         })).toBe(true);
     });
 

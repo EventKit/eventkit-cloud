@@ -14,8 +14,8 @@ import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import { List, ListItem} from 'material-ui/List'
 import moment from 'moment';
 import CustomScrollbar from '../CustomScrollbar';
-import BaseDialog from '../BaseDialog';
-import DeleteDialog from '../DeleteDialog';
+import BaseDialog from '../Dialog/BaseDialog';
+import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
@@ -50,7 +50,7 @@ export class DataPackTableItem extends Component {
             return <NavigationCheck className={'qa-DataPackTableItem-NavigationCheck'} style={{color: '#bcdfbb', height: '22px'}}/>
         }
     }
-    handleProviderClose = () => {
+    handleProviderClose() {
         this.setState({providerDialogOpen: false});
 
     };
@@ -161,14 +161,15 @@ export class DataPackTableItem extends Component {
                             primaryText="View Data Sources"
                             onClick={this.handleProviderOpen.bind(this, runProviders)}
                         />
-                        
-                        {this.props.run.user == this.props.user.data.user.username ?
-                        <MenuItem
-                            className={'qa-DataPackTableItem-MenuItem-deleteExport'}
-                            style={{fontSize: '12px'}}
-                            primaryText={'Delete Export'}
-                            onClick={this.showDeleteDialog}/>
-                        : null}
+
+                        { this.props.run.user === this.props.user.data.user.username ?
+                            <MenuItem
+                                className="qa-DataPackTableItem-MenuItem-deleteExport"
+                                style={{ fontSize: '12px' }}
+                                primaryText="Delete Export"
+                                onClick={this.showDeleteDialog}
+                            />
+                            : null}
                     </IconMenu>
                     <BaseDialog
                         className={'qa-DataPackTableItem-BaseDialog'}
@@ -178,11 +179,11 @@ export class DataPackTableItem extends Component {
                     >
                         <List className={'qa-DataPackTableItem-List-dataSources'} >{providersList}</List>
                     </BaseDialog>
-                    <DeleteDialog
+                    <DeleteDataPackDialog
                         className={'qa-DataPackTableItem-DeleteDialog'}
                         show={this.state.deleteDialogOpen}
-                        handleCancel={this.hideDeleteDialog}
-                        handleDelete={this.handleDelete}
+                        onCancel={this.hideDeleteDialog}
+                        onDelete={this.handleDelete}
                     />
                 </TableRowColumn>
             </TableRow>
@@ -194,7 +195,7 @@ DataPackTableItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired
+    providers: PropTypes.array.isRequired,
 };
 
 export default DataPackTableItem;

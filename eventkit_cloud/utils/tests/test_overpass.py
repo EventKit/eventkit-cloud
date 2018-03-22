@@ -25,8 +25,10 @@ class TestOverpass(TestCase):
         self.bbox = [-10.85, 6.25, -10.62, 6.4]  # [<long0>, <lat0>, <long1>, <lat1>]
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
-        Group.objects.create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
 
@@ -65,7 +67,7 @@ class TestOverpass(TestCase):
 
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
-    @patch('eventkit_cloud.utils.overpass.requests.post')
+    @patch('eventkit_cloud.utils.overpass.auth_requests.post')
     def test_run_query(self, mock_post, export_task, mock_close):
         verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
         export_task_instance = Mock(progress=0, estimated_finish=None)
@@ -74,7 +76,7 @@ class TestOverpass(TestCase):
         mock_export_task_instance_id = 1
         op = Overpass(
             stage_dir=self.path + '/files/', task_uid=mock_export_task_instance_id,
-            bbox=self.bbox, job_name='testjob',
+            bbox=self.bbox, job_name='testjob', slug='testslug',
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'
@@ -85,6 +87,7 @@ class TestOverpass(TestCase):
         mock_post.return_value = mock_response
         op.run_query()
         mock_post.assert_called_once_with(self.url,
+                                          slug='testslug',
                                           data=q,
                                           stream=True,
                                           verify=verify_ssl)

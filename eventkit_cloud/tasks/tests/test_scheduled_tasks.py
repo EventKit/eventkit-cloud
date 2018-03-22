@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Marked for deletion
 # class TestPurgeUnpublishedExportsTask(TestCase):
 #     def setUp(self, ):
-#         Group.objects.create(name='TestDefaultExportExtentGroup')
+#         Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
 #         self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
 #         # bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
 #         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
@@ -42,8 +42,10 @@ logger = logging.getLogger(__name__)
 
 class TestExpireRunsTask(TestCase):
     def setUp(self,):
-        Group.objects.create(name='TestExpireRunsTaskGroup')
-        self.user = User.objects.create(username='test', email='test@test.com', password='test')
+        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = group
+            self.user = User.objects.create(username='test', email='test@test.com', password='test')
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
         created_at = timezone.now() - timezone.timedelta(days=7)
@@ -66,7 +68,7 @@ class TestExpireRunsTask(TestCase):
 
             self.assertEquals('Expire Runs', expire_runs.name)
             expire_runs.run()
-            site_url = getattr(settings, "SITE_URL", "cloud.eventkit.dev")
+            site_url = getattr(settings, "SITE_URL", "cloud.eventkit.test")
             expected_url = '{0}/status/{1}'.format(site_url.rstrip('/'), job.uid)
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=1), url=expected_url,
                                        addr=job.user.email, job_name=job.name)
@@ -80,7 +82,7 @@ class TestEmailNotifications(TestCase):
     @patch('eventkit_cloud.tasks.scheduled_tasks.EmailMultiAlternatives')
     def test_send_warning_email(self, alternatives):
         now = timezone.now()
-        site_url = getattr(settings, "SITE_URL", "http://cloud.eventkit.dev")
+        site_url = getattr(settings, "SITE_URL", "http://cloud.eventkit.test")
         url = '{0}/status/1234'.format(site_url.rstrip('/'))
         addr = 'test@test.com'
         job_name = "job"

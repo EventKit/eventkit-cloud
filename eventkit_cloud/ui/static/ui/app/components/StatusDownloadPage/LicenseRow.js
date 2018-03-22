@@ -1,6 +1,6 @@
 import React, {PropTypes, Component} from 'react'
 import {TableRow, TableRowColumn} from 'material-ui/Table';
-import BaseDialog from '../BaseDialog';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class LicenseRow extends React.Component {
     constructor(props) {

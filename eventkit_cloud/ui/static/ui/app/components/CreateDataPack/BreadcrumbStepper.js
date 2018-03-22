@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import { browserHistory } from 'react-router';
 import { connect } from 'react-redux';
 import Divider from 'material-ui/Divider';
@@ -8,14 +8,14 @@ import FloatingActionButton from 'material-ui/FloatingActionButton';
 import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
 import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import ExportAOI from './CreateDataPack/ExportAOI';
-import ExportInfo from './CreateDataPack/ExportInfo';
-import ExportSummary from './CreateDataPack/ExportSummary';
-import { flattenFeatureCollection } from '../utils/mapUtils';
+import ExportAOI from './ExportAOI';
+import ExportInfo from './ExportInfo';
+import ExportSummary from './ExportSummary';
+import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
-    stepperNextEnabled, submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../actions/exportsActions';
-import { getDatacartDetails } from '../actions/statusDownloadActions';
-import BaseDialog from './BaseDialog';
+    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
+import { getDatacartDetails } from '../../actions/statusDownloadActions';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -38,7 +38,8 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentDidMount() {
-        // Clone will mount the stepper and we don't want it disabled if there's information in the exportInfo props
+        // Clone will mount the stepper and we don't want it disabled
+        // if there's information in the exportInfo props
         if (this.props.exportInfo.exportName === '') {
             this.props.setNextDisabled();
         }
@@ -56,7 +57,7 @@ export class BreadcrumbStepper extends React.Component {
         }
         if (nextProps.jobError) {
             this.hideLoading();
-            this.showError(nextProps.jobError.response);
+            this.showError(nextProps.jobError);
         }
     }
 
@@ -124,9 +125,14 @@ export class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
         switch (stepIndex) {
         case 0:
-            return <ExportAOI />;
+            return (<ExportAOI />);
         case 1:
-            return <ExportInfo providers={this.props.providers} formats={this.props.formats} handlePrev={this.handlePrev} />;
+            return (
+                <ExportInfo
+                    providers={this.props.providers}
+                    formats={this.props.formats}
+                    handlePrev={this.handlePrev}
+                />);
         case 2:
             return <ExportSummary allFormats={this.props.formats} />;
         default:
@@ -311,12 +317,10 @@ export class BreadcrumbStepper extends React.Component {
         let message = [];
         if (this.state.error) {
             const responseError = { ...this.state.error };
-            if (responseError.data && responseError.data.errors) {
-                const errors = [...responseError.data.errors];
-                message = errors.map((error, ix) => (
-                    this.getErrorMessage(error.title, error.detail, ix)
-                ));
-            }
+            const errors = [...responseError.errors];
+            message = errors.map((error, ix) => (
+                this.getErrorMessage(error.title, error.detail, ix)
+            ));
             if (!message.length) {
                 message.push(this.getErrorMessage('Error', 'An unknown error has occured'));
             }
@@ -344,7 +348,7 @@ export class BreadcrumbStepper extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 className="qa-BreadcrumbStepper-CircularProgress"
-                                style={{ margin: 'auto', display: 'block' }} 
+                                style={{ margin: 'auto', display: 'block' }}
                                 color={'#4598bf'}
                                 size={50}
                             />
@@ -359,22 +363,21 @@ export class BreadcrumbStepper extends React.Component {
 }
 
 BreadcrumbStepper.propTypes = {
-    aoiInfo: React.PropTypes.object.isRequired,
-    providers: React.PropTypes.array.isRequired,
-    stepperNextEnabled: React.PropTypes.bool.isRequired,
-    exportInfo: React.PropTypes.object.isRequired,
-    submitJob: React.PropTypes.func.isRequired,
-    getProviders: React.PropTypes.func.isRequired,
-    setNextDisabled: React.PropTypes.func.isRequired,
-    setNextEnabled: React.PropTypes.func.isRequired,
-    clearAoiInfo: React.PropTypes.func.isRequired,
-    clearExportInfo: React.PropTypes.func.isRequired,
-    clearJobInfo: React.PropTypes.func.isRequired,
-    jobFetched: React.PropTypes.bool.isRequired,
-    jobError: React.PropTypes.object,
-    jobuid: React.PropTypes.string.isRequired,
-    formats: React.PropTypes.array.isRequired,
-    getFormats: React.PropTypes.func.isRequired,
+    aoiInfo: PropTypes.object.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    stepperNextEnabled: PropTypes.bool.isRequired,
+    exportInfo: PropTypes.object.isRequired,
+    submitJob: PropTypes.func.isRequired,
+    getProviders: PropTypes.func.isRequired,
+    setNextDisabled: PropTypes.func.isRequired,
+    clearAoiInfo: PropTypes.func.isRequired,
+    clearExportInfo: PropTypes.func.isRequired,
+    clearJobInfo: PropTypes.func.isRequired,
+    jobFetched: PropTypes.bool.isRequired,
+    jobError: PropTypes.object,
+    jobuid: PropTypes.string.isRequired,
+    formats: PropTypes.arrayOf(PropTypes.object).isRequired,
+    getFormats: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -399,9 +402,6 @@ function mapDispatchToProps(dispatch) {
         },
         setNextDisabled: () => {
             dispatch(stepperNextDisabled());
-        },
-        setNextEnabled: () => {
-            dispatch(stepperNextEnabled());
         },
         clearAoiInfo: () => {
             dispatch(clearAoiInfo());

@@ -8,13 +8,9 @@ import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import {Account} from '../../components/AccountPage/Account';
-
-import isEqual from 'lodash/isEqual';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 describe('Account Component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const getProps = () => {

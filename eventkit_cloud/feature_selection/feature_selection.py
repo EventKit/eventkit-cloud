@@ -68,6 +68,7 @@ BANNED_THEME_NAMES = [
     'other_relations'
 ]
 
+
 # adapted from https://github.com/django/django/blob/92053acbb9160862c3e743a99ed8ccff8d4f8fd6/django/utils/text.py#L417
 def slugify(s):
     slug = unicodedata.normalize('NFKD', unicode(s))
@@ -77,7 +78,7 @@ def slugify(s):
     return slug
 
 
-# FeatureSelection seralizes as YAML.
+# FeatureSelection serializes as YAML.
 # It describes a set of tables (themes)
 # to create in a Spatialite database.
 class FeatureSelection(object):
@@ -155,10 +156,9 @@ class FeatureSelection(object):
             # add exceptions
             #self._valid = (self._yaml != None)
 
-
     @property
     def valid(self):
-        return self.doc != None
+        return self.doc is not None
 
     @property
     def errors(self):

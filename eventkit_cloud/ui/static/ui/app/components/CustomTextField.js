@@ -1,21 +1,17 @@
-import React, {Component} from 'react';
-import {TextField} from 'material-ui';
-import clone from 'lodash/clone';
-import uniqueId from 'lodash/uniqueId';
+import React, { Component, PropTypes } from 'react';
+import { TextField } from 'material-ui';
 import * as ReactDOM from 'react-dom';
 
 export class CustomTextField extends Component {
     constructor(props) {
         super(props);
-
-        this.textFieldProps = clone(this.props);
-        delete this.textFieldProps.showRemaining;
-        delete this.textFieldProps.onChange;
-
+        this.onChange = this.onChange.bind(this);
+        this.onFocus = this.onFocus.bind(this);
+        this.onBlur = this.onBlur.bind(this);
         this.state = {
             charsRemaining: this.props.maxLength,
             focused: false,
-        }
+        };
 
         this.styles = {
             charsRemaining: {
@@ -23,43 +19,51 @@ export class CustomTextField extends Component {
                 bottom: '4px',
                 right: '16px',
                 transform: 'translateY(-50%)',
-                fontWeight: 'bold'
-            }
-        }
+                fontWeight: 'bold',
+            },
+        };
     }
 
-    onChange = (e) => {
+    onChange(e, val) {
         if (this.props.onChange) {
-            this.props.onChange(e);
+            this.props.onChange(e, val);
         }
 
-        this.setState({charsRemaining: this.props.maxLength - e.target.value.length});
+        this.setState({ charsRemaining: this.props.maxLength - e.target.value.length });
     }
 
-    onFocus = (e) => {
+    onFocus(e) {
         if (this.props.onFocus) {
             this.props.onFocus(e);
         }
 
-        this.setState({focused: true});
+        this.setState({ focused: true });
     }
 
-    onBlur = (e) => {
+    onBlur(e) {
         if (this.props.onBlur) {
             this.props.onBlur(e);
         }
 
-        this.setState({focused: false});
+        this.setState({ focused: false });
     }
 
     render() {
+        const {
+            showRemaining,
+            onChange,
+            onFocus,
+            onBlur,
+            ...rest
+        } = this.props;
+
         const charsRemainingColor = (this.state.charsRemaining > 10) ? '#B4B7B8' : '#CE4427';
 
         return (
-            <div style={{position: 'relative'}}>
+            <div style={{ position: 'relative' }}>
                 <TextField
-                    className={'qa-CustomTextField-TextField'}
-                    id={uniqueId()}
+                    className="qa-CustomTextField-TextField"
+                    id="custom-text-field"
                     ref={(textField) => {
                         if (!textField) {
                             return;
@@ -72,26 +76,37 @@ export class CustomTextField extends Component {
                     onChange={this.onChange}
                     onFocus={this.onFocus}
                     onBlur={this.onBlur}
-                    {...this.textFieldProps}
+                    {...rest}
                 />
                 {(this.props.maxLength && this.props.showRemaining && this.state.focused) ?
-                <div
-                    className={'qa-CustomTextField-div-charsRemaining'}
-                    style={{...this.styles.charsRemaining, color: charsRemainingColor}}>
-                    {this.state.charsRemaining}
-                </div>
-                : null}
+                    <div
+                        className="qa-CustomTextField-div-charsRemaining"
+                        style={{ ...this.styles.charsRemaining, color: charsRemainingColor }}
+                    >
+                        {this.state.charsRemaining}
+                    </div>
+                    :
+                    null
+                }
             </div>
-        )
+        );
     }
 }
 
 CustomTextField.propTypes = {
-    showRemaining: React.PropTypes.bool,
+    showRemaining: PropTypes.bool,
+    maxLength: PropTypes.number,
+    onChange: PropTypes.func,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
 };
 
 CustomTextField.defaultProps = {
-    showRemaining: true
-}
+    showRemaining: true,
+    maxLength: 100,
+    onChange: undefined,
+    onFocus: undefined,
+    onBlur: undefined,
+};
 
-export default CustomTextField
+export default CustomTextField;

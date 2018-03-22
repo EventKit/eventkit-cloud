@@ -6,7 +6,6 @@ import MenuItem from 'material-ui/MenuItem';
 import {DataPackGridItem} from '../../components/DataPackPage/DataPackGridItem';
 import IconButton from 'material-ui/IconButton';
 import { List, ListItem} from 'material-ui/List'
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import {Card, CardActions, CardMedia, CardTitle, CardText} from 'material-ui/Card';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
@@ -30,7 +29,7 @@ const tasks = [
         "uid": "fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         "result": {
             "size": "1.234 MB",
-            "url": "http://cloud.eventkit.dev/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
+            "url": "http://cloud.eventkit.test/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34",
         },
         "display": true,
     }
@@ -43,13 +42,13 @@ const providerTasks = [{
     "slug": "osm",
     "tasks": tasks,
     "uid": "e261d619-2a02-4ba5-a58c-be0908f97d04",
-    "url": "http://cloud.eventkit.dev/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
+    "url": "http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04"
 }];
 
 const providers = [
     {
         "id": 2,
-        "model_url": "http://cloud.eventkit.dev/api/providers/osm",
+        "model_url": "http://cloud.eventkit.test/api/providers/osm",
         "type": "osm",
         "license": null,
         "created_at": "2017-08-15T19:25:10.844911Z",
@@ -85,9 +84,6 @@ const getWrapper = (props) => {
 }
 
 describe('DataPackGridItem component', () => {
-    injectTapEventPlugin();
-
-    
     const user = {data: {user: {username: 'admin'}}};
 
     it('should display general run information', () => {
@@ -277,7 +273,7 @@ function getRuns() {
     return [
     {
         "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
-        "url": "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
+        "url": "http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
         "started_at": "2017-03-10T15:52:35.637331Z",
         "finished_at": "2017-03-10T15:52:39.837Z",
         "duration": "0:00:04.199825",
@@ -288,7 +284,7 @@ function getRuns() {
             "name": "Test1",
             "event": "Test1 event",
             "description": "Test1 description",
-            "url": "http://cloud.eventkit.dev/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
+            "url": "http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
             "extent": {
                 "type": "Feature",
                 "properties": {
@@ -327,12 +323,12 @@ function getRuns() {
             "published": false
         },
         "provider_tasks": providerTasks,
-        "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
+        "zipfile_url": "http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
         "expiration": "2017-03-24T15:52:35.637258Z"
     },
     {
         "uid": "c7466114-8c0c-4160-8383-351414b11e37",
-        "url": "http://cloud.eventkit.dev/api/runs/c7466114-8c0c-4160-8383-351414b11e37",
+        "url": "http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37",
         "started_at": "2017-03-10T15:52:29.311523Z",
         "finished_at": "2017-03-10T15:52:33.612Z",
         "duration": "0:00:04.301278",
@@ -343,7 +339,7 @@ function getRuns() {
             "name": "Test2",
             "event": "Test2 event",
             "description": "Test2 description",
-            "url": "http://cloud.eventkit.dev/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a",
+            "url": "http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a",
             "extent": {
                 "type": "Feature",
                 "properties": {
@@ -382,12 +378,12 @@ function getRuns() {
             "published": true
         },
         "provider_tasks": providerTasks,
-        "zipfile_url": "http://cloud.eventkit.dev/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip",
+        "zipfile_url": "http://cloud.eventkit.test/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip",
         "expiration": "2017-03-24T15:52:29.311458Z"
     },
     {
         "uid": "282816a6-7d16-4f59-a1a9-18764c6339d6",
-        "url": "http://cloud.eventkit.dev/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6",
+        "url": "http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6",
         "started_at": "2017-03-10T15:52:18.796929Z",
         "finished_at": "2017-03-10T15:52:27.500Z",
         "duration": "0:00:08.703092",
@@ -398,7 +394,7 @@ function getRuns() {
             "name": "Test3",
             "event": "Test3 event",
             "description": "Test3 description",
-            "url": "http://cloud.eventkit.dev/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a",
+            "url": "http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a",
             "extent": {
                 "type": "Feature",
                 "properties": {
@@ -437,7 +433,7 @@ function getRuns() {
             "published": true
         },
         "provider_tasks": providerTasks,
-        "zipfile_url": "http://cloud.eventkit.dev/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip",
+        "zipfile_url": "http://cloud.eventkit.test/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip",
         "expiration": "2017-03-24T15:52:18.796854Z"
     },]
 }

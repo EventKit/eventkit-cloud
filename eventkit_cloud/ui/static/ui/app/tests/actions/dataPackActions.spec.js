@@ -3,7 +3,7 @@ import thunk from 'redux-thunk';
 import axios from 'axios';
 import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
-import * as actions from '../../actions/DataPackPageActions';
+import * as actions from '../../actions/dataPackActions';
 import types from '../../actions/actionTypes';
 
 const middlewares = [thunk];
@@ -150,7 +150,7 @@ describe('DataPackList actions', () => {
 const expectedRuns = [
     {
         "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
-        "url": "http://cloud.eventkit.dev/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
+        "url": "http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
         "started_at": "2017-03-10T15:52:35.637331Z",
         "finished_at": "2017-03-10T15:52:39.837Z",
         "duration": "0:00:04.199825",
@@ -161,7 +161,7 @@ const expectedRuns = [
             "name": "Test1",
             "event": "Test1 event",
             "description": "Test1 description",
-            "url": "http://cloud.eventkit.dev/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
+            "url": "http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
             "extent": {
                 "type": "Feature",
                 "properties": {
@@ -200,6 +200,6 @@ const expectedRuns = [
             "published": false
         },
         "provider_tasks": [],
-        "zipfile_url": "http://cloud.eventkit.dev/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
+        "zipfile_url": "http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
         "expiration": "2017-03-24T15:52:35.637258Z"
     }];

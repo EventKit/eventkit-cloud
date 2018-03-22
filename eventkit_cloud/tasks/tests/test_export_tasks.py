@@ -14,7 +14,6 @@ from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
-from django.db.models.signals import post_save
 
 from billiard.einfo import ExceptionInfo
 from celery import chain
@@ -91,8 +90,8 @@ class ExportTaskBase(TransactionTestCase):
 
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
-        self.group = Group.objects.create(name="TestDefault")
-        with patch('eventkit_cloud.jobs.models.Group') as mock_group:
+        self.group, created = Group.objects.get_or_create(name="TestDefault")
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(
                 username='demo',
@@ -568,7 +567,7 @@ class TestExportTasks(ExportTaskBase):
         worker_name = "test_worker"
         task_pid = 55
         celery_uid = uuid.uuid4()
-        with patch('eventkit_cloud.jobs.models.Group') as mock_group:
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
             user = User.objects.create(username="test_user", password="test_password", email="test@email.com")
         export_provider_task = DataProviderTaskRecord.objects.create(

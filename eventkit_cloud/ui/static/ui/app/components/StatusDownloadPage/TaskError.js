@@ -1,25 +1,25 @@
-import React, {PropTypes, Component} from 'react'
-import Warning from 'material-ui/svg-icons/alert/warning'
-import CustomScrollbar from '../CustomScrollbar';
-import BaseDialog from '../BaseDialog';
+import React, { PropTypes, Component } from 'react';
+import Divider from 'material-ui/Divider';
+import Warning from 'material-ui/svg-icons/alert/warning';
+import BaseDialog from '../Dialog/BaseDialog';
 
-export class TaskError extends React.Component {
+export class TaskError extends Component {
     constructor(props) {
-        super(props)
+        super(props);
         this.handleTaskErrorClose = this.handleTaskErrorClose.bind(this);
         this.handleTaskErrorOpen = this.handleTaskErrorOpen.bind(this);
         this.state = {
             taskErrorDialogOpen: false,
-        }
+        };
     }
 
     handleTaskErrorOpen() {
-        this.setState({taskErrorDialogOpen: true});
-    };
+        this.setState({ taskErrorDialogOpen: true });
+    }
 
     handleTaskErrorClose() {
-        this.setState({taskErrorDialogOpen: false});
-    };
+        this.setState({ taskErrorDialogOpen: false });
+    }
 
     render() {
         const styles = {
@@ -30,20 +30,22 @@ export class TaskError extends React.Component {
                 borderLeftWidth: '10px',
                 color: '#ce4427',
                 cursor: 'pointer',
-            }
-        }
-        let task = this.props.task;
-        const errors = task.errors;
+            },
+            warningIcon: {
+                marginRight: '10px',
+                display: 'inlineBlock',
+                fill: '#e8ac90',
+                verticalAlign: 'bottom',
+            },
+        };
 
-        let error;
-        if(errors.length != 0) {
-            error = errors.filter((error) => {
-                return error.exception != null;
-            });
-        }
+        const { task } = this.props;
+        const { errors } = task;
+
+        const taskErrors = errors.filter(error => error.exception != null);
 
         return (
-            <span  className={'qa-TaskError-errorLink'}>
+            <span className="qa-TaskError-errorLink">
                 <a 
                     onClick={() => {this.handleTaskErrorOpen()}} 
                     style={styles.errorText}
@@ -52,25 +54,43 @@ export class TaskError extends React.Component {
                 </a>
 
                 <BaseDialog
-                    className={'qa-TaskError-BaseDialog'}
+                    className="qa-TaskError-BaseDialog"
                     show={this.state.taskErrorDialogOpen}
-                    title={<strong id='error-title'>{task.name} has <strong style={{color: '#ce4427'}}>1 error. </strong></strong>}
+                    title={
+                        <strong id="error-title">
+                            {task.name} has
+                            <strong style={{ color: '#ce4427' }}> {taskErrors.length} error(s).</strong>
+                        </strong>
+                    }
                     onClose={this.handleTaskErrorClose}
                 >
-                    <div className={'qa-TaskError-div-errorData'} id='error-data'>
-                        <Warning className={'qa-TaskError-Warning'} style={{marginRight: '10px', display:'inlineBlock', fill:'#e8ac90', verticalAlign: 'bottom'}}/>
-                        {error!= null ? error[0].exception : ''}
-                    </div>
+                    {taskErrors.map(error => (
+                        <div
+                            className="qa-TaskError-div-errorData"
+                            key={error.exception}
+                            style={{ marginTop: '15px', width: '100%' }}
+                        >
+                            <Warning
+                                className="qa-TaskError-Warning"
+                                style={styles.warningIcon}
+                            />
+                            {error.exception}
+                            <Divider
+                                className="qa-TaskError-Divider"
+                                style={{ marginTop: '15px' }}
+                            />
+                        </div>
+                    ))}
                 </BaseDialog>
 
             </span>
-        )
+        );
     }
 }
 
 TaskError.propTypes = {
     task: PropTypes.object.isRequired,
-}
+};
 
 export default TaskError;
 

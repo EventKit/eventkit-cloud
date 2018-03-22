@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import injectTapEventPlugin from 'react-tap-event-plugin';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
@@ -26,13 +25,13 @@ import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
 import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
+import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
 
 
 describe('ExportAOI component', () => {
-    injectTapEventPlugin();
     const muiTheme = getMuiTheme();
 
     const geojson = {
@@ -99,6 +98,14 @@ describe('ExportAOI component', () => {
         });
     };
 
+    beforeEach(() => {
+        sinon.stub(ExportAOI.prototype, 'updateZoomLevel');
+    });
+
+    afterEach(() => {
+        ExportAOI.prototype.updateZoomLevel.restore();
+    });
+
     it('should render the basic elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -106,6 +113,7 @@ describe('ExportAOI component', () => {
         expect(wrapper.find(AoiInfobar)).toHaveLength(1);
         expect(wrapper.find(SearchAOIToolbar)).toHaveLength(1);
         expect(wrapper.find(DrawAOIToolbar)).toHaveLength(1);
+        expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
     });
