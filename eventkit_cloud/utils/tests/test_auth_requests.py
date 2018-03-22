@@ -75,11 +75,12 @@ class TestAuthResult(TransactionTestCase):
             new_orig_init = MagicMock()
             auth_requests._orig_HTTPSConnection_init = new_orig_init
             # Confirm that the patch is applied
+            getenv.return_value = "key and cert contents"
             auth_requests.patch_https("test-provider-slug")
             self.assertNotEqual(auth_requests._orig_HTTPSConnection_init, httplib.HTTPSConnection.__init__)
-            self.assertEqual("_new_init", httplib.HTTPSConnection.__init__.__func__.func_closure[1].cell_contents.__name__) # complicated because decorator
+            self.assertEqual("_new_init", httplib.HTTPSConnection.__init__
+                             .__func__.func_closure[1].cell_contents.__name__)  # complicated because decorator
 
-            getenv.return_value = "key and cert contents"
             named_tempfile = MagicMock()
             cert_tempfile = MagicMock()
             cert_tempfile.name = "temp filename"
