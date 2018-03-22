@@ -219,7 +219,7 @@ export class ExportSummary extends Component {
                                             <td style={style.tdData}>{formatDesc}</td>
                                         </tr>
                                         <tr id="layers" className="qa-ExportSummary-tr-layers">
-                                            <td style={style.tdHeading} rowSpan={providers.length}>Layer Data</td>
+                                            <td style={style.tdHeading} rowSpan={providers.length}>Data Sources</td>
                                             <td style={style.tdData}>{providers.map(provider => <p key={provider.uid}>{provider.name}</p>)}</td>
                                         </tr>
                                     </tbody>

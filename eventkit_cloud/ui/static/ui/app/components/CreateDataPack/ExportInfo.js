@@ -473,7 +473,7 @@ export class ExportInfo extends React.Component {
                                 style={style.textField}
                                 textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                maxLength={1000}
+                                maxLength={250}
                             />
                             <CustomTextField
                                 className="qa-ExportInfo-input-project"
