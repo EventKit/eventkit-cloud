@@ -719,10 +719,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
 
+        perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
         return ExportRun.objects.filter(
-            (Q(user=self.request.user) | Q(pk__in=job_ids) | Q(job__published=True)) & Q(deleted=False))
+            (Q(user=self.request.user) | Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
