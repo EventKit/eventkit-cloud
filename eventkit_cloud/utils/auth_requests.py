@@ -17,9 +17,9 @@ def content_to_file(content):
     def decorator(func):
         def wrapper(*args, **kwargs):
             if content:
-                logger.debug("Certfile found for {}({}, {})".format(func.__name__,
-                                                                   ", ".join([str(arg) for arg in args]),
-                                                                   ", ".join(["{}={}".format(k, v) for k, v in kwargs.iteritems()])))
+                logger.debug("Content found for {}({}, {})".format(func.__name__,
+                                                                  ", ".join([str(arg) for arg in args]),
+                                                                  ", ".join(["{}={}".format(k, v) for k, v in kwargs.iteritems()])))
                 with NamedTemporaryFile() as certfile:
                     certfile.write(content)
                     certfile.flush()
@@ -74,15 +74,15 @@ _orig_HTTPSConnection_init = httplib.HTTPSConnection.__init__
 
 def patch_https(slug):
     cert = find_cert(slug)
+    logger.debug("Patching with slug {}, cert [{} B]".format(slug, len(cert) if cert is not None else 0))
 
     @content_to_file(cert)
     def _new_init(_self, *args, **kwargs):
         certfile = kwargs.pop("cert", None)
-        kwargs["key_file"] = certfile
-        kwargs["cert_file"] = certfile
-        logger.debug("Initializing new HTTPSConnection with certfile={}".format(certfile))
+        kwargs["key_file"] = certfile or kwargs.get("key_file", None)
+        kwargs["cert_file"] = certfile or kwargs.get("cert_file", None)
+        logger.debug("Initializing new HTTPSConnection with provider={}, certfile={}".format(slug, certfile))
         _orig_HTTPSConnection_init(_self, *args, **kwargs)
 
     httplib.HTTPSConnection.__init__ = _new_init
 
-patch_https(None)

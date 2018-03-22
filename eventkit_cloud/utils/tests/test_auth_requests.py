@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
 import requests
+import httplib
 from django.test import TransactionTestCase
-from mock import Mock, patch, MagicMock
+from mock import Mock, patch, MagicMock, ANY
+from mapproxy.client.http import VerifiedHTTPSConnection
 
-from ..auth_requests import get, post
+from .. import auth_requests
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +57,49 @@ class TestAuthResult(TransactionTestCase):
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
     @patch('eventkit_cloud.utils.auth_requests.requests.get')
     def test_get(self, get_patch, getenv):
-        self.do_tests(get, get_patch, getenv)
+        self.do_tests(auth_requests.get, get_patch, getenv)
 
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
     @patch('eventkit_cloud.utils.auth_requests.requests.post')
     def test_post(self, post_patch, getenv):
-        self.do_tests(post, post_patch, getenv)
+        self.do_tests(auth_requests.post, post_patch, getenv)
+
+    @patch('eventkit_cloud.utils.auth_requests.os.getenv')
+    def test_patch_https(self, getenv):
+        # NB: HTTPSConnection is never mocked here; the monkey-patch applies to the actual httplib library.
+        # If other tests in the future have any issues with httplib (they shouldn't, the patch is transparent,
+        # and the original initializer is restored in the finally block), this may be why.
+
+        _orig_HTTPSConnection_init = auth_requests._orig_HTTPSConnection_init
+        try:
+            new_orig_init = MagicMock()
+            auth_requests._orig_HTTPSConnection_init = new_orig_init
+            # Confirm that the patch is applied
+            auth_requests.patch_https("test-provider-slug")
+            self.assertNotEqual(auth_requests._orig_HTTPSConnection_init, httplib.HTTPSConnection.__init__)
+            self.assertEqual("_new_init", httplib.HTTPSConnection.__init__.__func__.func_closure[1].cell_contents.__name__) # complicated because decorator
+
+            getenv.return_value = "key and cert contents"
+            named_tempfile = MagicMock()
+            cert_tempfile = MagicMock()
+            cert_tempfile.name = "temp filename"
+            named_tempfile.__enter__ = MagicMock(return_value=cert_tempfile)
+            cert_tempfile.write = MagicMock()
+            cert_tempfile.flush = MagicMock()
+
+            with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=named_tempfile,
+                       create=True):
+                # Confirm that a base HTTPSConnection picks up key and cert files
+                conn = httplib.HTTPSConnection()
+                getenv.assert_called_with("test-provider-slug_CERT")
+                new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
+                cert_tempfile.write.assert_called_once_with("key and cert contents")
+
+                # Confirm that a MapProxy VerifiedHTTPSConnection picks up key and cert files
+                cert_tempfile.write.reset_mock()
+                conn = VerifiedHTTPSConnection()
+                new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
+                cert_tempfile.write.assert_called_once_with("key and cert contents")
+
+        finally:
+            auth_requests._orig_HTTPSConnection_init = _orig_HTTPSConnection_init
