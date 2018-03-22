@@ -54,6 +54,7 @@ class TestGeopackage(TransactionTestCase):
         config_command.assert_called_once_with(cmd)
         self.assertEqual(w2g, real_yaml.load(test_yaml))
 
+    @patch('eventkit_cloud.utils.external_service.auth_requests.patch_https')
     @patch('eventkit_cloud.utils.external_service.set_gpkg_contents_bounds')
     @patch('eventkit_cloud.utils.external_service.check_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.check_service')
@@ -64,7 +65,7 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.load_config')
     @patch('eventkit_cloud.utils.external_service.get_cache_template')
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
-    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds):
+    def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds, patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
@@ -95,8 +96,9 @@ class TestGeopackage(TransactionTestCase):
         json_config['sources']['imagery_wmts']['transparent'] = True
         json_config['sources']['imagery_wmts']['on_error'] = {404: {'cache': False,'response': 'transparent'}}
         json_config['services'] = ['demo']
-        
-        check_service.assert_called_once_with(json_config)
+
+        patch_https.assert_called_once_with('imagery')
+        check_service.assert_called_once_with(json_config, 'imagery')
         load_config.assert_called_once_with(mapproxy_config, config_dict=json_config)
         remove_zoom_levels.assert_called_once_with(gpkgfile)
         mock_set_gpkg_contents_bounds.assert_called_once_with(gpkgfile, 'imagery', bbox)
@@ -108,7 +110,7 @@ class TestGeopackage(TransactionTestCase):
 
 class TestHelpers(TransactionTestCase):
 
-    @patch('requests.get')
+    @patch('eventkit_cloud.utils.external_service.auth_requests.get')
     def test_check_service(self, requests_get):
 
         conf_dict = {'sources': {'source1': {'url': 'http://example.com/url'},
