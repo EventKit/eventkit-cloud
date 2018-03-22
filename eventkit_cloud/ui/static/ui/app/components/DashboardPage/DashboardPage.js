@@ -8,12 +8,15 @@ import { getProviders } from '../../actions/exportsActions';
 import { DashboardSection } from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
+import NotificationGridItem from './NotificationGridItem';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
 export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
+        this.getNotificationsColumns = this.getNotificationsColumns.bind(this);
+        this.getNotificationsRows = this.getNotificationsRows.bind(this);
         this.getGridColumns = this.getGridColumns.bind(this);
         this.getGridWideColumns = this.getGridWideColumns.bind(this);
         this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
@@ -86,7 +89,7 @@ export class DashboardPage extends React.Component {
     getGridColumns() {
         if (window.innerWidth > 1920) {
             return 6;
-        } else if (window.innerWidth > 1400) {
+        } else if (window.innerWidth > 1600) {
             return 5;
         } else if (window.innerWidth > 1024) {
             return 4;
@@ -96,11 +99,25 @@ export class DashboardPage extends React.Component {
     }
 
     getGridWideColumns() {
-        if (window.innerWidth > 1500) {
+        if (window.innerWidth > 1600) {
             return 2;
         }
 
         return 1;
+    }
+
+    getNotificationsColumns() {
+        if (window.innerWidth > 1600) {
+            return 3;
+        } else if (window.innerWidth > 1024) {
+            return 2;
+        }
+
+        return 1;
+    }
+
+    getNotificationsRows() {
+        return 3;
     }
 
     refreshMyDataPacks({ showLoading = true } = {}) {
@@ -197,7 +214,54 @@ export class DashboardPage extends React.Component {
                 top: '50%',
                 transform: 'translate(-50%, -50%)',
             },
+            content: {
+                marginBottom: '12px',
+                maxWidth: '1920px',
+                margin: 'auto',
+            },
         };
+
+        const now = new Date();
+        const mockNotifications = [
+            {
+                uid: 3,
+                read: false,
+                type: 'license-update',
+                date: new Date().setMinutes(now.getMinutes() - 5),
+            },
+            {
+                uid: 2,
+                read: true,
+                type: 'datapack-complete-error',
+                date: new Date().setHours(now.getHours() - 5),
+                data: {
+                    run: {
+                        uid: 2,
+                        job: {
+                            uid: 2,
+                            name: 'B',
+                        },
+                        expiration: new Date(2018, 5, 1),
+                    },
+                },
+            },
+            {
+                uid: 1,
+                read: true,
+                type: 'datapack-complete-success',
+                date: new Date().setDate(now.getDate() - 5),
+                data: {
+                    run: {
+                        uid: 1,
+                        job: {
+                            uid: 1,
+                            name: 'A',
+                        },
+                        expiration: new Date(2018, 5, 1),
+                    },
+                },
+            },
+        ];
 
         return (
             <div style={styles.root}>
@@ -223,15 +287,35 @@ export class DashboardPage extends React.Component {
                     {this.state.loadingPage ?
                         null
                         :
-                        <div style={{marginBottom: '12px'}}>
+                        <div style={styles.content}>
+                            {/* Notifications */}
+                            <DashboardSection
+                                className="qa-DashboardSection-Notifications"
+                                style={{marginBottom: '35px'}}
+                                title="Notifications"
+                                name="Notifications"
+                                columns={this.getNotificationsColumns()}
+                                rows={this.getNotificationsRows()}
+                                user={this.props.user}
+                                providers={this.props.providers}
+                            >
+                                {mockNotifications.map((notification, index) => (
+                                    <NotificationGridItem
+                                        key={`Notification-${index}`}
+                                        notification={notification}
+                                    />
+                                ))}
+                            </DashboardSection>
+
+                            {/* Recently Viewed */}
                             <DashboardSection
                                 className="qa-DashboardSection-RecentlyViewed"
                                 style={{marginBottom: '35px'}}
                                 title="Recently Viewed"
                                 name="RecentlyViewed"
+                                columns={this.getGridColumns()}
                                 user={this.props.user}
                                 providers={this.props.providers}
-                                columns={this.getGridColumns()}
                             >
                                 {this.props.user.viewedJobs.jobs.length === 0 ?
                                     <div className="qa-DashboardSection-RecentlyViewed-NoData">
@@ -254,6 +338,7 @@ export class DashboardPage extends React.Component {
                                 }
                             </DashboardSection>
 
+                            {/* Featured */}
                             {this.props.featuredRunsList.runs.length === 0 ?
                                 null
                                 :
@@ -261,10 +346,10 @@ export class DashboardPage extends React.Component {
                                     style={{marginBottom: '35px'}}
                                     title="Featured"
                                     name="Featured"
+                                    columns={this.getGridWideColumns()}
+                                    cellHeight={335}
                                     user={this.props.user}
                                     providers={this.props.providers}
-                                    cellHeight={335}
-                                    columns={this.getGridWideColumns()}
                                 >
                                     {this.props.featuredRunsList.runs.map((run, index) => (
                                         <DataPackWideItem
@@ -281,13 +366,14 @@ export class DashboardPage extends React.Component {
                                 </DashboardSection>
                             }
 
+                            {/* My DataPacks */}
                             <DashboardSection
                                 className="qa-DashboardSection-MyDataPacks"
                                 title="My DataPacks"
                                 name="MyDataPacks"
+                                columns={this.getGridColumns()}
                                 user={this.props.user}
                                 providers={this.props.providers}
-                                columns={this.getGridColumns()}
                             >
                                 {this.props.runsList.runs.length === 0 ?
                                     <div className="qa-DashboardSection-MyDataPacks-NoData">

@@ -164,13 +164,13 @@ export class DashboardSection extends React.Component {
 }
 
 DashboardSection.propTypes = {
-    user: PropTypes.object.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     title: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     columns: PropTypes.number.isRequired,
-    rows: PropTypes.number,
+    user: PropTypes.object.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     cellHeight: PropTypes.number,
+    rows: PropTypes.number,
     style: PropTypes.object,
 };
 
