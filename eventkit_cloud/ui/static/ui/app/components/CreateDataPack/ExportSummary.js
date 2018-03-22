@@ -155,6 +155,7 @@ export class ExportSummary extends Component {
                 backgroundColor: '#f8f8f8',
                 fontWeight: 'normal',
                 color: '#8b9396',
+                wordWrap: 'break-word',
             },
             table: {
                 width: '100%',
@@ -162,6 +163,7 @@ export class ExportSummary extends Component {
                 border: '0px solid black',
                 borderSpacing: '5px',
                 borderCollapse: 'separate',
+                tableLayout: 'fixed',
             },
             mapCard: {
                 paddingBottom: '20px',
