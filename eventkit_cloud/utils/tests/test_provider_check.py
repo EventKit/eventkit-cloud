@@ -227,8 +227,8 @@ class TestProviderCheck(TransactionTestCase):
                                    <Layer>
                                        <Title>exampleLayer</Title>
                                        <WGS84BoundingBox>
-                                            <LowerCorner>10 10</LowerCorner>
-                                            <UpperCorner>11 11</UpperCorner>
+                                            <LowerCorner>-1 -1</LowerCorner>
+                                            <UpperCorner>1 1</UpperCorner>
                                        </WGS84BoundingBox>
                                    </Layer>
                                </Contents>

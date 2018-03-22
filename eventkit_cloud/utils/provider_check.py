@@ -504,10 +504,10 @@ class WMTSProviderCheck(OWSProviderCheck):
         if bbox_element is None:
             return None
 
-        westsouth = bbox_element.find("lowercorner")
-        eastnorth = bbox_element.find("uppercorner")
+        southwest = bbox_element.find("lowercorner").text.split()[::-1]
+        northeast = bbox_element.find("uppercorner").text.split()[::-1]
 
-        bbox = []
+        bbox = map(float, southwest + northeast)
         return bbox
 
 
