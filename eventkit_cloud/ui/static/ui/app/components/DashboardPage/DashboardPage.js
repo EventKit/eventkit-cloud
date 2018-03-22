@@ -93,9 +93,11 @@ export class DashboardPage extends React.Component {
             return 5;
         } else if (window.innerWidth > 1024) {
             return 4;
+        } else if (window.innerWidth > 768) {
+            return 3;
         }
 
-        return 3;
+        return 2;
     }
 
     getGridWideColumns() {
