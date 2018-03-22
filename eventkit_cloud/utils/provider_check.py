@@ -430,6 +430,13 @@ class WMSProviderCheck(OWSProviderCheck):
         return bbox
 
 
+class TMSProviderCheck(ProviderCheck):
+
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
+        super(TMSProviderCheck, self).__init__(service_url, layer, aoi_geojson, slug)
+        self.service_url = self.service_url.format(z='0', y='0', x='0')
+
+
 PROVIDER_CHECK_MAP = {
     "wfs": WFSProviderCheck,
     "wcs": WCSProviderCheck,
@@ -437,7 +444,8 @@ PROVIDER_CHECK_MAP = {
     "osm": OverpassProviderCheck,
     "wmts": WMSProviderCheck,
     "arcgis-raster": ProviderCheck,
-    "arcgis-feature": ProviderCheck
+    "arcgis-feature": ProviderCheck,
+    "tms": TMSProviderCheck
 }
 
 
