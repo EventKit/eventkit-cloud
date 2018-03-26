@@ -639,13 +639,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         logger.error(dir(ExportRun))
-        the_queryset = ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))\
+        prefetched_queryset = ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))\
             .select_related('job', 'user')\
             .prefetch_related(Prefetch('provider_tasks',
                 queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
                     queryset=ExportTaskRecord.objects.select_related('result').prefetch_related('exceptions')))))
 
-        return the_queryset
+        return prefetched_queryset
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
