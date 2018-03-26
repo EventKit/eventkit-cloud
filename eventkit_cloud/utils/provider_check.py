@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from django.utils.translation import ugettext as _
+from django.conf import settings
 from enum import Enum
 import json
 import logging
@@ -94,6 +95,7 @@ class ProviderCheck(object):
         self.slug = slug
         self.result = CheckResults.SUCCESS
         self.timeout = 10
+        self.verify = getattr(settings, "DISABLE_SSL_VERIFICATION", False)
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
@@ -118,7 +120,8 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout)
+            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout,
+                                         verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
@@ -191,7 +194,8 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.NO_URL
                 return None
 
-            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout)
+            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout,
+                                          verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
