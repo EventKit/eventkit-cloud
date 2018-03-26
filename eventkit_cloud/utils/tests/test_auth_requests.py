@@ -102,5 +102,9 @@ class TestAuthResult(TransactionTestCase):
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
                 cert_tempfile.write.assert_called_once_with("key and cert contents")
 
+                # Test removing the patch
+                auth_requests.unpatch_https()
+                self.assertEqual(httplib.HTTPSConnection.__init__, new_orig_init)
+
         finally:
             auth_requests._orig_HTTPSConnection_init = _orig_HTTPSConnection_init

@@ -36,6 +36,10 @@ def find_cert(slug=None):
         cert = os.getenv(slug + "_CERT") or os.getenv(slug.upper() + "_CERT")
     else:
         cert = None
+
+    if cert:
+        cert = cert.replace('\\n', '\n')
+
     return cert
 
 
@@ -73,6 +77,13 @@ _orig_HTTPSConnection_init = httplib.HTTPSConnection.__init__
 
 
 def patch_https(slug):
+    """
+    Given a provider slug, wrap the initializer for HTTPSConnection so it checks for client keys and certs
+    in environment variables named after the given slug, and if found, provides them to the SSLContext.
+    If no certs are found, this should function identically to the original, even if external certs/keys are given.
+    :param slug: Provider slug, used for finding cert/key environment variable
+    :return: None
+    """
     cert = find_cert(slug)
     logger.debug("Patching with slug {}, cert [{} B]".format(slug, len(cert) if cert is not None else 0))
 
@@ -86,3 +97,6 @@ def patch_https(slug):
 
     httplib.HTTPSConnection.__init__ = _new_init
 
+
+def unpatch_https():
+    httplib.HTTPSConnection.__init__ = _orig_HTTPSConnection_init
