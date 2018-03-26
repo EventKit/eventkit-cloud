@@ -48,6 +48,7 @@ class TaskFactory:
                               'wms': ExportExternalRasterServiceTaskRunner,
                               'wcs': ExportWCSTaskRunner,
                               'wmts': ExportExternalRasterServiceTaskRunner,
+                              'tms': ExportExternalRasterServiceTaskRunner,
                               'arcgis-raster': ExportExternalRasterServiceTaskRunner,
                               'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
 
