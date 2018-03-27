@@ -8,6 +8,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 from mock import patch
+from ...core.models import JobPermission
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask
 
@@ -52,6 +53,9 @@ class TestJobFilter(APITestCase):
                                 HTTP_ACCEPT='application/json; version=1.0',
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
+
+        self.jp = JobPermission(job=self.job1,content_object=self.user1,permission=JobPermission.Permissions.ADMIN.value);
+        self.jp.save()
 
     def test_filterset_no_user(self, ):
         url = reverse('api:jobs-list')

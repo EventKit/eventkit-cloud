@@ -102,7 +102,7 @@ class JobViewSet(viewsets.ModelViewSet):
         perms, job_ids = JobPermission.userjobs(self.request.user, JobPermission.Permissions.READ.value )
 
         return Job.objects.filter(
-            Q(user=self.request.user) | Q(visibility=Job.Visibility.PUBLIC.value) | Q(pk__in=job_ids))
+             Q(visibility=Job.Visibility.PUBLIC.value) | Q(pk__in=job_ids))
 
     def list(self, request, *args, **kwargs):
         """
