@@ -95,7 +95,7 @@ class ProviderCheck(object):
         self.slug = slug
         self.result = CheckResults.SUCCESS
         self.timeout = 10
-        self.verify = getattr(settings, "DISABLE_SSL_VERIFICATION", False)
+        self.verify = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
