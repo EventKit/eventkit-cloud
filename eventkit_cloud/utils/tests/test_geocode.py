@@ -250,3 +250,48 @@ class TestGeoCode(TestCase):
         # test not valid
         bbox = [0,0,1]
         self.assertFalse(is_valid_bbox(bbox))
+
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL='http://pelias.url/place')
+    def test_pelias_point_geometry(self):
+        bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
+        api_response = {
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type":"Point",
+                        "coordinates": []
+                    },
+                    "bbox": bbox
+                }
+            ]
+        }
+        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        geocode = Geocode()
+        result = geocode.search("test")
+        self.assertEquals(result.get('features')[0].get('geometry').get('coordinates'), [[[-71.1912490997, 42.227911131], [-70.9227798807, 42.227911131], [-70.9227798807, 42.3969775021], [-71.1912490997, 42.3969775021], [-71.1912490997, 42.227911131]]])
+    
+    @override_settings(GEOCODING_API_URL="http://pelias.url/",
+                       GEOCODING_API_TYPE="pelias",
+                       GEOCODING_UPDATE_URL='http://pelias.url/place')
+    def test_pelias_polygon_geometry(self):
+        polygonCoordinates = [[[0,1],[1,0],[0,3]]]
+        bbox = [-71.1912490997, 42.227911131, -70.9227798807, 42.3969775021]
+        api_response = {
+            "features": [ 
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type":"Polygon",
+                        "coordinates": polygonCoordinates
+                    },
+                    "bbox": bbox
+                }
+            ]
+        }
+        self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
+        geocode = Geocode()
+        result = geocode.search("test")
+        self.assertEquals(result.get('features')[0].get('geometry').get('coordinates'), polygonCoordinates)
