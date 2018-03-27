@@ -108,12 +108,10 @@ class GeocodeAdapter:
         if bbox and is_valid_bbox(bbox):
             # testing
             feature['bbox'] = bbox
-            if feature['geometry'] is not None:
-                if feature['geometry']['type'] == 'Point':
-                    feature['geometry'] = self.bbox2polygon(bbox)
-            if feature['geometry'] is None:
+            geometry = feature.get('geometry', {})
+            if not geometry or geometry.get('type') == 'Point':
                 feature['geometry'] = self.bbox2polygon(bbox)
-            
+
         return self.map_properties(feature, properties=properties)
 
     @staticmethod
