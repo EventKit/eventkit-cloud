@@ -1,4 +1,4 @@
-"""Provides validation for API operatios."""
+"""Provides validation for API operations."""
 
 # -*- coding: utf-8 -*-
 import logging
@@ -132,6 +132,7 @@ def validate_bbox(extents, user=None):
     except GEOSException:
         raise serializers.ValidationError(detail)
 
+
 def validate_original_selection(data):
     """
     Checks for a feature collection with features and constructs a GEOS Geometry Collection if possible
@@ -152,7 +153,6 @@ def validate_original_selection(data):
     except GEOSException as geos_exception:
         logger.error(geos_exception)
         return GeometryCollection()
-
 
 
 def validate_selection(data, user=None):
