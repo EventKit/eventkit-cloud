@@ -99,7 +99,7 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return all objects user can view."""
 
-        perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
+        perms, job_ids = JobPermission.userjobs(self.request.user, JobPermission.Permissions.READ.value )
 
         return Job.objects.filter(
             Q(user=self.request.user) | Q(visibility=Job.Visibility.PUBLIC.value) | Q(pk__in=job_ids))
@@ -460,8 +460,6 @@ class JobViewSet(viewsets.ModelViewSet):
            """
 
         job = Job.objects.get(uid=uid)
-        if job.user != request.user and not request.user.is_superuser:
-            return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
         # Does the user have admin permission to make changes to this job?
 
@@ -500,7 +498,7 @@ class JobViewSet(viewsets.ModelViewSet):
             users = payload["permissions"]["users"]
             groups = payload["permissions"]["groups"]
 
-            # make sure all user names, group names, and permissions are valid, and insure there is at least one admn
+            # make sure all user names, group names, and permissions are valid, and insure there is at least one admin
             # if the job is made private
 
             for index, set in enumerate([users, groups]):
@@ -520,8 +518,8 @@ class JobViewSet(viewsets.ModelViewSet):
 
                     if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
 
-            if admins == 0 and job.visibility in [Job.Visibility.PRIVATE.value, Job.Visibility.SHARED.value]:
-                return Response([{'detail': "There must be at least one administrator for a private or shared job."}],
+            if admins == 0:
+                return Response([{'detail': "This job has no administrators."}],
                                 status.HTTP_400_BAD_REQUEST)
 
             # throw out all current permissions and rewrite them

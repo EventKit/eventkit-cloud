@@ -139,7 +139,7 @@ class JobPermission(TimeStampedModelMixin):
         # get all the jobs this user has been explicitly assigned to
 
         for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
-            if level == JobPermission.Permissions.ADMIN.value or jp.permission == level:
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
@@ -149,7 +149,7 @@ class JobPermission(TimeStampedModelMixin):
         for gp in GroupPermission.objects.filter(user=user):
             group_ids.append(gp.group.id)
         for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group), object_id__in=group_ids):
-            if level == JobPermission.Permissions.ADMIN.value or jp.permission == level:
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
