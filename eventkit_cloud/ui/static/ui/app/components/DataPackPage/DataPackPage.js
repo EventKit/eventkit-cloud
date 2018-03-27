@@ -339,6 +339,14 @@ export class DataPackPage extends React.Component {
                 },
         };
 
+        let permissions;
+        if (this.state.targetJob) {
+            const run = this.props.runsList.runs.find(run => run.job.uid === this.state.targetJob);
+            if (run) {
+                permissions = run.job.permissions;
+            }
+        }
+
         return (
             <div style={styles.backgroundStyle}>
                 <AppBar
@@ -438,18 +446,7 @@ export class DataPackPage extends React.Component {
                         onSave={this.handleShareSave}
                         groups={this.props.groups}
                         members={this.props.users}
-                        permissions={{
-                            groups: {
-                                2: 'ADMIN',
-                                3: 'ADMIN',
-                                4: 'READ',
-                            },
-                            members: {
-                                user_three: 'READ',
-                                user_one: 'READ',
-                                user_two: 'READ',
-                            },
-                        }}
+                        permissions={permissions}
                         groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
                         membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
                         canUpdateAdmin

@@ -65,7 +65,7 @@ export class ShareBodyTooltip extends Component {
         return (
             <div>
                 <div
-                    key="qa-ShareBodyTooltip-arrow"
+                    className="qa-ShareBodyTooltip-arrow"
                     style={styles.arrowContainer}
                 >
                     <div
@@ -76,7 +76,7 @@ export class ShareBodyTooltip extends Component {
                     />
                 </div>
                 <div
-                    key="qa-ShareBodyTooltip-text"
+                    className="qa-ShareBodyTooltip-text"
                     style={styles.textContainer}
                 >
                     <div

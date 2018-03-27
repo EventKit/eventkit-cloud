@@ -210,7 +210,7 @@ describe('statusDownload actions', () => {
             });
     });
 
-    it('updatePermission should dispatch a patch and update the published state on the job', () => {
+    it('updateDataCartPermissions should dispatch a patch and update the published state on the job', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
 
         mock.onPatch('/api/jobs/123456789').reply(204);
@@ -221,13 +221,13 @@ describe('statusDownload actions', () => {
 
         const store = mockStore({ updatePermission: {} });
 
-        return store.dispatch(actions.updatePermission('123456789', 'true'))
+        return store.dispatch(actions.updateDataCartPermissions('123456789', 'true'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
 
-    it('updatePermission should dispatch an error', () => {
+    it('updateDataCartPermissions should dispatch an error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
 
         mock.onPatch('/api/jobs/123').reply(400, 'oh no an error');
@@ -238,7 +238,7 @@ describe('statusDownload actions', () => {
 
         const store = mockStore({ updatePermission: {} });
 
-        return store.dispatch(actions.updatePermission('123', 'true'))
+        return store.dispatch(actions.updateDataCartPermissions('123', 'true'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });

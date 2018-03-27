@@ -84,7 +84,6 @@ describe('StatusDownload component', () => {
             params: {
                 jobuid: '123456789',
             },
-            jobuid: '123456789',
             datacartDetails: {
                 fetching: false,
                 fetched: false,
@@ -137,6 +136,7 @@ describe('StatusDownload component', () => {
             cancelProviderTask: () => {},
             getProviders: () => {},
             getUsers: () => {},
+            getGroups: () => {},
         }
     );
 

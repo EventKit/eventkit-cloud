@@ -78,13 +78,17 @@ export class ShareInfoBody extends Component {
                 </EnhancedButton>
                 <div style={styles.text} className="qa-ShareInfoBody-text">
                     {title}
-                    <p className="qa-ShareInfoBody-rightsTitle"><strong>Member Rights (for Non-Administrators)</strong></p>
+                    <p className="qa-ShareInfoBody-rightsTitle">
+                        <strong>Member Rights (for Non-Administrators)</strong>
+                    </p>
                     {rights}
                     <ul style={{ paddingLeft: '20px' }} className="qa-ShareInfoBody-rightsList">
                         <li>View</li>
                         <li>Clone</li>
                     </ul>
-                    <p className="qa-ShareInfoBody-adminRightsTitle"><strong>Administrator Rights</strong></p>
+                    <p className="qa-ShareInfoBody-adminRightsTitle">
+                        <strong>Administrator Rights</strong>
+                    </p>
                     {adminRights}
                     <ul style={{ paddingLeft: '20px' }} className="qa-ShareInfoBody-adminRightsList">
                         <li>View</li>

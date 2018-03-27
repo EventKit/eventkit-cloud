@@ -2,9 +2,12 @@ import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import DropDownMenu from 'material-ui/DropDownMenu';
-import BaseDialog from '../../components/BaseDialog';
-import DataPackShareDialog from '../../components/DataPackPage/DataPackShareDialog';
+import RaisedButton from 'material-ui/RaisedButton';
+import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
+import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
+import MembersBody from '../../components/DataPackShareDialog/MembersBody';
+import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
+import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackPage component', () => {
     const muiTheme = getMuiTheme();
@@ -16,34 +19,55 @@ describe('DataPackPage component', () => {
             onSave: () => {},
             groups: [
                 {
-                    id: 'group1',
-                    name: 'group1',
-                    members: ['user1', 'user2', 'user3', 'user4'],
-                    administrators: ['user1'],
+                    id: 1,
+                    name: 'group_one',
+                    members: ['user_one', 'user_two', 'user_three'],
+                    administrators: ['user_one'],
                 }, {
-                    id: 'group2',
-                    name: 'group2',
-                    members: ['user1', 'user2', 'user3'],
-                    administrators: ['user1'],
+                    id: 2,
+                    name: 'group_two',
+                    members: ['user_one', 'user_two'],
+                    administrators: ['user_one'],
                 }, {
-                    id: 'group3',
-                    name: 'group3',
-                    members: ['user1', 'user2'],
-                    administrators: ['user3'],
+                    id: 3,
+                    name: 'group_three',
+                    members: ['user_one', 'user_two'],
+                    administrators: ['user_three'],
                 },
             ],
-            users: [
-                { id: 'user1', username: 'user1', email: 'user1@email.com' },
-                { id: 'user2', username: 'user2', email: 'user2@email.com' },
-                { id: 'user3', username: 'user3', email: 'user3@email.com' },
-                { id: 'user4', username: 'user4', email: 'user4@email.com' },
+            members: [
+                {
+                    user: {
+                        username: 'user_one',
+                        firt_name: 'user',
+                        last_name: 'one',
+                        email: 'user_one@email.com',
+                    },
+                    groups: [1, 2, 3],
+                },
+                {
+                    user: {
+                        username: 'user_two',
+                        first_name: 'user',
+                        last_name: 'two',
+                        email: 'user_two@email.com',
+                    },
+                    groups: [1, 2, 3],
+                },
+                {
+                    user: {
+                        username: 'user_three',
+                        first_name: 'user',
+                        last_name: 'three',
+                        email: 'user_three@email.com',
+                    },
+                    groups: [1],
+                },
             ],
-            user: {
-                username: 'user1',
-            },
-            run: {
-                job: { uid: '12345' },
-                users: ['user1', 'user2', 'user3'],
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
             },
         }
     );
@@ -60,78 +84,155 @@ describe('DataPackPage component', () => {
     it('should render all the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(BaseDialog)).toHaveLength(1);
+        expect(wrapper.find(ShareBaseDialog)).toHaveLength(1);
         wrapper.setProps({ ...props, show: true });
-        const dropDownContainer = mount(wrapper.find(BaseDialog).props().children[0], {
+        const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
             },
         });
-        expect(dropDownContainer.find(DropDownMenu)).toHaveLength(1);
-        expect(dropDownContainer.find('.qa-DataPackShareDialog-rowHeader')).toHaveLength(1);
-        expect(wrapper.state().dropDownValue).toEqual('custom');
+        expect(header.find(RaisedButton)).toHaveLength(2);
+        const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: PropTypes.object,
+            },
+        });
+        expect(body.find(GroupsBody)).toHaveLength(1);
     });
 
-    it('handleDropDownChange should set dropDownValue', () => {
+    it('should display the ShareInfoBody', () => {
         const props = getProps();
-        const stateStub = sinon.stub(DataPackShareDialog.prototype, 'setState');
         const wrapper = getWrapper(props);
-        const value = 'test value';
-        wrapper.instance().handleDropDownChange({}, 0, value);
+        wrapper.setState({ showShareInfo: true });
+        const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: PropTypes.object,
+            },
+        });
+        expect(body.find(ShareInfoBody)).toHaveLength(1);
+    });
+
+    it('should display the MembersBody', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({ view: 'members' });
+        const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: PropTypes.object,
+            },
+        });
+        expect(body.find(MembersBody)).toHaveLength(1);
+    });
+
+    it('should display the selected count on the header buttons', () => {
+        const props = getProps();
+        props.permissions.groups = {};
+        props.permissions.members = {};
+        const wrapper = getWrapper(props);
+        const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: PropTypes.object,
+            },
+        });
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').text()).toEqual('GROUPS (0)');
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').text()).toEqual('MEMBERS (0)');
+    });
+
+    it('should display "ALL" as the selected count on the header buttons', () => {
+        const props = getProps();
+        props.permissions.groups = { 1: '', 2: '', 3: '' };
+        props.permissions.members = { user_one: '', user_two: '', user_three: '' };
+        const wrapper = getWrapper(props);
+        const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {
+            context: { muiTheme },
+            childContextTypes: {
+                muiTheme: PropTypes.object,
+            },
+        });
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').text()).toEqual('GROUPS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').text()).toEqual('MEMBERS (ALL)');
+    });
+
+    it('handleSave should call props.onSave', () => {
+        const props = getProps();
+        props.onSave = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleSave();
+        expect(props.onSave.calledOnce).toBe(true);
+        expect(props.onSave.calledWith(props.permissions)).toBe(true);
+    });
+
+    it('handleGroupUpdate should setState', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const groups = {
+            group_one: 'READ',
+            group_two: 'ADMIN',
+        };
+        wrapper.instance().handleGroupUpdate(groups);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ dropDownValue: value })).toBe(true);
+        expect(stateStub.calledWith({ permissions: { ...props.permissions, groups } })).toBe(true);
         stateStub.restore();
     });
 
-    it('handleSave should do something when all selected and needs updating', () => {
-        // TODO update this when its ready
+    it('handleMemberUpdate should setState', () => {
         const props = getProps();
-        props.onSave = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.setState({ dropDownValue: 'all', currentSelection: ['user1', 'user2'] });
-        wrapper.instance().handleSave();
-        expect(props.onSave.calledOnce).toBe(true);
-    });
-
-    it('handleSave should do something when all selected and does not need updating', () => {
-        // TODO update this when its ready
-        const props = getProps();
-        props.onSave = sinon.spy();
-        props.users = [{}, {}, {}, {}, {}];
-        const wrapper = getWrapper(props);
-        wrapper.setState({ dropDownValue: 'all' });
-        wrapper.instance().handleSave();
-        expect(props.onSave.calledOnce).toBe(true);
-    });
-
-    it('handleSave should do something when custom is selected and needs updating', () => {
-        // TODO update this when its ready
-        const props = getProps();
-        props.onSave = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.setState({ currentSelection: ['user1', 'user2'] });
-        wrapper.instance().handleSave();
-        expect(props.onSave.calledOnce).toBe(true);
-    });
-
-    it('handleSave should do something when custom is selected and does not need updating', () => {
-        // TODO update this when its ready
-        const props = getProps();
-        props.onSave = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleSave();
-        expect(props.onSave.calledOnce).toBe(true);
-    });
-
-    it('updateSelection should set the new selection in state', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataPackShareDialog.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        const newSelection = ['new1', 'new2'];
-        wrapper.instance().updateSelection(newSelection);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const members = {
+            user_one: 'ADMIN',
+            user_two: 'ADMIN',
+        };
+        wrapper.instance().handleMemberUpdate(members);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ currentSelection: newSelection }));
+        expect(stateStub.calledWith({ permissions: { ...props.permissions, members } })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('showShareInfo should set show to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().showShareInfo();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showShareInfo: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('hideShareInfo should set show to false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().hideShareInfo();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showShareInfo: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('toggleView should set passed in view', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().toggleView('members');
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ view: 'members' }));
+        stateStub.restore();
+    });
+
+    it('toggleView should set opposite view', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().view).toEqual('groups');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().toggleView();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ view: 'members' })).toBe(true);
         stateStub.restore();
     });
 });

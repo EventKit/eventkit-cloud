@@ -217,7 +217,7 @@ export class GroupsBody extends Component {
             shareInfo: {
                 display: 'flex',
                 flexWrap: 'wrap',
-                padding: '10px 0px', 
+                padding: '10px 0px',
                 lineHeight: '20px',
             },
             shareInfoButton: {

@@ -80,16 +80,53 @@ describe('DataPackPage component', () => {
             setOrder: () => {},
             setView: () => {},
             groups: [
-                { id: 'group1', name: 'group1', members: ['user1'], administrators: ['user3'] },
-                { id: 'group2', name: 'group2', members: ['user2'], administrators: ['user3'] },
-                { id: 'group3', name: 'group3', members: ['user1', 'user2'], administrators: ['user1'] },
+                {
+                    id: 1,
+                    name: 'group_one',
+                    members: ['user_one'],
+                    administrators: ['user_three'],
+                },
+                {
+                    id: 2,
+                    name: 'group_two',
+                    members: ['user_two'],
+                    administrators: ['user_three'],
+                },
+                {
+                    id: 3,
+                    name: 'group_three',
+                    members: ['user_one', 'user_two'],
+                    administrators: ['user_one'],
+                },
             ],
             users: [
-                { name: 'user1', username: 'user1', email: 'user1@email.com' },
-                { name: 'user2', username: 'user2', email: 'user2@email.com' },
+                {
+                    user: {
+                        first_name: 'user',
+                        last_name: 'one',
+                        username: 'user_one',
+                        email: 'user.one@email.com',
+                    },
+                    groups: [1, 3],
+                },
+                {
+                    user: {
+                        first_name: 'user',
+                        last_name: 'two',
+                        username: 'user_two',
+                        email: 'user.two@email.com',
+                    },
+                    groups: [2, 3],
+                },
             ],
             getGroups: () => {},
             getUsers: () => {},
+            updateDataCartPermissions: () => {},
+            updatePermissions: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
         };
     };
 
@@ -132,17 +169,16 @@ describe('DataPackPage component', () => {
         changeStub.restore();
     });
 
-    it('should show the DataPackShareDialog  and give it the corrent run', () => {
+    it('should show the DataPackShareDialog  and give it the correct run', () => {
         const runs = [
-            { job: { uid: '123' } },
-            { job: { uid: '456' } },
+            { job: { uid: '123', permissions: { visiblity: 'PRIVATE', groups: {}, members: {} } } },
+            { job: { uid: '456', permissions: { visibiity: 'PRIVATE', groups: {}, members: {} } } },
         ];
         const props = getProps();
         props.runsList.runs = runs;
         const wrapper = getWrapper(props);
         wrapper.setState({ shareOpen: true, targetJob: '456' });
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-        expect(wrapper.find(DataPackShareDialog).props().run).toEqual(runs[1]);
     });
 
     it('should use order and view from props or just default to map and featured', () => {
@@ -340,15 +376,13 @@ describe('DataPackPage component', () => {
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
         const owner = 'test_user';
-        const permissions = 'group';
-        const groups = ['group1', 'group2'];
+        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
         const search = 'search_text';
         const expectedParams = {
             page_size: 12,
             ordering: '-job__featured,-started_at',
             user: 'test_user',
-            published: 'group',
-            groups: 'group1,group2',
+            permissions: { value: 'PRIVATE', groups: {}, members: {} },
             status: 'COMPLETED,INCOMPLETE',
             min_date: '2017-07-30',
             max_date: '2017-08-02',
@@ -360,7 +394,6 @@ describe('DataPackPage component', () => {
             maxDate,
             ownerFilter: owner,
             permissions,
-            selectedGroups: groups,
             search,
         });
         wrapper.instance().makeRunRequest();
@@ -412,7 +445,11 @@ describe('DataPackPage component', () => {
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({
-            permissions: 'public',
+            permissions: {
+                value: 'PUBLIC',
+                groups: {},
+                members: {},
+            },
             status: {
                 completed: false,
                 incomplete: false,
@@ -421,7 +458,6 @@ describe('DataPackPage component', () => {
             minDate: null,
             maxDate: null,
             providers: {},
-            selectedGroups: [],
             loading: true,
         }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(stateSpy.calledWith({ open: false })).toBe(true);
@@ -570,6 +606,21 @@ describe('DataPackPage component', () => {
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ shareOpen: false, targetJob: '' })).toBe(true);
         stateStub.restore();
+    });
+
+    it('handleShareSave should call shareClose and update permissions', () => {
+        const props = getProps();
+        props.updateDataCartPermissions = sinon.spy();
+        const wrapper = getWrapper(props);
+        const target = '1234';
+        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
+        const closeStub = sinon.stub(wrapper.instance(), 'handleShareClose');
+        wrapper.setState({ targetJob: target });
+        wrapper.instance().handleShareSave(permissions);
+        expect(closeStub.calledOnce).toBe(true);
+        expect(props.updateDataCartPermissions.calledOnce).toBe(true);
+        expect(props.updateDataCartPermissions.calledWith(target, { permissions })).toBe(true);
+        closeStub.restore();
     });
 });
 

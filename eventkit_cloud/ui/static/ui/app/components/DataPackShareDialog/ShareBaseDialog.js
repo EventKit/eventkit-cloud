@@ -39,7 +39,7 @@ export class ShareBaseDialog extends Component {
                 height: '100%',
                 minWidth: '325px',
                 maxWidth: '650px',
-                transform: `translate(0px, ${this.state.mobile ? 16 : 64}px`,
+                transform: `translate(0px, ${this.state.mobile ? 16 : 64}px)`,
             },
             title: {
                 padding: '25px',
@@ -94,7 +94,7 @@ export class ShareBaseDialog extends Component {
 
         // display passed in title and a clear button which calls props.onClose
         const title = (
-            <div className="qa-ShareBaseDialog-div">
+            <div className="qa-ShareBaseDialog-title">
                 <strong>{this.props.title}</strong>
                 <Clear style={styles.clear} onClick={this.props.onClose} />
             </div>

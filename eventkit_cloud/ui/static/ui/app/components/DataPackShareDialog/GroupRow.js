@@ -1,13 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
-import People from 'material-ui/svg-icons/social/people';
-import PeopleOutline from 'material-ui/svg-icons/social/people-outline';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';
-import AdminShare from '../icons/AdminShareIcon';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import Eye from 'material-ui/svg-icons/image/remove-red-eye';
+import AdminShare from '../icons/AdminShareIcon';
 import GroupMemberRow from './GroupMemberRow';
 
 export class GroupRow extends Component {

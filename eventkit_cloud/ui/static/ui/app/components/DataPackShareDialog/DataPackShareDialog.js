@@ -50,8 +50,7 @@ export class DataPackShareDialog extends Component {
     toggleView(view) {
         if (view) {
             this.setState({ view });
-        }
-        if (this.state.view === 'groups') {
+        } else if (this.state.view === 'groups') {
             this.setState({ view: 'members' });
         } else {
             this.setState({ view: 'groups' });

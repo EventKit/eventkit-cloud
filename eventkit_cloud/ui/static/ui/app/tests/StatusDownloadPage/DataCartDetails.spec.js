@@ -108,30 +108,17 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
     });
 
-    it('should call initializeOpenLayers, setPermission, and setMaxDate set on mount', () => {
+    it('should call initializeOpenLayers and setMaxDate set on mount', () => {
         const props = getProps();
         const initStub = sinon.stub(DataCartDetails.prototype, 'initializeOpenLayers');
-        const permissionStub = sinon.stub(DataCartDetails.prototype, 'setPermission');
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
         DataCartDetails.prototype.componentDidMount = didMount;
         const wrapper = getWrapper(props);
         expect(initStub.calledOnce).toBe(true);
-        expect(permissionStub.calledOnce).toBe(true);
         expect(dateStub.calledOnce).toBe(true);
         initStub.restore();
-        permissionStub.restore();
         dateStub.restore();
         DataCartDetails.prototype.componentDidMount = sinon.spy();
-    });
-
-    it('setPermission should set the state for published permission', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().setPermission();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: 'public' })).toBe(true);
-        stateStub.restore();
     });
 
     it('setMaxDate should set the min and max dates', () => {
@@ -163,30 +150,18 @@ describe('DataCartDetails component', () => {
         fitStub.restore();
     });
 
-    it('handlePermissionChange should set state to public and call onUpdateDataCartPermissions', () => {
+    it('handlePermissionsChange should call onUpdateDataCartPermissions', () => {
         const props = getProps();
         props.onUpdateDataCartPermissions = sinon.spy();
-        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
-        wrapper.instance().handlePermissionChange({}, 0, 'public');
+        const permissions = {
+            value: 'PUBLIC',
+            groups: {},
+            members: {},
+        };
+        wrapper.instance().handlePermissionsChange(permissions);
         expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, { published: true })).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: 'public' })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handlePermissionChange should state to private and call onUpdateDataCartPermissions', () => {
-        const props = getProps();
-        props.onUpdateDataCartPermissions = sinon.spy();
-        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handlePermissionChange({}, 0, 'private');
-        expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, { published: false })).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: 'private' })).toBe(true);
-        stateStub.restore();
+        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, { permissions })).toBe(true);
     });
 
     it('handleExpirationChange should call onUpdateExpiration', () => {

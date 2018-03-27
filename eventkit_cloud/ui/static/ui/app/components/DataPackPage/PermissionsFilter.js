@@ -111,13 +111,14 @@ export class PermissionsFilter extends Component {
             } else if (memberCount === this.props.members.length) {
                 memberText = 'All Members';
             } else if (memberCount === 1) {
-                memberText = '1 Members';
+                memberText = '1 Member';
             } else {
                 memberText = `${memberCount} Members`;
             }
 
             sharedButton = (
                 <EnhancedButton
+                    className="qa-PermissionsFilter-MembersAndGroups-button"
                     onClick={this.handleOpen}
                     style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
                 >

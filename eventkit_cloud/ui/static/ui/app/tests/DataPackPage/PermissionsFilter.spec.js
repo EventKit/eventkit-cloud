@@ -4,18 +4,41 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import PermissionsFilter from '../../components/DataPackPage/PermissionsFilter';
+import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('PermissionsFilter component', () => {
     const muiTheme = getMuiTheme();
     const getProps = () => (
         {
-            valueSelected: 'public',
-            selectedGroups: ['group1'],
-            onGroupSelect: () => {},
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
             onChange: () => {},
             groups: [
-                { id: 'group1', name: 'group1', members: ['user1'] },
-                { id: 'group1', name: 'group2', members: ['user2'] },
+                { id: 1, name: 'group_one', members: ['user_one'] },
+                { id: 2, name: 'group_two', members: ['user_two'] },
+            ],
+            members: [
+                {
+                    user: {
+                        username: 'user_one',
+                        first_name: 'user',
+                        last_name: 'one',
+                        email: 'user.one@email.com',
+                    },
+                    groups: [1],
+                },
+                {
+                    user: {
+                        username: 'user_two',
+                        first_name: 'user',
+                        last_name: 'two',
+                        email: 'user.two@email.com',
+                    },
+                    groups: [2],
+                },
             ],
         }
     );
@@ -33,103 +56,113 @@ describe('PermissionsFilter component', () => {
         expect(wrapper.find('p').text()).toEqual('Permissions');
         expect(wrapper.find(RadioButtonGroup)).toHaveLength(1);
         expect(wrapper.find(RadioButtonGroup).props().name).toEqual('permissions');
-        expect(wrapper.find(RadioButtonGroup).props().onChange).toEqual(props.onChange);
-        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('public');
-        expect(wrapper.find(RadioButton)).toHaveLength(3);
+        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('PRIVATE');
+        expect(wrapper.find(RadioButton)).toHaveLength(2);
         expect(wrapper.find(RadioButton).at(0).text()).toEqual('Private (only me)');
-        expect(wrapper.find(RadioButton).at(0).props().value).toEqual('private');
-        expect(wrapper.find(RadioButton).at(1).text()).toEqual('Public (everyone)');
-        expect(wrapper.find(RadioButton).at(1).props().value).toEqual('public');
-        expect(wrapper.find(RadioButton).at(2).text()).toEqual('Group Shared (only)');
-        expect(wrapper.find(RadioButton).at(2).props().value).toEqual('group');
+        expect(wrapper.find(RadioButton).at(0).props().value).toEqual('PRIVATE');
+        expect(wrapper.find(RadioButton).at(1).text()).toEqual('Shared');
+        expect(wrapper.find(RadioButton).at(1).props().value).toEqual('SHARED');
     });
 
-    it('should call onChange with "private"', () => {
+    it('should render a Share Dialog', () => {
         const props = getProps();
-        props.onChange = sinon.spy();
+        props.permissions.value = 'SHARED';
+        const stub = sinon.stub(DataPackShareDialog.prototype, 'render').returns(null);
         const wrapper = getWrapper(props);
-        wrapper.find(RadioButton).at(0).find('input[type="radio"]')
-            .simulate('change', { target: { checked: true } });
-        expect(props.onChange.calledOnce).toBe(true);
-        expect(props.onChange.args[0][1]).toEqual('private');
+        wrapper.setState({ open: true });
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        stub.restore();
     });
 
-    it('should call onChange with "public"', () => {
+    it('should render the correct members and groups text', () => {
         const props = getProps();
-        props.onChange = sinon.spy();
+        props.permissions.value = 'SHARED';
+        props.permissions.groups = {};
+        props.permissions.members = {};
         const wrapper = getWrapper(props);
-        wrapper.find(RadioButton).at(1).find('input[type="radio"]')
-            .simulate('change', { target: { checked: true } });
-        expect(props.onChange.calledOnce).toBe(true);
-        expect(props.onChange.args[0][1]).toEqual('public');
-    });
+        const button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
 
-    it('should call onChange with "group"', () => {
-        const props = getProps();
-        props.onChange = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.find(RadioButton).at(2).find('input[type="radio"]')
-            .simulate('change', { target: { checked: true } });
-        expect(props.onChange.calledOnce).toBe(true);
-        expect(props.onChange.args[0][1]).toEqual('group');
-    });
+        expect(button.text()).toEqual('No Members / No Groups');
 
-    it('should set the selected value', () => {
-        const props = getProps();
-        props.onChange = sinon.spy();
-        const wrapper = getWrapper(props);
-        const nextProps = getProps();
-        nextProps.valueSelected = 'group';
+        let nextProps = { ...props };
+        nextProps.permissions.groups = { 1: '' };
+        nextProps.permissions.members = { user_one: '' };
         wrapper.setProps(nextProps);
-        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('group');
+        expect(button.text()).toEqual('1 Member / 1 Group');
+
+        nextProps = { ...nextProps };
+        nextProps.permissions.groups = { 1: '', 2: '' };
+        nextProps.permissions.members = { user_one: '', user_two: '' };
+        wrapper.setProps(nextProps);
+        expect(button.text()).toEqual('All Members / All Groups');
+
+        nextProps = { ...nextProps };
+        nextProps.permissions.groups = { 1: '', 2: '', 3: '' };
+        nextProps.permissions.members = { user_one: '', user_two: '', user_three: '' };
+        wrapper.setProps(nextProps);
+        expect(button.text()).toEqual('3 Members / 3 Groups');
     });
 
-    it('should display the selected groups div and the selected count', () => {
+    it('handleOpen should setState to open', () => {
         const props = getProps();
-        props.valueSelected = 'group';
-        props.selectedGroups = [];
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-PermissionsFilter-groups-button')).toHaveLength(1);
-        let expectedText = 'No Groups';
-        expect(wrapper.find('.qa-PermissionsFilter-groups-selection').text()).toEqual(expectedText);
-        let nextProps = getProps();
-        nextProps.selectedGroups = [nextProps.groups[0].id];
-        nextProps.valueSelected = 'group';
-        expectedText = '1 Group';
-        wrapper.setProps(nextProps);
-        expect(wrapper.find('.qa-PermissionsFilter-groups-selection').text()).toEqual(expectedText);
-        nextProps = getProps();
-        nextProps.valueSelected = 'group';
-        nextProps.selectedGroups = nextProps.groups.map(group => group.id);
-        expectedText = 'All Groups';
-        wrapper.setProps(nextProps);
-        expect(wrapper.find('.qa-PermissionsFilter-groups-selection').text()).toEqual(expectedText);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const e = { preventDefault: () => {}, stopPropagation: () => {} };
+        wrapper.instance().handleOpen(e);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ open: true })).toBe(true);
+        stateStub.restore();
     });
 
-    it('handleGroupsOpen should setState open and the popover target', () => {
+    it('handleClose should setState to close', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(PermissionsFilter.prototype, 'setState');
         const wrapper = getWrapper(props);
-        const fakeEvent = {
-            preventDefault: sinon.spy(),
-            stopPropagation: sinon.spy(),
-            currentTarget: null,
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ open: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleSave should call props onChange and handleClose', () => {
+        const props = getProps();
+        props.onChange = sinon.spy();
+        const wrapper = getWrapper(props);
+        const closeStub = sinon.stub(wrapper.instance(), 'handleClose');
+        const permissions = {
+            value: 'SHARED',
+            groups: {},
+            members: {},
         };
-        wrapper.instance().handleGroupsOpen(fakeEvent);
-        expect(fakeEvent.preventDefault.calledOnce).toBe(true);
-        expect(fakeEvent.stopPropagation.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ open: true, popoverAnchor: null })).toBe(true);
-        stateSpy.restore();
+        wrapper.instance().handleSave(permissions);
+        expect(props.onChange.calledOnce).toBe(true);
+        expect(props.onChange.calledWith({ ...permissions })).toBe(true);
+        expect(closeStub.calledOnce).toBe(true);
+        closeStub.restore();
     });
 
-    it('handleGroupsClose should setState with open false', () => {
+    it('handleSelection should call onChange with passed in value', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(PermissionsFilter.prototype, 'setState');
+        props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleGroupsClose();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ open: false })).toBe(true);
-        stateSpy.restore();
+        wrapper.instance().handleSelection({}, 'PRIVATE');
+        expect(props.onChange.calledOnce).toBe(true);
+        expect(props.onChange.calledWith({ value: 'PRIVATE' })).toBe(true);
+    });
+
+    it('handleSelection should call onChange with all members and groups too', () => {
+        const props = getProps();
+        const expected = {
+            value: 'SHARED',
+            groups: {},
+            members: {},
+        };
+        props.groups.forEach((group) => { expected.groups[group.id] = 'READ'; });
+        props.members.forEach((member) => { expected.members[member.user.username] = 'READ'; });
+        props.onChange = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleSelection({}, 'SHARED');
+        expect(props.onChange.calledOnce).toBe(true);
+        expect(props.onChange.calledWith(expected)).toBe(true);
     });
 });

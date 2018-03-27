@@ -12,13 +12,13 @@ export class GroupMemberRow extends Component {
                     style={{ flex: '1 1 auto' }}
                     className="qa-GroupMemberRow-memberInfo"
                 >
-                    <div>
+                    <div className="qa-GroupMemberRow-name">
                         <strong>
                             {this.props.member.user.first_name} {this.props.member.user.last_name}
                             {this.props.isGroupAdmin ? ' (Group Admin)' : ''}
                         </strong>
                     </div>
-                    <div>{this.props.member.user.email}</div>
+                    <div className="qa-GroupMemberRow-email">{this.props.member.user.email}</div>
                 </div>
             </div>
         );

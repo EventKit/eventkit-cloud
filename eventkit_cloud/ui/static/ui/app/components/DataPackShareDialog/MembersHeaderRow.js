@@ -163,7 +163,7 @@ export class MembersHeaderRow extends Component {
                                     }
                                 </EnhancedButton>
                             </div>
-                            <div style={{ flex: '1 1 auto' }}>{countText}</div>
+                            <div style={{ flex: '1 1 auto' }} className="qa-MembersHeaderRow-countText">{countText}</div>
                             <div style={styles.share} className="qa-MembersHeaderRow-CardHeader-icons">
                                 <EnhancedButton
                                     onClick={this.handleClick}

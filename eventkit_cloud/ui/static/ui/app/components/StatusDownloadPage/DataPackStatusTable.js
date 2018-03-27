@@ -169,13 +169,14 @@ export class DataPackStatusTable extends Component {
             } else if (memberCount === this.props.members.length) {
                 memberText = 'All Members';
             } else if (memberCount === 1) {
-                memberText = '1 Members';
+                memberText = '1 Member';
             } else {
                 memberText = `${memberCount} Members`;
             }
 
             membersAndGroups = (
                 <EnhancedButton
+                    className="qa-DataPackStatusTable-MembersAndGroups-button"
                     key="membersAndGroupsButton"
                     onClick={this.handleShareDialogOpen}
                     style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
@@ -311,10 +312,13 @@ DataPackStatusTable.propTypes = {
     statusColor: PropTypes.string,
     statusFontColor: PropTypes.string,
     members: PropTypes.arrayOf(PropTypes.shape({
-        username: PropTypes.string,
-        name: PropTypes.string,
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+        }),
         groups: PropTypes.arrayOf(PropTypes.number),
-        email: PropTypes.string,
     })).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
