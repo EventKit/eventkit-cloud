@@ -237,7 +237,6 @@ DataCartDetails.propTypes = {
         job: PropTypes.shape({
             uid: PropTypes.string,
             name: PropTypes.string,
-            published: PropTypes.bool,
             permissions: PropTypes.shape({
                 value: PropTypes.oneOf([
                     'PUBLIC',

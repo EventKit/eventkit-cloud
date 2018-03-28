@@ -42,7 +42,6 @@ describe('Export Summary Component', () => {
             exportName: 'name',
             datapackDescription: 'description',
             projectName: 'project',
-            makePublic: true,
             providers: [
                 { name: 'one', uid: 1, display: true }, 
                 { name: 'two', uid: 2, display: false }, 
@@ -94,8 +93,6 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#description').find('td').last().text()).toEqual('description');
         expect(wrapper.find('#project').find('td').first().text()).toEqual('Project / Category');
         expect(wrapper.find('#project').find('td').last().text()).toEqual('project');
-        expect(wrapper.find('#published').find('td').first().text()).toEqual('Published');
-        expect(wrapper.find('#published').find('td').last().text()).toEqual('true');
         expect(wrapper.find('#formats').find('td').first().text()).toEqual('File Formats');
         expect(wrapper.find('#formats').find('td').last().text()).toEqual('Geopackage');
         expect(wrapper.find('#layers').find('td').first().text()).toEqual('Layer Data');

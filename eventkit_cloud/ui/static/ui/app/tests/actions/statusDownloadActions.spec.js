@@ -26,7 +26,6 @@ describe('statusDownload actions', () => {
                 url: 'http://cloud.eventkit.test/api/jobs/123',
                 extent: {},
                 selection: '',
-                published: false,
             },
             provider_tasks: [],
             zipfile_url: 'http://cloud.eventkit.test/downloads/123/test.zip',

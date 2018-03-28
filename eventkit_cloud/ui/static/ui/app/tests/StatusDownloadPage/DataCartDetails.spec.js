@@ -188,7 +188,6 @@ const run = {
         event: 'test',
         description: 'test',
         url: 'http://cloud.eventkit.test/api/jobs/67890',
-        published: true,
         formats: [
             'Geopackage',
         ],

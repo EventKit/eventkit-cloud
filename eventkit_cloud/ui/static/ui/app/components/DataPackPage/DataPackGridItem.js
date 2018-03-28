@@ -407,7 +407,7 @@ export class DataPackGridItem extends Component {
                             :
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>
                         }
-                        {this.props.run.job.published ?
+                        {this.props.run.job.permissions.value !== 'PRIVATE' ?
                             <SocialGroup style={styles.publishedIcon} />
                             :
 

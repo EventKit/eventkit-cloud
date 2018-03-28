@@ -34,17 +34,35 @@ export function getRuns(params, geojson) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-                
-            }
+            });
+
             let range = '';
             if (response.headers['content-range']) {
                 range = response.headers['content-range'].split('-')[1]; 
             }
-            dispatch({ type: types.RECEIVED_RUNS, runs: response.data, nextPage, range });
+
+            // TODO dont mock when api is ready
+            const runs = response.data.map((run) => {
+                const newRun = { ...run };
+                newRun.job.permissions = {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
+                };
+                return newRun;
+            });
+
+            dispatch({
+                type: types.RECEIVED_RUNS,
+                runs,
+                nextPage,
+                range,
+            });
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -56,7 +74,7 @@ export function getRuns(params, geojson) {
 }
 
 export function deleteRuns(uid) {
-    return (dispatch, getState) => {
+    return (dispatch) => {
         dispatch({ type: types.DELETING_RUN });
 
         const csrftoken = cookie.load('csrftoken');
@@ -80,13 +98,13 @@ export function deleteRuns(uid) {
 export function setPageOrder(order) {
     return {
         type: types.SET_PAGE_ORDER,
-        order: order
-    }
+        order,
+    };
 }
 
 export function setPageView(view) {
     return {
         type: types.SET_PAGE_VIEW,
-        view: view
-    }
+        view,
+    };
 }

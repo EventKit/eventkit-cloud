@@ -348,7 +348,6 @@ function mapDispatchToProps(dispatch) {
                 exportName: cartDetails.job.name,
                 datapackDescription: cartDetails.job.description,
                 projectName: cartDetails.job.event,
-                makePublic: cartDetails.job.published,
                 providers: providerArray,
                 layers: 'Geopackage',
             }));

@@ -171,8 +171,8 @@ describe('DataPackPage component', () => {
 
     it('should show the DataPackShareDialog  and give it the correct run', () => {
         const runs = [
-            { job: { uid: '123', permissions: { visiblity: 'PRIVATE', groups: {}, members: {} } } },
-            { job: { uid: '456', permissions: { visibiity: 'PRIVATE', groups: {}, members: {} } } },
+            { job: { uid: '123', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
+            { job: { uid: '456', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
         ];
         const props = getProps();
         props.runsList.runs = runs;
@@ -418,7 +418,6 @@ describe('DataPackPage component', () => {
         const currentState = {...wrapper.state()};
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const newState = {
-            published: true, 
             minDate: new Date(), 
             maxDate: new Date(), 
             status: {

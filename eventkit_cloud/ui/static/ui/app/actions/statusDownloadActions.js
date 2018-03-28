@@ -136,7 +136,6 @@ export function updateDataCartPermissions(uid, options = {}) {
         const csrftoken = cookie.load('csrftoken');
 
         const data = {};
-        if (options.published) data.published = options.published;
         if (options.permissions) data.permissions = options.permissions;
 
         return axios({

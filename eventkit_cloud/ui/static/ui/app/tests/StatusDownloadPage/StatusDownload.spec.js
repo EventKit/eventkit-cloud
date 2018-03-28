@@ -69,7 +69,6 @@ describe('StatusDownload component', () => {
             description: 'Test1 description',
             url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             selection: '',
-            published: false,
             formats: [
                 'Geopackage',
             ],
