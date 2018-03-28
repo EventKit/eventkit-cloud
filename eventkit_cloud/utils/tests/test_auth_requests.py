@@ -70,14 +70,14 @@ class TestAuthResult(TransactionTestCase):
         # If other tests in the future have any issues with httplib (they shouldn't, the patch is transparent,
         # and the original initializer is restored in the finally block), this may be why.
 
-        _orig_HTTPSConnection_init = auth_requests._orig_HTTPSConnection_init
+        orig_init = auth_requests._ORIG_HTTPSCONNECTION_INIT
         try:
             new_orig_init = MagicMock()
-            auth_requests._orig_HTTPSConnection_init = new_orig_init
+            auth_requests._ORIG_HTTPSCONNECTION_INIT = new_orig_init
             # Confirm that the patch is applied
             getenv.return_value = "key and cert contents"
             auth_requests.patch_https("test-provider-slug")
-            self.assertNotEqual(auth_requests._orig_HTTPSConnection_init, httplib.HTTPSConnection.__init__)
+            self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, httplib.HTTPSConnection.__init__)
             self.assertEqual("_new_init", httplib.HTTPSConnection.__init__
                              .__func__.func_closure[1].cell_contents.__name__)  # complicated because decorator
 
@@ -107,4 +107,4 @@ class TestAuthResult(TransactionTestCase):
                 self.assertEqual(httplib.HTTPSConnection.__init__, new_orig_init)
 
         finally:
-            auth_requests._orig_HTTPSConnection_init = _orig_HTTPSConnection_init
+            auth_requests._ORIG_HTTPSCONNECTION_INIT = orig_init

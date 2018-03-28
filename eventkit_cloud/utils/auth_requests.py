@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import logging
-import requests
 import os
+import httplib
+import requests
 from tempfile import NamedTemporaryFile
 
-import httplib
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +18,9 @@ def content_to_file(content):
         def wrapper(*args, **kwargs):
             if content:
                 logger.debug("Content found for {}({}, {})".format(func.__name__,
-                                                                  ", ".join([str(arg) for arg in args]),
-                                                                  ", ".join(["{}={}".format(k, v) for k, v in kwargs.iteritems()])))
+                                                                   ", ".join([str(arg) for arg in args]),
+                                                                   ", ".join(["{}={}".format(k, v) for k, v
+                                                                              in kwargs.iteritems()])))
                 with NamedTemporaryFile() as certfile:
                     certfile.write(content)
                     certfile.flush()
@@ -32,6 +33,12 @@ def content_to_file(content):
 
 
 def find_cert(slug=None):
+    """
+    Given a provider slug, returns the contents of an environment variable consisting of the slug (lower or uppercase)
+    followed by "_CERT". If no variable was found, return None.
+    :param slug: Provider slug
+    :return: Cert contents if found
+    """
     if slug:
         cert = os.getenv(slug + "_CERT") or os.getenv(slug.upper() + "_CERT")
     else:
@@ -57,23 +64,30 @@ def slug_to_cert(func):
 
 
 @slug_to_cert
-def request_with_cert(method, url, **kwargs):
-    try:
-        return method(url, **kwargs)
-    except requests.exceptions.SSLError as e:
-        logger.error('Could not establish SSL connection: possibly missing client certificate')
-        raise e
-
-
 def get(url, **kwargs):
-    return request_with_cert(requests.get, url, **kwargs)
+    """
+    As requests.get, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
+    if found.
+    :param url: URL for requests.get
+    :param kwargs: Dict is passed along unaltered to requests.get, except for removing "slug" and adding "cert".
+    :return: Result of requests.get call
+    """
+    return requests.get(url, **kwargs)
 
 
+@slug_to_cert
 def post(url, **kwargs):
-    return request_with_cert(requests.post, url, **kwargs)
+    """
+    As requests.post, but replaces the "slug" kwarg with "cert", pointing to a temporary file holding cert and key info,
+    if found.
+    :param url: URL for requests.get
+    :param kwargs: Dict is passed along unaltered to requests.post, except for removing "slug" and adding "cert".
+    :return: Result of requests.post call
+    """
+    return requests.post(url, **kwargs)
 
 
-_orig_HTTPSConnection_init = httplib.HTTPSConnection.__init__
+_ORIG_HTTPSCONNECTION_INIT = httplib.HTTPSConnection.__init__
 
 
 def patch_https(slug):
@@ -93,10 +107,14 @@ def patch_https(slug):
         kwargs["key_file"] = certfile or kwargs.get("key_file", None)
         kwargs["cert_file"] = certfile or kwargs.get("cert_file", None)
         logger.debug("Initializing new HTTPSConnection with provider={}, certfile={}".format(slug, certfile))
-        _orig_HTTPSConnection_init(_self, *args, **kwargs)
+        _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     httplib.HTTPSConnection.__init__ = _new_init
 
 
 def unpatch_https():
-    httplib.HTTPSConnection.__init__ = _orig_HTTPSConnection_init
+    """
+    Remove the patch applied by patch_https, restoring the original initializer for HTTPSConnection.
+    :return: None
+    """
+    httplib.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT
