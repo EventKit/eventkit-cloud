@@ -36,7 +36,7 @@ Step 11 will take many minutes while it.  It will download the base linux image 
 14. `sudo docker-compose run --rm eventkit python manage.py runinitial setup`
 15. `sudo docker-compose up`
 
-Step 14 and 15 will take a long time as each containers image is downloaded and configured, once this is done you will see the logs from the containers as they start, eventually you will see the eventkit container have listening on 0.0.0.0:6080 at that point you can open a browser and navigate to *cloud.eventkit.dev*
+Step 14 and 15 will take a long time as each containers image is downloaded and configured, once this is done you will see the logs from the containers as they start, eventually you will see the eventkit container have listening on 0.0.0.0:6080 at that point you can open a browser and navigate to *cloud.eventkit.test*
 
 # Pulling Updates
 When a new update is pushed to master you can view the latest code:

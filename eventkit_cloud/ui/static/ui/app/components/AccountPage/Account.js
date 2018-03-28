@@ -1,17 +1,14 @@
-import React, {Component} from 'react';
-import {connect} from 'react-redux';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import AppBar from 'material-ui/AppBar';
 import UserInfo from './UserInfo';
-import Warning from './Warning';
 import LicenseInfo from './LicenseInfo';
 import SaveButton from './SaveButton';
 import getLicenses from '../../actions/licenseActions';
-import {patchUser} from '../../actions/userActions';
+import { patchUser } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
-import isEqual from 'lodash/isEqual';
 
 export class Account extends Component {
-
     constructor(props) {
         super(props);
         this.handleCheck = this.handleCheck.bind(this);
@@ -26,8 +23,8 @@ export class Account extends Component {
     componentWillMount() {
         this.setState({acceptedLicenses: {...this.props.user.data.accepted_licenses}});
         this.props.getLicenses();
-    };
-    
+    }
+
     componentWillReceiveProps(nextProps) {
         if(nextProps.user.patched && !this.props.user.patched) {
             this.setState({showSavedMessage: true});
@@ -41,7 +38,7 @@ export class Account extends Component {
         const licenses = this.state.acceptedLicenses;
         licenses[slug] = checked;
         this.setState({acceptedLicenses: licenses});
-    };
+    }
 
     handleAll(event, checked) {
         const licenses = {...this.state.acceptedLicenses};
@@ -68,7 +65,7 @@ export class Account extends Component {
                 height: '35px',
                 color: 'white',
                 fontSize: '14px',
-                padding: '0px 34px'
+                padding: '0px 34px',
             },
             headerTitle: {
                 fontSize: '18px',
@@ -83,10 +80,17 @@ export class Account extends Component {
             },
             bodyContent: {
                 padding: '30px 34px',
-                maxWidth: '1000px', 
-                margin: 'auto'
+                maxWidth: '1000px',
+                margin: 'auto',
             }
         };
+
+        const equal = Object.keys(this.state.acceptedLicenses).every((key) => {
+            if (this.state.acceptedLicenses[key] === this.props.user.data.accepted_licenses[key]) {
+                return true;
+            }
+            return false;
+        });
 
         return (
             <div style={{backgroundColor: 'white'}}>
@@ -97,9 +101,9 @@ export class Account extends Component {
                     titleStyle={styles.headerTitle}
                     showMenuIconButton={false}
                 >
-                    <SaveButton 
-                        saved={this.state.showSavedMessage} 
-                        saveDisabled={isEqual(this.state.acceptedLicenses, this.props.user.data.accepted_licenses)} 
+                    <SaveButton
+                        saved={this.state.showSavedMessage}
+                        saveDisabled={equal}
                         handleSubmit={this.handleSubmit}
                     />
                 </AppBar>

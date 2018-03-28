@@ -1295,6 +1295,34 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_403_FORBIDDEN)
 
+    def test_leave_group(self):
+        # ensure the group is created
+        self.insert_test_group()
+        url = reverse('api:groups-detail', args=[self.groupid])
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        # check add user_2 as member and only admin
+        group_data = json.loads(response.content)
+        group_data['members'] = ['user_1', 'user_2']
+        group_data['administrators'] = ['user_2']
+        response = self.client.patch(url, data=json.dumps(group_data), content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        group_data = json.loads(response.content)
+        self.assertEquals(len(group_data['members']), 2)
+        self.assertEquals(len(group_data['administrators']), 1)
+        self.assertEquals(group_data['administrators'][0], 'user_2')
+
+        # empty patch request should remove user_1 from members
+        response = self.client.patch(url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # verify the results
+        response = self.client.get(url, content_type='application/json; verison=1.0')
+        group_data = json.loads(response.content)
+        self.assertEquals(len(group_data['members']), 1)
+        self.assertEquals(group_data['members'][0], 'user_2')
+
 
 class TestUserJobActivityViewSet(APITestCase):
     fixtures = ('insert_provider_types.json', 'osm_provider.json')

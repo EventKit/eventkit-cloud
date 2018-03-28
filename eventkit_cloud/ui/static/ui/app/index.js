@@ -17,6 +17,7 @@ import DashboardPage from './components/DashboardPage/DashboardPage';
 import DataPackPage from './components/DataPackPage/DataPackPage';
 import CreateExport from './components/CreateDataPack/CreateExport';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
+import UserGroupsPage from './components/UserGroupsPage/UserGroupsPage';
 import NotificationsPage from './components/NotificationsPage/NotificationsPage';
 import { isBrowserValid } from './utils/generic';
 import { login, userActive } from './actions/userActions';
@@ -85,6 +86,7 @@ render(
                 <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))} />
                 <Route path="/about" component={UserIsAuthenticated(About)} />
                 <Route path="/account" component={UserIsAuthenticated(Account)} />
+                <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
                 <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
             </Route>
         </Router>

@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 import argparse
 import logging
-import shutil
-import subprocess
-from ..tasks.task_process import TaskProcess
 from datetime import datetime
 from string import Template
 import os
-
-import requests
 from requests import exceptions
+
+import auth_requests
 
 from django.conf import settings
 
@@ -23,29 +20,29 @@ class Overpass(object):
     Returns all nodes, ways and relations within the specified bounding box.
     """
 
-    def __init__(self, url=None, bbox=None, stage_dir=None, job_name=None, debug=False, task_uid=None,
+    def __init__(self, url=None, slug=None, bbox=None, stage_dir=None, job_name=None, debug=False, task_uid=None,
                  raw_data_filename=None):
         """
         Initialize the Overpass utility.
 
         Args:
+            slug: data provider's slug, used for looking up cert env vars
+            url: location of Overpass endpoint; defaults to env var if not specified
             bbox: the bounding box to extract
             stage_dir: where to stage the extract job
             job_name: the name of the export job
             debug: turn on/off debug logging
         """
-        if settings.OVERPASS_API_URL:
-            self.url = settings.OVERPASS_API_URL
-        else:
-            self.url = 'http://localhost/interpreter'
+
+        self.url = url or settings.OVERPASS_API_URL or 'http://localhost/interpreter'
+
+        self.slug = slug
         self.query = None
         self.stage_dir = stage_dir
         self.job_name = job_name
         self.debug = debug
         self.task_uid = task_uid
         self.verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
-        if url:
-            self.url = url
         if bbox:
             # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
             self.bbox = '{},{},{},{}'.format(bbox[1], bbox[0], bbox[3], bbox[2])
@@ -92,7 +89,8 @@ class Overpass(object):
         logger.debug(q)
         logger.debug('Query started at: %s'.format(datetime.now()))
         try:
-            req = requests.post(self.url, data=q, stream=True, verify=self.verify_ssl)
+            req = auth_requests.post(self.url, slug=self.slug, data=q, stream=True, verify=self.verify_ssl)
+
             # Since the request takes a while, jump progress to an arbitrary 50 percent...
             update_progress(self.task_uid, progress=50, subtask_percentage=subtask_percentage)
             try:
@@ -122,59 +120,10 @@ class Overpass(object):
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)
+
         logger.debug('Query finished at %s'.format(datetime.now()))
         logger.debug('Wrote overpass query results to: %s'.format(self.raw_osm))
         return self.raw_osm
-
-    def _build_overpass_query(self,):  # pragma: no cover
-        """
-        Overpass  imposes a limit of 1023 statements per query.
-        This is no good for us when querying with the OSM Data Model
-        which contains 578 tags. Thats 578 * 3 statements to filter all
-        nodes, ways and relations. Instead we use 'osmfilter' as a second
-        step in this task. Leaving this here in case things change or
-        we decide to build our own overpass api in future.
-        """
-        template = Template("""
-                [out:xml][timeout:3600][bbox:$bbox];
-                (
-                  $nodes
-                  $ways
-                  $relations
-                );
-                (._;>;);
-                out body;
-            """)
-
-        nodes = []
-        ways = []
-        relations = []
-
-        node_tmpl = Template('node[$tags];')
-        way_tmpl = Template('way[$tags];')
-        rel_tmpl = Template('rel[$tags];')
-
-        for tag in self.tags:
-            try:
-                (k, v) = tag.split(':')
-                tag_str = '"' + k + '"="' + v + '"'
-                node_tag = node_tmpl.safe_substitute({'tags': tag_str})
-                way_tag = way_tmpl.safe_substitute({'tags': tag_str})
-                rel_tag = rel_tmpl.safe_substitute({'tags': tag_str})
-                nodes.append(node_tag)
-                ways.append(way_tag)
-                relations.append(rel_tag)
-            except ValueError as e:
-                continue
-
-        # build strings
-        node_filter = '\n'.join(nodes)
-        way_filter = '\n'.join(ways)
-        rel_filter = '\n'.join(relations)
-
-        q = template.safe_substitute({'bbox': self.bbox, 'nodes': node_filter, 'ways': way_filter,
-                                      'relations': rel_filter})
-        return q
 
 
 if __name__ == '__main__':
@@ -198,5 +147,5 @@ if __name__ == '__main__':
     debug = False
     if config.get('debug'):
         debug = config.get('debug')
-    overpass = Overpass(url=url, bbox=bbox, osm=osm, debug=debug)
+    overpass = Overpass(url=url, bbox=bbox, raw_data_filename=osm, debug=debug)
     overpass.run_query()

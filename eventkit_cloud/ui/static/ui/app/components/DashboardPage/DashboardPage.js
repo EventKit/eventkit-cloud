@@ -225,44 +225,44 @@ export class DashboardPage extends React.Component {
 
         const now = new Date();
         const mockNotifications = [
-            // {
-            //     uid: 3,
-            //     read: false,
-            //     type: 'license-update',
-            //     date: new Date().setMinutes(now.getMinutes() - 5),
-            // },
-            // {
-            //     uid: 2,
-            //     read: true,
-            //     type: 'datapack-complete-error',
-            //     date: new Date().setHours(now.getHours() - 5),
-            //     data: {
-            //         run: {
-            //             uid: 2,
-            //             job: {
-            //                 uid: 2,
-            //                 name: 'B',
-            //             },
-            //             expiration: new Date(2018, 5, 1),
-            //         },
-            //     },
-            // },
-            // {
-            //     uid: 1,
-            //     read: true,
-            //     type: 'datapack-complete-success',
-            //     date: new Date().setDate(now.getDate() - 5),
-            //     data: {
-            //         run: {
-            //             uid: 1,
-            //             job: {
-            //                 uid: 1,
-            //                 name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
-            //             },
-            //             expiration: new Date(2018, 5, 1),
-            //         },
-            //     },
-            // },
+            {
+                uid: 3,
+                read: false,
+                type: 'license-update',
+                date: new Date().setMinutes(now.getMinutes() - 5),
+            },
+            {
+                uid: 2,
+                read: true,
+                type: 'datapack-complete-error',
+                date: new Date().setHours(now.getHours() - 5),
+                data: {
+                    run: {
+                        uid: 2,
+                        job: {
+                            uid: 2,
+                            name: 'B',
+                        },
+                        expiration: new Date(2018, 5, 1),
+                    },
+                },
+            },
+            {
+                uid: 1,
+                read: true,
+                type: 'datapack-complete-success',
+                date: new Date().setDate(now.getDate() - 5),
+                data: {
+                    run: {
+                        uid: 1,
+                        job: {
+                            uid: 1,
+                            name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                        },
+                        expiration: new Date(2018, 5, 1),
+                    },
+                },
+            },
         ];
 
         return (
@@ -319,7 +319,7 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 noDataText="You haven't viewed any DataPacks yet..."
                             >
-                                {[].map((job, index) => (
+                                {this.props.user.viewedJobs.jobs.map((job, index) => (
                                     <DataPackGridItem
                                         className="qa-DashboardSection-RecentlyViewedGrid-Item"
                                         run={job.last_export_run}
@@ -328,31 +328,6 @@ export class DashboardPage extends React.Component {
                                         onRunDelete={this.props.deleteRuns}
                                         providers={this.props.providers}
                                         gridName="RecentlyViewed"
-                                        index={index}
-                                        showFeaturedFlag={false}
-                                    />
-                                ))}
-                            </DashboardSection>
-
-                            {/* My DataPacks */}
-                            <DashboardSection
-                                className="qa-DashboardSection-MyDataPacks"
-                                title="My DataPacks"
-                                name="MyDataPacks"
-                                columns={this.getGridColumns()}
-                                user={this.props.user}
-                                providers={this.props.providers}
-                                noDataText="You haven't created any DataPacks yet..."
-                            >
-                                {[].map((run, index) => (
-                                    <DataPackGridItem
-                                        className="qa-DashboardSection-MyDataPacksGrid-Item"
-                                        run={run}
-                                        user={this.props.user}
-                                        key={`MyDataPacksDataPack-${run.created_at}`}
-                                        onRunDelete={this.props.deleteRuns}
-                                        providers={this.props.providers}
-                                        gridName="MyDataPacks"
                                         index={index}
                                         showFeaturedFlag={false}
                                     />
@@ -385,6 +360,31 @@ export class DashboardPage extends React.Component {
                                     ))}
                                 </DashboardSection>
                             }
+
+                            {/* My DataPacks */}
+                            <DashboardSection
+                                className="qa-DashboardSection-MyDataPacks"
+                                title="My DataPacks"
+                                name="MyDataPacks"
+                                columns={this.getGridColumns()}
+                                user={this.props.user}
+                                providers={this.props.providers}
+                                noDataText="You haven't created any DataPacks yet..."
+                            >
+                                {this.props.runsList.runs.map((run, index) => (
+                                    <DataPackGridItem
+                                        className="qa-DashboardSection-MyDataPacksGrid-Item"
+                                        run={run}
+                                        user={this.props.user}
+                                        key={`MyDataPacksDataPack-${run.created_at}`}
+                                        onRunDelete={this.props.deleteRuns}
+                                        providers={this.props.providers}
+                                        gridName="MyDataPacks"
+                                        index={index}
+                                        showFeaturedFlag={false}
+                                    />
+                                ))}
+                            </DashboardSection>
                         </div>
                     }
                 </CustomScrollbar>

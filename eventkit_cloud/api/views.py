@@ -200,7 +200,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     }
                   ],
                   "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
-                  "url": "http://cloud.eventkit.dev/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "url": "http://cloud.eventkit.test/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
                   "name": "test",
                   "description": "test",
                   "event": "test",
@@ -211,7 +211,7 @@ class JobViewSet(viewsets.ModelViewSet):
                       "formats": [
                         {
                           "uid": "167fbc03-83b3-41c9-8034-8566257cb2e8",
-                          "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+                          "url": "http://cloud.eventkit.test/api/formats/gpkg",
                           "slug": "gpkg",
                           "name": "Geopackage",
                           "description": "GeoPackage"
@@ -544,7 +544,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
                 url = settings.OVERPASS_API_URL
 
             checker_type = get_provider_checker(provider_type)
-            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
             response = checker.check()
 
             logger.info("Status of provider '{}': {}".format(str(provider.name), response))
@@ -1163,7 +1163,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
         """
-             Change the group's name, members, and admnistrators
+             Change the group's name, members, and administrators
 
 
              Sample input:
@@ -1173,6 +1173,9 @@ class GroupViewSet(viewsets.ModelViewSet):
                     "members": [ "user2", "user3", "admin"],
                     "administrators": [ "admin" ]
                  }
+                 
+            If a member wishes to remove themselves from a group they can make an patch request with no body.
+            However, this will not work if they are a admin of the group.
 
          """
 
@@ -1182,6 +1185,17 @@ class GroupViewSet(viewsets.ModelViewSet):
         # administrator of the current group or there is an attempt to end up with no administrators
 
         if not self.useradmin(group,request):
+            user = User.objects.filter(username=request.user.username)[0]
+            perms = GroupPermission.objects.filter(
+                user=user,
+                group=group,
+                permission=GroupPermission.Permissions.MEMBER.value
+            )
+            # if the user is not an admin but is a member we remove them from the group
+            if perms:
+                perms.delete()
+                return Response("OK", status=status.HTTP_200_OK)
+
             return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
 
         if "administrators" in request.data:
@@ -1191,8 +1205,14 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
 
-        # examine provided lists of administrators and members. Adjust as needed.
+        # if name in request we need to change the group name
+        if "name" in request.data:
+            name = request.data["name"]
+            if name:
+                group.name = name
+                group.save()
 
+        # examine provided lists of administrators and members. Adjust as needed.
         for item in [ ("members",GroupPermission.Permissions.MEMBER.value),("administrators", GroupPermission.Permissions.ADMIN.value)]:
             permissionlabel = item[0]
             permission = item[1]
