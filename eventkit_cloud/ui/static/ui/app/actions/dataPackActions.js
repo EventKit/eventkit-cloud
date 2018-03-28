@@ -50,9 +50,9 @@ export function getRuns(params, geojson) {
             const runs = response.data.map((run) => {
                 const newRun = { ...run };
                 newRun.job.permissions = {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
+                    value: newRun.job.visibility,
+                    groups: newRun.job.permissions.groups,
+                    members: newRun.job.permissions.members,
                 };
                 return newRun;
             });

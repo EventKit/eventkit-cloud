@@ -17,9 +17,9 @@ export const getDatacartDetails = jobuid => (dispatch) => {
 
         // TODO dont mock when api is ready
         data[0].job.permissions = {
-            value: 'PRIVATE',
-            groups: {},
-            members: {},
+            value: data[0].job.visibility,
+            groups: data[0].job.permissions.groups,
+            members: data[0].job.permissions.users,
         };
 
         dispatch({
@@ -136,7 +136,10 @@ export function updateDataCartPermissions(uid, options = {}) {
         const csrftoken = cookie.load('csrftoken');
 
         const data = {};
-        if (options.permissions) data.permissions = options.permissions;
+        if (options.permissions) {
+            data.permissions = { ...options.permissions };
+            data.visibility = options.permissions.value;
+        }
 
         return axios({
             url: `/api/jobs/${uid}`,

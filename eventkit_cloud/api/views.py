@@ -719,7 +719,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
         return ExportRun.objects.filter(
-            (Q(user=self.request.user) | Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))
+            (Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
