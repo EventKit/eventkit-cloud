@@ -55,16 +55,20 @@ export class LoadButtons extends React.Component {
         return (
             <div style={styles.container}>
                 <div style={{display: 'inline-block'}}>
-                    <RaisedButton
-                        className={'qa-LoadButtons-RaisedButton-showLess'}
-                        backgroundColor={'#e5e5e5'}
-                        labelColor={'#4498c0'}
-                        label={'Show Less'}
-                        disabled={this.props.loadLessDisabled}
-                        onClick={this.props.handleLoadLess}
-                        icon={<KeyboardArrowUp/>}
-                        style={{minWidth: '145px', margin: '5px 2.5px'}}
-                    />
+                    {(!!this.props.handleLoadLess) ?
+                        <RaisedButton
+                            className={'qa-LoadButtons-RaisedButton-showLess'}
+                            backgroundColor={'#e5e5e5'}
+                            labelColor={'#4498c0'}
+                            label={'Show Less'}
+                            disabled={this.props.loadLessDisabled}
+                            onClick={this.props.handleLoadLess}
+                            icon={<KeyboardArrowUp/>}
+                            style={{minWidth: '145px', margin: '5px 2.5px'}}
+                        />
+                        :
+                        null
+                    }
                     <RaisedButton
                         className={'qa-LoadButtons-RaisedButton-showMore'}
                         backgroundColor={'#e5e5e5'}
@@ -86,10 +90,10 @@ export class LoadButtons extends React.Component {
 
 LoadButtons.propTypes = {
     range: PropTypes.string.isRequired,
-    handleLoadLess: PropTypes.func.isRequired,
+    handleLoadLess: PropTypes.func,
     handleLoadMore: PropTypes.func.isRequired,
-    loadLessDisabled: PropTypes.bool.isRequired,
-    loadMoreDisabled: PropTypes.bool.isRequired
+    loadLessDisabled: PropTypes.bool,
+    loadMoreDisabled: PropTypes.bool.isRequired,
 };
 
 export default LoadButtons;

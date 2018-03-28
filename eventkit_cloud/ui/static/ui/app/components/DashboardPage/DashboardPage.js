@@ -8,7 +8,7 @@ import { getProviders } from '../../actions/exportsActions';
 import { DashboardSection } from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
-import NotificationGridItem from './NotificationGridItem';
+import NotificationGridItem from '../Notification/NotificationGridItem';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -225,44 +225,44 @@ export class DashboardPage extends React.Component {
 
         const now = new Date();
         const mockNotifications = [
-            {
-                uid: 3,
-                read: false,
-                type: 'license-update',
-                date: new Date().setMinutes(now.getMinutes() - 5),
-            },
-            {
-                uid: 2,
-                read: true,
-                type: 'datapack-complete-error',
-                date: new Date().setHours(now.getHours() - 5),
-                data: {
-                    run: {
-                        uid: 2,
-                        job: {
-                            uid: 2,
-                            name: 'B',
-                        },
-                        expiration: new Date(2018, 5, 1),
-                    },
-                },
-            },
-            {
-                uid: 1,
-                read: true,
-                type: 'datapack-complete-success',
-                date: new Date().setDate(now.getDate() - 5),
-                data: {
-                    run: {
-                        uid: 1,
-                        job: {
-                            uid: 1,
-                            name: 'A',
-                        },
-                        expiration: new Date(2018, 5, 1),
-                    },
-                },
-            },
+            // {
+            //     uid: 3,
+            //     read: false,
+            //     type: 'license-update',
+            //     date: new Date().setMinutes(now.getMinutes() - 5),
+            // },
+            // {
+            //     uid: 2,
+            //     read: true,
+            //     type: 'datapack-complete-error',
+            //     date: new Date().setHours(now.getHours() - 5),
+            //     data: {
+            //         run: {
+            //             uid: 2,
+            //             job: {
+            //                 uid: 2,
+            //                 name: 'B',
+            //             },
+            //             expiration: new Date(2018, 5, 1),
+            //         },
+            //     },
+            // },
+            // {
+            //     uid: 1,
+            //     read: true,
+            //     type: 'datapack-complete-success',
+            //     date: new Date().setDate(now.getDate() - 5),
+            //     data: {
+            //         run: {
+            //             uid: 1,
+            //             job: {
+            //                 uid: 1,
+            //                 name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+            //             },
+            //             expiration: new Date(2018, 5, 1),
+            //         },
+            //     },
+            // },
         ];
 
         return (
@@ -293,13 +293,13 @@ export class DashboardPage extends React.Component {
                             {/* Notifications */}
                             <DashboardSection
                                 className="qa-DashboardSection-Notifications"
-                                style={{marginBottom: '35px'}}
                                 title="Notifications"
                                 name="Notifications"
                                 columns={this.getNotificationsColumns()}
                                 rows={this.getNotificationsRows()}
                                 user={this.props.user}
                                 providers={this.props.providers}
+                                noDataText="You don't have any notifications."
                             >
                                 {mockNotifications.map((notification, index) => (
                                     <NotificationGridItem
@@ -312,61 +312,27 @@ export class DashboardPage extends React.Component {
                             {/* Recently Viewed */}
                             <DashboardSection
                                 className="qa-DashboardSection-RecentlyViewed"
-                                style={{marginBottom: '35px'}}
                                 title="Recently Viewed"
                                 name="RecentlyViewed"
                                 columns={this.getGridColumns()}
                                 user={this.props.user}
                                 providers={this.props.providers}
+                                noDataText="You haven't viewed any DataPacks yet..."
                             >
-                                {this.props.user.viewedJobs.jobs.length === 0 ?
-                                    <div className="qa-DashboardSection-RecentlyViewed-NoData">
-                                        {"You haven't viewed any DataPacks yet..."}
-                                    </div>
-                                    :
-                                    this.props.user.viewedJobs.jobs.map((job, index) => (
-                                        <DataPackGridItem
-                                            className={`qa-DashboardSection-RecentlyViewedGrid-Item`}
-                                            run={job.last_export_run}
-                                            user={this.props.user}
-                                            key={`RecentlyViewedDataPack-${job.created_at}`}
-                                            onRunDelete={this.props.deleteRuns}
-                                            providers={this.props.providers}
-                                            gridName="RecentlyViewed"
-                                            index={index}
-                                            showFeaturedFlag={false}
-                                        />
-                                    ))
-                                }
+                                {[].map((job, index) => (
+                                    <DataPackGridItem
+                                        className="qa-DashboardSection-RecentlyViewedGrid-Item"
+                                        run={job.last_export_run}
+                                        user={this.props.user}
+                                        key={`RecentlyViewedDataPack-${job.created_at}`}
+                                        onRunDelete={this.props.deleteRuns}
+                                        providers={this.props.providers}
+                                        gridName="RecentlyViewed"
+                                        index={index}
+                                        showFeaturedFlag={false}
+                                    />
+                                ))}
                             </DashboardSection>
-
-                            {/* Featured */}
-                            {this.props.featuredRunsList.runs.length === 0 ?
-                                null
-                                :
-                                <DashboardSection
-                                    style={{marginBottom: '35px'}}
-                                    title="Featured"
-                                    name="Featured"
-                                    columns={this.getGridWideColumns()}
-                                    cellHeight={335}
-                                    user={this.props.user}
-                                    providers={this.props.providers}
-                                >
-                                    {this.props.featuredRunsList.runs.map((run, index) => (
-                                        <DataPackWideItem
-                                            className={`qa-DashboardSection-${this.props.name}Grid-WideItem`}
-                                            run={run}
-                                            user={this.props.user}
-                                            key={`RecentlyViewedDataPack-${run.created_at}`}
-                                            providers={this.props.providers}
-                                            gridName="Featured"
-                                            index={index}
-                                            height={'335px'}
-                                        />
-                                    ))}
-                                </DashboardSection>
-                            }
 
                             {/* My DataPacks */}
                             <DashboardSection
@@ -376,27 +342,49 @@ export class DashboardPage extends React.Component {
                                 columns={this.getGridColumns()}
                                 user={this.props.user}
                                 providers={this.props.providers}
+                                noDataText="You haven't created any DataPacks yet..."
                             >
-                                {this.props.runsList.runs.length === 0 ?
-                                    <div className="qa-DashboardSection-MyDataPacks-NoData">
-                                        {"You haven't created any DataPacks yet..."}
-                                    </div>
-                                    :
-                                    this.props.runsList.runs.map((run, index) => (
-                                        <DataPackGridItem
-                                            className={`qa-DashboardSection-MyDataPacksGrid-Item`}
+                                {[].map((run, index) => (
+                                    <DataPackGridItem
+                                        className="qa-DashboardSection-MyDataPacksGrid-Item"
+                                        run={run}
+                                        user={this.props.user}
+                                        key={`MyDataPacksDataPack-${run.created_at}`}
+                                        onRunDelete={this.props.deleteRuns}
+                                        providers={this.props.providers}
+                                        gridName="MyDataPacks"
+                                        index={index}
+                                        showFeaturedFlag={false}
+                                    />
+                                ))}
+                            </DashboardSection>
+
+                            {/* Featured */}
+                            {this.props.featuredRunsList.runs.length === 0 ?
+                                null
+                                :
+                                <DashboardSection
+                                    title="Featured"
+                                    name="Featured"
+                                    columns={this.getGridWideColumns()}
+                                    cellHeight={335}
+                                    user={this.props.user}
+                                    providers={this.props.providers}
+                                >
+                                    {this.props.featuredRunsList.runs.map((run, index) => (
+                                        <DataPackWideItem
+                                            className="qa-DashboardSection-FeaturedGrid-WideItem"
                                             run={run}
                                             user={this.props.user}
-                                            key={`MyDataPacksDataPack-${run.created_at}`}
-                                            onRunDelete={this.props.deleteRuns}
+                                            key={`FeaturedDataPack-${run.created_at}`}
                                             providers={this.props.providers}
-                                            gridName="MyDataPacks"
+                                            gridName="Featured"
                                             index={index}
-                                            showFeaturedFlag={false}
+                                            height="335px"
                                         />
-                                    ))
-                                }
-                            </DashboardSection>
+                                    ))}
+                                </DashboardSection>
+                            }
                         </div>
                     }
                 </CustomScrollbar>

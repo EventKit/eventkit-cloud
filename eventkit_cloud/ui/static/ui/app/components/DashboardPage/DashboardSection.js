@@ -73,6 +73,9 @@ export class DashboardSection extends React.Component {
                 paddingLeft: spacing,
                 paddingRight: spacing,
             },
+            noData: {
+                marginLeft: '15px',
+            }
         };
 
         // Inherited styles.
@@ -111,53 +114,67 @@ export class DashboardSection extends React.Component {
                 >
                     {this.props.title}
                 </div>
-                <Tabs
-                    style={{position: 'relative', width: '100%'}}
-                    tabItemContainerStyle={styles.tabButtonsContainer}
-                    inkBarStyle={{display: 'none'}}
-                    onChange={this.handlePageChange}
-                    value={this.state.pageIndex}
-                >
-                    {[...Array(maxPages)].map((nothing, pageIndex) => (
-                        <Tab
-                            key={`${this.props.name}Tab${pageIndex}`}
-                            value={pageIndex}
-                            style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
-                            disableTouchRipple={true}
-                            buttonStyle={(pageIndex < childrenPages.length) ?
-                                {
-                                    ...styles.tabButton,
-                                    border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
-                                }
-                                :
-                                styles.tabButtonDisabled
-                            }
+                {(childrenPages.length === 0) ?
+                    this.props.noDataText ?
+                        <div
+                            className={`qa-DashboardSection-${this.props.name}-NoData`}
+                            style={styles.noData}
                         >
-                        </Tab>
-                    ))}
-                </Tabs>
-                <SwipeableViews
-                    style={styles.swipeableViews}
-                    index={this.state.pageIndex}
-                    onChangeIndex={this.handlePageChange}
-                >
-                    {childrenPages.map((childrenPage, pageIndex) => (
-                        <GridList
-                            key={`${this.props.name}GridList${pageIndex}`}
-                            className={`qa-DashboardSection-${this.props.name}Grid`}
-                            cellHeight={this.props.cellHeight || 'auto'}
-                            style={styles.gridList}
-                            padding={this.getGridPadding()}
-                            cols={this.props.columns}
+                            {this.props.noDataText}
+                        </div>
+                        :
+                        null
+                    :
+                    <div>
+                        <Tabs
+                            style={{position: 'relative', width: '100%'}}
+                            tabItemContainerStyle={styles.tabButtonsContainer}
+                            inkBarStyle={{display: 'none'}}
+                            onChange={this.handlePageChange}
+                            value={this.state.pageIndex}
                         >
-                            {childrenPage.map((child, index) => (
-                                <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
-                                    {child}
-                                </div>
+                            {[...Array(maxPages)].map((nothing, pageIndex) => (
+                                <Tab
+                                    key={`${this.props.name}Tab${pageIndex}`}
+                                    value={pageIndex}
+                                    style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
+                                    disableTouchRipple={true}
+                                    buttonStyle={(pageIndex < childrenPages.length) ?
+                                        {
+                                            ...styles.tabButton,
+                                            border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
+                                        }
+                                        :
+                                        styles.tabButtonDisabled
+                                    }
+                                >
+                                </Tab>
                             ))}
-                        </GridList>
-                    ))}
-                </SwipeableViews>
+                        </Tabs>
+                        <SwipeableViews
+                            style={styles.swipeableViews}
+                            index={this.state.pageIndex}
+                            onChangeIndex={this.handlePageChange}
+                        >
+                            {childrenPages.map((childrenPage, pageIndex) => (
+                                <GridList
+                                    key={`${this.props.name}GridList${pageIndex}`}
+                                    className={`qa-DashboardSection-${this.props.name}Grid`}
+                                    cellHeight={this.props.cellHeight || 'auto'}
+                                    style={styles.gridList}
+                                    padding={this.getGridPadding()}
+                                    cols={this.props.columns}
+                                >
+                                    {childrenPage.map((child, index) => (
+                                        <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
+                                            {child}
+                                        </div>
+                                    ))}
+                                </GridList>
+                            ))}
+                        </SwipeableViews>
+                    </div>
+                }
             </div>
         )
     }
@@ -169,6 +186,7 @@ DashboardSection.propTypes = {
     columns: PropTypes.number.isRequired,
     user: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    noDataText: PropTypes.string,
     cellHeight: PropTypes.number,
     rows: PropTypes.number,
     style: PropTypes.object,
@@ -176,6 +194,7 @@ DashboardSection.propTypes = {
 
 DashboardSection.defaultProps = {
     rows: 1,
+    style: { marginBottom: '35px' },
 };
 
 export default DashboardSection;

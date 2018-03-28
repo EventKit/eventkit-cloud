@@ -17,6 +17,7 @@ import DashboardPage from './components/DashboardPage/DashboardPage';
 import DataPackPage from './components/DataPackPage/DataPackPage';
 import CreateExport from './components/CreateDataPack/CreateExport';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
+import NotificationsPage from './components/NotificationsPage/NotificationsPage';
 import { isBrowserValid } from './utils/generic';
 import { login, userActive } from './actions/userActions';
 
@@ -78,24 +79,13 @@ render(
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
                 <Route path="/logout" component={Logout} />
-                <Route
-                    path="/dashboard"
-                    component={UserIsAuthenticated(UserHasAgreed(DashboardPage))}
-                />
-                <Route
-                    path="/exports"
-                    component={UserIsAuthenticated(UserHasAgreed(DataPackPage))}
-                />
-                <Route
-                    path="/create"
-                    component={UserIsAuthenticated(UserHasAgreed(CreateExport))}
-                />
-                <Route
-                    path="/status/:jobuid"
-                    component={UserIsAuthenticated(UserHasAgreed(StatusDownload))}
-                />
+                <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
+                <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
+                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
+                <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))} />
                 <Route path="/about" component={UserIsAuthenticated(About)} />
                 <Route path="/account" component={UserIsAuthenticated(Account)} />
+                <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
             </Route>
         </Router>
     </Provider>,
