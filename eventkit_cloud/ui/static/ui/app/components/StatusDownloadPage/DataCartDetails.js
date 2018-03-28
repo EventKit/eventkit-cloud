@@ -22,15 +22,13 @@ import { DataCartInfoTable } from './DataCartInfoTable';
 export class DataCartDetails extends Component {
     constructor(props) {
         super(props);
-        this.setPermission = this.setPermission.bind(this);
         this.setDates = this.setDates.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleExpirationChange = this.handleExpirationChange.bind(this);
-        this.handlePermissionChange = this.handlePermissionChange.bind(this);
+        this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
         this.state = {
             minDate: null,
             maxDate: null,
-            permission: null,
             status: '',
         };
     }
@@ -38,11 +36,6 @@ export class DataCartDetails extends Component {
     componentDidMount() {
         this.initializeOpenLayers();
         this.setDates();
-        this.setPermission();
-    }
-
-    setPermission() {
-        this.setState({ permission: this.props.cartDetails.job.published });
     }
 
     setDates() {
@@ -109,15 +102,8 @@ export class DataCartDetails extends Component {
         this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
-    handlePermissionChange(event, index, value) {
-        if (value === 1) {
-            // hit the API and change published to the new value
-            this.setState({ permission: true });
-            this.props.onUpdatePermission(this.props.cartDetails.job.uid, true);
-        } else {
-            this.setState({ permission: false });
-            this.props.onUpdatePermission(this.props.cartDetails.job.uid, false);
-        }
+    handlePermissionsChange(permissions) {
+        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, { permissions });
     }
 
     handleExpirationChange(e, date) {
@@ -173,13 +159,17 @@ export class DataCartDetails extends Component {
                         className="qa-DataCartDetails-DataPackStatusTable"
                         status={this.props.cartDetails.status}
                         expiration={this.props.cartDetails.expiration}
-                        permission={this.state.permission}
+                        permissions={this.props.cartDetails.job.permissions}
                         minDate={this.state.minDate}
                         maxDate={this.state.maxDate}
                         handleExpirationChange={this.handleExpirationChange}
-                        handlePermissionsChange={this.handlePermissionChange}
+                        handlePermissionsChange={this.handlePermissionsChange}
+                        updatingExpiration={this.props.updatingExpiration}
+                        updatingPermission={this.props.updatingPermission}
                         statusColor={statusBackgroundColor}
                         statusFontColor={statusFontColor}
+                        members={this.props.members}
+                        groups={this.props.groups}
                     />
                 </div>
                 <div style={styles.container}>
@@ -234,12 +224,30 @@ DataCartDetails.contextTypes = {
     config: PropTypes.object,
 };
 
+DataCartDetails.defaultProps = {
+    updatingExpiration: false,
+    updatingPermission: false,
+};
+
 DataCartDetails.propTypes = {
     cartDetails: PropTypes.shape({
         uid: PropTypes.string,
         status: PropTypes.string,
         user: PropTypes.string,
-        job: PropTypes.object,
+        job: PropTypes.shape({
+            uid: PropTypes.string,
+            name: PropTypes.string,
+            permissions: PropTypes.shape({
+                value: PropTypes.oneOf([
+                    'PUBLIC',
+                    'PRIVATE',
+                    'SHARED',
+                ]),
+                groups: PropTypes.objectOf(PropTypes.string),
+                members: PropTypes.objectOf(PropTypes.string),
+            }),
+            extent: PropTypes.object,
+        }),
         provider_tasks: PropTypes.arrayOf(PropTypes.object),
         created_at: PropTypes.string,
         finished_at: PropTypes.string,
@@ -253,12 +261,32 @@ DataCartDetails.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onRunRerun: PropTypes.func.isRequired,
     onUpdateExpiration: PropTypes.func.isRequired,
-    onUpdatePermission: PropTypes.func.isRequired,
+    onUpdateDataCartPermissions: PropTypes.func.isRequired,
+    updatingExpiration: PropTypes.bool,
+    updatingPermission: PropTypes.bool,
     onClone: PropTypes.func.isRequired,
     onProviderCancel: PropTypes.func.isRequired,
     maxResetExpirationDays: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        groups: PropTypes.arrayOf(PropTypes.number),
+        accepted_licenses: PropTypes.object,
+    })).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 export default DataCartDetails;

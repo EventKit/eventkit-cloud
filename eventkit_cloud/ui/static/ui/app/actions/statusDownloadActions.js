@@ -14,6 +14,14 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         // We take only the first one for now since multiples are currently disabled.
         // However we leave it in an array for future proofing.
         const data = [{ ...response.data[0] }];
+
+        // TODO dont mock when api is ready
+        data[0].job.permissions = {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
+        };
+
         dispatch({
             type: types.DATACART_DETAILS_RECEIVED,
             datacartDetails: {
@@ -122,20 +130,23 @@ export function updateExpiration(uid, expiration) {
     };
 }
 
-export function updatePermission(uid, value) {
+export function updateDataCartPermissions(uid, options = {}) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_PERMISSION });
         const csrftoken = cookie.load('csrftoken');
 
+        const data = {};
+        if (options.permissions) data.permissions = options.permissions;
+
         return axios({
             url: `/api/jobs/${uid}`,
             method: 'PATCH',
-            data: { published: value },
+            data,
             headers: { 'X-CSRFToken': csrftoken },
-        }).then(() => {
-            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS });
-        }).catch((error) => {
-            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data });
-        });
+        }).then(() => (
+            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS })
+        )).catch(error => (
+            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data })
+        ));
     };
 }

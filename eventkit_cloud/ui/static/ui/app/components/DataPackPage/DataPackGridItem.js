@@ -333,13 +333,22 @@ export class DataPackGridItem extends Component {
                                     onClick={this.handleProviderOpen}
                                 />
                                 {this.props.run.user === this.props.user.data.user.username ?
-                                    <MenuItem
-                                        key="delete"
-                                        className="qa-DataPackGridItem-MenuItem-delete"
-                                        style={{ fontSize: cardTextFontSize }}
-                                        primaryText="Delete Export"
-                                        onClick={this.showDeleteDialog}
-                                    />
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackGridItem-MenuItem-delete"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackGridItem-MenuItem-share"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run.job.uid)}
+                                        />,
+                                    ]
                                     :
                                     null
                                 }
@@ -398,7 +407,7 @@ export class DataPackGridItem extends Component {
                             :
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>
                         }
-                        {this.props.run.job.published ?
+                        {this.props.run.job.permissions.value !== 'PRIVATE' ?
                             <SocialGroup style={styles.publishedIcon} />
                             :
 
@@ -420,6 +429,7 @@ DataPackGridItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackGridItem;

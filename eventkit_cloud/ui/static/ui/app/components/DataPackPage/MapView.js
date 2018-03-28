@@ -900,6 +900,7 @@ export class MapView extends Component {
                                     onClick={this.handleClick}
                                     backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
                                     providers={this.props.providers}
+                                    openShare={this.props.openShare}
                                 />
                             ))}
                         </GridList>
@@ -1005,6 +1006,7 @@ MapView.propTypes = {
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
     onMapFilter: PropTypes.func.isRequired,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default MapView;

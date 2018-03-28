@@ -18,6 +18,7 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
+import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -78,6 +79,54 @@ describe('DataPackPage component', () => {
             resetGeoJSONFile: () => {},
             setOrder: () => {},
             setView: () => {},
+            groups: [
+                {
+                    id: 1,
+                    name: 'group_one',
+                    members: ['user_one'],
+                    administrators: ['user_three'],
+                },
+                {
+                    id: 2,
+                    name: 'group_two',
+                    members: ['user_two'],
+                    administrators: ['user_three'],
+                },
+                {
+                    id: 3,
+                    name: 'group_three',
+                    members: ['user_one', 'user_two'],
+                    administrators: ['user_one'],
+                },
+            ],
+            users: [
+                {
+                    user: {
+                        first_name: 'user',
+                        last_name: 'one',
+                        username: 'user_one',
+                        email: 'user.one@email.com',
+                    },
+                    groups: [1, 3],
+                },
+                {
+                    user: {
+                        first_name: 'user',
+                        last_name: 'two',
+                        username: 'user_two',
+                        email: 'user.two@email.com',
+                    },
+                    groups: [2, 3],
+                },
+            ],
+            getGroups: () => {},
+            getUsers: () => {},
+            updateDataCartPermissions: () => {},
+            updatePermissions: {
+                updating: false,
+                updated: false,
+                error: null,
+            },
         };
     };
 
@@ -118,6 +167,18 @@ describe('DataPackPage component', () => {
         expect(changeStub.calledOnce).toBe(true);
         expect(changeStub.calledWith('value')).toBe(true);
         changeStub.restore();
+    });
+
+    it('should show the DataPackShareDialog  and give it the correct run', () => {
+        const runs = [
+            { job: { uid: '123', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
+            { job: { uid: '456', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
+        ];
+        const props = getProps();
+        props.runsList.runs = runs;
+        const wrapper = getWrapper(props);
+        wrapper.setState({ shareOpen: true, targetJob: '456' });
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
     it('should use order and view from props or just default to map and featured', () => {
@@ -171,6 +232,8 @@ describe('DataPackPage component', () => {
 
     it('componentDidMount should make data requests and setInterval', () => {
         const props = getProps();
+        props.getGroups = sinon.spy();
+        props.getUsers = sinon.spy();
         props.getProviders = sinon.spy();
         props.resetGeoJSONFile = sinon.spy();
         const mountSpy = sinon.spy(DataPackPage.prototype, 'componentDidMount');
@@ -178,6 +241,8 @@ describe('DataPackPage component', () => {
         const intervalStub = sinon.stub(global, 'setInterval');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
+        expect(props.getGroups.calledOnce).toBe(true);
+        expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(requestStub.calledOnce).toBe(true);
         expect(intervalStub.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
@@ -311,13 +376,13 @@ describe('DataPackPage component', () => {
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
         const owner = 'test_user';
-        const published = 'True';
+        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
         const search = 'search_text';
         const expectedParams = {
             page_size: 12,
             ordering: '-job__featured,-started_at',
             user: 'test_user',
-            published: 'True',
+            permissions: { value: 'PRIVATE', groups: {}, members: {} },
             status: 'COMPLETED,INCOMPLETE',
             min_date: '2017-07-30',
             max_date: '2017-08-02',
@@ -328,7 +393,7 @@ describe('DataPackPage component', () => {
             minDate,
             maxDate,
             ownerFilter: owner,
-            published,
+            permissions,
             search,
         });
         wrapper.instance().makeRunRequest();
@@ -353,7 +418,6 @@ describe('DataPackPage component', () => {
         const currentState = {...wrapper.state()};
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const newState = {
-            published: true, 
             minDate: new Date(), 
             maxDate: new Date(), 
             status: {
@@ -380,7 +444,11 @@ describe('DataPackPage component', () => {
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({
-            published: null,
+            permissions: {
+                value: 'PUBLIC',
+                groups: {},
+                members: {},
+            },
             status: {
                 completed: false,
                 incomplete: false,
@@ -488,6 +556,7 @@ describe('DataPackPage component', () => {
             loadLessDisabled: props.runsList.runs.length <= 12,
             loadMoreDisabled: !props.runsList.nextPage,
             providers,
+            openShare: wrapper.instance().handleShareOpen,
         };
 
         expect(wrapper.instance().getView('list')).toEqual((
@@ -516,6 +585,41 @@ describe('DataPackPage component', () => {
             />
         ));
         expect(wrapper.instance().getView('bad case')).toEqual(null);
+    });
+
+    it('handleShareOpen should set open true and the target job uid', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleShareOpen('12345');
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ shareOpen: true, targetJob: '12345' })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleShareClose should set open false and clear the target job uid', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleShareClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ shareOpen: false, targetJob: '' })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleShareSave should call shareClose and update permissions', () => {
+        const props = getProps();
+        props.updateDataCartPermissions = sinon.spy();
+        const wrapper = getWrapper(props);
+        const target = '1234';
+        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
+        const closeStub = sinon.stub(wrapper.instance(), 'handleShareClose');
+        wrapper.setState({ targetJob: target });
+        wrapper.instance().handleShareSave(permissions);
+        expect(closeStub.calledOnce).toBe(true);
+        expect(props.updateDataCartPermissions.calledOnce).toBe(true);
+        expect(props.updateDataCartPermissions.calledWith(target, { permissions })).toBe(true);
+        closeStub.restore();
     });
 });
 

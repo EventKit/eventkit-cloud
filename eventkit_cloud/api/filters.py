@@ -94,6 +94,7 @@ class UserFilter(django_filters.FilterSet):
         The value "1" will return any users in group 1
         And value "none,1,4,7" will return users in no groups, users in group 1, users in group 4, and users in group 7
         """
+
         target_users = []
         groups = value.split(",")
 

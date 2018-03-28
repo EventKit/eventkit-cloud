@@ -220,13 +220,22 @@ export class DataPackListItem extends Component {
                                 />
 
                                 {this.props.run.user === this.props.user.data.user.username ?
-                                    <MenuItem
-                                        key="delete"
-                                        className="qa-DataPackListItem-MenuItem-deleteExport"
-                                        style={{ fontSize: subtitleFontSize }}
-                                        primaryText="Delete Export"
-                                        onClick={this.showDeleteDialog}
-                                    />
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackListItem-MenuItem-deleteExport"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackListItem-MenuItem-share"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run.job.uid)}
+                                        />,
+                                    ]
                                     :
                                     null
                                 }
@@ -260,7 +269,7 @@ export class DataPackListItem extends Component {
                                     <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
                                 <div className={'qa-DataPackListItem-subtitle-status'} style={{display: 'inline-block', float: 'right'}}>
-                                {this.props.run.job.published ?
+                                {this.props.run.job.permissions.value !== 'PRIVATE' ?
                                     <SocialGroup className={'qa-DataPackListItem-SocialGroup'} style={styles.publishedIcon}/>
                                     :
                                     
@@ -293,6 +302,7 @@ DataPackListItem.propTypes = {
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackListItem;

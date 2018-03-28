@@ -69,7 +69,6 @@ describe('StatusDownload component', () => {
             description: 'Test1 description',
             url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             selection: '',
-            published: false,
             formats: [
                 'Geopackage',
             ],
@@ -84,7 +83,6 @@ describe('StatusDownload component', () => {
             params: {
                 jobuid: '123456789',
             },
-            jobuid: '123456789',
             datacartDetails: {
                 fetching: false,
                 fetched: false,
@@ -120,16 +118,24 @@ describe('StatusDownload component', () => {
                     },
                 },
             },
+            users: {
+                fetched: false,
+                fetching: false,
+                users: [],
+                error: null,
+            },
             getDatacartDetails: () => {},
             clearDataCartDetails: () => {},
             deleteRun: () => {},
             rerunExport: () => {},
             clearReRunInfo: () => {},
             updateExpirationDate: () => {},
-            updatePermission: () => {},
+            updateDataCartPermissions: () => {},
             cloneExport: () => {},
             cancelProviderTask: () => {},
             getProviders: () => {},
+            getUsers: () => {},
+            getGroups: () => {},
         }
     );
 

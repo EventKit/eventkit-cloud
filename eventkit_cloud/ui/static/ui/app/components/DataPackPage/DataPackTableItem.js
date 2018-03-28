@@ -34,8 +34,8 @@ export class DataPackTableItem extends Component {
         return run.user == user ? 'My DataPack' : run.user;
     }
 
-    getPermissionsIcon(published) {
-        return published ? <SocialGroup className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'bcdfbb'}}/>
+    getPermissionsIcon(visibility) {
+        return visibility !== 'PRIVATE' ? <SocialGroup className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'bcdfbb'}}/>
         : <SocialPerson className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>;
     }
 
@@ -130,7 +130,7 @@ export class DataPackTableItem extends Component {
                     {this.getStatusIcon(this.props.run.status)}
                 </TableRowColumn>
                 <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-published'} style={{width: '100px' ,padding: '0px 0px 0px 0px',textAlign: 'center'}}>
-                    {this.getPermissionsIcon(this.props.run.job.published)}
+                    {this.getPermissionsIcon(this.props.run.job.permissions.value)}
                 </TableRowColumn>
                 <TableRowColumn className={'qa-DataPackTableItem-TableRowColumn-owner'} style={{padding: '0px 0px 0px 10px', textAlign: 'left'}}>
                     {this.getOwnerText(this.props.run, this.props.user.data.user.username)}
@@ -161,15 +161,26 @@ export class DataPackTableItem extends Component {
                             primaryText="View Data Sources"
                             onClick={this.handleProviderOpen.bind(this, runProviders)}
                         />
-
                         { this.props.run.user === this.props.user.data.user.username ?
-                            <MenuItem
-                                className="qa-DataPackTableItem-MenuItem-deleteExport"
-                                style={{ fontSize: '12px' }}
-                                primaryText="Delete Export"
-                                onClick={this.showDeleteDialog}
-                            />
-                            : null}
+                            [
+                                <MenuItem
+                                    key="delete"
+                                    className="qa-DataPackTableItem-MenuItem-deleteExport"
+                                    style={{ fontSize: '12px' }}
+                                    primaryText="Delete Export"
+                                    onClick={this.showDeleteDialog}
+                                />,
+                                <MenuItem
+                                    key="share"
+                                    className="qa-DataPackTableItem-MenuItem-share"
+                                    style={{ fontSize: '12px' }}
+                                    primaryText="Share"
+                                    onClick={() => this.props.openShare(this.props.run.job.uid)}
+                                />,
+                            ]
+                            :
+                            null
+                        }
                     </IconMenu>
                     <BaseDialog
                         className={'qa-DataPackTableItem-BaseDialog'}
@@ -196,6 +207,7 @@ DataPackTableItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    openShare: PropTypes.func.isRequired,
 };
 
 export default DataPackTableItem;
