@@ -1476,7 +1476,7 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
 @app.task(name='Check Provider Availability', base=LockingTask)
 def check_provider_availability(result=None, task_pid=None, celery_uid=None):
     for provider in DataProvider.objects.all():
-        perform_provider_check(provider.slug, geojson)
+        perform_provider_check(provider.slug, None)
 
 def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated_finish=None):
     """
