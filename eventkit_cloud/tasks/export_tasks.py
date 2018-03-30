@@ -1475,8 +1475,10 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
 
 @app.task(name='Check Provider Availability', base=LockingTask)
 def check_provider_availability(result=None, task_pid=None, celery_uid=None):
+    logger.error('EJ RUNNING CHECK_PROVIDER_AVAILABILITY')
     for provider in DataProvider.objects.all():
         status = json.loads(perform_provider_check(provider.slug, None))
+        logger.error('EJ STATUS OBJECT: {}'.format(str(status)))
         provider.status_information.status = status['status']
         provider.status_information.message = status['message']
 
