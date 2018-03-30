@@ -536,7 +536,8 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
         """
         try:
             geojson = self.request.data.get('geojson', None)
-            return Response(perform_provider_check(slug, geojson), status=status.HTTP_200_OK)
+            provider = DataProvider.objects.get(slug=slug)
+            return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist as e:
             return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)

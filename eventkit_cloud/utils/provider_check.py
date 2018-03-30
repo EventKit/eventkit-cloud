@@ -546,8 +546,7 @@ def get_provider_checker(type_slug):
         return ProviderCheck
 
 
-def perform_provider_check(provider_slug, geojson):
-    provider = DataProvider.objects.get(slug=provider_slug)
+def perform_provider_check(provider, geojson):
     provider_type = str(provider.export_provider_type)
 
     url = str(provider.url)

@@ -71,7 +71,7 @@ def check_provider_availability():
     from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
     from eventkit_cloud.utils.provider_check import perform_provider_check
     for provider in DataProvider.objects.all():
-        status = json.loads(perform_provider_check(provider.slug, None))
+        status = json.loads(perform_provider_check(provider, None))
         data_provider_status = DataProviderStatus.objects.filter(related_provider=provider).first()
         if not data_provider_status:
             data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
