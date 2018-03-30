@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+import json
+
 from django.utils import timezone
 from django.conf import settings
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 
 from celery.utils.log import get_task_logger
+from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.celery import app
 
 logger = get_task_logger(__name__)
@@ -61,6 +65,22 @@ def expire_runs():
             send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
+
+
+@app.task(name='Check Provider Availability')
+def check_provider_availability(result=None, task_pid=None, celery_uid=None):
+    try:
+        logger.error('EJ RUNNING CHECK_PROVIDER_AVAILABILITY')
+        for provider in DataProvider.objects.all():
+            status = json.loads(perform_provider_check(provider.slug, None))
+            logger.error('EJ STATUS OBJECT: {}'.format(str(status)))
+            provider.status_information.status = status['status']
+            provider.status_information.message = status['message']
+    except Exception as e:
+        logger.error('EJ EXCEPTION OCCURRED RUNNING CHECK PROVIDER AVAILABILITY')
+        logger.error(e)
+        import traceback
+        traceback.print_exc()
 
 
 def send_warning_email(date=None, url=None, addr=None, job_name=None):

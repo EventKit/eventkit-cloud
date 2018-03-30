@@ -171,7 +171,7 @@ class DataProviderAdmin(admin.ModelAdmin):
     form = DataProviderForm
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
     inlines = [
-        DataProviderStatus,
+        DataProviderStatusInline,
     ]
 
 

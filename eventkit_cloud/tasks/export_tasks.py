@@ -1473,16 +1473,6 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     return result
 
 
-@app.task(name='Check Provider Availability', base=LockingTask)
-def check_provider_availability(result=None, task_pid=None, celery_uid=None):
-    logger.error('EJ RUNNING CHECK_PROVIDER_AVAILABILITY')
-    for provider in DataProvider.objects.all():
-        status = json.loads(perform_provider_check(provider.slug, None))
-        logger.error('EJ STATUS OBJECT: {}'.format(str(status)))
-        provider.status_information.status = status['status']
-        provider.status_information.message = status['message']
-
-
 def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated_finish=None):
     """
     Updates the progress of the ExportTaskRecord from the given task_uid.

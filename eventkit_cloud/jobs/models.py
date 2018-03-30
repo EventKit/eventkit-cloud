@@ -167,7 +167,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
-    status_information = models.OneToOneField(DataProviderStatus)
+    status_information = models.OneToOneField(DataProviderStatus, on_delete=models.CASCADE)
 
     class Meta:  # pragma: no cover
         managed = True
