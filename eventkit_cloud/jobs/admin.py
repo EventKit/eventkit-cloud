@@ -112,6 +112,9 @@ class DataProviderStatusInline(admin.TabularInline):
     """
     model = DataProviderStatus
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class DataProviderForm(forms.ModelForm):
     """

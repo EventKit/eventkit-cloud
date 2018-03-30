@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import datetime
 
 from django.utils import timezone
 from django.conf import settings
@@ -74,6 +75,7 @@ def check_provider_availability():
         data_provider_status = DataProviderStatus.objects.filter(related_provider=provider).first()
         if not data_provider_status:
             data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
+        data_provider_status.last_check_time = datetime.datetime.now()
         data_provider_status.status = status['status']
         data_provider_status.message = status['message']
         data_provider_status.save()
