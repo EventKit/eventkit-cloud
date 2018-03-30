@@ -147,43 +147,114 @@ export class DataPackStatusTable extends Component {
             membersCheck: this.state.permissions.value === 'SHARED' ? checkIcon : null,
         };
 
-        let membersAndGroups = null;
-        if (this.state.permissions.value === 'SHARED') {
-            const groupCount = Object.keys(this.state.permissions.groups).length;
-            const memberCount = Object.keys(this.state.permissions.members).length;
+        const expiration = moment(this.props.expiration).format('YYYY-MM-DD');
 
-            let groupText = '';
-            if (groupCount === 0) {
-                groupText = 'No Groups';
-            } else if (groupCount === this.props.groups.length) {
-                groupText = 'All Groups';
-            } else if (groupCount === 1) {
-                groupText = '1 Group';
-            } else {
-                groupText = `${groupCount} Groups`;
-            }
+        let expirationData = expiration;
+        let permissionData = <div>{permissionsIcons.members}Shared</div>;
 
-            let memberText = '';
-            if (memberCount === 0) {
-                memberText = 'No Members';
-            } else if (memberCount === this.props.members.length) {
-                memberText = 'All Members';
-            } else if (memberCount === 1) {
-                memberText = '1 Member';
-            } else {
-                memberText = `${memberCount} Members`;
-            }
-
-            membersAndGroups = (
-                <EnhancedButton
-                    className="qa-DataPackStatusTable-MembersAndGroups-button"
-                    key="membersAndGroupsButton"
-                    onClick={this.handleShareDialogOpen}
-                    style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
-                >
-                    {memberText} / {groupText}
-                </EnhancedButton>
+        if (this.props.adminPermissions) {
+            expirationData = (
+                <div>
+                    {expiration}
+                    <DatePicker
+                        ref={(instance) => { this.dp = instance; }}
+                        style={{ height: '0px', display: '-webkit-inline-box', width: '0px' }}
+                        autoOk
+                        minDate={this.props.minDate}
+                        maxDate={this.props.maxDate}
+                        id="datePicker"
+                        onChange={this.props.handleExpirationChange}
+                        textFieldStyle={styles.textField}
+                        underlineStyle={{ display: 'none' }}
+                        disabled
+                    />
+                    <Edit
+                        onClick={() => { this.dp.focus(); }}
+                        style={styles.tableRowInfoIcon}
+                    />
+                </div>
             );
+
+            let membersAndGroups = null;
+            if (this.state.permissions.value === 'SHARED') {
+                const groupCount = Object.keys(this.state.permissions.groups).length;
+                const memberCount = Object.keys(this.state.permissions.members).length;
+
+                let groupText = '';
+                if (groupCount === 0) {
+                    groupText = 'No Groups';
+                } else if (groupCount === this.props.groups.length) {
+                    groupText = 'All Groups';
+                } else if (groupCount === 1) {
+                    groupText = '1 Group';
+                } else {
+                    groupText = `${groupCount} Groups`;
+                }
+
+                let memberText = '';
+                if (memberCount === 0) {
+                    memberText = 'No Members';
+                } else if (memberCount === this.props.members.length) {
+                    memberText = 'All Members';
+                } else if (memberCount === 1) {
+                    memberText = '1 Member';
+                } else {
+                    memberText = `${memberCount} Members`;
+                }
+
+                membersAndGroups = (
+                    <EnhancedButton
+                        className="qa-DataPackStatusTable-MembersAndGroups-button"
+                        key="membersAndGroupsButton"
+                        onClick={this.handleShareDialogOpen}
+                        style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
+                        disabled={!this.props.adminPermissions}
+                    >
+                        {memberText} / {groupText}
+                    </EnhancedButton>
+                );
+            }
+
+            permissionData = [
+                <DropDownMenu
+                    key="permissionsMenu"
+                    className="qa-DataPackStatusTable-DropDownMenu-published"
+                    value={this.state.permissions.value}
+                    onChange={this.handleDropDownChange}
+                    style={styles.dropDown}
+                    labelStyle={styles.label}
+                    iconStyle={styles.icon}
+                    listStyle={styles.list}
+                    selectedMenuItemStyle={{ color: '#8b9396' }}
+                    underlineStyle={styles.underline}
+                >
+                    <MenuItem
+                        value="PRIVATE"
+                        className="qa-DataPackStatusTable-MenuItem-permissionPrivate"
+                        rightIcon={permissionsIcons.privateCheck}
+                        primaryText={
+                            <div>
+                                {permissionsIcons.private}
+                                Private
+                            </div>
+                        }
+                        style={{ color: '#8b9396' }}
+                    />
+                    <MenuItem
+                        value="SHARED"
+                        className="qa-DataPackStatusTable-MenuItem-permissionMembers"
+                        rightIcon={permissionsIcons.membersCheck}
+                        primaryText={
+                            <div>
+                                {permissionsIcons.members}
+                                Share
+                            </div>
+                        }
+                        style={{ color: '#8b9396' }}
+                    />
+                </DropDownMenu>,
+                membersAndGroups,
+            ];
         }
 
         return (
@@ -199,74 +270,17 @@ export class DataPackStatusTable extends Component {
                 />
                 <DataPackTableRow
                     title="Expiration"
-                    data={
-                        <div>
-                            {moment(this.props.expiration).format('YYYY-MM-DD')}
-                            <DatePicker
-                                ref={(instance) => { this.dp = instance; }}
-                                style={{ height: '0px', display: '-webkit-inline-box', width: '0px' }}
-                                autoOk
-                                minDate={this.props.minDate}
-                                maxDate={this.props.maxDate}
-                                id="datePicker"
-                                onChange={this.props.handleExpirationChange}
-                                textFieldStyle={styles.textField}
-                                underlineStyle={{ display: 'none' }}
-                            />
-                            <Edit
-                                onClick={() => { this.dp.focus(); }}
-                                style={styles.tableRowInfoIcon}
-                            />
-                        </div>
-                    }
+                    data={expirationData}
                 />
                 <DataPackTableRow
                     title="Permissions"
                     dataStyle={{ flexWrap: 'wrap' }}
-                    data={[
-                        <DropDownMenu
-                            key="permissionsMenu"
-                            className="qa-DataPackStatusTable-DropDownMenu-published"
-                            value={this.state.permissions.value}
-                            onChange={this.handleDropDownChange}
-                            style={styles.dropDown}
-                            labelStyle={styles.label}
-                            iconStyle={styles.icon}
-                            listStyle={styles.list}
-                            selectedMenuItemStyle={{ color: '#8b9396' }}
-                            underlineStyle={styles.underline}
-                        >
-                            <MenuItem
-                                value="PRIVATE"
-                                className="qa-DataPackStatusTable-MenuItem-permissionPrivate"
-                                rightIcon={permissionsIcons.privateCheck}
-                                primaryText={
-                                    <div>
-                                        {permissionsIcons.private}
-                                        Private
-                                    </div>
-                                }
-                                style={{ color: '#8b9396' }}
-                            />
-                            <MenuItem
-                                value="SHARED"
-                                className="qa-DataPackStatusTable-MenuItem-permissionMembers"
-                                rightIcon={permissionsIcons.membersCheck}
-                                primaryText={
-                                    <div>
-                                        {permissionsIcons.members}
-                                        Share
-                                    </div>
-                                }
-                                style={{ color: '#8b9396' }}
-                            />
-                        </DropDownMenu>,
-                        membersAndGroups,
-                    ]}
+                    data={permissionData}
                 />
                 {this.state.shareDialogOpen ?
                     <DataPackShareDialog
                         show
+                        user={this.props.user}
                         onClose={this.handleShareDialogClose}
                         onSave={this.handleShareDialogSave}
                         groups={this.props.groups}
@@ -291,6 +305,7 @@ DataPackStatusTable.defaultProps = {
     maxDate: null,
     statusColor: null,
     statusFontColor: null,
+    adminPermissions: false,
 };
 
 DataPackStatusTable.propTypes = {
@@ -326,6 +341,11 @@ DataPackStatusTable.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
+    adminPermissions: PropTypes.bool,
+    user: PropTypes.shape({
+        user: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    }).isRequired,
 };
 
 export default DataPackStatusTable;

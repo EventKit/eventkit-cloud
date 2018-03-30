@@ -46,13 +46,12 @@ export function getRuns(params, geojson) {
                 range = response.headers['content-range'].split('-')[1]; 
             }
 
-            // TODO dont mock when api is ready
             const runs = response.data.map((run) => {
                 const newRun = { ...run };
                 newRun.job.permissions = {
                     value: newRun.job.visibility,
                     groups: newRun.job.permissions.groups,
-                    members: newRun.job.permissions.members,
+                    members: newRun.job.permissions.users,
                 };
                 return newRun;
             });

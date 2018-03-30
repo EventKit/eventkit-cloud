@@ -65,7 +65,7 @@ export class DataPackPage extends React.Component {
             loading: false,
             geojson_geometry: null,
             shareOpen: false,
-            targetJob: '',
+            targetRun: null,
         };
     }
 
@@ -89,6 +89,9 @@ export class DataPackPage extends React.Component {
             }
         }
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+            this.setState({ loading: true }, this.makeRunRequest);
+        }
+        if (nextProps.updatePermissions.updated && !this.props.updatePermissions.updated) {
             this.setState({ loading: true }, this.makeRunRequest);
         }
     }
@@ -120,6 +123,7 @@ export class DataPackPage extends React.Component {
             loadMoreDisabled: !this.props.runsList.nextPage,
             providers: this.props.providers,
             openShare: this.handleShareOpen,
+            groups: this.props.groups,
         };
         switch (view) {
         case 'list':
@@ -191,7 +195,6 @@ export class DataPackPage extends React.Component {
         }
         if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
         if (providers.length) params.providers = providers.join(',');
-        console.log(params);
 
         return this.props.getRuns(params, this.state.geojson_geometry);
     }
@@ -270,17 +273,18 @@ export class DataPackPage extends React.Component {
         }
     }
 
-    handleShareOpen(jobUid) {
-        this.setState({ shareOpen: true, targetJob: jobUid });
+    handleShareOpen(run) {
+        this.setState({ shareOpen: true, targetRun: run });
     }
 
     handleShareClose() {
-        this.setState({ shareOpen: false, targetJob: '' });
+        this.setState({ shareOpen: false, targetRun: null });
     }
 
-    handleShareSave(permissions) {
+    handleShareSave(perms) {
         this.handleShareClose();
-        this.props.updateDataCartPermissions(this.state.targetJob, { permissions });
+        const permissions = { ...perms };
+        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, { permissions });
     }
 
     render() {
@@ -338,14 +342,6 @@ export class DataPackPage extends React.Component {
                     fontSize: '12px',
                 },
         };
-
-        let permissions;
-        if (this.state.targetJob) {
-            const run = this.props.runsList.runs.find(run => run.job.uid === this.state.targetJob);
-            if (run) {
-                permissions = run.job.permissions;
-            }
-        }
 
         return (
             <div style={styles.backgroundStyle}>
@@ -439,14 +435,15 @@ export class DataPackPage extends React.Component {
                         </div>
                     }
                 </div>
-                {this.state.shareOpen && this.state.targetJob ?
+                {this.state.shareOpen && this.state.targetRun ?
                     <DataPackShareDialog
                         show
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
+                        user={this.props.user.data}
                         groups={this.props.groups}
                         members={this.props.users}
-                        permissions={permissions}
+                        permissions={this.state.targetRun.job.permissions}
                         groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
                         membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
                         canUpdateAdmin

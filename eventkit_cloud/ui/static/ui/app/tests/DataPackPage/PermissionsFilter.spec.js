@@ -157,7 +157,7 @@ describe('PermissionsFilter component', () => {
             groups: {},
             members: {},
         };
-        props.groups.forEach((group) => { expected.groups[group.id] = 'READ'; });
+        props.groups.forEach((group) => { expected.groups[group.name] = 'READ'; });
         props.members.forEach((member) => { expected.members[member.user.username] = 'READ'; });
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);

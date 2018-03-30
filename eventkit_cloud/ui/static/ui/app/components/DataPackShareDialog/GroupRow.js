@@ -144,7 +144,7 @@ export class GroupRow extends Component {
 
         return (
             <Card
-                key={this.props.group.id}
+                key={this.props.group.name}
                 expanded={this.state.expanded}
                 style={styles.card}
                 containerStyle={{ paddingBottom: '0px' }}

@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Lock from 'material-ui/svg-icons/action/lock';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import CheckCircle from 'material-ui/svg-icons/action/check-circle';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
@@ -42,7 +42,7 @@ export class PermissionsFilter extends Component {
                 members: {},
             };
             this.props.groups.forEach((group) => {
-                permissions.groups[group.id] = 'READ';
+                permissions.groups[group.name] = 'READ';
             });
             this.props.members.forEach((member) => {
                 permissions.members[member.user.username] = 'READ';

@@ -45,6 +45,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
+import { userIsDataPackAdmin } from '../../utils/generic';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -891,18 +892,22 @@ export class MapView extends Component {
                             padding={0}
                             style={{ width: '100%' }}
                         >
-                            {this.props.runs.map(run => (
-                                <DataPackListItem
-                                    run={run}
-                                    user={this.props.user}
-                                    key={run.uid}
-                                    onRunDelete={this.props.onRunDelete}
-                                    onClick={this.handleClick}
-                                    backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
-                                    providers={this.props.providers}
-                                    openShare={this.props.openShare}
-                                />
-                            ))}
+                            {this.props.runs.map((run) => {
+                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                                return (
+                                    <DataPackListItem
+                                        run={run}
+                                        user={this.props.user}
+                                        key={run.uid}
+                                        onRunDelete={this.props.onRunDelete}
+                                        onClick={this.handleClick}
+                                        backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
+                                        providers={this.props.providers}
+                                        openShare={this.props.openShare}
+                                        adminPermission={admin}
+                                    />
+                                );
+                            })}
                         </GridList>
                     </div>
                     {load}
@@ -1007,6 +1012,12 @@ MapView.propTypes = {
     resetGeoJSONFile: PropTypes.func.isRequired,
     onMapFilter: PropTypes.func.isRequired,
     openShare: PropTypes.func.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 export default MapView;

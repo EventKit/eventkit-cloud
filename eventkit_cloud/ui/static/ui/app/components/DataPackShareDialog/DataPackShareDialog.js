@@ -15,16 +15,65 @@ export class DataPackShareDialog extends Component {
         this.hideShareInfo = this.hideShareInfo.bind(this);
         this.toggleView = this.toggleView.bind(this);
         this.forceUpdate = this.forceUpdate.bind(this);
+        const permissions = this.getSplitPermissions(this.props.user, this.props.permissions);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
-            permissions: this.props.permissions,
+            // we split out permission the user should not see
+            // they will get added back in onSave
+            unusedPermissions: permissions[1],
+            permissions: permissions[0],
             showShareInfo: false,
         };
     }
 
+    getSplitPermissions(user, permissions) {
+        const { username } = user.user;
+        const unused = {
+            groups: {},
+            members: {},
+        };
+        const used = { ...permissions };
+        // if the current user is in the permission we dont want keep them in the member permissions
+        if (used.members[username] !== undefined) {
+            unused.members[username] = used.members[username];
+            used.members[username] = null;
+            delete used.members[username];
+        }
+        // if the user is not in a group we dont want to keep it in the group permissions
+        Object.keys(used.groups).forEach((key) => {
+            if (!this.props.groups.find(g => g.name === key)) {
+                unused.groups[key] = used.groups[key];
+                used.groups[key] = null;
+                delete used.groups[key];
+            }
+        });
+        console.log({ ...used });
+        console.log({ ...unused });
+        return [used, unused];
+    }
+
+    getCombinedGroups() {
+        const permissions = {
+            value: this.state.permissions.value,
+            groups: { ...this.state.unusedPermissions.groups, ...this.state.permissions.groups },
+            members: { ...this.state.unusedPermissions.members, ...this.state.permissions.members },
+        };
+        return permissions;
+    }
+
     handleSave() {
-        this.props.onSave(this.state.permissions);
+        const permissions = this.getCombinedGroups();
+        console.log(permissions);
+        if (Object.keys(permissions.members).length || Object.keys(permissions.groups).length) {
+            permissions.value = 'SHARED';
+            if (Object.keys(permissions.members).length === this.props.members.length) {
+                permissions.value = 'PUBLIC';
+            }
+        } else {
+            permissions.value = 'PRIVATE';
+        }
+        this.props.onSave(permissions);
     }
 
     handleGroupUpdate(groups) {
@@ -196,6 +245,10 @@ DataPackShareDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
+    user: PropTypes.shape({
+        user: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    }).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,

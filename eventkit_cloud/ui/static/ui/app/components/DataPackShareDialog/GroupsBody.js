@@ -43,11 +43,11 @@ export class GroupsBody extends Component {
     handleUncheckAll() {
         if (this.state.search) {
             const groups = [...this.props.groups];
-            const shownGroupNames = this.searchGroups(groups, this.state.search).map(g => g.id);
+            const shownGroupNames = this.searchGroups(groups, this.state.search).map(g => g.name);
             const selectedGroups = { ...this.props.selectedGroups };
-            shownGroupNames.forEach((id) => {
-                selectedGroups[id] = null;
-                delete selectedGroups[id];
+            shownGroupNames.forEach((name) => {
+                selectedGroups[name] = null;
+                delete selectedGroups[name];
             });
             this.props.onGroupsUpdate(selectedGroups);
         } else {
@@ -59,38 +59,38 @@ export class GroupsBody extends Component {
         if (this.state.search) {
             const groups = this.searchGroups(this.props.groups, this.state.search);
             const selectedGroups = { ...this.props.selectedGroups };
-            groups.forEach((group) => { selectedGroups[group.id] = 'READ'; });
+            groups.forEach((group) => { selectedGroups[group.name] = 'READ'; });
             this.props.onGroupsUpdate(selectedGroups);
         } else {
             const selectedGroups = {};
-            this.props.groups.forEach((group) => { selectedGroups[group.id] = 'READ'; });
+            this.props.groups.forEach((group) => { selectedGroups[group.name] = 'READ'; });
             this.props.onGroupsUpdate(selectedGroups);
         }
     }
 
     handleCheck(group) {
-        const permissions = this.props.selectedGroups[group.id];
+        const permissions = this.props.selectedGroups[group.name];
         const newSelection = { ...this.props.selectedGroups };
         if (permissions) {
             // we need to remove from the selection
-            newSelection[group.id] = null;
-            delete newSelection[group.id];
+            newSelection[group.name] = null;
+            delete newSelection[group.name];
         } else {
             // we need to add to the selection
-            newSelection[group.id] = 'READ';
+            newSelection[group.name] = 'READ';
         }
         this.props.onGroupsUpdate(newSelection);
     }
 
     handleAdminCheck(group) {
-        const permissions = this.props.selectedGroups[group.id];
+        const permissions = this.props.selectedGroups[group.name];
         const newSelection = { ...this.props.selectedGroups };
         if (permissions && permissions === 'ADMIN') {
             // we need to demote the group from admin status
-            newSelection[group.id] = 'READ';
+            newSelection[group.name] = 'READ';
         } else {
             // we need to make the group an admin
-            newSelection[group.id] = 'ADMIN';
+            newSelection[group.name] = 'ADMIN';
         }
         this.props.onGroupsUpdate(newSelection);
     }
@@ -150,16 +150,16 @@ export class GroupsBody extends Component {
     sortByShared(groups, selectedGroups, descending) {
         if (descending === true) {
             groups.sort((a, b) => {
-                const aSelected = a.id in selectedGroups;
-                const bSelected = b.id in selectedGroups;
+                const aSelected = a.name in selectedGroups;
+                const bSelected = b.name in selectedGroups;
                 if (aSelected && !bSelected) return -1;
                 if (!aSelected && bSelected) return 1;
                 return 0;
             });
         } else {
             groups.sort((a, b) => {
-                const aSelected = a.id in selectedGroups;
-                const bSelected = b.id in selectedGroups;
+                const aSelected = a.name in selectedGroups;
+                const bSelected = b.name in selectedGroups;
                 if (!aSelected && bSelected) return -1;
                 if (aSelected && !bSelected) return 1;
                 return 0;
@@ -171,16 +171,16 @@ export class GroupsBody extends Component {
     sortByAdmin(groups, selectedGroups, descending) {
         if (descending === true) {
             groups.sort((a, b) => {
-                const aAdmin = selectedGroups[a.id] === 'ADMIN';
-                const bAdmin = selectedGroups[b.id] === 'ADMIN';
+                const aAdmin = selectedGroups[a.name] === 'ADMIN';
+                const bAdmin = selectedGroups[b.name] === 'ADMIN';
                 if (aAdmin && !bAdmin) return -1;
                 if (!aAdmin && bAdmin) return 1;
                 return 0;
             });
         } else {
             groups.sort((a, b) => {
-                const aAdmin = selectedGroups[a.id] === 'ADMIN';
-                const bAdmin = selectedGroups[b.id] === 'ADMIN';
+                const aAdmin = selectedGroups[a.name] === 'ADMIN';
+                const bAdmin = selectedGroups[b.name] === 'ADMIN';
                 if (!aAdmin && bAdmin) return -1;
                 if (aAdmin && !bAdmin) return 1;
                 return 0;
@@ -253,9 +253,9 @@ export class GroupsBody extends Component {
             }
         }
 
-        const selectedGroups = groups.filter(group => group.id in this.props.selectedGroups);
+        const selectedGroups = groups.filter(group => group.name in this.props.selectedGroups);
         const selectedCount = selectedGroups.length;
-        const adminCount = selectedGroups.filter(group => this.props.selectedGroups[group.id] === 'ADMIN').length;
+        const adminCount = selectedGroups.filter(group => this.props.selectedGroups[group.name] === 'ADMIN').length;
 
         let shareInfo = null;
         if (this.props.canUpdateAdmin) {
@@ -323,11 +323,11 @@ export class GroupsBody extends Component {
                     />
                 </div>
                 {groups.map((group) => {
-                    const selected = this.props.selectedGroups[group.id];
+                    const selected = this.props.selectedGroups[group.name];
                     const admin = selected === 'ADMIN';
                     return (
                         <GroupRow
-                            key={group.id}
+                            key={group.name}
                             group={group}
                             members={this.props.members}
                             selected={!!selected}

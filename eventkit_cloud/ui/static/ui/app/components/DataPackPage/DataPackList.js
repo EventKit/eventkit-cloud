@@ -1,8 +1,9 @@
-import React, {PropTypes, Component} from 'react'
-import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow} from 'material-ui/Table';
-import {GridList} from 'material-ui/GridList'
+import React, { PropTypes, Component } from 'react';
+import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui/Table';
+import { GridList } from 'material-ui/GridList';
 import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import { userIsDataPackAdmin } from '../../utils/generic';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from './LoadButtons';
@@ -17,33 +18,32 @@ export class DataPackList extends Component {
         this.isSameOrderType = this.isSameOrderType.bind(this);
     }
 
-    handleOrder(order) {
-        let newOrder = '';
-        if (this.isSameOrderType(this.props.order, order)) {
-            newOrder = this.props.order.charAt(0) == '-' ? this.props.order.substring(1) : '-' + this.props.order;
-        }
-        else {
-            newOrder = order;
-        }
-        this.props.onSort(newOrder);
-    }
-
-    isSameOrderType(unknown, known) {
-        return unknown.replace(/-/, '') == known.replace(/-/, '');
-    }
-
-    //If it is a 'reversed' order the arrow should be up, otherwise it should be down
+    // If it is a 'reversed' order the arrow should be up, otherwise it should be down
     getIcon(order) {
-        const style = {verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'};
-        const icon = this.props.order == order ?
-            <NavigationArrowDropUp className={'qa-DataPackList-NavigationArrowDropUp'} style={style}/>
+        const style = { verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' };
+        const icon = this.props.order === order ?
+            <NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={style} />
             :
-            <NavigationArrowDropDown className={'qa-DataPackList-NavigationArrowDropDown'} style={style}/>
+            <NavigationArrowDropDown className="qa-DataPackList-NavigationArrowDropDown" style={style} />;
         return icon;
     }
 
     getHeaderStyle(isActive) {
-        return isActive ? {color: '#000', fontWeight: 'bold'} : {color: 'inherit'}
+        return isActive ? { color: '#000', fontWeight: 'bold' } : { color: 'inherit' };
+    }
+
+    isSameOrderType(unknown, known) {
+        return unknown.replace(/-/, '') === known.replace(/-/, '');
+    }
+
+    handleOrder(order) {
+        let newOrder = '';
+        if (this.isSameOrderType(this.props.order, order)) {
+            newOrder = this.props.order.charAt(0) === '-' ? this.props.order.substring(1) : '-' + this.props.order;
+        } else {
+            newOrder = order;
+        }
+        this.props.onSort(newOrder);
     }
 
     render() {
@@ -105,7 +105,7 @@ export class DataPackList extends Component {
                 textAlign: 'left',
                 height: 'inherit',
                 width: '80px',
-            }
+            },
         };
 
         const load = (
@@ -120,98 +120,112 @@ export class DataPackList extends Component {
 
         if (window.innerWidth < 768) {
             return (
-                <CustomScrollbar style={{height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%'}}>
+                <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
                     <div style={styles.root}>
                         <GridList
-                            className={'qa-DataPackList-GridList'}
-                            cellHeight={'auto'}
+                            className="qa-DataPackList-GridList"
+                            cellHeight="auto"
                             cols={1}
                             padding={0}
-                            style={{width: '100%', minWidth: '360px'}}
+                            style={{ width: '100%', minWidth: '360px' }}
                         >
-                            {this.props.runs.map(run => (
-                                <DataPackListItem
-                                    run={run}
-                                    user={this.props.user}
-                                    key={run.uid}
-                                    onRunDelete={this.props.onRunDelete}
-                                    providers={this.props.providers}
-                                    openShare={this.props.openShare}
-                                />
-                            ))}
-                        </GridList>
-                    </div>
-                    {load}
-                </CustomScrollbar>
-            )
-        }
-        return (
-            <div>
-                <div style={styles.root}>
-                    <Table className={'qa-DataPackList-Table-list'}>
-                        <TableHeader className={'qa-DataPackList-TableHeader'} displaySelectAll={false} adjustForCheckbox={false} style={{height: '50px'}}>
-                            <TableRow className={'qa-DataPackList-TableRow'} style={styles.tableRow}>
-                                <TableHeaderColumn
-                                    className={'qa-DataPackList-TableHeaderColumn-name'}
-                                    style={styles.nameColumn}>
-                                    <div onClick={() => {this.handleOrder('job__name')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
-                                        {this.getIcon('-job__name')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className={'qa-DataPackList-TableHeaderColumn-event'} style={styles.eventColumn}>
-                                    <div onClick={() => {this.handleOrder('job__event')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__event'))}>Event</span>
-                                        {this.getIcon('-job__event')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className={'qa-DataPackList-TableHeaderColumn-date'} style={styles.dateColumn}>
-                                    <div onClick={() => {this.handleOrder('-started_at')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
-                                        {this.getIcon('started_at')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className={'qa-DataPackList-TableHeaderColumn-status'} style={styles.statusColumn}>
-                                    <div onClick={() => {this.handleOrder('status')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'status'))}>Status</span>
-                                        {this.getIcon('-status')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className={'qa-DataPackList-TableHeaderColumn-permission'} style={styles.permissionsColumn}>
-                                    <div onClick={() => {this.handleOrder('job__published')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__published'))}>Permissions</span>
-                                        {this.getIcon('-job__published')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className={'qa-DataPackList-TableHeaderColumn-owner'} style={styles.ownerColumn}>
-                                    <div onClick={() => {this.handleOrder('user__username')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'user__username'))}>Owner</span>
-                                        {this.getIcon('-user__username')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className={'qa-DataPackList-TableHeaderColumn-featured'} style={styles.featuredColum}>
-                                    <div onClick={() => {this.handleOrder('-job__featured')}} style={styles.clickable}>
-                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__featured'))}>Featured</span>
-                                        {this.getIcon('job__featured')}
-                                    </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={{padding: '0px', width: '35px', height: 'inherit'}}/>
-                            </TableRow>
-                        </TableHeader>
-                    </Table>
-                    <CustomScrollbar style={{height: window.innerHeight - 343}}>
-                        <Table className={'qa-DataPackList-Table-item'}>
-                            <TableBody displayRowCheckbox={false}>
-                                {this.props.runs.map(run => (
-                                    <DataPackTableItem
+                            {this.props.runs.map((run) => {
+                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                                return (
+                                    <DataPackListItem
                                         run={run}
                                         user={this.props.user}
                                         key={run.uid}
                                         onRunDelete={this.props.onRunDelete}
                                         providers={this.props.providers}
                                         openShare={this.props.openShare}
+                                        adminPermission={admin}
                                     />
-                                ))}
+                                );
+                            })}
+                        </GridList>
+                    </div>
+                    {load}
+                </CustomScrollbar>
+            );
+        }
+        return (
+            <div>
+                <div style={styles.root}>
+                    <Table className="qa-DataPackList-Table-list">
+                        <TableHeader
+                            className="qa-DataPackList-TableHeader"
+                            displaySelectAll={false}
+                            adjustForCheckbox={false}
+                            style={{ height: '50px' }}
+                        >
+                            <TableRow className="qa-DataPackList-TableRow" style={styles.tableRow}>
+                                <TableHeaderColumn
+                                    className="qa-DataPackList-TableHeaderColumn-name"
+                                    style={styles.nameColumn}
+                                >
+                                    <div onClick={() => {this.handleOrder('job__name')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
+                                        {this.getIcon('-job__name')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-event" style={styles.eventColumn}>
+                                    <div onClick={() => {this.handleOrder('job__event')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__event'))}>Event</span>
+                                        {this.getIcon('-job__event')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-date" style={styles.dateColumn}>
+                                    <div onClick={() => {this.handleOrder('-started_at')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'started_at'))}>Date Added</span>
+                                        {this.getIcon('started_at')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-status" style={styles.statusColumn}>
+                                    <div onClick={() => {this.handleOrder('status')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'status'))}>Status</span>
+                                        {this.getIcon('-status')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-permission" style={styles.permissionsColumn}>
+                                    <div onClick={() => {this.handleOrder('job__published')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__published'))}>Permissions</span>
+                                        {this.getIcon('-job__published')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-owner" style={styles.ownerColumn}>
+                                    <div onClick={() => {this.handleOrder('user__username')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'user__username'))}>Owner</span>
+                                        {this.getIcon('-user__username')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-featured" style={styles.featuredColum}>
+                                    <div onClick={() => {this.handleOrder('-job__featured')}} style={styles.clickable}>
+                                        <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__featured'))}>Featured</span>
+                                        {this.getIcon('job__featured')}
+                                    </div>
+                                </TableHeaderColumn>
+                                <TableHeaderColumn style={{padding: '0px', width: '35px', height: 'inherit'}} />
+                            </TableRow>
+                        </TableHeader>
+                    </Table>
+                    <CustomScrollbar style={{ height: window.innerHeight - 343 }}>
+                        <Table className="qa-DataPackList-Table-item">
+                            <TableBody displayRowCheckbox={false}>
+                                {this.props.runs.map((run) => {
+                                    const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                                    return (
+                                        <DataPackTableItem
+                                            run={run}
+                                            user={this.props.user}
+                                            key={run.uid}
+                                            onRunDelete={this.props.onRunDelete}
+                                            providers={this.props.providers}
+                                            openShare={this.props.openShare}
+                                            adminPermissions={admin}
+                                        />
+                                    );
+                                })}
 
                             </TableBody>
                         </Table>
@@ -220,7 +234,7 @@ export class DataPackList extends Component {
                 </div>
                 {load}
             </div>
-        )
+        );
     }
 }
 
@@ -237,6 +251,12 @@ DataPackList.propTypes = {
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
     openShare: PropTypes.func.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 export default DataPackList;

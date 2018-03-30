@@ -134,10 +134,12 @@ export function updateDataCartPermissions(uid, options = {}) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_PERMISSION });
         const csrftoken = cookie.load('csrftoken');
-
         const data = {};
         if (options.permissions) {
-            data.permissions = { ...options.permissions };
+            data.permissions = {
+                groups: options.permissions.groups,
+                users: options.permissions.members,
+            };
             data.visibility = options.permissions.value;
         }
 

@@ -17,6 +17,7 @@ import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import ol3mapCss from '../../styles/ol3map.css';
 import DataPackGeneralTable from './DataPackGeneralTable';
+import { userIsDataPackAdmin } from '../../utils/generic';
 import { DataCartInfoTable } from './DataCartInfoTable';
 
 export class DataCartDetails extends Component {
@@ -139,7 +140,13 @@ export class DataCartDetails extends Component {
             statusFontColor = '#ce4427';
         }
 
-        const rerunDisabled = this.state.status === 'SUBMITTED' || this.props.user.data.user.username !== this.props.cartDetails.user;
+        const adminUser = userIsDataPackAdmin(
+            this.props.user.data.user,
+            this.props.cartDetails.job.permissions,
+            this.props.groups,
+        );
+
+        console.log(this.props.user);
 
         return (
             <div>
@@ -157,6 +164,7 @@ export class DataCartDetails extends Component {
                     </div>
                     <DataPackStatusTable
                         className="qa-DataCartDetails-DataPackStatusTable"
+                        user={this.props.user.data}
                         status={this.props.cartDetails.status}
                         expiration={this.props.cartDetails.expiration}
                         permissions={this.props.cartDetails.job.permissions}
@@ -170,6 +178,7 @@ export class DataCartDetails extends Component {
                         statusFontColor={statusFontColor}
                         members={this.props.members}
                         groups={this.props.groups}
+                        adminPermissions={adminUser}
                     />
                 </div>
                 <div style={styles.container}>
@@ -189,7 +198,7 @@ export class DataCartDetails extends Component {
                         onClone={this.props.onClone}
                         onDelete={this.props.onRunDelete}
                         dataPack={this.props.cartDetails}
-                        rerunDisabled={rerunDisabled}
+                        adminPermissions={adminUser}
                     />
                 </div>
                 <div style={styles.container}>

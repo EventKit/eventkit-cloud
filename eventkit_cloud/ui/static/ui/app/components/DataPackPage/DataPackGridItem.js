@@ -8,7 +8,7 @@ import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
@@ -332,7 +332,7 @@ export class DataPackGridItem extends Component {
                                     primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen}
                                 />
-                                {this.props.run.user === this.props.user.data.user.username ?
+                                {this.props.adminPermission ?
                                     [
                                         <MenuItem
                                             key="delete"
@@ -346,7 +346,7 @@ export class DataPackGridItem extends Component {
                                             className="qa-DataPackGridItem-MenuItem-share"
                                             style={{ fontSize: cardTextFontSize }}
                                             primaryText="Share"
-                                            onClick={() => this.props.openShare(this.props.run.job.uid)}
+                                            onClick={() => this.props.openShare(this.props.run)}
                                         />,
                                     ]
                                     :
@@ -411,7 +411,7 @@ export class DataPackGridItem extends Component {
                             <SocialGroup style={styles.publishedIcon} />
                             :
 
-                            <SocialPerson style={styles.unpublishedIcon} />
+                            <Lock style={styles.unpublishedIcon} />
                         }
                     </span>
                 </CardActions>
@@ -430,6 +430,7 @@ DataPackGridItem.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
     openShare: PropTypes.func.isRequired,
+    adminPermission: PropTypes.bool.isRequired,
 };
 
 export default DataPackGridItem;
