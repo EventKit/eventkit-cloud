@@ -550,9 +550,6 @@ def perform_provider_check(provider_slug, geojson):
     provider = DataProvider.objects.get(slug=provider_slug)
     provider_type = str(provider.export_provider_type)
 
-    #geojson = self.request.data.get('geojson', None)
-    #logger.error('GEOJSON: {}'.format(str(geojson)))
-
     url = str(provider.url)
     if url == '' and 'osm' in provider_type:
         url = settings.OVERPASS_API_URL
