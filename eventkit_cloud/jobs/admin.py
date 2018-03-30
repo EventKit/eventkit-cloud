@@ -9,7 +9,7 @@ from django.contrib.gis.geos import GEOSGeometry
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
 
 
 logger = logging.getLogger(__name__)
@@ -106,6 +106,13 @@ class ExportConfigAdmin(admin.ModelAdmin):
     list_display = ['uid', 'name', 'user', 'config_type', 'published', 'created_at']
 
 
+class DataProviderStatusInline(admin.TabularInline):
+    """
+    Status information for Data Providers
+    """
+    model = DataProviderStatus
+
+
 class DataProviderForm(forms.ModelForm):
     """
     Admin form for editing export providers in the admin interface.
@@ -163,6 +170,9 @@ class DataProviderAdmin(admin.ModelAdmin):
     """
     form = DataProviderForm
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
+    inlines = [
+        DataProviderStatus,
+    ]
 
 
 # register the new admin models
