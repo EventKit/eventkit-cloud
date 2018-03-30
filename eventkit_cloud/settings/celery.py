@@ -36,7 +36,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'provider-statuses': {
         'task': 'Check Provider Availability',
-        'schedule': crontab(minute='*', hour='*', day_of_week='*')
+        'schedule': crontab(minute='*/{}'.format(os.getenv('PROVIDER_CHECK_INTERVAL', '30')))
     }
 }
 
