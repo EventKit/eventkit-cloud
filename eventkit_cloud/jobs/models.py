@@ -128,14 +128,6 @@ class DataProviderType(TimeStampedModelMixin):
         return '{0}'.format(self.type_name)
 
 
-class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
-    """
-    Model that remembers the last recorded status of a data provider.
-    """
-    status = models.CharField(max_length=100, blank=True)
-    message = models.CharField(max_length=100, blank=True)
-
-
 class DataProvider(UIDMixin, TimeStampedModelMixin):
     """
     Model for a DataProvider.
@@ -167,7 +159,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
-    status_information = models.OneToOneField(DataProviderStatus, on_delete=models.CASCADE)
 
     class Meta:  # pragma: no cover
         managed = True
@@ -185,6 +176,15 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
 
     def __unicode__(self,):
         return '{0}'.format(self.name)
+
+
+class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that remembers the last recorded status of a data provider.
+    """
+    status = models.CharField(max_length=100, blank=True)
+    message = models.CharField(max_length=100, blank=True)
+    related_provider = models.OneToOneField(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
 
 
 class Region(UIDMixin, TimeStampedModelMixin):

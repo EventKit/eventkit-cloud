@@ -36,9 +36,6 @@ from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
 
-from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.utils.provider_check import perform_provider_check
-
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
 # Get an instance of a logger

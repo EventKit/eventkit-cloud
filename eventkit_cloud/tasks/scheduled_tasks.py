@@ -7,8 +7,6 @@ from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
 
 from celery.utils.log import get_task_logger
-from eventkit_cloud.jobs.models import DataProvider
-from eventkit_cloud.utils.provider_check import perform_provider_check
 from eventkit_cloud.celery import app
 
 logger = get_task_logger(__name__)
@@ -68,19 +66,17 @@ def expire_runs():
 
 
 @app.task(name='Check Provider Availability')
-def check_provider_availability(result=None, task_pid=None, celery_uid=None):
-    try:
-        logger.error('EJ RUNNING CHECK_PROVIDER_AVAILABILITY')
-        for provider in DataProvider.objects.all():
-            status = json.loads(perform_provider_check(provider.slug, None))
-            logger.error('EJ STATUS OBJECT: {}'.format(str(status)))
-            provider.status_information.status = status['status']
-            provider.status_information.message = status['message']
-    except Exception as e:
-        logger.error('EJ EXCEPTION OCCURRED RUNNING CHECK PROVIDER AVAILABILITY')
-        logger.error(e)
-        import traceback
-        traceback.print_exc()
+def check_provider_availability():
+    from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
+    from eventkit_cloud.utils.provider_check import perform_provider_check
+    for provider in DataProvider.objects.all():
+        status = json.loads(perform_provider_check(provider.slug, None))
+        data_provider_status = DataProviderStatus.objects.filter(related_provider=provider).first()
+        if not data_provider_status:
+            data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
+        data_provider_status.status = status['status']
+        data_provider_status.message = status['message']
+        data_provider_status.save()
 
 
 def send_warning_email(date=None, url=None, addr=None, job_name=None):
