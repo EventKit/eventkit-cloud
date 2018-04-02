@@ -136,6 +136,7 @@ class JobPermission(TimeStampedModelMixin):
     def userjobs(user,level):
         perms = []
         job_ids = []
+
         # get all the jobs this user has been explicitly assigned to
 
         for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
@@ -154,6 +155,20 @@ class JobPermission(TimeStampedModelMixin):
                 job_ids.append(jp.job.id)
 
         return (perms,job_ids)
+
+    @staticmethod
+    def groupjobs(group, level):
+        perms = []
+        job_ids = []
+
+        # get all the jobs for which this group has the given permission level
+
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group), object_id=group.id):
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        return (perms, job_ids)
 
     def __str__(self):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
