@@ -178,7 +178,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
         lookup_field='uid'
     )
 
-    def get_tasks(self):
+    def get_tasks(self, obj):
         return ExportTaskRecordSerializer(many=True, required=False, context=self.context)
 
     class Meta:
@@ -277,7 +277,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
     def get_user(obj):
         return obj.user.username
 
-    def get_provider_tasks(self):
+    def get_provider_tasks(self, obj):
         return DataProviderTaskRecordSerializer(many=True, context=self.context)
 
     def get_zipfile_url(self, obj):
