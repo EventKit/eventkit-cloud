@@ -270,7 +270,7 @@ export class GroupsBody extends Component {
                         Sharing Rights
                     </EnhancedButton>
                     <span style={styles.shareInfoText} className="qa-GroupsBody-shareInfo-text">
-                        Shared: {selectedCount} Groups plus {adminCount} Admin Groups
+                        Shared: {selectedCount - adminCount} Groups plus {adminCount} Admin Groups
                     </span>
                 </div>
             );
@@ -283,7 +283,7 @@ export class GroupsBody extends Component {
                     className="qa-GroupsBody-GroupBodyTooltip"
                     target={this.state.tooltip.target}
                     body={this.body}
-                    text={`${this.state.tooltip.admin ? 'Unshare' : 'Share'} administrative rights with group administrators`}
+                    text={this.state.tooltip.admin ? 'Remove administrative rights from group administrators' : 'Share administrative rights with group administrators'}
                 />
             );
         }

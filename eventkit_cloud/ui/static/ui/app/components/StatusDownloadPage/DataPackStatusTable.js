@@ -272,6 +272,7 @@ export class DataPackStatusTable extends Component {
                         membersText="You may share view and edit rights with members exclusively.
                          Member sharing is managed separately from group sharing"
                         canUpdateAdmin
+                        warnPublic
                     />
                     :
                     null

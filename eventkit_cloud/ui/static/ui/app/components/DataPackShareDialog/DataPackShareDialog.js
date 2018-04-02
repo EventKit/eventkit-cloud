@@ -1,9 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
+import FlatButton from 'material-ui/FlatButton';
 import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
 import MembersBody from './MembersBody';
 import ShareInfoBody from './ShareInfoBody';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class DataPackShareDialog extends Component {
     constructor(props) {
@@ -13,6 +15,8 @@ export class DataPackShareDialog extends Component {
         this.handleMemberUpdate = this.handleMemberUpdate.bind(this);
         this.showShareInfo = this.showShareInfo.bind(this);
         this.hideShareInfo = this.hideShareInfo.bind(this);
+        this.showPublicWarning = this.showPublicWarning.bind(this);
+        this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
         this.forceUpdate = this.forceUpdate.bind(this);
         this.state = {
@@ -20,6 +24,7 @@ export class DataPackShareDialog extends Component {
             // Make a copy of the permissions so we can modify it locally
             permissions: this.getAdjustedPermissions(this.props.permissions),
             showShareInfo: false,
+            showPublicWarning: false,
         };
     }
 
@@ -80,6 +85,12 @@ export class DataPackShareDialog extends Component {
 
     handleMemberUpdate(members) {
         const permissions = { ...this.state.permissions };
+        if (this.props.warnPublic) {
+            const { length } = Object.keys(members);
+            if (length === this.props.members.length) {
+                this.showPublicWarning();
+            }
+        }
         permissions.members = members;
         this.setState({ permissions });
     }
@@ -90,6 +101,14 @@ export class DataPackShareDialog extends Component {
 
     hideShareInfo() {
         this.setState({ showShareInfo: false });
+    }
+
+    showPublicWarning() {
+        this.setState({ showPublicWarning: true });
+    }
+
+    hidePublicWarning() {
+        this.setState({ showPublicWarning: false });
     }
 
     toggleView() {
@@ -224,6 +243,36 @@ export class DataPackShareDialog extends Component {
                     </div>
                 </div>
                 {body}
+                {this.state.showPublicWarning ?
+                    <BaseDialog
+                        show
+                        onClose={this.hidePublicWarning}
+                        title="MAKE PUBLIC"
+                        actions={[
+                            <FlatButton
+                                style={{ margin: '0px', float: 'left' }}
+                                labelStyle={{ color: '#4598bf' }}
+                                disableTouchRipple
+                                label="CONTINUE EDITING"
+                                primary={false}
+                                onClick={this.hidePublicWarning}
+                            />,
+                            <RaisedButton
+                                style={{ margin: '0px' }}
+                                labelStyle={{ color: 'whitesmoke' }}
+                                buttonStyle={{ backgroundColor: '#4598bf', borderRadius: '0px' }}
+                                disableTouchRipple
+                                label="MAKE PUBLIC"
+                                primary={false}
+                                onClick={this.handleSave}
+                            />,
+                        ]}
+                    >
+                        Sharing with all users would make this DataPack public. Would you still like to share with all users and make public?
+                    </BaseDialog>
+                    :
+                    null
+                }
             </ShareBaseDialog>
         );
     }
@@ -236,6 +285,7 @@ DataPackShareDialog.defaultProps = {
     membersText: '',
     canUpdateAdmin: false,
     user: null,
+    warnPublic: false,
 };
 
 DataPackShareDialog.propTypes = {
@@ -284,6 +334,7 @@ DataPackShareDialog.propTypes = {
         PropTypes.node,
         PropTypes.string,
     ]),
+    warnPublic: PropTypes.bool,
 };
 
 export default DataPackShareDialog;
