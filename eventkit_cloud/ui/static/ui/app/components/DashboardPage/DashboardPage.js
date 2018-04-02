@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import { AppBar, CircularProgress } from 'material-ui';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActions';
+import { getNotifications } from '../../actions/notificationsActions';
 import CustomScrollbar from '../CustomScrollbar';
 import { getProviders } from '../../actions/exportsActions';
 import { DashboardSection } from './DashboardSection';
@@ -19,14 +20,15 @@ export class DashboardPage extends React.Component {
         this.getNotificationsRows = this.getNotificationsRows.bind(this);
         this.getGridColumns = this.getGridColumns.bind(this);
         this.getGridWideColumns = this.getGridWideColumns.bind(this);
+        this.refreshNotifications = this.refreshNotifications.bind(this);
         this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
         this.refreshFeatured = this.refreshFeatured.bind(this);
         this.refreshRecentlyViewed = this.refreshRecentlyViewed.bind(this);
         this.refresh = this.refresh.bind(this);
-        this.isLoading = this.isLoading.bind(this);
         this.state = {
             loadingPage: true,
             loadingSections: {
+                notifications: true,
                 myDataPacks: true,
                 featured: true,
                 recentlyViewed: true,
@@ -47,6 +49,11 @@ export class DashboardPage extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         const loadingSections = {...this.state.loadingSections};
+
+        // Notifications.
+        if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
+            loadingSections.notifications = false;
+        }
 
         // My datapacks.
         if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
@@ -86,8 +93,8 @@ export class DashboardPage extends React.Component {
         }
     }
 
-    getGridColumns() {
-        if (window.innerWidth > 1920) {
+    getGridColumns({ getMax = false } = {}) {
+        if (window.innerWidth > 1920 || getMax) {
             return 6;
         } else if (window.innerWidth > 1600) {
             return 5;
@@ -100,16 +107,16 @@ export class DashboardPage extends React.Component {
         return 2;
     }
 
-    getGridWideColumns() {
-        if (window.innerWidth > 1600) {
+    getGridWideColumns({ getMax = false } = {}) {
+        if (window.innerWidth > 1600 || getMax) {
             return 2;
         }
 
         return 1;
     }
 
-    getNotificationsColumns() {
-        if (window.innerWidth > 1600) {
+    getNotificationsColumns({ getMax = false } = {}) {
+        if (window.innerWidth > 1600 || getMax) {
             return 3;
         } else if (window.innerWidth > 1024) {
             return 2;
@@ -122,9 +129,20 @@ export class DashboardPage extends React.Component {
         return 3;
     }
 
+    refreshNotifications({ showLoading = true } = {}) {
+        const maxNotifications = this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows();
+        this.props.getNotifications({ pageSize: maxNotifications });
+
+        if (showLoading) {
+            const loadingSections = {...this.state.loadingSections};
+            loadingSections.notifications = true;
+            this.setState({ loadingSections });
+        }
+    }
+
     refreshMyDataPacks({ showLoading = true } = {}) {
         this.props.getRuns({
-            pageSize: 6,
+            pageSize: this.getGridColumns({ getMax: true }),
             ordering: '-started_at',
             ownerFilter: this.props.user.data.user.username,
         });
@@ -132,48 +150,35 @@ export class DashboardPage extends React.Component {
         if (showLoading) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.myDataPacks = true;
-            this.setState({ loadingSection: loadingSections });
+            this.setState({ loadingSections });
         }
     }
 
     refreshFeatured({ showLoading = true } = {}) {
-        this.props.getFeaturedRuns({ pageSize: 6 });
+        this.props.getFeaturedRuns({ pageSize: this.getGridWideColumns({ getMax: true }) });
 
         if (showLoading) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.featured = true;
-            this.setState({ loadingSection: loadingSections });
+            this.setState({ loadingSections });
         }
     }
 
     refreshRecentlyViewed({ showLoading = true } = {}) {
-        this.props.getViewedJobs({ pageSize: 6 });
+        this.props.getViewedJobs({ pageSize: this.getGridColumns({ getMax: true }) });
 
         if (showLoading) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.recentlyViewed = true;
-            this.setState({ loadingSection: loadingSections });
+            this.setState({ loadingSections });
         }
     }
 
     refresh({ showLoading = true } = {}) {
-        this.refreshMyDataPacks({ showLoading: showLoading });
-        this.refreshFeatured({ showLoading: showLoading });
-        this.refreshRecentlyViewed({ showLoading: showLoading });
-    }
-
-    isLoading() {
-        if (this.state.loadingPage) {
-            return true;
-        }
-
-        for (const loadingSection of Object.values(this.state.loadingSections)) {
-            if (loadingSection) {
-                return true;
-            }
-        }
-
-        return false;
+        this.refreshNotifications({ showLoading });
+        this.refreshMyDataPacks({ showLoading });
+        this.refreshFeatured({ showLoading });
+        this.refreshRecentlyViewed({ showLoading });
     }
 
     render() {
@@ -223,48 +228,6 @@ export class DashboardPage extends React.Component {
             },
         };
 
-        const now = new Date();
-        const mockNotifications = [
-            {
-                uid: 3,
-                read: false,
-                type: 'license-update',
-                date: new Date().setMinutes(now.getMinutes() - 5),
-            },
-            {
-                uid: 2,
-                read: true,
-                type: 'datapack-complete-error',
-                date: new Date().setHours(now.getHours() - 5),
-                data: {
-                    run: {
-                        uid: 2,
-                        job: {
-                            uid: 2,
-                            name: 'B',
-                        },
-                        expiration: new Date(2018, 5, 1),
-                    },
-                },
-            },
-            {
-                uid: 1,
-                read: true,
-                type: 'datapack-complete-success',
-                date: new Date().setDate(now.getDate() - 5),
-                data: {
-                    run: {
-                        uid: 1,
-                        job: {
-                            uid: 1,
-                            name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
-                        },
-                        expiration: new Date(2018, 5, 1),
-                    },
-                },
-            },
-        ];
-
         return (
             <div style={styles.root}>
                 <AppBar
@@ -274,7 +237,7 @@ export class DashboardPage extends React.Component {
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
                 />
-                {this.isLoading() ?
+                {this.state.loadingPage ?
                     <div style={styles.loadingOverlay}>
                         <CircularProgress
                             style={styles.loadingPage}
@@ -297,14 +260,14 @@ export class DashboardPage extends React.Component {
                                 name="Notifications"
                                 columns={this.getNotificationsColumns()}
                                 rows={this.getNotificationsRows()}
-                                user={this.props.user}
                                 providers={this.props.providers}
                                 noDataText="You don't have any notifications."
                             >
-                                {mockNotifications.map((notification, index) => (
+                                {this.props.notifications.notifications.map((notification, index) => (
                                     <NotificationGridItem
                                         key={`Notification-${index}`}
                                         notification={notification}
+                                        router={this.props.router}
                                     />
                                 ))}
                             </DashboardSection>
@@ -315,7 +278,6 @@ export class DashboardPage extends React.Component {
                                 title="Recently Viewed"
                                 name="RecentlyViewed"
                                 columns={this.getGridColumns()}
-                                user={this.props.user}
                                 providers={this.props.providers}
                                 noDataText="You haven't viewed any DataPacks yet..."
                             >
@@ -343,7 +305,6 @@ export class DashboardPage extends React.Component {
                                     name="Featured"
                                     columns={this.getGridWideColumns()}
                                     cellHeight={335}
-                                    user={this.props.user}
                                     providers={this.props.providers}
                                 >
                                     {this.props.featuredRunsList.runs.map((run, index) => (
@@ -394,14 +355,11 @@ export class DashboardPage extends React.Component {
 }
 
 DashboardPage.propTypes = {
-    getViewedJobs: PropTypes.func.isRequired,
+    router: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    deleteRuns: PropTypes.func.isRequired,
-    runsDeletion: PropTypes.object.isRequired,
-    getRuns: PropTypes.func.isRequired,
-    getFeaturedRuns: PropTypes.func.isRequired,
+    notifications: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    runsDeletion: PropTypes.object.isRequired,
     runsList: PropTypes.shape({
         cancelSource: PropTypes.object,
         error: PropTypes.string,
@@ -422,11 +380,18 @@ DashboardPage.propTypes = {
         range: PropTypes.string,
         runs: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
+    getRuns: PropTypes.func.isRequired,
+    getFeaturedRuns: PropTypes.func.isRequired,
+    getViewedJobs: PropTypes.func.isRequired,
+    getProviders: PropTypes.func.isRequired,
+    deleteRuns: PropTypes.func.isRequired,
+    getNotifications: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
     return {
         user: state.user,
+        notifications: state.notifications,
         providers: state.providers,
         runsDeletion: state.runsDeletion,
         runsList: state.runsList,
@@ -441,6 +406,7 @@ function mapDispatchToProps(dispatch) {
         getViewedJobs: (args) => dispatch(getViewedJobs(args)),
         getProviders: () => dispatch(getProviders()),
         deleteRuns: (uid) => dispatch(deleteRuns(uid)),
+        getNotifications: (args) => dispatch(getNotifications(args)),
     };
 }
 

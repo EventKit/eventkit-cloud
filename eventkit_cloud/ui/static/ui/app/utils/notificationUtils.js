@@ -8,7 +8,6 @@ import { Link } from 'react-router';
 const types = {
     DATAPACK_COMPLETE_SUCCESS: 'datapack-complete-success',
     DATAPACK_COMPLETE_ERROR: 'datapack-complete-error',
-    LICENSE_UPDATE: 'license-update',
 };
 
 // NOTE: This should ideally be a NotificationMessage component, but we need to return the bare elements without
@@ -52,19 +51,6 @@ export function getNotificationMessage({ notification, textStyle, linkStyle }) {
                 </Link>,
                 <span key={`${notification.uid}-span0`} style={styles.text}>&nbsp;failed to complete.</span>
             ];
-        case types.LICENSE_UPDATE:
-            return [
-                <span key={`${notification.uid}-span0`} style={styles.text}>You have a&nbsp;</span>,
-                <Link
-                    key={`${notification.uid}-Link`}
-                    to="/account"
-                    href="/account"
-                    style={styles.link}
-                >
-                    license
-                </Link>,
-                <span key={`${notification.uid}-span1`} style={styles.text}>&nbsp;update.</span>
-            ];
         default:
             console.error(`Unsupported notification type '${notification.type}'`, notification);
     }
@@ -89,9 +75,17 @@ export function getNotificationIcon({ notification, iconStyle }) {
             return checkCircleIcon;
         case types.DATAPACK_COMPLETE_ERROR:
             return errorIcon;
-        case types.LICENSE_UPDATE:
-            return infoIcon;
         default:
-            console.error(`Unsupported notification type '${this.props.notification.type}'`, this.props.notification);
+            console.error(`Unsupported notification type '${notification.type}'`, notification);
+    }
+}
+
+export function getNotificationViewUrl(notification) {
+    switch (notification.type) {
+        case types.DATAPACK_COMPLETE_SUCCESS:
+        case types.DATAPACK_COMPLETE_ERROR:
+            return `/status/${notification.data.run.uid}`;
+        default:
+            console.error(`Unsupported notification type '${notification.type}'`, notification);
     }
 }

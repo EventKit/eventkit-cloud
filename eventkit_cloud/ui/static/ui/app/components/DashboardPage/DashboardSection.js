@@ -184,7 +184,6 @@ DashboardSection.propTypes = {
     title: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     columns: PropTypes.number.isRequired,
-    user: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     noDataText: PropTypes.string,
     cellHeight: PropTypes.number,

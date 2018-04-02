@@ -2,9 +2,10 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { AppBar, CircularProgress, GridList } from 'material-ui';
 import CustomScrollbar from '../CustomScrollbar';
-import { NotificationTable } from '../Notification/NotificationTable';
+import NotificationTable from '../Notification/NotificationTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../DataPackPage/LoadButtons';
+import { getNotifications } from '../../actions/notificationsActions';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -17,9 +18,11 @@ export class NotificationsPage extends React.Component {
         this.getGridPadding = this.getGridPadding.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
         this.state = {
-            loadingPage: false,
+            loadingPage: true,
         };
         this.refreshInterval = 10000;
+        this.notificationsPerPage = 10;
+        this.notificationsPage = 1;
     }
 
     componentDidMount() {
@@ -32,9 +35,16 @@ export class NotificationsPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
+            this.setState({
+                loadingPage: false,
+            });
+        }
     }
 
-    refresh({ showLoading = true } = {}) {
+    refresh() {
+        const pageSize = this.notificationsPage * this.notificationsPerPage;
+        this.props.getNotifications({ pageSize });
     }
 
     isSameOrderType(unknown, known) {
@@ -118,51 +128,6 @@ export class NotificationsPage extends React.Component {
             },
         };
 
-        ////////////////////////////////////////////////////
-        // MOCK DATA
-        const now = new Date();
-        const mockNotifications = [
-            {
-                uid: 3,
-                read: false,
-                type: 'license-update',
-                date: new Date().setMinutes(now.getMinutes() - 5),
-            },
-            {
-                uid: 2,
-                read: true,
-                type: 'datapack-complete-error',
-                date: new Date().setHours(now.getHours() - 5),
-                data: {
-                    run: {
-                        uid: 2,
-                        job: {
-                            uid: 2,
-                            name: 'B',
-                        },
-                        expiration: new Date(2018, 5, 1),
-                    },
-                },
-            },
-            {
-                uid: 1,
-                read: true,
-                type: 'datapack-complete-success',
-                date: new Date().setDate(now.getDate() - 5),
-                data: {
-                    run: {
-                        uid: 1,
-                        job: {
-                            uid: 1,
-                            name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
-                        },
-                        expiration: new Date(2018, 5, 1),
-                    },
-                },
-            },
-        ];
-        ///////////////////////////////////////////////
-
         return (
             <div style={styles.root}>
                 <AppBar
@@ -188,7 +153,7 @@ export class NotificationsPage extends React.Component {
                         null
                         :
                         <div style={styles.content}>
-                            {(mockNotifications.length === 0) ?
+                            {(this.props.notifications.notifications.length === 0) ?
                                 <div style={{color: 'white', marginLeft: '27px', marginTop: '14px'}} className="qa-NotifcationsPage-NoData">
                                     {"You don't have any notifications."}
                                 </div>
@@ -196,8 +161,9 @@ export class NotificationsPage extends React.Component {
                                 <div>
                                     {(window.innerWidth > 768) ?
                                         <NotificationTable
-                                            notifications={mockNotifications}
+                                            notifications={this.props.notifications}
                                             order={this.props.order}
+                                            router={this.props.router}
                                         />
                                         :
                                         <div>
@@ -209,10 +175,11 @@ export class NotificationsPage extends React.Component {
                                                 padding={this.getGridPadding()}
                                                 cols={1}
                                             >
-                                                {mockNotifications.map((notification, index) => (
+                                                {this.props.notifications.notifications.map((notification, index) => (
                                                     <NotificationGridItem
                                                         key={`Notification-${index}`}
                                                         notification={notification}
+                                                        router={this.props.router}
                                                     />
                                                 ))}
                                             </GridList>
@@ -234,8 +201,8 @@ export class NotificationsPage extends React.Component {
 }
 
 NotificationsPage.propTypes = {
-    user: PropTypes.object.isRequired,
-    order: PropTypes.string.isRequired,
+    order: PropTypes.string,
+    router: PropTypes.object.isRequired,
 };
 
 NotificationsPage.defaultProps = {
@@ -244,12 +211,13 @@ NotificationsPage.defaultProps = {
 
 function mapStateToProps(state) {
     return {
-        user: state.user,
+        notifications: state.notifications,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
+        getNotifications: (args) => dispatch(getNotifications(args)),
     };
 }
 

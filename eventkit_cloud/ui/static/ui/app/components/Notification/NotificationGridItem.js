@@ -1,12 +1,40 @@
 import React, { PropTypes, Component } from 'react';
-import { IconButton, IconMenu, MenuItem, Paper } from 'material-ui';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
+import { connect } from 'react-redux';
+import { Paper } from 'material-ui';
 import moment from 'moment';
-import { getNotificationIcon, getNotificationMessage } from '../../utils/notificationUtils';
+import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
+import { getNotificationIcon, getNotificationMessage, getNotificationViewUrl } from '../../utils/notificationUtils';
+import { NotificationMenu } from './NotificationMenu';
 
 export class NotificationGridItem extends Component {
     constructor(props) {
         super(props);
+        this.handleMarkAsRead = this.handleMarkAsRead.bind(this);
+        this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
+        this.handleRemove = this.handleRemove.bind(this);
+        this.handleView = this.handleView.bind(this);
+    }
+
+    handleMarkAsRead() {
+        this.props.markNotificationsAsRead([this.props.notification]);
+        this.props.onMarkAsRead(this.props.notification);
+    }
+
+    handleMarkAsUnread() {
+        this.props.markNotificationsAsUnread([this.props.notification]);
+        this.props.onMarkAsUnread(this.props.notification);
+    }
+
+    handleRemove() {
+        this.props.removeNotifications([this.props.notification]);
+        this.props.onRemove(this.props.notification);
+    }
+
+    handleView() {
+        // Allow the parent component the opportunity to stop or handle navigation.
+        if (this.props.onView(this.props.notification)) {
+            this.props.router.push(getNotificationViewUrl(this.props.notification));
+        }
     }
 
     render() {
@@ -17,14 +45,12 @@ export class NotificationGridItem extends Component {
                 padding: '15px',
                 fontSize: (window.innerWidth > 575) ? '18px' : '14px',
                 color: 'rgba(0, 0, 0, 0.54)',
+                transition: 'background-color 0.25s',
             },
             content: {
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-            },
-            unread: {
-                backgroundColor: '#D5E6F1',
             },
             icon: {
                 flex: '0 0 auto',
@@ -52,45 +78,24 @@ export class NotificationGridItem extends Component {
         const message = getNotificationMessage({ notification: this.props.notification });
 
         return (
-            <Paper style={(this.props.notification.read) ? styles.root : {...styles.root, ...styles.unread}}>
+            <Paper
+                style={{
+                    ...styles.root,
+                    backgroundColor: (this.props.notification.read) ? 'white' : '#d5e6f1',
+                }}
+            >
                 {icon}
                 {message}
                 <div style={{flex: '1'}}></div>
                 <div style={styles.date}>
                     {moment(this.props.notification.date).fromNow()}
                 </div>
-                <IconMenu
-                    style={{ float: 'right', width: '24px', height: '100%', flex: '0 0 auto' }}
-                    iconButtonElement={
-                        <IconButton
-                            style={styles.iconMenu}
-                            iconStyle={{ color: '#4598bf' }}
-                        >
-                            <NavigationMoreVert />
-                        </IconButton>}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                >
-                    <MenuItem
-                        style={styles.menuItem}
-                        primaryText="View"
-                    />
-                    {this.props.notification.read ?
-                        <MenuItem
-                            style={styles.menuItem}
-                            primaryText="Mark Unread"
-                        />
-                        :
-                        <MenuItem
-                            style={styles.menuItem}
-                            primaryText="Mark Read"
-                        />
-                    }
-                    <MenuItem
-                        style={styles.menuItem}
-                        primaryText="Remove"
-                    />
-                </IconMenu>
+                <NotificationMenu
+                    onMarkAsRead={this.props.notification.read ? null : this.handleMarkAsRead}
+                    onMarkAsUnread={this.props.notification.read ? this.handleMarkAsUnread : null}
+                    onRemove={this.handleRemove}
+                    onView={this.handleView}
+                />
             </Paper>
         );
     }
@@ -98,6 +103,29 @@ export class NotificationGridItem extends Component {
 
 NotificationGridItem.propTypes = {
     notification: PropTypes.object.isRequired,
+    router: PropTypes.object.isRequired,
+    onMarkAsRead: PropTypes.func,
+    onMarkAsUnread: PropTypes.func,
+    onRemove: PropTypes.func,
+    onView: PropTypes.func,
 };
 
-export default NotificationGridItem;
+NotificationGridItem.defaultProps = {
+    onMarkAsRead: () => {},
+    onMarkAsUnread: () => {},
+    onRemove: () => {},
+    onView: () => { return true; },
+};
+
+function mapDispatchToProps(dispatch) {
+    return {
+        markNotificationsAsRead: (notification) => dispatch(markNotificationsAsRead(notification)),
+        markNotificationsAsUnread: (notification) => dispatch(markNotificationsAsUnread(notification)),
+        removeNotifications: (notification) => dispatch(removeNotifications(notification)),
+    };
+}
+
+export default connect(
+    null,
+    mapDispatchToProps,
+)(NotificationGridItem);

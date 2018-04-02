@@ -121,4 +121,15 @@ export default {
         error: null,
     },
     users: usersState,
+    notifications: {
+        fetching: false,
+        fetched: false,
+        notifications: [],
+        error: null,
+        unreadCount: {
+            fetching: false,
+            fetched: false,
+            unreadCount: 0,
+        },
+    },
 };

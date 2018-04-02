@@ -22,6 +22,7 @@ import BaseDialog from './Dialog/BaseDialog';
 import logo from '../../images/eventkit-logo.1.png';
 import { DrawerTimeout } from '../actions/exportsActions';
 import { userActive } from '../actions/userActions';
+import { getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';
 
 require('../fonts/index.css');
@@ -78,6 +79,7 @@ export class Application extends Component {
             showLogoutDialog: false,
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
+        this.notificationsUnreadCountRefreshInterval = 10000;
     }
 
     getChildContext() {
@@ -89,6 +91,8 @@ export class Application extends Component {
     componentDidMount() {
         this.getConfig();
         window.addEventListener('resize', this.handleResize);
+        this.props.getNotificationsUnreadCount();
+        this.notificationsUnreadCountIntervalId = setInterval(this.props.getNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -109,6 +113,7 @@ export class Application extends Component {
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
+        clearInterval(this.notificationsUnreadCountIntervalId);
     }
 
     onMenuItemClick() {
@@ -474,7 +479,14 @@ export class Application extends Component {
                                         >
                                             <Notifications />
                                         </IconButton>
-                                        <div style={styles.notificationsIndicator}></div>
+                                        {(this.props.notifications.unreadCount.unreadCount > 0) ?
+                                            <div
+                                                className="qa-Application-NotificationsIndicator"
+                                                style={styles.notificationsIndicator}
+                                            />
+                                            :
+                                            null
+                                        }
                                     </div>
                                 </div>
                             }
@@ -668,6 +680,8 @@ Application.propTypes = {
     }),
     autoLogoutAt: PropTypes.instanceOf(Date),
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
+    notifications: PropTypes.object.isRequired,
+    getNotificationsUnreadCount: PropTypes.func.isRequired,
 };
 
 Application.childContextTypes = {
@@ -680,6 +694,7 @@ function mapStateToProps(state) {
         userData: state.user.data,
         autoLogoutAt: state.user.autoLogoutAt,
         autoLogoutWarningAt: state.user.autoLogoutWarningAt,
+        notifications: state.notifications,
     };
 }
 
@@ -694,6 +709,9 @@ function mapDispatchToProps(dispatch) {
         },
         userActive: () => {
             dispatch(userActive());
+        },
+        getNotificationsUnreadCount: () => {
+            dispatch(getNotificationsUnreadCount());
         },
     };
 }

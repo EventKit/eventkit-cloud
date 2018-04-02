@@ -23,6 +23,7 @@ import {
     updatePermissionReducer,
 } from './statusDownloadReducer';
 import { userGroupsReducer } from './userGroupsReducer';
+import { notificationsReducer } from './notificationsReducer';
 
 
 const rootReducer = combineReducers({
@@ -50,6 +51,7 @@ const rootReducer = combineReducers({
     formats: getFormatsReducer,
     groups: userGroupsReducer,
     users: usersReducer,
+    notifications: notificationsReducer,
 });
 
 export default rootReducer;
