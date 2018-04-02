@@ -31,6 +31,8 @@ describe('DataPackStatusTable component', () => {
                 { id: 1 },
                 { id: 2 },
             ],
+            adminPermissions: true,
+            user: { user: { username: 'admin' } },
         }
     );
 
@@ -67,33 +69,34 @@ describe('DataPackStatusTable component', () => {
         expect(button).toHaveLength(1);
         expect(button.text()).toEqual('No Members / No Groups');
 
-        wrapper.setState({
-            permissions: {
-                ...props.permissions,
-                groups: { 1: 'READ', 2: 'READ' },
-                members: { user_one: 'READ', user_two: 'READ' },
-            },
-        });
+        let nextProps = getProps();
+        nextProps.permissions = {
+            value: 'SHARED',
+            groups: { 1: 'READ', 2: 'READ' },
+            members: { user_one: 'READ', user_two: 'READ' },
+        };
+        wrapper.setProps(nextProps);
         button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
         expect(button.text()).toEqual('All Members / All Groups');
 
-        wrapper.setState({
-            permissions: {
-                ...props.permissions,
-                groups: { 1: 'READ' },
-                members: { user_one: 'READ' },
-            },
-        });
+        nextProps = getProps();
+        nextProps.permissions = {
+            value: 'SHARED',
+            groups: { 1: 'READ' },
+            members: { user_one: 'READ' },
+        };
+        wrapper.setProps(nextProps);
         button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
         expect(button.text()).toEqual('1 Member / 1 Group');
 
-        wrapper.setState({
-            permissions: {
-                ...props.permissions,
-                groups: { 1: 'READ', 2: 'READ', 3: 'READ' },
-                members: { user_one: 'READ', user_two: 'READ', user_three: 'READ' },
-            },
-        });
+
+        nextProps = getProps();
+        nextProps.permissions = {
+            value: 'SHARED',
+            groups: { 1: 'READ', 2: 'READ', 3: 'READ' },
+            members: { user_one: 'READ', user_two: 'READ', user_three: 'READ' },
+        };
+        wrapper.setProps(nextProps);
         button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
         expect(button.text()).toEqual('3 Members / 3 Groups');
     });
@@ -116,27 +119,6 @@ describe('DataPackStatusTable component', () => {
         expect(val).toEqual('SHARED');
     });
 
-    it('componentDidMount should call setPermissions', () => {
-        const props = getProps();
-        const setStub = sinon.stub(DataPackStatusTable.prototype, 'setPermissions');
-        const wrapper = getWrapper(props);
-        expect(setStub.calledOnce).toBe(true);
-        wrapper.unmount();
-        setStub.restore();
-    });
-
-    it('setPermissions should set the state permissions', () => {
-        const props = getProps();
-        props.permissions.value = 'SHARED';
-        props.permissions.groups = { group_one: 'READ' };
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().setPermissions();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: { ...props.permissions } })).toBe(true);
-        stateStub.restore();
-    });
-
     it('handleShareDialogOpen should set open to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -157,11 +139,10 @@ describe('DataPackStatusTable component', () => {
         stateStub.restore();
     });
 
-    it('handleShareDialogSave should set state and call handleChange and Close', () => {
+    it('handleShareDialogSave should call handleChange and Close', () => {
         const props = getProps();
         props.handlePermissionsChange = sinon.spy();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const closeStub = sinon.stub(wrapper.instance(), 'handleShareDialogClose');
         const newPermissions = {
             value: 'SHARED',
@@ -169,12 +150,9 @@ describe('DataPackStatusTable component', () => {
             groups: { group_one: 'READ', group_two: 'READ' },
         };
         wrapper.instance().handleShareDialogSave(newPermissions);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: { ...newPermissions } })).toBe(true);
         expect(props.handlePermissionsChange.calledOnce).toBe(true);
-        expect(props.handlePermissionsChange.calledWith({ ...newPermissions, value: 'PUBLIC' })).toBe(true);
+        expect(props.handlePermissionsChange.calledWith({ ...newPermissions })).toBe(true);
         expect(closeStub.calledOnce).toBe(true);
-        stateStub.restore();
         closeStub.restore();
     });
 
@@ -182,12 +160,8 @@ describe('DataPackStatusTable component', () => {
         const props = getProps();
         props.handlePermissionsChange = sinon.spy();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleDropDownChange({}, 0, 'SHARED');
         expect(props.handlePermissionsChange.calledOnce).toBe(true);
         expect(props.handlePermissionsChange.calledWith({ ...props.permissions, value: 'SHARED' })).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permissions: { ...props.permissions, value: 'SHARED' } })).toBe(true);
-        stateStub.restore();
     });
 });

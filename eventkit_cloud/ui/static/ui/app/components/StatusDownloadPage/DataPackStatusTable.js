@@ -14,32 +14,13 @@ import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 export class DataPackStatusTable extends Component {
     constructor(props) {
         super(props);
-        this.setPermissions = this.setPermissions.bind(this);
         this.handleShareDialogOpen = this.handleShareDialogOpen.bind(this);
         this.handleShareDialogClose = this.handleShareDialogClose.bind(this);
         this.handleShareDialogSave = this.handleShareDialogSave.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
         this.state = {
             shareDialogOpen: false,
-            permissions: {
-                value: 'PRIVATE',
-                groups: {},
-                members: {},
-            },
         };
-    }
-
-    componentDidMount() {
-        this.setPermissions();
-    }
-
-    setPermissions() {
-        if (this.props.permissions) {
-            // Add the DataPack permissions to local state so we can modify without saving each change
-            // Because we have no "public" button, public is grouped in with shared
-            const value = this.props.permissions.value === 'PRIVATE' ? 'PRIVATE' : 'SHARED';
-            this.setState({ permissions: { ...this.props.permissions, value } });
-        }
     }
 
     handleShareDialogOpen() {
@@ -51,27 +32,24 @@ export class DataPackStatusTable extends Component {
     }
 
     handleShareDialogSave(permissions) {
-        const newPermissions = { ...permissions };
-        // update the local state to what the user set in the ShareDialog
-        this.setState({ permissions: { ...newPermissions } });
-
-        // check if all groups and members are selected
-        const groupsEqual = Object.keys(newPermissions.groups).length === this.props.groups.length;
-        const membersEqual = Object.keys(newPermissions.members).length === this.props.members.length;
-        // if all groups and members are selected we tell the api that it should be public
-        if (groupsEqual && membersEqual) {
-            newPermissions.value = 'PUBLIC';
-        }
-        this.props.handlePermissionsChange({ ...newPermissions });
+        this.props.handlePermissionsChange({ ...permissions });
         this.handleShareDialogClose();
     }
 
     handleDropDownChange(e, k, value) {
         // update the value in permissions
-        const permissions = { ...this.state.permissions, value };
-        // update api and local state
+        // if new value is private, remove all but the logged in user
+        const permissions = { ...this.props.permissions, value };
+        if (value === 'PRIVATE') {
+            permissions.groups = {};
+            if (permissions.members[this.props.user.user.username] === 'ADMIN') {
+                permissions.members = {};
+                permissions.members[this.props.user.user.username] = 'ADMIN';
+            } else {
+                permissions.members = {};
+            }
+        }
         this.props.handlePermissionsChange(permissions);
-        this.setState({ permissions });
     }
 
     render() {
@@ -143,8 +121,8 @@ export class DataPackStatusTable extends Component {
         const permissionsIcons = {
             private: <Lock style={styles.permissionsIcon} />,
             members: <SocialGroup style={styles.permissionsIcon} />,
-            privateCheck: this.state.permissions.value === 'PRIVATED' ? checkIcon : null,
-            membersCheck: this.state.permissions.value === 'SHARED' ? checkIcon : null,
+            privateCheck: this.props.permissions.value === 'PRIVATE' ? checkIcon : null,
+            membersCheck: this.props.permissions.value !== 'PRIVATE' ? checkIcon : null,
         };
 
         const expiration = moment(this.props.expiration).format('YYYY-MM-DD');
@@ -176,9 +154,12 @@ export class DataPackStatusTable extends Component {
             );
 
             let membersAndGroups = null;
-            if (this.state.permissions.value === 'SHARED') {
-                const groupCount = Object.keys(this.state.permissions.groups).length;
-                const memberCount = Object.keys(this.state.permissions.members).length;
+            if (this.props.permissions.value !== 'PRIVATE') {
+                const groupCount = Object.keys(this.props.permissions.groups).length;
+                let memberCount = Object.keys(this.props.permissions.members).length;
+                if (this.props.permissions.members[this.props.user.user.username] !== undefined) {
+                    memberCount -= 1;
+                }
 
                 let groupText = '';
                 if (groupCount === 0) {
@@ -219,7 +200,7 @@ export class DataPackStatusTable extends Component {
                 <DropDownMenu
                     key="permissionsMenu"
                     className="qa-DataPackStatusTable-DropDownMenu-published"
-                    value={this.state.permissions.value}
+                    value={this.props.permissions.value}
                     onChange={this.handleDropDownChange}
                     style={styles.dropDown}
                     labelStyle={styles.label}
@@ -241,7 +222,7 @@ export class DataPackStatusTable extends Component {
                         style={{ color: '#8b9396' }}
                     />
                     <MenuItem
-                        value="SHARED"
+                        value={this.props.permissions.value === 'PUBLIC' ? 'PUBLIC' : 'SHARED'}
                         className="qa-DataPackStatusTable-MenuItem-permissionMembers"
                         rightIcon={permissionsIcons.membersCheck}
                         primaryText={
@@ -285,7 +266,7 @@ export class DataPackStatusTable extends Component {
                         onSave={this.handleShareDialogSave}
                         groups={this.props.groups}
                         members={this.props.members}
-                        permissions={this.state.permissions}
+                        permissions={this.props.permissions}
                         groupsText="You may share view and edit rights with groups exclusively.
                          Group sharing is managed separately from member sharing"
                         membersText="You may share view and edit rights with members exclusively.

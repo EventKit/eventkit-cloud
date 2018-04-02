@@ -8,7 +8,7 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
@@ -49,7 +49,7 @@ describe('DataPackListItem component', () => {
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);
         expect(wrapper.find(NavigationCheck)).toHaveLength(1);
-        expect(wrapper.find(SocialPerson)).toHaveLength(1);
+        expect(wrapper.find(Lock)).toHaveLength(1);
     });
 
     it('should update when the run properties change', () => {
@@ -58,10 +58,10 @@ describe('DataPackListItem component', () => {
         props.run.started_at = '2017-04-11T15:52:35.637331Z';
         wrapper.setProps(props);
         expect(wrapper.find(CardTitle).text()).toContain('Added: 2017-04-11');
-        props.run.job.name ='jobby job';
+        props.run.job.name = 'jobby job';
         wrapper.setProps(props);
         expect(wrapper.find(CardTitle).text()).toContain('jobby job');
-        props.run.job.event ='new event here';
+        props.run.job.event = 'new event here';
         wrapper.setProps(props);
         expect(wrapper.find(CardTitle).text()).toContain('Event: new event here');
         props.run.user = 'not admin';
@@ -86,7 +86,7 @@ describe('DataPackListItem component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({providerDialogOpen: false})).toBe(true);
+        expect(stateSpy.calledWith({ providerDialogOpen: false })).toBe(true);
         stateSpy.restore();
     });
 

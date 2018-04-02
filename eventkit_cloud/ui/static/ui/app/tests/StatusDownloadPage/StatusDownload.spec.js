@@ -72,6 +72,11 @@ describe('StatusDownload component', () => {
             formats: [
                 'Geopackage',
             ],
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: providerTasks,
         zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
@@ -307,7 +312,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(11);
+        expect(setTimeout.mock.calls.length).toBe(10);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
@@ -325,7 +330,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(11);
+        expect(setTimeout.mock.calls.length).toBe(10);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });

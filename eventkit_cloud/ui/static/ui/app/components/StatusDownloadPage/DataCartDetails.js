@@ -146,8 +146,6 @@ export class DataCartDetails extends Component {
             this.props.groups,
         );
 
-        console.log(this.props.user);
-
         return (
             <div>
                 <div style={{ marginLeft: '-5px', marginTop: '-5px' }} className="qa-DataCartDetails-div-name">

@@ -15,56 +15,43 @@ export class DataPackShareDialog extends Component {
         this.hideShareInfo = this.hideShareInfo.bind(this);
         this.toggleView = this.toggleView.bind(this);
         this.forceUpdate = this.forceUpdate.bind(this);
-        const permissions = this.getSplitPermissions(this.props.user, this.props.permissions);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
-            // we split out permission the user should not see
-            // they will get added back in onSave
-            unusedPermissions: permissions[1],
-            permissions: permissions[0],
+            permissions: this.getAdjustedPermissions(this.props.permissions),
             showShareInfo: false,
         };
     }
 
-    getSplitPermissions(user, permissions) {
-        const { username } = user.user;
-        const unused = {
-            groups: {},
-            members: {},
-        };
-        const used = { ...permissions };
-        // if the current user is in the permission we dont want keep them in the member permissions
-        if (used.members[username] !== undefined) {
-            unused.members[username] = used.members[username];
-            used.members[username] = null;
-            delete used.members[username];
-        }
-        // if the user is not in a group we dont want to keep it in the group permissions
-        Object.keys(used.groups).forEach((key) => {
-            if (!this.props.groups.find(g => g.name === key)) {
-                unused.groups[key] = used.groups[key];
-                used.groups[key] = null;
-                delete used.groups[key];
+    getAdjustedPermissions(perms) {
+        const permissions = { ...perms };
+        // Check if the logged in user has member rights
+        // If they do, move them out of members for now, so it wont be displayed.
+        // We will add them back in before saving any updates
+        if (this.props.user) {
+            const { members } = permissions;
+            const { username } = this.props.user.user;
+            if (members[username] !== undefined) {
+                permissions.user = members[username];
+                members[username] = null;
+                delete members[username];
             }
-        });
-        console.log({ ...used });
-        console.log({ ...unused });
-        return [used, unused];
-    }
+        }
 
-    getCombinedGroups() {
-        const permissions = {
-            value: this.state.permissions.value,
-            groups: { ...this.state.unusedPermissions.groups, ...this.state.permissions.groups },
-            members: { ...this.state.unusedPermissions.members, ...this.state.permissions.members },
-        };
+        // Check if the permissions are PUBLIC
+        // If yes, we need to add members in if not already there
+        if (permissions.value === 'PUBLIC') {
+            this.props.members.forEach((member) => {
+                if (permissions.members[member.user.username] === undefined) {
+                    permissions.members[member.user.username] = 'READ';
+                }
+            });
+        }
         return permissions;
     }
 
     handleSave() {
-        const permissions = this.getCombinedGroups();
-        console.log(permissions);
+        const permissions = { ...this.state.permissions };
         if (Object.keys(permissions.members).length || Object.keys(permissions.groups).length) {
             permissions.value = 'SHARED';
             if (Object.keys(permissions.members).length === this.props.members.length) {
@@ -72,6 +59,15 @@ export class DataPackShareDialog extends Component {
             }
         } else {
             permissions.value = 'PRIVATE';
+            permissions.members = {};
+            permissions.groups = {};
+        }
+        // Check if logged in user had been moved out of members
+        // If so, add them back in before saving
+        if (permissions.user !== undefined) {
+            permissions.members[this.props.user.user.username] = permissions.user;
+            permissions.user = null;
+            delete permissions.user;
         }
         this.props.onSave(permissions);
     }
@@ -239,6 +235,7 @@ DataPackShareDialog.defaultProps = {
     groupsText: '',
     membersText: '',
     canUpdateAdmin: false,
+    user: null,
 };
 
 DataPackShareDialog.propTypes = {
@@ -248,7 +245,7 @@ DataPackShareDialog.propTypes = {
     user: PropTypes.shape({
         user: PropTypes.object,
         groups: PropTypes.arrayOf(PropTypes.number),
-    }).isRequired,
+    }),
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,

@@ -150,20 +150,20 @@ describe('GroupBody component', () => {
 
     it('handleUncheckAll should only uncheck from searched groups', () => {
         const props = getProps();
-        props.selectedGroups = { 1: 'READ', 2: 'READ' };
+        props.selectedGroups = { group_one: 'READ', group_two: 'READ' };
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setState({ search: 'one' });
         wrapper.instance().handleUncheckAll();
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
-        expect(props.onGroupsUpdate.calledWith({ 2: 'READ' })).toBe(true);
+        expect(props.onGroupsUpdate.calledWith({ group_two: 'READ' })).toBe(true);
     });
 
     it('handleCheckAll should call onGroupsUpdate with all groups selected', () => {
         const props = getProps();
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = { 1: 'READ', 2: 'READ' };
+        const expected = { group_one: 'READ', group_two: 'READ' };
         wrapper.instance().handleCheckAll();
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
         expect(props.onGroupsUpdate.calledWith(expected)).toBe(true);
@@ -174,7 +174,7 @@ describe('GroupBody component', () => {
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setState({ search: 'one' });
-        const expected = { 1: 'READ' };
+        const expected = { group_one: 'READ' };
         wrapper.instance().handleCheckAll();
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
         expect(props.onGroupsUpdate.calledWith(expected)).toBe(true);
@@ -182,10 +182,10 @@ describe('GroupBody component', () => {
 
     it('handleCheck should call onGroupsUpdate with the target group removed', () => {
         const props = getProps();
-        props.selectedGroups = { 1: 'READ', 2: 'READ' };
+        props.selectedGroups = { group_one: 'READ', group_two: 'READ' };
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = { 2: 'READ' };
+        const expected = { group_two: 'READ' };
         wrapper.instance().handleCheck(props.groups[0]);
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
         expect(props.onGroupsUpdate.calledWith(expected)).toBe(true);
@@ -196,7 +196,7 @@ describe('GroupBody component', () => {
         props.selectedGroups = {};
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = { 1: 'READ' };
+        const expected = { group_one: 'READ' };
         wrapper.instance().handleCheck(props.groups[0]);
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
         expect(props.onGroupsUpdate.calledWith(expected)).toBe(true);
@@ -204,10 +204,10 @@ describe('GroupBody component', () => {
 
     it('handleAdminCheck should demote ADMIN to READ and call onGroupsUpdate', () => {
         const props = getProps();
-        props.selectedGroups = { 1: 'ADMIN', 2: 'ADMIN' };
+        props.selectedGroups = { group_one: 'ADMIN', group_two: 'ADMIN' };
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = { 1: 'READ', 2: 'ADMIN' };
+        const expected = { group_one: 'READ', group_two: 'ADMIN' };
         wrapper.instance().handleAdminCheck(props.groups[0]);
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
         expect(props.onGroupsUpdate.calledWith(expected)).toBe(true);
@@ -215,10 +215,10 @@ describe('GroupBody component', () => {
 
     it('handleAdminCheck should make group an ADMIN and call onGroupsUpdate', () => {
         const props = getProps();
-        props.selectedGroups = { 1: 'READ', 2: 'READ' };
+        props.selectedGroups = { group_one: 'READ', group_two: 'READ' };
         props.onGroupsUpdate = sinon.spy();
         const wrapper = getWrapper(props);
-        const expected = { 1: 'ADMIN', 2: 'READ' };
+        const expected = { group_one: 'ADMIN', group_two: 'READ' };
         wrapper.instance().handleAdminCheck(props.groups[0]);
         expect(props.onGroupsUpdate.calledOnce).toBe(true);
         expect(props.onGroupsUpdate.calledWith(expected)).toBe(true);
@@ -321,9 +321,9 @@ describe('GroupBody component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const groups = [
-            { 1: 'READ', name: 'one' },
-            { 2: 'READ', name: 'one' },
-            { 3: 'READ', name: 'one' },
+            { group_one: 'READ', name: 'one' },
+            { group_two: 'READ', name: 'one' },
+            { group_three: 'READ', name: 'one' },
         ];
         const expected = [...groups];
         const ret = wrapper.instance().sortByGroup(groups, false);
@@ -338,7 +338,7 @@ describe('GroupBody component', () => {
         const wrapper = getWrapper(props);
         const groups = [...props.groups];
         const expected = [...props.groups];
-        const selected = { 1: 'READ' };
+        const selected = { group_one: 'READ' };
         const ret = wrapper.instance().sortByShared(groups, selected, true);
         expect(ret).toEqual(expected);
     });
@@ -348,7 +348,7 @@ describe('GroupBody component', () => {
         const wrapper = getWrapper(props);
         const groups = [...props.groups];
         const expected = [...props.groups].reverse();
-        const selected = { 1: 'READ' };
+        const selected = { group_one: 'READ' };
         const ret = wrapper.instance().sortByShared(groups, selected, false);
         expect(ret).toEqual(expected);
     });
@@ -358,7 +358,7 @@ describe('GroupBody component', () => {
         const wrapper = getWrapper(props);
         const groups = [...props.groups];
         const expected = [...props.groups];
-        const selected = { 1: 'READ', 2: 'READ' };
+        const selected = { group_one: 'READ', group_two: 'READ' };
         const ret = wrapper.instance().sortByShared(groups, selected, false);
         expect(ret).toEqual(expected);
     });
@@ -368,7 +368,7 @@ describe('GroupBody component', () => {
         const wrapper = getWrapper(props);
         const groups = [...props.groups];
         const expected = [...props.groups];
-        const selected = { 1: 'ADMIN', 2: 'READ' };
+        const selected = { group_one: 'ADMIN', group_two: 'READ' };
         const ret = wrapper.instance().sortByAdmin(groups, selected, true);
         expect(ret).toEqual(expected);
     });
@@ -378,7 +378,7 @@ describe('GroupBody component', () => {
         const wrapper = getWrapper(props);
         const groups = [...props.groups];
         const expected = [...props.groups].reverse();
-        const selected = { 1: 'ADMIN', 2: 'READ' };
+        const selected = { group_one: 'ADMIN', group_two: 'READ' };
         const ret = wrapper.instance().sortByAdmin(groups, selected, false);
         expect(ret).toEqual(expected);
     });
@@ -388,7 +388,7 @@ describe('GroupBody component', () => {
         const wrapper = getWrapper(props);
         const groups = [...props.groups];
         const expected = [...props.groups];
-        const selected = { 1: 'ADMIN', 2: 'ADMIN' };
+        const selected = { group_one: 'ADMIN', group_two: 'ADMIN' };
         const ret = wrapper.instance().sortByAdmin(groups, selected, false);
         expect(ret).toEqual(expected);
     });

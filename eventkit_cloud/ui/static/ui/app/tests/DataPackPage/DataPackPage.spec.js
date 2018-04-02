@@ -177,7 +177,17 @@ describe('DataPackPage component', () => {
         const props = getProps();
         props.runsList.runs = runs;
         const wrapper = getWrapper(props);
-        wrapper.setState({ shareOpen: true, targetJob: '456' });
+        const run = {
+            job: {
+                uid: '12345',
+                permissions: {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
+                },
+            },
+        };
+        wrapper.setState({ shareOpen: true, targetRun: run });
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
@@ -557,6 +567,7 @@ describe('DataPackPage component', () => {
             loadMoreDisabled: !props.runsList.nextPage,
             providers,
             openShare: wrapper.instance().handleShareOpen,
+            groups: props.groups,
         };
 
         expect(wrapper.instance().getView('list')).toEqual((
@@ -591,9 +602,10 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
         const wrapper = getWrapper(props);
-        wrapper.instance().handleShareOpen('12345');
+        const run = { job: { uid: '12345' } };
+        wrapper.instance().handleShareOpen(run);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: true, targetJob: '12345' })).toBe(true);
+        expect(stateStub.calledWith({ shareOpen: true, targetRun: run })).toBe(true);
         stateStub.restore();
     });
 
@@ -603,7 +615,7 @@ describe('DataPackPage component', () => {
         const wrapper = getWrapper(props);
         wrapper.instance().handleShareClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: false, targetJob: '' })).toBe(true);
+        expect(stateStub.calledWith({ shareOpen: false, targetRun: null })).toBe(true);
         stateStub.restore();
     });
 
@@ -611,14 +623,14 @@ describe('DataPackPage component', () => {
         const props = getProps();
         props.updateDataCartPermissions = sinon.spy();
         const wrapper = getWrapper(props);
-        const target = '1234';
+        const target = { job: { uid: '123' } };
         const permissions = { value: 'PRIVATE', groups: {}, members: {} };
         const closeStub = sinon.stub(wrapper.instance(), 'handleShareClose');
-        wrapper.setState({ targetJob: target });
+        wrapper.setState({ targetRun: target });
         wrapper.instance().handleShareSave(permissions);
         expect(closeStub.calledOnce).toBe(true);
         expect(props.updateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.updateDataCartPermissions.calledWith(target, { permissions })).toBe(true);
+        expect(props.updateDataCartPermissions.calledWith(target.job.uid, { permissions })).toBe(true);
         closeStub.restore();
     });
 });

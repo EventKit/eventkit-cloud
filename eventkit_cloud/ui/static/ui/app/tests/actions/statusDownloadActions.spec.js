@@ -18,6 +18,7 @@ describe('statusDownload actions', () => {
             duration: '0:00:04.199825',
             user: 'admin',
             status: 'COMPLETED',
+            visibility: 'PRIVATE',
             job: {
                 uid: '123',
                 name: 'Test1',
@@ -26,6 +27,10 @@ describe('statusDownload actions', () => {
                 url: 'http://cloud.eventkit.test/api/jobs/123',
                 extent: {},
                 selection: '',
+                permissions: {
+                    groups: {},
+                    users: {},
+                },
             },
             provider_tasks: [],
             zipfile_url: 'http://cloud.eventkit.test/downloads/123/test.zip',

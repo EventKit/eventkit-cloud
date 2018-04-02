@@ -191,6 +191,11 @@ const run = {
         formats: [
             'Geopackage',
         ],
+        permissions: {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
+        },
     },
     provider_tasks: [
         {

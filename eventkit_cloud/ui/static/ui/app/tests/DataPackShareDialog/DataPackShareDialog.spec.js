@@ -69,6 +69,10 @@ describe('DataPackPage component', () => {
                 groups: {},
                 members: {},
             },
+            user: {
+                user: { username: 'admin' },
+                groups: [],
+            },
         }
     );
 
@@ -145,7 +149,8 @@ describe('DataPackPage component', () => {
 
     it('should display "ALL" as the selected count on the header buttons', () => {
         const props = getProps();
-        props.permissions.groups = { 1: '', 2: '', 3: '' };
+        props.user.groups = [1, 2, 3];
+        props.permissions.groups = { group_one: '', group_two: '', group_three: '' };
         props.permissions.members = { user_one: '', user_two: '', user_three: '' };
         const wrapper = getWrapper(props);
         const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {

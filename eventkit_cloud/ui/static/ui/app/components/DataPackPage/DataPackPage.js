@@ -508,9 +508,7 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
-        groups: state.groups.groups.filter(group => (
-            group.administrators.includes(state.user.data.user.username)
-        )),
+        groups: state.groups.groups,
         users: state.users.users,
         updatePermissions: state.updatePermission,
     };

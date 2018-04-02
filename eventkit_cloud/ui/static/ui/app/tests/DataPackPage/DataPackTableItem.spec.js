@@ -7,7 +7,7 @@ import { TableRow, TableRowColumn } from 'material-ui/Table';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import AlertError from 'material-ui/svg-icons/alert/error';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
@@ -22,6 +22,7 @@ describe('DataPackTableItem component', () => {
             user: { data: { user: { username: 'admin' } } },
             onRunDelete: () => {},
             providers,
+            adminPermissions: true,
         };
     };
 
@@ -42,7 +43,7 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(TableRowColumn).at(1).text()).toEqual(run.job.event);
         expect(wrapper.find(TableRowColumn).at(2).text()).toEqual('2017-03-10');
         expect(wrapper.find(TableRowColumn).at(3).find(NavigationCheck)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(4).find(SocialPerson)).toHaveLength(1);
+        expect(wrapper.find(TableRowColumn).at(4).find(Lock)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn).at(5).text()).toEqual('My DataPack');
     });
 
@@ -80,7 +81,7 @@ describe('DataPackTableItem component', () => {
         let icon = wrapper.instance().getPermissionsIcon('SHARED');
         expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{ color: 'bcdfbb' }} />);
         icon = wrapper.instance().getPermissionsIcon('PRIVATE');
-        expect(icon).toEqual(<SocialPerson className="qa-DataPackTableItem-SocialPerson" style={{ color: 'grey' }} />);
+        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-Lock" style={{ color: 'grey' }} />);
     });
 
     it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {

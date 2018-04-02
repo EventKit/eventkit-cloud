@@ -8,7 +8,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react-dom/test-utils';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
@@ -124,7 +124,7 @@ describe('DataPackGridItem component', () => {
     it('should display information specific to a unpublished & owned run', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(SocialPerson)).toHaveLength(1);
+        expect(wrapper.find(Lock)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
     });
 
