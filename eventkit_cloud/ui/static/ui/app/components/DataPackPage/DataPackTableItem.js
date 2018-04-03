@@ -6,8 +6,8 @@ import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import AlertError from 'material-ui/svg-icons/alert/error';
-import SocialPerson from 'material-ui/svg-icons/social/person';
-import SocialGroup from 'material-ui/svg-icons/social/group';
+import Lock from 'material-ui/svg-icons/action/lock';
+import SocialPublic from 'material-ui/svg-icons/social/public';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
@@ -35,8 +35,8 @@ export class DataPackTableItem extends Component {
     }
 
     getPermissionsIcon(published) {
-        return published ? <SocialGroup className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'bcdfbb'}}/>
-        : <SocialPerson className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>;
+        return published ? <SocialPublic className={'qa-DataPackTableItem-SocialGroup'} style={{color: 'grey'}}/>
+        : <Lock className={'qa-DataPackTableItem-SocialPerson'} style={{color: 'grey'}}/>;
     }
 
     getStatusIcon(status) {
