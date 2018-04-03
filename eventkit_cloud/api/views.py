@@ -638,7 +638,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        logger.error(dir(ExportRun))
         prefetched_queryset = ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))\
             .select_related('job', 'user')\
             .prefetch_related(Prefetch('provider_tasks',
@@ -755,10 +754,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request, 'no_license': True})
+            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'no_license': True})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = self.get_serializer(queryset, many=True, context={'request': request, 'no_license': True})
+            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'no_license': True})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
