@@ -187,6 +187,9 @@ class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     last_check_time = models.DateTimeField(null=True)
     related_provider = models.OneToOneField(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
 
+    class Meta:
+        verbose_name_plural = 'Data Provider Statuses'
+
 
 class Region(UIDMixin, TimeStampedModelMixin):
     """
