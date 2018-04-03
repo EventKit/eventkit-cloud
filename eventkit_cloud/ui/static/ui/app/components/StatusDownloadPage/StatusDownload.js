@@ -324,8 +324,8 @@ function mapDispatchToProps(dispatch) {
         updateExpirationDate: (uid, expiration) => {
             dispatch(updateExpiration(uid, expiration));
         },
-        updateDataCartPermissions: (uid, options) => {
-            dispatch(updateDataCartPermissions(uid, options));
+        updateDataCartPermissions: (uid, permissions) => {
+            dispatch(updateDataCartPermissions(uid, permissions));
         },
         clearReRunInfo: () => {
             dispatch(clearReRunInfo());

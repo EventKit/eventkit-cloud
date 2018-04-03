@@ -130,18 +130,16 @@ export function updateExpiration(uid, expiration) {
     };
 }
 
-export function updateDataCartPermissions(uid, options = {}) {
+export function updateDataCartPermissions(uid, permissions) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_PERMISSION });
         const csrftoken = cookie.load('csrftoken');
         const data = {};
-        if (options.permissions) {
-            data.permissions = {
-                groups: options.permissions.groups,
-                users: options.permissions.members,
-            };
-            data.visibility = options.permissions.value;
-        }
+        data.permissions = {
+            groups: permissions.groups,
+            users: permissions.members,
+        };
+        data.visibility = permissions.value;
 
         return axios({
             url: `/api/jobs/${uid}`,

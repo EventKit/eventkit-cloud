@@ -104,7 +104,7 @@ export class DataCartDetails extends Component {
     }
 
     handlePermissionsChange(permissions) {
-        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, { permissions });
+        this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, permissions);
     }
 
     handleExpirationChange(e, date) {

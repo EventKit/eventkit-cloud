@@ -163,6 +163,54 @@ describe('DataPackPage component', () => {
         expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').text()).toEqual('MEMBERS (ALL)');
     });
 
+    it('getAdjustedPermissions should move the user out of the members list', () => {
+        const props = getProps();
+        const user = {
+            user: {
+                username: 'user_one',
+            },
+        };
+        props.user = user;
+        const permissions = {
+            value: 'SHARED',
+            groups: {},
+            members: {
+                user_one: 'ADMIN',
+                user_two: 'READ',
+            },
+        };
+        const wrapper = getWrapper(props);
+        const expected = {
+            value: 'SHARED',
+            groups: {},
+            members: { user_two: 'READ' },
+            user: 'ADMIN',
+        };
+        const ret = wrapper.instance().getAdjustedPermissions(permissions);
+        expect(ret).toEqual(expected);
+    });
+
+    it('getAdjustedPermissions should add all members to a public permission set', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const permissions = {
+            value: 'PUBLIC',
+            groups: {},
+            members: { user_one: 'ADMIN' },
+        };
+        const expected = {
+            value: 'PUBLIC',
+            groups: {},
+            members: {
+                user_one: 'ADMIN',
+                user_two: 'READ',
+                user_three: 'READ',
+            },
+        };
+        const ret = wrapper.instance().getAdjustedPermissions(permissions);
+        expect(ret).toEqual(expected);
+    });
+
     it('handleSave should call props.onSave', () => {
         const props = getProps();
         props.onSave = sinon.spy();
@@ -170,6 +218,31 @@ describe('DataPackPage component', () => {
         wrapper.instance().handleSave();
         expect(props.onSave.calledOnce).toBe(true);
         expect(props.onSave.calledWith(props.permissions)).toBe(true);
+    });
+
+    it('handleSave should set value to public and add admin user back in', () => {
+        const props = getProps();
+        props.onSave = sinon.spy();
+        const wrapper = getWrapper(props);
+        const permissions = {
+            value: 'SHARED',
+            groups: {},
+            members: {
+                user_one: 'READ',
+                user_two: 'READ',
+                user_three: 'READ',
+            },
+            user: 'ADMIN',
+        };
+        wrapper.setState({ permissions });
+        const expected = {
+            value: 'PUBLIC',
+            groups: permissions.groups,
+            members: { ...permissions.members, admin: 'ADMIN' },
+        };
+        wrapper.instance().handleSave();
+        expect(props.onSave.calledOnce).toBe(true);
+        expect(props.onSave.calledWith(expected)).toBe(true);
     });
 
     it('handleGroupUpdate should setState', () => {
@@ -200,6 +273,21 @@ describe('DataPackPage component', () => {
         stateStub.restore();
     });
 
+    it('handleMemberUpdate should call showPublicWarning', () => {
+        const props = getProps();
+        props.warnPublic = true;
+        const wrapper = getWrapper(props);
+        const showStub = sinon.stub(wrapper.instance(), 'showPublicWarning');
+        const members = {
+            user_one: 'READ',
+            user_two: 'READ',
+            user_three: 'READ',
+        };
+        wrapper.instance().handleMemberUpdate(members);
+        expect(showStub.calledOnce).toBe(true);
+        showStub.restore();
+    });
+
     it('showShareInfo should set show to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -217,6 +305,26 @@ describe('DataPackPage component', () => {
         wrapper.instance().hideShareInfo();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showShareInfo: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('showPublicWarning should set show to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().showPublicWarning();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showPublicWarning: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('hidePublicWarning should set show to false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().hidePublicWarning();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showPublicWarning: false })).toBe(true);
         stateStub.restore();
     });
 
@@ -238,6 +346,17 @@ describe('DataPackPage component', () => {
         wrapper.instance().toggleView();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ view: 'members' })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('toggleView should set opposite view', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({ view: 'members' });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().toggleView();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ view: 'groups' })).toBe(true);
         stateStub.restore();
     });
 });

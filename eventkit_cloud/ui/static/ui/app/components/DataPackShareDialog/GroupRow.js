@@ -37,6 +37,22 @@ export class GroupRow extends Component {
         if (key === 13) this.handleAdminCheck();
     }
 
+    getGroupMembers(group, members) {
+        const groupMembers = [];
+        group.members.forEach((groupMember) => {
+            const member = members.find(propmember => propmember.user.username === groupMember);
+            if (member) groupMembers.push(member);
+        });
+        groupMembers.sort((a, b) => {
+            const aAdmin = group.administrators.includes(a.user.username);
+            const bAdmin = group.administrators.includes(b.user.username);
+            if (!aAdmin && bAdmin) return 1;
+            if (aAdmin && !bAdmin) return -1;
+            return 0;
+        });
+        return groupMembers;
+    }
+
     handleAdminCheck() {
         if (this.props.showAdmin && this.props.selected) {
             this.props.handleAdminCheck(this.props.group);
@@ -127,19 +143,7 @@ export class GroupRow extends Component {
             );
         }
 
-        const groupMembers = [];
-        this.props.group.members.forEach((groupMember) => {
-            const member = this.props.members.find(propmember => propmember.user.username === groupMember);
-            if (member) groupMembers.push(member);
-        });
-        groupMembers.sort((a, b) => {
-            const aAdmin = this.props.group.administrators.includes(a.user.username);
-            const bAdmin = this.props.group.administrators.includes(b.user.username);
-            if (!aAdmin && bAdmin) return 1;
-            if (aAdmin && !bAdmin) return -1;
-            return 0;
-        });
-
+        const groupMembers = this.getGroupMembers(this.props.group, this.props.members);
         const firstFour = groupMembers.splice(0, 4);
 
         return (

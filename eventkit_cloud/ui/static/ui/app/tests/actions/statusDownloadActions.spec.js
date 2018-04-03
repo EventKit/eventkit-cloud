@@ -225,10 +225,15 @@ describe('statusDownload actions', () => {
 
         const store = mockStore({ updatePermission: {} });
 
-        return store.dispatch(actions.updateDataCartPermissions('123456789', 'true'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        return store.dispatch(actions.updateDataCartPermissions('123456789', {
+            permissions: {
+                value: 'SHARED',
+                groups: { group_one: 'READ' },
+                members: { admin: 'ADMIN' },
+            },
+        })).then(() => {
+            expect(store.getActions()).toEqual(expectedActions);
+        });
     });
 
     it('updateDataCartPermissions should dispatch an error', () => {
@@ -242,9 +247,14 @@ describe('statusDownload actions', () => {
 
         const store = mockStore({ updatePermission: {} });
 
-        return store.dispatch(actions.updateDataCartPermissions('123', 'true'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        return store.dispatch(actions.updateDataCartPermissions('123', {
+            permissions: {
+                value: 'SHARED',
+                groups: { group_one: 'READ' },
+                members: { admin: 'ADMIN' },
+            },
+        })).then(() => {
+            expect(store.getActions()).toEqual(expectedActions);
+        });
     });
 });

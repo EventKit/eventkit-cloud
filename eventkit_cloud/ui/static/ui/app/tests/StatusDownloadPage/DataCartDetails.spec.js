@@ -161,7 +161,7 @@ describe('DataCartDetails component', () => {
         };
         wrapper.instance().handlePermissionsChange(permissions);
         expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, { permissions })).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, permissions)).toBe(true);
     });
 
     it('handleExpirationChange should call onUpdateExpiration', () => {

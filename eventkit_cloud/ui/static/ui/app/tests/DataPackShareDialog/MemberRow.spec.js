@@ -47,7 +47,7 @@ describe('GroupRow component', () => {
         expect(wrapper.find(CheckBoxOutline)).toHaveLength(1);
     });
 
-    it('onAdminMouseOver should call call handleAdminMouseOver', () => {
+    it('onAdminMouseOver should call handleAdminMouseOver', () => {
         const props = getProps();
         props.selected = true;
         props.handleAdminMouseOver = sinon.spy();
@@ -57,6 +57,15 @@ describe('GroupRow component', () => {
         wrapper.instance().onAdminMouseOver();
         expect(props.handleAdminMouseOver.calledOnce).toBe(true);
         expect(props.handleAdminMouseOver.calledWith(tooltip, props.admin)).toBe(true);
+    });
+
+    it('onAdminMouseOver should not call handleAdminMouseOver', () => {
+        const props = getProps();
+        props.selected = false;
+        props.handleAdminMouseOver = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().onAdminMouseOver();
+        expect(props.handleAdminMouseOver.called).toBe(false);
     });
 
     it('onAdminMouseOut should call handleAdminMouseOut', () => {
@@ -71,9 +80,22 @@ describe('GroupRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const checkStub = sinon.stub(wrapper.instance(), 'handleAdminCheck');
-        const e = { which: 13, keyCode: 13 };
+        const e = { which: 13 };
         wrapper.instance().onKeyDown(e);
         expect(checkStub.calledOnce).toBe(true);
+        const e2 = { keyCode: 13 };
+        wrapper.instance().onKeyDown(e2);
+        expect(checkStub.calledTwice).toBe(true);
+        checkStub.restore();
+    });
+
+    it('onKeyDown should not call handleAdminCheck', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const checkStub = sinon.stub(wrapper.instance(), 'handleAdminCheck');
+        const e = { which: 12, keyCode: 12 };
+        wrapper.instance().onKeyDown(e);
+        expect(checkStub.called).toBe(false);
         checkStub.restore();
     });
 
@@ -86,5 +108,15 @@ describe('GroupRow component', () => {
         wrapper.instance().handleAdminCheck();
         expect(props.handleAdminCheck.calledOnce).toBe(true);
         expect(props.handleAdminCheck.calledWith(props.member)).toBe(true);
+    });
+
+    it('handleAdminCheck should not call props.handleAdminCheck', () => {
+        const props = getProps();
+        props.showAdmin = true;
+        props.selected = false;
+        props.handleAdminCheck = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleAdminCheck();
+        expect(props.handleAdminCheck.called).toBe(false);
     });
 });

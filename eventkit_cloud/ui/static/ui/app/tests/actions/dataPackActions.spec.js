@@ -51,6 +51,28 @@ describe('DataPackList actions', () => {
 
         const store = mockStore({ runsList: {} });
 
+        return store.dispatch(actions.getRuns({}, { fake: 'data' }))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                axios.CancelToken.source = original;
+            });
+    });
+
+    it('getRuns should return handle empty header', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {});
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+
+        const expectedActions = [
+            { type: types.FETCHING_RUNS, cancelSource: testSource },
+            { type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: false, range: '' }
+        ];
+
+        const store = mockStore({ runsList: {} });
+
         return store.dispatch(actions.getRuns())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);

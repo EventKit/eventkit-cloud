@@ -630,7 +630,7 @@ describe('DataPackPage component', () => {
         wrapper.instance().handleShareSave(permissions);
         expect(closeStub.calledOnce).toBe(true);
         expect(props.updateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.updateDataCartPermissions.calledWith(target.job.uid, { permissions })).toBe(true);
+        expect(props.updateDataCartPermissions.calledWith(target.job.uid, permissions)).toBe(true);
         closeStub.restore();
     });
 });
