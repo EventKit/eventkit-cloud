@@ -113,6 +113,9 @@ class DataProviderStatusInline(admin.TabularInline):
     model = DataProviderStatus
     readonly_fields = ('status', 'message', 'last_check_time')
 
+    def has_add_permission(self, request, obj=None):
+        return False
+
     def has_delete_permission(self, request, obj=None):
         return False
 
