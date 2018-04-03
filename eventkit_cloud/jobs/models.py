@@ -189,6 +189,7 @@ class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
 
     class Meta:
         verbose_name_plural = 'Data Provider Statuses'
+        ordering = ['-last_check_time']
 
 
 class Region(UIDMixin, TimeStampedModelMixin):
