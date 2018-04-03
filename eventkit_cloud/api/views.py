@@ -564,18 +564,25 @@ class JobViewSet(viewsets.ModelViewSet):
         groups = Group.objects.filter(name__in=groupnames)
         payload = {}
         master_job_list = []
+        initialized = False
         for group in groups:
             perms,job_ids = JobPermission.groupjobs(group, JobPermission.Permissions.READ.value)
-            for job in job_ids:
-                if not job in master_job_list:
-                    master_job_list.append(job)
+            temp_list = master_job_list
+            if not initialized:
+                master_job_list = job_ids
+            else:
+                master_job_list =  list(set(temp_list).intersection(job_ids))
+            initialized = True
 
         users = User.objects.filter(username__in=usernames)
         for user in users:
             perms,job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value)
-            for job in job_ids:
-                if not job in master_job_list:
-                    master_job_list.append(job)
+            temp_list = master_job_list
+            if not initialized:
+                master_job_list = job_ids
+            else:
+                master_job_list =  list(set(temp_list).intersection(job_ids))
+            initialized = True
 
         jobs = Job.objects.filter(id__in=master_job_list)
         serializer = ListJobSerializer(jobs, many=True, context={'request': request})
