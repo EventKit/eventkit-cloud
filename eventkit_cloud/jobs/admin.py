@@ -111,6 +111,7 @@ class DataProviderStatusInline(admin.TabularInline):
     Status information for Data Providers
     """
     model = DataProviderStatus
+    readonly_fields = ('status', 'message', 'last_check_time')
 
     def has_delete_permission(self, request, obj=None):
         return False
