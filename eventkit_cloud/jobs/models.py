@@ -185,7 +185,7 @@ class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     status = models.CharField(max_length=100, blank=True)
     message = models.CharField(max_length=100, blank=True)
     last_check_time = models.DateTimeField(null=True)
-    related_provider = models.OneToOneField(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
+    related_provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
 
     class Meta:
         verbose_name_plural = 'Data Provider Statuses'
