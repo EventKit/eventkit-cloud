@@ -551,44 +551,21 @@ class JobViewSet(viewsets.ModelViewSet):
              Return all jobs that are readable by every
              groups and every user in the payload
 
-             {
+             {  "permissions" : {
                 groups : [ 'group_one', 'group_two', ...]
                 users : ['user_one', 'user_two' ... ]
+                 }
              }
 
         """
 
-        groupnames = request.data["groups"]
-        usernames  = request.data["users"]
+        if not "permissions" in request.data:
+            return Response([{'detail': "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST)
 
-        groups = Group.objects.filter(name__in=groupnames)
-        payload = {}
-        master_job_list = []
-        initialized = False
-        for group in groups:
-            perms,job_ids = JobPermission.groupjobs(group, JobPermission.Permissions.READ.value)
-            temp_list = master_job_list
-            if not initialized:
-                master_job_list = job_ids
-            else:
-                master_job_list =  list(set(temp_list).intersection(job_ids))
-            initialized = True
-
-        users = User.objects.filter(username__in=usernames)
-        for user in users:
-            perms,job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value)
-            temp_list = master_job_list
-            if not initialized:
-                master_job_list = job_ids
-            else:
-                master_job_list =  list(set(temp_list).intersection(job_ids))
-            initialized = True
-
-        jobs = Job.objects.filter(id__in=master_job_list)
+        job_list = get_job_ids_via_permissions(request.data["permissions"])
+        jobs =  Job.objects.filter(id__in=job_list)
         serializer = ListJobSerializer(jobs, many=True, context={'request': request})
         return Response(serializer.data)
-#        return Response(payload, status=status.HTTP_200_OK)
-
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -832,6 +809,11 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :return: the serialized runs
         """
         queryset = self.filter_queryset(self.get_queryset())
+
+        if "permissions" in request.data:
+            job_ids = get_job_ids_via_permissions(request.data["permissions"])
+            queryset = ExportRun.objects.filter(
+            Q(job_id__in=job_ids) & Q(deleted=False))
 
         search_geojson = self.request.data.get('geojson', None)
         if search_geojson is not None:
@@ -1589,6 +1571,40 @@ def geojson_to_geos(geojson_geom, srid=None):
         )
     return geom
 
+
+def get_job_ids_via_permissions(permissions):
+
+    groupnames = []
+    if "groups" in permissions:
+        groupnames = permissions["groups"]
+    usernames = []
+    if "users" in permissions:
+        usernames = permissions["users"]
+
+    groups = Group.objects.filter(name__in=groupnames)
+    payload = {}
+    master_job_list = []
+    initialized = False
+    for group in groups:
+        perms, job_ids = JobPermission.groupjobs(group, JobPermission.Permissions.READ.value)
+        temp_list = master_job_list
+        if not initialized:
+            master_job_list = job_ids
+        else:
+            master_job_list = list(set(temp_list).intersection(job_ids))
+        initialized = True
+
+    users = User.objects.filter(username__in=usernames)
+    for user in users:
+        perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value)
+        temp_list = master_job_list
+        if not initialized:
+            master_job_list = job_ids
+        else:
+            master_job_list = list(set(temp_list).intersection(job_ids))
+        initialized = True
+
+    return master_job_list
 
 class SwaggerSchemaView(views.APIView):
     _ignore_model_permissions = True
