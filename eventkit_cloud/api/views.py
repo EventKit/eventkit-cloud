@@ -545,6 +545,50 @@ class JobViewSet(viewsets.ModelViewSet):
         response['success'] = True
         return Response(response, status=status.HTTP_200_OK)
 
+    @list_route(methods=['post', ])
+    def filter(self, request, *args, **kwargs):
+        """
+             Return all jobs that are readable by every
+             groups and every user in the payload
+
+             {
+                groups : [ 'group_one', 'group_two', ...]
+                users : ['user_one', 'user_two' ... ]
+             }
+
+        """
+
+        groupnames = request.data["groups"]
+        usernames  = request.data["users"]
+
+        groups = Group.objects.filter(name__in=groupnames)
+        payload = {}
+        master_job_list = []
+        initialized = False
+        for group in groups:
+            perms,job_ids = JobPermission.groupjobs(group, JobPermission.Permissions.READ.value)
+            temp_list = master_job_list
+            if not initialized:
+                master_job_list = job_ids
+            else:
+                master_job_list =  list(set(temp_list).intersection(job_ids))
+            initialized = True
+
+        users = User.objects.filter(username__in=usernames)
+        for user in users:
+            perms,job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value)
+            temp_list = master_job_list
+            if not initialized:
+                master_job_list = job_ids
+            else:
+                master_job_list =  list(set(temp_list).intersection(job_ids))
+            initialized = True
+
+        jobs = Job.objects.filter(id__in=master_job_list)
+        serializer = ListJobSerializer(jobs, many=True, context={'request': request})
+        return Response(serializer.data)
+#        return Response(payload, status=status.HTTP_200_OK)
+
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
