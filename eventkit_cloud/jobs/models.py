@@ -188,7 +188,7 @@ class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     related_provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
 
     class Meta:
-        verbose_name_plural = 'Data Provider Statuses'
+        verbose_name_plural = 'data provider statuses'
         ordering = ['-last_check_time']
 
 

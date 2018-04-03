@@ -106,20 +106,6 @@ class ExportConfigAdmin(admin.ModelAdmin):
     list_display = ['uid', 'name', 'user', 'config_type', 'published', 'created_at']
 
 
-class DataProviderStatusInline(admin.TabularInline):
-    """
-    Status information for Data Providers
-    """
-    model = DataProviderStatus
-    readonly_fields = ('status', 'message', 'last_check_time')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
-
-
 class DataProviderForm(forms.ModelForm):
     """
     Admin form for editing export providers in the admin interface.
@@ -177,12 +163,25 @@ class DataProviderAdmin(admin.ModelAdmin):
     """
     form = DataProviderForm
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
-    inlines = [
-        DataProviderStatusInline,
-    ]
+
+
+class DataProviderStatusAdmin(admin.ModelAdmin):
+    """
+    Status information for Data Providers
+    """
+    model = DataProviderStatus
+    readonly_fields = ('status', 'message', 'last_check_time', 'related_provider')
+    list_display = ('status', 'message', 'last_check_time', 'related_provider')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
+admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
