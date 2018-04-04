@@ -1596,7 +1596,7 @@ def get_job_ids_via_permissions(permissions):
 
     users = User.objects.filter(username__in=usernames)
     for user in users:
-        perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value)
+        perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value,include_groups=False)
         temp_list = master_job_list
         if not initialized:
             master_job_list = job_ids

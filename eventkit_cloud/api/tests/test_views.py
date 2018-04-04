@@ -633,6 +633,7 @@ class TestExportRunViewSet(APITestCase):
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
+        self.job.visibility="PUBLIC"
         self.job.save()
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)

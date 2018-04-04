@@ -133,7 +133,7 @@ class JobPermission(TimeStampedModelMixin):
         return permissions
 
     @staticmethod
-    def userjobs(user,level):
+    def userjobs(user,level, include_groups=True):
         perms = []
         job_ids = []
 
@@ -144,7 +144,11 @@ class JobPermission(TimeStampedModelMixin):
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
+        if not include_groups:
+            return (perms,job_ids)
+
         # Now do the same for groups that the user belongs to
+
 
         group_ids = []
         for gp in GroupPermission.objects.filter(user=user):
