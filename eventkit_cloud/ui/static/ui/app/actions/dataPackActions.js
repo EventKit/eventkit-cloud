@@ -2,7 +2,7 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './actionTypes';
 
-export function getRuns(params, geojson) {
+export function getRuns(params, options = {}) {
     return (dispatch, getState) => {
         const { runsList } = getState();
         if (runsList.fetching && runsList.cancelSource) {
@@ -18,7 +18,14 @@ export function getRuns(params, geojson) {
 
         const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
-        const data = geojson ? { geojson: JSON.stringify(geojson) } : { };
+        const data = {};
+        if (options.geojson) {
+            data.geojson = JSON.stringify(options.geojson);
+        }
+        if (options.permissions) {
+            data.groups = options.permissions.groups;
+            data.users = options.permissions.members;
+        }
 
         return axios({
             url,

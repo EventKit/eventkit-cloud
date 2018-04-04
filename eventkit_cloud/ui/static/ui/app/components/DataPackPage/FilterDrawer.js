@@ -24,7 +24,7 @@ export class FilterDrawer extends Component {
     getDefaultState() {
         return {
             permissions: {
-                value: 'PUBLIC',
+                value: '',
                 groups: {},
                 members: {},
             },

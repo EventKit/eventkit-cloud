@@ -45,7 +45,7 @@ export class DataPackPage extends React.Component {
             open: window.innerWidth >= 1200,
             search: '',
             permissions: {
-                value: 'PUBLIC',
+                value: '',
                 groups: {},
                 members: {},
             },
@@ -183,7 +183,7 @@ export class DataPackPage extends React.Component {
             :
             this.state.order;
         if (this.state.ownerFilter) params.user = this.state.ownerFilter;
-        if (this.state.permissions) params.permissions = this.state.permissions;
+        if (this.state.permissions.value) params.visibility = this.state.permissions.value;
         if (status.length) params.status = status.join(',');
         if (this.state.minDate) {
             params.min_date = this.state.minDate.toISOString().substring(0, 10);
@@ -196,7 +196,15 @@ export class DataPackPage extends React.Component {
         if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
         if (providers.length) params.providers = providers.join(',');
 
-        return this.props.getRuns(params, this.state.geojson_geometry);
+        const options = {};
+        if (this.state.geojson_geometry) {
+            options.geojson = this.state.geojson_geometry;
+        }
+        if (params.visibility === 'SHARED') {
+            options.permissions = this.state.permissions;
+        }
+
+        return this.props.getRuns(params, options);
     }
 
     handleOwnerFilter(event, index, value) {
@@ -213,7 +221,7 @@ export class DataPackPage extends React.Component {
     handleFilterClear() {
         this.setState({
             permissions: {
-                value: 'PUBLIC',
+                value: '',
                 groups: {},
                 members: {},
             },
@@ -460,7 +468,7 @@ export class DataPackPage extends React.Component {
 DataPackPage.propTypes = {
     runsList: PropTypes.shape({
         cancelSource: PropTypes.object,
-        error: PropTypes.string,
+        error: PropTypes.object,
         fetched: PropTypes.bool,
         fetching: PropTypes.bool,
         nextPage: PropTypes.bool,
@@ -517,8 +525,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (params, geojson) => (
-            dispatch(getRuns(params, geojson))
+        getRuns: (params, options) => (
+            dispatch(getRuns(params, options))
         ),
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));

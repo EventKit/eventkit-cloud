@@ -34,10 +34,15 @@ export class PermissionsFilter extends Component {
     }
 
     handleSelection(e, v) {
-        // if filtering by shared, add all members and groups by default
-        if (v === 'SHARED') {
+        // Dont do anything if the value is already selected
+        if (v === this.props.permissions.value) {
+            return;
+        }
+        // If this is a new selection we need to handle it
+        // if the selection is not PRIVATE, we make it PUBLIC by default
+        if (v !== 'PRIVATE') {
             const permissions = {
-                value: v,
+                value: 'PUBLIC',
                 groups: {},
                 members: {},
             };
@@ -49,6 +54,7 @@ export class PermissionsFilter extends Component {
             });
             this.props.onChange({ ...permissions });
         } else {
+            // If the selection IS PRIVATE we can just make the update
             this.props.onChange({ value: v });
         }
     }
@@ -90,7 +96,8 @@ export class PermissionsFilter extends Component {
 
         let dialog = null;
         let sharedButton = null;
-        if (this.props.permissions.value === 'SHARED') {
+        // SHARED and PUBLIC are internal, to the user they are both 'SHARED'
+        if (this.props.permissions.value === 'SHARED' || this.props.permissions.value === 'PUBLIC') {
             const groupCount = Object.keys(this.props.permissions.groups).length;
             const memberCount = Object.keys(this.props.permissions.members).length;
 
@@ -182,7 +189,9 @@ export class PermissionsFilter extends Component {
                         style={styles.radioButton}
                         iconStyle={styles.radioIcon}
                         labelStyle={styles.radioLabel}
-                        value="SHARED"
+                        // The value can be either since they are show to the user in the same way
+                        // PUBLIC and SHARED are distinct only for interal use
+                        value={this.props.permissions.value === 'SHARED' ? 'SHARED' : 'PUBLIC'}
                         checkedIcon={checkIcon}
                         label={
                             <div style={{ display: 'flex' }}>
@@ -203,7 +212,7 @@ export class PermissionsFilter extends Component {
 
 PermissionsFilter.propTypes = {
     permissions: PropTypes.shape({
-        value: PropTypes.oneOf(['PRIVATE', 'PUBLIC', 'SHARED']),
+        value: PropTypes.oneOf(['PRIVATE', 'PUBLIC', 'SHARED', '']),
         groups: PropTypes.objectOf(PropTypes.string),
         members: PropTypes.objectOf(PropTypes.string),
     }).isRequired,

@@ -301,9 +301,7 @@ function mapStateToProps(state) {
         providers: state.providers,
         user: state.user,
         users: state.users,
-        groups: state.groups.groups.filter(group => (
-            group.administrators.includes(state.user.data.user.username)
-        )),
+        groups: state.groups.groups,
     };
 }
 
