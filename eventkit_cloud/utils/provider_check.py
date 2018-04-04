@@ -10,7 +10,10 @@ import requests
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
 
+from django.conf import settings
+
 from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
 
@@ -541,3 +544,19 @@ def get_provider_checker(type_slug):
         return PROVIDER_CHECK_MAP[type_slug]
     except KeyError:
         return ProviderCheck
+
+
+def perform_provider_check(provider, geojson):
+    provider_type = str(provider.export_provider_type)
+
+    url = str(provider.url)
+    if url == '' and 'osm' in provider_type:
+        url = settings.OVERPASS_API_URL
+
+    checker_type = get_provider_checker(provider_type)
+    checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
+    response = checker.check()
+
+    logger.info("Status of provider '{}': {}".format(str(provider.name), response))
+
+    return response

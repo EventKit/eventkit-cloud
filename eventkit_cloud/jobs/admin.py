@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.template import RequestContext
+from django.utils.html import format_html
 from django.conf.urls import url
 from django.contrib import messages
 from django.shortcuts import render_to_response
@@ -9,7 +10,7 @@ from django.contrib.gis.geos import GEOSGeometry
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
 
 
 logger = logging.getLogger(__name__)
@@ -165,7 +166,30 @@ class DataProviderAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
 
 
+class DataProviderStatusAdmin(admin.ModelAdmin):
+    """
+    Status information for Data Providers
+    """
+
+    def color_status(self, obj):
+        if obj.status == 'SUCCESS':
+            return format_html('<div style="width:100%%; height:100%%; background-color:rgba(0, 255, 0, 0.3);">%s</div>' % obj.status)
+        elif obj.status.startswith('WARN'):
+            return format_html('<div style="width:100%%; height:100%%; background-color:rgba(255, 255, 0, 0.3);">%s</div>' % obj.status)
+        return format_html('<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>' % obj.status)
+    color_status.short_description = 'status'
+
+    model = DataProviderStatus
+    readonly_fields = ('status', 'message', 'last_check_time', 'related_provider')
+    list_display = ('color_status', 'message', 'last_check_time', 'related_provider')
+    list_filter = ('related_provider', 'last_check_time')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
+admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
