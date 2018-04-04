@@ -93,12 +93,11 @@ class TestCheckProviderAvailabilityTask(TestCase):
         check_provider_availability()
 
         perform_provider_check_mock.assert_has_calls([call(first_provider, None), call(second_provider, None)])
-        # check that in a case where the provider did not already have a status object, one was created
-        DataProviderStatus.objects.get(related_provider=second_provider)
-
-        first_provider_status = DataProviderStatus.objects.get(related_provider=first_provider)
-        self.assertEqual(first_provider_status.status, 'SUCCESS')
-        self.assertEqual(first_provider_status.message, 'Export should proceed without issues.')
+        statuses = DataProviderStatus.objects.filter(related_provider=first_provider)
+        self.assertEqual(len(statuses), 2)
+        most_recent_first_provider_status = statuses.order_by('-id')[0]
+        self.assertEqual(most_recent_first_provider_status.status, 'SUCCESS')
+        self.assertEqual(most_recent_first_provider_status.message, 'Export should proceed without issues.')
 
 
 class TestEmailNotifications(TestCase):
