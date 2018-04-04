@@ -251,7 +251,7 @@ export class DataPackShareDialog extends Component {
                     <BaseDialog
                         show
                         onClose={this.hidePublicWarning}
-                        title="MAKE PUBLIC"
+                        title="SHARE WITH ALL MEMBERS"
                         actions={[
                             <FlatButton
                                 style={{ margin: '0px', float: 'left' }}
@@ -266,13 +266,13 @@ export class DataPackShareDialog extends Component {
                                 labelStyle={{ color: 'whitesmoke' }}
                                 buttonStyle={{ backgroundColor: '#4598bf', borderRadius: '0px' }}
                                 disableTouchRipple
-                                label="MAKE PUBLIC"
+                                label="SHARE"
                                 primary={false}
                                 onClick={this.handleSave}
                             />,
                         ]}
                     >
-                        Sharing with all users would make this DataPack public. Would you still like to share with all users and make public?
+                        Sharing with all members will make this DataPack visible to everyone with an EventKit account. Are you sure you want to share it with everyone?
                     </BaseDialog>
                     :
                     null
