@@ -187,9 +187,6 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
-    def has_delete_permission(self, request, obj=None):
-        return False
-
 
 # register the new admin models
 admin.site.register(Region, HOTRegionGeoAdmin)
