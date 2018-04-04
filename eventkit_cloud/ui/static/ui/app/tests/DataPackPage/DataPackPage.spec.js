@@ -374,7 +374,7 @@ describe('DataPackPage component', () => {
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleSortChange('job__name');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({order: 'job__name', loading: true}, wrapper.instance().makeRunRequest))
+        expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest))
         stateSpy.restore();
     });
 
@@ -386,17 +386,20 @@ describe('DataPackPage component', () => {
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
         const owner = 'test_user';
-        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
+        const permissions = { value: 'SHARED', groups: {}, members: {} };
         const search = 'search_text';
         const expectedParams = {
             page_size: 12,
             ordering: '-job__featured,-started_at',
             user: 'test_user',
-            permissions: { value: 'PRIVATE', groups: {}, members: {} },
+            visibility: 'SHARED',
             status: 'COMPLETED,INCOMPLETE',
             min_date: '2017-07-30',
             max_date: '2017-08-02',
             search_term: 'search_text',
+        };
+        const expectedOptions = {
+            permissions,
         };
         wrapper.setState({
             status,
@@ -408,7 +411,7 @@ describe('DataPackPage component', () => {
         });
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
-        expect(props.getRuns.calledWith(expectedParams, null)).toBe(true);
+        expect(props.getRuns.calledWith(expectedParams, expectedOptions)).toBe(true);
     });
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
@@ -455,7 +458,7 @@ describe('DataPackPage component', () => {
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({
             permissions: {
-                value: 'PUBLIC',
+                value: '',
                 groups: {},
                 members: {},
             },

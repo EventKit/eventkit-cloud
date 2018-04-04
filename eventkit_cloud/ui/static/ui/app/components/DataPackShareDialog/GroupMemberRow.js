@@ -5,20 +5,17 @@ export class GroupMemberRow extends Component {
         return (
             <div
                 key={this.props.member.user.username}
-                style={{ padding: '6px 0px 0px', display: 'flex', flexWrap: 'wrap' }}
-                className="qa-GroupMemberRow-memberContainer"
+                style={{ padding: '6px 0px 0px' }}
+                className="qa-GroupMemberRow"
             >
-                <div
-                    style={{ flex: '1 1 auto' }}
-                    className="qa-GroupMemberRow-memberInfo"
-                >
-                    <div className="qa-GroupMemberRow-name">
-                        <strong>
-                            {this.props.member.user.first_name} {this.props.member.user.last_name}
-                            {this.props.isGroupAdmin ? ' (Group Admin)' : ''}
-                        </strong>
-                    </div>
-                    <div className="qa-GroupMemberRow-email">{this.props.member.user.email}</div>
+                <div className="qa-GroupMemberRow-name" style={{ wordBreak: 'break-word' }}>
+                    <strong>
+                        {this.props.member.user.first_name} {this.props.member.user.last_name}
+                        {this.props.isGroupAdmin ? ' (Group Admin)' : ''}
+                    </strong>
+                </div>
+                <div className="qa-GroupMemberRow-email" style={{ wordBreak: 'break-word' }}>
+                    {this.props.member.user.email}
                 </div>
             </div>
         );

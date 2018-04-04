@@ -57,12 +57,13 @@ export class MemberRow extends Component {
                 width: '28px',
                 height: '28px',
                 cursor: 'pointer',
+                flex: '0 0 auto',
             },
             adminCheckIcon: {
                 width: '28px',
                 height: '28px',
                 cursor: 'pointer',
-                marginRight: '5px',
+                marginRight: '15px',
             },
             cardText: {
                 backgroundColor: '#fff',
@@ -122,8 +123,13 @@ export class MemberRow extends Component {
                     title={
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.text} className="qa-MemberRow-CardHeader-text">
-                                <div><strong>{this.props.member.user.first_name} {this.props.member.user.last_name}</strong></div>
-                                <div>{this.props.member.user.email}</div>
+                                <div>
+                                    <strong>
+                                        <span style={{ wordBreak: 'break-word' }}>{this.props.member.user.first_name} </span>
+                                        <span style={{ wordBreak: 'break-word' }}>{this.props.member.user.last_name}</span>
+                                    </strong>
+                                </div>
+                                <div style={{ wordBreak: 'break-word' }}>{this.props.member.user.email}</div>
                             </div>
                             {adminButton}
                             {groupIcon}

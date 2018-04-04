@@ -65,11 +65,7 @@ export class PermissionsFilter extends Component {
                 width: '100%',
                 paddingLeft: '10px',
                 paddingRight: '10px',
-                lineHeight: '36px',
-            },
-            radioButton: {
-                width: '100%',
-                marginBottom: '5px',
+                marginBottom: '10px',
             },
             radioIcon: {
                 fill: 'grey',
@@ -78,6 +74,7 @@ export class PermissionsFilter extends Component {
             radioLabel: {
                 color: 'grey',
                 width: '100%',
+                marginBottom: '0px',
             },
             icon: {
                 fill: 'grey',
@@ -89,6 +86,12 @@ export class PermissionsFilter extends Component {
                 display: 'flex',
                 cursor: 'pointer',
                 outline: 'none',
+            },
+            sharedButton: {
+                color: '#4598bf',
+                textDecoration: 'underline',
+                padding: '0px 5px',
+                width: '100%',
             },
         };
 
@@ -127,7 +130,7 @@ export class PermissionsFilter extends Component {
                 <EnhancedButton
                     className="qa-PermissionsFilter-MembersAndGroups-button"
                     onClick={this.handleOpen}
-                    style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
+                    style={styles.sharedButton}
                 >
                     {memberText} / {groupText}
                 </EnhancedButton>
@@ -157,7 +160,7 @@ export class PermissionsFilter extends Component {
             <div style={styles.drawerSection}>
                 <p
                     className="qa-PermissionsFilter-p"
-                    style={{ width: '100%', margin: '0px' }}
+                    style={{ width: '100%', margin: '0px', lineHeight: '36px' }}
                 >
                     <strong>Permissions</strong>
                 </p>
@@ -170,7 +173,7 @@ export class PermissionsFilter extends Component {
                 >
                     <RadioButton
                         className="qa-PermissionsFilter-RadioButton-private"
-                        style={styles.radioButton}
+                        style={{ width: '100%', marginBottom: '10px' }}
                         iconStyle={styles.radioIcon}
                         labelStyle={styles.radioLabel}
                         value="PRIVATE"
@@ -186,7 +189,7 @@ export class PermissionsFilter extends Component {
                     />
                     <RadioButton
                         className="qa-PermissionsFilter-RadioButton-group"
-                        style={styles.radioButton}
+                        style={{ width: '100%' }}
                         iconStyle={styles.radioIcon}
                         labelStyle={styles.radioLabel}
                         // The value can be either since they are show to the user in the same way

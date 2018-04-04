@@ -72,18 +72,16 @@ export class GroupRow extends Component {
             },
             groupText: {
                 flex: '1 1 auto',
-                justifyContent: 'flex-start',
-                marginRight: '10px',
-            },
-            groupName: {
                 color: '#000',
                 fontSize: '16px',
                 fontWeight: 'bold',
-                flex: '0 1 auto',
                 marginRight: '10px',
+                lineHeight: '28px',
+                wordBreak: 'break-word',
             },
             groupIcons: {
                 display: 'flex',
+                flex: '1 1 auto',
                 alignItems: 'center',
                 flexDirection: 'row-reverse',
             },
@@ -101,7 +99,7 @@ export class GroupRow extends Component {
                 width: '28px',
                 height: '28px',
                 cursor: 'pointer',
-                marginRight: '5px',
+                marginRight: '15px',
             },
             cardText: {
                 backgroundColor: '#fff',
@@ -159,11 +157,8 @@ export class GroupRow extends Component {
                     title={
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.groupText} className="qa-GroupRow-CardHeader-text">
-                                <span style={styles.groupName}>
-                                    {this.props.group.name}
-                                </span>
+                                {this.props.group.name}
                             </div>
-                            {adminButton}
                             <div style={styles.groupIcons} className="qa-GroupRow-CardHeader-icons">
                                 {this.state.expanded ?
                                     <ArrowUp style={styles.expandIcon} onClick={this.toggleExpanded} />
@@ -171,6 +166,7 @@ export class GroupRow extends Component {
                                     <ArrowDown style={styles.expandIcon} onClick={this.toggleExpanded} />
                                 }
                                 {groupIcon}
+                                {adminButton}
                             </div>
                         </div>
                     }

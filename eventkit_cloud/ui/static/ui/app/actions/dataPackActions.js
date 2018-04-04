@@ -23,8 +23,12 @@ export function getRuns(params, options = {}) {
             data.geojson = JSON.stringify(options.geojson);
         }
         if (options.permissions) {
-            data.groups = options.permissions.groups;
-            data.users = options.permissions.members;
+            const groups = Object.keys(options.permissions.groups);
+            const members = Object.keys(options.permissions.members);
+            data.permissions = {
+                groups,
+                members,
+            };
         }
 
         return axios({

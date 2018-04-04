@@ -101,7 +101,7 @@ describe('FilterDrawer component', () => {
         const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         const expectedState = {
             permissions: {
-                value: 'PUBLIC',
+                value: '',
                 groups: {},
                 members: {},
             },

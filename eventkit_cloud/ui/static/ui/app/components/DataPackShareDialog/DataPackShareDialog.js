@@ -29,7 +29,11 @@ export class DataPackShareDialog extends Component {
     }
 
     getAdjustedPermissions(perms) {
-        const permissions = { ...perms };
+        const permissions = {
+            value: perms.value,
+            groups: { ...perms.groups },
+            members: { ...perms.members },
+        };
         // Check if the logged in user has member rights
         // If they do, move them out of members for now, so it wont be displayed.
         // We will add them back in before saving any updates

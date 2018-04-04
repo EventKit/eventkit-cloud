@@ -25,8 +25,7 @@ describe('GroupMemberRow component', () => {
     it('should render the basic elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-GroupMemberRow-memberContainer')).toHaveLength(1);
-        expect(wrapper.find('.qa-GroupMemberRow-memberInfo')).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupMemberRow')).toHaveLength(1);
         expect(wrapper.find('.qa-GroupMemberRow-name').text()).toEqual('user one');
         expect(wrapper.find('.qa-GroupMemberRow-email').text()).toEqual('user.one@email.com');
     });

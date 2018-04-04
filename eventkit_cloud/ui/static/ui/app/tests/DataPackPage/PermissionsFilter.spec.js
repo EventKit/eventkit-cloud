@@ -11,7 +11,7 @@ describe('PermissionsFilter component', () => {
     const getProps = () => (
         {
             permissions: {
-                value: 'PRIVATE',
+                value: 'SHARED',
                 groups: {},
                 members: {},
             },
@@ -50,13 +50,13 @@ describe('PermissionsFilter component', () => {
         })
     );
 
-    it('should render a title and a RadioButtonGroup with 3 RadioButtons', () => {
+    it('should render a title and a RadioButtonGroup with 2 RadioButtons', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('p').text()).toEqual('Permissions');
         expect(wrapper.find(RadioButtonGroup)).toHaveLength(1);
         expect(wrapper.find(RadioButtonGroup).props().name).toEqual('permissions');
-        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('PRIVATE');
+        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('SHARED');
         expect(wrapper.find(RadioButton)).toHaveLength(2);
         expect(wrapper.find(RadioButton).at(0).text()).toEqual('Private (only me)');
         expect(wrapper.find(RadioButton).at(0).props().value).toEqual('PRIVATE');
@@ -153,7 +153,7 @@ describe('PermissionsFilter component', () => {
     it('handleSelection should call onChange with all members and groups too', () => {
         const props = getProps();
         const expected = {
-            value: 'SHARED',
+            value: 'PUBLIC',
             groups: {},
             members: {},
         };
@@ -161,7 +161,7 @@ describe('PermissionsFilter component', () => {
         props.members.forEach((member) => { expected.members[member.user.username] = 'READ'; });
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleSelection({}, 'SHARED');
+        wrapper.instance().handleSelection({}, 'PUBLIC');
         expect(props.onChange.calledOnce).toBe(true);
         expect(props.onChange.calledWith(expected)).toBe(true);
     });
