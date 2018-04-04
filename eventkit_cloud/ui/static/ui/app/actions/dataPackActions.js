@@ -24,10 +24,10 @@ export function getRuns(params, options = {}) {
         }
         if (options.permissions) {
             const groups = Object.keys(options.permissions.groups);
-            const members = Object.keys(options.permissions.members);
+            const users = Object.keys(options.permissions.members);
             data.permissions = {
                 groups,
-                members,
+                users,
             };
         }
 
