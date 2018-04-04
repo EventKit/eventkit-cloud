@@ -177,6 +177,7 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
         elif obj.status.startswith('WARN'):
             return format_html('<div style="width:100%%; height:100%%; background-color:rgba(255, 255, 0, 0.3);">%s</div>' % obj.status)
         return format_html('<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>' % obj.status)
+    color_status.short_description = 'status'
 
     model = DataProviderStatus
     readonly_fields = ('status', 'message', 'last_check_time', 'related_provider')
