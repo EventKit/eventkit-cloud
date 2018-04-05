@@ -41,6 +41,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                     href={`/status/${notification.data.run.job.uid}`}
                     style={styles.link}
                     onClick={handleLinkClick}
+                    title={notification.data.run.job.name}
                 >
                     {notification.data.run.job.name}
                 </Link>,
@@ -54,6 +55,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                     href={`/status/${notification.data.run.job.uid}`}
                     style={styles.link}
                     onClick={handleLinkClick}
+                    title={notification.data.run.job.name}
                 >
                     {notification.data.run.job.name}
                 </Link>,
