@@ -9,7 +9,7 @@ export class DataPackLinkButton extends React.Component {
     }
 
     getFontSize() {
-        if(window.innerWidth <= 575) {
+        if (window.innerWidth <= 575) {
             return '10px';
         }
         else if (window.innerWidth <= 767) {
@@ -18,7 +18,7 @@ export class DataPackLinkButton extends React.Component {
         else if (window.innerWidth <= 991) {
             return '12px';
         }
-        else if(window.innerWidth <= 1199) {
+        else if (window.innerWidth <= 1199) {
             return '13px';
         }
         else {
@@ -29,29 +29,29 @@ export class DataPackLinkButton extends React.Component {
     render() {
         const styles = {
             button: {
-                margin: '0px', 
-                minWidth: '50px', 
-                height: '35px', 
-                borderRadius: '0px'
+                margin: '0px',
+                minWidth: '50px',
+                height: '35px',
+                borderRadius: '0px',
             },
             label: {
                 fontSize: this.getFontSize(),
-                paddingLeft: '20px', 
-                paddingRight: '20px', 
-                lineHeight: '35px'
+                paddingLeft: '20px',
+                paddingRight: '20px',
+                lineHeight: '35px',
             },
         };
 
         return (
-            <Link to={'/create'}>
+            <Link to="/create">
                 <RaisedButton
-                    className={'qa-DataPackLinkButton-RaisedButton'}
-                    label={"Create DataPack"}
+                    className="qa-DataPackLinkButton-RaisedButton"
+                    label="Create DataPack"
                     primary={true}
                     labelStyle={styles.label}
                     style={styles.button}
-                    buttonStyle={{borderRadius: '0px', backgroundColor: '#4598bf'}}
-                    overlayStyle={{borderRadius: '0px'}}
+                    buttonStyle={{ borderRadius: '0px', backgroundColor: '#4598bf' }}
+                    overlayStyle={{ borderRadius: '0px' }}
                 />
             </Link>
         );
