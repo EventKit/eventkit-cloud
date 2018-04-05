@@ -431,13 +431,12 @@ export class UserGroupsPage extends Component {
                 minWidth: '50px',
                 height: '35px',
                 borderRadius: '0px',
-                display: 'flex',
-                float: 'right',
+                width: mobile ? '115px' : '150px',
             },
             label: {
                 fontSize: '12px',
-                paddingLeft: mobile ? '10px' : '20px',
-                paddingRight: mobile ? '10px' : '20px',
+                paddingLeft: '0px',
+                paddingRight: '0px',
                 lineHeight: '35px',
             },
             body: {
