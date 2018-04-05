@@ -47,6 +47,7 @@ from rest_framework_swagger import renderers
 from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
 import coreapi
+from notifications.signals import notify
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -946,6 +947,15 @@ class UserDataViewSet(viewsets.GenericViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @list_route(methods=[ 'get'])
+    def notifications(self,request):
+        logger.info( "****************")
+        logger.info("Notifications")
+        logger.info("****************")
+        notify.send(self.request.user, recipient=self.request.user, verb=u'ACK')
+        return Response("Notifications", status=status.HTTP_200_OK)
+
 
     @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):

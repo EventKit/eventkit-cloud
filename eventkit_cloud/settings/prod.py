@@ -22,7 +22,7 @@ INSTALLED_APPS += (
     'eventkit_cloud',
 )
 
-INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", "notifications", )
 
 LOGIN_URL = '/login'
 LOGOUT_URL = '/logout'
