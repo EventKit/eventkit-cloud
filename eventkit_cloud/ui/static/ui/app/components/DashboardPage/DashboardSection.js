@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react';
-import { GridList, Tab, Tabs } from 'material-ui';
+import { GridList, Paper, Tab, Tabs } from 'material-ui';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
 import SwipeableViews from 'react-swipeable-views';
@@ -7,15 +7,10 @@ import SwipeableViews from 'react-swipeable-views';
 export class DashboardSection extends React.Component {
     constructor(props) {
         super(props);
-        this.getGridPadding = this.getGridPadding.bind(this);
         this.handlePageChange = this.handlePageChange.bind(this);
         this.state = {
             pageIndex: 0,
         }
-    }
-
-    getGridPadding() {
-        return window.innerWidth >= 768 ? 7 : 2;
     }
 
     handlePageChange(pageIndex) {
@@ -73,9 +68,6 @@ export class DashboardSection extends React.Component {
                 paddingLeft: spacing,
                 paddingRight: spacing,
             },
-            noData: {
-                marginLeft: '15px',
-            }
         };
 
         // Inherited styles.
@@ -99,8 +91,9 @@ export class DashboardSection extends React.Component {
         const maxPages = 3;
         const itemsPerPage = this.props.columns * this.props.rows;
         const childrenPages = [];
-        for (let i = 0; i < this.props.children.length; i += itemsPerPage) {
-            childrenPages.push(this.props.children.slice(i, i + itemsPerPage));
+        const children = React.Children.toArray(this.props.children);
+        for (let i = 0; i < children.length; i += itemsPerPage) {
+            childrenPages.push(children.slice(i, i + itemsPerPage));
             if (childrenPages.length === maxPages) {
                 break;
             }
@@ -115,13 +108,8 @@ export class DashboardSection extends React.Component {
                     {this.props.title}
                 </div>
                 {(childrenPages.length === 0) ?
-                    this.props.noDataText ?
-                        <div
-                            className={`qa-DashboardSection-${this.props.name}-NoData`}
-                            style={styles.noData}
-                        >
-                            {this.props.noDataText}
-                        </div>
+                    this.props.noDataElement ?
+                        this.props.noDataElement
                         :
                         null
                     :
@@ -162,7 +150,7 @@ export class DashboardSection extends React.Component {
                                     className={`qa-DashboardSection-${this.props.name}Grid`}
                                     cellHeight={this.props.cellHeight || 'auto'}
                                     style={styles.gridList}
-                                    padding={this.getGridPadding()}
+                                    padding={this.props.gridPadding}
                                     cols={this.props.columns}
                                 >
                                     {childrenPage.map((child, index) => (
@@ -185,8 +173,9 @@ DashboardSection.propTypes = {
     name: PropTypes.string.isRequired,
     columns: PropTypes.number.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    noDataText: PropTypes.string,
+    noDataElement: PropTypes.element,
     cellHeight: PropTypes.number,
+    gridPadding: PropTypes.number,
     rows: PropTypes.number,
     style: PropTypes.object,
 };
@@ -194,6 +183,7 @@ DashboardSection.propTypes = {
 DashboardSection.defaultProps = {
     rows: 1,
     style: { marginBottom: '35px' },
+    gridPadding: 2,
 };
 
 export default DashboardSection;

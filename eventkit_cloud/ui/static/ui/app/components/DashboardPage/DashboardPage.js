@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { AppBar, CircularProgress } from 'material-ui';
+import { AppBar, CircularProgress, Paper } from 'material-ui';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActions';
 import { getNotifications } from '../../actions/notificationsActions';
@@ -10,16 +10,18 @@ import { DashboardSection } from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
+import { Link } from 'react-router';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
 export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
-        this.getNotificationsColumns = this.getNotificationsColumns.bind(this);
-        this.getNotificationsRows = this.getNotificationsRows.bind(this);
+        this.getGridPadding = this.getGridPadding.bind(this);
         this.getGridColumns = this.getGridColumns.bind(this);
         this.getGridWideColumns = this.getGridWideColumns.bind(this);
+        this.getNotificationsColumns = this.getNotificationsColumns.bind(this);
+        this.getNotificationsRows = this.getNotificationsRows.bind(this);
         this.refreshNotifications = this.refreshNotifications.bind(this);
         this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
         this.refreshFeatured = this.refreshFeatured.bind(this);
@@ -91,6 +93,10 @@ export class DashboardPage extends React.Component {
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
             this.refresh();
         }
+    }
+
+    getGridPadding() {
+        return window.innerWidth >= 768 ? 6 : 2;
     }
 
     getGridColumns({ getMax = false } = {}) {
@@ -226,6 +232,15 @@ export class DashboardPage extends React.Component {
                 maxWidth: '1920px',
                 margin: 'auto',
             },
+            noData: {
+                margin: `0 ${10 + this.getGridPadding()/2}px`,
+                padding: '29px',
+                fontSize: '25px',
+                color: 'rgba(0, 0, 0, 0.54)',
+            },
+            link: {
+                color: '#337ab7',
+            }
         };
 
         return (
@@ -260,8 +275,13 @@ export class DashboardPage extends React.Component {
                                 name="Notifications"
                                 columns={this.getNotificationsColumns()}
                                 rows={this.getNotificationsRows()}
+                                gridPadding={this.getGridPadding()}
                                 providers={this.props.providers}
-                                noDataText="You don't have any notifications."
+                                noDataElement={
+                                    <Paper style={styles.noData}>
+                                        You have no notifications.
+                                    </Paper>
+                                }
                             >
                                 {this.props.notifications.notificationsSorted.map((notification, index) => (
                                     <NotificationGridItem
@@ -278,8 +298,20 @@ export class DashboardPage extends React.Component {
                                 title="Recently Viewed"
                                 name="RecentlyViewed"
                                 columns={this.getGridColumns()}
+                                gridPadding={this.getGridPadding()}
                                 providers={this.props.providers}
-                                noDataText="You haven't viewed any DataPacks yet..."
+                                noDataElement={
+                                    <Paper style={styles.noData}>
+                                        You have no recorded activity.&nbsp;
+                                        <Link
+                                            to="/exports"
+                                            href="/exports"
+                                            style={styles.link}
+                                        >
+                                            View DataPack Library
+                                        </Link>
+                                    </Paper>
+                                }
                             >
                                 {this.props.user.viewedJobs.jobs.map((job, index) => (
                                     <DataPackGridItem
@@ -304,6 +336,7 @@ export class DashboardPage extends React.Component {
                                     title="Featured"
                                     name="Featured"
                                     columns={this.getGridWideColumns()}
+                                    gridPadding={this.getGridPadding()}
                                     cellHeight={335}
                                     providers={this.props.providers}
                                 >
@@ -328,9 +361,21 @@ export class DashboardPage extends React.Component {
                                 title="My DataPacks"
                                 name="MyDataPacks"
                                 columns={this.getGridColumns()}
+                                gridPadding={this.getGridPadding()}
                                 user={this.props.user}
                                 providers={this.props.providers}
-                                noDataText="You haven't created any DataPacks yet..."
+                                noDataElement={
+                                    <Paper style={styles.noData}>
+                                        You have no DataPacks.&nbsp;
+                                        <Link
+                                            to="/exports"
+                                            href="/exports"
+                                            style={styles.link}
+                                        >
+                                            View DataPack Library
+                                        </Link>
+                                    </Paper>
+                                }
                             >
                                 {this.props.runsList.runs.map((run, index) => (
                                     <DataPackGridItem
