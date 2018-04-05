@@ -34,6 +34,7 @@ export class DataPackPage extends React.Component {
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
+        this.handleSortChange = this.handleSortChange.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
