@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { AppBar, CircularProgress, GridList } from 'material-ui';
+import { AppBar, CircularProgress, GridList, Paper } from 'material-ui';
 import CustomScrollbar from '../CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
@@ -123,6 +123,12 @@ export class NotificationsPage extends React.Component {
                 paddingLeft: spacing,
                 paddingRight: spacing,
             },
+            noData: {
+                margin: `0 ${10 + this.getGridPadding()/2}px`,
+                padding: '29px',
+                fontSize: '25px',
+                color: 'rgba(0, 0, 0, 0.54)',
+            },
         };
 
         return (
@@ -151,9 +157,12 @@ export class NotificationsPage extends React.Component {
                         :
                         <div style={styles.content}>
                             {(this.props.notifications.notificationsSorted.length === 0) ?
-                                <div style={{color: 'white', marginLeft: '27px', marginTop: '14px'}} className="qa-NotifcationsPage-NoData">
+                                <Paper
+                                    className="qa-NotifcationsPage-NoData"
+                                    style={styles.noData}
+                                >
                                     {"You don't have any notifications."}
-                                </div>
+                                </Paper>
                                 :
                                 <div>
                                     {(window.innerWidth > 768) ?

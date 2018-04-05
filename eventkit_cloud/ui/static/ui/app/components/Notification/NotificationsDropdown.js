@@ -60,9 +60,10 @@ export class NotificationsDropdown extends React.Component {
                 borderBottom: '1px solid lightgray',
                 borderRadius: '0',
             },
-            noDataMessage: {
+            noData: {
                 textAlign: 'center',
-                fontSize: '14px',
+                fontSize: '18px',
+                color: 'rgba(0, 0, 0, 0.54)',
             },
             viewAll: {
                 color: '#337ab7',
@@ -92,7 +93,12 @@ export class NotificationsDropdown extends React.Component {
                         </div>
                         :
                         (notifications.length === 0) ?
-                            <div style={styles.noDataMessage}>{"You don't have any notifications."}</div>
+                            <div
+                                className="qa-NotificationsDropdown-NoData"
+                                style={styles.noData}
+                            >
+                                {"You don't have any notifications."}
+                            </div>
                             :
                             <GridList
                                 className="qa-NotificationsDropdown-Grid"

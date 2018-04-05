@@ -279,7 +279,7 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 noDataElement={
                                     <Paper style={styles.noData}>
-                                        You have no notifications.
+                                        {"You don't have any notifications."}
                                     </Paper>
                                 }
                             >
@@ -302,7 +302,7 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 noDataElement={
                                     <Paper style={styles.noData}>
-                                        You have no recorded activity.&nbsp;
+                                        {"You don't have any recently viewed DataPacks."}&nbsp;
                                         <Link
                                             to="/exports"
                                             href="/exports"
@@ -366,7 +366,7 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 noDataElement={
                                     <Paper style={styles.noData}>
-                                        You have no DataPacks.&nbsp;
+                                        {"You don't have any DataPacks."}&nbsp;
                                         <Link
                                             to="/exports"
                                             href="/exports"
