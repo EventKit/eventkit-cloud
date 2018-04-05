@@ -617,6 +617,7 @@ class TestExportRunViewSet(APITestCase):
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
             self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
@@ -741,34 +742,6 @@ class TestExportRunViewSet(APITestCase):
         mock_invalid_licenses.return_value = []
         self.assertTrue(ExportRunViewSet.validate_licenses(queryset))
 
-
-
-    def test_retrieve_run_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs/{0}'.format(self.run_uid)
-        url = reverse('api:runs-detail', args=[self.run_uid])
-        self.assertEquals(expected, url)
-        response = self.client.get(url)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        # self.assertEquals(response.data, {'detail': 'Not found.'})
-        self.assertEquals(response.data, [])
-
     def test_list_runs(self,):
         expected = '/api/runs'
         url = reverse('api:runs-list')
@@ -794,31 +767,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertTrue("InvalidLicense" in result[0].get('detail'))
         self.assertEquals(response.status_code, 400)
 
-    def test_list_runs_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs'
-        url = reverse('api:runs-list')
-        self.assertEquals(expected, url)
-        query = '{0}?job_uid={1}'.format(url, self.job.uid)
-        response = self.client.get(query)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        self.assertEquals(response.data, [])
 
     def test_filter_runs(self,):
         expected = '/api/runs/filter'
@@ -897,33 +845,6 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         self.assertTrue("InvalidLicense" in result[0].get('detail'))
         self.assertEquals(response.status_code, 400)
-
-    def test_filter_runs_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs/filter'
-        url = reverse('api:runs-filter')
-        self.assertEquals(expected, url)
-        query = '{0}?job_uid={1}'.format(url, self.job.uid)
-        response = self.client.get(query)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        self.assertEquals(response.data, [])
-
 
 class TestExportTaskViewSet(APITestCase):
     """
