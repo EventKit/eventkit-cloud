@@ -13,17 +13,23 @@ const types = {
 // NOTE: This should ideally be a NotificationMessage component, but we need to return the bare elements without
 // a wrapper to solve the middle text truncation problem. With React 16 we'll be able to do this from a component
 // by using fragments (https://reactjs.org/docs/fragments.html).
-export function getNotificationMessage({ notification, textStyle, linkStyle }) {
+export function getNotificationMessage({ notification, textStyle, linkStyle, onLinkClick = () => { return true; } }) {
     const styles = {
         text: textStyle || {
             whiteSpace: 'nowrap',
         },
         link: linkStyle || {
-            textDecoration: 'underline',
+            color: '#337ab7',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
         },
+    };
+
+    const handleLinkClick = (e) => {
+        if (!onLinkClick()) {
+            e.preventDefault();
+        }
     };
 
     switch (notification.type) {
@@ -34,6 +40,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle }) {
                     to={`/status/${notification.data.run.job.uid}`}
                     href={`/status/${notification.data.run.job.uid}`}
                     style={styles.link}
+                    onClick={handleLinkClick}
                 >
                     {notification.data.run.job.name}
                 </Link>,
@@ -46,6 +53,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle }) {
                     to={`/status/${notification.data.run.job.uid}`}
                     href={`/status/${notification.data.run.job.uid}`}
                     style={styles.link}
+                    onClick={handleLinkClick}
                 >
                     {notification.data.run.job.name}
                 </Link>,

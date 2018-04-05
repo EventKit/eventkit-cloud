@@ -124,7 +124,8 @@ export default {
     notifications: {
         fetching: false,
         fetched: false,
-        notifications: [],
+        notifications: {},
+        notificationsSorted: [],
         error: null,
         unreadCount: {
             fetching: false,

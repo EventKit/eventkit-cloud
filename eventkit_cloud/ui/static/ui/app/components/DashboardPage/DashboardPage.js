@@ -263,7 +263,7 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 noDataText="You don't have any notifications."
                             >
-                                {this.props.notifications.notifications.map((notification, index) => (
+                                {this.props.notifications.notificationsSorted.map((notification, index) => (
                                     <NotificationGridItem
                                         key={`Notification-${index}`}
                                         notification={notification}

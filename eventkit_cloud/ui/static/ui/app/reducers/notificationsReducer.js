@@ -1,5 +1,6 @@
 import initialState from './initialState';
 import types from '../actions/actionTypes';
+import values from 'lodash/values';
 
 export function notificationsReducer(state = initialState.notifications, action) {
     switch (action.type) {
@@ -11,17 +12,24 @@ export function notificationsReducer(state = initialState.notifications, action)
                 error: null,
                 cancelSource: action.cancelSource,
             };
-        case types.RECEIVED_NOTIFICATIONS:
+        case types.RECEIVED_NOTIFICATIONS: {
+            const notifications = { ...state.notifications };
+            for (let notification of action.notifications) {
+                notifications[notification.uid] = notification;
+            }
+
             return {
                 ...state,
                 fetching: false,
                 fetched: true,
-                notifications: action.notifications,
+                notifications: notifications,
+                notificationsSorted: getSortedNotifications(notifications),
                 nextPage: action.nextPage,
                 range: action.range,
                 error: action.error,
                 cancelSource: null,
             };
+        }
         case types.FETCH_NOTIFICATIONS_ERROR:
             return {
                 ...state,
@@ -32,21 +40,22 @@ export function notificationsReducer(state = initialState.notifications, action)
                 cancelSource: null,
             };
         case types.MARKING_NOTIFICATIONS_AS_READ: {
-            const notifications = [ ...state.notifications ];
-            const indices = getNotificationsIndices(notifications, action.notifications);
+            const notifications = { ...state.notifications };
             let unreadCount = state.unreadCount.unreadCount;
-            indices.forEach((index) => {
-                if (!notifications[index].read) {
+            for (let notification of action.notifications) {
+                const uid = notification.uid;
+                if (!notifications[uid].read) {
                     unreadCount--;
                 }
-                notifications[index] = {
-                    ...notifications[index],
+                notifications[uid] = {
+                    ...notifications[uid],
                     read: true,
                 }
-            });
+            }
             return {
                 ...state,
                 notifications,
+                notificationsSorted: getSortedNotifications(notifications),
                 unreadCount: {
                     ...state.unreadCount,
                     unreadCount,
@@ -54,21 +63,22 @@ export function notificationsReducer(state = initialState.notifications, action)
             };
         }
         case types.MARKING_NOTIFICATIONS_AS_UNREAD: {
-            const notifications = [ ...state.notifications ];
-            const indices = getNotificationsIndices(notifications, action.notifications);
+            const notifications = { ...state.notifications };
             let unreadCount = state.unreadCount.unreadCount;
-            indices.forEach((index) => {
-                if (notifications[index].read) {
+            for (let notification of action.notifications) {
+                const uid = notification.uid;
+                if (!notifications[uid].read) {
                     unreadCount++;
                 }
-                notifications[index] = {
-                    ...notifications[index],
+                notifications[uid] = {
+                    ...notifications[uid],
                     read: false,
                 }
-            });
+            }
             return {
                 ...state,
                 notifications,
+                notificationsSorted: getSortedNotifications(notifications),
                 unreadCount: {
                     ...state.unreadCount,
                     unreadCount,
@@ -76,19 +86,19 @@ export function notificationsReducer(state = initialState.notifications, action)
             };
         }
         case types.REMOVING_NOTIFICATIONS: {
-            let notifications = [ ...state.notifications ];
-            // Make sure we remove notifications from highest index to lowest.
-            const indices = getNotificationsIndices(notifications, action.notifications).sort().reverse();
+            let notifications = { ...state.notifications };
             let unreadCount = state.unreadCount.unreadCount;
-            indices.forEach((index) => {
-                if (!notifications[index].read) {
+            for (let notification of action.notifications) {
+                const uid = notification.uid;
+                if (!notifications[uid].read) {
                     unreadCount--;
                 }
-                notifications.splice(index, 1);
-            });
+                delete notifications[uid];
+            }
             return {
                 ...state,
                 notifications,
+                notificationsSorted: getSortedNotifications(notifications),
                 unreadCount: {
                     ...state.unreadCount,
                     unreadCount,
@@ -118,11 +128,8 @@ export function notificationsReducer(state = initialState.notifications, action)
     }
 }
 
-function getNotificationsIndices(stateNotifications, actionNotifications) {
-    const stateNotificationsIndexLookup = {};
-    for (let i = 0; i < stateNotifications.length; i++) {
-        stateNotificationsIndexLookup[stateNotifications[i].uid] = i;
-    }
-
-    return actionNotifications.map((notification) => stateNotificationsIndexLookup[notification.uid]);
+function getSortedNotifications(notificationsObj) {
+    const notificationsSorted = values(notificationsObj);
+    notificationsSorted.sort((a, b) => b.date - a.date);
+    return notificationsSorted;
 }

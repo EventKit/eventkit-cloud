@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { AppBar, CircularProgress, GridList } from 'material-ui';
 import CustomScrollbar from '../CustomScrollbar';
-import NotificationTable from '../Notification/NotificationTable';
+import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../DataPackPage/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
@@ -36,9 +36,7 @@ export class NotificationsPage extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
-            this.setState({
-                loadingPage: false,
-            });
+            this.setState({ loadingPage: false });
         }
     }
 
@@ -119,7 +117,6 @@ export class NotificationsPage extends React.Component {
                 width: 'min-content'
             },
             gridList: {
-                border: '1px',
                 width: '100%',
                 height: 'auto',
                 margin: '0',
@@ -153,16 +150,15 @@ export class NotificationsPage extends React.Component {
                         null
                         :
                         <div style={styles.content}>
-                            {(this.props.notifications.notifications.length === 0) ?
+                            {(this.props.notifications.notificationsSorted.length === 0) ?
                                 <div style={{color: 'white', marginLeft: '27px', marginTop: '14px'}} className="qa-NotifcationsPage-NoData">
                                     {"You don't have any notifications."}
                                 </div>
                                 :
                                 <div>
                                     {(window.innerWidth > 768) ?
-                                        <NotificationTable
+                                        <NotificationsTable
                                             notifications={this.props.notifications}
-                                            order={this.props.order}
                                             router={this.props.router}
                                         />
                                         :
@@ -172,10 +168,10 @@ export class NotificationsPage extends React.Component {
                                                 className="qa-NotificationsPage-Grid"
                                                 cellHeight="auto"
                                                 style={styles.gridList}
-                                                padding={this.getGridPadding()}
+                                                padding={2}
                                                 cols={1}
                                             >
-                                                {this.props.notifications.notifications.map((notification, index) => (
+                                                {this.props.notifications.notificationsSorted.map((notification, index) => (
                                                     <NotificationGridItem
                                                         key={`Notification-${index}`}
                                                         notification={notification}
@@ -201,12 +197,7 @@ export class NotificationsPage extends React.Component {
 }
 
 NotificationsPage.propTypes = {
-    order: PropTypes.string,
     router: PropTypes.object.isRequired,
-};
-
-NotificationsPage.defaultProps = {
-    order: 'notification__date',
 };
 
 function mapStateToProps(state) {

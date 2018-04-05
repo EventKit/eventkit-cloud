@@ -34,6 +34,7 @@ export class NotificationGridItem extends Component {
         // Allow the parent component the opportunity to stop or handle navigation.
         if (this.props.onView(this.props.notification)) {
             this.props.router.push(getNotificationViewUrl(this.props.notification));
+            this.props.markNotificationsAsRead([this.props.notification]);
         }
     }
 
@@ -74,8 +75,16 @@ export class NotificationGridItem extends Component {
             },
         };
 
+        styles.root = {
+            ...styles.root,
+            ...this.props.style,
+        };
+
         const icon = getNotificationIcon({ notification: this.props.notification });
-        const message = getNotificationMessage({ notification: this.props.notification });
+        const message = getNotificationMessage({
+            notification: this.props.notification,
+            onLinkClick: this.handleView,
+        });
 
         return (
             <Paper
@@ -102,6 +111,7 @@ export class NotificationGridItem extends Component {
 }
 
 NotificationGridItem.propTypes = {
+    style: PropTypes.object,
     notification: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
@@ -111,6 +121,7 @@ NotificationGridItem.propTypes = {
 };
 
 NotificationGridItem.defaultProps = {
+    style: {},
     onMarkAsRead: () => {},
     onMarkAsUnread: () => {},
     onRemove: () => {},

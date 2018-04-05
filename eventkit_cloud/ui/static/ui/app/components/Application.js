@@ -22,8 +22,9 @@ import BaseDialog from './Dialog/BaseDialog';
 import logo from '../../images/eventkit-logo.1.png';
 import { DrawerTimeout } from '../actions/exportsActions';
 import { userActive } from '../actions/userActions';
-import { getNotificationsUnreadCount } from '../actions/notificationsActions';
+import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';
+import NotificationsDropdown from './Notification/NotificationsDropdown';
 
 require('../fonts/index.css');
 
@@ -59,6 +60,7 @@ export class Application extends Component {
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleResize = this.handleResize.bind(this);
+        this.handleClick = this.handleClick.bind(this);
         this.logout = this.logout.bind(this);
         this.startCheckingForAutoLogout = this.startCheckingForAutoLogout.bind(this);
         this.stopCheckingForAutoLogout = this.stopCheckingForAutoLogout.bind(this);
@@ -71,15 +73,20 @@ export class Application extends Component {
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.getButtonBackgroundColor = this.getButtonBackgroundColor.bind(this);
+        this.setNotificationsDropdownContainerRef = this.setNotificationsDropdownContainerRef.bind(this);
+        this.handleNotificationsDropdownNavigation = this.handleNotificationsDropdownNavigation.bind(this);
         this.state = {
             config: {},
             hovered: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
             showLogoutDialog: false,
+            showNotificationsDropdown: false,
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
+        this.notificationsRefreshInterval = 10000;
+        this.notificationsPageSize = 10;
     }
 
     getChildContext() {
@@ -91,8 +98,11 @@ export class Application extends Component {
     componentDidMount() {
         this.getConfig();
         window.addEventListener('resize', this.handleResize);
+        window.addEventListener('click', this.handleClick);
         this.props.getNotificationsUnreadCount();
+        this.props.getNotifications({ pageSize: this.notificationsPageSize });
         this.notificationsUnreadCountIntervalId = setInterval(this.props.getNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
+        this.notificationsRefreshIntervalId = setInterval(this.props.getNotifications, this.notificationsRefreshInterval);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -114,6 +124,7 @@ export class Application extends Component {
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
         clearInterval(this.notificationsUnreadCountIntervalId);
+        clearInterval(this.notificationsRefreshIntervalId);
     }
 
     onMenuItemClick() {
@@ -293,6 +304,17 @@ export class Application extends Component {
         this.forceUpdate();
     }
 
+    handleClick(e) {
+        // Close the notifications dropdown if it's open and we click outside of it.
+        if (this.notificationsDropdownContainerRef && this.state.showNotificationsDropdown) {
+            if (!this.notificationsDropdownContainerRef.contains(e.target)) {
+                this.setState({
+                    showNotificationsDropdown: false
+                });
+            }
+        }
+    }
+
     handleMouseOver(route) {
         this.setState({ hovered: route });
     }
@@ -324,11 +346,26 @@ export class Application extends Component {
     handleNotificationsButtonClick(e) {
         e.preventDefault();
         e.stopPropagation();
-        this.props.router.push('/notifications');
+        this.setState({
+            showNotificationsDropdown: !this.state.showNotificationsDropdown,
+        });
     }
 
     getButtonBackgroundColor(route, activeColor = '#161e2e') {
         return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
+    }
+
+    setNotificationsDropdownContainerRef(ref) {
+        this.notificationsDropdownContainerRef = ref;
+    }
+
+    handleNotificationsDropdownNavigation() {
+        this.setState({
+            showNotificationsDropdown: false
+        });
+
+        // Allow navigation to proceed.
+        return true;
     }
 
     render() {
@@ -447,7 +484,7 @@ export class Application extends Component {
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{ backgroundColor: '#000' }}>
                     <Banner />
-                    <header className="qa-Application-header" style={{ position: 'relative', height: '95px' }}>
+                    <header className="qa-Application-header" style={{ position: 'relative', height: '95px', zIndex: '1301' }}>
                         <AppBar
                             className="qa-Application-AppBar"
                             style={styles.appBar}
@@ -460,7 +497,7 @@ export class Application extends Component {
                                     <IconButton
                                         style={styles.menuButton}
                                         iconStyle={styles.menuButtonIcon}
-                                        disableTouchRipple={true}
+                                        touchRippleColor="white"
                                         onClick={this.handleToggle}
                                     >
                                         <Menu />
@@ -469,10 +506,10 @@ export class Application extends Component {
                                         <IconButton
                                             style={{
                                                 ...styles.notificationsButton,
-                                                backgroundColor: this.getButtonBackgroundColor('/notifications', '#4598BF'),
+                                                backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ? '#4598BF' : '',
                                             }}
                                             iconStyle={styles.notificationsButtonIcon}
-                                            disableTouchRipple={true}
+                                            touchRippleColor="white"
                                             onClick={this.handleNotificationsButtonClick}
                                             onMouseEnter={() => this.handleMouseOver('/notifications')}
                                             onMouseLeave={this.handleMouseOut}
@@ -487,6 +524,20 @@ export class Application extends Component {
                                             :
                                             null
                                         }
+                                        <div ref={this.setNotificationsDropdownContainerRef}>
+                                            <NotificationsDropdown
+                                                style={{
+                                                    transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                                                    opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
+                                                    pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
+                                                    transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
+                                                    transformOrigin: '6% -8%',
+                                                }}
+                                                notifications={this.props.notifications}
+                                                router={this.props.router}
+                                                onNavigation={this.handleNotificationsDropdownNavigation}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             }
@@ -682,6 +733,7 @@ Application.propTypes = {
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
     notifications: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
+    getNotifications: PropTypes.func.isRequired,
 };
 
 Application.childContextTypes = {
@@ -712,6 +764,9 @@ function mapDispatchToProps(dispatch) {
         },
         getNotificationsUnreadCount: () => {
             dispatch(getNotificationsUnreadCount());
+        },
+        getNotifications: (args) => {
+            dispatch(getNotifications(args));
         },
     };
 }

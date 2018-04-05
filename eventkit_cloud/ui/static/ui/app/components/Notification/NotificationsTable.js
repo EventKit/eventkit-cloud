@@ -16,7 +16,7 @@ import moment from 'moment';
 import { NotificationMenu } from './NotificationMenu';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 
-export class NotificationTable extends React.Component {
+export class NotificationsTable extends React.Component {
     constructor(props) {
         super(props);
         this.getSelectedCount = this.getSelectedCount.bind(this);
@@ -34,14 +34,6 @@ export class NotificationTable extends React.Component {
         this.state = {
             selected: {},
         };
-    }
-
-    isSameOrderType(unknown, known) {
-        return unknown.replace(/-/, '') === known.replace(/-/, '');
-    }
-
-    getHeaderStyle(isActive) {
-        return isActive ? {color: '#000', fontWeight: 'bold'} : {color: 'inherit'};
     }
 
     getSelectedCount() {
@@ -62,7 +54,7 @@ export class NotificationTable extends React.Component {
     handleSelectAllCheck() {
         let selected = { ...this.state.selected };
         if (this.getSelectedCount() === 0) {
-            this.props.notifications.notifications.map((notification) => {
+            this.props.notifications.notificationsSorted.map((notification) => {
                 selected[notification.uid] = notification;
             });
         } else {
@@ -73,7 +65,7 @@ export class NotificationTable extends React.Component {
     }
 
     getSelectAllCheckedIcon() {
-        if (this.getSelectedCount() === this.props.notifications.notifications.length) {
+        if (this.getSelectedCount() === this.props.notifications.notificationsSorted.length) {
             return <CheckboxIcon />;
         } else {
             return <IndeterminateCheckboxIcon />;
@@ -99,6 +91,7 @@ export class NotificationTable extends React.Component {
         // Allow the parent component the opportunity to stop or handle navigation.
         if (this.props.onView(notification)) {
             this.props.router.push(getNotificationViewUrl(notification));
+            this.props.markNotificationsAsRead([notification]);
         }
     }
 
@@ -251,7 +244,7 @@ export class NotificationTable extends React.Component {
                     >
                         <TableRow>
                             <TableHeaderColumn
-                                className="qa-NotificationTable-TableHeaderColumn-Checkbox"
+                                className="qa-NotificationsTable-TableHeaderColumn-Checkbox"
                                 style={styles.checkboxHeaderColumn}
                             >
                                 <Checkbox
@@ -262,7 +255,7 @@ export class NotificationTable extends React.Component {
                                 />
                             </TableHeaderColumn>
                             <TableHeaderColumn
-                                className="qa-NotificationTable-TableHeaderColumn-Content"
+                                className="qa-NotificationsTable-TableHeaderColumn-Content"
                                 style={styles.contentHeaderColumn}
                             >
                                 <div style={styles.contentHeaderColumnWrapper}>
@@ -283,21 +276,15 @@ export class NotificationTable extends React.Component {
                                 </div>
                             </TableHeaderColumn>
                             <TableHeaderColumn
-                                className="qa-NotificationTable-TableHeaderColumn-Date"
+                                className="qa-NotificationsTable-TableHeaderColumn-Date"
                                 style={styles.dateHeaderColumn}
                             >
-                                <span
-                                    style={{
-                                        ...styles.clickable,
-                                        ...this.getHeaderStyle(this.isSameOrderType(this.props.order, 'notification__date')),
-                                        marginRight: '40px',
-                                    }}
-                                >
+                                <span style={{ marginRight: '40px' }}>
                                     Date
                                 </span>
                             </TableHeaderColumn>
                             <TableHeaderColumn
-                                className="qa-NotificationTable-TableHeaderColumn-Options"
+                                className="qa-NotificationsTable-TableHeaderColumn-Options"
                                 style={styles.optionsHeaderColumn}
                             >
                                 Options
@@ -305,7 +292,7 @@ export class NotificationTable extends React.Component {
                         </TableRow>
                     </TableHeader>
                     <TableBody displayRowCheckbox={false}>
-                        {this.props.notifications.notifications.map((notification) => {
+                        {this.props.notifications.notificationsSorted.map((notification) => {
                             const icon = getNotificationIcon({ notification });
                             const message = getNotificationMessage({ notification });
                             return (
@@ -317,7 +304,7 @@ export class NotificationTable extends React.Component {
                                     }}
                                 >
                                     <TableRowColumn
-                                        className="qa-NotificationTable-Checkbox"
+                                        className="qa-NotificationsTable-Checkbox"
                                         style={styles.checkboxRowColumn}
                                     >
                                         <Checkbox
@@ -327,7 +314,7 @@ export class NotificationTable extends React.Component {
                                         />
                                     </TableRowColumn>
                                     <TableRowColumn
-                                        className="qa-NotificationTable-Content"
+                                        className="qa-NotificationsTable-Content"
                                         style={styles.contentRowColumn}
                                     >
                                         <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
@@ -336,7 +323,7 @@ export class NotificationTable extends React.Component {
                                         </div>
                                     </TableRowColumn>
                                     <TableRowColumn
-                                        className="qa-NotificationTable-Date"
+                                        className="qa-NotificationsTable-Date"
                                         style={styles.dateRowColumn}
                                     >
                                         <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
@@ -347,7 +334,7 @@ export class NotificationTable extends React.Component {
                                         </div>
                                     </TableRowColumn>
                                     <TableRowColumn
-                                        className="qa-NotificationTable-TableRowColumn-Options"
+                                        className="qa-NotificationsTable-TableRowColumn-Options"
                                         style={styles.optionsRowColumn}
                                     >
                                         <div style={styles.optionsButtonsContainer}>
@@ -415,7 +402,7 @@ export class NotificationTable extends React.Component {
     }
 }
 
-NotificationTable.propTypes = {
+NotificationsTable.propTypes = {
     notifications: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
@@ -424,7 +411,7 @@ NotificationTable.propTypes = {
     onView: PropTypes.func,
 };
 
-NotificationTable.defaultProps = {
+NotificationsTable.defaultProps = {
     onMarkAsRead: () => {},
     onMarkAsUnread: () => {},
     onRemove: () => {},
@@ -442,4 +429,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     null,
     mapDispatchToProps,
-)(NotificationTable);
+)(NotificationsTable);

@@ -19,7 +19,7 @@ export function getNotifications(args = {}) {
         const response = {
             data: [
                 {
-                    uid: 3,
+                    uid: 11,
                     read: false,
                     type: 'datapack-complete-success',
                     date: new Date().setDate(now.getDate() - 5),
@@ -35,7 +35,7 @@ export function getNotifications(args = {}) {
                     },
                 },
                 {
-                    uid: 2,
+                    uid: 10,
                     read: true,
                     type: 'datapack-complete-error',
                     date: new Date().setHours(now.getHours() - 5),
@@ -51,10 +51,138 @@ export function getNotifications(args = {}) {
                     },
                 },
                 {
+                    uid: 9,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setHours(now.getDate() - 4),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 8,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setHours(now.getDate() - 3),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 7,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setHours(now.getDate() - 2),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 6,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setHours(now.getDate() - 1),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 5,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setMinutes(now.getMinutes() - 55),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 4,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setMinutes(now.getMinutes() - 50),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 3,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setMinutes(now.getMinutes() - 45),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
+                    uid: 2,
+                    read: true,
+                    type: 'datapack-complete-success',
+                    date: new Date().setSeconds(now.getSeconds() - 55),
+                    data: {
+                        run: {
+                            uid: 1,
+                            job: {
+                                uid: 1,
+                                name: 'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+                            },
+                            expiration: new Date(2018, 5, 1),
+                        },
+                    },
+                },
+                {
                     uid: 1,
                     read: true,
                     type: 'datapack-complete-success',
-                    date: new Date().setDate(now.getDate() - 5),
+                    date: new Date().setSeconds(now.getSeconds() - 30),
                     data: {
                         run: {
                             uid: 1,
