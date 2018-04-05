@@ -137,6 +137,11 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
         return str(exc_info[1])
 
+
+class DefaultExportTaskRecordSerializer(serializers.Serializer):
+    name = 'Export task creation in progress.'
+
+
 class ExportTaskRecordSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
     result = serializers.SerializerMethodField()
@@ -171,6 +176,14 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
             return None
 
 
+class DefaultDataProviderTaskRecordSerializer(serializers.Serializer):
+    name = 'Provider task creation in progress.'
+    tasks = serializers.SerializerMethodField()
+
+    def get_tasks(self, obj):
+        return DefaultExportTaskRecordSerializer().data
+
+
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
@@ -179,11 +192,14 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     )
 
     def get_tasks(self, obj):
+        if self.context.add_placeholders and len(obj.tasks.all()) == 0:
+            return DefaultExportTaskRecordSerializer().data
         return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     class Meta:
         model = DataProviderTaskRecord
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
+
 
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
@@ -278,6 +294,8 @@ class ExportRunSerializer(serializers.ModelSerializer):
         return obj.user.username
 
     def get_provider_tasks(self, obj):
+        if self.context.add_placeholders and len(obj.provider_tasks.all()) == 0:
+            return DefaultDataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
         return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
