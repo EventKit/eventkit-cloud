@@ -192,7 +192,7 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     )
 
     def get_tasks(self, obj):
-        if self.context.add_placeholders and len(obj.tasks.all()) == 0:
+        if self.context.get('add_placeholders') and len(obj.tasks.all()) == 0:
             return DefaultExportTaskRecordSerializer().data
         return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
@@ -294,7 +294,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         return obj.user.username
 
     def get_provider_tasks(self, obj):
-        if self.context.add_placeholders and len(obj.provider_tasks.all()) == 0:
+        if self.context.get('add_placeholders') and len(obj.provider_tasks.all()) == 0:
             return DefaultDataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
         return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
