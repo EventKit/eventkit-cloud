@@ -138,13 +138,6 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
         return str(exc_info[1])
 
 
-class DefaultExportTaskRecordSerializer(serializers.Serializer):
-    name = 'Export task creation in progress.'
-    progress = 0
-    status = 'PENDING'
-    display = True
-
-
 class ExportTaskRecordSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
     result = serializers.SerializerMethodField()
