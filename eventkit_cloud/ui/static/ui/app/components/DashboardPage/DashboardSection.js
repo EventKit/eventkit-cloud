@@ -1,7 +1,5 @@
 import React, { PropTypes } from 'react';
-import { GridList, Paper, Tab, Tabs } from 'material-ui';
-import DataPackGridItem from '../DataPackPage/DataPackGridItem';
-import DataPackWideItem from './DataPackWideItem';
+import { GridList, Tab, Tabs } from 'material-ui';
 import SwipeableViews from 'react-swipeable-views';
 
 export class DashboardSection extends React.Component {

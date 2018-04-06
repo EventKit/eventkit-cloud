@@ -67,7 +67,7 @@ export function notificationsReducer(state = initialState.notifications, action)
             let unreadCount = state.unreadCount.unreadCount;
             for (let notification of action.notifications) {
                 const uid = notification.uid;
-                if (!notifications[uid].read) {
+                if (notifications[uid].read) {
                     unreadCount++;
                 }
                 notifications[uid] = {

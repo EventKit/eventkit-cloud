@@ -1,17 +1,25 @@
 import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
 import { IconButton, IconMenu, MenuItem } from 'material-ui';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import { getNotificationViewPath } from '../../utils/notificationUtils';
+import {
+    markNotificationsAsRead,
+    markNotificationsAsUnread,
+    removeNotifications
+} from '../../actions/notificationsActions';
 
 export class NotificationMenu extends React.Component {
     constructor(props) {
         super(props);
-        this.handleViewClick = this.handleViewClick.bind(this);
-        this.handleMarkAsReadClick = this.handleMarkAsReadClick.bind(this);
-        this.handleMarkAsUnreadClick = this.handleMarkAsUnreadClick.bind(this);
-        this.handleRemoveClick = this.handleRemoveClick.bind(this);
+        this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
+        this.handleMarkAsRead = this.handleMarkAsRead.bind(this);
+        this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
+        this.handleRemove = this.handleRemove.bind(this);
+        this.handleView = this.handleView.bind(this);
         this.state = {
             // This is a slight hack to prevent some glitchy behavior in the notifications dropdown. Without it, clicking
             // the "View" menu item will cause the dropdown to immediately close as the menu item stays for a moment to
@@ -26,28 +34,36 @@ export class NotificationMenu extends React.Component {
         }
     }
 
-    handleViewClick(e) {
+    handleMenuItemClick(e) {
         e.stopPropagation();
-        this.props.onView(this.props.notification);
         this.setState({ forceClose: true });
     }
 
-    handleMarkAsReadClick(e) {
-        e.stopPropagation();
+    handleMarkAsRead(e) {
+        this.handleMenuItemClick(e);
+        this.props.markNotificationsAsRead([this.props.notification]);
         this.props.onMarkAsRead(this.props.notification);
-        this.setState({ forceClose: true });
     }
 
-    handleMarkAsUnreadClick(e) {
-        e.stopPropagation();
+    handleMarkAsUnread(e) {
+        this.handleMenuItemClick(e);
+        this.props.markNotificationsAsUnread([this.props.notification]);
         this.props.onMarkAsUnread(this.props.notification);
-        this.setState({ forceClose: true });
     }
 
-    handleRemoveClick(e) {
-        e.stopPropagation();
+    handleRemove(e) {
+        this.handleMenuItemClick(e);
+        this.props.removeNotifications([this.props.notification]);
         this.props.onRemove(this.props.notification);
-        this.setState({ forceClose: true });
+    }
+
+    handleView(e) {
+        this.handleMenuItemClick(e);
+        const path = getNotificationViewPath(this.props.notification);
+        if (this.props.onView(path, this.props.notification)) {
+            this.props.router.push(path);
+            this.props.markNotificationsAsRead([this.props.notification]);
+        }
     }
 
     render() {
@@ -71,52 +87,39 @@ export class NotificationMenu extends React.Component {
                         style={styles.menuButton}
                         iconStyle={styles.menuButtonIcon}
                     >
-                        {this.props.icon}
+                        <MoreVertIcon />
                     </IconButton>}
-                anchorOrigin={this.props.anchorOrigin}
-                targetOrigin={this.props.targetOrigin}
+                anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                 open={this.state.forceClose ? false : undefined}
             >
-                {this.props.onView ?
-                    <MenuItem
-                        style={styles.menuItem}
-                        primaryText="View"
-                        leftIcon={<OpenInNewIcon />}
-                        onClick={this.handleViewClick}
-                    />
-                    :
-                    null
-                }
-                {this.props.onMarkAsRead ?
-                    <MenuItem
-                        style={styles.menuItem}
-                        primaryText="Mark As Read"
-                        leftIcon={<FlagIcon />}
-                        onClick={this.handleMarkAsReadClick}
-                    />
-                    :
-                    null
-                }
-                {this.props.onMarkAsUnread ?
+                <MenuItem
+                    style={styles.menuItem}
+                    primaryText="View"
+                    leftIcon={<OpenInNewIcon />}
+                    onClick={this.handleView}
+                />
+                {this.props.notification.read ?
                     <MenuItem
                         style={styles.menuItem}
                         primaryText="Mark As Unread"
                         leftIcon={<FlagIcon />}
-                        onClick={this.handleMarkAsUnreadClick}
+                        onClick={this.handleMarkAsUnread}
                     />
                     :
-                    null
-                }
-                {this.props.onRemove ?
                     <MenuItem
                         style={styles.menuItem}
-                        primaryText="Remove"
-                        leftIcon={<CloseIcon />}
-                        onClick={this.handleRemoveClick}
+                        primaryText="Mark As Read"
+                        leftIcon={<FlagIcon />}
+                        onClick={this.handleMarkAsRead}
                     />
-                    :
-                    null
                 }
+                <MenuItem
+                    style={styles.menuItem}
+                    primaryText="Remove"
+                    leftIcon={<CloseIcon />}
+                    onClick={this.handleRemove}
+                />
             </IconMenu>
         );
     }
@@ -124,17 +127,30 @@ export class NotificationMenu extends React.Component {
 
 NotificationMenu.propTypes = {
     style: PropTypes.object,
+    notification: PropTypes.object.isRequired,
+    router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
-    icon: PropTypes.element,
-    anchorOrigin: PropTypes.object,
-    targetOrigin: PropTypes.object,
 };
 
 NotificationMenu.defaultProps = {
-    icon: <MoreVertIcon />,
-    anchorOrigin: { horizontal: 'right', vertical: 'top' },
-    targetOrigin: { horizontal: 'right', vertical: 'top' },
+    onMarkAsRead: () => {},
+    onMarkAsUnread: () => {},
+    onRemove: () => {},
+    onView: () => { return true; },
 };
+
+function mapDispatchToProps(dispatch) {
+    return {
+        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
+        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
+        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
+    };
+}
+
+export default connect(
+    null,
+    mapDispatchToProps,
+)(NotificationMenu);

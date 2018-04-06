@@ -6,7 +6,7 @@ import { getViewedJobs } from '../../actions/userActions';
 import { getNotifications } from '../../actions/notificationsActions';
 import CustomScrollbar from '../CustomScrollbar';
 import { getProviders } from '../../actions/exportsActions';
-import { DashboardSection } from './DashboardSection';
+import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';

@@ -90,7 +90,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
     }
 }
 
-export function getNotificationViewUrl(notification) {
+export function getNotificationViewPath(notification) {
     switch (notification.type) {
         case types.DATAPACK_COMPLETE_SUCCESS:
         case types.DATAPACK_COMPLETE_ERROR:

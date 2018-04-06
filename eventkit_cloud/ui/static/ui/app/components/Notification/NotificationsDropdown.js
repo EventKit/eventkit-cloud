@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 export class NotificationsDropdown extends React.Component {
     constructor(props) {
         super(props);
-        this.handleNavigation = this.handleNavigation.bind(this);
+        this.handleViewAll = this.handleViewAll.bind(this);
         this.state = {
             showLoading: true,
         };
@@ -18,8 +18,10 @@ export class NotificationsDropdown extends React.Component {
         }
     }
 
-    handleNavigation(notification) {
-        return this.props.onNavigation(notification);
+    handleViewAll() {
+        if (this.props.onNavigate('/notifications')) {
+            this.props.router.push('/notifications');
+        }
     }
 
     render() {
@@ -29,6 +31,7 @@ export class NotificationsDropdown extends React.Component {
                 top: '80px',
                 left: '-2px',
                 zIndex: '100',
+                ...this.props.style,
             },
             pointer: {
                 position: 'absolute',
@@ -51,7 +54,6 @@ export class NotificationsDropdown extends React.Component {
             },
             gridList: {
                 width: '100%',
-                // margin: '0',
                 padding: '0',
             },
             gridItem: {
@@ -69,12 +71,8 @@ export class NotificationsDropdown extends React.Component {
                 color: '#337ab7',
                 fontSize: '22px',
                 textTransform: 'uppercase',
+                cursor: 'pointer',
             },
-        };
-
-        styles.root = {
-            ...styles.root,
-            ...this.props.style,
         };
 
         const notifications = this.props.notifications.notificationsSorted.slice(0, 10);
@@ -115,7 +113,7 @@ export class NotificationsDropdown extends React.Component {
                                             borderTop: (index === 0) ? '1px solid lightgray' : '',
                                         }}
                                         notification={notification}
-                                        onView={this.handleNavigation}
+                                        onView={this.props.onNavigate}
                                         router={this.props.router}
                                     />
                                 ))}
@@ -123,10 +121,8 @@ export class NotificationsDropdown extends React.Component {
                     }
                     <div style={{ marginTop: '25px', textAlign: 'center' }}>
                         <Link
-                            to="/notifications"
-                            href="/notifications"
                             style={styles.viewAll}
-                            onClick={this.handleNavigation}
+                            onClick={this.handleViewAll}
                         >
                             View All
                         </Link>
@@ -141,12 +137,12 @@ NotificationsDropdown.propTypes = {
     style: PropTypes.object,
     notifications: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
-    onNavigation: PropTypes.func,
+    onNavigate: PropTypes.func,
 };
 
 NotificationsDropdown.defaultProps = {
     style: {},
-    onNavigation: () => { return true; },
+    onNavigate: () => { return true; },
 };
 
 export default NotificationsDropdown;

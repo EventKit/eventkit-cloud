@@ -1,10 +1,9 @@
 import React, { PropTypes, Component } from 'react';
-import { Link, browserHistory } from 'react-router';
-import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
+import { Link } from 'react-router';
+import { Card, CardTitle, CardText } from 'material-ui/Card';
+import { ListItem } from 'material-ui/List';
 import moment from 'moment';
-import { List, ListItem } from 'material-ui/List';
 import isUndefined from 'lodash/isUndefined';
-
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';

@@ -7,14 +7,13 @@ import {
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
-import MoreHorizIcon from 'material-ui/svg-icons/navigation/more-horiz'
-import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
-import values from 'lodash/values';
-import { getNotificationIcon, getNotificationMessage, getNotificationViewUrl } from '../../utils/notificationUtils';
 import moment from 'moment';
-import { NotificationMenu } from './NotificationMenu';
+import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
+import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
+import NotificationMenu from './NotificationMenu';
+import NotificationMultiMenu from './NotificationMultiMenu';
 
 export class NotificationsTable extends React.Component {
     constructor(props) {
@@ -27,13 +26,24 @@ export class NotificationsTable extends React.Component {
         this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
         this.handleRemove = this.handleRemove.bind(this);
         this.handleView = this.handleView.bind(this);
-        this.handleMultiMarkAsRead = this.handleMultiMarkAsRead.bind(this);
-        this.handleMultiMarkAsUnread = this.handleMultiMarkAsUnread.bind(this);
-        this.getMultiMarkAsReadFunc = this.getMultiMarkAsReadFunc.bind(this);
-        this.getMultiMarkAsUnreadFunc = this.getMultiMarkAsUnreadFunc.bind(this);
         this.state = {
             selected: {},
         };
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.notifications !== this.props.notifications) {
+            // Make sure to deselect any notifications that have been removed. Handle it here instead of
+            // the standard callback in case it was removed by the notifications dropdown.
+            const selected = { ...this.state.selected };
+            for (let uid of Object.keys(selected)) {
+                if (!nextProps.notifications.notifications[uid]) {
+                    delete selected[uid];
+                }
+            }
+
+            this.setState({ selected });
+        }
     }
 
     getSelectedCount() {
@@ -74,59 +84,25 @@ export class NotificationsTable extends React.Component {
 
     handleMarkAsRead(notification) {
         this.props.markNotificationsAsRead([notification]);
-        this.props.onMarkAsRead([notification]);
+        this.props.onMarkAsRead(notification);
     }
 
     handleMarkAsUnread(notification) {
         this.props.markNotificationsAsUnread([notification]);
-        this.props.onMarkAsUnread([notification]);
+        this.props.onMarkAsUnread(notification);
     }
 
     handleRemove(notification) {
         this.props.removeNotifications([notification]);
-        this.props.onRemove([notification]);
+        this.props.onRemove(notification);
     }
 
     handleView(notification) {
-        // Allow the parent component the opportunity to stop or handle navigation.
-        if (this.props.onView(notification)) {
-            this.props.router.push(getNotificationViewUrl(notification));
+        const path = getNotificationViewPath(notification);
+        if (this.props.onView(path, notification)) {
+            this.props.router.push(path);
             this.props.markNotificationsAsRead([notification]);
         }
-    }
-
-    handleMultiMarkAsRead() {
-        const notifications = values(this.state.selected);
-        this.props.markNotificationsAsRead(notifications);
-        this.props.onMarkAsRead(notifications);
-    }
-
-    handleMultiMarkAsUnread() {
-        const notifications = values(this.state.selected);
-        this.props.markNotificationsAsUnread(notifications);
-        this.props.onMarkAsUnread(notifications);
-    }
-
-    getMultiMarkAsReadFunc() {
-        for (let uid of Object.keys(this.state.selected)) {
-            const notification = this.state.selected[uid];
-            if (!notification.read) {
-                return this.handleMultiMarkAsRead;
-            }
-        }
-
-        return null;
-    }
-
-    getMultiMarkAsUnreadFunc() {
-        for (let uid of Object.keys(this.state.selected)) {
-            const notification = this.state.selected[uid];
-            if (notification.read) {
-                return this.handleMultiMarkAsUnread;
-            }
-        }
-
-        return null;
     }
 
     render() {
@@ -261,14 +237,12 @@ export class NotificationsTable extends React.Component {
                                 <div style={styles.contentHeaderColumnWrapper}>
                                     <span>{this.getSelectedCount()} Selected</span>
                                     {this.getSelectedCount() > 0 ?
-                                        <NotificationMenu
+                                        <NotificationMultiMenu
                                             style={styles.multiMenu}
-                                            onMarkAsRead={this.getMultiMarkAsReadFunc()}
-                                            onMarkAsUnread={this.getMultiMarkAsUnreadFunc()}
-                                            onRemove={this.handleRemove}
-                                            icon={<MoreHorizIcon />}
-                                            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-                                            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+                                            selectedNotifications={this.state.selected}
+                                            onMarkAsRead={this.props.onMultiMarkAsRead}
+                                            onMarkAsUnread={this.props.onMultiMarkAsUnread}
+                                            onRemove={this.props.onMultiRemove}
                                         />
                                         :
                                         null
@@ -384,10 +358,12 @@ export class NotificationsTable extends React.Component {
                                                 </div>
                                                 :
                                                 <NotificationMenu
-                                                    onMarkAsRead={notification.read ? null : this.handleMarkAsRead}
-                                                    onMarkAsUnread={notification.read ? this.handleMarkAsUnread : null}
-                                                    onRemove={this.handleRemove}
-                                                    onView={this.handleView}
+                                                    notification={notification}
+                                                    router={this.props.router}
+                                                    onMarkAsRead={this.props.onMarkAsRead}
+                                                    onMarkAsUnread={this.props.onMarkAsUnread}
+                                                    onRemove={this.props.onRemove}
+                                                    onView={this.props.onView}
                                                 />
                                             }
                                         </div>
@@ -409,6 +385,9 @@ NotificationsTable.propTypes = {
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
+    onMultiMarkAsRead: PropTypes.func,
+    onMultiMarkAsUnread: PropTypes.func,
+    onMultiRemove: PropTypes.func,
 };
 
 NotificationsTable.defaultProps = {
