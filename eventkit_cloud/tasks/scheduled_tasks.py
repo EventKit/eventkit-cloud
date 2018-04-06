@@ -75,6 +75,7 @@ def check_provider_availability():
         data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
         data_provider_status.last_check_time = datetime.datetime.now()
         data_provider_status.status = status['status']
+        data_provider_status.status_type = status['type']
         data_provider_status.message = status['message']
         data_provider_status.save()
 

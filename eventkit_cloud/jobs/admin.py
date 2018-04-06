@@ -180,9 +180,9 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
     color_status.short_description = 'status'
 
     model = DataProviderStatus
-    readonly_fields = ('status', 'message', 'last_check_time', 'related_provider')
-    list_display = ('color_status', 'message', 'last_check_time', 'related_provider')
-    list_filter = ('related_provider', 'last_check_time')
+    readonly_fields = ('status', 'status_type', 'message', 'last_check_time', 'related_provider')
+    list_display = ('color_status', 'status_type', 'message', 'last_check_time', 'related_provider')
+    list_filter = ('related_provider', 'status', 'status_type', 'last_check_time')
 
     def has_add_permission(self, request, obj=None):
         return False
