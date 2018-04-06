@@ -5,10 +5,14 @@ import httplib
 from tempfile import NamedTemporaryFile
 import logging
 from functools import wraps
+import urllib2
 import requests
+
+from mapproxy.client import http
 
 
 logger = logging.getLogger(__name__)
+logger.debug = logger.info  # TODO: don't forget to take this out
 
 
 def content_to_file(content):
@@ -35,7 +39,7 @@ def content_to_file(content):
     return decorator
 
 
-def find_cert(slug=None):
+def find_cert_var(slug=None):
     """
     Given a provider slug, returns the contents of an environment variable consisting of the slug (lower or uppercase)
     followed by "_CERT". If no variable was found, return None.
@@ -62,45 +66,63 @@ def slug_to_cert(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        cert_env = find_cert(kwargs.pop("slug", None))
+        cert_env = find_cert_var(kwargs.get("slug", None))
 
         return content_to_file(cert_env)(func)(*args, **kwargs)
     return wrapper
 
 
+def get_cred(slug=None, url=None, params=None):
+    """
+    Given a URL with a query string, locates parameters corresponding to username and password, and returns them.
+    If both username and password are not found, return None.
+    :param slug: Provider slug
+    :param url: URL with query string
+    :param params: Parameters dict to be passed to request
+    :return: (username, password) or None
+    """
+    # Check for environment variable
+    cred = None
+    if slug:
+        cred = os.getenv(slug + "_CRED") or os.getenv(slug.upper() + "_CRED")
+        logger.info("Found credentials for %s in env var: %s", slug, cred)
+    if cred is not None and ":" in cred and all(cred.split(":")):
+        return cred.split(":")
+
+    # Check for http credentials
+    cred_str = re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url)
+    if cred_str:
+        return cred_str.group().split(":")
+
+    # Check in query string
+    username = re.search(r"(?<=[?&]username=)[a-zA-Z0-9\-._~]+", url)
+    password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
+    cred = (username.group(), password.group()) if username and password else None
+    if cred:
+        return cred
+
+    if params and params.get("username") and params.get("password"):
+        cred = (params.get("username"), params.get("password"))
+
+    return cred
+
+
 def handle_basic_auth(func):
     """
-    Decorator for requests methods that retries 401 response codes using username and password from query string
-     to construct a HTTPBasicAuth.
+    Decorator for requests methods that supplies username and password as HTTPBasicAuth header.
+    Checks first for credentials environment variable, then URL, and finally kwarg parameters.
     :param func: A requests method that returns an instance of requests.models.Response
-    :return: result of initial call if successful, or result of retry if it was 401 and username/password were available
+    :return: result of requests function call
     """
     @wraps(func)
     def wrapper(url, **kwargs):
-        response = func(url, **kwargs)
-        if not isinstance(response, requests.models.Response):
-            return response
-        if response.status_code != 401:
-            return response
-        # We're unauthorized; look for username/password
-        # Check kwargs
-        params = kwargs.get("params")
-        cred = None
-        if params and params.get("username") and params.get("password"):
-            cred = (params.get("username"), params.get("password"))
 
-        if not cred:
-            # Check query string
-            username = re.search(r"(?<=[?&]username=)[a-zA-Z0-9\-._~]+", url)
-            password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
-            cred = (username.group(), password.group()) if username and password else None
-
-        if not cred:
-            return response
-
-        kwargs["auth"] = cred
+        cred = get_cred(slug=kwargs.pop("slug"), url=url, params=kwargs.get("params", None))
+        if cred:
+            kwargs["auth"] = cred
         response = func(url, **kwargs)
         return response
+
     return wrapper
 
 
@@ -131,6 +153,7 @@ def post(url, **kwargs):
 
 
 _ORIG_HTTPSCONNECTION_INIT = httplib.HTTPSConnection.__init__
+_ORIG_URLOPENERCACHE_CALL = http._URLOpenerCache.__call__
 
 
 def patch_https(slug):
@@ -141,7 +164,7 @@ def patch_https(slug):
     :param slug: Provider slug, used for finding cert/key environment variable
     :return: None
     """
-    cert = find_cert(slug)
+    cert = find_cert_var(slug)
     logger.debug("Patching with slug %s, cert [%s B]", slug, len(cert) if cert is not None else 0)
 
     @content_to_file(cert)
@@ -153,6 +176,45 @@ def patch_https(slug):
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
     httplib.HTTPSConnection.__init__ = _new_init
+
+
+def patch_mapproxy_opener_cache():
+    """
+    Monkey-patches MapProxy's urllib opener constructor to include support for http cookies.
+    :return:
+    """
+    # Source: https://github.com/mapproxy/mapproxy/blob/a24cb41d3b3abcbb8a31460f4d1a0eee5312570a/mapproxy/client/http.py#L81
+    def _new_call(_self, ssl_ca_certs, url, username, password):
+        if ssl_ca_certs not in _self._opener:
+            handlers = []
+            if ssl_ca_certs:
+                connection_class = http.verified_https_connection_with_ca_certs(ssl_ca_certs)
+                https_handler = http.VerifiedHTTPSConnection(connection_class=connection_class)
+                handlers.append(https_handler)
+            handlers.append(urllib2.HTTPCookieProcessor)
+            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            authhandler = urllib2.HTTPBasicAuthHandler(passman)
+            handlers.append(authhandler)
+            authhandler = urllib2.HTTPDigestAuthHandler(passman)
+            handlers.append(authhandler)
+
+            opener = urllib2.build_opener(*handlers)
+            opener.addheaders = [('User-agent', 'MapProxy-%s' % (http.version,))]
+
+            _self._opener[ssl_ca_certs] = (opener, passman)
+        else:
+            opener, passman = _self._opener[ssl_ca_certs]
+
+        if url is not None and username is not None and password is not None:
+            passman.add_password(None, url, username, password)
+
+        return opener
+
+    http._URLOpenerCache.__call__ = _new_call
+
+
+def unpatch_mapproxy_opener_cache():
+    http._URLOpenerCache.__call__ = _ORIG_URLOPENERCACHE_CALL
 
 
 def unpatch_https():
