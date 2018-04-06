@@ -140,6 +140,9 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
 class DefaultExportTaskRecordSerializer(serializers.Serializer):
     name = 'Export task creation in progress.'
+    progress = 0
+    status = 'PENDING'
+    display = True
 
 
 class ExportTaskRecordSerializer(serializers.ModelSerializer):
@@ -176,12 +179,10 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
             return None
 
 
-class DefaultDataProviderTaskRecordSerializer(serializers.Serializer):
-    name = 'Provider task creation in progress.'
-    tasks = serializers.SerializerMethodField()
-
-    def get_tasks(self, obj):
-        return DefaultExportTaskRecordSerializer().data
+class DefaultDataProviderTaskRecordSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+    status = 'PENDING'
+    display = True
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
@@ -295,7 +296,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_provider_tasks(self, obj):
         if self.context.get('add_placeholders') and len(obj.provider_tasks.all()) == 0:
-            return DefaultDataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
+            return DefaultDataProviderTaskRecordSerializer(Job.objects.get(job_uid=self.context.get('job_uid')).provider_tasks.providers, many=True, context=self.context).data
         return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):

@@ -685,10 +685,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         add_placeholders = True if request.query_params.keys() == ['job_uid'] else False
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'add_placeholders': add_placeholders})
+            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'add_placeholders': add_placeholders, 'job_uid': request.query_params.get('job_uid')})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'add_placeholders': add_placeholders})
+            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'add_placeholders': add_placeholders, 'job_uid': request.query_params.get('job_uid')})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @list_route(methods=['post', 'get'])
