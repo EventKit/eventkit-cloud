@@ -174,13 +174,30 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
 
 class DefaultDataProviderTaskRecordSerializer(serializers.ModelSerializer):
     """
-    This serializer class uses DataProvider, instead of DataProviderTaskRecord, to give a subset of information
+    This serializer class uses DataProviderTask, instead of DataProviderTaskRecord, to give a subset of information
     DataProviderTaskRecordSerializer would give. It's useful in cases where the DataProviderTaskRecord objects have not
     yet been initialized for the run, and serializing them would yield nothing.
     """
-    name = serializers.CharField()
-    status = 'PENDING'
-    display = True
+    name = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    display = serializers.SerializerMethodField()
+    tasks = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        return 'PENDING'
+
+    def get_display(self, obj):
+        return True
+
+    def get_name(self, obj):
+        return obj.provider.name
+
+    def get_tasks(self, obj):
+        return []
+
+    class Meta:
+        model = DataProviderTask
+        fields = ('name', 'status', 'display', 'tasks')
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
@@ -289,7 +306,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_provider_tasks(self, obj):
         if self.context.get('add_placeholders') and len(obj.provider_tasks.all()) == 0:
-            return DefaultDataProviderTaskRecordSerializer(obj.job.provider_tasks.providers, many=True, context=self.context).data
+            return DefaultDataProviderTaskRecordSerializer(obj.job.provider_tasks, many=True, context=self.context).data
         return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
