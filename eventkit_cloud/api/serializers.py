@@ -173,22 +173,22 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
 
 
 class DefaultDataProviderTaskRecordSerializer(serializers.ModelSerializer):
+    """
+    This serializer class uses DataProvider, instead of DataProviderTaskRecord, to give a subset of information
+    DataProviderTaskRecordSerializer would give. It's useful in cases where the DataProviderTaskRecord objects have not
+    yet been initialized for the run, and serializing them would yield nothing.
+    """
     name = serializers.CharField()
     status = 'PENDING'
     display = True
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
-    tasks = serializers.SerializerMethodField()
+    tasks = ExportTaskRecordSerializer(many=True, required=False)
     url = serializers.HyperlinkedIdentityField(
         view_name='api:provider_tasks-detail',
         lookup_field='uid'
     )
-
-    def get_tasks(self, obj):
-        if self.context.get('add_placeholders') and len(obj.tasks.all()) == 0:
-            return DefaultExportTaskRecordSerializer().data
-        return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     class Meta:
         model = DataProviderTaskRecord
