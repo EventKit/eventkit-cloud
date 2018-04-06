@@ -95,7 +95,6 @@ export function updatePermissionReducer(state = initialState.updatePermission, a
         case types.UPDATE_PERMISSION_SUCCESS:
             return {updating: false, updated: true, error: null};
         case types.UPDATE_PERMISSION_ERROR:
-            console.log(action.error);
             return {updating: false, updated: false, error: action.error};
         default:
             return state;
