@@ -289,7 +289,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_provider_tasks(self, obj):
         if self.context.get('add_placeholders') and len(obj.provider_tasks.all()) == 0:
-            return DefaultDataProviderTaskRecordSerializer(Job.objects.get(job_uid=self.context.get('job_uid')).provider_tasks.providers, many=True, context=self.context).data
+            return DefaultDataProviderTaskRecordSerializer(obj.job.provider_tasks.providers, many=True, context=self.context).data
         return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
