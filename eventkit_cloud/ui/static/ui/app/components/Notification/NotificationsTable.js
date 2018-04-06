@@ -276,6 +276,7 @@ export class NotificationsTable extends React.Component {
                                         ...styles.tableRow,
                                         backgroundColor: (notification.read) ? 'white' : '#d5e6f1',
                                     }}
+                                    selectable={false}
                                 >
                                     <TableRowColumn
                                         className="qa-NotificationsTable-Checkbox"
