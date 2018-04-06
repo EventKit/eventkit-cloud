@@ -97,6 +97,7 @@ class TestCheckProviderAvailabilityTask(TestCase):
         self.assertEqual(len(statuses), 2)
         most_recent_first_provider_status = statuses.order_by('-id')[0]
         self.assertEqual(most_recent_first_provider_status.status, 'SUCCESS')
+        self.assertEqual(most_recent_first_provider_status.status_type, 'SUCCESS')
         self.assertEqual(most_recent_first_provider_status.message, 'Export should proceed without issues.')
 
 
