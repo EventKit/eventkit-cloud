@@ -15,28 +15,10 @@ from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, Data
 logger = logging.getLogger(__name__)
 
 admin.site.register(ExportFormat)
-admin.site.register(ExportProfile)
 admin.site.register(DataProviderType)
-admin.site.register(DataProviderTask)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
 admin.site.register(UserLicense)
-
-
-class HOTRegionGeoAdmin(OSMGeoAdmin):
-    """
-    Admin model to allow Region editing in admin interface.
-
-    Uses OSM for base layer in map in admin.
-    """
-    model = Region
-    exclude = ['the_geom', 'the_geog']
-
-    def save_model(self, request, obj, form, change):  # pragma no cover
-        geom_merc = obj.the_geom_webmercator
-        obj.the_geom = geom_merc.transform(ct=4326, clone=True)
-        obj.the_geog = GEOSGeometry(obj.the_geom.wkt)
-        obj.save()
 
 
 class JobAdmin(OSMGeoAdmin):
@@ -166,6 +148,5 @@ class DataProviderAdmin(admin.ModelAdmin):
 
 
 # register the new admin models
-admin.site.register(Region, HOTRegionGeoAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
