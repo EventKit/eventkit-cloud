@@ -20,18 +20,21 @@ export class NotificationMultiMenu extends React.Component {
     }
 
     handleMarkAsRead() {
-        this.props.markNotificationsAsRead(values(this.props.selectedNotifications));
-        this.props.onMarkAsRead(values(this.props.selectedNotifications));
+        if (this.props.onMarkAsRead(values(this.props.selectedNotifications))) {
+            this.props.markNotificationsAsRead(values(this.props.selectedNotifications));
+        }
     }
 
     handleMarkAsUnread() {
-        this.props.markNotificationsAsUnread(values(this.props.selectedNotifications));
-        this.props.onMarkAsUnread(values(this.props.selectedNotifications));
+        if (this.props.onMarkAsUnread(values(this.props.selectedNotifications))) {
+            this.props.markNotificationsAsUnread(values(this.props.selectedNotifications));
+        }
     }
 
     handleRemove() {
-        this.props.removeNotifications(values(this.props.selectedNotifications));
-        this.props.onRemove(values(this.props.selectedNotifications));
+        if (this.props.onRemove(values(this.props.selectedNotifications))) {
+            this.props.removeNotifications(values(this.props.selectedNotifications));
+        }
     }
 
     render() {
@@ -116,9 +119,9 @@ NotificationMultiMenu.propTypes = {
 
 NotificationMultiMenu.defaultProps = {
     style: {},
-    onMarkAsRead: () => {},
-    onMarkAsUnread: () => {},
-    onRemove: () => {},
+    onMarkAsRead: () => { return true; },
+    onMarkAsUnread: () => { return true; },
+    onRemove: () => { return true; },
 };
 
 function mapDispatchToProps(dispatch) {

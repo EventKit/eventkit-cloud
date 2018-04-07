@@ -180,9 +180,9 @@ export class NotificationsPage extends React.Component {
                                                 padding={2}
                                                 cols={1}
                                             >
-                                                {this.props.notifications.notificationsSorted.map((notification, index) => (
+                                                {this.props.notifications.notificationsSorted.map((notification) => (
                                                     <NotificationGridItem
-                                                        key={`Notification-${index}`}
+                                                        key={`Notification-${notification.uid}`}
                                                         notification={notification}
                                                         router={this.props.router}
                                                     />

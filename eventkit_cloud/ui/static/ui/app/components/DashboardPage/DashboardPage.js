@@ -283,9 +283,9 @@ export class DashboardPage extends React.Component {
                                     </Paper>
                                 }
                             >
-                                {this.props.notifications.notificationsSorted.map((notification, index) => (
+                                {this.props.notifications.notificationsSorted.map((notification) => (
                                     <NotificationGridItem
-                                        key={`Notification-${index}`}
+                                        key={`Notification-${notification.uid}`}
                                         notification={notification}
                                         router={this.props.router}
                                     />

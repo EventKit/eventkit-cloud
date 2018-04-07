@@ -41,26 +41,29 @@ export class NotificationMenu extends React.Component {
 
     handleMarkAsRead(e) {
         this.handleMenuItemClick(e);
-        this.props.markNotificationsAsRead([this.props.notification]);
-        this.props.onMarkAsRead(this.props.notification);
+        if (this.props.onMarkAsRead(this.props.notification)) {
+            this.props.markNotificationsAsRead([this.props.notification]);
+        }
     }
 
     handleMarkAsUnread(e) {
         this.handleMenuItemClick(e);
-        this.props.markNotificationsAsUnread([this.props.notification]);
-        this.props.onMarkAsUnread(this.props.notification);
+        if (this.props.onMarkAsUnread(this.props.notification)) {
+            this.props.markNotificationsAsUnread([this.props.notification]);
+        }
     }
 
     handleRemove(e) {
         this.handleMenuItemClick(e);
-        this.props.removeNotifications([this.props.notification]);
-        this.props.onRemove(this.props.notification);
+        if (this.props.onRemove(this.props.notification)) {
+            this.props.removeNotifications([this.props.notification]);
+        }
     }
 
     handleView(e) {
         this.handleMenuItemClick(e);
         const path = getNotificationViewPath(this.props.notification);
-        if (this.props.onView(path, this.props.notification)) {
+        if (this.props.onView(this.props.notification, path)) {
             this.props.router.push(path);
             this.props.markNotificationsAsRead([this.props.notification]);
         }
@@ -136,9 +139,9 @@ NotificationMenu.propTypes = {
 };
 
 NotificationMenu.defaultProps = {
-    onMarkAsRead: () => {},
-    onMarkAsUnread: () => {},
-    onRemove: () => {},
+    onMarkAsRead: () => { return true; },
+    onMarkAsUnread: () => { return true; },
+    onRemove: () => { return true; },
     onView: () => { return true; },
 };
 

@@ -1,19 +1,11 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import {
-    Checkbox, FlatButton, Table, TableBody, TableHeader, TableHeaderColumn, TableRow,
-    TableRowColumn
-} from 'material-ui';
-import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui';
 import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
-import moment from 'moment';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
-import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
-import NotificationMenu from './NotificationMenu';
 import NotificationMultiMenu from './NotificationMultiMenu';
+import NotificationsTableItem from './NotificationsTableItem';
 
 export class NotificationsTable extends React.Component {
     constructor(props) {
@@ -22,10 +14,6 @@ export class NotificationsTable extends React.Component {
         this.setSelected = this.setSelected.bind(this);
         this.handleSelectAllCheck = this.handleSelectAllCheck.bind(this);
         this.getSelectAllCheckedIcon = this.getSelectAllCheckedIcon.bind(this);
-        this.handleMarkAsRead = this.handleMarkAsRead.bind(this);
-        this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
-        this.handleRemove = this.handleRemove.bind(this);
-        this.handleView = this.handleView.bind(this);
         this.state = {
             selected: {},
         };
@@ -82,29 +70,6 @@ export class NotificationsTable extends React.Component {
         }
     }
 
-    handleMarkAsRead(notification) {
-        this.props.markNotificationsAsRead([notification]);
-        this.props.onMarkAsRead(notification);
-    }
-
-    handleMarkAsUnread(notification) {
-        this.props.markNotificationsAsUnread([notification]);
-        this.props.onMarkAsUnread(notification);
-    }
-
-    handleRemove(notification) {
-        this.props.removeNotifications([notification]);
-        this.props.onRemove(notification);
-    }
-
-    handleView(notification) {
-        const path = getNotificationViewPath(notification);
-        if (this.props.onView(path, notification)) {
-            this.props.router.push(path);
-            this.props.markNotificationsAsRead([notification]);
-        }
-    }
-
     render() {
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
         let styles = {
@@ -119,17 +84,9 @@ export class NotificationsTable extends React.Component {
             tableHeader: {
                 height: '50px',
             },
-            tableRow: {
-                transition: 'background-color 0.25s',
-            },
             tableHeaderColumn: {
                 padding: '0 10px',
                 textAlign: 'left',
-            },
-            tableRowColumn: {
-                padding: '0 10px',
-                color: 'rgba(0, 0, 0, 0.54)',
-                fontSize: '18px',
             },
             contentHeaderColumnWrapper: {
                 display: 'flex',
@@ -140,32 +97,6 @@ export class NotificationsTable extends React.Component {
                 marginLeft: '6px',
                 position: 'relative',
                 top: '1px',
-            },
-            optionsButtonsContainer: {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: (window.innerWidth > 1280) ? 'center' : 'flex-end',
-            },
-            optionButtonLabel: {
-                position: 'relative',
-                top: '-2px',
-                color: 'rgb(69, 152, 191)',
-                fill: 'rgb(69, 152, 191)',
-            },
-            menuButton: {
-                padding: '0',
-                width: '20px',
-                verticalAlign: 'middle',
-            },
-            menuButtonIcon: {
-                color: '#4598bf',
-            },
-            clickable: {
-                cursor: 'pointer',
-                width: 'min-content',
-            },
-            unread: {
-                backgroundColor: '#D5E6F1',
             },
         };
 
@@ -187,24 +118,6 @@ export class NotificationsTable extends React.Component {
             optionsHeaderColumn: {
                 ...styles.tableHeaderColumn,
                 textAlign: (window.innerWidth > 1280) ? 'center' : 'right',
-                width: (window.innerWidth > 1600) ? '600px' :
-                       (window.innerWidth > 1280) ? '435px' : '60px',
-            },
-            checkboxRowColumn: {
-                ...styles.tableRowColumn,
-                width: '45px',
-            },
-            contentRowColumn: {
-                ...styles.tableRowColumn,
-                display: 'flex',
-                alignItems: 'center',
-            },
-            dateRowColumn: {
-                ...styles.tableRowColumn,
-                width: (window.innerWidth > 768) ? '200px' : '150px',
-            },
-            optionsRowColumn: {
-                ...styles.tableRowColumn,
                 width: (window.innerWidth > 1600) ? '600px' :
                        (window.innerWidth > 1280) ? '435px' : '60px',
             },
@@ -266,112 +179,19 @@ export class NotificationsTable extends React.Component {
                         </TableRow>
                     </TableHeader>
                     <TableBody displayRowCheckbox={false}>
-                        {this.props.notifications.notificationsSorted.map((notification) => {
-                            const icon = getNotificationIcon({ notification });
-                            const message = getNotificationMessage({ notification });
-                            return (
-                                <TableRow
-                                    key={`${notification.uid}-TableRow`}
-                                    style={{
-                                        ...styles.tableRow,
-                                        backgroundColor: (notification.read) ? 'white' : '#d5e6f1',
-                                    }}
-                                    selectable={false}
-                                >
-                                    <TableRowColumn
-                                        className="qa-NotificationsTable-Checkbox"
-                                        style={styles.checkboxRowColumn}
-                                    >
-                                        <Checkbox
-                                            checked={!!this.state.selected[notification.uid]}
-                                            onCheck={(e, isChecked) => this.setSelected(notification, isChecked)}
-                                            disableTouchRipple={true}
-                                        />
-                                    </TableRowColumn>
-                                    <TableRowColumn
-                                        className="qa-NotificationsTable-Content"
-                                        style={styles.contentRowColumn}
-                                    >
-                                        <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
-                                            {icon}
-                                            {message}
-                                        </div>
-                                    </TableRowColumn>
-                                    <TableRowColumn
-                                        className="qa-NotificationsTable-Date"
-                                        style={styles.dateRowColumn}
-                                    >
-                                        <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
-                                            {moment(notification.date).format('M/D/YY')}
-                                        </div>
-                                        <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
-                                            {moment(notification.date).format('h:mma')}
-                                        </div>
-                                    </TableRowColumn>
-                                    <TableRowColumn
-                                        className="qa-NotificationsTable-TableRowColumn-Options"
-                                        style={styles.optionsRowColumn}
-                                    >
-                                        <div style={styles.optionsButtonsContainer}>
-                                            {(window.innerWidth > 1280) ?
-                                                <div style={{ display: 'flex', flex: '1' }}>
-                                                    <div style={{ flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box' }}>
-                                                        <FlatButton
-                                                            label="View"
-                                                            labelStyle={styles.optionButtonLabel}
-                                                            icon={<OpenInNewIcon style={styles.optionButtonLabel} />}
-                                                            hoverColor="rgba(0, 0, 0, 0)"
-                                                            disableTouchRipple={true}
-                                                            onClick={() => this.handleView(notification)}
-                                                        />
-                                                    </div>
-                                                    <div style={{ flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box' }}>
-                                                        {notification.read ?
-                                                            <FlatButton
-                                                                label="Mark As Unread"
-                                                                labelStyle={styles.optionButtonLabel}
-                                                                icon={<FlagIcon style={styles.optionButtonLabel} />}
-                                                                hoverColor="rgba(0, 0, 0, 0)"
-                                                                disableTouchRipple={true}
-                                                                onClick={() => this.handleMarkAsUnread(notification)}
-                                                            />
-                                                            :
-                                                            <FlatButton
-                                                                label="Mark As Read"
-                                                                labelStyle={styles.optionButtonLabel}
-                                                                icon={<FlagIcon style={styles.optionButtonLabel} />}
-                                                                hoverColor="rgba(0, 0, 0, 0)"
-                                                                disableTouchRipple={true}
-                                                                onClick={() => this.handleMarkAsRead(notification)}
-                                                            />
-                                                        }
-                                                    </div>
-                                                    <div style={{ flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box' }}>
-                                                        <FlatButton
-                                                            label="Remove"
-                                                            labelStyle={styles.optionButtonLabel}
-                                                            icon={<CloseIcon style={styles.optionButtonLabel} />}
-                                                            hoverColor="rgba(0, 0, 0, 0)"
-                                                            disableTouchRipple={true}
-                                                            onClick={() => this.handleRemove(notification)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                :
-                                                <NotificationMenu
-                                                    notification={notification}
-                                                    router={this.props.router}
-                                                    onMarkAsRead={this.props.onMarkAsRead}
-                                                    onMarkAsUnread={this.props.onMarkAsUnread}
-                                                    onRemove={this.props.onRemove}
-                                                    onView={this.props.onView}
-                                                />
-                                            }
-                                        </div>
-                                    </TableRowColumn>
-                                </TableRow>
-                            );
-                        })}
+                        {this.props.notifications.notificationsSorted.map((notification) => (
+                            <NotificationsTableItem
+                                key={`NotificationsTableItem-${notification.uid}`}
+                                notification={notification}
+                                router={this.props.router}
+                                isSelected={!!this.state.selected[notification.uid]}
+                                setSelected={this.setSelected}
+                                onMarkAsRead={this.props.onMarkAsRead}
+                                onMarkAsUnread={this.props.onMarkAsUnread}
+                                onRemove={this.props.onRemove}
+                                onView={this.props.onView}
+                            />
+                        ))}
                     </TableBody>
                 </Table>
             </div>
@@ -389,13 +209,6 @@ NotificationsTable.propTypes = {
     onMultiMarkAsRead: PropTypes.func,
     onMultiMarkAsUnread: PropTypes.func,
     onMultiRemove: PropTypes.func,
-};
-
-NotificationsTable.defaultProps = {
-    onMarkAsRead: () => {},
-    onMarkAsUnread: () => {},
-    onRemove: () => {},
-    onView: () => { return true; },
 };
 
 function mapDispatchToProps(dispatch) {
