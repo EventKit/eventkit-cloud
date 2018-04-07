@@ -16,7 +16,7 @@ export class NotificationGridItem extends Component {
         // Allow the parent component the opportunity to stop or handle navigation.
         const path = getNotificationViewPath(this.props.notification);
         if (this.props.onView(this.props.notification, path)) {
-            this.props.router.push(url);
+            this.props.router.push(path);
             this.props.markNotificationsAsRead([this.props.notification]);
         }
     }
