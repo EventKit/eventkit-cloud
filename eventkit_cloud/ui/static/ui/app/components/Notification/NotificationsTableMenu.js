@@ -11,7 +11,7 @@ import {
     removeNotifications
 } from '../../actions/notificationsActions';
 
-export class NotificationMultiMenu extends React.Component {
+export class NotificationsTableMenu extends React.Component {
     constructor(props) {
         super(props);
         this.handleMarkAsRead = this.handleMarkAsRead.bind(this);
@@ -109,7 +109,7 @@ export class NotificationMultiMenu extends React.Component {
     }
 }
 
-NotificationMultiMenu.propTypes = {
+NotificationsTableMenu.propTypes = {
     style: PropTypes.object,
     selectedNotifications: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
@@ -117,7 +117,7 @@ NotificationMultiMenu.propTypes = {
     onRemove: PropTypes.func,
 };
 
-NotificationMultiMenu.defaultProps = {
+NotificationsTableMenu.defaultProps = {
     style: {},
     onMarkAsRead: () => { return true; },
     onMarkAsUnread: () => { return true; },
@@ -135,4 +135,4 @@ function mapDispatchToProps(dispatch) {
 export default connect(
     null,
     mapDispatchToProps,
-)(NotificationMultiMenu);
+)(NotificationsTableMenu);

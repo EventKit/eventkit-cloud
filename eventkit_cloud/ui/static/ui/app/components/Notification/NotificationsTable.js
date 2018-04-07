@@ -4,8 +4,8 @@ import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } 
 import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
-import NotificationMultiMenu from './NotificationMultiMenu';
 import NotificationsTableItem from './NotificationsTableItem';
+import NotificationsTableMenu from './NotificationsTableMenu';
 
 export class NotificationsTable extends React.Component {
     constructor(props) {
@@ -150,7 +150,7 @@ export class NotificationsTable extends React.Component {
                                 <div style={styles.contentHeaderColumnWrapper}>
                                     <span>{this.getSelectedCount()} Selected</span>
                                     {this.getSelectedCount() > 0 ?
-                                        <NotificationMultiMenu
+                                        <NotificationsTableMenu
                                             style={styles.multiMenu}
                                             selectedNotifications={this.state.selected}
                                             onMarkAsRead={this.props.onMultiMarkAsRead}
