@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import logging
 from .models import OAuth
 from django.contrib import admin
+from rest_framework.authtoken.models import Token
 
 
 logger = logging.getLogger(__name__)
@@ -20,3 +21,4 @@ class OAuthAdmin(admin.ModelAdmin):
 
 
 admin.site.register(OAuth, OAuthAdmin)
+admin.site.unregister(Token)
