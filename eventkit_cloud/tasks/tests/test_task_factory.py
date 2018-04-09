@@ -14,6 +14,7 @@ from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_f
     get_invalid_licenses)
 from mock import patch, Mock, MagicMock, ANY
 
+from ...core.models import GroupPermission,JobPermission
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,8 @@ class TestExportTaskFactory(TestCase):
         self.job.region = self.region
         self.uid = str(provider_task.uid)
         self.job.save()
+        self.jp = JobPermission(job=self.job,content_object=self.user,permission=JobPermission.Permissions.ADMIN.value);
+        self.jp.save()
 
     def test_create_run_success(self):
         run_uid = create_run(job_uid=self.job.uid)
