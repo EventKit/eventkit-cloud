@@ -20,8 +20,7 @@ function BrowserWarning() {
             <CustomScrollbar style={{ height: window.innerHeight - 95 }}>
                 <div style={styles.text} className="qa-BrowserWarning-text">
                     The browser you are using is not supported by EventKit.<br />
-                     EventKit works on most modern browsers,
-                     but IE versions prior to 10 will not work.<br />
+                     EventKit does not support any versions of Internet Explorer or other legacy browsers.<br />
                      Please use a different browser or version to access EventKit
                      (we recommend Chrome).
                 </div>

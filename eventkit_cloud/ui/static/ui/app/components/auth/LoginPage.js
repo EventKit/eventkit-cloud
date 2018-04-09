@@ -110,7 +110,7 @@ export class LoginPage extends React.Component {
                                 null
                             }
                             <div style={styles.footerText} className="qa-LoginPage-browser-text">
-                                Supported Browsers: Chrome, Firefox, Opera, Edge, and IE versions 10 or newer
+                                Supported Browsers: Chrome, Firefox, Opera, and Edge
                             </div>
                         </div>
                     </div>
