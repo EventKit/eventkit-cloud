@@ -85,21 +85,22 @@ def get_cred(slug=None, url=None, params=None):
     cred = None
     if slug:
         cred = os.getenv(slug + "_CRED") or os.getenv(slug.upper() + "_CRED")
-        logger.info("Found credentials for %s in env var: %s", slug, cred)
     if cred is not None and ":" in cred and all(cred.split(":")):
+        logger.debug("Found credentials for %s in env var", slug)
         return cred.split(":")
 
-    # Check for http credentials
-    cred_str = re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url)
-    if cred_str:
-        return cred_str.group().split(":")
+    # Check url and params for http credentials
+    if url:
+        cred_str = re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url)
+        if cred_str:
+            return cred_str.group().split(":")
 
-    # Check in query string
-    username = re.search(r"(?<=[?&]username=)[a-zA-Z0-9\-._~]+", url)
-    password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
-    cred = (username.group(), password.group()) if username and password else None
-    if cred:
-        return cred
+        # Check in query string
+        username = re.search(r"(?<=[?&]username=)[a-zA-Z0-9\-._~]+", url)
+        password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
+        cred = (username.group(), password.group()) if username and password else None
+        if cred:
+            return cred
 
     if params and params.get("username") and params.get("password"):
         cred = (params.get("username"), params.get("password"))
@@ -178,14 +179,14 @@ def patch_https(slug):
     httplib.HTTPSConnection.__init__ = _new_init
 
 
-def patch_mapproxy_opener_cache():
+def patch_mapproxy_opener_cache(slug=None):
     """
     Monkey-patches MapProxy's urllib opener constructor to include support for http cookies.
     :return:
     """
     # Source: https://github.com/mapproxy/mapproxy/blob/a24cb41d3b3abcbb8a31460f4d1a0eee5312570a/mapproxy/client/http.py#L81
-    def _new_call(_self, ssl_ca_certs, url, username, password):
-        if ssl_ca_certs not in _self._opener:
+    def _new_call(self, ssl_ca_certs, url, username, password):
+        if ssl_ca_certs not in self._opener:
             handlers = []
             if ssl_ca_certs:
                 connection_class = http.verified_https_connection_with_ca_certs(ssl_ca_certs)
@@ -201,9 +202,14 @@ def patch_mapproxy_opener_cache():
             opener = urllib2.build_opener(*handlers)
             opener.addheaders = [('User-agent', 'MapProxy-%s' % (http.version,))]
 
-            _self._opener[ssl_ca_certs] = (opener, passman)
+            self._opener[ssl_ca_certs] = (opener, passman)
         else:
-            opener, passman = _self._opener[ssl_ca_certs]
+            opener, passman = self._opener[ssl_ca_certs]
+
+        cred = get_cred(slug=slug)
+        if cred and len(cred) == 2:
+            username = username or cred[0]
+            password = password or cred[1]
 
         if url is not None and username is not None and password is not None:
             passman.add_password(None, url, username, password)

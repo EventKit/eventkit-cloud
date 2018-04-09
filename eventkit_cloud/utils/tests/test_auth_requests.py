@@ -2,11 +2,13 @@
 import logging
 import requests
 import httplib
+import urllib2
 from django.test import TransactionTestCase
 from mock import Mock, patch, MagicMock, ANY
-from mapproxy.client.http import VerifiedHTTPSConnection
+from mapproxy.client.http import VerifiedHTTPSConnection, _URLOpenerCache
 
 from .. import auth_requests
+
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +110,24 @@ class TestAuthResult(TransactionTestCase):
 
         finally:
             auth_requests._ORIG_HTTPSCONNECTION_INIT = orig_init
+            auth_requests.unpatch_https()
+
+    def test_mapproxy_opener_patch(self):
+        orig_call = auth_requests._ORIG_URLOPENERCACHE_CALL
+        try:
+            new_orig_call = MagicMock()
+            auth_requests._ORIG_URLOPENERCACHE_CALL = new_orig_call
+            # Confirm that the patch is applied
+            auth_requests.patch_mapproxy_opener_cache()
+            self.assertEqual("_new_call", _URLOpenerCache.__call__.__func__.__name__)
+            create_url_opener = _URLOpenerCache()
+            opener = create_url_opener(None, "example.com", "test_user", "test_password")
+            self.assertTrue(any([isinstance(h, urllib2.HTTPCookieProcessor) for h in opener.handlers]))
+
+            # Test removing the patch
+            auth_requests.unpatch_mapproxy_opener_cache()
+            self.assertEqual(orig_call, _URLOpenerCache.__call__)
+
+        finally:
+            auth_requests._ORIG_URLOPENERCACHE_CALL = orig_call
+            auth_requests.unpatch_mapproxy_opener_cache()
