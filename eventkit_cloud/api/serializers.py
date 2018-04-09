@@ -702,3 +702,13 @@ class JobSerializer(serializers.Serializer):
     def get_owner(obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+class GenericNotificationRelatedField(serializers.RelatedField):
+
+    def to_representation(self, value):
+        if isinstance(value, User):
+            serializer = UserSerializer(value)
+        if isinstance(value, Job):
+            serializer = JobSerializer(value)
+
+        return serializer.data

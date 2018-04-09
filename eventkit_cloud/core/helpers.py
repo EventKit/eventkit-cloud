@@ -7,6 +7,7 @@ import dj_database_url
 import zipfile
 import shutil
 import logging
+from notifications.signals import notify
 
 logger = logging.getLogger(__name__)
 
@@ -98,4 +99,12 @@ def load_land_vectors(db_conn=None, url=None):
         logger.info("Finished loading land data.")
 
 
+# notify.send(actor, recipient, verb, action_object, target, level, description, public, timestamp)
+
+def sendnotification(actor, recipient, verb):
+    logger.info("%s %s %s" % (actor,recipient,verb))
+    try:
+        result = notify.send(actor, recipient=recipient, verb=verb)
+    except Exception as err:
+        logger.info( "notify errror ignored: %s" % err)
 

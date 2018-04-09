@@ -48,6 +48,8 @@ from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
 import coreapi
 from notifications.signals import notify
+from notifications.models import Notification
+from ..core.helpers import sendnotification
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -948,13 +950,41 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @list_route(methods=[ 'get'])
-    def notifications(self,request):
-        logger.info( "****************")
-        logger.info("Notifications")
-        logger.info("****************")
-        notify.send(self.request.user, recipient=self.request.user, verb=u'ACK')
-        return Response("Notifications", status=status.HTTP_200_OK)
+    @list_route(methods=['post','get'])
+    def notifications(self, request, *args, **kwargs):
+
+
+        notifications = Notification.objects.all()
+
+        logger.info("*** ALL *****")
+        for n in notifications:
+            logger.info(n)
+        logger.info("********")
+
+
+        test = Notification.objects.read()
+        logger.info("***  READ *****")
+        logger.info(test)
+        logger.info("********")
+
+        test = Notification.objects.unread()
+        logger.info("***  UNREAD *****")
+        logger.info(test)
+        logger.info("********")
+
+        verb = request.data["verb"]
+        recipient = User.objects.filter(username="dmsherman")[0]
+
+        result = None
+        try:
+            #result = notify.send(self.request.user, recipient=recipient, verb=verb)
+            result = sendnotification(self.request.user, recipient, verb)
+        except Exception as err:
+            logger.info("********")
+            logger.info(err)
+            logger.info("********")
+
+        return Response("Notification OK", status=status.HTTP_200_OK)
 
 
     @list_route(methods=['post','get'])
@@ -1330,6 +1360,20 @@ class SwaggerSchemaView(views.APIView):
                 description=members_link.description
             )
 
+        notifications_link = links.get('users', {}).get('notifications')['create']
+        if notifications_link:
+            links['users']['notifications'] = coreapi.Link(
+                url=notifications_link.url,
+                action=notifications_link.action,
+                fields=[
+                    (coreapi.Field(
+                        name='data',
+                        required=True,
+                        location='form',
+                        )),
+                ],
+                description=notifications_link.description
+            )
         schema = coreapi.Document(
             title='EventKit API',
             url='/api/docs',
