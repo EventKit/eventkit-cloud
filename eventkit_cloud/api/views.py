@@ -735,7 +735,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
 
-
+        logger.info( "HERE %s %s %s" % ( self.request.user.username, perms, job_ids))
 
         prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))\
             .select_related('job', 'user')\

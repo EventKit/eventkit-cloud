@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 import json
-import logging
 import os
-
+import uuid
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
@@ -15,10 +14,9 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
+from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
+from ...tasks.export_tasks import TaskStates
 from ...core.models import GroupPermission
-from mock import patch, Mock
-
-logger = logging.getLogger(__name__)
 
 
 class TestJobPermissions(APITestCase):
@@ -37,10 +35,8 @@ class TestJobPermissions(APITestCase):
     def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user1 = User.objects.create_user(username='user_1', email='demo@demo.com', password='demo')
-            self.user2 = User.objects.create_user(username='user_2', email='demo@demo.com', password='demo')
+        self.user1 = User.objects.create_user(username='user_1', email='demo@demo.com', password='demo')
+        self.user2 = User.objects.create_user(username='user_2', email='demo@demo.com', password='demo')
 
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
@@ -288,3 +284,134 @@ class TestJobPermissions(APITestCase):
         response = self.client.get(url)
 
         self.assertEquals(response.data["permissions"]["groups"]["group_one"], "READ")
+
+class TestExportRunViewSet(APITestCase):
+    fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
+
+    def __init__(self, *args, **kwargs):
+        super(TestExportRunViewSet, self).__init__(*args, **kwargs)
+        self.user = None
+        self.client = None
+        self.job = None
+        self.job_uid = None
+        self.export_run = None
+        self.run_uid = None
+
+    def setUp(self, ):
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        self.user1 = User.objects.create_user(username='user_1', email='demo@demo.com', password='demo')
+        self.user2= User.objects.create_user(username='user_2', email='demo@demo.com', password='demo')
+        token = Token.objects.create(user=self.user1)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+        extents = (-3.9, 16.1, 7.0, 27.6)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user1,
+                                      the_geom=the_geom)
+        formats = ExportFormat.objects.all()
+        provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=provider)
+        provider_task.formats.add(*formats)
+
+        self.job.provider_tasks.add(provider_task)
+        self.job.save()
+        self.job_uid = str(self.job.uid)
+        self.export_run = ExportRun.objects.create(job=self.job, user=self.user1)
+        self.run_uid = str(self.export_run.uid)
+
+        group1, created = Group.objects.get_or_create(name="group_one")
+        self.group1id = group1.id
+        gp = GroupPermission.objects.create(group=group1, user=self.user1,
+                                            permission=GroupPermission.Permissions.ADMIN.value)
+        gp = GroupPermission.objects.create(group=group1, user=self.user2,
+                                            permission=GroupPermission.Permissions.MEMBER.value)
+        group2, created = Group.objects.get_or_create(name="group_two")
+        self.group2id = group2.id
+        gp = GroupPermission.objects.create(group=group2, user=self.user1,
+                                            permission=GroupPermission.Permissions.ADMIN.value)
+
+
+    def test_retrieve_run(self,):
+        expected = '/api/runs/{0}'.format(self.run_uid)
+
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        self.assertEquals(expected, url)
+        response = self.client.get(url)
+        self.assertIsNotNone(response)
+        result = response.data
+        # make sure we get the correct uid back out
+        self.assertEquals(self.run_uid, result[0].get('uid'))
+
+
+    def test_private_run(self, ):
+        token = Token.objects.create(user=self.user2)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        response = self.client.get(url)
+        result = response.data
+        self.assertEquals(result, [])
+
+    def test_user_sharing(self, ):
+
+        joburl = reverse('api:jobs-detail', args=[self.job.uid])
+
+        request_data = {"permissions": {"users": {"user_1": "ADMIN","user_2": "ADMIN"}, }}
+
+        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+        token = Token.objects.create(user=self.user2)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        response = self.client.get(url)
+        result = response.data
+        self.assertEquals(self.run_uid, result[0].get('uid'))
+
+        request_data = {"permissions": {"users": {"user_1": "ADMIN"}  }}
+
+        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+        response = self.client.get(url)
+        result = response.data
+        self.assertEquals(result, [])
+
+    def test_group_sharing(self, ):
+
+        joburl = reverse('api:jobs-detail', args=[self.job.uid])
+
+        request_data = {"permissions": {"groups": {"group_one": "ADMIN"} }}
+
+        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+        token = Token.objects.create(user=self.user2)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        url = reverse('api:runs-detail', args=[self.run_uid])
+        response = self.client.get(url)
+        result = response.data
+        self.assertEquals(self.run_uid, result[0].get('uid'))
+
+        request_data = {"permissions": {"groups": {"group_two": "ADMIN"} }}
+
+        response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+        response = self.client.get(url)
+        result = response.data
+        self.assertEquals(result, [])

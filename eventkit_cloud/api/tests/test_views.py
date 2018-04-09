@@ -47,11 +47,7 @@ class TestJobViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         original_selection = GeometryCollection(Point(1,1), LineString((5.625, 48.458),(0.878, 44.339)))
@@ -167,11 +163,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
 
     def test_get_job_detail_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
+        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -522,11 +514,8 @@ class TestBBoxSearch(APITestCase):
         url = reverse('api:jobs-list')
         # create dummy user
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+
         # setup token authentication
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -611,9 +600,7 @@ class TestExportRunViewSet(APITestCase):
 
     def setUp(self,):
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
 
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -851,9 +838,7 @@ class TestExportTaskViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
@@ -924,11 +909,7 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(et.status, TaskStates.SUCCESS.value)
 
     def test_patch_cancel_task_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
+        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -988,11 +969,7 @@ class TestLicenseViewSet(APITestCase):
 
     def setUp(self,):
         group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         self.licenses = [License.objects.create(slug='test1', name='name1', text='text1')]
         self.licenses += [License.objects.create(slug='test0', name='name0', text='text0')]
         token = Token.objects.create(user=self.user)
@@ -1049,11 +1026,7 @@ class TestUserDataViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo')
         self.licenses = [License.objects.create(slug='test1', name='Test1', text='text')]
         self.licenses += [License.objects.create(slug='test2', name='Test2', text='text')]
         token = Token.objects.create(user=self.user)
