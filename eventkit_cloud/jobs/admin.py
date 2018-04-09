@@ -18,7 +18,6 @@ admin.site.register(ExportFormat)
 admin.site.register(DataProviderType)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
-admin.site.register(UserLicense)
 
 
 class JobAdmin(OSMGeoAdmin):
