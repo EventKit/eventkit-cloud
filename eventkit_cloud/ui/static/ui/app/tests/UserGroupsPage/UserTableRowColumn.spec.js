@@ -48,6 +48,16 @@ describe('UserTableRowColumn component', () => {
         expect(wrapper.find(GroupsDropDownMenu)).toHaveLength(1);
     });
 
+    it('should render username and no email text', () => {
+        const props = getProps();
+        props.user.user.first_name = '';
+        props.user.user.last_name = '';
+        props.user.user.email = '';
+        const wrapper = getWrapper(props);
+        expect(wrapper.find('.qa-UserTableRowColumn-name').text()).toEqual(props.user.user.username);
+        expect(wrapper.find('.qa-UserTableRowColumn-email').text()).toEqual('No email provided');
+    });
+
     it('handleOpen should preventDefault, stopPropagation, and setState', () => {
         const fakeEvent = {
             preventDefault: sinon.spy(),
