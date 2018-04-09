@@ -878,21 +878,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEquals(0, len(result))
 
-
-
-    @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
-    def test_filter_runs_invalid_license(self, mock_validate_licenses):
-        from ...tasks.task_factory import InvalidLicense
-        expected = '/api/runs/filter'
-        url = reverse('api:runs-filter')
-        mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
-        self.assertEquals(expected, url)
-        response = self.client.get(url)
-        self.assertIsNotNone(response)
-        result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
-        self.assertEquals(response.status_code, 400)
-
     def test_filter_runs_no_permissions(self,):
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
@@ -1293,6 +1278,35 @@ class TestGroupDataViewSet(APITestCase):
         groupdata['administrators'] = []
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_403_FORBIDDEN)
+
+    def test_leave_group(self):
+        # ensure the group is created
+        self.insert_test_group()
+        url = reverse('api:groups-detail', args=[self.groupid])
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        # check add user_2 as member and only admin
+        group_data = json.loads(response.content)
+        group_data['members'] = ['user_1', 'user_2']
+        group_data['administrators'] = ['user_2']
+        response = self.client.patch(url, data=json.dumps(group_data), content_type='application/json; version=1.0')
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        response = self.client.get(url, content_type='application/json; version=1.0')
+        group_data = json.loads(response.content)
+        self.assertEquals(len(group_data['members']), 2)
+        self.assertEquals(len(group_data['administrators']), 1)
+        self.assertEquals(group_data['administrators'][0], 'user_2')
+
+        # empty patch request should remove user_1 from members
+        response = self.client.patch(url)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # verify the results
+        response = self.client.get(url, content_type='application/json; verison=1.0')
+        group_data = json.loads(response.content)
+        self.assertEquals(len(group_data['members']), 1)
+        self.assertEquals(group_data['members'][0], 'user_2')
+
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):

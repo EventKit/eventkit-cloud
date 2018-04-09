@@ -14,6 +14,7 @@ export class CreateExport extends React.Component {
         this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
 
+        this.routeLeaveHook = this.routeLeaveHook.bind(this);
         this.state = {
             showLeaveWarningDialog: false,
             modified: false,
@@ -30,19 +31,8 @@ export class CreateExport extends React.Component {
     }
 
     componentDidMount() {
-        // Show warning dialog if we try to navigate away with changes.
         const route = this.props.routes[this.props.routes.length - 1];
-        this.props.router.setRouteLeaveHook(route, (info) => {
-            if (!this.state.modified || this.leaveRoute) {
-                // No changes to lose, or we confirmed we want to leave.
-                return true;
-            }
-
-            // We must have started making changes. Save the route we're trying to navigate to and show a warning.
-            this.leaveRoute = info.pathname;
-            this.setState({ showLeaveWarningDialog: true });
-            return false;
-        });
+        this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -52,6 +42,18 @@ export class CreateExport extends React.Component {
         }
     }
 
+    routeLeaveHook(info) {
+        // Show warning dialog if we try to navigate away with changes.
+        if (!this.state.modified || this.leaveRoute || info.pathname.indexOf('/status') === 0) {
+            // No changes to lose, or we confirmed we want to leave.
+            return true;
+        }
+
+        // We must have started making changes. Save the route we're trying to navigate to and show a warning.
+        this.leaveRoute = info.pathname;
+        this.setState({ showLeaveWarningDialog: true });
+        return false;
+    }
     handleLeaveWarningDialogCancel = () => {
         this.setState({ showLeaveWarningDialog: false });
         this.leaveRoute = null;

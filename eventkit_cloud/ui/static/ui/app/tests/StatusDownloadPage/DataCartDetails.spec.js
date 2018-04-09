@@ -212,7 +212,7 @@ const run = {
         name: 'test',
         event: 'test',
         description: 'test',
-        url: 'http://cloud.eventkit.dev/api/jobs/67890',
+        url: 'http://cloud.eventkit.test/api/jobs/67890',
         published: true,
         formats: [
             'Geopackage',

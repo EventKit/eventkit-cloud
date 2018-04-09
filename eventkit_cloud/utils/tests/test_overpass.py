@@ -67,7 +67,7 @@ class TestOverpass(TestCase):
 
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
-    @patch('eventkit_cloud.utils.overpass.requests.post')
+    @patch('eventkit_cloud.utils.overpass.auth_requests.post')
     def test_run_query(self, mock_post, export_task, mock_close):
         verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
         export_task_instance = Mock(progress=0, estimated_finish=None)
@@ -76,7 +76,7 @@ class TestOverpass(TestCase):
         mock_export_task_instance_id = 1
         op = Overpass(
             stage_dir=self.path + '/files/', task_uid=mock_export_task_instance_id,
-            bbox=self.bbox, job_name='testjob',
+            bbox=self.bbox, job_name='testjob', slug='testslug',
         )
         q = op.get_query()
         out = self.path + '/files/query.osm'
@@ -87,6 +87,7 @@ class TestOverpass(TestCase):
         mock_post.return_value = mock_response
         op.run_query()
         mock_post.assert_called_once_with(self.url,
+                                          slug='testslug',
                                           data=q,
                                           stream=True,
                                           verify=verify_ssl)

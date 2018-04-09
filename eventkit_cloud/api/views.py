@@ -7,7 +7,7 @@ import logging
 import json
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
@@ -200,7 +200,7 @@ class JobViewSet(viewsets.ModelViewSet):
                     }
                   ],
                   "uid": "cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
-                  "url": "http://cloud.eventkit.dev/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
+                  "url": "http://cloud.eventkit.test/api/jobs/cf9c038c-a09a-4058-855a-b0b1d5a6c5c4",
                   "name": "test",
                   "description": "test",
                   "event": "test",
@@ -211,7 +211,7 @@ class JobViewSet(viewsets.ModelViewSet):
                       "formats": [
                         {
                           "uid": "167fbc03-83b3-41c9-8034-8566257cb2e8",
-                          "url": "http://cloud.eventkit.dev/api/formats/gpkg",
+                          "url": "http://cloud.eventkit.test/api/formats/gpkg",
                           "slug": "gpkg",
                           "name": "Geopackage",
                           "description": "GeoPackage"
@@ -511,7 +511,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
 
-class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
+class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
     """
@@ -534,26 +534,24 @@ class ExportProviderViewSet(viewsets.ReadOnlyModelViewSet):
         :return:
         """
         try:
-            provider = ExportProvider.objects.get(slug=slug)
+            provider = DataProvider.objects.get(slug=slug)
             provider_type = str(provider.export_provider_type)
 
-            aoi = None
-            if request is not None:
-                aoi = request.data.get('aoi')
+            geojson = self.request.data.get('geojson', None)
 
             url = str(provider.url)
             if url == "" and 'osm' in provider_type:
                 url = settings.OVERPASS_API_URL
 
             checker_type = get_provider_checker(provider_type)
-            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=aoi)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
             response = checker.check()
 
             logger.info("Status of provider '{}': {}".format(str(provider.name), response))
 
             return Response(response, status=status.HTTP_200_OK)
 
-        except ExportProvider.DoesNotExist as e:
+        except DataProvider.DoesNotExist as e:
             return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
@@ -640,7 +638,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
+        prefetched_queryset = ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))\
+            .select_related('job', 'user')\
+            .prefetch_related(Prefetch('provider_tasks',
+                queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
+                    queryset=ExportTaskRecord.objects.select_related('result').prefetch_related('exceptions')))))
+
+        return prefetched_queryset
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -698,7 +702,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-
     @list_route(methods=['post', 'get'])
     def filter(self, request, *args, **kwargs):
         """
@@ -739,7 +742,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 logger.debug(e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
             queryset = queryset.filter(
@@ -750,16 +752,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 )
         )
 
-        try:
-            self.validate_licenses(queryset, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'no_license': True})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'no_license': True})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
@@ -1116,7 +1114,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
         """
-             Change the group's name, members, and admnistrators
+             Change the group's name, members, and administrators
 
 
              Sample input:
@@ -1126,6 +1124,9 @@ class GroupViewSet(viewsets.ModelViewSet):
                     "members": [ "user2", "user3", "admin"],
                     "administrators": [ "admin" ]
                  }
+                 
+            If a member wishes to remove themselves from a group they can make an patch request with no body.
+            However, this will not work if they are a admin of the group.
 
          """
 
@@ -1135,6 +1136,17 @@ class GroupViewSet(viewsets.ModelViewSet):
         # administrator of the current group or there is an attempt to end up with no administrators
 
         if not self.useradmin(group,request):
+            user = User.objects.filter(username=request.user.username)[0]
+            perms = GroupPermission.objects.filter(
+                user=user,
+                group=group,
+                permission=GroupPermission.Permissions.MEMBER.value
+            )
+            # if the user is not an admin but is a member we remove them from the group
+            if perms:
+                perms.delete()
+                return Response("OK", status=status.HTTP_200_OK)
+
             return Response("Administative privileges required.", status=status.HTTP_403_FORBIDDEN)
 
         if "administrators" in request.data:
@@ -1144,8 +1156,14 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
 
-        # examine provided lists of administrators and members. Adjust as needed.
+        # if name in request we need to change the group name
+        if "name" in request.data:
+            name = request.data["name"]
+            if name:
+                group.name = name
+                group.save()
 
+        # examine provided lists of administrators and members. Adjust as needed.
         for item in [ ("members",GroupPermission.Permissions.MEMBER.value),("administrators", GroupPermission.Permissions.ADMIN.value)]:
             permissionlabel = item[0]
             permission = item[1]

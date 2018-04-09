@@ -36,12 +36,14 @@ import RevertDialog from './RevertDialog';
 import { updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
-import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
+import {
+    generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
     serialize, isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, hasArea,
     getDominantGeometry } from '../../utils/mapUtils';
 import Joyride from 'react-joyride';
+import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -77,6 +79,7 @@ export class ExportAOI extends Component {
         this.closeResetDialog = this.closeResetDialog.bind(this);
         this.openResetDialog = this.openResetDialog.bind(this);
         this.resetAoi = this.resetAoi.bind(this);
+        this.updateZoomLevel = this.updateZoomLevel.bind(this);
         this.state = {
             toolbarIcons: {
                 box: 'DEFAULT',
@@ -94,6 +97,7 @@ export class ExportAOI extends Component {
             isRunning: false,
             fakeData: false,
             showReset: false,
+            zoomLevel: 2,
         };
     }
 
@@ -259,6 +263,15 @@ export class ExportAOI extends Component {
         this.setState({ toolbarIcons: icons });
     }
 
+    toggleImportModal(show) {
+        if (show != undefined) {
+            this.setState({ showImportModal: show });
+        }
+        else {
+            this.setState({ showImportModal: !this.state.showImportModal });
+        }
+    }
+
     showInvalidDrawWarning(show) {
         if (show !== undefined) {
             this.setState({ showInvalidDrawWarning: show });
@@ -355,11 +368,6 @@ export class ExportAOI extends Component {
         }
     }
 
-    onBufferClick() {
-        this.bufferMapFeature();
-        this.setState({ showBuffer: false, validBuffer: true });
-    }
-
     setMapView() {
         clearDraw(this.drawLayer);
         const extent = this.map.getView().calculateExtent(this.map.getSize());
@@ -385,21 +393,13 @@ export class ExportAOI extends Component {
         this.props.setNextEnabled();
     }
 
-    toggleImportModal(show) {
-        if (show != undefined) {
-            this.setState({ showImportModal: show });
-        } else {
-            this.setState({ showImportModal: !this.state.showImportModal });
-        }
-    }
-
     updateMode(mode) {
         // make sure interactions are deactivated
         this.drawBoxInteraction.setActive(false);
         this.drawFreeInteraction.setActive(false);
         if (isViewOutsideValidExtent(this.map.getView())) {
             // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
-            // when needed, the draw interaction breaks if you wrap too many time, so to
+            // when needed, the draw interaction breaks if you wrap too many time, so to 
             // avoid that issue we go back to the valid extent but maintain the same view
             goToValidExtent(this.map.getView());
         }
@@ -501,7 +501,7 @@ export class ExportAOI extends Component {
         this.map = new Map({
             controls: [
                 new ScaleLine({
-                    className: css.olScaleLine,
+                    className: css.olScaleLineLargeMap,
                 }),
                 new Attribution({
                     className: ['ol-attribution', css['ol-attribution']].join(' '),
@@ -541,8 +541,8 @@ export class ExportAOI extends Component {
             view: new View({
                 projection: 'EPSG:3857',
                 center: [110, 0],
-                zoom: 2.5,
-                minZoom: 2.5,
+                zoom: this.state.zoomLevel,
+                minZoom: 2,
                 maxZoom: 22,
             }),
         });
@@ -560,6 +560,13 @@ export class ExportAOI extends Component {
         this.map.addLayer(this.drawLayer);
         this.map.addLayer(this.markerLayer);
         this.map.addLayer(this.bufferLayer);
+
+        this.updateZoomLevel();
+        this.map.getView().on('propertychange', this.updateZoomLevel);
+    }
+
+    updateZoomLevel() {
+        this.setState({ zoomLevel: this.map.getView().getZoom() });
     }
 
     upEvent() {
@@ -713,6 +720,11 @@ export class ExportAOI extends Component {
         return true;
     }
 
+    onBufferClick() {
+        this.bufferMapFeature();
+        this.setState({ showBuffer: false, validBuffer: true });
+    }
+
     openBufferDialog() {
         this.setState({ showBuffer: true });
     }
@@ -759,6 +771,7 @@ export class ExportAOI extends Component {
 
     resetAoi() {
         const { originalGeojson } = this.props.aoiInfo;
+
         const reader = new GeoJSON();
         const newFeatures = reader.readFeatures(originalGeojson, {
             dataProjection: 'EPSG:4326',
@@ -779,7 +792,6 @@ export class ExportAOI extends Component {
 
 
     doesMapHaveFeatures() {
-        console.log(this.props.aoiInfo.geojson);
         return Object.keys(this.props.aoiInfo.geojson).length !== 0;
     }
 
@@ -938,6 +950,9 @@ export class ExportAOI extends Component {
                         setMapViewButtonSelected={() => { this.setButtonSelected('mapView'); }}
                         setImportButtonSelected={() => { this.setButtonSelected('import'); }}
                         setImportModalState={this.toggleImportModal}
+                    />
+                    <ZoomLevelLabel
+                        zoomLevel={this.state.zoomLevel}
                     />
                     <BufferDialog
                         show={this.state.showBuffer}

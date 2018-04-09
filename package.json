@@ -6,10 +6,7 @@
   "dependencies": {
     "axios": "~0.15.3",
     "babel-polyfill": "~6.23.0",
-    "bootstrap": "~3.3.7",
     "detect-browser": "~2.0.0",
-    "flexboxgrid": "~6.3.0",
-    "font-awesome": "~4.7.0",
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
     "material-ui": "~0.18.0",
@@ -18,7 +15,6 @@
     "ol": "~4.4.2",
     "react-dom": "~15.5.4",
     "react": "~15.4.0",
-    "react-flexbox-grid": "~0.10.2",
     "react-bootstrap-typeahead": "~1.0.0-beta4",
     "react-cookie": "~1.0.4",
     "react-custom-scrollbars": "~4.1.1",
@@ -31,11 +27,8 @@
     "react-tap-event-plugin": "~2.0.1",
     "redux": "~3.6.0",
     "redux-auth-wrapper": "~1.0.0",
-    "redux-debounced": "~0.4.0",
-    "redux-mock-store": "~1.2.2",
     "redux-logger": "~2.7.4",
-    "redux-thunk": "~2.1.0",
-    "roboto-fontface": "~0.7.0"
+    "redux-thunk": "~2.1.0"
   },
   "devDependencies": {
     "axios-mock-adapter": "~1.7.1",
@@ -49,7 +42,6 @@
     "canvas":"1.6.7",
     "css-loader": "~0.28.0",
     "enzyme": "~2.7.1",
-    "extract-text-webpack-plugin": "~2.0.0",
     "identity-obj-proxy": "~3.0.0",
     "image-webpack-loader": "~3.0.0",    
     "jest-cli": "~21.1.0",
