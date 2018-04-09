@@ -47,8 +47,6 @@ class TestExportTaskFactory(TestCase):
         self.job.region = self.region
         self.uid = str(provider_task.uid)
         self.job.save()
-        self.jp = JobPermission(job=self.job,content_object=self.user,permission=JobPermission.Permissions.ADMIN.value);
-        self.jp.save()
 
     def test_create_run_success(self):
         run_uid = create_run(job_uid=self.job.uid)

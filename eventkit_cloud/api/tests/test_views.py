@@ -24,7 +24,7 @@ from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission,JobPermission
+from ...core.models import GroupPermission
 from mock import patch, Mock
 
 
@@ -75,9 +75,6 @@ class TestJobViewSet(APITestCase):
         hdm_presets = DatamodelPreset.objects.get(name='hdm')
         self.job.preset = hdm_presets
         self.job.save()
-
-        self.jp = JobPermission(job=self.job,content_object=self.user,permission=JobPermission.Permissions.ADMIN.value);
-        self.jp.save()
 
         self.tags = [
             {
@@ -831,20 +828,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEquals(0, len(result))
 
-
-
-    @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
-    def test_filter_runs_invalid_license(self, mock_validate_licenses):
-        from ...tasks.task_factory import InvalidLicense
-        expected = '/api/runs/filter'
-        url = reverse('api:runs-filter')
-        mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
-        self.assertEquals(expected, url)
-        response = self.client.get(url)
-        self.assertIsNotNone(response)
-        result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
-        self.assertEquals(response.status_code, 400)
 
 class TestExportTaskViewSet(APITestCase):
     """

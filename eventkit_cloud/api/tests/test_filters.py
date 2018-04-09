@@ -54,8 +54,6 @@ class TestJobFilter(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-        self.jp = JobPermission(job=self.job1,content_object=self.user1,permission=JobPermission.Permissions.ADMIN.value);
-        self.jp.save()
 
     def test_filterset_no_user(self, ):
         url = reverse('api:jobs-list')

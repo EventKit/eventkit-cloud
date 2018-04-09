@@ -7,7 +7,7 @@ import logging
 import json
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
@@ -355,11 +355,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                               }]}
                     return Response(error_data, status=status_code)
 
-                # assign ADMIN permission to user
-
-                jp = JobPermission.objects.create(job=job, content_object=job.user,
-                                                  permission=JobPermission.Permissions.ADMIN.value)
-                jp.save()
 
             # run the tasks
             job_uid = str(job.uid)
@@ -739,8 +734,21 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
 
         perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        return ExportRun.objects.filter(
-            (Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))
+
+
+
+        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))\
+            .select_related('job', 'user')\
+            .prefetch_related(Prefetch('provider_tasks',
+                queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
+                    queryset=ExportTaskRecord.objects.select_related('result').prefetch_related('exceptions')))))
+
+        return prefetched_queryset
+
+
+
+
+
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """

@@ -45,9 +45,6 @@ class TestExportTaskRunner(TestCase):
         self.job.region = self.region
         self.job.save()
 
-        self.jp = JobPermission(job=self.job,content_object=self.user,permission=JobPermission.Permissions.ADMIN.value);
-        self.jp.save()
-
         create_run(job_uid=self.job.uid)
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
