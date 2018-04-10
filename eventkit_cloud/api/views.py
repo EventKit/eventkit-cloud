@@ -7,7 +7,7 @@ import logging
 import json
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
@@ -638,7 +638,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
+        prefetched_queryset = ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))\
+            .select_related('job', 'user')\
+            .prefetch_related(Prefetch('provider_tasks',
+                queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
+                    queryset=ExportTaskRecord.objects.select_related('result').prefetch_related('exceptions')))))
+
+        return prefetched_queryset
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -736,7 +742,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 logger.debug(e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
             queryset = queryset.filter(
@@ -747,16 +752,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 )
         )
 
-        try:
-            self.validate_licenses(queryset, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'no_license': True})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'no_license': True})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic

@@ -102,6 +102,11 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
 
+    def __init__(self, *args, **kwargs):
+        super(ExportTaskResultSerializer, self).__init__(*args, **kwargs)
+        if self.context.get('no_license'):
+            self.fields.pop('url')
+
     class Meta:
         model = FileProducingTaskResult
         fields = ('filename', 'size', 'url', 'deleted')
@@ -167,11 +172,14 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
-    tasks = ExportTaskRecordSerializer(many=True, required=False)
+    tasks = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
         view_name='api:provider_tasks-detail',
         lookup_field='uid'
     )
+
+    def get_tasks(self, obj):
+        return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     class Meta:
         model = DataProviderTaskRecord
@@ -252,7 +260,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
         lookup_field='uid'
     )
     job = SimpleJobSerializer()  # nest the job details
-    provider_tasks = DataProviderTaskRecordSerializer(many=True)
+    provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
     expiration = serializers.SerializerMethodField
@@ -268,6 +276,9 @@ class ExportRunSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_user(obj):
         return obj.user.username
+
+    def get_provider_tasks(self, obj):
+        return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
         request = self.context['request']

@@ -879,21 +879,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEquals(0, len(result))
 
-
-
-    @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
-    def test_filter_runs_invalid_license(self, mock_validate_licenses):
-        from ...tasks.task_factory import InvalidLicense
-        expected = '/api/runs/filter'
-        url = reverse('api:runs-filter')
-        mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
-        self.assertEquals(expected, url)
-        response = self.client.get(url)
-        self.assertIsNotNone(response)
-        result = response.data
-        self.assertTrue("InvalidLicense" in result[0].get('detail'))
-        self.assertEquals(response.status_code, 400)
-
     def test_filter_runs_no_permissions(self,):
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
             mock_group.objects.get.return_value = self.group
