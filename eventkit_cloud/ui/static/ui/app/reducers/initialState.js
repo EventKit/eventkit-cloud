@@ -121,6 +121,14 @@ export default {
         error: null,
     },
     users: usersState,
+    userActivity: {
+        viewedJobs: {
+            fetching: false,
+            fetched: false,
+            jobs: [],
+            error: null,
+        },
+    },
     notifications: {
         fetching: false,
         fetched: false,

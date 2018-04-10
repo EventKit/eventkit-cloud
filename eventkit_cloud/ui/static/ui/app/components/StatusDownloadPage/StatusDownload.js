@@ -11,7 +11,7 @@ import {
     clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
-import { viewedJob } from '../../actions/userActions';
+import { viewedJob } from '../../actions/userActivityActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 

@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { AppBar, CircularProgress, Paper } from 'material-ui';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
-import { getViewedJobs } from '../../actions/userActions';
+import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
 import CustomScrollbar from '../CustomScrollbar';
 import { getProviders } from '../../actions/exportsActions';
@@ -68,7 +68,7 @@ export class DashboardPage extends React.Component {
         }
 
         // Received viewed datapacks.
-        if (nextProps.user.viewedJobs.fetched && !this.props.user.viewedJobs.fetched) {
+        if (nextProps.userActivity.viewedJobs.fetched && !this.props.userActivity.viewedJobs.fetched) {
             loadingSections.recentlyViewed = false;
         }
 
@@ -313,7 +313,7 @@ export class DashboardPage extends React.Component {
                                     </Paper>
                                 }
                             >
-                                {this.props.user.viewedJobs.jobs.map((job, index) => (
+                                {this.props.userActivity.viewedJobs.jobs.map((job, index) => (
                                     <DataPackGridItem
                                         className="qa-DashboardSection-RecentlyViewedGrid-Item"
                                         run={job.last_export_run}
@@ -436,6 +436,7 @@ DashboardPage.propTypes = {
 function mapStateToProps(state) {
     return {
         user: state.user,
+        userActivity: state.userActivity,
         notifications: state.notifications,
         providers: state.providers,
         runsDeletion: state.runsDeletion,

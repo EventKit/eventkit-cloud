@@ -8,15 +8,9 @@ export const userState = {
   error: null,
   autoLogoutAt: null,
   autoLogoutWarningAt: null,
-  viewedJobs: {
-    fetching: false,
-    fetched: false,
-    jobs: [],
-    error: null,
-  },
-}
+};
 
-export function userReducer(state = userState, { type, payload, error, cancelSource, nextPage, range }) {
+export function userReducer(state = userState, { type, payload, error }) {
   switch (type) {
     case types.USER_LOGGING_IN:
         return { ...state, isLoading: true };
@@ -34,13 +28,7 @@ export function userReducer(state = userState, { type, payload, error, cancelSou
     case types.PATCHING_USER_ERROR:
         return { ...state, patching: false, error };
     case types.USER_ACTIVE:
-        return { ...state, ...payload }
-    case types.FETCHING_VIEWED_JOBS:
-        return { ...state, viewedJobs: { ...state.viewedJobs, fetching: true, fetched: false, error: null, cancelSource: cancelSource } };
-    case types.RECEIVED_VIEWED_JOBS:
-        return { ...state, viewedJobs: { ...state.viewedJobs, fetching: false, fetched: true, jobs: payload, nextPage, range, error, cancelSource: null } };
-    case types.FETCH_VIEWED_JOBS_ERROR:
-        return { ...state, viewedJobs: { ...state.viewedJobs, fetching: false, fetched: false, jobs: [], error, cancelSource: null } };
+        return { ...state, ...payload };
     default:
         return state;
     }

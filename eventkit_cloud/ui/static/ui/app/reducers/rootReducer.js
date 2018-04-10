@@ -24,6 +24,7 @@ import {
 } from './statusDownloadReducer';
 import { userGroupsReducer } from './userGroupsReducer';
 import { notificationsReducer } from './notificationsReducer';
+import { userActivityReducer } from './userActivityReducer';
 
 
 const rootReducer = combineReducers({
@@ -51,6 +52,7 @@ const rootReducer = combineReducers({
     formats: getFormatsReducer,
     groups: userGroupsReducer,
     users: usersReducer,
+    userActivity: userActivityReducer,
     notifications: notificationsReducer,
 });
 
