@@ -815,7 +815,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEquals(0, len(result))
 
-
 class TestExportTaskViewSet(APITestCase):
     """
     Test cases for ExportTaskViewSet
