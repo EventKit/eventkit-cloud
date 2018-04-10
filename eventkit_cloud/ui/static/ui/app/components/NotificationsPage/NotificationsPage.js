@@ -191,7 +191,7 @@ export class NotificationsPage extends React.Component {
                                         </div>
                                     }
                                     <LoadButtons
-                                        range="3/3"
+                                        range={this.props.notifications.range}
                                         handleLoadMore={this.handleLoadMore}
                                         loadMoreDisabled={false}
                                     />

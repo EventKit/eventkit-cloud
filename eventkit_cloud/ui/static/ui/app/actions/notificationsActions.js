@@ -202,7 +202,7 @@ export function getNotifications(args = {}) {
                 type: actions.RECEIVED_NOTIFICATIONS,
                 notifications: response.data,
                 nextPage: false,
-                range: 3,
+                range: '5/5',
             });
         }, 100);
         ///////////////////////
