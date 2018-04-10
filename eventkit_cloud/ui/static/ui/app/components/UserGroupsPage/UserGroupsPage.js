@@ -733,6 +733,8 @@ export class UserGroupsPage extends Component {
                     ownedGroups={ownedGroups}
                     sharedGroups={sharedGroups}
                     usersCount={this.props.users.total}
+                    newCount={this.props.users.new}
+                    ungroupedCount={this.props.users.ungrouped}
                     className="qa-UserGroupsPage-drawer"
                     onNewGroupClick={this.handleCreateOpen}
                     onSharedInfoClick={this.showSharedInfoDialog}
@@ -882,6 +884,8 @@ UserGroupsPage.propTypes = {
         fetched: PropTypes.bool,
         error: PropTypes.string,
         total: PropTypes.number,
+        new: PropTypes.number,
+        ungrouped: PropTypes.number,
     }).isRequired,
     getGroups: PropTypes.func.isRequired,
     deleteGroup: PropTypes.func.isRequired,
