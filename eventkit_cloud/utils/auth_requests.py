@@ -187,27 +187,26 @@ def patch_mapproxy_opener_cache(slug=None):
     :return:
     """
     # Source: https://github.com/mapproxy/mapproxy/blob/a24cb41d3b3abcbb8a31460f4d1a0eee5312570a/mapproxy/client/http.py#L81
+
     def _new_call(self, ssl_ca_certs, url, username, password):
-        if ssl_ca_certs not in self._opener:
-            handlers = []
+        if ssl_ca_certs not in self._opener or slug not in self._opener:
+            https_handler = urllib2.BaseHandler()
             if ssl_ca_certs:
                 connection_class = http.verified_https_connection_with_ca_certs(ssl_ca_certs)
                 https_handler = http.VerifiedHTTPSConnection(connection_class=connection_class)
-                handlers.append(https_handler)
-            logger.debug("Creating URL opener for ssl_ca_certs=%s", ssl_ca_certs)
-            handlers.append(urllib2.HTTPCookieProcessor)
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            authhandler = urllib2.HTTPBasicAuthHandler(passman)
-            handlers.append(authhandler)
-            authhandler = urllib2.HTTPDigestAuthHandler(passman)
-            handlers.append(authhandler)
+            handlers = [urllib2.HTTPCookieProcessor,
+                        urllib2.HTTPRedirectHandler(),
+                        https_handler,
+                        urllib2.HTTPBasicAuthHandler(passman),
+                        urllib2.HTTPDigestAuthHandler(passman)]
 
             opener = urllib2.build_opener(*handlers)
             opener.addheaders = [('User-agent', 'MapProxy-%s' % (http.version,))]
 
-            self._opener[ssl_ca_certs] = (opener, passman)
+            self._opener[ssl_ca_certs or slug] = (opener, passman)
         else:
-            opener, passman = self._opener[ssl_ca_certs]
+            opener, passman = self._opener[ssl_ca_certs or slug]
 
         cred = get_cred(slug=slug)
         if cred and len(cred) == 2:
