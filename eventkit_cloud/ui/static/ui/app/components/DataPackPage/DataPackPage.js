@@ -63,8 +63,7 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
-        const steps = this.setJoyRideSteps();
-        this.joyrideAddSteps(steps);
+
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.makeRunRequest, 10000);
@@ -510,40 +509,33 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
         }
-        if (data.index === 3 && data.type === 'step:before') {
-            if (this.state.open === false) {
-                this.setState({ open: true });
-            }
-        }
-        if (data.index === 3 && data.type === 'step:after') {
-            if (this.state.view === 'list' && this.state.open === true) {
-                this.setState({ open: false });
+        if (data.step) {
+            if (data.step.title === 'Filter DataPacks' && data.type === 'step:before') {
+                if (this.state.open === false) {
+                    this.setState({open: true});
+                }
             }
         }
     }
 
     handleJoyride() {
         if (this.state.isRunning === true) {
-            this.setState({ isRunning: false });
+            this.setState({ isRunning: false, steps: [] });
             this.refs.joyride.reset(true);
         } else {
             this.setState({ isRunning: true });
-
-            //  Need to figure out a way to add a step if a featured datapack is shown.
-            //  Below adds a step, but we aren't checking for featured yet.
-
-            let hasMatch = false;
+            const steps = this.setJoyRideSteps();
 
             for (let index = 0; index < this.props.runsList.runs.length; index += 1) {
-
                 const run = this.props.runsList.runs[index];
-
                 if (run.job.featured === true) {
-                    hasMatch = true;
                     const newStep = {
                         title: 'Featured DataPacks',
                         text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
-                        selector: '.qa-FeaturedFlag-div',
+                        selector: this.state.view ==='list' ?
+                            '.qa-DataPackTableItem-TableRowColumn-featured'
+                            :
+                            '.qa-FeaturedFlag-div',
                         style: {
                             backgroundColor: 'white',
                             borderRadius: '0',
@@ -575,11 +567,11 @@ export class DataPackPage extends React.Component {
                         },
                         position: 'top',
                     };
-                    this.setState({ steps: [...this.state.steps, newStep] });
+                    steps.push(newStep);
                     break;
                 }
             }
-            console.log('hasmatch = ' + hasMatch);
+            this.joyrideAddSteps(steps);
         }
     }
 
