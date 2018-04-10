@@ -5,7 +5,7 @@ from django.conf.urls import url
 from django.contrib import messages
 from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
-from django.contrib.gis.geos import GEOSGeometry
+from django_celery_beat.models import IntervalSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
@@ -146,6 +146,7 @@ class DataProviderAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
 
 
+admin.site.unregister(IntervalSchedule)
 # register the new admin models
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
