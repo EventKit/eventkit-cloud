@@ -99,12 +99,13 @@ def load_land_vectors(db_conn=None, url=None):
         logger.info("Finished loading land data.")
 
 
-# notify.send(actor, recipient, verb, action_object, target, level, description, public, timestamp)
+# notify.send(actor, recipient, verb, action_object, target, level, description, all required. None value is OK)
 
-def sendnotification(actor, recipient, verb):
+def sendnotification(actor, recipient, verb, action_object, target, level, description):
     logger.info("%s %s %s" % (actor,recipient,verb))
     try:
-        result = notify.send(actor, recipient=recipient, verb=verb)
+        result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
+                             level=level,description=description)
     except Exception as err:
         logger.info( "notify errror ignored: %s" % err)
 

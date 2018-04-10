@@ -18,6 +18,7 @@ from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User,Group
 from ..core.models import GroupPermission,JobPermission
+from notifications.models import Notification
 
 
 from eventkit_cloud.jobs.models import (
@@ -705,10 +706,32 @@ class JobSerializer(serializers.Serializer):
 
 class GenericNotificationRelatedField(serializers.RelatedField):
 
+    data = {}
     def to_representation(self, value):
         if isinstance(value, User):
-            serializer = UserSerializer(value)
+            data = { 'username' : value.username}
         if isinstance(value, Job):
-            serializer = JobSerializer(value)
+            data = { 'name' : 'test'}
 
-        return serializer.data
+        return data
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+#    actor = GenericNotificationRelatedField(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = ( 'level', 'description', 'id', 'timestamp', 'recipient_id' ) # , 'actor')
+
+    def get_actor(self, obj, request):
+
+        response = { 'actor_type' : obj.actor_content_type_id,  'actor_id ': obj.actor_object_id }
+        if obj.actor_content_type_id  == 4 :
+           user = User.objects.get(pk=obj.actor_object_id)
+           response['details'] =   UserSerializer(user).data
+        if obj.actor_content_type_id  == 13 :
+           job = Job.objects.get(pk=obj.actor_object_id)
+           response['details'] = ListJobSerializer(job,context={'request': request}).data
+
+        return response

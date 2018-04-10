@@ -10,6 +10,9 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
 
 from django.contrib.auth.models import User,Group
 from ..core.models import GroupPermission, JobPermission
@@ -31,7 +34,7 @@ from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    DataProviderSerializer, LicenseSerializer, UserDataSerializer,GroupSerializer
+    DataProviderSerializer, LicenseSerializer, UserDataSerializer,GroupSerializer, NotificationSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
@@ -953,38 +956,26 @@ class UserDataViewSet(viewsets.GenericViewSet):
     @list_route(methods=['post','get'])
     def notifications(self, request, *args, **kwargs):
 
-
-        notifications = Notification.objects.all()
-
-        logger.info("*** ALL *****")
+        payload = []
+        notifications = Notification.objects.all() # filter(recipient_id=request.user.id)
         for n in notifications:
-            logger.info(n)
-        logger.info("********")
+            serializer = NotificationSerializer(n)
+            item = serializer.data
+            item['actor'] = serializer.get_actor(n, request)
+            payload.append(item)
 
+        return Response(payload, status=status.HTTP_200_OK)
 
-        test = Notification.objects.read()
-        logger.info("***  READ *****")
-        logger.info(test)
-        logger.info("********")
-
-        test = Notification.objects.unread()
-        logger.info("***  UNREAD *****")
-        logger.info(test)
-        logger.info("********")
-
-        verb = request.data["verb"]
-        recipient = User.objects.filter(username="dmsherman")[0]
-
-        result = None
-        try:
-            #result = notify.send(self.request.user, recipient=recipient, verb=verb)
-            result = sendnotification(self.request.user, recipient, verb)
-        except Exception as err:
-            logger.info("********")
-            logger.info(err)
-            logger.info("********")
-
-        return Response("Notification OK", status=status.HTTP_200_OK)
+        # verb = "TEST6" # request.data["verb"]
+        # recipient = User.objects.filter(username="dmsherman")[0]
+        # uid = 'd581241c-3f4f-4130-8c91-3b14d65aa194'
+        # job = Job.objects.get(uid=uid)
+        # target=None
+        # action_object=recipient
+        # level = 'info'
+        # description = 'description here'
+        # sendnotification(job,recipient,verb,action_object,target,level,description)
+        # return Response("Notification OK", status=status.HTTP_200_OK)
 
 
     @list_route(methods=['post','get'])
