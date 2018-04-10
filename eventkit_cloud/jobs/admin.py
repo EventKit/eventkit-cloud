@@ -5,7 +5,7 @@ from django.conf.urls import url
 from django.contrib import messages
 from django.shortcuts import render_to_response
 from django.contrib.gis.admin import OSMGeoAdmin
-from django_celery_beat.models import IntervalSchedule
+from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
@@ -146,7 +146,24 @@ class DataProviderAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
 
 
+# The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
+# way to do this is to unregister them using admin.site.unregister, but that also means that you can't use the plus
+# button to add new ones on lists displayed on admin pages of other models (in this case, PeriodicTask). Having the
+# model be registered but hidden prevents that option from being removed.
+class IntervalScheduleAdmin(admin.ModelAdmin):
+    def get_model_perms(self, request):
+        return {}
+
+
+class CrontabScheduleAdmin(admin.ModelAdmin):
+    def get_model_perms(self, request):
+        return {}
+
+
 admin.site.unregister(IntervalSchedule)
+admin.site.unregister(CrontabSchedule)
 # register the new admin models
+admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
+admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
