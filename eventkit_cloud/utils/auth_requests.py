@@ -12,7 +12,6 @@ from mapproxy.client import http
 
 
 logger = logging.getLogger(__name__)
-logger.debug = logger.info  # TODO: don't forget to take this out
 
 
 def content_to_file(content):
@@ -93,6 +92,7 @@ def get_cred(slug=None, url=None, params=None):
     if url:
         cred_str = re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url)
         if cred_str:
+            logger.debug("Found credentials for %s in query string", slug)
             return cred_str.group().split(":")
 
         # Check in query string
@@ -100,6 +100,7 @@ def get_cred(slug=None, url=None, params=None):
         password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
         cred = (username.group(), password.group()) if username and password else None
         if cred:
+            logger.debug("Found credentials for %s in query string", slug)
             return cred
 
     if params and params.get("username") and params.get("password"):
@@ -118,9 +119,10 @@ def handle_basic_auth(func):
     @wraps(func)
     def wrapper(url, **kwargs):
 
-        cred = get_cred(slug=kwargs.pop("slug"), url=url, params=kwargs.get("params", None))
+        cred = get_cred(slug=kwargs.pop("slug", None), url=url, params=kwargs.get("params", None))
         if cred:
-            kwargs["auth"] = cred
+            kwargs["auth"] = tuple(cred)
+        logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.iteritems()]))
         response = func(url, **kwargs)
         return response
 
@@ -192,6 +194,7 @@ def patch_mapproxy_opener_cache(slug=None):
                 connection_class = http.verified_https_connection_with_ca_certs(ssl_ca_certs)
                 https_handler = http.VerifiedHTTPSConnection(connection_class=connection_class)
                 handlers.append(https_handler)
+            logger.debug("Creating URL opener for ssl_ca_certs=%s", ssl_ca_certs)
             handlers.append(urllib2.HTTPCookieProcessor)
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
             authhandler = urllib2.HTTPBasicAuthHandler(passman)

@@ -33,7 +33,8 @@ class TestAuthResult(TransactionTestCase):
 
         result = req(self.url, slug="test_slug", data=42)
 
-        getenv.assert_called_with("TEST_SLUG_CERT")
+        getenv.assert_any_call("TEST_SLUG_CERT")
+        getenv.assert_any_call("TEST_SLUG_CRED")
         req_patch.assert_called_with(self.url, data=42)
         self.assertEqual("test", result.content)
 
@@ -50,7 +51,8 @@ class TestAuthResult(TransactionTestCase):
         with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=named_tempfile, create=True):
             result = req(self.url, slug="test_slug", data=42)
 
-        getenv.assert_called_with("test_slug_CERT")
+        getenv.assert_any_call("test_slug_CRED")
+        getenv.assert_any_call("test_slug_CERT")
         cert_tempfile.write.assert_called_once_with("test cert content")
         cert_tempfile.flush.assert_called()
         req_patch.assert_called_with(self.url, data=42, cert="temp filename")
@@ -126,7 +128,7 @@ class TestAuthResult(TransactionTestCase):
 
             # Test removing the patch
             auth_requests.unpatch_mapproxy_opener_cache()
-            self.assertEqual(orig_call, _URLOpenerCache.__call__)
+            self.assertEqual(new_orig_call, _URLOpenerCache.__call__)
 
         finally:
             auth_requests._ORIG_URLOPENERCACHE_CALL = orig_call
