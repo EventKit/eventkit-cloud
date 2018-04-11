@@ -416,7 +416,7 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
         except Unauthorized as ua:
-            return Response([{'detail': _(ua.message)}], status.HTTP_403_FORBIDDEN)
+            return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
         if run:
             logger.debug("Placing pick_up_run_task for {0} on the queue.".format(run.uid))
@@ -572,7 +572,10 @@ class JobViewSet(viewsets.ModelViewSet):
 
         # Does the user have admin permission to make changes to this job?
 
+        logger.info("DELETE REQUEST")
         perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        logger.info("JOB IDS %s %s" % (job.id, job_ids))
+
         if not job.id in job_ids:
             return Response([{'detail': 'ADMIN permission is required to delete this job.'}],
                             status.HTTP_400_BAD_REQUEST)
@@ -790,7 +793,16 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
             Destroy a model instance.
         """
+
         instance = self.get_object()
+        job = instance.job
+
+
+        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        if not job.id in job_ids:
+               return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
+                            status.HTTP_400_BAD_REQUEST)
+
         instance.soft_delete(user=request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
