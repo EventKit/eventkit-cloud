@@ -537,6 +537,7 @@ PROVIDER_CHECK_MAP = {
     "wcs": WCSProviderCheck,
     "wms": WMSProviderCheck,
     "osm": OverpassProviderCheck,
+    "osm-generic": OverpassProviderCheck,
     "wmts": WMTSProviderCheck,
     "arcgis-raster": ProviderCheck,
     "arcgis-feature": ProviderCheck,
