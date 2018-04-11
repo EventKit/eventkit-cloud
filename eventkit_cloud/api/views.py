@@ -1172,10 +1172,14 @@ class GroupViewSet(viewsets.ModelViewSet):
         name = request.data['name']
 
         matches = Group.objects.filter(name__iexact=name.lower())
-        if len(matches) > 0 :
-            return Response({'success': False, 'detail': 'A group named %s already exists.' % name}, status=status.HTTP_400_BAD_REQUEST)
-        response = super(GroupViewSet, self).create(request, *args, **kwargs)
+        if len(matches) > 0:
+            error_data = {"errors": [{"status": status.HTTP_400_BAD_REQUEST,
+                                      "title": _('Duplicate Group Name'),
+                                      "detail": _('A group named %s already exists.' % name)
+                                      }]}
+            return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
+        response = super(GroupViewSet, self).create(request, *args, **kwargs)
         group_id = response.data["id"]
         user = User.objects.all().filter(username=request.user.username)[0]
         group = Group.objects.get(pk=group_id)
