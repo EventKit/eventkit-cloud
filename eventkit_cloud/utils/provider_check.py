@@ -179,7 +179,7 @@ class ProviderCheck(object):
             self.validate_response(response)
 
         result_json = json.dumps(self.result.value[0]) % self.token_dict
-        logger.debug("Provider check returning result: {}".format(result_json))
+        logger.debug("Provider check returning result: %s", result_json)
         return result_json
 
 

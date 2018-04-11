@@ -21,19 +21,22 @@ class TestWFSToGPKG(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
+    @patch('eventkit_cloud.utils.wfs.get_cred')
     @patch('eventkit_cloud.utils.wfs.check_content_exists')
     @patch('eventkit_cloud.utils.wfs.os.path.exists')
-    def test_create_convert(self, exists, check_content_exists):
+    def test_create_convert(self, exists, check_content_exists, get_cred):
         gpkg = '/path/to/sqlite.gpkg'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
         name = 'Great export'
-        service_url = 'http://my-service.org/some-server/wfs?'
-        expected_url = '{}{}'.format(service_url.rstrip('?'), '?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer))
+        service_url = 'http://my-service.org/some-server/wfs?foo=bar&SERVICE=thisWillBeStrippedOut'
+        expected_url = 'http://my-service.org/some-server/wfs?foo=bar&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature' \
+                       '&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer)
         cmd = Template("ogr2ogr -skipfailures -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
         cmd = cmd.safe_substitute({'gpkg': gpkg, 'url': expected_url, 'minX': bbox[0], 'minY': bbox[1], 'maxX': bbox[2], 'maxY': bbox[3]})
         exists.return_value = True
         check_content_exists.return_value = True
+        get_cred.return_value = None
         self.task_process.return_value = Mock(exitcode=0)
         # set zipped to False for testing
         w2g = WFSToGPKG(gpkg=gpkg,

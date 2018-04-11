@@ -4,8 +4,11 @@ import logging
 import os
 import subprocess
 from string import Template
+import re
 from ..tasks.task_process import TaskProcess
 from ..utils.geopackage import check_content_exists
+from ..utils.auth_requests import get_cred
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,26 +47,31 @@ class WFSToGPKG(object):
         if not os.path.exists(os.path.dirname(self.gpkg)):
             os.makedirs(os.path.dirname(self.gpkg), 6600)
 
-        try:
-            # remove any url params so we can add our own
-            self.service_url = self.service_url.split('?')[0]
-        except ValueError:
-            # if no url params we can just check for trailing slash and move on
-            self.service_url = self.service_url.rstrip('/\\')
-        finally:
-            self.service_url = '{}?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'\
-                .format(self.service_url, self.layer)
+        # Strip out query string parameters that might conflict
+        self.service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "",
+                                  self.service_url)
+        query_str = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(self.layer)
+        if "?" in self.service_url:
+            if "&" != self.service_url[-1]:
+                self.service_url += "&"
+            self.service_url += query_str
+        else:
+            self.service_url += "?" + query_str
+
+        url = self.service_url
+        cred = get_cred(slug=self.name, url=url)
+        if cred:
+            user, pw = cred
+            url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
-                {'gpkg': self.gpkg, 'url': self.service_url, 'minX': self.bbox[0], 'minY': self.bbox[1],
+                {'gpkg': self.gpkg, 'url': url, 'minX': self.bbox[0], 'minY': self.bbox[1],
                  'maxX': self.bbox[2], 'maxY': self.bbox[3]})
         else:
-            convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': self.service_url})
+            convert_cmd = self.cmd.safe_substitute({'gpkg': self.gpkg, 'url': url})
 
-        logger.info('Running: %s' % convert_cmd)
-        if self.debug:
-            logger.debug('Running: %s' % convert_cmd)
+        logger.debug('Running: %s' % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
