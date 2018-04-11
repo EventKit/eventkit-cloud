@@ -190,6 +190,21 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response['Content-Length'], '0')
         self.assertEquals(response['Content-Language'], 'en')
 
+    def test_delete_job_no_permission(self,):
+        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
+        token = Token.objects.create(user=user)
+        # reset the client credentials to the new user
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        response = self.client.delete(url)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
+
     def test_create_zipfile(self):
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
         request_data = {
@@ -1119,6 +1134,11 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
 
+    def test_duplicate_group(self):
+        url = reverse('api:groups-list')
+        payload = {'name': "oMaHa 319"}
+        response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_get_list(self):
         url = reverse('api:groups-list')
