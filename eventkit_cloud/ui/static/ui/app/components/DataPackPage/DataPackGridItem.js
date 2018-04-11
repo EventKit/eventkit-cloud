@@ -7,7 +7,7 @@ import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import Lock from 'material-ui/svg-icons/action/lock';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import SocialPublic from 'material-ui/svg-icons/social/public';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';

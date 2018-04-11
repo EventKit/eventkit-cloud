@@ -81,7 +81,7 @@ export class DataCartGeneralTable extends Component {
                 <DataPackTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
-                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 0px' }}
+                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
                     data={
                         providerTasks.map(providerTask => (
                             <div key={providerTask.name} style={{ margin: '5px 0px' }}>

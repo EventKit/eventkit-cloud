@@ -46,9 +46,9 @@ export class DataPackTableRow extends Component {
                 <div
                     style={styles.data}
                 >
-                    <p>
+
                         {this.props.data}
-                    </p>
+
                 </div>
             </div>
         );

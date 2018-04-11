@@ -9,7 +9,7 @@ import { List, ListItem } from 'material-ui/List';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import Lock from 'material-ui/svg-icons/action/lock';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import SocialPublic from 'material-ui/svg-icons/social/public';
 import ReactDOM from 'react-dom';
 import TestUtils from 'react-dom/test-utils';
