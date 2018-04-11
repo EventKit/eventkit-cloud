@@ -2,7 +2,7 @@
 import logging
 import os
 import requests
-from mock import Mock, patch, MagicMock
+from mock import Mock, patch, MagicMock, ANY
 from django.conf import settings
 from django.test import TransactionTestCase
 from string import Template
@@ -39,7 +39,7 @@ class TestWCSConverter(TransactionTestCase):
               <UserPwd>$userpwd</UserPwd>
               <HttpAuth>ANY</HttpAuth>
             </WCS_GDAL>""").safe_substitute({
-            'url': service_url,
+            'url': service_url.split('?')[0] + '?',
             'coverage': layer,
             'params': '&amp;map=testMap.map',
             'userpwd': 'testUser:testPass',
@@ -60,7 +60,7 @@ class TestWCSConverter(TransactionTestCase):
         out = wcs_conv.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(os.path.dirname(geotiff))
-        write.assert_called_once_with(expected_wcs_xml)
+        write.assert_called_once_with(ANY, expected_wcs_xml)
 
         cmd = cmd.safe_substitute({'out': geotiff, 'wcs': wcs_conv.wcs_xml_path, 'minX': bbox[0], 'minY': bbox[1],
                                    'maxX': bbox[2], 'maxY': bbox[3], 'type': ''})
