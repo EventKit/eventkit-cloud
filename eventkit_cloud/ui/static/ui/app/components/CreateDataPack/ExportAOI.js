@@ -818,6 +818,7 @@ export class ExportAOI extends Component {
             if (this.state.fakeData === true) {
                 this.props.clearAoiInfo();
                 this.handleResetMap();
+                this.setState({ fakeData: false });
             } else {
                 this.setButtonSelected('box');
                 this.props.setNextEnabled();
