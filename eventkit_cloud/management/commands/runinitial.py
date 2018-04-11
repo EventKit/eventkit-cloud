@@ -17,4 +17,4 @@ class Command(BaseCommand):
             call_command('loaddata', 'insert_provider_types')
             call_command('loaddata', 'osm_provider')
             call_command('loaddata', 'datamodel_presets')
-            #call_command('load_land_data')
+            call_command('load_land_data')
