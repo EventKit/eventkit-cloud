@@ -201,8 +201,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
                                                 'out_ds': out_dataset})
 
         logger.debug("GDAL clip cmd: %s", cmd)
-        with open(boundary, 'r') as f:
-            logger.debug("Cutline GeoJSON: %s", f.read())
 
         task_process = TaskProcess(task_uid=task_uid)
         task_process.start_process(cmd, shell=True, executable="/bin/bash",
