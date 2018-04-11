@@ -200,7 +200,7 @@ export class DataPackPage extends React.Component {
                 },
                 {
                     title: 'DataPack Status',
-                    text: 'Check the status (success, error, fail) of previously created DataPacks',
+                    text: 'Check the status (complete, running, error) of previously created DataPacks.',
                     selector: '.qa-DataPackListItem-subtitle-date',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -253,7 +253,7 @@ export class DataPackPage extends React.Component {
                 },
                 {
                     title: 'DataPack Status',
-                    text: 'Check the status (success, error, fail) of previously created DataPacks',
+                    text: 'Check the status (complete, running, error) of previously created DataPacks.',
                     selector: '.qa-DataPackGridItem-CardActions',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -305,7 +305,7 @@ export class DataPackPage extends React.Component {
                 },
                 {
                     title: 'DataPack Status',
-                    text: 'Check the status of previously created DataPacks',
+                    text: 'Check the status (complete, running, error) of previously created DataPacks.',
                     selector: '.qa-DataPackTableItem-TableRowColumn-status',
                     position: 'bottom',
                     style: tooltipStyle,

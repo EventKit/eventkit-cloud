@@ -69,10 +69,52 @@ export class StatusDownload extends React.Component {
             },
         };
 
+        const welcomeTooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf',
+            },
+            arrow: {
+                display: 'none',
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf',
+            },
+            skip: {
+                display: 'none',
+            },
+            back: {
+                color: '#8b9396',
+            },
+            hole: {
+                display: 'none',
+            },
+        };
+
         const steps = [
             {
+                title: 'Welcome to the Status & Download Page',
+                text: 'You can review relevant information about the DataPack here such as its creation date, Area of Interest, and which data is included.  Most importantly, you can download the data.',
+                selector: '.qa-StatusDownload-AppBar',
+                position: 'top',
+                style: welcomeTooltipStyle,
+                isFixed: true,
+            },
+            {
                 title: 'DataPack Info',
-                text: 'This is the name of the datapack.',
+                text: 'This is the name of the DataPack.',
                 selector: '.qa-DataCartDetails-div-name',
                 position: 'bottom',
                 style: tooltipStyle,
@@ -80,7 +122,7 @@ export class StatusDownload extends React.Component {
             },
             {
                 title: 'DataPack Status',
-                text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.',
+                text: 'This is the status of the DataPack.  Here you can change the expiration date and permission of the DataPack.',
                 selector: '.qa-DataCartDetails-div-StatusContainer',
                 position: 'bottom',
                 style: tooltipStyle,
@@ -88,7 +130,7 @@ export class StatusDownload extends React.Component {
             },
             {
                 title: 'DataPack Download Options',
-                text: 'Here you will find download options for the datapack. <br> Each data source has its own table where you can view status of the current downloadable files.',
+                text: 'Here you will find download options for the DataPack. <br> Each data source has its own table where you can view status of the current downloadable files.',
                 selector: '.qa-DataCartDetails-div-downloadOptionsContainer',
                 position: 'bottom',
                 style: tooltipStyle,
@@ -96,7 +138,7 @@ export class StatusDownload extends React.Component {
             },
             {
                 title: 'Other Options',
-                text: 'There are options availble to run datapack export again, clone the dataoack or delete the datapack',
+                text: 'Here you can run the DataPack again which will refresh the data.  You can clone, which will create a new DataPack using the existing specifications.  From there you can make tweaks to the AOI, the selected data sources, and the metadata (e.g., the name of the DataPack, the permissions).  And you can delete the DataPack.',
                 selector: '.qa-DataCartDetails-div-otherOptionsContainer',
                 position: 'bottom',
                 style: tooltipStyle,
@@ -104,15 +146,15 @@ export class StatusDownload extends React.Component {
             },
             {
                 title: 'General Information',
-                text: 'Here you will find general information related to the datapack.  ',
+                text: 'Here you will find general information related to the DataPack.  ',
                 selector: '.qa-DataCartDetails-div-generalInfoContainer',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
             },
             {
-                title: 'AIO',
-                text: 'This is the selected area of interest for the datapack.',
+                title: 'AOI',
+                text: 'This is the selected area of interest for the DataPack.',
                 selector: '.qa-DataCartDetails-div-map',
                 position: 'bottom',
                 style: tooltipStyle,
@@ -339,6 +381,7 @@ export class StatusDownload extends React.Component {
         return (
             <div className="qa-StatusDownload-div-root" style={styles.root}>
                 <AppBar
+                    className="qa-StatusDownload-AppBar"
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}

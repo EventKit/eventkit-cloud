@@ -77,7 +77,7 @@ export class ExportSummary extends Component {
             },
             {
                 title: 'Submit DataPack',
-                text: 'Once ready, click the large green button to kick off the DataPack submission process.<br>You will be redirected to the Status and Download page.',
+                text: 'Once ready, click the large green button to kick off the DataPack submission process.  You will be redirected to the Status and Download page.',
                 selector: '.qa-BreadcrumbStepper-FloatingActionButton-case2',
                 position: 'bottom',
                 style: tooltipStyle,

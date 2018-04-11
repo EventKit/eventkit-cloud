@@ -25,13 +25,13 @@ import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import ProviderStatusIcon from './ProviderStatusIcon'
+import ProviderStatusIcon from './ProviderStatusIcon';
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import ol3mapCss from '../../styles/ol3map.css';
 import Joyride from 'react-joyride';
-import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh'
+import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
 import BaseTooltip from '../BaseTooltip';
 
 
@@ -67,11 +67,8 @@ export class ExportInfo extends React.Component {
 
         // Populate provider state attributes specific to this component
         if (this.state.providers) {
-            this.state.providers.forEach((provider,pi) => {
-
-                if (provider.availability === undefined)
-                    provider.availability = {};
-
+            this.state.providers.forEach((provider, pi) => {
+                if (provider.availability === undefined) { provider.availability = {}; }
             });
         }
     }
@@ -119,7 +116,7 @@ export class ExportInfo extends React.Component {
 
         // make requests to check provider availability
         if (this.state.providers) {
-            this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
+            this.fetch = setInterval(this.state.providers.forEach((provider, pi) => {
                 if (provider.display === false) return;
                 this.checkAvailability(provider);
             }), 30000);
@@ -134,7 +131,7 @@ export class ExportInfo extends React.Component {
             header: {
                 textAlign: 'left',
                 fontSize: '20px',
-                borderColor: '#4598bf'
+                borderColor: '#4598bf',
             },
             main: {
                 paddingTop: '20px',
@@ -142,30 +139,30 @@ export class ExportInfo extends React.Component {
             },
             button: {
                 color: 'white',
-                backgroundColor: '#4598bf'
+                backgroundColor: '#4598bf',
             },
             skip: {
-                color: '#8b9396'
+                color: '#8b9396',
             },
             back: {
-                color: '#8b9396'
+                color: '#8b9396',
             },
             hole: {
                 backgroundColor: 'rgba(226,226,226, 0.2)',
-            }
-        }
+            },
+        };
 
         const steps = [
             {
                 title: 'Enter General Information',
-                text: 'Enter the general details and identifying information about the datapack.',
+                text: 'Enter the general details and identifying information about the DataPack.',
                 selector: '.qa-ExportInfo-input-name',
                 position: 'bottom',
                 style: tooltipStyle,
             },
             {
                 title: 'Choose your sources',
-                text: 'Choose the data sources desired for the datapack.',
+                text: 'Choose the data sources desired for the DataPack.',
                 selector: '.qa-ExportInfo-List',
                 position: 'left',
                 style: tooltipStyle,
@@ -182,25 +179,24 @@ export class ExportInfo extends React.Component {
         this.joyrideAddSteps(steps);
     }
 
-   componentWillReceiveProps(nextProps) {
-       //if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-       if(nextProps.walkthroughClicked != true) {
+    componentWillReceiveProps(nextProps) {
+        // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
+        if (nextProps.walkthroughClicked != true) {
         // if required fields are fulfilled enable next
-        if (this.hasRequiredFields(nextProps.exportInfo)) {
-            if (!nextProps.nextEnabled) {
-                this.props.setNextEnabled();
-            }
-        } else if (nextProps.nextEnabled) {
+            if (this.hasRequiredFields(nextProps.exportInfo)) {
+                if (!nextProps.nextEnabled) {
+                    this.props.setNextEnabled();
+                }
+            } else if (nextProps.nextEnabled) {
             // if not and next is enabled it should be disabled
-            this.props.setNextDisabled();
+                this.props.setNextDisabled();
+            }
+        }
+        if (nextProps.walkthroughClicked == true && this.state.isRunning == false) {
+            this.refs.joyride.reset(true);
+            this.setState({ isRunning: true });
         }
     }
-       if(nextProps.walkthroughClicked == true && this.state.isRunning == false) {
-           this.refs.joyride.reset(true);
-           this.setState({isRunning: true});
-       }
-
-   }
 
     componentDidUpdate(prevProps, prevState) {
         // if the user expaned the AOI section mount the map
@@ -258,10 +254,10 @@ export class ExportInfo extends React.Component {
     }
 
     checkAvailability(provider) {
-        const data = {'geojson': this.props.geojson};
+        const data = { geojson: this.props.geojson };
         const csrfmiddlewaretoken = cookie.load('csrftoken');
         axios({
-            url: '/api/providers/' + provider.slug + '/status',
+            url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
             data,
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
@@ -269,12 +265,11 @@ export class ExportInfo extends React.Component {
             provider.availability = JSON.parse(response.data);
             provider.availability.slug = provider.slug;
             this.setState({ providers: [provider, ...this.state.providers] });
-
         }).catch((error) => {
             console.log(error);
             provider.availability = {
-                status: "WARN_CHECK_FAILURE",
-                message: "An error occurred while checking this provider's availability."
+                status: 'WARN_CHECK_FAILURE',
+                message: "An error occurred while checking this provider's availability.",
             };
             provider.availability.slug = provider.slug;
             this.setState({ providers: [provider, ...this.state.providers] });
@@ -424,7 +419,7 @@ export class ExportInfo extends React.Component {
 
         if (!newSteps.length) return;
 
-        this.setState(currentState => {
+        this.setState((currentState) => {
             currentState.steps = currentState.steps.concat(newSteps);
             return currentState;
         });
@@ -432,32 +427,31 @@ export class ExportInfo extends React.Component {
 
     callback(data) {
         this.props.setNextDisabled();
-        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
             this.refs.joyride.reset(true);
         }
-        if(data.index === 0 && data.type === 'tooltip:before') {
+        if (data.index === 0 && data.type === 'tooltip:before') {
 
         }
 
-        if(data.index === 2 && data.type === 'tooltip:before') {
+        if (data.index === 2 && data.type === 'tooltip:before') {
             this.props.setNextEnabled();
         }
     }
 
     handleJoyride() {
-        if(this.state.isRunning === true){
+        if (this.state.isRunning === true) {
             this.refs.joyride.reset(true);
-        }
-        else {
-            this.setState({isRunning: true})
+        } else {
+            this.setState({ isRunning: true });
         }
     }
 
     render() {
         const formWidth = window.innerWidth < 800 ? '90%' : '60%';
-        const {steps, isRunning} = this.state;
+        const { steps, isRunning } = this.state;
 
         const style = {
             underlineStyle: {
@@ -470,7 +464,7 @@ export class ExportInfo extends React.Component {
             root: {
                 width: '100%',
                 height: window.innerHeight - 180,
-                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
+                backgroundImage: `url(${require('../../../images/topoBackground.jpg')})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -547,14 +541,14 @@ export class ExportInfo extends React.Component {
             <div id="root" className="qa-ExportInfo-root" style={style.root}>
                 <Joyride
                     callback={this.callback}
-                    ref={'joyride'}
+                    ref="joyride"
                     debug={false}
                     steps={steps}
-                    autoStart={true}
-                    type={'continuous'}
+                    autoStart
+                    type="continuous"
                     disableOverlay
-                    showSkipButton={true}
-                    showStepsProgress={true}
+                    showSkipButton
+                    showStepsProgress
                     locale={{
                         back: (<span>Back</span>),
                         close: (<span>Close</span>),
@@ -562,7 +556,8 @@ export class ExportInfo extends React.Component {
                         next: (<span>Next</span>),
                         skip: (<span>Skip</span>),
                     }}
-                    run={isRunning}/>
+                    run={isRunning}
+                />
                 <CustomScrollbar>
                     <form id="form" onSubmit={this.onSubmit} style={style.form} className="qa-ExportInfo-form">
                         <Paper
@@ -635,12 +630,15 @@ export class ExportInfo extends React.Component {
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
                                 <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
-                                    <span className="qa-ExportInfo-ListHeaderItem"
-                                    style={style.providerListHeading}>
+                                    <span
+                                        className="qa-ExportInfo-ListHeaderItem"
+                                        style={style.providerListHeading}
+                                    >
                                         DATA PROVIDERS
                                     </span>
-                                    <span className="qa-ExportInfo-ListHeaderItem"
-                                    style={{ position: 'absolute', left: '60%' }}
+                                    <span
+                                        className="qa-ExportInfo-ListHeaderItem"
+                                        style={{ position: 'absolute', left: '60%' }}
                                     >
                                         AVAILABILITY
                                         <NavigationRefresh
@@ -662,8 +660,8 @@ export class ExportInfo extends React.Component {
                                             onMouseOut={this.handleRefreshTooltipClose.bind(this)}
                                             onTouchTap={this.onRefresh.bind(this)}
                                         >
-                                    <div>You may try to resolve errors by running the availability check again.</div>
-                                </BaseTooltip>
+                                            <div>You may try to resolve errors by running the availability check again.</div>
+                                        </BaseTooltip>
                                     </span>
                                 </div>
                                 <List className="qa-ExportInfo-List" style={{ width: '100%', fontSize: '16px' }}>
@@ -691,7 +689,9 @@ export class ExportInfo extends React.Component {
                                                         </BaseDialog>
                                                     </div>
                                                 }
-                                                style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0' }}
+                                                style={{
+                                                    fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0',
+                                                }}
                                             />);
                                         }
                                         nestedItems.push(<ListItem
@@ -699,7 +699,9 @@ export class ExportInfo extends React.Component {
                                             key={nestedItems.length}
                                             primaryText={<div style={{ whiteSpace: 'pre-wrap' }}>{provider.service_description}</div>}
                                             disabled
-                                            style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
+                                            style={{
+                                                fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0',
+                                            }}
                                         />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
@@ -707,7 +709,9 @@ export class ExportInfo extends React.Component {
                                         return (<ListItem
                                             className="qa-ExportInfo-ListItem"
                                             key={provider.uid}
-                                            style={{ backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom: '0' }}
+                                            style={{
+                                                backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom: '0',
+                                            }}
                                             nestedListStyle={{ padding: '0px', backgroundColor }}
                                             primaryText={
                                                 <div>
@@ -715,7 +719,7 @@ export class ExportInfo extends React.Component {
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon
-                                                        baseStyle={{ 'left': '80%' }}
+                                                        baseStyle={{ left: '80%' }}
                                                         tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
                                                     />
@@ -725,7 +729,7 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
-                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true}
+                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) !== -1}
                                                 onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle
@@ -760,7 +764,13 @@ export class ExportInfo extends React.Component {
                                         style={{ display: 'inlineBlock' }}
                                         disabled
                                         checkedIcon={<ActionCheckCircle className="qa-ExportInfo-ActionCheckCircle-projection" />}
-                                    /><Info className="qa-ExportInfo-Info-projection" onTouchTap={this.handleProjectionsOpen} style={{ marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle' }} />
+                                    /><Info
+                                        className="qa-ExportInfo-Info-projection"
+                                        onTouchTap={this.handleProjectionsOpen}
+                                        style={{
+                                            marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle',
+                                        }}
+                                    />
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
                                         title="Projection Information"
@@ -788,13 +798,19 @@ export class ExportInfo extends React.Component {
                                             defaultChecked
                                             disabled
                                             checkedIcon={<ActionCheckCircle />}
-                                        /><Info onTouchTap={this.handleFormatsOpen} style={{ marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle' }}/>
+                                        /><Info
+                                            onTouchTap={this.handleFormatsOpen}
+                                            style={{
+                                                marginLeft: '10px', height: '24px', width: '24px', cursor: 'pointer', display: 'inlineBlock', fill: '#4598bf', verticalAlign: 'middle',
+                                            }}
+                                        />
                                         <BaseDialog
                                             show={this.state.formatsDialogOpen}
                                             title="Format Information"
                                             onClose={this.handleFormatsClose}
                                         ><div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
-                                            EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.</div>
+                                            EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.
+                                         </div>
                                         </BaseDialog>
                                     </div>
                                 ))}
@@ -816,7 +832,9 @@ export class ExportInfo extends React.Component {
                                     >
                                         <a
                                             onClick={this.props.handlePrev}
-                                            style={{ fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer' }}
+                                            style={{
+                                                fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer',
+                                            }}
                                         >
                                             Edit
                                         </a>

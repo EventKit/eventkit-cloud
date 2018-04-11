@@ -204,7 +204,7 @@ export class ExportAOI extends Component {
             },
             {
                 title: 'Define',
-                text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.',
+                text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>You can also upload a GeoJSON, KML, GeoPackage, or zipped shapefile using the file import option.',
                 selector: '.qa-DrawAOIToolbar-div',
                 position: 'left',
                 style: tooltipStyle,
@@ -233,7 +233,7 @@ export class ExportAOI extends Component {
             this.handleGeoJSONUpload(nextProps.importGeom);
         }
 
-        if (nextProps.walkthroughClicked == true && this.state.isRunning == false) {
+        if (nextProps.walkthroughClicked === true && this.state.isRunning === false) {
             this.refs.joyride.reset(true);
             this.setState({ isRunning: true });
         }
@@ -264,10 +264,9 @@ export class ExportAOI extends Component {
     }
 
     toggleImportModal(show) {
-        if (show != undefined) {
+        if (show !== undefined) {
             this.setState({ showImportModal: show });
-        }
-        else {
+        } else {
             this.setState({ showImportModal: !this.state.showImportModal });
         }
     }
@@ -399,7 +398,7 @@ export class ExportAOI extends Component {
         this.drawFreeInteraction.setActive(false);
         if (isViewOutsideValidExtent(this.map.getView())) {
             // Even though we can 'wrap' the draw layer and 'unwrap' the draw coordinates
-            // when needed, the draw interaction breaks if you wrap too many time, so to 
+            // when needed, the draw interaction breaks if you wrap too many time, so to
             // avoid that issue we go back to the valid extent but maintain the same view
             goToValidExtent(this.map.getView());
         }
@@ -804,7 +803,7 @@ export class ExportAOI extends Component {
 
         if (!newSteps.length) return;
 
-        this.setState(currentState => {
+        this.setState((currentState) => {
             currentState.steps = currentState.steps.concat(newSteps);
             return currentState;
         });
@@ -865,7 +864,7 @@ export class ExportAOI extends Component {
                 [55.25307655334473, 25.296621588996263],
                 [55.25307655334473, 25.256418028713934],
             ],
-        ]
+        ];
         const polygon = new Polygon(coords);
         polygon.transform('EPSG:4326', 'EPSG:3857');
         const feature = new Feature({
@@ -908,11 +907,11 @@ export class ExportAOI extends Component {
                     ref="joyride"
                     debug={false}
                     steps={steps}
-                    autoStart={true}
+                    autoStart
                     type="continuous"
                     disableOverlay
-                    showSkipButton={true}
-                    showStepsProgress={true}
+                    showSkipButton
+                    showStepsProgress
                     locale={{
                         back: (<span>Back</span>),
                         close: (<span>Close</span>),
@@ -987,8 +986,8 @@ export class ExportAOI extends Component {
 }
 
 ExportAOI.contextTypes = {
-    config: React.PropTypes.object
-}
+    config: React.PropTypes.object,
+};
 
 ExportAOI.propTypes = {
     aoiInfo: PropTypes.object,
@@ -1004,7 +1003,7 @@ ExportAOI.propTypes = {
     resetGeoJSONFile: PropTypes.func,
     walkthroughClicked: React.PropTypes.bool,
     onWalkthroughReset: React.PropTypes.func,
-}
+};
 
 function mapStateToProps(state) {
     return {
