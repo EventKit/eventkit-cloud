@@ -794,36 +794,14 @@ describe('UserGroupsPage component', () => {
         expect(props.updateGroup.calledWith(groupId, { administrators: expectedAdmins })).toBe(true);
     });
 
-    it('showErrorDialog should set state with string error message', () => {
+    it('showErrorDialog should set state with errors', () => {
         const props = getProps();
         const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
         const wrapper = getWrapper(props);
-        const message = 'oh no an error';
+        const message = { errors: [{ detail: 'an error' }] };
         wrapper.instance().showErrorDialog(message);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ errorMessage: message })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('showErrorDialog should handle an error object', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        const message = { errors: { detail: 'oh no an error object' } };
-        wrapper.instance().showErrorDialog(message);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ errorMessage: 'oh no an error object' })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('showErrorDialog should handle and invalid error object', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        const message = {};
-        wrapper.instance().showErrorDialog(message);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ errorMessage: 'An unknown error has occured' })).toBe(true);
+        expect(stateStub.calledWith({ errors: message.errors })).toBe(true);
         stateStub.restore();
     });
 
@@ -833,7 +811,7 @@ describe('UserGroupsPage component', () => {
         const wrapper = getWrapper(props);
         wrapper.instance().hideErrorDialog();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ errorMessage: '' })).toBe(true);
+        expect(stateStub.calledWith({ errors: [] })).toBe(true);
         stateStub.restore();
     });
 

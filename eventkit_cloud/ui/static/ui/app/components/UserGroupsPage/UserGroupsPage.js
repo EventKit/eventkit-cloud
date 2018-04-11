@@ -88,7 +88,7 @@ export class UserGroupsPage extends Component {
             createUsers: [],
             renameInput: '',
             drawerSelection: 'all',
-            errorMessage: '',
+            errors: [],
             showSharedInfo: false,
             showPageInfo: false,
             drawerIconHover: false,
@@ -369,19 +369,12 @@ export class UserGroupsPage extends Component {
     }
 
     showErrorDialog(message) {
-        if (typeof message === 'string') {
-            this.setState({ errorMessage: message });
-        } else {
-            let errorMessage = 'An unknown error has occured';
-            if (message.errors && message.errors.detail) {
-                errorMessage = message.errors.detail;
-            }
-            this.setState({ errorMessage });
-        }
+        const { errors } = message;
+        this.setState({ errors });
     }
 
     hideErrorDialog() {
-        this.setState({ errorMessage: '' });
+        this.setState({ errors: [] });
     }
 
     showSharedInfoDialog() {
@@ -781,13 +774,17 @@ export class UserGroupsPage extends Component {
                     null
                 }
                 <BaseDialog
-                    show={!!this.state.errorMessage}
+                    show={!!this.state.errors.length}
                     onClose={this.hideErrorDialog}
                     title="ERROR"
                     className="qa-UserGroupsPage-errorDialog"
                 >
-                    <Warning className="" style={styles.errorIcon} />
-                    {this.state.errorMessage}
+                    {this.state.errors.map(error => (
+                        <div className="qa-UserGroupsPage-error" key={error.detail}>
+                            <Warning className="qa-UserGroupsPage-errorIcon" style={styles.errorIcon} />
+                            {error.detail}
+                        </div>
+                    ))}
                 </BaseDialog>
 
                 <BaseDialog
@@ -855,14 +852,13 @@ UserGroupsPage.propTypes = {
         deleted: PropTypes.bool,
         updating: PropTypes.bool,
         updated: PropTypes.bool,
-        error: PropTypes.oneOfType([
-            PropTypes.string,
-            PropTypes.shape({
+        error: PropTypes.shape({
+            errors: PropTypes.arrayOf(PropTypes.shape({
                 status: PropTypes.number,
                 detail: PropTypes.string,
                 title: PropTypes.string,
-            }),
-        ]),
+            })),
+        }),
     }).isRequired,
     users: PropTypes.shape({
         users: PropTypes.arrayOf(PropTypes.shape({
