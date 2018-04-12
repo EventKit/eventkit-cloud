@@ -26,50 +26,51 @@ raf.polyfill();
 
 describe('Export Summary Component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            geojson: { 
-                "type": "FeatureCollection",
-                "features": [{ "type": "Feature",
-                    "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
-                        [100.0, 1.0], [100.0, 0.0] ]
-                        ]
-                    },}]
+    const getProps = () => ({
+        geojson: {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                            [100.0, 1.0], [100.0, 0.0]],
+                    ],
+                },
+            }],
+        },
+        exportName: 'name',
+        datapackDescription: 'description',
+        projectName: 'project',
+        makePublic: true,
+        providers: [
+            { name: 'one', uid: 1, display: true },
+            { name: 'two', uid: 2, display: false },
+            { name: 'three', uid: 3, display: false },
+        ],
+        areaStr: '12 sq km',
+        formats: 'gpkg',
+        allFormats: [
+            {
+                uid: 'ed48a7c1-1fc3-463e-93b3-e93eb3861a5a',
+                url: 'http://cloud.eventkit.test/api/formats/shp',
+                slug: 'shp',
+                name: 'ESRI Shapefile Format',
+                description: 'Esri Shapefile (OSM Schema)',
             },
-            exportName: 'name',
-            datapackDescription: 'description',
-            projectName: 'project',
-            providers: [
-                { name: 'one', uid: 1, display: true }, 
-                { name: 'two', uid: 2, display: false }, 
-                { name: 'three', uid: 3, display: false },
-            ],
-            areaStr: '12 sq km',
-            formats: 'gpkg',
-            allFormats: [
-                {
-                    "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
-                    "url": "http://cloud.eventkit.test/api/formats/shp",
-                    "slug": "shp",
-                    "name": "ESRI Shapefile Format",
-                    "description": "Esri Shapefile (OSM Schema)"
-                },
-                {
-                    "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
-                    "url": "http://cloud.eventkit.test/api/formats/gpkg",
-                    "slug": "gpkg",
-                    "name": "Geopackage",
-                    "description": "GeoPackage"
-                },
-            ],
-        }
-    }
+            {
+                uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
+                url: 'http://cloud.eventkit.test/api/formats/gpkg',
+                slug: 'gpkg',
+                name: 'Geopackage',
+                description: 'GeoPackage',
+            },
+        ],
+    });
 
     const getWrapper = (props) => {
-        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };        
+        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
         return mount(<ExportSummary {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
@@ -77,7 +78,7 @@ describe('Export Summary Component', () => {
                 config: React.PropTypes.object,
             },
         });
-    }
+    };
 
     it('should render the basic components', () => {
         const props = getProps();
@@ -95,7 +96,7 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#project').find('td').last().text()).toEqual('project');
         expect(wrapper.find('#formats').find('td').first().text()).toEqual('File Formats');
         expect(wrapper.find('#formats').find('td').last().text()).toEqual('Geopackage');
-        expect(wrapper.find('#layers').find('td').first().text()).toEqual('Layer Data');
+        expect(wrapper.find('#layers').find('td').first().text()).toEqual('Data Sources');
         expect(wrapper.find('#layers').find('td').last().text()).toEqual('one');
         expect(wrapper.find('#aoi-heading').text()).toEqual('Area of Interest (AOI)');
         expect(wrapper.find('#aoi-area').find('td').first().text()).toEqual('Area');

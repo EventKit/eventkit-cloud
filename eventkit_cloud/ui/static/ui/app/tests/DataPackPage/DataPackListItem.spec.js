@@ -53,7 +53,7 @@ describe('DataPackListItem component', () => {
     });
 
     it('should update when the run properties change', () => {
-        let props = getProps();
+        const props = getProps();
         const wrapper = getWrapper(props);
         props.run.started_at = '2017-04-11T15:52:35.637331Z';
         wrapper.setProps(props);
@@ -80,7 +80,7 @@ describe('DataPackListItem component', () => {
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
-        let props = getProps();
+        const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
@@ -91,14 +91,14 @@ describe('DataPackListItem component', () => {
     });
 
     it('handleProviderOpen should set provider dialog to open', () => {
-        let props = getProps();
+        const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({
-            providerDescs: { 
+            providerDescs: {
                 'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
             },
             providerDialogOpen: true,
@@ -113,7 +113,7 @@ describe('DataPackListItem component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({deleteDialogOpen: true}));
+        expect(stateSpy.calledWith({ deleteDialogOpen: true }));
         stateSpy.restore();
     });
 

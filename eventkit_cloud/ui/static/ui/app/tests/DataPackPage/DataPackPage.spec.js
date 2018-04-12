@@ -255,7 +255,7 @@ describe('DataPackPage component', () => {
         expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(requestStub.calledOnce).toBe(true);
-        expect(intervalStub.calledWith(wrapper.instance().makeRunRequest, 10000)).toBe(true);
+        expect(intervalStub.calledWith(wrapper.instance().autoRunRequest, 10000)).toBe(true);
         expect(props.resetGeoJSONFile.calledOnce).toBe(true);
         mountSpy.restore();
         requestStub.restore();
@@ -376,6 +376,16 @@ describe('DataPackPage component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest))
         stateSpy.restore();
+    });
+
+    it('autoRunRequest should call makeRunRequest with true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stub = sinon.stub(wrapper.instance(), 'makeRunRequest');
+        wrapper.instance().autoRunRequest();
+        expect(stub.calledOnce).toBe(true);
+        expect(stub.calledWith(true)).toBe(true);
+        stub.restore();
     });
 
     it('makeRunRequest should build a params object and pass it to props.getRuns', () => {

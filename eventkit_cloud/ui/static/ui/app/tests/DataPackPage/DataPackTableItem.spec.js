@@ -65,7 +65,7 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(TableRowColumn).at(3).find(NotificationSync)).toHaveLength(1);
     });
 
-    it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user',() => {
+    it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user', () => {
         const props = getProps();
         props.run.user = 'admin';
         const wrapper = shallow(<DataPackTableItem {...props} />);

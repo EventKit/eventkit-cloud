@@ -94,7 +94,9 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardTitle)).toHaveLength(1);
         expect(wrapper.find(CardTitle).find('span').first()
-            .childAt(0).childAt(0).text()).toEqual('Test1');
+            .childAt(0)
+            .childAt(0)
+            .text()).toEqual('Test1');
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);

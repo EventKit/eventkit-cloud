@@ -83,7 +83,6 @@ export class DataPackListItem extends Component {
                         />,
                     ]}
                 />
-
             );
         });
 
@@ -98,7 +97,7 @@ export class DataPackListItem extends Component {
                 paddingBottom: '0px',
                 position: 'relative',
             },
-            cardTitle:{
+            cardTitle: {
                 wordWrap: 'break-word',
                 padding: '8px 15px 15px',
             },
@@ -132,7 +131,7 @@ export class DataPackListItem extends Component {
             publishedIcon: {
                 height: '18px',
                 float: 'right',
-                color: '#bcdfbb',
+                color: 'grey',
                 marginRight: '5px',
             },
             ownerLabel: {
@@ -155,10 +154,10 @@ export class DataPackListItem extends Component {
         };
 
         const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
-
         const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
         const onClick = this.props.onClick ? () => { this.props.onClick(this.props.run.uid); } : null;
+
         return (
             <Card
                 className="qa-DataPackListItem-Card"
@@ -279,7 +278,7 @@ export class DataPackListItem extends Component {
                                         this.props.run.status === 'INCOMPLETE' ?
                                             <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />
                                             :
-                                            <NavigationCheck className="qa-DataPackListItem-NavigationCheck" style={styles.completeIcon}/>
+                                            <NavigationCheck className="qa-DataPackListItem-NavigationCheck" style={styles.completeIcon} />
                                     }
                                 </div>
                             </div>
@@ -287,7 +286,7 @@ export class DataPackListItem extends Component {
                     }
                 />
             </Card>
-        )
+        );
     }
 }
 

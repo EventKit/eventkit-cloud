@@ -222,14 +222,14 @@ export class DataPackGridItem extends Component {
             },
             publishedIcon: {
                 float: 'right',
-                color: '#bcdfbb',
+                color: 'grey',
                 fontSize: '20px',
                 marginRight: '5px',
             },
             ownerLabel: {
                 float: 'right',
                 color: 'grey',
-                padding: '0px, 10px',
+                paddingTop: '5px',
                 margin: '0px',
                 fontSize: cardTextFontSize,
             },

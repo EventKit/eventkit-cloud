@@ -9,6 +9,7 @@ import Lock from 'material-ui/svg-icons/action/lock-outline';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import Star from 'material-ui/svg-icons/toggle/star';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import { List, ListItem } from 'material-ui/List';
 import moment from 'moment';
@@ -203,7 +204,7 @@ export class DataPackTableItem extends Component {
                     className="qa-DataPackTableItem-TableRowColumn-featured"
                     style={styles.featuredColumn}
                 >
-                    {this.props.run.job.featured ? <NavigationCheck style={{ fill: '#4598bf' }} /> : null}
+                    {this.props.run.job.featured ? <Star style={{ fill: 'grey' }} /> : null}
                 </TableRowColumn>
                 <TableRowColumn
                     className="qa-DataPackTableItem-TableRowColumn-iconMenu"

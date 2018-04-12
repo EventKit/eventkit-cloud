@@ -30,7 +30,6 @@ export class DataCartDetails extends Component {
         this.state = {
             minDate: null,
             maxDate: null,
-            status: '',
         };
     }
 

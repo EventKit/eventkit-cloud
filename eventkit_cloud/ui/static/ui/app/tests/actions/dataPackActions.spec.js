@@ -88,11 +88,24 @@ describe('DataPackList actions', () => {
         const cancel = sinon.spy();
         const cancelSource = { cancel };
         const store = mockStore({ runsList: { fetching: true, cancelSource } });
-        return store.dispatch(actions.getRuns())
+        return store.dispatch(actions.getRuns({}, {}, false))
             .then(() => {
                 expect(cancel.calledOnce).toBe(true);
                 expect(cancel.calledWith('Request is no longer valid, cancelling')).toBe(true);
             });
+    });
+
+    it('getRuns should NOT cancel an active request', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {
+            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24',
+        });
+        const cancel = sinon.spy();
+        const cancelSource = { cancel };
+        const store = mockStore({ runsList: { fetching: true, cancelSource } });
+        const ret = store.dispatch(actions.getRuns({}, {}, true));
+        expect(cancel.called).toBe(false);
+        expect(ret).toBe(null);
     });
 
     it('getRuns should handle the axios request being cancelled', () => {
