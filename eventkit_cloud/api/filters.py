@@ -123,8 +123,9 @@ class GroupFilter(django_filters.FilterSet):
 
 
 class NotificationFilter(django_filters.FilterSet):
+
     unread = django_filters.BooleanFilter(name="unread")
 
     class Meta:
             model = Notification
-            fields = ('id', 'unread')
+            fields = ( 'unread',)

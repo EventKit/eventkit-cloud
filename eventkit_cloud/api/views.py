@@ -1243,7 +1243,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = NotificationSerializer
-#    filter_class = NotificationFilter
+    filter_class = NotificationFilter
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    search_fields = { 'unread' }
 
     def serialize_records(self, notifications, request):
         payload = []
@@ -1266,7 +1268,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response("Not supported", status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, unread=False, *args, **kwargs):
-        notifications = self.get_queryset()
+        notifications =  self.filter_queryset(self.get_queryset())
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
