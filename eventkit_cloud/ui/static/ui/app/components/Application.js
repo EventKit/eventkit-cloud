@@ -527,11 +527,9 @@ export class Application extends Component {
                                         <div ref={this.setNotificationsDropdownContainerRef}>
                                             <NotificationsDropdown
                                                 style={{
-                                                    transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
                                                     opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
                                                     pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
                                                     transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
-                                                    transformOrigin: '6% -8%',
                                                 }}
                                                 notifications={this.props.notifications}
                                                 router={this.props.router}

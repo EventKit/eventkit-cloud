@@ -33,6 +33,8 @@ export class NotificationsDropdown extends React.Component {
                 top: '80px',
                 left: '-2px',
                 zIndex: '100',
+                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                transformOrigin: '37px -21px',
                 ...this.props.style,
             },
             pointer: {
