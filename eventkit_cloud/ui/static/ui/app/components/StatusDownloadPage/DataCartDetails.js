@@ -31,7 +31,6 @@ export class DataCartDetails extends Component {
             minDate: null,
             maxDate: null,
             permission: null,
-            status: '',
         };
     }
 
@@ -153,7 +152,7 @@ export class DataCartDetails extends Component {
             statusFontColor = '#ce4427';
         }
 
-        const rerunDisabled = this.state.status === 'SUBMITTED' || this.props.user.data.user.username !== this.props.cartDetails.user;
+        const rerunDisabled = this.props.cartDetails.status === 'SUBMITTED' || this.props.user.data.user.username !== this.props.cartDetails.user;
 
         return (
             <div>
