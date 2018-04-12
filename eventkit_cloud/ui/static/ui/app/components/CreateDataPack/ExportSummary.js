@@ -260,6 +260,7 @@ export class ExportSummary extends Component {
                 backgroundColor: '#f8f8f8',
                 fontWeight: 'normal',
                 color: '#8b9396',
+                wordWrap: 'break-word',
             },
             table: {
                 width: '100%',
@@ -267,6 +268,7 @@ export class ExportSummary extends Component {
                 border: '0px solid black',
                 borderSpacing: '5px',
                 borderCollapse: 'separate',
+                tableLayout: 'fixed',
             },
             mapCard: {
                 paddingBottom: '20px',
@@ -340,7 +342,7 @@ export class ExportSummary extends Component {
                                             <td style={style.tdData}>{formatDesc}</td>
                                         </tr>
                                         <tr id="layers" className="qa-ExportSummary-tr-layers">
-                                            <td style={style.tdHeading} rowSpan={providers.length}>Layer Data</td>
+                                            <td style={style.tdHeading} rowSpan={providers.length}>Data Sources</td>
                                             <td style={style.tdData}>{providers.map(provider => <p key={provider.uid}>{provider.name}</p>)}</td>
                                         </tr>
                                     </tbody>

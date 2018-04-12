@@ -61,7 +61,7 @@ describe('Export Summary Component', () => {
 
     const getProps = () => {
         return {
-            geojson: { 
+            geojson: {
                 "type": "FeatureCollection",
                 "features": [{ "type": "Feature",
                     "geometry": {
@@ -77,8 +77,8 @@ describe('Export Summary Component', () => {
             projectName: 'project',
             makePublic: true,
             providers: [
-                { name: 'one', uid: 1, display: true }, 
-                { name: 'two', uid: 2, display: false }, 
+                { name: 'one', uid: 1, display: true },
+                { name: 'two', uid: 2, display: false },
                 { name: 'three', uid: 3, display: false },
             ],
             areaStr: '12 sq km',
@@ -105,7 +105,7 @@ describe('Export Summary Component', () => {
     }
 
     const getWrapper = (props) => {
-        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };        
+        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
         return mount(<ExportSummary {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
@@ -113,7 +113,7 @@ describe('Export Summary Component', () => {
                 config: React.PropTypes.object,
             },
         });
-    }
+    };
 
     it('should render the basic components', () => {
         const props = getProps();
@@ -133,7 +133,7 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#published').find('td').last().text()).toEqual('true');
         expect(wrapper.find('#formats').find('td').first().text()).toEqual('File Formats');
         expect(wrapper.find('#formats').find('td').last().text()).toEqual('Geopackage');
-        expect(wrapper.find('#layers').find('td').first().text()).toEqual('Layer Data');
+        expect(wrapper.find('#layers').find('td').first().text()).toEqual('Data Sources');
         expect(wrapper.find('#layers').find('td').last().text()).toEqual('one');
         expect(wrapper.find('#aoi-heading').text()).toEqual('Area of Interest (AOI)');
         expect(wrapper.find('#aoi-area').find('td').first().text()).toEqual('Area');
@@ -171,10 +171,11 @@ describe('Export Summary Component', () => {
 
     it('expandedChange should call setState', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
+        const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
+        expect(stateSpy.called).toBe(false);
         wrapper.instance().expandedChange(true);
-        expect(stateSpy.called).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
         stateSpy.restore();
     });

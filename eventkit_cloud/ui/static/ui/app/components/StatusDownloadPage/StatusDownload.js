@@ -213,6 +213,7 @@ export class StatusDownload extends React.Component {
                 if (clearTimer === 0) {
                     window.clearInterval(this.timer);
                     this.timer = null;
+                    window.clearTimeout(this.timeout);
                     this.timeout = window.setTimeout(() => {
                         this.props.getDatacartDetails(this.props.params.jobuid);
                     }, 270000);
@@ -271,6 +272,7 @@ export class StatusDownload extends React.Component {
     }
 
     startTimer() {
+        window.clearInterval(this.timer);
         this.timer = window.setInterval(() => {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }, 5000);

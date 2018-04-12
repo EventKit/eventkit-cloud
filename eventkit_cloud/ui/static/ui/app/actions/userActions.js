@@ -123,9 +123,21 @@ export function getUsers(params) {
             method: 'GET',
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
+            // get the total, new, and ungrouped counts from the header
+            const totalUsers = Number(response.headers['total-users']);
+            const newUsers = Number(response.headers['new-users']);
+            const ungroupedUsers = Number(response.headers['not-grouped-users']);
+
             // filter out the current user from the list
             const users = response.data.filter(user => (user.user.username !== loggedInUser.username));
-            dispatch({ type: actions.FETCHED_USERS, users });
+            
+            dispatch({
+                type: actions.FETCHED_USERS,
+                users,
+                total: totalUsers,
+                new: newUsers,
+                ungrouped: ungroupedUsers,
+            });
         }).catch((error) => {
             dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
         });

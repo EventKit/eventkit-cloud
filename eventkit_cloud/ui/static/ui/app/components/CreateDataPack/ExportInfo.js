@@ -505,11 +505,12 @@ export class ExportInfo extends React.Component {
             },
             listHeading: {
                 height: '20px',
-                fontSize: '13px',
+                fontSize: '16px',
+                fontWeight: 300,
             },
             providerListHeading: {
                 position: 'absolute',
-                marginLeft: '50px',
+                marginLeft: '10px',
             },
             refreshIcon: {
                 marginBottom: '-4px',
@@ -596,7 +597,7 @@ export class ExportInfo extends React.Component {
                                 style={style.textField}
                                 textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                 hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                maxLength={1000}
+                                maxLength={250}
                             />
                             <CustomTextField
                                 className="qa-ExportInfo-input-project"
@@ -630,15 +631,13 @@ export class ExportInfo extends React.Component {
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
                                 <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
-                                    <span
-                                        className="qa-ExportInfo-ListHeaderItem"
+                                    <span className="qa-ExportInfo-ListHeaderItem"
                                         style={style.providerListHeading}
                                     >
                                         DATA PROVIDERS
                                     </span>
-                                    <span
-                                        className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ position: 'absolute', left: '60%' }}
+                                    <span className="qa-ExportInfo-ListHeaderItem"
+                                        style={{ marginLeft: '75%' }}
                                     >
                                         AVAILABILITY
                                         <NavigationRefresh
@@ -689,9 +688,7 @@ export class ExportInfo extends React.Component {
                                                         </BaseDialog>
                                                     </div>
                                                 }
-                                                style={{
-                                                    fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0',
-                                                }}
+                                                style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '66px', marginLeft: '0' }}
                                             />);
                                         }
                                         nestedItems.push(<ListItem
@@ -699,9 +696,7 @@ export class ExportInfo extends React.Component {
                                             key={nestedItems.length}
                                             primaryText={<div style={{ whiteSpace: 'pre-wrap' }}>{provider.service_description}</div>}
                                             disabled
-                                            style={{
-                                                fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0',
-                                            }}
+                                            style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
                                         />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
@@ -709,9 +704,7 @@ export class ExportInfo extends React.Component {
                                         return (<ListItem
                                             className="qa-ExportInfo-ListItem"
                                             key={provider.uid}
-                                            style={{
-                                                backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom: '0',
-                                            }}
+                                            style={{ backgroundColor, fontWeight: 'normal', padding: '16px 16px 16px 45px', fontSize: '16px', marginBottom: '0' }}
                                             nestedListStyle={{ padding: '0px', backgroundColor }}
                                             primaryText={
                                                 <div>
@@ -719,7 +712,7 @@ export class ExportInfo extends React.Component {
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon
-                                                        baseStyle={{ left: '80%' }}
+                                                        baseStyle={{ 'left': '80%' }}
                                                         tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
                                                     />
@@ -729,7 +722,7 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
-                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) !== -1}
+                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true}
                                                 onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle
@@ -832,9 +825,7 @@ export class ExportInfo extends React.Component {
                                     >
                                         <a
                                             onClick={this.props.handlePrev}
-                                            style={{
-                                                fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer',
-                                            }}
+                                            style={{ fontSize: '15px', fontWeight: 'normal', verticalAlign: 'top', cursor: 'pointer' }}
                                         >
                                             Edit
                                         </a>
