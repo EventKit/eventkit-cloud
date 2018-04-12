@@ -38,7 +38,7 @@ from serializers import (
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter
+from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter, NotificationFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -380,6 +380,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={'request': request})
+            sendnotification(job,request.user,'STARTED', None, None, 'info', 'Job has started' )
 
             # Run is passed to celery to start the tasks.
             pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
@@ -956,12 +957,25 @@ class UserDataViewSet(viewsets.GenericViewSet):
     @list_route(methods=['post','get'])
     def notifications(self, request, *args, **kwargs):
 
+        filter = request.data['filter']
         payload = []
-        notifications = Notification.objects.all() # filter(recipient_id=request.user.id)
+        if filter == 'ALL':
+            notifications = Notification.objects.filter( recipient_id = request.user.id)
+        elif filter == 'UNREAD':
+            notifications = Notification.objects.filter( recipient_id = request.user.id, unread=True)
+        else:
+            return Response("unrecognized filter", status=status.HTTP_400_BAD_REQUEST)
+
+        if "read" in request.data:
+            mark_as_read = request.data["read"]
+            logger.info(mark_as_read)
+
         for n in notifications:
             serializer = NotificationSerializer(n)
             item = serializer.data
-            item['actor'] = serializer.get_actor(n, request)
+            item['actor'] = serializer.serialize_component(n, n.actor_object_id,  n.actor, request)
+            item['target'] = serializer.serialize_component(n, n.target_object_id,  n.target, request)
+            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id,  n.action_object, request)
             payload.append(item)
 
         return Response(payload, status=status.HTTP_200_OK)
@@ -1223,6 +1237,52 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response("OK", status=status.HTTP_200_OK)
 
 
+class NotificationViewSet(viewsets.ModelViewSet):
+    """
+     Api components for viewing notifications
+    """
+
+    serializer_class = NotificationSerializer
+#    filter_class = NotificationFilter
+
+    def serialize_records(self, notifications, request):
+        payload = []
+        for n in notifications:
+            serializer = NotificationSerializer(n)
+            item = serializer.data
+            item['actor'] = serializer.serialize_component(n, n.actor_object_id, n.actor, request)
+            item['target'] = serializer.serialize_component(n, n.target_object_id, n.target, request)
+            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id, n.action_object, request)
+            payload.append(item)
+        return payload
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient_id=self.request.user.id)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response("Not supported", status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response("Not supported", status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, unread=False, *args, **kwargs):
+        notifications = self.get_queryset()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, id, *args, **kwargs):
+        logger.info("id = %s" % id)
+        notifications =self.get_queryset().filter(id=id)
+        payload = []
+        for n in notifications:
+            serializer = NotificationSerializer(n)
+            item = serializer.data
+            item['actor'] = serializer.serialize_component(n, n.actor_object_id,  n.actor, request)
+            item['target'] = serializer.serialize_component(n, n.target_object_id,  n.target, request)
+            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id,  n.action_object, request)
+            payload.append(item)
+
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
@@ -1351,20 +1411,6 @@ class SwaggerSchemaView(views.APIView):
                 description=members_link.description
             )
 
-        notifications_link = links.get('users', {}).get('notifications')['create']
-        if notifications_link:
-            links['users']['notifications'] = coreapi.Link(
-                url=notifications_link.url,
-                action=notifications_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                        )),
-                ],
-                description=notifications_link.description
-            )
         schema = coreapi.Document(
             title='EventKit API',
             url='/api/docs',

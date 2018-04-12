@@ -704,34 +704,23 @@ class JobSerializer(serializers.Serializer):
         """Return the username for the owner of this export."""
         return obj.user.username
 
-class GenericNotificationRelatedField(serializers.RelatedField):
-
-    data = {}
-    def to_representation(self, value):
-        if isinstance(value, User):
-            data = { 'username' : value.username}
-        if isinstance(value, Job):
-            data = { 'name' : 'test'}
-
-        return data
-
-
 class NotificationSerializer(serializers.ModelSerializer):
-
-#    actor = GenericNotificationRelatedField(read_only=True)
 
     class Meta:
         model = Notification
-        fields = ( 'level', 'description', 'id', 'timestamp', 'recipient_id' ) # , 'actor')
+        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
 
-    def get_actor(self, obj, request):
+    def serialize_component(self, obj, id, component, request):
+        response = {}
+        if id > 0: response['id'] = id
 
-        response = { 'actor_type' : obj.actor_content_type_id,  'actor_id ': obj.actor_object_id }
-        if obj.actor_content_type_id  == 4 :
-           user = User.objects.get(pk=obj.actor_object_id)
-           response['details'] =   UserSerializer(user).data
-        if obj.actor_content_type_id  == 13 :
-           job = Job.objects.get(pk=obj.actor_object_id)
-           response['details'] = ListJobSerializer(job,context={'request': request}).data
+        if isinstance(component, User):
+            response['type'] = 'User'
+            response['details'] =   UserSerializer(component).data
+        if isinstance(component, Job):
+            job = Job.objects.get(pk=obj.actor_object_id)
+            response['type'] = 'Job'
+            response['details'] = ListJobSerializer(job,context={'request': request}).data
 
         return response
+
