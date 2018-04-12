@@ -93,13 +93,13 @@ export class GroupsDrawer extends Component {
                             value="all"
                         />
                         <MenuItem
-                            primaryText="New"
+                            primaryText={`New (${this.props.newCount})`}
                             style={styles.simpleMenuItem}
                             className="qa-GroupsDrawer-new"
                             value="new"
                         />
                         <MenuItem
-                            primaryText="Not Grouped"
+                            primaryText={`Not Grouped (${this.props.ungroupedCount})`}
                             style={styles.simpleMenuItem}
                             className="qa-GroupsDrawer-notGrouped"
                             value="ungrouped"
@@ -221,6 +221,8 @@ GroupsDrawer.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     usersCount: PropTypes.number.isRequired,
+    newCount: PropTypes.number.isRequired,
+    ungroupedCount: PropTypes.number.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
     onSharedInfoClick: PropTypes.func.isRequired,
     onLeaveGroupClick: PropTypes.func.isRequired,
