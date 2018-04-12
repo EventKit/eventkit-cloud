@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 import json
+import re
+import math
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
@@ -115,6 +117,130 @@ def require_email(request):
     backend = request.session['partial_pipeline']['backend']
     return render_to_response('osm/email.html', {'backend': backend}, RequestContext(request))
 
+
+def is_mgrs_string(query):
+    query = re.sub(r"\s+", '', query)
+    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I)
+    if pattern.match(query):
+        return True
+    return False
+
+
+def is_lat_lon(query):
+    # regex for matching to lat and lon
+    lat_pattern = re.compile(r"^(\+|-)?(?:90(?:(?:\.0{1,20})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,20})?))$")
+    lon_pattern = re.compile(r"^(\+|-)?(?:180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?))$")
+
+    parsed_coord_array = []
+
+    # initial separation of numbers
+    coord_array = query.split(',') if query.find(',') != -1 else query.split(' ')
+    if len(coord_array) != 2:
+        return False
+
+    parsed_lat = None
+    parsed_lon = None
+    try:
+        parsed_lat = float(coord_array[0])
+        parsed_lon = float(coord_array[1])
+    except ValueError as e:
+        return False
+
+    if not math.isnan(parsed_lat) and not math.isnan(parsed_lon):
+        parsed_coord_array = [
+            parsed_lat,
+            parsed_lon
+        ]
+
+    if lat_pattern.match(str(parsed_lat)) and lon_pattern.match(str(parsed_lon)):
+        return parsed_coord_array
+
+    return False
+
+
+@require_http_methods(['GET'])
+def search(request):
+    q = request.GET.get('query', None)
+    if not q:
+        return HttpResponse("where is your query dingus")
+
+    degree_range = 0.05
+    if is_mgrs_string(q):
+        # check for necessary settings
+        if getattr(settings, 'CONVERT_API_URL') is None:
+            return HttpResponse('No Convert API specified', status=501)
+
+        if getattr(settings, 'REVERSE_GEOCODING_API_URL') is None:
+            return HttpResponse('No Reverse Geocode API specified', status=501)
+
+        # make call to convert then do reverse geocode
+        convert = Convert()
+        mgrs_data = convert.get(q)
+        if mgrs_data.get('geometry'):
+            features = []
+            mgrs_data.get('properties')['bbox'] = [
+                mgrs_data.get('geometry').get('coordinates')[0] - degree_range,
+                mgrs_data.get('geometry').get('coordinates')[1] - degree_range,
+                mgrs_data.get('geometry').get('coordinates')[0] + degree_range,
+                mgrs_data.get('geometry').get('coordinates')[1] + degree_range,
+            ]
+            mgrs_data['source'] = 'MGRS'
+            features.append(mgrs_data)
+
+            reverse = ReverseGeocode()
+            result = reverse.search({
+                "point.lat": mgrs_data.get('geometry').get('coordinates')[1],
+                "point.lon": mgrs_data.get('geometry').get('coordinates')[0]
+            })
+            if result.get('features'):
+                # add the mgrs feature with the search results and return together
+                result['features'] = features + result['features']
+                return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+
+        return HttpResponse("Could not get the query results", status=204, content_type="application/json")
+
+    elif is_lat_lon(q):
+        coords = is_lat_lon(q)
+        # make call to reverse geocode
+        if getattr(settings, 'REVERSE_GEOCODING_API_URL') is None:
+            return HttpResponse('No Reverse Geocode API specified', status=501)
+
+        reverse = ReverseGeocode()
+
+        result = reverse.search({
+            "point.lat": coords[0],
+            "point.lon": coords[1]
+        })
+
+        point_feature = {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [coords[1], coords[0]]
+            },
+            "source": "Coordinate",
+            "type": "Feature",
+            "properties": {
+                "name": "Your searched coord",
+                "bbox": [
+                    coords[1] - degree_range,
+                    coords[0] - degree_range,
+                    coords[1] + degree_range,
+                    coords[0] + degree_range
+                ]
+            }
+        }
+
+        if result.get('features'):
+            result.get('features').insert(0, point_feature)
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+
+        features = {'features': [point_feature]}
+        return HttpResponse(content=json.dumps(features), status=200, content_type="application/json")
+    else:
+        # make call to geocode with search
+        geocode = Geocode()
+        result = geocode.search(q)
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
 
 @require_http_methods(['GET'])
 def geocode(request):
