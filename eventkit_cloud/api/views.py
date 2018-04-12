@@ -954,43 +954,6 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = UserDataSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @list_route(methods=['post','get'])
-    def notifications(self, request, *args, **kwargs):
-
-        filter = request.data['filter']
-        payload = []
-        if filter == 'ALL':
-            notifications = Notification.objects.filter( recipient_id = request.user.id)
-        elif filter == 'UNREAD':
-            notifications = Notification.objects.filter( recipient_id = request.user.id, unread=True)
-        else:
-            return Response("unrecognized filter", status=status.HTTP_400_BAD_REQUEST)
-
-        if "read" in request.data:
-            mark_as_read = request.data["read"]
-            logger.info(mark_as_read)
-
-        for n in notifications:
-            serializer = NotificationSerializer(n)
-            item = serializer.data
-            item['actor'] = serializer.serialize_component(n, n.actor_object_id,  n.actor, request)
-            item['target'] = serializer.serialize_component(n, n.target_object_id,  n.target, request)
-            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id,  n.action_object, request)
-            payload.append(item)
-
-        return Response(payload, status=status.HTTP_200_OK)
-
-        # verb = "TEST6" # request.data["verb"]
-        # recipient = User.objects.filter(username="dmsherman")[0]
-        # uid = 'd581241c-3f4f-4130-8c91-3b14d65aa194'
-        # job = Job.objects.get(uid=uid)
-        # target=None
-        # action_object=recipient
-        # level = 'info'
-        # description = 'description here'
-        # sendnotification(job,recipient,verb,action_object,target,level,description)
-        # return Response("Notification OK", status=status.HTTP_200_OK)
-
 
     @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):
@@ -1237,15 +1200,14 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response("OK", status=status.HTTP_200_OK)
 
 
-class NotificationViewSet(viewsets.ModelViewSet):
+class NotificationViewSet(viewsets.GenericViewSet):
     """
-     Api components for viewing notifications
+     Api components for viewing and working with notifications
     """
 
     serializer_class = NotificationSerializer
-    filter_class = NotificationFilter
+#    filter_class = NotificationFilter
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
-    search_fields = { 'unread' }
 
     def serialize_records(self, notifications, request):
         payload = []
@@ -1261,30 +1223,44 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Notification.objects.filter(recipient_id=self.request.user.id)
 
-    def destroy(self, request, *args, **kwargs):
-        return Response("Not supported", status.HTTP_400_BAD_REQUEST)
-
-    def partial_update(self, request, *args, **kwargs):
-        return Response("Not supported", status.HTTP_400_BAD_REQUEST)
-
-    def list(self, request, unread=False, *args, **kwargs):
-        notifications =  self.filter_queryset(self.get_queryset())
+    @list_route(methods=['get'])
+    def all(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.active()
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, id, *args, **kwargs):
-        logger.info("id = %s" % id)
-        notifications =self.get_queryset().filter(id=id)
-        payload = []
-        for n in notifications:
-            serializer = NotificationSerializer(n)
-            item = serializer.data
-            item['actor'] = serializer.serialize_component(n, n.actor_object_id,  n.actor, request)
-            item['target'] = serializer.serialize_component(n, n.target_object_id,  n.target, request)
-            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id,  n.action_object, request)
-            payload.append(item)
-
+    @list_route(methods=['get'])
+    def read(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.read()
+        payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def unread(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.unread()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def partial_update(self, request, *args, **kwargs):
+        """
+        [
+         {"id": 3, "action": "DELETE" },
+         {"id": 17, "action": "READ" },
+         ...
+        ]
+    """
+        logger.info(request.data)
+        for row in request.data:
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
+            logger.info(qs)
+            if row['action'] == 'READ':
+                qs.mark_all_as_read()
+            if row['action'] == 'DELETE':
+                qs.mark_all_as_deleted()
+
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
+
 
 
 def get_models(model_list, model_object, model_index):
