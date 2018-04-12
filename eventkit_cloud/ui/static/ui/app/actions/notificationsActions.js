@@ -285,6 +285,23 @@ export function markNotificationsAsUnread(notifications) {
     };
 }
 
+export function markAllNotificationsAsRead() {
+    return (dispatch) => {
+        dispatch({
+            type: actions.MARKING_ALL_NOTIFICATIONS_AS_READ,
+        });
+
+        //////////////////////////
+        // MOCK
+        setTimeout(() => {
+            dispatch({
+                type: actions.MARKED_ALL_NOTIFICATIONS_AS_READ,
+            });
+        }, 100);
+        //////////////////////////
+    }
+}
+
 export function removeNotifications(notifications) {
     return (dispatch) => {
         dispatch({

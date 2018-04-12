@@ -149,17 +149,14 @@ export class NotificationsTable extends React.Component {
                             >
                                 <div style={styles.contentHeaderColumnWrapper}>
                                     <span>{this.getSelectedCount()} Selected</span>
-                                    {this.getSelectedCount() > 0 ?
-                                        <NotificationsTableMenu
-                                            style={styles.multiMenu}
-                                            selectedNotifications={this.state.selected}
-                                            onMarkAsRead={this.props.onMultiMarkAsRead}
-                                            onMarkAsUnread={this.props.onMultiMarkAsUnread}
-                                            onRemove={this.props.onMultiRemove}
-                                        />
-                                        :
-                                        null
-                                    }
+                                    <NotificationsTableMenu
+                                        style={styles.multiMenu}
+                                        selectedNotifications={this.state.selected}
+                                        onMarkAsRead={this.props.onMultiMarkAsRead}
+                                        onMarkAsUnread={this.props.onMultiMarkAsUnread}
+                                        onRemove={this.props.onMultiRemove}
+                                        onMarkAllAsRead={this.props.onMarkAllAsRead}
+                                    />
                                 </div>
                             </TableHeaderColumn>
                             <TableHeaderColumn
@@ -205,6 +202,7 @@ NotificationsTable.propTypes = {
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
+    onMarkAllAsRead: PropTypes.func,
     onView: PropTypes.func,
     onMultiMarkAsRead: PropTypes.func,
     onMultiMarkAsUnread: PropTypes.func,

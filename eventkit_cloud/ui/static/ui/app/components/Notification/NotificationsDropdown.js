@@ -1,7 +1,9 @@
 import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import { CircularProgress, GridList, Paper } from 'material-ui';
 import NotificationGridItem from './NotificationGridItem';
-import { Link } from 'react-router';
+import { markAllNotificationsAsRead, } from '../../actions/notificationsActions';
 
 export class NotificationsDropdown extends React.Component {
     constructor(props) {
@@ -48,9 +50,19 @@ export class NotificationsDropdown extends React.Component {
                 padding: '28px 28px 24px',
             },
             header: {
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '20px',
+            },
+            headerTitle: {
                 fontSize: '22px',
                 textTransform: 'uppercase',
-                marginBottom: '20px',
+                flex: '1',
+            },
+            headerLink: {
+                fontSize: '14px',
+                color: '#337ab7',
+                cursor: 'pointer',
             },
             gridList: {
                 width: '100%',
@@ -81,7 +93,15 @@ export class NotificationsDropdown extends React.Component {
             <div style={styles.root}>
                 <div style={styles.pointer}></div>
                 <Paper style={styles.paper}>
-                    <div style={styles.header}>Notifications</div>
+                    <div style={styles.header}>
+                        <span style={styles.headerTitle}>Notifications</span>
+                        <a
+                            style={styles.headerLink}
+                            onClick={this.props.markAllNotificationsAsRead}
+                        >
+                            Mark All As Read
+                        </a>
+                    </div>
                     {this.state.showLoading ?
                         <div style={{ textAlign: 'center' }}>
                             <CircularProgress
@@ -145,4 +165,13 @@ NotificationsDropdown.defaultProps = {
     onNavigate: () => { return true; },
 };
 
-export default NotificationsDropdown;
+function mapDispatchToProps(dispatch) {
+    return {
+        markAllNotificationsAsRead: () => dispatch(markAllNotificationsAsRead()),
+    };
+}
+
+export default connect(
+    null,
+    mapDispatchToProps,
+)(NotificationsDropdown);

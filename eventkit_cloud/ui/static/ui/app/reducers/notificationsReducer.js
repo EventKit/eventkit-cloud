@@ -85,6 +85,23 @@ export function notificationsReducer(state = initialState.notifications, action)
                 },
             };
         }
+        case types.MARKING_ALL_NOTIFICATIONS_AS_READ:
+            const notifications = { ...state.notifications };
+            for (let uid of Object.keys(notifications)) {
+                notifications[uid] = {
+                    ...notifications[uid],
+                    read: true,
+                }
+            }
+            return {
+                ...state,
+                notifications,
+                notificationsSorted: getSortedNotifications(notifications),
+                unreadCount: {
+                    ...state.unreadCount,
+                    unreadCount: 0,
+                }
+            };
         case types.REMOVING_NOTIFICATIONS: {
             let notifications = { ...state.notifications };
             let unreadCount = state.unreadCount.unreadCount;
