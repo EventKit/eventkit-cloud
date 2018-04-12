@@ -29,6 +29,7 @@ export class DataPackPage extends React.Component {
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.changeView = this.changeView.bind(this);
+        this.autoRunRequest = this.autoRunRequest.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
@@ -60,7 +61,7 @@ export class DataPackPage extends React.Component {
     componentDidMount() {
         this.props.getProviders();
         this.makeRunRequest();
-        this.fetch = setInterval(this.makeRunRequest, 10000);
+        this.fetch = setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
@@ -148,7 +149,13 @@ export class DataPackPage extends React.Component {
         this.setState({ order: value, loading: true }, this.makeRunRequest);
     }
 
-    makeRunRequest() {
+    autoRunRequest() {
+        // Call make run request and pass true to indicate this is an auto run request
+        // The auto run request will not have the power to cancel any current requests
+        this.makeRunRequest(true);
+    }
+
+    makeRunRequest(isAuto = false) {
         return this.props.getRuns({
             pageSize: this.state.pageSize,
             ordering: this.state.order,
@@ -159,7 +166,8 @@ export class DataPackPage extends React.Component {
             maxDate: this.state.maxDate,
             search: this.state.search,
             providers: this.state.providers,
-            geojson: this.state.geojson_geometry
+            geojson: this.state.geojson_geometry,
+            isAuto,
         });
     }
 
@@ -415,9 +423,9 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (args) => (
-            dispatch(getRuns(args))
-        ),
+        getRuns: (args) => {
+            dispatch(getRuns(args));
+        },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
         },
