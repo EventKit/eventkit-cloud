@@ -19,10 +19,11 @@ function BrowserWarning() {
         <div style={styles.wholeDiv} className="qa-BrowserWarning">
             <CustomScrollbar style={{ height: window.innerHeight - 95 }}>
                 <div style={styles.text} className="qa-BrowserWarning-text">
-                    The browser you are using is not supported by EventKit.<br />
-                     EventKit does not support any versions of Internet Explorer or other legacy browsers.<br />
-                     Please use a different browser or version to access EventKit
-                     (we recommend Chrome).
+                    The browser you are using is not supported by EventKit.
+                    <br />
+                    EventKit does not support any versions of Internet Explorer or other legacy browsers.
+                    <br />
+                    Please use a modern browser to access EventKit (we recommend Chrome).
                 </div>
             </CustomScrollbar>
         </div>
