@@ -1,13 +1,13 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta, date
 from dateutil import parser
 import logging
 import json
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 
@@ -713,7 +713,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     ordering = ('-started_at',)
 
     def get_queryset(self):
-        return ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))
+        prefetched_queryset = ExportRun.objects.filter((Q(user=self.request.user) | Q(job__published=True)) & Q(deleted=False))\
+            .select_related('job', 'user')\
+            .prefetch_related(Prefetch('provider_tasks',
+                queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
+                    queryset=ExportTaskRecord.objects.select_related('result').prefetch_related('exceptions')))))
+
+        return prefetched_queryset
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -811,7 +817,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 logger.debug(e.detail)
                 return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
             queryset = queryset.filter(
@@ -822,16 +827,12 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 )
         )
 
-        try:
-            self.validate_licenses(queryset, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'no_license': True})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'no_license': True})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
@@ -1076,9 +1077,19 @@ class UserDataViewSet(viewsets.GenericViewSet):
         Get a list of users.
         * return: A list of all users.
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = UserDataSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        full_queryset = self.get_queryset()
+        queryset = full_queryset.exclude(id=request.user.id)
+        total = len(queryset)
+        delta = date.today() - timedelta(days=14)
+        new = len(queryset.filter(date_joined__gte=delta))
+        not_grouped = 0
+        for user in queryset:
+            if not len(GroupPermission.objects.filter(user=user)):
+                not_grouped += 1
+        headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
+        filtered_queryset = self.filter_queryset(full_queryset)
+        serializer = UserDataSerializer(filtered_queryset, many=True)
+        return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 
     @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):
@@ -1098,7 +1109,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         for group in groups:
             serializer = GroupSerializer(group)
             for username in serializer.get_members(group):
-                if  not username in targetnames: targetnames.append(username)
+                if not username in targetnames: targetnames.append(username)
 
 
         users = User.objects.filter(username__in=targetnames).all()
