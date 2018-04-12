@@ -148,7 +148,7 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAVAILABLE
                 return None
 
-        except requests.exceptions.ConnectTimeout as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
             return None
@@ -221,7 +221,7 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.UNAVAILABLE
                 return None
 
-        except requests.exceptions.ConnectTimeout as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
             return None
