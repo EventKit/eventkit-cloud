@@ -1,6 +1,7 @@
 *.log
 .idea
 .vagrant
+.env
 ubuntu-xenial-core-cloudimg-amd64-root.tar.gz
 db_dir
 .Dockerfile_eventkit.swp
