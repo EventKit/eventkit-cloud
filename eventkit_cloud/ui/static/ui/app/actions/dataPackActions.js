@@ -2,12 +2,17 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './actionTypes';
 
-export function getRuns(params, geojson) {
+export function getRuns(params, geojson, isAuto) {
     return (dispatch, getState) => {
         const { runsList } = getState();
+        // if there is already a request in process we need to cancel it
+        // before executing the current request
         if (runsList.fetching && runsList.cancelSource) {
-            // if there is already a request in process we need to cancel it
-            // before executing the current request
+            // if this is not a direct request from the user, dont cancel ongoing requests
+            if (isAuto) {
+                return null;
+            }
+            // if this is a direct user action, it is safe to cancel ongoing requests
             runsList.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 

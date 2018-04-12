@@ -29,6 +29,7 @@ export class DataPackPage extends React.Component {
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.changeView = this.changeView.bind(this);
+        this.autoRunRequest = this.autoRunRequest.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
@@ -60,7 +61,7 @@ export class DataPackPage extends React.Component {
     componentDidMount() {
         this.props.getProviders();
         this.makeRunRequest();
-        this.fetch = setInterval(this.makeRunRequest, 10000);
+        this.fetch = setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
@@ -147,7 +148,13 @@ export class DataPackPage extends React.Component {
         this.setState({ order: value, loading: true }, this.makeRunRequest);
     }
 
-    makeRunRequest() {
+    autoRunRequest() {
+        // Call make run request and pass true to indicate this is an auto run request
+        // The auto run request will not have the power to cancel any current requests
+        this.makeRunRequest(true);
+    }
+
+    makeRunRequest(isAuto = false) {
         const status = [];
         Object.keys(this.state.status).forEach((key) => {
             if (this.state.status[key]) {
@@ -177,7 +184,7 @@ export class DataPackPage extends React.Component {
         if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
         if (providers.length) params.providers = providers.join(',');
 
-        return this.props.getRuns(params, this.state.geojson_geometry);
+        return this.props.getRuns(params, this.state.geojson_geometry, isAuto);
     }
 
     handleOwnerFilter(event, index, value) {
@@ -432,8 +439,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (params, geojson) => (
-            dispatch(getRuns(params, geojson))
+        getRuns: (params, geojson, isAuto) => (
+            dispatch(getRuns(params, geojson, isAuto))
         ),
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
