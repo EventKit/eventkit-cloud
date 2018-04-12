@@ -1,31 +1,8 @@
-import React, {PropTypes} from 'react';
+import React from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import { Link } from 'react-router';
 
 export class DataPackLinkButton extends React.Component {
-
-    constructor(props) {
-        super(props);
-    }
-
-    getFontSize() {
-        if (window.innerWidth <= 575) {
-            return '10px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '11px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '12px';
-        }
-        else if (window.innerWidth <= 1199) {
-            return '13px';
-        }
-        else {
-            return '14px';
-        }
-    }
-
     render() {
         const styles = {
             button: {
@@ -33,21 +10,22 @@ export class DataPackLinkButton extends React.Component {
                 minWidth: '50px',
                 height: '35px',
                 borderRadius: '0px',
+                width: '150px',
             },
             label: {
-                fontSize: this.getFontSize(),
-                paddingLeft: '20px',
-                paddingRight: '20px',
+                fontSize: '12px',
+                paddingLeft: '0px',
+                paddingRight: '0px',
                 lineHeight: '35px',
             },
         };
 
         return (
-            <Link to="/create">
+            <Link to="/create" href="/create">
                 <RaisedButton
                     className="qa-DataPackLinkButton-RaisedButton"
                     label="Create DataPack"
-                    primary={true}
+                    primary
                     labelStyle={styles.label}
                     style={styles.button}
                     buttonStyle={{ borderRadius: '0px', backgroundColor: '#4598bf' }}

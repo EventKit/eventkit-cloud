@@ -205,7 +205,12 @@ describe('userActions actions', () => {
             { user: { name: 'user2', username: 'user2' } },
             { user: { name: 'user3', username: 'user3' } },
         ];
-        mock.onGet('/api/users').reply(200, users);
+        const headers = {
+            'total-users': '3',
+            'new-users': '2',
+            'not-grouped-users': '1',
+        };
+        mock.onGet('/api/users').reply(200, users, headers);
 
         const expectedUsers = [
             users[1],
@@ -214,7 +219,13 @@ describe('userActions actions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_USERS },
-            { type: types.FETCHED_USERS, users: expectedUsers },
+            {
+                type: types.FETCHED_USERS,
+                users: expectedUsers,
+                total: 3,
+                new: 2,
+                ungrouped: 1,
+            },
         ];
 
         const store = mockStore({
