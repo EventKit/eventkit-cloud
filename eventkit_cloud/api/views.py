@@ -38,7 +38,7 @@ from serializers import (
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter, NotificationFilter
+from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -1206,7 +1206,6 @@ class NotificationViewSet(viewsets.GenericViewSet):
     """
 
     serializer_class = NotificationSerializer
-#    filter_class = NotificationFilter
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
 
     def serialize_records(self, notifications, request):
@@ -1241,23 +1240,34 @@ class NotificationViewSet(viewsets.GenericViewSet):
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
-    @transaction.atomic
-    def partial_update(self, request, *args, **kwargs):
+    @list_route(methods=['post'])
+    def mark(self, request, *args, **kwargs):
         """
-        [
-         {"id": 3, "action": "DELETE" },
-         {"id": 17, "action": "READ" },
-         ...
-        ]
-    """
+             Mark one or more notifications as read or deleted.
+             Supply a list of notifications ids to be marked
+
+
+             * request: the HTTP request in JSON.
+
+                 Example:
+
+                     {
+                         "READ" : [ 2,4,17],
+                         "DELETE" : [1,4]
+                     }
+
+        """
+
         logger.info(request.data)
-        for row in request.data:
-            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
-            logger.info(qs)
-            if row['action'] == 'READ':
-                qs.mark_all_as_read()
-            if row['action'] == 'DELETE':
-                qs.mark_all_as_deleted()
+        if "READ" in request.data:
+            ids = request.data["READ"]
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id__in=ids)
+            qs.mark_all_as_read()
+
+        if "DELETE" in request.data:
+            ids = request.data["DELETE"]
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id__in=ids)
+            qs.mark_all_as_deleted()
 
         return Response( { "success" : True},  status=status.HTTP_200_OK)
 
