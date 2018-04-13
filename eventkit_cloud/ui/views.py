@@ -136,34 +136,60 @@ def is_lat_lon(query):
     :return: A parsed coordinate array if it matches, false if not
     """
     # regex for matching to lat and lon
-    lat_pattern = re.compile(r"^(\+|-)?(?:90(?:(?:\.0{1,20})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,20})?))$")
-    lon_pattern = re.compile(r"^(\+|-)?(?:180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?))$")
+    # ?P<> creates a named group so that we can access values later
+    lat_lon = re.compile(r"""
+        # group to match latitude
+        (?:
+            ^                       # latitude MUST start at the beginning of the string
+            (?P<lat_sign>[\+-]?)    # latitude may begin with + or -
+            (?:
+                (?P<lat>90(?:(?:\.0{1,20})?) | (?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid latitude values
+                [\s]?               # there may or may not be a space following the digits when N or S are included
+                (?P<lat_dir>[NS]?)  # N or S may be used instead of + or -
+            )
+            \b                      # there should be a word boundary after the latitude
+        )
+        
+        (?:[\,\s]{1,2})             # match common, space, or comma and space
+        
+        # group to match longitude
+        (?:
+            (?P<lon_sign>[\+-]?)    # longitude may begin with + or -
+            (?:
+                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values
+                [\s]?               # there may or may not be a space following the digits when E or W are included
+                (?P<lon_dir>[EW]?)  # E or W may be used instead of + or -
+            )
+            $                       # after longitude should be the end of the string
+        )
+    """, re.VERBOSE)
 
-    parsed_coord_array = []
-
-    # initial separation of numbers
-    coord_array = query.split(',') if query.find(',') != -1 else query.split(' ')
-    if len(coord_array) != 2:
+    r = lat_lon.match(query)
+    if not r:
         return False
 
     parsed_lat = None
     parsed_lon = None
     try:
-        parsed_lat = float(coord_array[0])
-        parsed_lon = float(coord_array[1])
+        parsed_lat = float(r.group('lat'))
+        parsed_lon = float(r.group('lon'))
     except ValueError as e:
         return False
 
-    if not math.isnan(parsed_lat) and not math.isnan(parsed_lon):
-        parsed_coord_array = [
-            parsed_lat,
-            parsed_lon
-        ]
+    if math.isnan(parsed_lat) or math.isnan(parsed_lon):
+        return False
 
-    if lat_pattern.match(str(parsed_lat)) and lon_pattern.match(str(parsed_lon)):
-        return parsed_coord_array
+    if r.group('lat_sign') == '-' or r.group('lat_dir') == 'S':
+        parsed_lat = parsed_lat * -1
+    if r.group('lon_sign') == '-' or r.group('lon_dir') == 'W':
+        parsed_lon = parsed_lon * -1
 
-    return False
+    parsed_coord_array = [
+        parsed_lat,
+        parsed_lon
+    ]
+
+    return parsed_coord_array
 
 
 @require_http_methods(['GET'])
@@ -218,7 +244,6 @@ def search(request):
         # if no results just return the MGRS feature in the response
         return HttpResponse(content=json.dumps({'features': features}), status=200, content_type="application/json")
 
-
     elif is_lat_lon(q):
         coords = is_lat_lon(q)
         # if no reverse url return 501
@@ -242,9 +267,9 @@ def search(request):
             "type": "Feature",
             "properties": {
                 "name": "{0} {1}, {2} {3}".format(
-                    coords[0],
+                    coords[0] if coords[0] >= 0 else coords[0] * -1,
                     "N" if coords[0] >= 0 else "S",
-                    coords[1],
+                    coords[1] if coords[1] >= 0 else coords[1] * -1,
                     "E" if coords[1] >= 0 else "W"
                 ),
                 "bbox": [
