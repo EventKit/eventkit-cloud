@@ -226,16 +226,16 @@ class DataProviderTask(models.Model):
         return '{0} - {1}'.format(self.uid, self.provider)
 
 
+class VisibilityState(Enum):
+    PRIVATE = "PRIVATE"
+    PUBLIC  = "PUBLIC"
+    SHARED  = "SHARED"
+
 class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
     """
 
-    @staticmethod
-    class Visibility(Enum):
-        PRIVATE = "PRIVATE"
-        PUBLIC  = "PUBLIC"
-        SHARED  = "SHARED"
 
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
@@ -253,7 +253,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
-    visibility = models.CharField(max_length=10,default="PRIVATE")
+    visibility = models.CharField(max_length=10,default=VisibilityState.PRIVATE.value)
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')

@@ -16,7 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, JobPermission
 
 from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
@@ -102,7 +102,7 @@ class JobViewSet(viewsets.ModelViewSet):
         perms, job_ids = JobPermission.userjobs(self.request.user, JobPermission.Permissions.READ.value )
 
         return Job.objects.filter(
-             Q(visibility=Job.Visibility.PUBLIC.value) | Q(pk__in=job_ids))
+             Q(visibility=VisibilityState.PUBLIC.value) | Q(pk__in=job_ids))
 
     def list(self, request, *args, **kwargs):
         """
@@ -467,7 +467,7 @@ class JobViewSet(viewsets.ModelViewSet):
         payload = request.data
 
         for attribute, value in payload.iteritems():
-            if attribute == 'visibility' and value not in Job.Visibility.__members__:
+            if attribute == 'visibility' and value not in VisibilityState.__members__:
                 msg = "unknown visibility value - %s" % value
                 return Response([{'detail': msg}], status.HTTP_400_BAD_REQUEST)
 
@@ -754,7 +754,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=Job.Visibility.PUBLIC.value)  ) & Q(deleted=False))\
+        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)  ) & Q(deleted=False))\
             .select_related('job', 'user')\
             .prefetch_related(Prefetch('provider_tasks',
                 queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',

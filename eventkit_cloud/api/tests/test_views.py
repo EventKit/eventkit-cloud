@@ -22,7 +22,7 @@ from ..views import get_models, get_provider_task, ExportRunViewSet
 from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
-    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
+    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ...core.models import GroupPermission
 from mock import patch, Mock
@@ -505,7 +505,7 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['featured'])
         self.assertTrue(response.data['success'])
 
-        request_data = {"featured": True, "published" : False, "visibility" : Job.Visibility.SHARED.value }
+        request_data = {"featured": True, "published" : False, "visibility" : VisibilityState.SHARED.value }
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['featured'])
@@ -633,7 +633,7 @@ class TestExportRunViewSet(APITestCase):
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
-        self.job.visibility="PUBLIC"
+        self.job.visibility=VisibilityState.PUBLIC.value
         self.job.save()
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
@@ -856,7 +856,7 @@ class TestExportTaskViewSet(APITestCase):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom, visibility='PUBLIC')
+                                      the_geom=the_geom, visibility=VisibilityState.PUBLIC.value )
 
         formats = ExportFormat.objects.all()
         provider = DataProvider.objects.first()

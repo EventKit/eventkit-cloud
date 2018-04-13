@@ -6,7 +6,7 @@ import django_filters
 
 from django.db.models import Q
 
-from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.jobs.models import Job, VisibilityState
 from eventkit_cloud.tasks.models import ExportRun
 
 from django.contrib.auth.models import User, Group
@@ -53,7 +53,7 @@ class JobFilter(django_filters.FilterSet):
         Return exports for all other users and where the export is published.
         """
         return queryset.filter(
-            (Q(user__username=value) | (~Q(user__username=value) & Q(visiblity=Job.Visibility.PUBLIC.value)))
+            (Q(user__username=value) | (~Q(user__username=value) & Q(visiblity=VisibilityState.PUBLIC.value)))
         )
 
 
