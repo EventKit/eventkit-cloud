@@ -216,7 +216,7 @@ class ExportTask(LockingTask):
                 5. copy the export file to the download directory
                 6. create the export task result
                 7. update the export task status and save it
-            """
+                """
             # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks
             # should just return.
             if not retval:

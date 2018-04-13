@@ -18,6 +18,7 @@ from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User,Group
 from ..core.models import GroupPermission,JobPermission
+from notifications.models import Notification
 
 
 from eventkit_cloud.jobs.models import (
@@ -729,3 +730,24 @@ class UserJobActivitySerializer(serializers.ModelSerializer):
             return serializer.data
         else:
             return None
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notification
+        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
+
+    def serialize_component(self, obj, id, component, request):
+        response = {}
+        if id > 0: response['id'] = id
+
+        if isinstance(component, User):
+            response['type'] = 'User'
+            response['details'] =   UserSerializer(component).data
+        if isinstance(component, Job):
+            job = Job.objects.get(pk=obj.actor_object_id)
+            response['type'] = 'Job'
+            response['details'] = ListJobSerializer(job,context={'request': request}).data
+
+        return response

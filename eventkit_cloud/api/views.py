@@ -10,6 +10,9 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
 
 from django.contrib.auth.models import User,Group
 from ..core.models import GroupPermission, JobPermission
@@ -30,12 +33,12 @@ from rest_framework.serializers import ValidationError
 from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
-    RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    DataProviderSerializer, LicenseSerializer, UserDataSerializer, GroupSerializer, UserJobActivitySerializer
+    RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
+    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter
+from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter, NotificationFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -47,6 +50,9 @@ from rest_framework_swagger import renderers
 from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
 import coreapi
+from notifications.signals import notify
+from notifications.models import Notification
+from ..core.helpers import sendnotification
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -374,6 +380,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={'request': request})
+            sendnotification(job,request.user,'STARTED', None, None, 'info', 'Job has started' )
 
             # Run is passed to celery to start the tasks.
             pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
@@ -958,6 +965,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         serializer = UserDataSerializer(filtered_queryset, many=True)
         return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 
+
     @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):
         """
@@ -1251,6 +1259,68 @@ class GroupViewSet(viewsets.ModelViewSet):
                 for perm in perms: perm.delete()
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+class NotificationViewSet(viewsets.GenericViewSet):
+    """
+     Api components for viewing and working with notifications
+    """
+
+    serializer_class = NotificationSerializer
+#    filter_class = NotificationFilter
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+
+    def serialize_records(self, notifications, request):
+        payload = []
+        for n in notifications:
+            serializer = NotificationSerializer(n)
+            item = serializer.data
+            item['actor'] = serializer.serialize_component(n, n.actor_object_id, n.actor, request)
+            item['target'] = serializer.serialize_component(n, n.target_object_id, n.target, request)
+            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id, n.action_object, request)
+            payload.append(item)
+        return payload
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient_id=self.request.user.id)
+
+    @list_route(methods=['get'])
+    def all(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.active()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def read(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.read()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def unread(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.unread()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @transaction.atomic
+    def partial_update(self, request, *args, **kwargs):
+        """
+        [
+         {"id": 3, "action": "DELETE" },
+         {"id": 17, "action": "READ" },
+         ...
+        ]
+    """
+        logger.info(request.data)
+        for row in request.data:
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
+            logger.info(qs)
+            if row['action'] == 'READ':
+                qs.mark_all_as_read()
+            if row['action'] == 'DELETE':
+                qs.mark_all_as_deleted()
+
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
