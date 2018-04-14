@@ -18,22 +18,33 @@ export class DashboardSection extends React.Component {
     }
 
     render() {
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = window.innerWidth > 575 ? 10 : 2;
+        const scrollbarWidth = 6;
+        const halfGridPadding = this.props.gridPadding / 2;
         let styles = {
+            root: {
+                marginBottom: '35px',
+                ...this.props.style,
+            },
             sectionHeader: {
                 margin: '12px 0 13px',
-                paddingLeft: '13px',
+                paddingLeft: `${spacing + halfGridPadding}px`,
+                paddingRight: `${spacing + halfGridPadding + scrollbarWidth}px`,
                 fontSize: '27px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase',
+                display: 'flex',
+                alignItems: 'center',
+            },
+            sectionHeaderLeft: {
+                flex: '1',
+            },
+            sectionHeaderRight: {
+                display: 'flex',
+                alignItems: 'center',
             },
             tabButtonsContainer: {
-                position: 'absolute',
-                height: '35px',
-                top: '-46px',
-                right: '-50px',
-                width: '200px',
                 backgroundColor: 'rgba(0, 0, 0, 0)',
             },
             tabButton: {
@@ -41,7 +52,7 @@ export class DashboardSection extends React.Component {
                 width: '16px',
                 height: '16px',
                 backgroundColor: 'white',
-                border: '3px solid rgb(68, 152, 192)',
+                border: '3px solid rgb(69, 152, 191)',
                 margin: '0',
                 transition: 'border 0.25s',
             },
@@ -49,11 +60,6 @@ export class DashboardSection extends React.Component {
                 width: 'auto',
                 margin: '0 4px',
                 padding: '0 4px',
-            },
-            tabContent: {
-                marginLeft: spacing,
-                marginRight: spacing,
-                paddingBottom: spacing,
             },
             swipeableViews: {
                 width: '100%',
@@ -63,8 +69,15 @@ export class DashboardSection extends React.Component {
                 width: '100%',
                 height: 'auto',
                 margin: '0',
-                paddingLeft: spacing,
-                paddingRight: spacing,
+                paddingLeft: `${spacing}px`,
+                paddingRight: `${spacing + scrollbarWidth}px`,
+            },
+            viewAll: {
+                color: 'rgb(69, 152, 191)',
+                textTransform: 'uppercase',
+                fontSize: '14px',
+                cursor: 'pointer',
+                marginLeft: '18px',
             },
         };
 
@@ -83,7 +96,7 @@ export class DashboardSection extends React.Component {
         };
 
         const tabButtonBorderStyle = (selected) => {
-            return selected ? '8px solid rgb(68, 152, 192)' : '3px solid rgb(68, 152, 192)';
+            return selected ? '8px solid rgb(69, 152, 191)' : '3px solid rgb(69, 152, 191)';
         };
 
         const maxPages = 3;
@@ -98,12 +111,53 @@ export class DashboardSection extends React.Component {
         }
 
         return (
-            <div style={this.props.style}>
+            <div style={styles.root}>
                 <div
                     className={`qa-DashboardSection-${this.props.name}Header`}
                     style={styles.sectionHeader}
                 >
-                    {this.props.title}
+                    <div style={styles.sectionHeaderLeft}>
+                        {this.props.title}
+                    </div>
+                    {(childrenPages.length > 0) ?
+                        <div style={styles.sectionHeaderRight}>
+                            <Tabs
+                                tabItemContainerStyle={styles.tabButtonsContainer}
+                                inkBarStyle={{ display: 'none' }}
+                                onChange={this.handlePageChange}
+                                value={this.state.pageIndex}
+                            >
+                                {[...Array(maxPages)].map((nothing, pageIndex) => (
+                                    <Tab
+                                        key={`${this.props.name}Tab${pageIndex}`}
+                                        value={pageIndex}
+                                        style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
+                                        disableTouchRipple={true}
+                                        buttonStyle={(pageIndex < childrenPages.length) ?
+                                            {
+                                                ...styles.tabButton,
+                                                border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
+                                            }
+                                            :
+                                            styles.tabButtonDisabled
+                                        }
+                                    >
+                                    </Tab>
+                                ))}
+                            </Tabs>
+                            <a
+                                style={{
+                                    ...styles.viewAll,
+                                    visibility: this.props.onViewAll ? 'visible' : 'hidden'
+                                }}
+                                onClick={this.props.onViewAll}
+                            >
+                                View All
+                            </a>
+                        </div>
+                        :
+                        null
+                    }
                 </div>
                 {(childrenPages.length === 0) ?
                     this.props.noDataElement ?
@@ -111,55 +165,28 @@ export class DashboardSection extends React.Component {
                         :
                         null
                     :
-                    <div>
-                        <Tabs
-                            style={{position: 'relative', width: '100%'}}
-                            tabItemContainerStyle={styles.tabButtonsContainer}
-                            inkBarStyle={{display: 'none'}}
-                            onChange={this.handlePageChange}
-                            value={this.state.pageIndex}
-                        >
-                            {[...Array(maxPages)].map((nothing, pageIndex) => (
-                                <Tab
-                                    key={`${this.props.name}Tab${pageIndex}`}
-                                    value={pageIndex}
-                                    style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
-                                    disableTouchRipple={true}
-                                    buttonStyle={(pageIndex < childrenPages.length) ?
-                                        {
-                                            ...styles.tabButton,
-                                            border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
-                                        }
-                                        :
-                                        styles.tabButtonDisabled
-                                    }
-                                >
-                                </Tab>
-                            ))}
-                        </Tabs>
-                        <SwipeableViews
-                            style={styles.swipeableViews}
-                            index={this.state.pageIndex}
-                            onChangeIndex={this.handlePageChange}
-                        >
-                            {childrenPages.map((childrenPage, pageIndex) => (
-                                <GridList
-                                    key={`${this.props.name}GridList${pageIndex}`}
-                                    className={`qa-DashboardSection-${this.props.name}Grid`}
-                                    cellHeight={this.props.cellHeight || 'auto'}
-                                    style={styles.gridList}
-                                    padding={this.props.gridPadding}
-                                    cols={this.props.columns}
-                                >
-                                    {childrenPage.map((child, index) => (
-                                        <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
-                                            {child}
-                                        </div>
-                                    ))}
-                                </GridList>
-                            ))}
-                        </SwipeableViews>
-                    </div>
+                    <SwipeableViews
+                        style={styles.swipeableViews}
+                        index={this.state.pageIndex}
+                        onChangeIndex={this.handlePageChange}
+                    >
+                        {childrenPages.map((childrenPage, pageIndex) => (
+                            <GridList
+                                key={`${this.props.name}GridList${pageIndex}`}
+                                className={`qa-DashboardSection-${this.props.name}Grid`}
+                                cellHeight={this.props.cellHeight || 'auto'}
+                                style={styles.gridList}
+                                padding={this.props.gridPadding}
+                                cols={this.props.columns}
+                            >
+                                {childrenPage.map((child, index) => (
+                                    <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
+                                        {child}
+                                    </div>
+                                ))}
+                            </GridList>
+                        ))}
+                    </SwipeableViews>
                 }
             </div>
         )
@@ -167,20 +194,21 @@ export class DashboardSection extends React.Component {
 }
 
 DashboardSection.propTypes = {
+    style: PropTypes.object,
     title: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     columns: PropTypes.number.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    onViewAll: PropTypes.func,
     noDataElement: PropTypes.element,
     cellHeight: PropTypes.number,
     gridPadding: PropTypes.number,
     rows: PropTypes.number,
-    style: PropTypes.object,
 };
 
 DashboardSection.defaultProps = {
+    style: {},
     rows: 1,
-    style: { marginBottom: '35px' },
     gridPadding: 2,
 };
 

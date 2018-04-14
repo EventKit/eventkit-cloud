@@ -56,6 +56,10 @@ export class DataPackPage extends React.Component {
             geojson_geometry: null,
             targetJob: '',
         };
+
+        if (props.location.query.collection === 'myDataPacks') {
+            this.state.ownerFilter = props.user.data.user.username;
+        }
     }
 
     componentDidMount() {

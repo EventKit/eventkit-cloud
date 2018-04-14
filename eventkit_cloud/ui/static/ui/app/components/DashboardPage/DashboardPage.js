@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { Link, browserHistory } from 'react-router';
 import { AppBar, CircularProgress, Paper } from 'material-ui';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
@@ -10,7 +11,6 @@ import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
-import { Link } from 'react-router';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -27,6 +27,9 @@ export class DashboardPage extends React.Component {
         this.refreshFeatured = this.refreshFeatured.bind(this);
         this.refreshRecentlyViewed = this.refreshRecentlyViewed.bind(this);
         this.refresh = this.refresh.bind(this);
+        this.handleNotificationsViewAll = this.handleNotificationsViewAll.bind(this);
+        this.handleFeaturedViewAll = this.handleFeaturedViewAll.bind(this);
+        this.handleMyDataPacksViewAll = this.handleMyDataPacksViewAll.bind(this);
         this.state = {
             loadingPage: true,
             loadingSections: {
@@ -187,6 +190,18 @@ export class DashboardPage extends React.Component {
         this.refreshRecentlyViewed({ showLoading });
     }
 
+    handleNotificationsViewAll() {
+        browserHistory.push('/notifications');
+    }
+
+    handleFeaturedViewAll() {
+        browserHistory.push('/exports');
+    }
+
+    handleMyDataPacksViewAll() {
+        browserHistory.push(`/exports?collection=myDataPacks`);
+    }
+
     render() {
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
@@ -277,6 +292,7 @@ export class DashboardPage extends React.Component {
                                 rows={this.getNotificationsRows()}
                                 gridPadding={this.getGridPadding()}
                                 providers={this.props.providers}
+                                onViewAll={this.handleNotificationsViewAll}
                                 noDataElement={
                                     <Paper style={styles.noData}>
                                         {"You don't have any notifications."}
@@ -339,6 +355,7 @@ export class DashboardPage extends React.Component {
                                     gridPadding={this.getGridPadding()}
                                     cellHeight={335}
                                     providers={this.props.providers}
+                                    onViewAll={this.handleFeaturedViewAll}
                                 >
                                     {this.props.featuredRunsList.runs.map((run, index) => (
                                         <DataPackWideItem
@@ -364,6 +381,7 @@ export class DashboardPage extends React.Component {
                                 gridPadding={this.getGridPadding()}
                                 user={this.props.user}
                                 providers={this.props.providers}
+                                onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
                                     <Paper style={styles.noData}>
                                         {"You don't have any DataPacks."}&nbsp;
