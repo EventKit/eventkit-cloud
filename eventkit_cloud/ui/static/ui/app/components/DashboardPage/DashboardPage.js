@@ -379,7 +379,6 @@ export class DashboardPage extends React.Component {
                                 name="MyDataPacks"
                                 columns={this.getGridColumns()}
                                 gridPadding={this.getGridPadding()}
-                                user={this.props.user}
                                 providers={this.props.providers}
                                 onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
