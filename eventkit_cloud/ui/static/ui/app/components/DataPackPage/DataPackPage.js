@@ -520,7 +520,7 @@ export class DataPackPage extends React.Component {
         if (data.step) {
             if (data.step.title === 'Filter DataPacks' && data.type === 'step:before') {
                 if (this.state.open === false) {
-                    this.setState({open: true});
+                    this.setState({ open: true });
                 }
             }
         }
@@ -648,11 +648,11 @@ export class DataPackPage extends React.Component {
                     ref="joyride"
                     debug={false}
                     steps={steps}
-                    autoStart={true}
+                    autoStart
                     type="continuous"
                     disableOverlay
-                    showSkipButton={true}
-                    showStepsProgress={true}
+                    showSkipButton
+                    showStepsProgress
                     locale={{
                         back: (<span>Back</span>),
                         close: (<span>Close</span>),
