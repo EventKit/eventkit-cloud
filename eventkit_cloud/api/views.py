@@ -1251,34 +1251,41 @@ class NotificationViewSet(viewsets.GenericViewSet):
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
+    @list_route(methods=['get'])
+    def markallasread(self, request, *args, **kwargs):
+        qs = Notification.objects.filter(recipient_id=self.request.user.id)
+        qs.mark_all_as_read()
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
+
     @list_route(methods=['post'])
     def mark(self, request, *args, **kwargs):
         """
-             Mark one or more notifications as read or deleted.
-             Supply a list of notifications ids to be marked
+         Change the status of one or more notifications.
 
 
-             * request: the HTTP request in JSON.
+         Args:
+             A list containing one or more records like this:
+            [
+             {"id": 3, "action": "DELETE" },
+             {"id": 17, "action": "READ" },
+             {"id" : 19, "action" "UNREAD" },
+             ...
+            ]
 
-                 Example:
-
-                     {
-                         "READ" : [ 2,4,17],
-                         "DELETE" : [1,4]
-                     }
-
+         Returns:
+            { "success" : True} or error
         """
 
         logger.info(request.data)
-        if "READ" in request.data:
-            ids = request.data["READ"]
-            qs = Notification.objects.filter(recipient_id=self.request.user.id,id__in=ids)
-            qs.mark_all_as_read()
-
-        if "DELETE" in request.data:
-            ids = request.data["DELETE"]
-            qs = Notification.objects.filter(recipient_id=self.request.user.id,id__in=ids)
-            qs.mark_all_as_deleted()
+        for row in request.data:
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
+            logger.info(qs)
+            if row['action'] == 'READ':
+                qs.mark_all_as_read()
+            if row['action'] == 'DELETE':
+                qs.mark_all_as_deleted()
+            if row['action'] == 'UNREAD':
+                qs.mark_all_as_unread()
 
         return Response( { "success" : True},  status=status.HTTP_200_OK)
 
