@@ -24,7 +24,7 @@ from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProvide
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
 from ..utils.provider_check import get_provider_checker
 
-from rest_framework import filters, permissions, status, views, viewsets
+from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -38,7 +38,7 @@ from serializers import (
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter,UserFilter,GroupFilter, NotificationFilter
+from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, NotificationFilter, UserJobActivityFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -1003,10 +1003,16 @@ class UserDataViewSet(viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserJobActivityViewSet(viewsets.ModelViewSet):
+class UserJobActivityViewSet(mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    """
+    Endpoint to create and retrieve user activity related to jobs.
+    """
     serializer_class = UserJobActivitySerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = LinkHeaderPagination
+    filter_class = UserJobActivityFilter
 
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
@@ -1020,9 +1026,13 @@ class UserJobActivityViewSet(viewsets.ModelViewSet):
 
             return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
         else:
-            raise exceptions.ValidationError('User job history not supported for activity %s' % activity_type)
+            activity_ids = UserJobActivity.objects.filter(user=self.request.user)
+            return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
 
     def list(self, request, *args, **kwargs):
+        """
+        Gets the most recent UserJobActivity objects.
+        """
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -1033,6 +1043,9 @@ class UserJobActivityViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request):
+        """
+        Creates a new UserJobActivity object.
+        """
         activity_type = request.query_params.get('activity', '').lower()
         job_uid = request.data.get('job_uid')
 
@@ -1044,13 +1057,13 @@ class UserJobActivityViewSet(viewsets.ModelViewSet):
             if queryset.count() > 0:
                 last_job_viewed = queryset.latest('created_at')
                 if str(last_job_viewed.job.uid) == job_uid:
-                    return Response({'success': True, 'ignored': True}, content_type='application/json',status=status.HTTP_200_OK)
+                    return Response({'ignored': True}, content_type='application/json', status=status.HTTP_200_OK)
 
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
-            raise exceptions.ValidationError('User job history not supported for activity %s' % activity_type)
+            raise exceptions.ValidationError("Activity type '%s' is invalid." % activity_type)
 
-        return Response({'success': True}, content_type='application/json', status=status.HTTP_200_OK)
+        return Response({}, content_type='application/json', status=status.HTTP_200_OK)
 
 
 class GroupViewSet(viewsets.ModelViewSet):

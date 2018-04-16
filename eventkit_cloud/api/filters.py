@@ -6,7 +6,7 @@ import django_filters
 
 from django.db.models import Q
 
-from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.jobs.models import Job, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
 
 from django.contrib.auth.models import User,Group
@@ -129,3 +129,11 @@ class NotificationFilter(django_filters.FilterSet):
     class Meta:
             model = Notification
             fields = ( 'unread',)
+
+
+class UserJobActivityFilter(django_filters.FilterSet):
+    activity = django_filters.CharFilter(name="activity")
+
+    class Meta:
+            model = UserJobActivity
+            fields = ('activity',)
