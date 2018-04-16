@@ -1,8 +1,8 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {Card} from 'material-ui/Card';
+import { Card } from 'material-ui/Card';
 import Clear from 'material-ui/svg-icons/content/clear';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
@@ -12,32 +12,28 @@ import MapPopup from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            featureInfo: {
-                name: 'test name',
-                job: {
-                    uid: '111',
-                    event: 'test event',
-                    description: 'test description'
-                },
-                created_at: '2017-03-10T15:52:27.500Z',
-                expiration: '2017-03-10T15:52:27.500Z',
-                user: 'test user',
+    const getProps = () => ({
+        featureInfo: {
+            name: 'test name',
+            job: {
+                uid: '111',
+                event: 'test event',
+                description: 'test description',
             },
-            detailUrl: 'cloud.eventkit.test',
-            handleZoom: () => {},
-            handlePopupClose: () => {}
-        }
-    };
-    const getWrapper = (props) => {
-        return mount(<MapPopup {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
-    }
+            created_at: '2017-03-10T15:52:27.500Z',
+            expiration: '2017-03-10T15:52:27.500Z',
+            user: 'test user',
+        },
+        detailUrl: 'cloud.eventkit.test',
+        handleZoom: () => {},
+        handlePopupClose: () => {},
+    });
+    const getWrapper = props => mount(<MapPopup {...props} />, {
+        context: { muiTheme },
+        childContextTypes: {
+            muiTheme: React.PropTypes.object,
+        },
+    });
 
     it('should render all the basic components', () => {
         const props = getProps();
@@ -46,14 +42,14 @@ describe('LoadButtons component', () => {
         expect(wrapper.find('#popup-header')).toHaveLength(1);
         expect(wrapper.find('#popup-name')).toHaveLength(1);
         expect(wrapper.find('#popup-name').find('a')).toHaveLength(1);
-        expect(wrapper.find('#popup-name').find('a').props().href).toEqual(`/status/${props.featureInfo.job.uid}`)
+        expect(wrapper.find('#popup-name').find('a').props().href).toEqual(`/status/${props.featureInfo.job.uid}`);
         expect(wrapper.find('#popup-name').text()).toEqual('test name');
         expect(wrapper.find(Dot)).toHaveLength(1);
         expect(wrapper.find(Clear)).toHaveLength(1);
         expect(wrapper.find('#popup-event')).toHaveLength(1);
         expect(wrapper.find('#popup-event').text()).toEqual('Event: test event');
         expect(wrapper.find('#popup-actions')).toHaveLength(1);
-        expect(wrapper.find('#details-url').text()).toEqual('Go To Detail and Downloads');
+        expect(wrapper.find('#details-url').text()).toEqual('Go To Status and Download');
         expect(wrapper.find('#zoom-to').text()).toEqual('Zoom To Selection');
         expect(wrapper.find('#show-more').text()).toEqual('Show More');
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
@@ -61,7 +57,7 @@ describe('LoadButtons component', () => {
     });
 
     it('the moreInfo div should display when user clicks "Show More"', () => {
-        const showSpy = new sinon.spy(MapPopup.prototype, 'showMore');        
+        const showSpy = new sinon.spy(MapPopup.prototype, 'showMore');
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(showSpy.notCalled).toBe(true);
@@ -78,7 +74,7 @@ describe('LoadButtons component', () => {
     });
 
     it('moreInfo should not display null data', () => {
-        let props = getProps();
+        const props = getProps();
         props.featureInfo.job.description = null;
         props.featureInfo.created_at = null;
         props.featureInfo.expiration = null;
@@ -95,7 +91,7 @@ describe('LoadButtons component', () => {
     });
 
     it('should call handleZoom when zoom button is clicked', () => {
-        let props = getProps();
+        const props = getProps();
         props.handleZoom = new sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.handleZoom.notCalled).toBe(true);
@@ -104,7 +100,7 @@ describe('LoadButtons component', () => {
     });
 
     it('should call handlePopupClose when a user clicks the close icon', () => {
-        let props = getProps();
+        const props = getProps();
         props.handlePopupClose = new sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.handlePopupClose.notCalled).toBe(true);
@@ -120,8 +116,7 @@ describe('LoadButtons component', () => {
         expect(initial).toBe(false);
         wrapper.instance().showMore();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showMore: !initial})).toBe(true);
-
+        expect(stateSpy.calledWith({ showMore: !initial })).toBe(true);
     });
 });
 
