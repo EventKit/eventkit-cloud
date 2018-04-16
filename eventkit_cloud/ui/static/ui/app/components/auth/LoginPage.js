@@ -1,15 +1,12 @@
 import React, { PropTypes } from 'react';
 import Paper from 'material-ui/Paper';
-import BrowserWarning from './BrowserWarning';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
-import { isBrowserValid } from '../../utils/generic';
 
 const backgroundImage = require('../../../images/topoBackground.jpg');
 
 export class LoginPage extends React.Component {
     render() {
-        const isValid = isBrowserValid();
         const mobile = window.innerWidth < 768;
         const styles = {
             wholeDiv: {
@@ -61,12 +58,6 @@ export class LoginPage extends React.Component {
                 alignSelf: 'flex-end',
             },
         };
-
-        if (!isValid) {
-            return (
-                <BrowserWarning />
-            );
-        }
 
         const version = this.context.config && this.context.config.VERSION ? this.context.config.VERSION : '';
 

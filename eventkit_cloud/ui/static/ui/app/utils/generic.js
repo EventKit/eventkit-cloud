@@ -1,14 +1,3 @@
-import detector from 'detect-browser';
-
-export function isBrowserValid() {
-    const browser = detector.detect();
-    const { name } = browser;
-    if (name === 'ie') {
-        return false;
-    }
-    return true;
-}
-
 export function isMgrsString(c) {
     c = c.replace(/\s+/g, '');
     const MGRS = /^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$/i;
