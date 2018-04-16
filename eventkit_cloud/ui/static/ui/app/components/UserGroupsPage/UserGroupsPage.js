@@ -31,6 +31,8 @@ import {
     updateGroup,
 } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 
 export class UserGroupsPage extends Component {
     constructor(props) {
@@ -73,6 +75,7 @@ export class UserGroupsPage extends Component {
         this.hidePageInfoDialog = this.hidePageInfoDialog.bind(this);
         this.showSharedInfoDialog = this.showSharedInfoDialog.bind(this);
         this.hideSharedInfoDialog = this.hideSharedInfoDialog.bind(this);
+        this.callback = this.callback.bind(this);
         this.state = {
             drawerOpen: !(window.innerWidth < 768),
             selectedUsers: [],
@@ -92,6 +95,8 @@ export class UserGroupsPage extends Component {
             showSharedInfo: false,
             showPageInfo: false,
             drawerIconHover: false,
+            steps: [],
+            isRunning: false,
         };
     }
 
@@ -99,6 +104,123 @@ export class UserGroupsPage extends Component {
         // make api request for users/groups
         this.makeUserRequest();
         this.props.getGroups();
+
+        const tooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf',
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf',
+            },
+            skip: {
+                color: '#8b9396',
+            },
+            back: {
+                color: '#8b9396',
+            },
+            hole: {
+                backgroundColor: 'rgba(226,226,226, 0.2)',
+            },
+        };
+
+        const welcomeTooltipStyle = {
+            backgroundColor: 'white',
+            borderRadius: '0',
+            color: 'black',
+            mainColor: '#ff4456',
+            textAlign: 'left',
+            header: {
+                textAlign: 'left',
+                fontSize: '20px',
+                borderColor: '#4598bf',
+            },
+            arrow: {
+                display: 'none',
+            },
+            main: {
+                paddingTop: '20px',
+                paddingBottom: '20px',
+            },
+
+            button: {
+                color: 'white',
+                backgroundColor: '#4598bf',
+            },
+            skip: {
+                display: 'none',
+            },
+            back: {
+                color: '#8b9396',
+            },
+            hole: {
+                display: 'none',
+            },
+        };
+
+        const steps = [
+            {
+                title: 'Welcome to the Members and Groups Page',
+                text: 'This page contains...',
+                selector: '.qa-UserGroupsPage-AppBar',
+                position: 'top',
+                style: welcomeTooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Create Group',
+                text: 'You can click on this button to create a group of your choice.',
+                selector: '.qa-UserGroupsPage-RaisedButton-create',
+                position: 'top',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Created Groups',
+                text: 'Your created groups will appear here.',
+                selector: '.qa-GroupsDrawer-groupsHeading',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Select users',
+                text: 'Select the users you would like to add to the group.',
+                selector: '.qa-UserGroupsPage-bodyTable > tbody > tr:nth-child(1) > td:nth-child(1) > div > input[type="checkbox"]',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Select All Users',
+                text: 'Selecting this checkbox selects all the users to add them to a group.',
+                selector: '.qa-UserGroupsPage-fixedHeader > div:nth-child(3) > div:nth-child(1) > table > thead > tr > th:nth-child(1) > div > input[type="checkbox"]',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Add Users to Groups',
+                text: 'This menu will allow you to add users to the groups.',
+                selector: '.qa-UserTableRowColumn-IconButton-options',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+        ];
+
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -393,7 +515,49 @@ export class UserGroupsPage extends Component {
         this.setState({ showPageInfo: false });
     }
 
+    handleWalkthroughClick() {
+        this.setState({ isRunning: true });
+    }
+
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState((currentState) => {
+            currentState.steps = currentState.steps.concat(newSteps);
+            return currentState;
+        });
+    }
+
+    callback(data) {
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+            this.setState({ isRunning: false });
+            this.refs.joyride.reset(true);
+        }
+
+        if (data.index === 4 && data.type === 'step:after') {
+            if (this.props.drawer === 'closed') {
+                this.props.openDrawer();
+            }
+        }
+    }
+
+    handleJoyride() {
+        if (this.state.isRunning === true) {
+            this.refs.joyride.reset(true);
+        } else {
+            this.setState({ isRunning: true });
+        }
+    }
+
     render() {
+        const { steps, isRunning } = this.state;
+        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginRight: '30px', fontSize: '16px' }}><Help onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
         const mobile = window.innerWidth < 768;
         const bodyWidth = !mobile ? 'calc(100% - 250px)' : '100%';
         const bodyHeight = window.innerHeight - 130;
@@ -599,6 +763,25 @@ export class UserGroupsPage extends Component {
 
         return (
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
+                <Joyride
+                    callback={this.callback}
+                    ref="joyride"
+                    debug={false}
+                    steps={steps}
+                    autoStart
+                    type="continuous"
+                    disableOverlay
+                    showSkipButton
+                    showStepsProgress
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}
+                />
                 {
                     <AppBar
                         className="qa-UserGroupsPage-AppBar"
@@ -614,6 +797,7 @@ export class UserGroupsPage extends Component {
                         style={styles.header}
                         titleStyle={styles.headerTitle}
                         showMenuIconButton={false}
+                        iconElementRight={iconElementRight}
                     >
                         <RaisedButton
                             className="qa-UserGroupsPage-RaisedButton-create"

@@ -23,7 +23,6 @@ export class Account extends Component {
             showSavedMessage: false,
             steps: [],
             isRunning: false,
-            expandForTour: false,
         };
     }
 
@@ -315,7 +314,6 @@ export class Account extends Component {
                                         acceptedLicenses={this.state.acceptedLicenses}
                                         onLicenseCheck={this.handleCheck}
                                         onAllCheck={this.handleAll}
-                                        expandForTour={this.state.expandForTour}
                                     />
                                 </div>
                                 :
