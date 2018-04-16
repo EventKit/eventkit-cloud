@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 import json
-import re
-import math
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
@@ -19,7 +17,7 @@ from logging import getLogger
 from ..utils.geocode import Geocode
 from ..utils.reverse import ReverseGeocode
 from ..utils.convert import Convert
-from .helpers import file_to_geojson, set_session_user_last_active_at
+from .helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
 from datetime import datetime, timedelta
 import pytz
 
@@ -118,80 +116,6 @@ def require_email(request):
     return render_to_response('osm/email.html', {'backend': backend}, RequestContext(request))
 
 
-def is_mgrs_string(query):
-    """
-    :param query: A string to test against MGRS format
-    :return: True if the string matches MGSR, false if not
-    """
-    query = re.sub(r"\s+", '', query)
-    pattern = re.compile(r"^(\d{1,2})([C-HJ-NP-X])\s*([A-HJ-NP-Z])([A-HJ-NP-V])\s*(\d{1,5}\s*\d{1,5})$", re.I)
-    if pattern.match(query):
-        return True
-    return False
-
-
-def is_lat_lon(query):
-    """
-    :param query: A string to test against lat/lon format
-    :return: A parsed coordinate array if it matches, false if not
-    """
-    # regex for matching to lat and lon
-    # ?P<> creates a named group so that we can access values later
-    lat_lon = re.compile(r"""
-        # group to match latitude
-        (?:
-            ^                       # latitude MUST start at the beginning of the string
-            (?P<lat_sign>[\+-]?)    # latitude may begin with + or -
-            (?:
-                (?P<lat>90(?:(?:\.0{1,20})?) | (?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid latitude values
-                [\s]?               # there may or may not be a space following the digits when N or S are included
-                (?P<lat_dir>[NS]?)  # N or S may be used instead of + or -
-            )
-            \b                      # there should be a word boundary after the latitude
-        )
-        
-        (?:[\,\s]{1,2})             # match common, space, or comma and space
-        
-        # group to match longitude
-        (?:
-            (?P<lon_sign>[\+-]?)    # longitude may begin with + or -
-            (?:
-                (?P<lon>180(?:(?:\.0{1,20})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,20})?)) # match valid longitude values
-                [\s]?               # there may or may not be a space following the digits when E or W are included
-                (?P<lon_dir>[EW]?)  # E or W may be used instead of + or -
-            )
-            $                       # after longitude should be the end of the string
-        )
-    """, re.VERBOSE)
-
-    r = lat_lon.match(query)
-    if not r:
-        return False
-
-    parsed_lat = None
-    parsed_lon = None
-    try:
-        parsed_lat = float(r.group('lat'))
-        parsed_lon = float(r.group('lon'))
-    except ValueError as e:
-        return False
-
-    if math.isnan(parsed_lat) or math.isnan(parsed_lon):
-        return False
-
-    if r.group('lat_sign') == '-' or r.group('lat_dir') == 'S':
-        parsed_lat = parsed_lat * -1
-    if r.group('lon_sign') == '-' or r.group('lon_dir') == 'W':
-        parsed_lon = parsed_lon * -1
-
-    parsed_coord_array = [
-        parsed_lat,
-        parsed_lon
-    ]
-
-    return parsed_coord_array
-
-
 @require_http_methods(['GET'])
 def search(request):
     """
@@ -204,7 +128,7 @@ def search(request):
         return HttpResponse(status=204, content_type="application/json")
 
     degree_range = 0.05
-    if is_mgrs_string(q):
+    if is_mgrs(q):
         # check for necessary settings
         if getattr(settings, 'CONVERT_API_URL') is None:
             return HttpResponse('No Convert API specified', status=501)
@@ -222,11 +146,13 @@ def search(request):
 
         features = []
         # save the mgrs feature to return later
-        mgrs_data.get('properties')['bbox'] = [
+        if not mgrs_data.get('properties'):
+            mgrs_data['properties'] = {}
+        mgrs_data['properties']['bbox'] = [
             mgrs_data.get('geometry').get('coordinates')[0] - degree_range,
             mgrs_data.get('geometry').get('coordinates')[1] - degree_range,
             mgrs_data.get('geometry').get('coordinates')[0] + degree_range,
-            mgrs_data.get('geometry').get('coordinates')[1] + degree_range,
+            mgrs_data.get('geometry').get('coordinates')[1] + degree_range
         ]
         mgrs_data['source'] = 'MGRS'
         features.append(mgrs_data)
