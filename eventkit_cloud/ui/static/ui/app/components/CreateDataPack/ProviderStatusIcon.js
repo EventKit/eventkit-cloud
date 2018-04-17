@@ -52,13 +52,11 @@ export class ProviderStatusIcon extends Component {
                 this.props.availability :
                 {status: "PENDING", message: "This data provider's availability is being checked."};
 
-        let statusStr = avail.status + " ";
-
         let StatusIcon;
         let title;
         let messagePrefix;
         let otherProps = {};
-        switch (statusStr.slice(0, statusStr.indexOf("_"))) {
+        switch (avail.status.toUpperCase()) {
             case 'SUCCESS':
                 style.icon['color'] = 'rgba(0, 192, 0, 0.87)';
                 StatusIcon = ActionDone;

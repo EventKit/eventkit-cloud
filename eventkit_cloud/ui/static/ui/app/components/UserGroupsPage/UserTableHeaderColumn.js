@@ -2,11 +2,13 @@ import React, { Component, PropTypes } from 'react';
 import { TableHeaderColumn } from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
+import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
 import Group from 'material-ui/svg-icons/social/group';
 import Sort from 'material-ui/svg-icons/content/sort';
 import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
+import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
 export class UserTableHeaderColumn extends Component {
     constructor(props) {
@@ -80,6 +82,17 @@ export class UserTableHeaderColumn extends Component {
                 border: 'none',
                 fill: '#4598bf',
             },
+            menuItem: {
+                fontSize: '14px',
+                overflow: 'hidden',
+                color: '#707274',
+            },
+            menuItemInner: {
+                padding: '0px',
+                margin: '0px 22px 0px 16px',
+                height: '48px',
+                display: 'flex',
+            },
         };
 
         return (
@@ -111,13 +124,28 @@ export class UserTableHeaderColumn extends Component {
                         anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'left', vertical: 'top' }}
                         onClose={this.handleClose}
-                        onMenuItemClick={this.handleGroupItemClick}
-                        onNewGroupClick={this.handleNewGroupClick}
-                        selectedGroups={this.props.selectedGroups}
-                        groups={this.props.groups}
-                        groupsLoading={this.props.groupsLoading}
-                        className="qa-UserTableHeaderColumn-GroupsDropDownMenu"
-                    />
+                        loading={this.props.groupsLoading}
+                        width={200}
+                        className="qa-UserTableRowColumn-GroupsDropDownMenu"
+                    >
+                        {this.props.groups.map(group => (
+                            <GroupsDropDownMenuItem
+                                key={group.id}
+                                group={group}
+                                onClick={this.props.handleGroupItemClick}
+                                selected={this.props.selectedGroups.includes(group.id)}
+                            />
+                        ))}
+                        <Divider className="qa-UserTableRowColumn-Divider" />
+                        <MenuItem
+                            style={styles.menuItem}
+                            innerDivStyle={styles.menuItemInner}
+                            onTouchTap={this.handleNewGroupClick}
+                            className="qa-UserTableRowColumn-MenuItem-newGroup"
+                        >
+                            <span>Share with New Group</span>
+                        </MenuItem>
+                    </GroupsDropDownMenu>
                     <IconMenu
                         value={this.props.sortValue}
                         onChange={this.props.handleSortChange}

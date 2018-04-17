@@ -8,9 +8,11 @@ import Warning from 'material-ui/svg-icons/alert/warning';
 import DataCartDetails from './DataCartDetails';
 import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
-    clearReRunInfo, cancelProviderTask, updateExpiration, updatePermission,
+    clearReRunInfo, cancelProviderTask, updateExpiration, updateDataCartPermissions,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
+import { getUsers } from '../../actions/userActions';
+import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
@@ -30,6 +32,8 @@ export class StatusDownload extends React.Component {
     componentDidMount() {
         this.props.getDatacartDetails(this.props.params.jobuid);
         this.props.getProviders();
+        this.props.getUsers();
+        this.props.getGroups();
         this.startTimer();
     }
 
@@ -210,7 +214,9 @@ export class StatusDownload extends React.Component {
                                         cartDetails={cartDetails}
                                         onRunDelete={this.props.deleteRun}
                                         onUpdateExpiration={this.props.updateExpirationDate}
-                                        onUpdatePermission={this.props.updatePermission}
+                                        onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
+                                        updatingExpiration={this.props.expirationState.updating}
+                                        updatingPermission={this.props.permissionState.updating}
                                         permissionState={this.props.permissionState}
                                         onRunRerun={this.props.rerunExport}
                                         onClone={this.props.cloneExport}
@@ -218,6 +224,8 @@ export class StatusDownload extends React.Component {
                                         providers={this.props.providers}
                                         maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                                         user={this.props.user}
+                                        members={this.props.users.users}
+                                        groups={this.props.groups}
                                     />
                                 ))}
                                 <BaseDialog
@@ -251,22 +259,36 @@ StatusDownload.propTypes = {
     rerunExport: PropTypes.func.isRequired,
     exportReRun: PropTypes.object.isRequired,
     updateExpirationDate: PropTypes.func.isRequired,
-    updatePermission: PropTypes.func.isRequired,
+    updateDataCartPermissions: PropTypes.func.isRequired,
     permissionState: PropTypes.shape({
         updating: PropTypes.bool,
         updated: PropTypes.bool,
-        error: PropTypes.string,
+        error: PropTypes.array,
     }).isRequired,
     expirationState: PropTypes.shape({
         updating: PropTypes.bool,
         updated: PropTypes.bool,
-        error: PropTypes.string,
+        error: PropTypes.array,
     }).isRequired,
     cloneExport: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
+    users: PropTypes.shape({
+        error: PropTypes.string,
+        fetched: PropTypes.bool,
+        fetching: PropTypes.bool,
+        users: PropTypes.arrayOf(PropTypes.object),
+    }).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    getUsers: PropTypes.func.isRequired,
+    getGroups: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -280,6 +302,8 @@ function mapStateToProps(state) {
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
+        users: state.users,
+        groups: state.groups.groups,
     };
 }
 
@@ -300,8 +324,8 @@ function mapDispatchToProps(dispatch) {
         updateExpirationDate: (uid, expiration) => {
             dispatch(updateExpiration(uid, expiration));
         },
-        updatePermission: (uid, value) => {
-            dispatch(updatePermission(uid, value));
+        updateDataCartPermissions: (uid, permissions) => {
+            dispatch(updateDataCartPermissions(uid, permissions));
         },
         clearReRunInfo: () => {
             dispatch(clearReRunInfo());
@@ -324,7 +348,6 @@ function mapDispatchToProps(dispatch) {
                 exportName: cartDetails.job.name,
                 datapackDescription: cartDetails.job.description,
                 projectName: cartDetails.job.event,
-                makePublic: cartDetails.job.published,
                 providers: providerArray,
                 layers: 'Geopackage',
             }));
@@ -335,6 +358,12 @@ function mapDispatchToProps(dispatch) {
         },
         getProviders: () => {
             dispatch(getProviders());
+        },
+        getUsers: () => {
+            dispatch(getUsers());
+        },
+        getGroups: () => {
+            dispatch(getGroups());
         },
     };
 }

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import json
+import datetime
+
 from django.utils import timezone
 from django.conf import settings
 from django.template.loader import get_template
@@ -61,6 +64,20 @@ def expire_runs():
             send_warning_email(date=expiration, url=url, addr=email, job_name=run.job.name)
             run.notified = now
             run.save()
+
+
+@app.task(name='Check Provider Availability')
+def check_provider_availability():
+    from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
+    from eventkit_cloud.utils.provider_check import perform_provider_check
+    for provider in DataProvider.objects.all():
+        status = json.loads(perform_provider_check(provider, None))
+        data_provider_status = DataProviderStatus.objects.create(related_provider=provider)
+        data_provider_status.last_check_time = datetime.datetime.now()
+        data_provider_status.status = status['status']
+        data_provider_status.status_type = status['type']
+        data_provider_status.message = status['message']
+        data_provider_status.save()
 
 
 def send_warning_email(date=None, url=None, addr=None, job_name=None):

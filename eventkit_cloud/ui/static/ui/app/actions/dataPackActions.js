@@ -2,7 +2,7 @@ import axios from 'axios';
 import cookie from 'react-cookie';
 import types from './actionTypes';
 
-export function getRuns(params, geojson, isAuto) {
+export function getRuns(params, options = {}, isAuto) {
     return (dispatch, getState) => {
         const { runsList } = getState();
         // if there is already a request in process we need to cancel it
@@ -23,7 +23,18 @@ export function getRuns(params, geojson, isAuto) {
 
         const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
-        const data = geojson ? { geojson: JSON.stringify(geojson) } : { };
+        const data = {};
+        if (options.geojson) {
+            data.geojson = JSON.stringify(options.geojson);
+        }
+        if (options.permissions) {
+            const groups = Object.keys(options.permissions.groups);
+            const users = Object.keys(options.permissions.members);
+            data.permissions = {
+                groups,
+                users,
+            };
+        }
 
         return axios({
             url,
@@ -39,17 +50,34 @@ export function getRuns(params, geojson, isAuto) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-                
-            }
+            });
+
             let range = '';
             if (response.headers['content-range']) {
                 range = response.headers['content-range'].split('-')[1]; 
             }
-            dispatch({ type: types.RECEIVED_RUNS, runs: response.data, nextPage, range });
+
+            const runs = response.data.map((run) => {
+                const newRun = { ...run };
+                newRun.job.permissions = {
+                    value: newRun.job.visibility,
+                    groups: newRun.job.permissions.groups,
+                    members: newRun.job.permissions.users,
+                };
+                return newRun;
+            });
+
+            dispatch({
+                type: types.RECEIVED_RUNS,
+                runs,
+                nextPage,
+                range,
+            });
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -61,7 +89,7 @@ export function getRuns(params, geojson, isAuto) {
 }
 
 export function deleteRuns(uid) {
-    return (dispatch, getState) => {
+    return (dispatch) => {
         dispatch({ type: types.DELETING_RUN });
 
         const csrftoken = cookie.load('csrftoken');
@@ -85,13 +113,13 @@ export function deleteRuns(uid) {
 export function setPageOrder(order) {
     return {
         type: types.SET_PAGE_ORDER,
-        order: order
-    }
+        order,
+    };
 }
 
 export function setPageView(view) {
     return {
         type: types.SET_PAGE_VIEW,
-        view: view
-    }
+        view,
+    };
 }
