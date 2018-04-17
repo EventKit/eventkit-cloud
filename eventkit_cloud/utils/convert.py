@@ -34,7 +34,7 @@ class Convert(object):
     def get(self, query):
         result = self.get_data(query)
         
-        if('error' in result and result['error'] == 'jwt expired'):
+        if('error' in result and result['error'] == 'Invalid token'):
             authenticate()
             result = get_data(query)
         return result
