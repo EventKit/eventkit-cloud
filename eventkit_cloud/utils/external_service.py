@@ -157,7 +157,7 @@ class ExternalRasterServiceToGeopackage(object):
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             auth_requests.patch_https(self.name)
-            auth_requests.patch_mapproxy_opener_cache()
+            auth_requests.patch_mapproxy_opener_cache(slug=self.name)
             check_service(conf_dict, self.name)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
             task_process = TaskProcess(task_uid=self.task_uid)
