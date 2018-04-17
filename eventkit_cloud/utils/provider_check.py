@@ -556,8 +556,8 @@ class WMTSProviderCheck(OWSProviderCheck):
 
 class TMSProviderCheck(ProviderCheck):
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
-        super(TMSProviderCheck, self).__init__(service_url, layer, aoi_geojson, slug)
+    def __init__(self, service_url, *args, **kwargs):
+        super(TMSProviderCheck, self).__init__(service_url, *args, **kwargs)
         self.service_url = self.service_url.format(z='0', y='0', x='0')
 
 
@@ -570,7 +570,7 @@ PROVIDER_CHECK_MAP = {
     "wmts": WMTSProviderCheck,
     "arcgis-raster": ProviderCheck,
     "arcgis-feature": ProviderCheck,
-    "tms": TMSProviderCheck
+    "tms": TMSProviderCheck,
 }
 
 
