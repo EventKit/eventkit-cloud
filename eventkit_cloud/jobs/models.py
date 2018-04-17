@@ -179,6 +179,21 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
 
+class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that remembers the last recorded status of a data provider.
+    """
+    status = models.CharField(max_length=10, blank=True)
+    status_type = models.CharField(max_length=25, blank=True)
+    message = models.CharField(max_length=150, blank=True)
+    last_check_time = models.DateTimeField(null=True)
+    related_provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
+
+    class Meta:
+        verbose_name_plural = 'data provider statuses'
+        ordering = ['-last_check_time']
+
+
 class Region(UIDMixin, TimeStampedModelMixin):
     """
     Model for a HOT Export Region.
