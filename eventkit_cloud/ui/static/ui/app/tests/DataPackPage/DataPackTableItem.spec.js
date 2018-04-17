@@ -6,10 +6,9 @@ import { Link } from 'react-router';
 import { TableRow, TableRowColumn } from 'material-ui/Table';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
 import AlertError from 'material-ui/svg-icons/alert/error';
-import Lock from 'material-ui/svg-icons/action/lock';
-import SocialPublic from 'material-ui/svg-icons/social/public';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
+import SocialGroup from 'material-ui/svg-icons/social/group';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
@@ -17,12 +16,15 @@ import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 
 describe('DataPackTableItem component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => ({
-        run,
-        user: { data: { user: { username: 'admin' } } },
-        onRunDelete: () => {},
-        providers,
-    });
+    const getProps = () => {
+        return {
+            run,
+            user: { data: { user: { username: 'admin' } } },
+            onRunDelete: () => {},
+            providers,
+            adminPermissions: true,
+        };
+    };
 
     it('should render a table row with the correct table columns', () => {
         const props = getProps();
@@ -52,11 +54,11 @@ describe('DataPackTableItem component', () => {
             childContextTypes: { muiTheme: React.PropTypes.object },
         });
         props.run.user = 'Not Admin';
-        props.run.job.published = true;
+        props.run.job.permissions.value = 'PUBLIC';
         props.run.status = 'INCOMPLETE';
         wrapper.setProps(props);
         expect(wrapper.find(TableRowColumn).at(3).find(AlertError)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(4).find(SocialPublic)).toHaveLength(1);
+        expect(wrapper.find(TableRowColumn).at(4).find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn).at(5).text()).toEqual('Not Admin');
         props.run.status = 'SUBMITTED';
         wrapper.setProps(props);
@@ -76,10 +78,10 @@ describe('DataPackTableItem component', () => {
     it('getPermissionsIcon should return either Group or Person', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props} />);
-        let icon = wrapper.instance().getPermissionsIcon(true);
-        expect(icon).toEqual(<SocialPublic className="qa-DataPackTableItem-SocialGroup" style={{ color: 'grey' }} />);
-        icon = wrapper.instance().getPermissionsIcon(false);
-        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-SocialPerson" style={{ color: 'grey' }} />);
+        let icon = wrapper.instance().getPermissionsIcon('SHARED');
+        expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{ color: 'bcdfbb' }} />);
+        icon = wrapper.instance().getPermissionsIcon('PRIVATE');
+        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-Lock" style={{ color: 'grey' }} />);
     });
 
     it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {
@@ -96,7 +98,7 @@ describe('DataPackTableItem component', () => {
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props} />);
-        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
@@ -107,18 +109,23 @@ describe('DataPackTableItem component', () => {
     it('handleProviderOpen should set provider dialog to open', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props} />);
-        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ providerDescs: { 'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).' }, providerDialogOpen: true })).toBe(true);
+        expect(stateSpy.calledWith({
+            providerDescs: {
+                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+            },
+            providerDialogOpen: true,
+        })).toBe(true);
         stateSpy.restore();
     });
 
     it('showDeleteDialog should set deleteDialogOpen to true', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props} />);
-        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -129,7 +136,7 @@ describe('DataPackTableItem component', () => {
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackTableItem {...props} />);
-        const stateSpy = new sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -139,8 +146,8 @@ describe('DataPackTableItem component', () => {
 
     it('handleDelete should call hideDelete and onRunDelete', () => {
         const props = getProps();
-        props.onRunDelete = new sinon.spy();
-        const hideSpy = new sinon.spy(DataPackTableItem.prototype, 'hideDeleteDialog');
+        props.onRunDelete = sinon.spy();
+        const hideSpy = sinon.spy(DataPackTableItem.prototype, 'hideDeleteDialog');
         const wrapper = shallow(<DataPackTableItem {...props} />);
         expect(props.onRunDelete.called).toBe(false);
         expect(hideSpy.called).toBe(false);
@@ -150,6 +157,7 @@ describe('DataPackTableItem component', () => {
         expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 });
+
 const providers = [
     {
         id: 2,
@@ -215,42 +223,12 @@ const run = {
         event: 'Test1 event',
         description: 'Test1 description',
         url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-        extent: {
-            type: 'Feature',
-            properties: {
-                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                name: 'Test1',
-            },
-            geometry: {
-                type: 'Polygon',
-                coordinates: [
-                    [
-                        [
-                            -0.077419,
-                            50.778155,
-                        ],
-                        [
-                            -0.077419,
-                            50.818517,
-                        ],
-                        [
-                            -0.037251,
-                            50.818517,
-                        ],
-                        [
-                            -0.037251,
-                            50.778155,
-                        ],
-                        [
-                            -0.077419,
-                            50.778155,
-                        ],
-                    ],
-                ],
-            },
+        extent: {},
+        permissions: {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
         },
-        selection: '',
-        published: false,
     },
     provider_tasks: providerTasks,
     zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',

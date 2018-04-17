@@ -78,6 +78,7 @@
       "**/*.{js,jsx}",
       "!**/coverage/**",
       "!**/setupFile.js",
+      "!**/initialState.js",
       "!**/webpack.config.js",
       "!**/build/**",
       "!**/staticfiles/**",

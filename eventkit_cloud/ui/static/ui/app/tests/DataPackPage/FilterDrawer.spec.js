@@ -41,6 +41,11 @@ describe('FilterDrawer component', () => {
             onFilterClear: () => {},
             open: true,
             providers,
+            groups: [
+                { id: 'group1', name: 'group1', members: ['user1', 'user2', 'user3'] },
+                { id: 'group2', name: 'group2', members: ['user1', 'user2'] },
+                { id: 'group3', name: 'group3', members: ['user1'] },
+            ],
         }
     );
 
@@ -77,7 +82,11 @@ describe('FilterDrawer component', () => {
         const props = getProps();
         props.onFilterClear = sinon.spy();
         const initialState = {
-            published: 'True',
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
             minDate: new Date(),
             maxDate: new Date(),
             status: {
@@ -91,7 +100,11 @@ describe('FilterDrawer component', () => {
         wrapper.setState(initialState);
         const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
         const expectedState = {
-            published: null,
+            permissions: {
+                value: '',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -112,10 +125,15 @@ describe('FilterDrawer component', () => {
     it('handlePermissionsChange should set state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
-        wrapper.instance().handlePermissionsChange(null, 'value');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const permissions = {
+            value: 'SHARED',
+            groups: { group_one: 'READ' },
+            members: {},
+        };
+        wrapper.instance().handlePermissionsChange(permissions);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ published: 'value' }));
+        expect(stateStub.calledWith({ permissions }));
         stateStub.restore();
     });
 

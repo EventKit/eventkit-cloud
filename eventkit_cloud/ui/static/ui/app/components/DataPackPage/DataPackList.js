@@ -3,6 +3,7 @@ import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'mate
 import { GridList } from 'material-ui/GridList';
 import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import { userIsDataPackAdmin } from '../../utils/generic';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from './LoadButtons';
@@ -20,7 +21,7 @@ export class DataPackList extends Component {
     // If it is a 'reversed' order the arrow should be up, otherwise it should be down
     getIcon(order) {
         const style = { verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' };
-        const icon = this.props.order == order ?
+        const icon = this.props.order === order ?
             <NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={style} />
             :
             <NavigationArrowDropDown className="qa-DataPackList-NavigationArrowDropDown" style={style} />;
@@ -44,6 +45,7 @@ export class DataPackList extends Component {
         }
         this.props.onSort(newOrder);
     }
+
     render() {
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
@@ -106,13 +108,15 @@ export class DataPackList extends Component {
             },
         };
 
-        const load = (<LoadButtons
-            range={this.props.range}
-            handleLoadLess={this.props.handleLoadLess}
-            handleLoadMore={this.props.handleLoadMore}
-            loadLessDisabled={this.props.loadLessDisabled}
-            loadMoreDisabled={this.props.loadMoreDisabled}
-        />);
+        const load = (
+            <LoadButtons
+                range={this.props.range}
+                handleLoadLess={this.props.handleLoadLess}
+                handleLoadMore={this.props.handleLoadMore}
+                loadLessDisabled={this.props.loadLessDisabled}
+                loadMoreDisabled={this.props.loadMoreDisabled}
+            />
+        );
 
         if (window.innerWidth < 768) {
             return (
@@ -125,27 +129,37 @@ export class DataPackList extends Component {
                             padding={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
-                            {this.props.runs.map(run => (
-                                <DataPackListItem
-                                    run={run}
-                                    user={this.props.user}
-                                    key={run.uid}
-                                    onRunDelete={this.props.onRunDelete}
-                                    providers={this.props.providers}
-                                />
-                            ))}
+                            {this.props.runs.map((run) => {
+                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                                return (
+                                    <DataPackListItem
+                                        run={run}
+                                        user={this.props.user}
+                                        key={run.uid}
+                                        onRunDelete={this.props.onRunDelete}
+                                        providers={this.props.providers}
+                                        openShare={this.props.openShare}
+                                        adminPermission={admin}
+                                    />
+                                );
+                            })}
                         </GridList>
                     </div>
                     {load}
                 </CustomScrollbar>
             );
         }
-
+        
         return (
             <div>
                 <div style={styles.root}>
                     <Table className="qa-DataPackList-Table-list">
-                        <TableHeader className="qa-DataPackList-TableHeader" displaySelectAll={false} adjustForCheckbox={false} style={{ height: '50px' }}>
+                        <TableHeader
+                            className="qa-DataPackList-TableHeader"
+                            displaySelectAll={false}
+                            adjustForCheckbox={false}
+                            style={{ height: '50px' }}
+                        >
                             <TableRow className="qa-DataPackList-TableRow" style={styles.tableRow}>
                                 <TableHeaderColumn
                                     className="qa-DataPackList-TableHeaderColumn-name"
@@ -199,17 +213,20 @@ export class DataPackList extends Component {
                     <CustomScrollbar style={{ height: window.innerHeight - 343 }}>
                         <Table className="qa-DataPackList-Table-item">
                             <TableBody displayRowCheckbox={false}>
-
-                                {this.props.runs.map(run => (
-                                    <DataPackTableItem
-                                        run={run}
-                                        user={this.props.user}
-                                        key={run.uid}
-                                        onRunDelete={this.props.onRunDelete}
-                                        providers={this.props.providers}
-                                    />
-                                ))}
-
+                                {this.props.runs.map((run) => {
+                                    const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                                    return (
+                                        <DataPackTableItem
+                                            run={run}
+                                            user={this.props.user}
+                                            key={run.uid}
+                                            onRunDelete={this.props.onRunDelete}
+                                            providers={this.props.providers}
+                                            openShare={this.props.openShare}
+                                            adminPermissions={admin}
+                                        />
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </CustomScrollbar>
@@ -233,6 +250,13 @@ DataPackList.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    openShare: PropTypes.func.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 export default DataPackList;
