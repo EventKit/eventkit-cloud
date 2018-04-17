@@ -224,7 +224,11 @@ export class StatusDownload extends React.Component {
 
         if (!details.length && !this.state.isLoading) {
             details.push((
-                <div key="no-datapack" style={{ textAlign: 'center', padding: '30px' }}>
+                <div
+                    key="no-datapack"
+                    style={{ textAlign: 'center', padding: '30px' }}
+                    className="qa-StatusDownload-NoDatapack"
+                >
                     <ErrorOutline style={styles.notFoundIcon} />
                     <span style={styles.notFoundText}>No DataPack Found</span>
                 </div>
