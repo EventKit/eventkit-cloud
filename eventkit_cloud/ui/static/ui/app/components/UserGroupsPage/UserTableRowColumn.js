@@ -106,6 +106,12 @@ export class UserTableRowColumn extends Component {
             ...rest
         } = this.props;
 
+        let name = user.user.username;
+        if (user.user.first_name && user.user.last_name) {
+            name = `${user.user.first_name} ${user.user.last_name}`;
+        }
+        const email = user.user.email || 'No email provided';
+
         return (
             <TableRowColumn
                 {...rest}
@@ -115,10 +121,10 @@ export class UserTableRowColumn extends Component {
                 <div style={{ display: 'flex' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
                         <div className="qa-UserTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
-                            <strong>{`${user.user.first_name} ${user.user.last_name}`}</strong>
+                            <strong>{name}</strong>
                         </div>
                         <div className="qa-UserTableRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
-                            {user.user.email}
+                            {email}
                         </div>
                     </div>
                     {showAdminLabel ?

@@ -55,13 +55,14 @@ export class DataCartGeneralTable extends Component {
 
         const styles = {
             tableRowInfoIcon: {
-                marginLeft: '10px',
+                marginLeft: '5px',
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
                 display: 'inlineBlock',
                 fill: '#4598bf',
                 verticalAlign: 'middle',
+                marginRight: '10px',
             },
         };
 
@@ -80,7 +81,7 @@ export class DataCartGeneralTable extends Component {
                 <DataPackTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
-                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
+                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
                     data={
                         providerTasks.map(providerTask => (
                             <div key={providerTask.name} style={{ margin: '5px 0px' }}>
@@ -125,7 +126,7 @@ export class DataCartGeneralTable extends Component {
                                 >
                                     <div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
                                         EventKit provides all geospatial data in the GeoPackage (.gpkg) format.
-                                            Additional format support will be added in subsequent versions.
+                                        Additional format support will be added in subsequent versions.
                                     </div>
                                 </BaseDialog>
                             </div>

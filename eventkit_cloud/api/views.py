@@ -1,7 +1,7 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta, date
 from dateutil import parser
 import logging
 import json
@@ -932,9 +932,19 @@ class UserDataViewSet(viewsets.GenericViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request,  *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = UserDataSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        full_queryset = self.get_queryset()
+        queryset = full_queryset.exclude(id=request.user.id)
+        total = len(queryset)
+        delta = date.today() - timedelta(days=14)
+        new = len(queryset.filter(date_joined__gte=delta))
+        not_grouped = 0
+        for user in queryset:
+            if not len(GroupPermission.objects.filter(user=user)):
+                not_grouped += 1
+        headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
+        filtered_queryset = self.filter_queryset(full_queryset)
+        serializer = UserDataSerializer(filtered_queryset, many=True)
+        return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 
     @list_route(methods=['post','get'])
     def members(self, request, *args, **kwargs):
@@ -954,7 +964,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         for group in groups:
             serializer = GroupSerializer(group)
             for username in serializer.get_members(group):
-                if  not username in targetnames: targetnames.append(username)
+                if not username in targetnames: targetnames.append(username)
 
 
         users = User.objects.filter(username__in=targetnames).all()

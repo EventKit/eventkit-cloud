@@ -117,22 +117,29 @@ describe('usersReducer', () => {
 
     it('FETCHED_USER should return fetched true, the users, and user total', () => {
         const users = [{ name: 'one' }, { name: 'two' }];
-        const total = 2;
         expect(usersReducer(
             {
                 ...usersState,
                 fetching: true,
+                total: 0,
+                new: 0,
+                ungrouped: 0,
             },
             {
                 type: types.FETCHED_USERS,
                 users,
-                total,
+                total: 3,
+                new: 2,
+                ungrouped: 1,
+
             },
         )).toEqual({
             ...usersState,
             fetched: true,
             users,
-            total,
+            total: 3,
+            new: 2,
+            ungrouped: 1,
         });
     });
 

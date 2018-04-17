@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
 from django.utils.translation import ugettext as _
+from django.conf import settings
 from enum import Enum
 import json
 import logging
@@ -108,6 +110,7 @@ class ProviderCheck(object):
         self.slug = slug
         self.result = CheckResults.SUCCESS
         self.timeout = 10
+        self.verify = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
@@ -132,7 +135,12 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout)
+            logger.debug("Checking url %s&%s",
+                         self.service_url,
+                         '&'.join(['{}={}'.format(k, v) for k, v in self.query.iteritems()]))
+
+            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout,
+                                         verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
@@ -203,38 +211,39 @@ class OverpassProviderCheck(ProviderCheck):
         try:
             if not self.service_url:
                 self.result = CheckResults.NO_URL
-                return None
+                return
 
-            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout)
+            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout,
+                                          verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
             if response.status_code in [401, 403]:
                 self.result = CheckResults.UNAUTHORIZED
-                return None
+                return
 
             if response.status_code == 404:
                 self.result = CheckResults.NOT_FOUND
-                return None
+                return
 
             if not response.ok:
                 self.result = CheckResults.UNAVAILABLE
-                return None
+                return
 
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
-            return None
+            return
 
         except requests.exceptions.SSLError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
             self.result = CheckResults.SSL_EXCEPTION
-            return None
+            return
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
             self.result = CheckResults.CONNECTION
-            return None
+            return
 
 
 class OWSProviderCheck(ProviderCheck):
@@ -253,8 +262,8 @@ class OWSProviderCheck(ProviderCheck):
         self.query = {
             "VERSION": "1.0.0",
             "REQUEST": "GetCapabilities"
-            # Amended with "SERVICE" parameter by subclasses
         }
+        # Amended with "SERVICE" parameter by subclasses
 
         # If service or version parameters are left in query string, it can lead to a protocol error and false negative
         self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url)
@@ -344,13 +353,13 @@ class WCSProviderCheck(OWSProviderCheck):
         # Get names of available coverages
         coverage_offers = content_meta.findall("coverageofferingbrief")
 
-        cover_names = map(lambda c: (c, c.find("name")), coverage_offers)
-        if len(cover_names) == 0:  # No coverages are offered
+        cover_names = [(c, c.find("name")) for c in coverage_offers]
+        if not cover_names:  # No coverages are offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
         covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
-        if len(covers) == 0:  # Requested coverage is not offered
+        if not covers:  # Requested coverage is not offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
@@ -365,7 +374,7 @@ class WCSProviderCheck(OWSProviderCheck):
         pos = envelope.getchildren()
         # Make sure there aren't any surprises
         coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-        if len(pos) == 0 or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
+        if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
             return None
 
         x1, y1 = map(float, pos[0].text.split(' '))
@@ -399,11 +408,11 @@ class WFSProviderCheck(OWSProviderCheck):
         feature_types = feature_type_list.findall("featuretype")
 
         # Get layer names
-        feature_names = map(lambda f: (f, f.find("name")), feature_types)
+        feature_names = [(ft, ft.find("name")) for ft in feature_types]
         logger.debug("WFS layers offered: {}".format([n.text for f, n in feature_names if n]))
         features = [f for f, n in feature_names if n is not None and self.layer == n.text]
 
-        if len(features) == 0:
+        if not features:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
@@ -451,10 +460,10 @@ class WMSProviderCheck(OWSProviderCheck):
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = map(lambda l: (l, l.find("name")), layers)
-        logger.debug("WMS layers offered: {}".format([n.text for l,n in layer_names if n]))
+        layer_names = [(l, l.find("name")) for l in layers]
+        logger.debug("WMS layers offered: {}".format([n.text for l, n in layer_names if n]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
-        if len(layer) == 0:
+        if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
             self.result = CheckResults.SUCCESS
             return None
@@ -495,15 +504,15 @@ class WMTSProviderCheck(OWSProviderCheck):
         # Flatten nested layers to single list
         layers = contents.findall("layer")
         sublayers = layers
-        while len(sublayers) > 0:
+        while sublayers:
             sublayers = [l for layer in sublayers for l in layer.findall("layer")]
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = map(lambda l: (l, l.find("title")), layers)
-        logger.debug("WMTS layers offered: {}".format([n.text for l,n in layer_names if n is not None]))
+        layer_names = [(l, l.find("title")) for l in layers]
+        logger.debug("WMTS layers offered: {}".format([n.text for l, n in layer_names if n is not None]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
-        if len(layer) == 0:
+        if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
             self.result = CheckResults.SUCCESS
             return None
@@ -524,7 +533,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         bbox = map(float, southwest + northeast)
         return bbox
 
-      
+
 class TMSProviderCheck(ProviderCheck):
 
     def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
