@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^create/?$', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="create"),
     url(r'^account', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="account"),
     url(r'^about', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="about"),
+    url(r'^groups', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="groups"),
     url(r'^logout', never_cache(login_required(logout)), name="logout"),
     url(r'^estimator/?$', never_cache(login_required(data_estimator))),
     url(r'^geocode/?$', never_cache(login_required(geocode))),

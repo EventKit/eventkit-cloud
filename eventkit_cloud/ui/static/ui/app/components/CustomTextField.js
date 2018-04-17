@@ -20,6 +20,7 @@ export class CustomTextField extends Component {
                 right: '16px',
                 transform: 'translateY(-50%)',
                 fontWeight: 'bold',
+                ...this.props.charsRemainingStyle,
             },
         };
     }
@@ -50,6 +51,7 @@ export class CustomTextField extends Component {
 
     render() {
         const {
+            charsRemainingStyle,
             showRemaining,
             onChange,
             onFocus,
@@ -96,6 +98,7 @@ export class CustomTextField extends Component {
 CustomTextField.propTypes = {
     showRemaining: PropTypes.bool,
     maxLength: PropTypes.number,
+    charsRemainingStyle: PropTypes.object,
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
@@ -104,6 +107,7 @@ CustomTextField.propTypes = {
 CustomTextField.defaultProps = {
     showRemaining: true,
     maxLength: 100,
+    charsRemainingStyle: {},
     onChange: undefined,
     onFocus: undefined,
     onBlur: undefined,
