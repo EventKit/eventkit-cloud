@@ -38,7 +38,7 @@ from serializers import (
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, NotificationFilter, UserJobActivityFilter
+from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -1280,7 +1280,6 @@ class NotificationViewSet(viewsets.GenericViewSet):
     """
 
     serializer_class = NotificationSerializer
-#    filter_class = NotificationFilter
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
 
     def serialize_records(self, notifications, request):
@@ -1315,15 +1314,31 @@ class NotificationViewSet(viewsets.GenericViewSet):
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
-    @transaction.atomic
-    def partial_update(self, request, *args, **kwargs):
+    @list_route(methods=['get'])
+    def markallasread(self, request, *args, **kwargs):
+        qs = Notification.objects.filter(recipient_id=self.request.user.id)
+        qs.mark_all_as_read()
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
+
+    @list_route(methods=['post'])
+    def mark(self, request, *args, **kwargs):
         """
-        [
-         {"id": 3, "action": "DELETE" },
-         {"id": 17, "action": "READ" },
-         ...
-        ]
-    """
+         Change the status of one or more notifications.
+
+
+         Args:
+             A list containing one or more records like this:
+            [
+             {"id": 3, "action": "DELETE" },
+             {"id": 17, "action": "READ" },
+             {"id" : 19, "action" "UNREAD" },
+             ...
+            ]
+
+         Returns:
+            { "success" : True} or error
+        """
+
         logger.info(request.data)
         for row in request.data:
             qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
@@ -1332,6 +1347,8 @@ class NotificationViewSet(viewsets.GenericViewSet):
                 qs.mark_all_as_read()
             if row['action'] == 'DELETE':
                 qs.mark_all_as_deleted()
+            if row['action'] == 'UNREAD':
+                qs.mark_all_as_unread()
 
         return Response( { "success" : True},  status=status.HTTP_200_OK)
 

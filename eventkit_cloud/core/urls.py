@@ -25,6 +25,7 @@ urlpatterns += [
     url(r'^api/docs$', schema_view),
     url(r'^api/', include(router.urls, namespace='api')),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
-    url('^inbox/notifications/', include(notifications.urls, namespace='notifications')),
+#    url('^inbox/notifications/', include(notifications.urls, namespace='notifications')),
+    url('^api/', include(notifications.urls, namespace='api')),
 ]
 

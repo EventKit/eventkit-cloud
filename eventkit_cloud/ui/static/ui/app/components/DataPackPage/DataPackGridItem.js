@@ -7,8 +7,8 @@ import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
+import SocialPublic from 'material-ui/svg-icons/social/public';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
@@ -248,14 +248,14 @@ export class DataPackGridItem extends Component {
             },
             publishedIcon: {
                 float: 'right',
-                color: '#bcdfbb',
+                color: 'grey',
                 fontSize: '20px',
                 marginRight: '5px',
             },
             ownerLabel: {
                 float: 'right',
                 color: 'grey',
-                padding: '0px, 10px',
+                paddingTop: '5px',
                 margin: '0px',
                 fontSize: cardTextFontSize,
             },
@@ -429,10 +429,10 @@ export class DataPackGridItem extends Component {
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>
                         }
                         {this.props.run.job.published ?
-                            <SocialGroup style={styles.publishedIcon} />
+                            <SocialPublic style={styles.publishedIcon} />
                             :
 
-                            <SocialPerson style={styles.unpublishedIcon} />
+                            <Lock style={styles.unpublishedIcon} />
                         }
                     </span>
                 </CardActions>

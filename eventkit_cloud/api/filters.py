@@ -9,18 +9,18 @@ from django.db.models import Q
 from eventkit_cloud.jobs.models import Job, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
 
-from django.contrib.auth.models import User,Group
+from django.contrib.auth.models import User, Group
 from ..core.models import GroupPermission
-from notifications.models import Notification
 
-from rest_framework.filters import BaseFilterBackend
 
 logger = logging.getLogger(__name__)
+
 
 class ListFilter(django_filters.Filter):
     def filter(self, qs, value):
         value_list = value.split(u',')
         return super(ListFilter, self).filter(qs, django_filters.fields.Lookup(value_list, 'in'))
+
 
 class JobFilter(django_filters.FilterSet):
     """Filter export results according to a range of critera."""
@@ -120,15 +120,6 @@ class GroupFilter(django_filters.FilterSet):
     class Meta:
             model = Group
             fields = ('id', 'name')
-
-
-class NotificationFilter(django_filters.FilterSet):
-
-    unread = django_filters.BooleanFilter(name="unread")
-
-    class Meta:
-            model = Notification
-            fields = ( 'unread',)
 
 
 class UserJobActivityFilter(django_filters.FilterSet):
