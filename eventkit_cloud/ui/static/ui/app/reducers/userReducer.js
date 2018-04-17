@@ -40,6 +40,8 @@ export const usersState = {
     fetched: false,
     error: null,
     total: 0,
+    new: 0,
+    ungrouped: 0,
 };
 
 export function usersReducer(state = usersState, action) {
@@ -57,7 +59,9 @@ export function usersReducer(state = usersState, action) {
             fetching: false,
             fetched: true,
             users: action.users,
-            total: state.total || action.users.length,
+            total: action.total,
+            new: action.new,
+            ungrouped: action.ungrouped,
         };
     case types.FETCH_USERS_ERROR:
         return {
@@ -66,6 +70,8 @@ export function usersReducer(state = usersState, action) {
             fetched: false,
             error: action.error,
             total: 0,
+            new: 0,
+            ungrouped: 0,
         };
     default:
         return state;

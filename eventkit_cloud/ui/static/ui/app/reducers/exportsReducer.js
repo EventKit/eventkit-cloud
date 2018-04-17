@@ -67,7 +67,6 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
             exportName: '',
             datapackDescription: '',
             projectName: '',
-            makePublic: false,
             providers: [],
             areaStr: '',
             layers: '',

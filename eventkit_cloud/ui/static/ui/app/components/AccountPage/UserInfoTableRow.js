@@ -1,35 +1,45 @@
-import React, {Component} from 'react';
+import React, { Component, PropTypes } from 'react';
 
 export class UserInfoTableRow extends Component {
-
-    constructor(props) {
-        super(props);
-    };
-
     render() {
-        const styles ={
+        const styles = {
             tr: {
                 lineHeight: '35px',
             },
-            td: {padding: '0px 15px', backgroundColor: 'whitesmoke'}
-        }
+            title: {
+                padding: '0px 15px',
+                backgroundColor: 'whitesmoke',
+                whiteSpace: 'nowrap',
+            },
+            data: {
+                padding: '0px 15px',
+                backgroundColor: 'whitesmoke',
+                color: 'grey',
+                width: '99%',
+            },
+        };
 
-        if(!this.props.title || !this.props.data) {
-            return null
+        if (!this.props.title || !this.props.data) {
+            return null;
         }
 
         return (
-            <tr className={'qa-UserInfoTableRow-tr'} style={styles.tr}>
-                <td style={{...styles.td, whiteSpace: 'nowrap'}}><strong>{this.props.title}</strong></td>
-                <td style={{...styles.td, color: 'grey', width: '99%'}}>{this.props.data}</td>
+            <tr className="qa-UserInfoTableRow-tr" style={styles.tr}>
+                <td style={styles.title}><strong>{this.props.title}</strong></td>
+                <td style={styles.data}>{this.props.data}</td>
             </tr>
-        )
-    };
+        );
+    }
+}
+
+UserInfoTableRow.defaultProps = {
+    title: '',
+    data: '',
 };
 
-UserInfoTableRow.PropTypes = {
-    title: React.PropTypes.string,
-    data: React.PropTypes.string
+UserInfoTableRow.propTypes = {
+    title: PropTypes.string,
+    data: PropTypes.string,
 };
 
 export default UserInfoTableRow;

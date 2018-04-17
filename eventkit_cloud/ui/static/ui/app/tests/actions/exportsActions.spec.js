@@ -32,7 +32,6 @@ describe('export actions', () => {
         description: 'testJobDesc',
         event: 'testJobEvent',
         include_zipfile: false,
-        published: false,
         provider_tasks: {'provider': ['provider1'], 'formats': ['gpkg']},
         selection: {"type": "FeatureCollection",
                     "features": [{
@@ -66,7 +65,6 @@ describe('export actions', () => {
             exportName: 'exportName',
             datapackDescription: 'datapackDescription',
             projectName: 'projectName',
-            makePublic: true,
             providers: ['provider1'],
             areaStr: 'areaStr',
             layers: ['layer1'],
@@ -76,7 +74,6 @@ describe('export actions', () => {
                 exportName: 'exportName',
                 datapackDescription: 'datapackDescription',
                 projectName: 'projectName',
-                makePublic: true,
                 providers: ['provider1'],
                 areaStr: 'areaStr',
                 layers: ['layer1'],
