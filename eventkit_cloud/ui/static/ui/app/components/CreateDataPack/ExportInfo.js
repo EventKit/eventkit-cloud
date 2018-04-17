@@ -49,6 +49,7 @@ export class ExportInfo extends React.Component {
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
+        this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.setLicenseOpen = this.setLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
@@ -72,7 +73,9 @@ export class ExportInfo extends React.Component {
 
     componentDidMount() {
         // if the state does not have required data disable next
-        if (!this.hasRequiredFields(this.props.exportInfo)) {
+        if (!this.hasRequiredFields(this.props.exportInfo) ||
+            this.hasDisallowedSelection(this.props.exportInfo)) {
+
             this.props.setNextDisabled();
         }
 
@@ -122,7 +125,9 @@ export class ExportInfo extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         // if required fields are fulfilled enable next
-        if (this.hasRequiredFields(nextProps.exportInfo)) {
+        if (this.hasRequiredFields(nextProps.exportInfo) &&
+            !this.hasDisallowedSelection(nextProps.exportInfo)) {
+
             if (!nextProps.nextEnabled) {
                 this.props.setNextEnabled();
             }
@@ -283,6 +288,15 @@ export class ExportInfo extends React.Component {
             && exportInfo.datapackDescription
             && exportInfo.projectName
             && exportInfo.providers.length > 0;
+    }
+
+    hasDisallowedSelection(exportInfo) {
+        // if any unacceptable providers are selected return true, else return false
+        return exportInfo.providers.some((provider) => {
+            // short-circuiting means that this shouldn't be called until provider.availability
+            // is populated, but if it's not, return false
+            return provider.availability && provider.availability.status.toUpperCase() === 'FATAL';
+        });
     }
 
     initializeOpenLayers() {
