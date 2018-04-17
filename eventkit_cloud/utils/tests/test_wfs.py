@@ -29,9 +29,9 @@ class TestWFSToGPKG(TransactionTestCase):
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
         name = 'Great export'
-        service_url = 'http://my-service.org/some-server/wfs?foo=bar&SERVICE=thisWillBeStrippedOut'
-        expected_url = 'http://my-service.org/some-server/wfs?foo=bar&SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature' \
-                       '&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer)
+        service_url = 'http://user:pass@my-service.org/some-server/wfs?foo=bar&SERVICE=thisWillBeStrippedOut'
+        expected_url = 'http://user:pass@my-service.org/some-server/wfs?foo=bar&SERVICE=WFS&VERSION=1.0.0' \
+                       '&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer)
         cmd = Template("ogr2ogr -skipfailures -spat $minX $minY $maxX $maxY -f GPKG $gpkg WFS:'$url'")
         cmd = cmd.safe_substitute({'gpkg': gpkg, 'url': expected_url, 'minX': bbox[0], 'minY': bbox[1], 'maxX': bbox[2], 'maxY': bbox[3]})
         exists.return_value = True

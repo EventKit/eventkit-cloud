@@ -62,7 +62,8 @@ class WFSToGPKG(object):
         cred = get_cred(slug=self.name, url=url)
         if cred:
             user, pw = cred
-            url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
+            if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
+                url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(
