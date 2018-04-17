@@ -15,7 +15,7 @@ export function isBrowserValid() {
 
 export function userIsDataPackAdmin(user, permissions, groups) {
     const { username } = user;
-    if (permissions.members[username] === 'ADMIN') {
+    if (permissions.users[username] === 'ADMIN') {
         return true;
     }
     const groupPermissions = Object.keys(permissions.groups);

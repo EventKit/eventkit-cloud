@@ -184,7 +184,6 @@ export class DataPackPage extends React.Component {
             pageSize: this.state.pageSize,
             ordering: this.state.order,
             ownerFilter: this.state.ownerFilter,
-            published: this.state.published,
             status: this.state.status,
             minDate: this.state.minDate,
             maxDate: this.state.maxDate,

@@ -11,6 +11,8 @@ import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackWideItem from './DataPackWideItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
+import { userIsDataPackAdmin } from '../../utils/generic';
+import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -30,6 +32,9 @@ export class DashboardPage extends React.Component {
         this.handleNotificationsViewAll = this.handleNotificationsViewAll.bind(this);
         this.handleFeaturedViewAll = this.handleFeaturedViewAll.bind(this);
         this.handleMyDataPacksViewAll = this.handleMyDataPacksViewAll.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             loadingPage: true,
             loadingSections: {
@@ -38,6 +43,8 @@ export class DashboardPage extends React.Component {
                 featured: true,
                 recentlyViewed: true,
             },
+            shareOpen: false,
+            targetRun: null,
         };
         this.refreshInterval = 10000;
     }
@@ -84,6 +91,10 @@ export class DashboardPage extends React.Component {
                     loadingPage = true;
                     break;
                 }
+            }
+
+            if (nextProps.updatePermissions.updating) {
+                loadingPage = true;
             }
         }
 
@@ -200,6 +211,20 @@ export class DashboardPage extends React.Component {
 
     handleMyDataPacksViewAll() {
         browserHistory.push(`/exports?collection=myDataPacks`);
+    }
+
+    handleShareOpen(run) {
+        this.setState({ shareOpen: true, targetRun: run });
+    }
+
+    handleShareClose() {
+        this.setState({ shareOpen: false, targetRun: null });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
     }
 
     render() {
@@ -329,19 +354,24 @@ export class DashboardPage extends React.Component {
                                     </Paper>
                                 }
                             >
-                                {this.props.userActivity.viewedJobs.jobs.map((job, index) => (
-                                    <DataPackGridItem
-                                        className="qa-DashboardSection-RecentlyViewedGrid-Item"
-                                        run={job.last_export_run}
-                                        user={this.props.user}
-                                        key={`RecentlyViewedDataPack-${job.created_at}`}
-                                        onRunDelete={this.props.deleteRuns}
-                                        providers={this.props.providers}
-                                        gridName="RecentlyViewed"
-                                        index={index}
-                                        showFeaturedFlag={false}
-                                    />
-                                ))}
+                                {this.props.userActivity.viewedJobs.jobs.map((job, index) => {
+                                    const run = job.last_export_run;
+                                    return (
+                                        <DataPackGridItem
+                                            className="qa-DashboardSection-RecentlyViewedGrid-Item"
+                                            run={run}
+                                            user={this.props.user}
+                                            key={`RecentlyViewedDataPack-${job.created_at}`}
+                                            onRunDelete={this.props.deleteRuns}
+                                            providers={this.props.providers}
+                                            adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups)}
+                                            openShare={this.handleShareOpen}
+                                            gridName="RecentlyViewed"
+                                            index={index}
+                                            showFeaturedFlag={false}
+                                        />
+                                    )
+                                })}
                             </DashboardSection>
 
                             {/* Featured */}
@@ -402,6 +432,8 @@ export class DashboardPage extends React.Component {
                                         key={`MyDataPacksDataPack-${run.created_at}`}
                                         onRunDelete={this.props.deleteRuns}
                                         providers={this.props.providers}
+                                        adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups)}
+                                        openShare={this.handleShareOpen}
                                         gridName="MyDataPacks"
                                         index={index}
                                         showFeaturedFlag={false}
@@ -448,6 +480,11 @@ DashboardPage.propTypes = {
     getProviders: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
+    updatePermissions: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.array,
+    }).isRequired,
 };
 
 function mapStateToProps(state) {
@@ -459,6 +496,7 @@ function mapStateToProps(state) {
         runsDeletion: state.runsDeletion,
         runsList: state.runsList,
         featuredRunsList: state.featuredRunsList,
+        updatePermissions: state.updatePermission,
     };
 }
 
@@ -470,6 +508,7 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => dispatch(getProviders()),
         deleteRuns: (uid) => dispatch(deleteRuns(uid)),
         getNotifications: (args) => dispatch(getNotifications(args)),
+        updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
     };
 }
 
