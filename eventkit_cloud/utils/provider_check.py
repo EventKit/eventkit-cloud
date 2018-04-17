@@ -81,7 +81,7 @@ class CheckResults(Enum):
                            "availability cannot be checked")},
 
     TOO_LARGE = {"status": "FATAL",
-                 "type": "TOO_LARGE",
+                 "type": "SELECTION_TOO_LARGE",
                  "message": _("The selected AOI is larger than the maximum allowed size for this data provider.")},
 
     SUCCESS = {"status": "SUCCESS",
