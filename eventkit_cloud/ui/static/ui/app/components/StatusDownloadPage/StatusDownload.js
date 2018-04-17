@@ -5,6 +5,7 @@ import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
+import ErrorOutline from 'material-ui/svg-icons/alert/error-outline';
 import DataCartDetails from './DataCartDetails';
 import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
@@ -55,26 +56,38 @@ export class StatusDownload extends React.Component {
             this.props.getDatacartDetails(this.props.params.jobuid);
         }
         if (nextProps.datacartDetails.fetched && !this.props.datacartDetails.fetched) {
-            const datacartDetails = nextProps.datacartDetails.data;
-            let clearTimer = 0;
-            if (nextProps.datacartDetails.data[0].zipfile_url == null) {
-                clearTimer += 1;
+            if (this.state.isLoading) {
+                this.setState({ isLoading: false });
             }
 
-            // If the status of the job is completed, check the provider tasks to ensure they are all completed as well
-            // If a Provider Task does not have a successful outcome, add to a counter.  If the counter is greater than 1, that
+            // If no data returned from API we stop here
+            if (!nextProps.datacartDetails.data.length) {
+                return;
+            }
+
+            const datacart = nextProps.datacartDetails.data;
+            let clearTimer = true;
+            if (nextProps.datacartDetails.data[0].zipfile_url == null) {
+                clearTimer = false;
+            }
+
+            // If the status of the job is completed,
+            // check the provider tasks to ensure they are all completed as well
+            // If a Provider Task does not have a successful outcome, add to a counter.
+            // If the counter is greater than 1, that
             // means that at least one task is not completed, so do not stop the timer
-            if (datacartDetails[0].status === 'COMPLETED' || datacartDetails[0].status === 'INCOMPLETE') {
-                const providerTasks = datacartDetails[0].provider_tasks;
+            if (clearTimer && (datacart[0].status === 'COMPLETED' || datacart[0].status === 'INCOMPLETE')) {
+                const providerTasks = datacart[0].provider_tasks;
                 providerTasks.forEach((tasks) => {
-                    tasks.tasks.forEach((task) => {
+                    clearTimer = tasks.tasks.every((task) => {
                         if ((task.status !== 'SUCCESS') && (task.status !== 'CANCELED') && (task.status !== 'FAILED')) {
-                            clearTimer += 1;
+                            return false;
                         }
+                        return true;
                     });
                 });
 
-                if (clearTimer === 0) {
+                if (clearTimer) {
                     window.clearInterval(this.timer);
                     this.timer = null;
                     window.clearTimeout(this.timeout);
@@ -82,10 +95,6 @@ export class StatusDownload extends React.Component {
                         this.props.getDatacartDetails(this.props.params.jobuid);
                     }, 270000);
                 }
-            }
-
-            if (this.state.isLoading) {
-                this.setState({ isLoading: false });
             }
         }
     }
@@ -144,7 +153,6 @@ export class StatusDownload extends React.Component {
 
     render() {
         const marginPadding = this.getMarginPadding();
-
         const styles = {
             root: {
                 height: window.innerHeight - 95,
@@ -177,9 +185,55 @@ export class StatusDownload extends React.Component {
                 display: 'inline-flex',
                 backgroundColor: 'rgba(0,0,0,0.3)',
             },
+            notFoundIcon: {
+                color: '#ce4427',
+                height: '22px',
+                width: '22px',
+                verticalAlign: 'bottom',
+            },
+            notFoundText: {
+                fontSize: '16px',
+                color: '#ce4427',
+                fontWeight: 800,
+                marginLeft: '5px',
+            },
         };
 
         const errorMessage = this.getErrorMessage();
+
+        const details = this.props.datacartDetails.data.map(cartDetails => (
+            <DataCartDetails
+                key={cartDetails.uid}
+                cartDetails={cartDetails}
+                onRunDelete={this.props.deleteRun}
+                onUpdateExpiration={this.props.updateExpirationDate}
+                onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
+                updatingExpiration={this.props.expirationState.updating}
+                updatingPermission={this.props.permissionState.updating}
+                permissionState={this.props.permissionState}
+                onRunRerun={this.props.rerunExport}
+                onClone={this.props.cloneExport}
+                onProviderCancel={this.props.cancelProviderTask}
+                providers={this.props.providers}
+                maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
+                user={this.props.user}
+                members={this.props.users.users}
+                groups={this.props.groups}
+            />
+        ));
+
+        if (!details.length && !this.state.isLoading) {
+            details.push((
+                <div
+                    key="no-datapack"
+                    style={{ textAlign: 'center', padding: '30px' }}
+                    className="qa-StatusDownload-NoDatapack"
+                >
+                    <ErrorOutline style={styles.notFoundIcon} />
+                    <span style={styles.notFoundText}>No DataPack Found</span>
+                </div>
+            ));
+        }
 
         return (
             <div className="qa-StatusDownload-div-root" style={styles.root}>
@@ -208,26 +262,7 @@ export class StatusDownload extends React.Component {
                                     :
                                     null
                                 }
-                                {this.props.datacartDetails.data.map(cartDetails => (
-                                    <DataCartDetails
-                                        key={cartDetails.uid}
-                                        cartDetails={cartDetails}
-                                        onRunDelete={this.props.deleteRun}
-                                        onUpdateExpiration={this.props.updateExpirationDate}
-                                        onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
-                                        updatingExpiration={this.props.expirationState.updating}
-                                        updatingPermission={this.props.permissionState.updating}
-                                        permissionState={this.props.permissionState}
-                                        onRunRerun={this.props.rerunExport}
-                                        onClone={this.props.cloneExport}
-                                        onProviderCancel={this.props.cancelProviderTask}
-                                        providers={this.props.providers}
-                                        maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
-                                        user={this.props.user}
-                                        members={this.props.users.users}
-                                        groups={this.props.groups}
-                                    />
-                                ))}
+                                {details}
                                 <BaseDialog
                                     className="qa-StatusDownload-BaseDialog-error"
                                     show={!!this.state.error}
