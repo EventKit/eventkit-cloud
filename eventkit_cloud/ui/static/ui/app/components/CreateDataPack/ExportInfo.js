@@ -204,7 +204,8 @@ export class ExportInfo extends React.Component {
         }).catch((error) => {
             console.log(error);
             provider.availability = {
-                status: "WARN_CHECK_FAILURE",
+                status: "WARN",
+                type: "CHECK_FAILURE",
                 message: "An error occurred while checking this provider's availability."
             };
             provider.availability.slug = provider.slug;
