@@ -83,6 +83,11 @@ export class ProviderStatusIcon extends Component {
                 title = "Checking Availability"
                 messagePrefix = "";
                 otherProps = {thickness: 2};
+            case 'SELECTION':
+                style.icon['color'] = 'rgba(192, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = "AOI Selection Too Large";
+                messagePrefix = "Cannot select: ";
             default:
                 break;
         }

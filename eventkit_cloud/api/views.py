@@ -544,7 +544,8 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
                 url = settings.OVERPASS_API_URL
 
             checker_type = get_provider_checker(provider_type)
-            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
+            checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug,
+                                   max_area=provider.max_selection)
             response = checker.check()
 
             logger.info("Status of provider '{}': {}".format(str(provider.name), response))

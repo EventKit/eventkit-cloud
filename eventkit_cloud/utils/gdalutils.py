@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from osgeo import gdal, ogr
+import json
 import logging
+import math
 import os
 import subprocess
 from string import Template
@@ -100,10 +102,36 @@ def is_raster(ds_path):
     return raster
 
 
+def get_area(geojson):
+    """
+    Given a GeoJSON string or object, return an approximation of its geodesic area in km².
+    The geometry must contain a single polygon with a single ring, no holes.
+    Based on Chamberlain and Duquette's algorithm: https://trs.jpl.nasa.gov/bitstream/handle/2014/41271/07-0286.pdf
+    :param geojson: GeoJSON selection area
+    :return: area of geojson ring in square kilometers
+    """
+    earth_r = 6371  # km
+    rad = lambda d: (math.pi*d)/180
+
+    if isinstance(geojson, str):
+        geojson = json.loads(geojson)
+
+    ring = geojson['coordinates'][0]
+    if len(ring) < 4:
+        return 0
+
+    ring.append(ring[-2])  # convenient for circular indexing
+    a = 0
+    for i in range(len(ring) - 2):
+        a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
+    result = abs(a * (earth_r**2) / 2)
+    return result
+
+
 def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
-    :param boundary: A geojson file or bbox to serve as a cutline
+    :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
     :param in_dataset: A raster or vector file to be clipped
     :param out_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
@@ -159,7 +187,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
                                             'in_ds': in_dataset,
                                             'out_ds': out_dataset})
 
-    logger.debug(cmd)
+    logger.debug("GDAL clip cmd: %s", cmd)
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",
@@ -173,6 +201,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 def convert(dataset=None, fmt=None, task_uid=None):
+    """
+    Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
+    If the dataset is already in the output format, returns the unaltered original.
+    :param dataset: Raster or vector file to be converted
+    :param fmt: Short format (e.g. gpkg, gtiff) to convert into
+    :param task_uid: A task uid to update
+    :return: Converted dataset, same filename as input
+    """
 
     if not dataset:
         raise Exception("Could not open input file: {0}".format(dataset))
@@ -199,7 +235,7 @@ def convert(dataset=None, fmt=None, task_uid=None):
                                         'in_ds': in_ds,
                                         'out_ds': dataset})
 
-    logger.debug(cmd)
+    logger.debug("GDAL convert cmd: %s", cmd)
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",
