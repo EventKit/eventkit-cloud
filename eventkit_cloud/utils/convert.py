@@ -1,28 +1,26 @@
 from django.conf import settings
-import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
+from geocode_auth import getAuthHeaders, authenticate
+import logging
 import requests
 import json
 
-
 logger = logging.getLogger(__name__)
-
-
 
 
 class Convert(object):
 
 
     def __init__(self):
-
         self.converter = self.get_converter()
+    
 
     @property
     def map(self):
         return self
 
     def get_converter(self):
-        return self;
+        return self
 
     def add_bbox(self, data):
         logger.info("add_bbox")
@@ -34,10 +32,23 @@ class Convert(object):
         return self.converter.get_data(query)
     
     def get(self, query):
+        result = self.get_data(query)
+        
+        if('error' in result and result['error'] == 'jwt expired'):
+            authenticate()
+            result = get_data(query)
+        return result
+    
+    def get_data(self, query):
         url = getattr(settings, 'CONVERT_API_URL')
         args = { "from":"mgrs", "to":"decdeg","q":str(query)}
-        response = requests.get(url, params=args)
-        return response.json()
+        try: 
+            response = requests.get(url, params=args, headers=getAuthHeaders())
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error(e)
+            return
+        
 
 
 def is_valid_bbox(bbox):

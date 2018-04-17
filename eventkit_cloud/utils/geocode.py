@@ -1,6 +1,7 @@
 from django.conf import settings
 import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
+from geocode_auth import getAuthHeaders, authenticate
 import requests
 
 
@@ -73,6 +74,9 @@ class GeocodeAdapter:
         """
         pass
 
+    def get_response(self, payload):
+        return requests.get(self.url, params=payload, headers=getAuthHeaders()).json()
+
     def get_data(self, query):
         """
         Handles querying the endpoint and returning a geojson (as a python dict).
@@ -83,7 +87,10 @@ class GeocodeAdapter:
         payload = self.get_payload(query)
         if not self.url:
             return
-        response = requests.get(self.url, params=payload).json()
+        response = self.get_response(payload)
+        if('error' in response and response['error'] == 'jwt expired'):
+            authenticate()
+            response = self.get_response(payload)
         assert (isinstance(response, dict))
         return self.create_geojson(response)
 
