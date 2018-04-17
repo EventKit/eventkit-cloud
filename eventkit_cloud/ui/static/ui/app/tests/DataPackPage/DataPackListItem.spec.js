@@ -6,10 +6,9 @@ import { Link } from 'react-router';
 import { Card, CardTitle } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import Lock from 'material-ui/svg-icons/action/lock';
-import SocialPublic from 'material-ui/svg-icons/social/public';
+import SocialGroup from 'material-ui/svg-icons/social/group';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
@@ -18,17 +17,21 @@ import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 describe('DataPackListItem component', () => {
     const muiTheme = getMuiTheme();
 
-    const getProps = () => ({
-        run,
-        user: { data: { user: { username: 'admin' } } },
-        onRunDelete: () => {},
-        providers,
-    });
+    const getProps = () => {
+        return {
+            run,
+            user: { data: { user: { username: 'admin' } } },
+            onRunDelete: () => {},
+            providers,
+        };
+    };
 
-    const getWrapper = props => mount(<DataPackListItem {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
-    });
+    const getWrapper = (props) => {
+        return mount(<DataPackListItem {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
+        });
+    };
 
     it('should render a list item with complete and private icons and owner text', () => {
         const props = getProps();
@@ -71,15 +74,15 @@ describe('DataPackListItem component', () => {
         props.run.status = 'INCOMPLETE';
         wrapper.setProps(props);
         expect(wrapper.find(AlertError)).toHaveLength(1);
-        props.run.job.published = true;
+        props.run.job.permissions.value = 'PUBLIC';
         wrapper.setProps(props);
-        expect(wrapper.find(SocialPublic)).toHaveLength(1);
+        expect(wrapper.find(SocialGroup)).toHaveLength(1);
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
@@ -90,18 +93,23 @@ describe('DataPackListItem component', () => {
     it('handleProviderOpen should set provider dialog to open', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ providerDescs: { 'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).' }, providerDialogOpen: true })).toBe(true);
+        expect(stateSpy.calledWith({
+            providerDescs: {
+                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+            },
+            providerDialogOpen: true,
+        })).toBe(true);
         stateSpy.restore();
     });
 
     it('showDeleteDialog should set deleteDialogOpen to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackListItem.prototype,'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -112,7 +120,7 @@ describe('DataPackListItem component', () => {
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(DataPackListItem.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -122,8 +130,8 @@ describe('DataPackListItem component', () => {
 
     it('handleDelete should call hideDelete and onRunDelete', () => {
         const props = getProps();
-        props.onRunDelete = new sinon.spy();
-        const hideSpy = new sinon.spy(DataPackListItem.prototype, 'hideDeleteDialog');
+        props.onRunDelete = sinon.spy();
+        const hideSpy = sinon.spy(DataPackListItem.prototype, 'hideDeleteDialog');
         const wrapper = getWrapper(props);
         expect(props.onRunDelete.called).toBe(false);
         expect(hideSpy.called).toBe(false);
@@ -200,42 +208,12 @@ const run = {
         event: 'Test1 event',
         description: 'Test1 description',
         url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-        extent: {
-            type: 'Feature',
-            properties: {
-                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                name: 'Test1',
-            },
-            geometry: {
-                type: 'Polygon',
-                coordinates: [
-                    [
-                        [
-                            -0.077419,
-                            50.778155,
-                        ],
-                        [
-                            -0.077419,
-                            50.818517,
-                        ],
-                        [
-                            -0.037251,
-                            50.818517,
-                        ],
-                        [
-                            -0.037251,
-                            50.778155,
-                        ],
-                        [
-                            -0.077419,
-                            50.778155,
-                        ],
-                    ],
-                ],
-            },
+        extent: {},
+        permissions: {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
         },
-        selection: '',
-        published: false,
     },
     provider_tasks: providerTasks,
     zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',

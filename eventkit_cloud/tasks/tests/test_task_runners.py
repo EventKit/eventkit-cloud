@@ -16,6 +16,7 @@ from ..task_runners import (
     ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
 )
 from ..task_factory import create_run
+from ...core.models import GroupPermission,JobPermission
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class TestExportTaskRunner(TestCase):
         self.region, created = Region.objects.get_or_create(name='Africa', the_geom=the_geom)
         self.job.region = self.region
         self.job.save()
+
         create_run(job_uid=self.job.uid)
 
     @patch('eventkit_cloud.tasks.task_runners.chain')

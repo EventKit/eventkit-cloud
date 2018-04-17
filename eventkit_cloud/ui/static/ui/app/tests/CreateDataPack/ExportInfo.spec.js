@@ -51,7 +51,6 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                makePublic: false,
             },
             providers: [],
             formats,
@@ -248,19 +247,6 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
             providers: [{ name: 'one' }],
-        })).toBe(true);
-    });
-
-    it('toggleCheckbox should update exportInfo with new makePublic state', () => {
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
-        const wrapper = getWrapper(props);
-        const newState = !props.exportInfo.makePublic;
-        wrapper.instance().toggleCheckbox({}, newState);
-        expect(props.updateExportInfo.called).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
-            makePublic: newState,
         })).toBe(true);
     });
 
