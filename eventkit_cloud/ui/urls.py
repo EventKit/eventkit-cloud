@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson, user_active, reverse_geocode, convert
+from .views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson, user_active, reverse_geocode, convert, search
 from django.views.decorators.cache import never_cache
 
 urlpatterns = [
@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^groups', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="groups"),
     url(r'^logout', never_cache(login_required(logout)), name="logout"),
     url(r'^estimator/?$', never_cache(login_required(data_estimator))),
+    url(r'^search/?$', never_cache(login_required(search))),
     url(r'^geocode/?$', never_cache(login_required(geocode))),
     url(r'^convert/?$', login_required(convert)),
     url(r'^reverse_geocode/?$', login_required(reverse_geocode)),
