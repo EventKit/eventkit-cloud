@@ -47,7 +47,7 @@ describe('DataCartDetails component', () => {
             maxResetExpirationDays: '30',
             zipFileProp: null,
             onUpdateExpiration: () => {},
-            onUpdatePermission: () => {},
+            onUpdateDataCartPermissions: () => {},
             onRunDelete: () => {},
             onRunRerun: () => {},
             onClone: () => {},
@@ -108,30 +108,17 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
     });
 
-    it('should call initializeOpenLayers, setPermission, and setMaxDate set on mount', () => {
+    it('should call initializeOpenLayers and setMaxDate set on mount', () => {
         const props = getProps();
         const initStub = sinon.stub(DataCartDetails.prototype, 'initializeOpenLayers');
-        const permissionStub = sinon.stub(DataCartDetails.prototype, 'setPermission');
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
         DataCartDetails.prototype.componentDidMount = didMount;
         const wrapper = getWrapper(props);
         expect(initStub.calledOnce).toBe(true);
-        expect(permissionStub.calledOnce).toBe(true);
         expect(dateStub.calledOnce).toBe(true);
         initStub.restore();
-        permissionStub.restore();
         dateStub.restore();
         DataCartDetails.prototype.componentDidMount = sinon.spy();
-    });
-
-    it('setPermission should set the state for published permission', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().setPermission();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: props.cartDetails.job.published })).toBe(true);
-        stateStub.restore();
     });
 
     it('setMaxDate should set the min and max dates', () => {
@@ -163,30 +150,18 @@ describe('DataCartDetails component', () => {
         fitStub.restore();
     });
 
-    it('handlePermissionChange should state to true and call onUpdatePermission', () => {
+    it('handlePermissionsChange should call onUpdateDataCartPermissions', () => {
         const props = getProps();
-        props.onUpdatePermission = sinon.spy();
-        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
+        props.onUpdateDataCartPermissions = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handlePermissionChange({}, 0, 1);
-        expect(props.onUpdatePermission.calledOnce).toBe(true);
-        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, true)).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handlePermissionChange should state to false and call onUpdatePermission', () => {
-        const props = getProps();
-        props.onUpdatePermission = sinon.spy();
-        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handlePermissionChange({}, 0, 2);
-        expect(props.onUpdatePermission.calledOnce).toBe(true);
-        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, false)).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: false })).toBe(true);
-        stateStub.restore();
+        const permissions = {
+            value: 'PUBLIC',
+            groups: {},
+            members: {},
+        };
+        wrapper.instance().handlePermissionsChange(permissions);
+        expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, permissions)).toBe(true);
     });
 
     it('handleExpirationChange should call onUpdateExpiration', () => {
@@ -213,10 +188,14 @@ const run = {
         event: 'test',
         description: 'test',
         url: 'http://cloud.eventkit.test/api/jobs/67890',
-        published: true,
         formats: [
             'Geopackage',
         ],
+        permissions: {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
+        },
     },
     provider_tasks: [
         {
@@ -245,6 +224,7 @@ const run = {
     ],
     zipfile_url: null,
     expiration: '2017-08-01T00:00:00Z',
+    members: [],
 };
 
 const providers = [

@@ -13,10 +13,14 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
+import { getGroups } from '../../actions/userGroupsActions';
+import { getUsers } from '../../actions/userActions';
+import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 
 export class DataPackPage extends React.Component {
@@ -29,15 +33,24 @@ export class DataPackPage extends React.Component {
         this.handleFilterApply = this.handleFilterApply.bind(this);
         this.handleFilterClear = this.handleFilterClear.bind(this);
         this.changeView = this.changeView.bind(this);
+        this.autoRunRequest = this.autoRunRequest.bind(this);
         this.makeRunRequest = this.makeRunRequest.bind(this);
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
+        this.handleSortChange = this.handleSortChange.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
-            published: null,
+            permissions: {
+                value: '',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -53,14 +66,17 @@ export class DataPackPage extends React.Component {
             pageSize: 12,
             loading: false,
             geojson_geometry: null,
-            targetJob: '',
+            shareOpen: false,
+            targetRun: null,
         };
     }
 
     componentDidMount() {
+        this.props.getGroups();
+        this.props.getUsers();
         this.props.getProviders();
         this.makeRunRequest();
-        this.fetch = setInterval(this.makeRunRequest, 10000);
+        this.fetch = setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
     }
@@ -75,6 +91,9 @@ export class DataPackPage extends React.Component {
             }
         }
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+            this.setState({ loading: true }, this.makeRunRequest);
+        }
+        if (nextProps.updatePermissions.updated && !this.props.updatePermissions.updated) {
             this.setState({ loading: true }, this.makeRunRequest);
         }
     }
@@ -105,6 +124,8 @@ export class DataPackPage extends React.Component {
             loadLessDisabled: this.props.runsList.runs.length <= 12,
             loadMoreDisabled: !this.props.runsList.nextPage,
             providers: this.props.providers,
+            openShare: this.handleShareOpen,
+            groups: this.props.groups,
         };
         switch (view) {
         case 'list':
@@ -147,7 +168,13 @@ export class DataPackPage extends React.Component {
         this.setState({ order: value, loading: true }, this.makeRunRequest);
     }
 
-    makeRunRequest() {
+    autoRunRequest() {
+        // Call make run request and pass true to indicate this is an auto run request
+        // The auto run request will not have the power to cancel any current requests
+        this.makeRunRequest(true);
+    }
+
+    makeRunRequest(isAuto = false) {
         const status = [];
         Object.keys(this.state.status).forEach((key) => {
             if (this.state.status[key]) {
@@ -164,7 +191,7 @@ export class DataPackPage extends React.Component {
             :
             this.state.order;
         if (this.state.ownerFilter) params.user = this.state.ownerFilter;
-        if (this.state.published) params.published = this.state.published;
+        if (this.state.permissions.value) params.visibility = this.state.permissions.value;
         if (status.length) params.status = status.join(',');
         if (this.state.minDate) {
             params.min_date = this.state.minDate.toISOString().substring(0, 10);
@@ -177,7 +204,15 @@ export class DataPackPage extends React.Component {
         if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
         if (providers.length) params.providers = providers.join(',');
 
-        return this.props.getRuns(params, this.state.geojson_geometry);
+        const options = {};
+        if (this.state.geojson_geometry) {
+            options.geojson = this.state.geojson_geometry;
+        }
+        if (params.visibility === 'SHARED') {
+            options.permissions = this.state.permissions;
+        }
+
+        return this.props.getRuns(params, options, isAuto);
     }
 
     handleOwnerFilter(event, index, value) {
@@ -193,7 +228,11 @@ export class DataPackPage extends React.Component {
 
     handleFilterClear() {
         this.setState({
-            published: null,
+            permissions: {
+                value: '',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -248,6 +287,20 @@ export class DataPackPage extends React.Component {
                 this.makeRunRequest,
             );
         }
+    }
+
+    handleShareOpen(run) {
+        this.setState({ shareOpen: true, targetRun: run });
+    }
+
+    handleShareClose() {
+        this.setState({ shareOpen: false, targetRun: null });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
     }
 
     render() {
@@ -357,6 +410,8 @@ export class DataPackPage extends React.Component {
                         onFilterClear={this.handleFilterClear}
                         open={this.state.open}
                         providers={this.props.providers}
+                        groups={this.props.groups}
+                        members={this.props.users}
                     />
 
                     {this.state.pageLoading ?
@@ -369,11 +424,22 @@ export class DataPackPage extends React.Component {
                         </div>
                         :
                         <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
-                            {this.state.loading || this.props.runsDeletion.deleting || this.props.importGeom.processing ?
-                                <div style={{ zIndex: 10, position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                            {this.state.loading ||
+                            this.props.runsDeletion.deleting ||
+                            this.props.updatePermissions.updating ||
+                            this.props.importGeom.processing ?
+                                <div
+                                    style={{
+                                        zIndex: 10,
+                                        position: 'absolute',
+                                        width: '100%',
+                                        height: '100%',
+                                        backgroundColor: 'rgba(0,0,0,0.2)',
+                                    }}
+                                >
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                                         <CircularProgress
-                                            style={{ margin: 'auto', display: 'block' }} 
+                                            style={{ margin: 'auto', display: 'block' }}
                                             color="#4598bf"
                                             size={50}
                                         />
@@ -385,6 +451,23 @@ export class DataPackPage extends React.Component {
                         </div>
                     }
                 </div>
+                {this.state.shareOpen && this.state.targetRun ?
+                    <DataPackShareDialog
+                        show
+                        onClose={this.handleShareClose}
+                        onSave={this.handleShareSave}
+                        user={this.props.user.data}
+                        groups={this.props.groups}
+                        members={this.props.users}
+                        permissions={this.state.targetRun.job.permissions}
+                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
+                        canUpdateAdmin
+                        warnPublic
+                    />
+                    :
+                    null
+                }
             </div>
         );
     }
@@ -393,7 +476,7 @@ export class DataPackPage extends React.Component {
 DataPackPage.propTypes = {
     runsList: PropTypes.shape({
         cancelSource: PropTypes.object,
-        error: PropTypes.string,
+        error: PropTypes.object,
         fetched: PropTypes.bool,
         fetching: PropTypes.bool,
         nextPage: PropTypes.bool,
@@ -416,6 +499,21 @@ DataPackPage.propTypes = {
     setOrder: PropTypes.func.isRequired,
     setView: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    getGroups: PropTypes.func.isRequired,
+    getUsers: PropTypes.func.isRequired,
+    updateDataCartPermissions: PropTypes.func.isRequired,
+    updatePermissions: PropTypes.shape({
+        updating: PropTypes.bool,
+        updated: PropTypes.bool,
+        error: PropTypes.array,
+    }).isRequired,
 };
 
 function mapStateToProps(state) {
@@ -427,13 +525,16 @@ function mapStateToProps(state) {
         providers: state.providers,
         importGeom: state.importGeom,
         geocode: state.geocode,
+        groups: state.groups.groups,
+        users: state.users.users,
+        updatePermissions: state.updatePermission,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (params, geojson) => (
-            dispatch(getRuns(params, geojson))
+        getRuns: (params, options, isAuto) => (
+            dispatch(getRuns(params, options, isAuto))
         ),
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
@@ -455,6 +556,15 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
+        },
+        getGroups: () => {
+            dispatch(getGroups());
+        },
+        getUsers: () => {
+            dispatch(getUsers());
+        },
+        updateDataCartPermissions: (uid, permissions) => {
+            dispatch(updateDataCartPermissions(uid, permissions));
         },
     };
 }
