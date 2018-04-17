@@ -5,7 +5,7 @@ import uuid
 from enum import Enum
 from django.contrib.gis.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User,Group
+from django.contrib.auth.models import User, Group
 
 
 class TimeStampedModelMixin(models.Model):
@@ -68,6 +68,7 @@ class UIDMixin(models.Model):
     class Meta:
         abstract = True
 
+
 class GroupPermission(TimeStampedModelMixin):
     """
     Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
@@ -81,8 +82,8 @@ class GroupPermission(TimeStampedModelMixin):
 
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group)
-    permission  = models.CharField(
-        choices=[('NONE','None'),('MEMBER','Member'),('ADMIN','Admin')],
+    permission = models.CharField(
+        choices=[('NONE', 'None'), ('MEMBER', 'Member'), ('ADMIN', 'Admin')],
         max_length=10)
 
     def __str__(self):
@@ -98,13 +99,11 @@ from django.contrib.contenttypes.models import ContentType
 
 
 class JobPermission(TimeStampedModelMixin):
-
     @staticmethod
-    class JobPermissions(object):
-        class MemberTypes(Enum):
-            NONE = "NONE"
-            READ = "READ"
-            ADMIN = "ADMIN"
+    class Permissions(Enum):
+        NONE = "NONE"
+        READ = "READ"
+        ADMIN = "ADMIN"
 
     """
     Model associates users or groups with jobs
@@ -119,10 +118,65 @@ class JobPermission(TimeStampedModelMixin):
         choices=[('NONE', 'None'), ('READ', 'Read'), ('ADMIN', 'Admin')],
         max_length=10)
 
+    @staticmethod
+    def jobpermissions(job):
+        permissions = {'groups': {}, 'users': {}}
+        for jp in JobPermission.objects.filter(job=job):
+            item = None
+            if jp.content_type == ContentType.objects.get_for_model(User):
+                user = User.objects.get(pk=jp.object_id)
+                permissions['users'][user.username] = jp.permission
+            else:
+                group = Group.objects.get(pk=jp.object_id)
+                permissions['groups'][group.name] = jp.permission
+
+        return permissions
+
+    @staticmethod
+    def userjobs(user, level, include_groups=True):
+        perms = []
+        job_ids = []
+
+        # get all the jobs this user has been explicitly assigned to
+
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        if not include_groups:
+            return (perms, job_ids)
+
+        # Now do the same for groups that the user belongs to
+
+        group_ids = []
+        for gp in GroupPermission.objects.filter(user=user):
+            group_ids.append(gp.group.id)
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group),
+                                               object_id__in=group_ids):
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        return (perms, job_ids)
+
+    @staticmethod
+    def groupjobs(group, level):
+        perms = []
+        job_ids = []
+
+        # get all the jobs for which this group has the given permission level
+
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group),
+                                               object_id=group.id):
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        return (perms, job_ids)
+
     def __str__(self):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
 
     def __unicode__(self):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
-
-

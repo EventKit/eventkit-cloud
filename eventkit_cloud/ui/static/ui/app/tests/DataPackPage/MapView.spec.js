@@ -1,7 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
-import { mount, shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { GridList } from 'material-ui/GridList';
 import axios from 'axios';
@@ -23,10 +23,10 @@ import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import LoadButtons from '../../components/DataPackPage/LoadButtons';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar.js';
-import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
-import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
-import DropZone from '../../components/MapTools/DropZone.js';
+import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar';
+import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
+import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
+import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
 import MapView, { RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
@@ -34,28 +34,26 @@ import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
 
-const providers = [
-    {
-        id: 2,
-        model_url: 'http://cloud.eventkit.test/api/providers/osm',
-        type: 'osm',
-        license: null,
-        created_at: '2017-08-15T19:25:10.844911Z',
-        updated_at: '2017-08-15T19:25:10.844919Z',
-        uid: 'bc9a834a-727a-4779-8679-2500880a8526',
-        name: 'OpenStreetMap Data (Themes)',
-        slug: 'osm',
-        preview_url: '',
-        service_copyright: '',
-        service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
-        layer: null,
-        level_from: 0,
-        level_to: 10,
-        zip: false,
-        display: true,
-        export_provider_type: 2,
-    },
-]
+const providers = [{
+    id: 2,
+    model_url: 'http://cloud.eventkit.test/api/providers/osm',
+    type: 'osm',
+    license: null,
+    created_at: '2017-08-15T19:25:10.844911Z',
+    updated_at: '2017-08-15T19:25:10.844919Z',
+    uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+    name: 'OpenStreetMap Data (Themes)',
+    slug: 'osm',
+    preview_url: '',
+    service_copyright: '',
+    service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+    layer: null,
+    level_from: 0,
+    level_to: 10,
+    zip: false,
+    display: true,
+    export_provider_type: 2,
+}];
 
 describe('MapView component', () => {
     const muiTheme = getMuiTheme();
@@ -2008,7 +2006,11 @@ function getRuns() {
                 },
             },
             selection: '',
-            published: false,
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: [],
         zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
@@ -2064,7 +2066,11 @@ function getRuns() {
                 },
             },
             selection: '',
-            published: true,
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: [],
         zipfile_url: 'http://cloud.eventkit.test/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
@@ -2120,7 +2126,11 @@ function getRuns() {
                 },
             },
             selection: '',
-            published: true,
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: [],
         zipfile_url: 'http://cloud.eventkit.test/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',

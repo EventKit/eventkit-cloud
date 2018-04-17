@@ -7,8 +7,8 @@ import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
+import SocialGroup from 'material-ui/svg-icons/social/group';
 import Lock from 'material-ui/svg-icons/action/lock-outline';
-import SocialPublic from 'material-ui/svg-icons/social/public';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
@@ -358,14 +358,23 @@ export class DataPackGridItem extends Component {
                                     primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen}
                                 />
-                                {this.props.run.user === this.props.user.data.user.username ?
-                                    <MenuItem
-                                        key="delete"
-                                        className="qa-DataPackGridItem-MenuItem-delete"
-                                        style={{ fontSize: cardTextFontSize }}
-                                        primaryText="Delete Export"
-                                        onClick={this.showDeleteDialog}
-                                    />
+                                {this.props.adminPermission ?
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackGridItem-MenuItem-delete"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackGridItem-MenuItem-share"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run)}
+                                        />,
+                                    ]
                                     :
                                     null
                                 }
@@ -428,8 +437,8 @@ export class DataPackGridItem extends Component {
                             :
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>
                         }
-                        {this.props.run.job.published ?
-                            <SocialPublic style={styles.publishedIcon} />
+                        {this.props.run.job.permissions.value !== 'PRIVATE' ?
+                            <SocialGroup style={styles.publishedIcon} />
                             :
 
                             <Lock style={styles.unpublishedIcon} />
@@ -453,6 +462,8 @@ DataPackGridItem.propTypes = {
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     showFeaturedFlag: PropTypes.bool,
+    openShare: PropTypes.func.isRequired,
+    adminPermission: PropTypes.bool.isRequired,
 };
 
 DataPackGridItem.defaultProps = {

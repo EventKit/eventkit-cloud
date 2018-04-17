@@ -69,10 +69,14 @@ describe('StatusDownload component', () => {
             description: 'Test1 description',
             url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
             selection: '',
-            published: false,
             formats: [
                 'Geopackage',
             ],
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
         },
         provider_tasks: providerTasks,
         zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
@@ -84,7 +88,6 @@ describe('StatusDownload component', () => {
             params: {
                 jobuid: '123456789',
             },
-            jobuid: '123456789',
             datacartDetails: {
                 fetching: false,
                 fetched: false,
@@ -120,17 +123,25 @@ describe('StatusDownload component', () => {
                     },
                 },
             },
+            users: {
+                fetched: false,
+                fetching: false,
+                users: [],
+                error: null,
+            },
             getDatacartDetails: () => {},
             clearDataCartDetails: () => {},
             deleteRun: () => {},
             rerunExport: () => {},
             clearReRunInfo: () => {},
             updateExpirationDate: () => {},
-            updatePermission: () => {},
+            updateDataCartPermissions: () => {},
             cloneExport: () => {},
             cancelProviderTask: () => {},
             getProviders: () => {},
             viewedJob: () => {},
+            getUsers: () => {},
+            getGroups: () => {},
         }
     );
 
@@ -302,7 +313,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(11);
+        expect(setTimeout.mock.calls.length).toBe(10);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
@@ -320,7 +331,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(11);
+        expect(setTimeout.mock.calls.length).toBe(10);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });

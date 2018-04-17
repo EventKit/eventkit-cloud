@@ -1,25 +1,18 @@
-import React, {PropTypes, Component} from 'react'
-import {GridList} from 'material-ui/GridList'
-import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'material-ui/Card'
+import React, { PropTypes, Component } from 'react';
+import { GridList } from 'material-ui/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from './LoadButtons';
+import { userIsDataPackAdmin } from '../../utils/generic';
 
 export class DataPackGrid extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     getColumns() {
-        if(window.innerWidth <= 800) {
+        if (window.innerWidth <= 800) {
             return 2;
-        }
-        else if(window.innerWidth > 1200) {
+        } else if (window.innerWidth > 1200) {
             return 4;
         }
-        else {
-            return 3;
-        }
+        return 3;
     }
 
     render() {
@@ -31,7 +24,7 @@ export class DataPackGrid extends Component {
                 justifyContent: 'space-around',
                 marginLeft: spacing,
                 marginRight: spacing,
-                paddingBottom: spacing
+                paddingBottom: spacing,
             },
             gridList: {
                 border: '1px',
@@ -51,18 +44,23 @@ export class DataPackGrid extends Component {
                         padding={window.innerWidth >= 768 ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runs.map((run, index) => (
-                            <DataPackGridItem
-                                className="qa-DataPackGrid-GridListItem"
-                                run={run}
-                                user={this.props.user}
-                                key={run.uid}
-                                onRunDelete={this.props.onRunDelete}
-                                providers={this.props.providers}
-                                gridName={this.props.name}
-                                index={index}
-                            />
-                        ))}
+                        {this.props.runs.map((run, index) => {
+                            const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
+                            return (
+                                <DataPackGridItem
+                                    className="qa-DataPackGrid-GridListItem"
+                                    run={run}
+                                    user={this.props.user}
+                                    key={run.uid}
+                                    onRunDelete={this.props.onRunDelete}
+                                    providers={this.props.providers}
+                                    openShare={this.props.openShare}
+                                    adminPermission={admin}
+                                    gridName={this.props.name}
+                                    index={index}
+                                />
+                            );
+                        })}
                     </GridList>
                 </div>
                 <LoadButtons
@@ -87,6 +85,13 @@ DataPackGrid.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    openShare: PropTypes.func.isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
     name: PropTypes.string.isRequired,
 };
 

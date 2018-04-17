@@ -61,7 +61,6 @@ export default {
         exportName: '',
         datapackDescription: '',
         projectName: '',
-        makePublic: false,
         providers: [],
         areaStr: '',
         formats: [],

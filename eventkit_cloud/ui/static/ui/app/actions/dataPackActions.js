@@ -43,7 +43,6 @@ export function getRuns(args = {}) {
             params.ordering = '-job__featured';
         }
         if (args.ownerFilter) params.user = args.ownerFilter;
-        if (args.published) params.published = args.published;
         if (status.length) params.status = status.join(',');
         if (args.minDate) {
             params.min_date = args.minDate.toISOString().substring(0, 10);
@@ -58,7 +57,22 @@ export function getRuns(args = {}) {
 
         const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
-        const data = args.geojson ? { geojson: JSON.stringify(args.geojson) } : { };
+        const data = {};
+        if (args.geojson) {
+            data.geojson = JSON.stringify(args.geojson);
+        }
+        if (args.permissions && args.permissions.value) {
+            params.visibility = this.state.permissions.value;
+
+            if (params.visibility === 'SHARED') {
+                const groups = Object.keys(args.permissions.groups);
+                const users = Object.keys(args.permissions.members);
+                data.permissions = {
+                    groups,
+                    users,
+                };
+            }
+        }
 
         return axios({
             url,
@@ -74,17 +88,34 @@ export function getRuns(args = {}) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-                
-            }
+            });
+
             let range = '';
             if (response.headers['content-range']) {
                 range = response.headers['content-range'].split('-')[1]; 
             }
-            dispatch({ type: types.RECEIVED_RUNS, runs: response.data, nextPage, range });
+
+            const runs = response.data.map((run) => {
+                const newRun = { ...run };
+                newRun.job.permissions = {
+                    value: newRun.job.visibility,
+                    groups: newRun.job.permissions.groups,
+                    members: newRun.job.permissions.users,
+                };
+                return newRun;
+            });
+
+            dispatch({
+                type: types.RECEIVED_RUNS,
+                runs,
+                nextPage,
+                range,
+            });
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -161,7 +192,7 @@ export function getFeaturedRuns(args) {
 }
 
 export function deleteRuns(uid) {
-    return (dispatch, getState) => {
+    return (dispatch) => {
         dispatch({ type: types.DELETING_RUN });
 
         const csrftoken = cookie.load('csrftoken');
@@ -185,13 +216,13 @@ export function deleteRuns(uid) {
 export function setPageOrder(order) {
     return {
         type: types.SET_PAGE_ORDER,
-        order: order
-    }
+        order,
+    };
 }
 
 export function setPageView(view) {
     return {
         type: types.SET_PAGE_VIEW,
-        view: view
-    }
+        view,
+    };
 }
