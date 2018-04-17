@@ -80,7 +80,7 @@ class CheckResults(Enum):
               "message": _("No Service URL was found in the data provider config; "
                            "availability cannot be checked")},
 
-    TOO_LARGE = {"status": "SELECTION",
+    TOO_LARGE = {"status": "FATAL",
                  "type": "TOO_LARGE",
                  "message": _("The selected AOI is larger than the maximum allowed size for this data provider.")},
 
