@@ -13,13 +13,15 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         // get the list of runs (DataPacks) that are associated with the job UID.
         // We take only the first one for now since multiples are currently disabled.
         // However we leave it in an array for future proofing.
-        const data = [{ ...response.data[0] }];
-
-        data[0].job.permissions = {
-            value: data[0].job.visibility,
-            groups: data[0].job.permissions.groups,
-            members: data[0].job.permissions.users,
-        };
+        const data = [];
+        if (response.data.length) {
+            data.push({ ...response.data[0] });
+            data[0].job.permissions = {
+                value: data[0].job.visibility,
+                groups: data[0].job.permissions.groups,
+                members: data[0].job.permissions.users,
+            };
+        }
 
         dispatch({
             type: types.DATACART_DETAILS_RECEIVED,
