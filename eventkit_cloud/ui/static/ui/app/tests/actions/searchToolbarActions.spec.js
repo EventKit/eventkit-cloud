@@ -88,11 +88,11 @@ describe('async searchToolbar actions', () => {
     it('should handle errors', () => {
         store = mockStore({ geocode: [] });
         const fail = new MockAdapter(axios, { delayResponse: 10 });
-        fail.onGet('/search').reply(400, 'ERROR: Invalid MGRS String');
+        fail.onGet('/search').reply(400, 'Request failed with status code 400');
 
         const expectedActions = [
             { type: 'FETCHING_GEOCODE' },
-            { type: 'GEOCODE_ERROR', error: new Error('Request failed with status code 400') },
+            { type: 'FETCH_GEOCODE_ERROR', error: 'Request failed with status code 400' },
         ];
 
         return store.dispatch(actions.getGeocode('18SJT9710003009'))
