@@ -54,6 +54,22 @@ describe('statusDownload actions', () => {
             });
     });
 
+    it('getDatacartDetails should return an empty array if there are no results', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        mock.onGet('/api/runs?job_uid=123456789').reply(200, []);
+        const expectedActions = [
+            { type: types.GETTING_DATACART_DETAILS },
+            { type: types.DATACART_DETAILS_RECEIVED, datacartDetails: { data: [] } },
+        ];
+
+        const store = mockStore({ datacartDetails: {} });
+
+        return store.dispatch(actions.getDatacartDetails('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
     it('getDatacartDetails should dispatch an error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onGet('/api/runs?job_uid=123').reply(400, 'oh no an error');

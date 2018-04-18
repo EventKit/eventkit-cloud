@@ -50,7 +50,7 @@ export class ProviderStatusIcon extends Component {
 
         let avail = this.props.availability.status ?
                 this.props.availability :
-                {status: "PENDING", message: "This data provider's availability is being checked."};
+                {status: "PENDING", type: "PENDING", message: "This data provider's availability is being checked."};
 
         let StatusIcon;
         let title;
@@ -76,12 +76,12 @@ export class ProviderStatusIcon extends Component {
                 messagePrefix = "Availability compromised: ";
                 break;
             case 'PENDING':
+            default:
                 style.icon['color'] = 'rgba(0, 0, 0, 0.87)';
                 StatusIcon = CircularProgress;
                 title = "Checking Availability"
                 messagePrefix = "";
                 otherProps = {thickness: 2};
-            default:
                 break;
         }
 

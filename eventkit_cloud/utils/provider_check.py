@@ -135,10 +135,6 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            logger.debug("Checking url %s&%s",
-                         self.service_url,
-                         '&'.join(['{}={}'.format(k, v) for k, v in self.query.iteritems()]))
-
             response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout,
                                          verify=self.verify)
 
