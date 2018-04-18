@@ -111,7 +111,9 @@ def get_area(geojson):
     :return: area of geojson ring in square kilometers
     """
     earth_r = 6371  # km
-    rad = lambda d: (math.pi*d)/180
+
+    def rad(d):
+        return math.pi*d/180
 
     if isinstance(geojson, str):
         geojson = json.loads(geojson)

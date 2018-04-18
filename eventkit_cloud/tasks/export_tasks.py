@@ -570,7 +570,9 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
         # Test against max AOI size
         from ..jobs.models import DataProvider
         max_selection = DataProvider.objects.get(slug=provider_slug).max_selection
-        if max_selection < gdalutils.get_area(selection):
+        aoi_area = gdalutils.get_area(selection)
+        logger.debug("Selected area is %s km^2; max for provider %s is %s", aoi_area, provider_slug, max_selection)
+        if 0 < max_selection < aoi_area:
             raise Exception("AOI is too large for this provider")
 
         from audit_logging.file_logging import logging_open

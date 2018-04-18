@@ -135,7 +135,7 @@ class ProviderCheck(object):
         Return True if the AOI selection's area is lower than the maximum for this provider, otherwise False.
         :return: True if AOI is lower than area limit
         """
-        if self.aoi is None:
+        if self.aoi is None or self.max_area <= 0:
             return True
 
         gj = self.aoi.ExportToJson()
