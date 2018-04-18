@@ -275,7 +275,6 @@ export class BreadcrumbStepper extends React.Component {
             description: this.props.exportInfo.datapackDescription,
             event: this.props.exportInfo.projectName,
             include_zipfile: false,
-            published: this.props.exportInfo.makePublic,
             provider_tasks: provider_tasks,
             selection,
             original_selection: this.props.aoiInfo.originalGeojson,

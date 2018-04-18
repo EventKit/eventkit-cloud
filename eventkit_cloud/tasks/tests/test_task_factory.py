@@ -14,6 +14,7 @@ from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_f
     get_invalid_licenses)
 from mock import patch, Mock, MagicMock, ANY
 
+from ...core.models import GroupPermission,JobPermission
 
 logger = logging.getLogger(__name__)
 

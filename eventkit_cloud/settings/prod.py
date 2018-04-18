@@ -10,6 +10,8 @@ import urllib
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
+
 # Project apps
 INSTALLED_APPS += (
     'eventkit_cloud.core',
@@ -21,8 +23,6 @@ INSTALLED_APPS += (
     'eventkit_cloud.utils',
     'eventkit_cloud',
 )
-
-INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
 
 LOGIN_URL = '/login'
 LOGOUT_URL = '/logout'
