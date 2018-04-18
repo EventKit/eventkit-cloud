@@ -172,10 +172,26 @@ export class UserGroupsPage extends Component {
         const steps = [
             {
                 title: 'Welcome to the Members and Groups Page',
-                text: 'This page contains...',
+                text: 'EventKit allows you to easily share your data with other EventKit users.  Here, you can create and administer groups, allowing you to share DataPacks with your team, customers, community of interest, etc.',
                 selector: '.qa-UserGroupsPage-AppBar',
                 position: 'top',
                 style: welcomeTooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Search',
+                text: 'You can search for users of EventKit by using this text search.  Search by name, username, or email.',
+                selector: '.qa-UserGroupsPage-search',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Filter Members View',
+                text: 'You can filter the members list by selecting one of these options: all members, new members, members that are not grouped, and by the groups you have created.',
+                selector: '.qa-GroupsDrawer-Menu',
+                position: 'top',
+                style: tooltipStyle,
                 isFixed: true,
             },
             {
@@ -183,6 +199,14 @@ export class UserGroupsPage extends Component {
                 text: 'You can click on this button to create a group of your choice.',
                 selector: '.qa-UserGroupsPage-RaisedButton-create',
                 position: 'top',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Create Group',
+                text: 'Or by clicking on this plus sign icon.',
+                selector: '.qa-GroupsDrawer-addGroupIcon',
+                position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
             },
@@ -214,6 +238,15 @@ export class UserGroupsPage extends Component {
                 title: 'Add Users to Groups',
                 text: 'This menu will allow you to add users to the groups.',
                 selector: '.qa-UserTableRowColumn-IconButton-options',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
+            {
+                title: 'Groups Shared with Me',
+                text: 'Here you can view the groups that have been shared with you. <br />For groups that have been shared with you: <br />' +
+                'You\'ll receive all notifications, you have limited administrative rights for all data shared with each group, and you may leave any group, but by doing so, you opt out of notifications and your admin rights.',
+                selector: '.qa-GroupsDrawer-sharedGroupsHeading',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,

@@ -11,6 +11,9 @@ import LeaveGroupDialog from '../../components/UserGroupsPage/LeaveGroupDialog';
 import DeleteGroupDialog from '../../components/UserGroupsPage/DeleteGroupDialog';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
+import { Account } from '../../components/AccountPage/Account';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 
 describe('UserGroupsPage component', () => {
     const muiTheme = getMuiTheme();
@@ -98,6 +101,37 @@ describe('UserGroupsPage component', () => {
         }
     );
 
+    const tooltipStyle = {
+        backgroundColor: 'white',
+        borderRadius: '0',
+        color: 'black',
+        mainColor: '#ff4456',
+        textAlign: 'left',
+        header: {
+            textAlign: 'left',
+            fontSize: '20px',
+            borderColor: '#4598bf',
+        },
+        main: {
+            paddingTop: '20px',
+            paddingBottom: '20px',
+        },
+
+        button: {
+            color: 'white',
+            backgroundColor: '#4598bf',
+        },
+        skip: {
+            color: '#8b9396',
+        },
+        back: {
+            color: '#8b9396',
+        },
+        hole: {
+            backgroundColor: 'rgba(226,226,226, 0.2)',
+        },
+    };
+
     const getWrapper = props => (
         mount(<UserGroupsPage {...props} />, {
             context: { muiTheme },
@@ -130,6 +164,8 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(7);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
     });
 
     it('should give the table header a list of groups that all selected users share', () => {
@@ -154,16 +190,19 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(UserTableHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
     });
 
-    it('componentDidMount should call makeUserRequest and getGroups', () => {
+    it('componentDidMount should call makeUserRequest, getGroups and joyrideAddSteps', () => {
         const props = getProps();
         props.getGroups = sinon.spy();
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
+        const joyrideStub = new sinon.stub(UserGroupsPage.prototype, 'joyrideAddSteps');
         // we stub componentDidMount before all tests, so temporarily undo it
         UserGroupsPage.prototype.componentDidMount.restore();
         const wrapper = getWrapper(props);
         expect(props.getGroups.calledOnce).toBe(true);
         expect(makeRequestStub.calledOnce).toBe(true);
+        expect(joyrideStub.calledOnce).toBe(true);
         makeRequestStub.restore();
+        joyrideStub.restore();
         // re-stub it since afterAll will restore it when tests are finished
         sinon.stub(UserGroupsPage.prototype, 'componentDidMount');
     });
@@ -853,5 +892,68 @@ describe('UserGroupsPage component', () => {
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showPageInfo: false })).toBe(true);
         stateStub.restore();
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{
+            title: 'Welcome to the Account Settings Page', text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.', selector: '.qa-Account-AppBar', position: 'top', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'License Agreement Info', text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.', selector: '.qa-UserLicense-ArrowDown', position: 'bottom', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Agree to Licenses', text: 'Once you’ve reviewed the licenses, you can agree to them individually.', selector: '.qa-UserLicense-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Agree to Licenses', text: 'Or you can choose to agree to them collectively.', selector: '.qa-LicenseInfo-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Save Agreements', text: 'Once you have selected the licenses to agree to, click Save Changes.', selector: '.qa-SaveButton-RaisedButton-SaveChanges', position: 'top', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Navigate Application', text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.', selector: '.qa-Application-MenuItem-exports', position: 'top', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Navigate Application', text: 'Or to create your own DataPack.', selector: '.qa-Application-MenuItem-create', position: 'top', style: tooltipStyle, isFixed: true,
+        }];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.stub(UserGroupsPage.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('handleJoyride should set state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.stub(UserGroupsPage.prototype, 'setState');
+        wrapper.instance().handleJoyride();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-Application-MenuItem-create',
+                style: tooltipStyle,
+                text: 'Or to create your own DataPack.',
+                title: 'Navigate Application',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = new sinon.stub(UserGroupsPage.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
     });
 });

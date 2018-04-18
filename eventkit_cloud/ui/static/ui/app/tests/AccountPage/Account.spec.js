@@ -11,7 +11,7 @@ import { Account } from '../../components/AccountPage/Account';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Joyride from 'react-joyride';
 import Help from 'material-ui/svg-icons/action/help';
-import {StatusDownload} from "../../components/StatusDownloadPage/StatusDownload";
+import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 
 describe('Account Component', () => {
     const muiTheme = getMuiTheme();
@@ -57,7 +57,7 @@ describe('Account Component', () => {
         header: {
             textAlign: 'left',
             fontSize: '20px',
-            borderColor: '#4598bf'
+            borderColor: '#4598bf',
         },
         main: {
             paddingTop: '20px',
@@ -66,17 +66,17 @@ describe('Account Component', () => {
 
         button: {
             color: 'white',
-            backgroundColor: '#4598bf'
+            backgroundColor: '#4598bf',
         },
         skip: {
-            color: '#8b9396'
+            color: '#8b9396',
         },
         back: {
-            color: '#8b9396'
+            color: '#8b9396',
         },
         hole: {
             backgroundColor: 'rgba(226,226,226, 0.2)',
-        }
+        },
     };
     const getMountedWrapper = props => mount(<Account {...props} />, {
         context: { muiTheme },
@@ -94,19 +94,33 @@ describe('Account Component', () => {
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [{ title: 'Welcome to the Account Settings Page', text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.', selector: '.qa-Account-AppBar', position: 'top', style: tooltipStyle, isFixed: true, },
-            { title: 'License Agreement Info', text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.', selector: '.qa-UserLicense-ArrowDown', position: 'bottom', style: tooltipStyle, isFixed: true,},
-            { title: 'Agree to Licenses', text: 'Once you’ve reviewed the licenses, you can agree to them individually.', selector: '.qa-UserLicense-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,},
-            { title: 'Agree to Licenses', text: 'Or you can choose to agree to them collectively.', selector: '.qa-LicenseInfo-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,},
-            { title: 'Save Agreements', text: 'Once you have selected the licenses to agree to, click Save Changes.', selector: '.qa-SaveButton-RaisedButton-SaveChanges', position: 'top', style: tooltipStyle, isFixed: true,},
-            { title: 'Navigate Application', text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.', selector: '.qa-Application-MenuItem-exports', position: 'top', style: tooltipStyle, isFixed: true,},
-            { title: 'Navigate Application', text: 'Or to create your own DataPack.', selector: '.qa-Application-MenuItem-create', position: 'top', style: tooltipStyle, isFixed: true, }, ];
+        const steps = [{
+            title: 'Welcome to the Account Settings Page', text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.', selector: '.qa-Account-AppBar', position: 'top', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'License Agreement Info', text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.', selector: '.qa-UserLicense-ArrowDown', position: 'bottom', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Agree to Licenses', text: 'Once you’ve reviewed the licenses, you can agree to them individually.', selector: '.qa-UserLicense-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Agree to Licenses', text: 'Or you can choose to agree to them collectively.', selector: '.qa-LicenseInfo-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Save Agreements', text: 'Once you have selected the licenses to agree to, click Save Changes.', selector: '.qa-SaveButton-RaisedButton-SaveChanges', position: 'top', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Navigate Application', text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.', selector: '.qa-Application-MenuItem-exports', position: 'top', style: tooltipStyle, isFixed: true,
+        },
+        {
+            title: 'Navigate Application', text: 'Or to create your own DataPack.', selector: '.qa-Application-MenuItem-create', position: 'top', style: tooltipStyle, isFixed: true,
+        }];
         const props = getProps();
         const wrapper = getMountedWrapper(props);
         const stateSpy = new sinon.spy(Account.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ steps: steps }));
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
 
@@ -122,23 +136,23 @@ describe('Account Component', () => {
 
     it('callback function should stop tour if close is clicked', () => {
         const callbackData = {
-            action: "close",
+            action: 'close',
             index: 2,
             step: {
-                position: "bottom",
-                selector: ".qa-Application-MenuItem-create",
+                position: 'bottom',
+                selector: '.qa-Application-MenuItem-create',
                 style: tooltipStyle,
-                text: "Or to create your own DataPack.",
-                title: "Navigate Application",
+                text: 'Or to create your own DataPack.',
+                title: 'Navigate Application',
             },
-            type: "step:before",
-        }
+            type: 'step:before',
+        };
         const props = getProps();
         const wrapper = getMountedWrapper(props);
         const stateSpy = new sinon.spy(Account.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });
 
