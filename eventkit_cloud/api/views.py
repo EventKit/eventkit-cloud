@@ -14,6 +14,9 @@ from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, JobPermission
+from notifications.models import Notification
+from ..core.helpers import sendnotification
+
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState
@@ -33,7 +36,7 @@ from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    DataProviderSerializer, LicenseSerializer, UserDataSerializer, GroupSerializer
+    DataProviderSerializer, LicenseSerializer, UserDataSerializer, GroupSerializer,NotificationSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
@@ -381,6 +384,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={'request': request})
+            sendnotification(job, request.user, 'STARTED', None, None, 'info', 'Job has started')
 
             # Run is passed to celery to start the tasks.
             pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)

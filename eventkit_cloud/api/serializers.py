@@ -18,6 +18,8 @@ from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from notifications.models import Notification
+
 
 from ..core.models import GroupPermission, JobPermission
 
@@ -738,3 +740,23 @@ class JobSerializer(serializers.Serializer):
     @staticmethod
     def get_permissions(obj):
         return JobPermission.jobpermissions(obj)
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notification
+        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
+
+    def serialize_component(self, obj, id, component, request):
+        response = {}
+        if id > 0: response['id'] = id
+
+        if isinstance(component, User):
+            response['type'] = 'User'
+            response['details'] =   UserSerializer(component).data
+        if isinstance(component, Job):
+            job = Job.objects.get(pk=obj.actor_object_id)
+            response['type'] = 'Job'
+            response['details'] = ListJobSerializer(job,context={'request': request}).data
+
+        return response
