@@ -47,6 +47,7 @@ services:
         - GEOCODING_API_TYPE
         - MAX_EXPORTRUN_EXPIRATION_DAYS=30
         - BASEMAP_URL
+        - PROVIDER_CHECK_INTERVAL
      extra_hosts:
         - "${SITE_NAME}:${SITE_IP}"
      command: echo 'Base box is not used, exiting now'

@@ -25,7 +25,6 @@ describe('BreadcrumbStepper component', () => {
             exportName: '',
             datapackDescription: '',
             projectName: '',
-            makePublic: false,
             providers,
             areaStr: '',
             formats: ['gpkg'],
@@ -309,7 +308,6 @@ describe('BreadcrumbStepper component', () => {
             description: 'test description',
             event: 'test event',
             include_zipfile: false,
-            published: false,
             provider_tasks: [{
                 provider: 'OpenStreetMap Data (Themes)',
                 formats: ['gpkg'],

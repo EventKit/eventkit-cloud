@@ -5,6 +5,7 @@ export class DataPackTableRow extends Component {
         const styles = {
             container: {
                 display: 'flex',
+                flex: '0 1 auto',
                 width: '100%',
                 padding: '5px',
                 ...this.props.containerStyle,

@@ -6,7 +6,7 @@ from django.test import TestCase
 import os
 from mock import Mock, patch, call, mock_open
 from ..helpers import cd, get_style_files, get_file_paths, file_to_geojson, \
-    read_json_file, unzip_file, write_uploaded_file
+    read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon
 
 logger = logging.getLogger(__name__)
 
@@ -164,3 +164,35 @@ class TestHelpers(TestCase):
 
             m.side_effect = Exception('whoops!')
             self.assertRaises(Exception, write_uploaded_file, test_file, file_path)
+
+    def test_is_mgrs(self):
+        valid_spaced = '18S TJ 90000 10000'
+        valid_no_space = '18STJ9000010000'
+        invalid = '180 TJ S0000 10000'
+        self.assertTrue(is_mgrs(valid_spaced))
+        self.assertTrue(is_mgrs(valid_no_space))
+        self.assertFalse(is_mgrs(invalid))
+
+    def test_is_lat_lon(self):
+        valid_1 = '90 180'
+        valid_2 = '-45, -120'
+        valid_3 = '+67.0890808,129.0980007'
+        valid_4 = '38.00 N, 89.088 E'
+        invalid_1 = '390, 97.00'
+        invalid_2 = '45a -25.00'
+        invalid_3 = '-45.0+67.00'
+        self.assertTrue(is_lat_lon(valid_1))
+        self.assertTrue(is_lat_lon(valid_2))
+        self.assertTrue(is_lat_lon(valid_3))
+        self.assertTrue(is_lat_lon(valid_4))
+        self.assertFalse(is_lat_lon(invalid_1))
+        self.assertFalse(is_lat_lon(invalid_2))
+        self.assertFalse(is_lat_lon(invalid_3))
+
+        with patch('eventkit_cloud.ui.helpers.float') as float:
+            float.side_effect = ValueError
+            self.assertFalse(is_lat_lon(valid_1))
+
+        with patch('eventkit_cloud.ui.helpers.math') as math:
+            math.isnan.return_value = True
+            self.assertFalse(is_lat_lon(valid_3))

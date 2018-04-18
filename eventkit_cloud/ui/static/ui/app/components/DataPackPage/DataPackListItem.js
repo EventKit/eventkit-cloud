@@ -1,19 +1,17 @@
-import React, {PropTypes, Component} from 'react'
-import {browserHistory} from 'react-router';
-import {Link} from 'react-router';
-import {Card, CardTitle} from 'material-ui/Card'
+import React, { PropTypes, Component } from 'react';
+import { Link, browserHistory } from 'react-router';
+import { Card, CardTitle } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import Lock from 'material-ui/svg-icons/action/lock';
-import SocialPublic from 'material-ui/svg-icons/social/public';
+import SocialGroup from 'material-ui/svg-icons/social/group';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
-import { List, ListItem} from 'material-ui/List'
-import CustomScrollbar from '../CustomScrollbar';
+import { List, ListItem } from 'material-ui/List';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
@@ -37,12 +35,12 @@ export class DataPackListItem extends Component {
     }
 
     handleProviderOpen(runProviders) {
-        let providerDesc = {};
+        const providerDesc = {};
         runProviders.forEach((runProvider) => {
-            let a = this.props.providers.find(x => x.slug === runProvider.slug);
+            const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDesc[a.name] = a.service_description;
         });
-        this.setState({ providerDescs:providerDesc, providerDialogOpen: true });
+        this.setState({ providerDescs: providerDesc, providerDialogOpen: true });
     }
 
     handleMenuButtonClick(e) {
@@ -90,9 +88,7 @@ export class DataPackListItem extends Component {
         });
 
         const width = window.innerWidth;
-        const titleFontSize = width < 576 ? '19px' : '23px';
         const subtitleFontSize = width < 576 ? '10px' : '14px';
-        const subtitleHeight = width < 576 ? '16px' : '20px';
 
         const styles = {
             card: {
@@ -185,7 +181,8 @@ export class DataPackListItem extends Component {
                             <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
                                 <div className="qa-DataPackListItem-titleLink" style={styles.titleLink}>
                                     <Link
-                                        to={'/status/' + this.props.run.job.uid}
+                                        to={`/status/${this.props.run.job.uid}`}
+                                        href={`/status/${this.props.run.job.uid}`}
                                         style={{ color: 'inherit' }}
                                     >
                                         {this.props.run.job.name}
@@ -211,7 +208,7 @@ export class DataPackListItem extends Component {
                                     className="qa-DataPackListItem-MenuItem-statusDownloadLink"
                                     style={{ fontSize: subtitleFontSize }}
                                     primaryText="Go to Status & Download"
-                                    onClick={() => {browserHistory.push('/status/'+this.props.run.job.uid)}}
+                                    onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem
                                     className="qa-DataPackListItem-MenuItem-viewDataSources"
@@ -220,14 +217,23 @@ export class DataPackListItem extends Component {
                                     onClick={this.handleProviderOpen.bind(this, runProviders)}
                                 />
 
-                                {this.props.run.user === this.props.user.data.user.username ?
-                                    <MenuItem
-                                        key="delete"
-                                        className="qa-DataPackListItem-MenuItem-deleteExport"
-                                        style={{ fontSize: subtitleFontSize }}
-                                        primaryText="Delete Export"
-                                        onClick={this.showDeleteDialog}
-                                    />
+                                {this.props.adminPermission ?
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackListItem-MenuItem-deleteExport"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackListItem-MenuItem-share"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run)}
+                                        />,
+                                    ]
                                     :
                                     null
                                 }
@@ -241,7 +247,7 @@ export class DataPackListItem extends Component {
                                 <List>{providersList}</List>
                             </BaseDialog>
                             <DeleteDataPackDialog
-                                className={'qa-DataPackListItem-DeleteDialog'}
+                                className="qa-DataPackListItem-DeleteDialog"
                                 show={this.state.deleteDialogOpen}
                                 onCancel={this.hideDeleteDialog}
                                 onDelete={this.handleDelete}
@@ -251,20 +257,21 @@ export class DataPackListItem extends Component {
                     subtitle={
                         <div>
                             <div className="qa-DataPackListItem-subtitle-event" style={styles.eventText}>
-                                {'Event: ' + this.props.run.job.event}
+                                {`Event: ${this.props.run.job.event}`}
                             </div>
                             <div className="qa-DataPackListItem-subtitle-date" style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}>
-                                {'Added: ' + moment(this.props.run.started_at).format('YYYY-MM-DD')}
+                                {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
                                 {this.props.run.user === this.props.user.data.user.username ?
                                     <div style={styles.ownerLabel}>My DataPack</div>
                                     :
                                     <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
                                 <div className="qa-DataPackListItem-subtitle-status" style={{ display: 'inline-block', float: 'right' }}>
-                                    {this.props.run.job.published ?
-                                        <SocialPublic className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
+                                    {this.props.run.job.permissions.value !== 'PRIVATE' ?
+                                        <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
                                         :
-                                        <Lock className="qa-DataPackListItem-SocialPerson" style={styles.unpublishedIcon} />
+                                        
+                                        <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
                                     }
                                     {this.props.run.status === 'SUBMITTED' ?
                                         <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />
@@ -293,6 +300,8 @@ DataPackListItem.propTypes = {
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
+    openShare: PropTypes.func.isRequired,
+    adminPermission: PropTypes.bool.isRequired,
 };
 
 export default DataPackListItem;

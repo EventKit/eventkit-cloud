@@ -333,10 +333,6 @@ export class ExportSummary extends Component {
                                             <td style={style.tdHeading}>Project&nbsp;/ Category</td>
                                             <td style={style.tdData}>{this.props.projectName}</td>
                                         </tr>
-                                        <tr id="published" className="qa-ExportSummary-tr-published">
-                                            <td style={style.tdHeading}>Published</td>
-                                            <td style={style.tdData}>{this.props.makePublic.toString()}</td>
-                                        </tr>
                                         <tr id="formats" className="qa-ExportSummary-tr-formats">
                                             <td style={style.tdHeading}>File Formats</td>
                                             <td style={style.tdData}>{formatDesc}</td>
@@ -396,7 +392,6 @@ function mapStateToProps(state) {
         exportName: state.exportInfo.exportName,
         datapackDescription: state.exportInfo.datapackDescription,
         projectName: state.exportInfo.projectName,
-        makePublic: state.exportInfo.makePublic,
         providers: state.exportInfo.providers,
         areaStr: state.exportInfo.areaStr,
         formats: state.exportInfo.formats,
@@ -412,7 +407,6 @@ ExportSummary.propTypes = {
     exportName: PropTypes.string,
     datapackDescription: PropTypes.string,
     projectName: PropTypes.string,
-    makePublic: PropTypes.bool,
     providers: PropTypes.array,
     areaStr: PropTypes.string,
     formats: PropTypes.array,
