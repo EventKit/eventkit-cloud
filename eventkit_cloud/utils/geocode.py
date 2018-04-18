@@ -199,9 +199,10 @@ class Pelias(GeocodeAdapter):
 
     def create_geojson(self, response):
         features = []
-        for feature in response.get('features'):
-            feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
-            features += [feature]
+        if response.get('features') is not None:
+            for feature in response.get('features'):
+                feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
+                features += [feature]
         return self.get_feature_collection(features=features)
 
     def property_map(self):
