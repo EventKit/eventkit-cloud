@@ -570,6 +570,13 @@ export class ExportInfo extends React.Component {
                                             disabled
                                             style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
                                         />);
+                                        nestedItems.push(<ListItem
+                                            className="qa-ExportInfo-ListItem-provMaxAoi"
+                                            key={nestedItems.length}
+                                            primaryText={<div style={{ whiteSpace: 'pre-wrap' }}><span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>{((provider.max_selection == null || provider.max_selection == "" || parseFloat(provider.max_selection) <= 0) ? "unlimited" : (provider.max_selection + " km²"))}</div>}
+                                            disabled
+                                            style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
+                                        />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
 
