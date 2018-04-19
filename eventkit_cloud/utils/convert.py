@@ -36,7 +36,7 @@ class Convert(object):
         
         if('error' in result and result['error'] == 'Invalid token'):
             authenticate()
-            result = get_data(query)
+            result = self.get_data(query)
         return result
     
     def get_data(self, query):
