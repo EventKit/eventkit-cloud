@@ -76,7 +76,7 @@ export class NotificationGridItem extends Component {
                 {message}
                 <div style={{flex: '1'}}></div>
                 <div style={styles.date}>
-                    {moment(this.props.notification.date).fromNow()}
+                    {this.props.notification.timestamp.fromNow()}
                 </div>
                 <NotificationMenu
                     notification={this.props.notification}
