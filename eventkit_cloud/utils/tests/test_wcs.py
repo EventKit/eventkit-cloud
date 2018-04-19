@@ -21,14 +21,15 @@ class TestWCSConverter(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
+    @patch('eventkit_cloud.utils.wcs.auth_requests.get_cred')
     @patch('eventkit_cloud.utils.wcs.os.write')
     @patch('eventkit_cloud.utils.wcs.os.path.exists')
-    def test_convert_geotiff(self, exists, write):
+    def test_convert_geotiff(self, exists, write, get_cred):
         geotiff = '/path/to/geotiff.tif'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
         name = 'Great export'
-        service_url = 'http://testUser:testPass@my-service.org/some-server/wcs?map=testMap.map'
+        service_url = 'http://my-service.org/some-server/wcs?map=testMap.map'
         cmd = Template("gdal_translate -projwin $minX $maxY $maxX $minY -of gtiff $type $wcs $out")
         expected_wcs_xml = Template("""<WCS_GDAL>
               <ServiceURL>$url</ServiceURL>
@@ -46,6 +47,7 @@ class TestWCSConverter(TransactionTestCase):
         })
 
         exists.return_value = True
+        get_cred.return_value = ("testUser", "testPass")
         self.task_process.return_value = Mock(exitcode=0)
 
         wcs_conv = WCSConverter(out=geotiff,
