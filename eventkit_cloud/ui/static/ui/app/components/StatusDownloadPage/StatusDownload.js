@@ -396,8 +396,8 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => {
             dispatch(getProviders());
         },
-        viewedJob: (jobUid) => {
-            dispatch(viewedJob(jobUid));
+        viewedJob: (jobuid) => {
+            dispatch(viewedJob(jobuid));
         },
         getUsers: () => {
             dispatch(getUsers());

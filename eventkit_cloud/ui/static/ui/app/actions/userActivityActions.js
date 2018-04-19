@@ -2,22 +2,29 @@ import axios from 'axios/index';
 import cookie from 'react-cookie';
 import actions from './actionTypes';
 
-export function viewedJob(jobUid) {
+export function viewedJob(jobuid) {
     return (dispatch) => {
         dispatch({
             type: actions.VIEWED_JOB,
-            payload: {
-                jobUid: jobUid
-            }
+            jobuid: jobuid,
         });
 
         return axios({
             url: '/api/user/activity/jobs?activity=viewed',
             method: 'POST',
-            data: {job_uid: jobUid},
-            headers: {'X-CSRFToken': cookie.load('csrftoken')}
+            data: { job_uid: jobuid },
+            headers: { 'X-CSRFToken': cookie.load('csrftoken') }
+        }).then(() => {
+            dispatch({
+                type: actions.VIEWED_JOB_SUCCESS,
+                jobuid: jobuid,
+            });
         }).catch((error) => {
             console.error(error.message);
+            dispatch({
+                type: actions.VIEWED_JOB_ERROR,
+                jobuid: jobuid,
+            });
         });
     };
 }
