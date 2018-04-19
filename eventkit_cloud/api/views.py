@@ -1339,6 +1339,85 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response("OK", status=status.HTTP_200_OK)
 
 
+class NotificationViewSet(viewsets.GenericViewSet):
+    """
+     Api components for viewing and working with notifications
+    """
+
+    serializer_class = NotificationSerializer
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+
+    def serialize_records(self, notifications, request):
+        payload = []
+        for n in notifications:
+            serializer = NotificationSerializer(n)
+            item = serializer.data
+            item['actor'] = serializer.serialize_component(n, n.actor_object_id, n.actor, request)
+            item['target'] = serializer.serialize_component(n, n.target_object_id, n.target, request)
+            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id, n.action_object, request)
+            payload.append(item)
+        return payload
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient_id=self.request.user.id)
+
+    @list_route(methods=['get'])
+    def all(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.active()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def read(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.read()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def unread(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.unread()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def markallasread(self, request, *args, **kwargs):
+        qs = Notification.objects.filter(recipient_id=self.request.user.id)
+        qs.mark_all_as_read()
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
+
+    @list_route(methods=['post'])
+    def mark(self, request, *args, **kwargs):
+        """
+         Change the status of one or more notifications.
+
+
+         Args:
+             A list containing one or more records like this:
+            [
+             {"id": 3, "action": "DELETE" },
+             {"id": 17, "action": "READ" },
+             {"id" : 19, "action" "UNREAD" },
+             ...
+            ]
+
+         Returns:
+            { "success" : True} or error
+        """
+
+        logger.info(request.data)
+        for row in request.data:
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
+            logger.info(qs)
+            if row['action'] == 'READ':
+                qs.mark_all_as_read()
+            if row['action'] == 'DELETE':
+                qs.mark_all_as_deleted()
+            if row['action'] == 'UNREAD':
+                qs.mark_all_as_unread()
+
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
+
+
 def get_models(model_list, model_object, model_index):
     models = []
     if not model_list:
