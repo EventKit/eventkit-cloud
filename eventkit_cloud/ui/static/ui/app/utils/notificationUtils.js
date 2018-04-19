@@ -34,13 +34,13 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
                     key={`${notification.id}-Link`}
-                    to={`/status/${notification.actor.details.uid}`}
-                    href={`/status/${notification.actor.details.uid}`}
+                    to={`/status/${notification.actor.details.job.uid}`}
+                    href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.name}
+                    title={notification.actor.details.job.name}
                 >
-                    {notification.actor.details.name}
+                    {notification.actor.details.job.name}
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;has started.</span>
             ];
@@ -49,13 +49,13 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
                     key={`${notification.id}-Link`}
-                    to={`/status/${notification.actor.details.uid}`}
-                    href={`/status/${notification.actor.details.uid}`}
+                    to={`/status/${notification.actor.details.job.uid}`}
+                    href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.name}
+                    title={notification.actor.details.job.name}
                 >
-                    {notification.actor.details.name}
+                    {notification.actor.details.job.name}
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;is complete.</span>
             ];
@@ -64,13 +64,13 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
                     key={`${notification.id}-Link`}
-                    to={`/status/${notification.actor.details.uid}`}
-                    href={`/status/${notification.actor.details.uid}`}
+                    to={`/status/${notification.actor.details.job.uid}`}
+                    href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.name}
+                    title={notification.actor.details.job.name}
                 >
-                    {notification.actor.details.name}
+                    {notification.actor.details.job.name}
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was deleted.</span>
             ];
@@ -79,13 +79,13 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
                     key={`${notification.id}-Link`}
-                    to={`/status/${notification.actor.details.uid}`}
-                    href={`/status/${notification.actor.details.uid}`}
+                    to={`/status/${notification.actor.details.job.uid}`}
+                    href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.name}
+                    title={notification.actor.details.job.name}
                 >
-                    {notification.actor.details.name}
+                    {notification.actor.details.job.name}
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;failed to complete.</span>
             ];
@@ -130,7 +130,7 @@ export function getNotificationViewPath(notification) {
         case 'run_complete':
         case 'run_delete':
         case 'run_error':
-            return `/status/${notification.actor.details.uid}`;
+            return `/status/${notification.actor.details.job.uid}`;
         default:
             console.error(`Unsupported notification type '${type}'`, notification);
     }
