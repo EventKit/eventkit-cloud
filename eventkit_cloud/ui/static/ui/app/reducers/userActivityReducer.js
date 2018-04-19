@@ -21,7 +21,7 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     ...state.viewedJobs,
                     fetching: false,
                     fetched: true,
-                    jobs: action.payload,
+                    viewedJobs: action.payload,
                     nextPage: action.nextPage,
                     range: action.range,
                     error: action.error,
@@ -35,7 +35,7 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     ...state.viewedJobs,
                     fetching: false,
                     fetched: false,
-                    jobs: [],
+                    viewedJobs: [],
                     error: action.error,
                     cancelSource: null
                 }

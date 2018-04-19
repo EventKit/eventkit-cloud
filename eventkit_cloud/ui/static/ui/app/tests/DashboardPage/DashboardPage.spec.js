@@ -21,7 +21,7 @@ describe('DashboardPage component', () => {
                 viewedJobs: {
                     fetching: false,
                     fetched: false,
-                    jobs: [],
+                    viewedJobs: [],
                 },
             },
             runsList: {
@@ -95,7 +95,7 @@ describe('DashboardPage component', () => {
                 viewedJobs: {
                     fetching: false,
                     fetched: true,
-                    jobs: [],
+                    viewedJobs: [],
                 },
             },
         });
@@ -121,7 +121,7 @@ describe('DashboardPage component', () => {
                 viewedJobs: {
                     fetching: false,
                     fetched: true,
-                    jobs: [
+                    viewedJobs: [
                         {last_export_run: runs[0]},
                         {last_export_run: runs[1]},
                     ],

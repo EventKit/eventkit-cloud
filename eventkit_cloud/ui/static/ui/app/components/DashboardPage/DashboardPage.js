@@ -354,14 +354,14 @@ export class DashboardPage extends React.Component {
                                     </Paper>
                                 }
                             >
-                                {this.props.userActivity.viewedJobs.jobs.map((job, index) => {
-                                    const run = job.last_export_run;
+                                {this.props.userActivity.viewedJobs.viewedJobs.map((viewedJob, index) => {
+                                    const run = viewedJob.last_export_run;
                                     return (
                                         <DataPackGridItem
                                             className="qa-DashboardSection-RecentlyViewedGrid-Item"
                                             run={run}
                                             user={this.props.user}
-                                            key={`RecentlyViewedDataPack-${job.created_at}`}
+                                            key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
                                             onRunDelete={this.props.deleteRuns}
                                             providers={this.props.providers}
                                             adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups)}

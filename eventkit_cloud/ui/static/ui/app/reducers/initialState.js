@@ -124,7 +124,7 @@ export default {
         viewedJobs: {
             fetching: false,
             fetched: false,
-            jobs: [],
+            viewedJobs: [],
             error: null,
         },
     },
