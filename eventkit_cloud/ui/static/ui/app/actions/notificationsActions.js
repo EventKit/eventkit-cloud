@@ -260,15 +260,14 @@ export function getNotificationsUnreadCount(args = {}) {
             cancelSource,
         });
 
-        // TODO: Switch this to a new endpoint that only returns the count.
         return axios({
-            url: '/api/notifications/unread',
+            url: '/api/notifications/counts',
             method: 'GET',
             cancelToken: cancelSource.token,
         }).then((response) => {
             dispatch({
                 type: actions.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
-                unreadCount: response.data.length,
+                unreadCount: response.data.unread,
             });
         }).catch((error) => {
             if (axios.isCancel(error)) {
