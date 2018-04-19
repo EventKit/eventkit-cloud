@@ -9,6 +9,7 @@ import shutil
 import logging
 from notifications.signals import notify
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -98,8 +99,8 @@ def load_land_vectors(db_conn=None, url=None):
     finally:
         logger.info("Finished loading land data.")
 
-
 # notify.send(actor, recipient, verb, action_object, target, level, description, all required. None value is OK)
+
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
     logger.info("%s %s %s" % (actor,recipient,verb))

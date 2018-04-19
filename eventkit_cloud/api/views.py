@@ -17,6 +17,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, JobPermission
+from notifications.models import Notification
+from ..core.helpers import sendnotification
+
 
 from eventkit_cloud.jobs.models import (
     ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
@@ -388,7 +391,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={'request': request})
-            sendnotification(job,request.user,'STARTED', None, None, 'info', 'Job has started' )
+            sendnotification(job, request.user, 'STARTED', None, None, 'info', 'Job has started')
 
             # Run is passed to celery to start the tasks.
             pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
