@@ -1,9 +1,9 @@
 import React from 'react';
 import sinon from 'sinon';
-import {shallow, mount} from 'enzyme';
+import { shallow, mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {Table, TableBody, TableHeader, TableHeaderColumn, TableRow} from 'material-ui/Table';
-import {GridList} from 'material-ui/GridList'
+import { Table, TableBody, TableHeader, TableHeaderColumn } from 'material-ui/Table';
+import { GridList } from 'material-ui/GridList'
 import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
 import DataPackList from '../../components/DataPackPage/DataPackList';
@@ -15,41 +15,42 @@ describe('DataPackList component', () => {
     const muiTheme = getMuiTheme();
     const providers = [
         {
-            "id": 2,
-            "model_url": "http://cloud.eventkit.test/api/providers/osm",
-            "type": "osm",
-            "license": null,
-            "created_at": "2017-08-15T19:25:10.844911Z",
-            "updated_at": "2017-08-15T19:25:10.844919Z",
-            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
-            "name": "OpenStreetMap Data (Themes)",
-            "slug": "osm",
-            "preview_url": "",
-            "service_copyright": "",
-            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
-            "layer": null,
-            "level_from": 0,
-            "level_to": 10,
-            "zip": false,
-            "display": true,
-            "export_provider_type": 2
+            id: 2,
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            type: 'osm',
+            license: null,
+            created_at: '2017-08-15T19:25:10.844911Z',
+            updated_at: '2017-08-15T19:25:10.844919Z',
+            uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+            name: 'OpenStreetMap Data (Themes)',
+            slug: 'osm',
+            preview_url: '',
+            service_copyright: '',
+            service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            zip: false,
+            display: true,
+            export_provider_type: 2,
         },
-    ]
+    ];
+
     const getProps = () => {
         return {
             runs: getRuns(),
-            user: {data: {user: {username: 'admin'}}},
+            user: { data: { user: { username: 'admin' } } },
             onRunDelete: () => {},
             onSort: () => {},
             order: '-started_at',
-            providers: providers,
-        }
+            providers,
+        };
     };
 
     const getWrapper = (props) => {
-        return mount(<DataPackList {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        return mount(<DataPackList {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object }
         });
     }
 
@@ -68,8 +69,8 @@ describe('DataPackList component', () => {
 
     it('should render table items as part of the desktop view', () => {
         const props = getProps();
-        const  wrapper = getWrapper(props);
-        //ensure the screen is large
+        const wrapper = getWrapper(props);
+        // ensure the screen is large
         window.resizeTo(1250, 800);
         expect(window.innerWidth).toEqual(1250);
         wrapper.update();
@@ -101,7 +102,7 @@ describe('DataPackList component', () => {
 
     it('name column header should call handleOrder onclick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(0).find('div').simulate('click');
@@ -112,7 +113,7 @@ describe('DataPackList component', () => {
 
     it('event column header should call handleOrder onclick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(1).find('div').simulate('click');
@@ -123,7 +124,7 @@ describe('DataPackList component', () => {
 
     it('date column header should call handleOrder onclick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(2).find('div').simulate('click');
@@ -134,7 +135,7 @@ describe('DataPackList component', () => {
 
     it('status column header should call handleOrder onclick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(3).find('div').simulate('click');
@@ -145,7 +146,7 @@ describe('DataPackList component', () => {
 
     it('permissions column header should call handleOrder onclick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(4).find('div').simulate('click');
@@ -156,7 +157,7 @@ describe('DataPackList component', () => {
 
     it('owner column header should call handleOrder onclick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(5).find('div').simulate('click');
@@ -167,18 +168,18 @@ describe('DataPackList component', () => {
 
     it('featured colum header should call handleOrder onClick', () => {
         const props = getProps();
-        const orderSpy = new sinon.spy(DataPackList.prototype, 'handleOrder');
+        const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
         wrapper.find(TableHeaderColumn).at(6).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('-job__featured')).toBe(true);
-    })
+    });
 
     it('handleOrder should call isSameOrderType and props.onSort', () => {
-        let props = getProps();
-        props.onSort = new sinon.spy();
-        const isSameSpy = new sinon.spy(DataPackList.prototype, 'isSameOrderType');
+        const props = getProps();
+        props.onSort = sinon.spy();
+        const isSameSpy = sinon.spy(DataPackList.prototype, 'isSameOrderType');
         const wrapper = getWrapper(props);
 
         let newOrder = 'job__name';
@@ -193,7 +194,7 @@ describe('DataPackList component', () => {
         expect(props.onSort.calledTwice).toBe(true);
         expect(props.onSort.calledWith(newOrder)).toBe(true);
 
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.order = 'started_at';
         nextProps.onSort = props.onSort;
         wrapper.setProps(nextProps);
@@ -208,195 +209,100 @@ describe('DataPackList component', () => {
 
     it('isSameOrderType should return true or false', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
+        const wrapper = shallow(<DataPackList {...props} />);
         expect(wrapper.instance().isSameOrderType('-started_at', 'started_at')).toBe(true);
         expect(wrapper.instance().isSameOrderType('job__name', 'started_at')).toBe(false);
     });
 
     it('getIcon should return up arrow if activeSort is equal to passed in sort, else it return down arrow', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
+        const wrapper = shallow(<DataPackList {...props} />);
         let icon = wrapper.instance().getIcon('started_at');
-        expect(icon).toEqual(<NavigationArrowDropDown className={'qa-DataPackList-NavigationArrowDropDown'} style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
+        expect(icon).toEqual(<NavigationArrowDropDown className="qa-DataPackList-NavigationArrowDropDown" style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }} />);
         icon = wrapper.instance().getIcon('-started_at');
-        expect(icon).toEqual(<NavigationArrowDropUp className={'qa-DataPackList-NavigationArrowDropUp'} style={{verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0'}}/>);
+        expect(icon).toEqual(<NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }} />);
     });
 
     it('getHeaderStyle should return bold black style if true or inherit style if false', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackList {...props}/>);
+        const wrapper = shallow(<DataPackList {...props} />);
         let style = wrapper.instance().getHeaderStyle(true);
-        expect(style).toEqual({color: '#000', fontWeight: 'bold'});
+        expect(style).toEqual({ color: '#000', fontWeight: 'bold' });
         style = wrapper.instance().getHeaderStyle(false);
-        expect(style).toEqual({color: 'inherit'});
+        expect(style).toEqual({ color: 'inherit' });
     });
 });
 
 function getRuns() {
     return [
-    {
-        "uid": "6870234f-d876-467c-a332-65fdf0399a0d",
-        "url": "http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d",
-        "started_at": "2017-03-10T15:52:35.637331Z",
-        "finished_at": "2017-03-10T15:52:39.837Z",
-        "duration": "0:00:04.199825",
-        "user": "admin",
-        "status": "COMPLETED",
-        "job": {
-            "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
-            "name": "Test1",
-            "event": "Test1 event",
-            "description": "Test1 description",
-            "url": "http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a",
-            "extent": {
-                "type": "Feature",
-                "properties": {
-                    "uid": "7643f806-1484-4446-b498-7ddaa65d011a",
-                    "name": "Test1"
+        {
+            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+            url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+            started_at: '2017-03-10T15:52:35.637331Z',
+            finished_at: '2017-03-10T15:52:39.837Z',
+            user: 'admin',
+            status: 'COMPLETED',
+            job: {
+                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                name: 'Test1',
+                event: 'Test1 event',
+                description: 'Test1 description',
+                url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+                extent: {},
+                permissions: {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
                 },
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [
-                            [
-                                -0.077419,
-                                50.778155
-                            ],
-                            [
-                                -0.077419,
-                                50.818517
-                            ],
-                            [
-                                -0.037251,
-                                50.818517
-                            ],
-                            [
-                                -0.037251,
-                                50.778155
-                            ],
-                            [
-                                -0.077419,
-                                50.778155
-                            ]
-                        ]
-                    ]
-                }
             },
-            "selection": "",
-            "published": false
+            provider_tasks: [],
+            expiration: '2017-03-24T15:52:35.637258Z',
         },
-        "provider_tasks": [],
-        "zipfile_url": "http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip",
-        "expiration": "2017-03-24T15:52:35.637258Z"
-    },
-    {
-        "uid": "c7466114-8c0c-4160-8383-351414b11e37",
-        "url": "http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37",
-        "started_at": "2017-03-10T15:52:29.311523Z",
-        "finished_at": "2017-03-10T15:52:33.612Z",
-        "duration": "0:00:04.301278",
-        "user": "notAdmin",
-        "status": "COMPLETED",
-        "job": {
-            "uid": "5488a864-89f2-4e9c-8370-18291ecdae4a",
-            "name": "Test2",
-            "event": "Test2 event",
-            "description": "Test2 description",
-            "url": "http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a",
-            "extent": {
-                "type": "Feature",
-                "properties": {
-                    "uid": "5488a864-89f2-4e9c-8370-18291ecdae4a",
-                    "name": "Test2"
+        {
+            uid: 'c7466114-8c0c-4160-8383-351414b11e37',
+            url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
+            started_at: '2017-03-10T15:52:29.311523Z',
+            finished_at: '2017-03-10T15:52:33.612Z',
+            user: 'notAdmin',
+            status: 'COMPLETED',
+            job: {
+                uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
+                name: 'Test2',
+                event: 'Test2 event',
+                description: 'Test2 description',
+                url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
+                extent: {},
+                permissions: {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
                 },
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [
-                            [
-                                -0.077419,
-                                50.778155
-                            ],
-                            [
-                                -0.077419,
-                                50.818517
-                            ],
-                            [
-                                -0.037251,
-                                50.818517
-                            ],
-                            [
-                                -0.037251,
-                                50.778155
-                            ],
-                            [
-                                -0.077419,
-                                50.778155
-                            ]
-                        ]
-                    ]
-                }
             },
-            "selection": "",
-            "published": true
+            provider_tasks: [],
+            expiration: '2017-03-24T15:52:29.311458Z',
         },
-        "provider_tasks": [],
-        "zipfile_url": "http://cloud.eventkit.test/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip",
-        "expiration": "2017-03-24T15:52:29.311458Z"
-    },
-    {
-        "uid": "282816a6-7d16-4f59-a1a9-18764c6339d6",
-        "url": "http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6",
-        "started_at": "2017-03-10T15:52:18.796929Z",
-        "finished_at": "2017-03-10T15:52:27.500Z",
-        "duration": "0:00:08.703092",
-        "user": "admin",
-        "status": "COMPLETED",
-        "job": {
-            "uid": "78bbd59a-4066-4e30-8460-c7b0093a0d7a",
-            "name": "Test3",
-            "event": "Test3 event",
-            "description": "Test3 description",
-            "url": "http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a",
-            "extent": {
-                "type": "Feature",
-                "properties": {
-                    "uid": "78bbd59a-4066-4e30-8460-c7b0093a0d7a",
-                    "name": "Test3"
+        {
+            uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
+            url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
+            started_at: '2017-03-10T15:52:18.796929Z',
+            finished_at: '2017-03-10T15:52:27.500Z',
+            user: 'admin',
+            status: 'COMPLETED',
+            job: {
+                uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                name: 'Test3',
+                event: 'Test3 event',
+                description: 'Test3 description',
+                url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                extent: {},
+                permissions: {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
                 },
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [
-                            [
-                                -0.077419,
-                                50.778155
-                            ],
-                            [
-                                -0.077419,
-                                50.818517
-                            ],
-                            [
-                                -0.037251,
-                                50.818517
-                            ],
-                            [
-                                -0.037251,
-                                50.778155
-                            ],
-                            [
-                                -0.077419,
-                                50.778155
-                            ]
-                        ]
-                    ]
-                }
             },
-            "selection": "",
-            "published": true
+            provider_tasks: [],
+            expiration: '2017-03-24T15:52:18.796854Z',
         },
-        "provider_tasks": [],
-        "zipfile_url": "http://cloud.eventkit.test/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip",
-        "expiration": "2017-03-24T15:52:18.796854Z"
-    },]
+    ];
 }
