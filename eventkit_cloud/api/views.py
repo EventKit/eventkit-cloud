@@ -1381,6 +1381,15 @@ class NotificationViewSet(viewsets.GenericViewSet):
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
+    @list_route(methods=['get'])
+    def counts(self, request, *args, **kwargs):
+        payload = {
+            "read" : len(request.user.notifications.read()),
+            "unread": len(request.user.notifications.unread())
+        }
+
+        return Response(payload, status=status.HTTP_200_OK)
+
     @list_route(methods=['post'])
     def mark_all_as_read(self, request, *args, **kwargs):
         qs = Notification.objects.filter(recipient_id=self.request.user.id)
