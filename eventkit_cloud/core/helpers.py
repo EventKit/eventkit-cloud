@@ -8,6 +8,7 @@ import zipfile
 import shutil
 import logging
 from notifications.signals import notify
+from enum import Enum
 
 
 logger = logging.getLogger(__name__)
@@ -102,10 +103,18 @@ def load_land_vectors(db_conn=None, url=None):
 # notify.send(actor, recipient, verb, action_object, target, level, description, all required. None value is OK)
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
-    logger.info("%s %s %s" % (actor,recipient,verb))
+    logger.info("**** NOTIFY  %s %s %s" % (actor,recipient,verb))
     try:
         result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
                              level=level,description=description)
     except Exception as err:
         logger.info( "notify errror ignored: %s" % err)
+
+
+class NotificationVerbs(Enum):
+    START = "START"
+    END   = "END"
+    DELETE = "DELETE"
+    JOIN = "JOIN"
+    REMOVE = "REMOVE"
 

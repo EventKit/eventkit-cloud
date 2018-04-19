@@ -34,6 +34,7 @@ from .task_runners import (
     ExportArcGISFeatureServiceTaskRunner
 )
 
+from ..core.helpers import sendnotification, NotificationVerbs
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -218,6 +219,7 @@ def create_run(job_uid, user=None):
             # add the export run to the database
             run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
+            sendnotification(run, run.user, NotificationVerbs.START.value, None, None, "info", '')
             run_uid = run.uid
             logger.debug('Saved run with id: {0}'.format(str(run_uid)))
             return run_uid

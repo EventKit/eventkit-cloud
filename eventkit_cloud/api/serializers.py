@@ -758,5 +758,9 @@ class NotificationSerializer(serializers.ModelSerializer):
             job = Job.objects.get(pk=obj.actor_object_id)
             response['type'] = 'Job'
             response['details'] = ListJobSerializer(job,context={'request': request}).data
+        if isinstance(component, ExportRun):
+            run = ExportRun.objects.get(pk=obj.actor_object_id)
+            response['type'] = 'Run'
+            response['details'] = ExportRunSerializer(run,context={'request': request}).data
 
         return response
