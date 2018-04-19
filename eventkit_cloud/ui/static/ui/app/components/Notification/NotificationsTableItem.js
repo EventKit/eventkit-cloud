@@ -132,10 +132,10 @@ export class NotificationsTableItem extends React.Component {
                     style={styles.dateRowColumn}
                 >
                     <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
-                        {moment(this.props.notification.date).format('M/D/YY')}
+                        {this.props.notification.timestamp.format('M/D/YY')}
                     </div>
                     <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
-                        {moment(this.props.notification.date).format('h:mma')}
+                        {this.props.notification.timestamp.format('h:mma')}
                     </div>
                 </TableRowColumn>
                 <TableRowColumn
