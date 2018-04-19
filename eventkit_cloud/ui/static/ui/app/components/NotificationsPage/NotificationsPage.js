@@ -201,7 +201,7 @@ export class NotificationsPage extends React.Component {
                                     <LoadButtons
                                         range={this.props.notifications.range}
                                         handleLoadMore={this.handleLoadMore}
-                                        loadMoreDisabled={false}
+                                        loadMoreDisabled={!this.props.notifications.nextPage}
                                     />
                                 </div>
                             }

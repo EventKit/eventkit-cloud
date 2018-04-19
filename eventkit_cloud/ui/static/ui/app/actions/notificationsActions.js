@@ -1,6 +1,7 @@
 import axios from 'axios';
 import actions from './actionTypes';
 import cookie from 'react-cookie';
+import moment from 'moment';
 
 export function getNotifications(args = {}) {
     return (dispatch, getState) => {
@@ -47,6 +48,11 @@ export function getNotifications(args = {}) {
             let range = '';
             if (response.headers['content-range']) {
                 range = response.headers['content-range'].split('-')[1];
+            }
+
+            // Convert timestamp strings to moments.
+            for (let notification of response.data) {
+                notification.timestamp = moment(notification.timestamp);
             }
 
             dispatch({
@@ -212,8 +218,8 @@ export function markAllNotificationsAsRead() {
         });
 
         return axios({
-            url: '/api/notifications/markallasread',
-            method: 'GET',
+            url: '/api/notifications/mark_all_as_read',
+            method: 'POST',
             cancelToken: cancelSource.token,
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {

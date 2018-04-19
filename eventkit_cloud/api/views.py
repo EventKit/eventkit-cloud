@@ -18,7 +18,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, JobPermission
 from notifications.models import Notification
-from ..core.helpers import sendnotification
+from ..core.helpers import sendnotification, NotificationVerbs
 
 
 from eventkit_cloud.jobs.models import (
@@ -391,7 +391,6 @@ class JobViewSet(viewsets.ModelViewSet):
                 return Response(error_data, status=status_code)
 
             running = JobSerializer(job, context={'request': request})
-            sendnotification(job, request.user, 'STARTED', None, None, 'info', 'Job has started')
 
             # Run is passed to celery to start the tasks.
             pick_up_run_task.delay(run_uid=run_uid, user_details=user_details)
@@ -436,7 +435,9 @@ class JobViewSet(viewsets.ModelViewSet):
             logger.debug("Getting Run Data.".format(run.uid))
             running = ExportRunSerializer(run, context={'request': request})
             logger.debug("Returning Run Data.".format(run.uid))
+
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
+
         else:
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
@@ -1416,6 +1417,7 @@ class NotificationViewSet(viewsets.GenericViewSet):
 
     serializer_class = NotificationSerializer
     filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    pagination_class = LinkHeaderPagination
 
     def serialize_records(self, notifications, request):
         payload = []
@@ -1449,8 +1451,8 @@ class NotificationViewSet(viewsets.GenericViewSet):
         payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
-    @list_route(methods=['get'])
-    def markallasread(self, request, *args, **kwargs):
+    @list_route(methods=['post'])
+    def mark_all_as_read(self, request, *args, **kwargs):
         qs = Notification.objects.filter(recipient_id=self.request.user.id)
         qs.mark_all_as_read()
         return Response( { "success" : True},  status=status.HTTP_200_OK)

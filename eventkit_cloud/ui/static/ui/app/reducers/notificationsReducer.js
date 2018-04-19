@@ -147,6 +147,6 @@ export function notificationsReducer(state = initialState.notifications, action)
 
 function getSortedNotifications(notificationsObj) {
     const notificationsSorted = values(notificationsObj);
-    notificationsSorted.sort((a, b) => b.date - a.date);
+    notificationsSorted.sort((a, b) => b.timestamp - a.timestamp);
     return notificationsSorted;
 }

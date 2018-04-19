@@ -29,7 +29,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
 
     const type = getNotificationType(notification);
     switch (type) {
-        case 'job_started':
+        case 'run_start':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -44,7 +44,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;has started.</span>
             ];
-        case 'job_completed':
+        case 'run_complete':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -59,7 +59,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;is complete.</span>
             ];
-        case 'job_deleted':
+        case 'run_delete':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -74,7 +74,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was deleted.</span>
             ];
-        case 'job_error':
+        case 'run_error':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -110,13 +110,13 @@ export function getNotificationIcon({ notification, iconStyle }) {
 
     const type = getNotificationType(notification);
     switch (type) {
-        case 'job_started':
+        case 'run_start':
             return infoIcon;
-        case 'job_complete':
+        case 'run_complete':
             return checkCircleIcon;
-        case 'job_deleted':
+        case 'run_delete':
             return warningIcon;
-        case 'job_error':
+        case 'run_error':
             return errorIcon;
         default:
             console.error(`Unsupported notification type '${type}'`, notification);
@@ -126,10 +126,10 @@ export function getNotificationIcon({ notification, iconStyle }) {
 export function getNotificationViewPath(notification) {
     const type = getNotificationType(notification);
     switch (type) {
-        case 'job_started':
-        case 'job_complete':
-        case 'job_deleted':
-        case 'job_error':
+        case 'run_start':
+        case 'run_complete':
+        case 'run_delete':
+        case 'run_error':
             return `/status/${notification.actor.details.uid}`;
         default:
             console.error(`Unsupported notification type '${type}'`, notification);
@@ -142,5 +142,15 @@ function getNotificationType(notification) {
         type = `${notification.actor.type.toLowerCase()}_${type}`;
     }
 
-    return type;
+    const level = notification.level.toLowerCase();
+    switch (type) {
+        case 'run_end':
+            if (level === 'error') {
+                return 'run_error';
+            } else {
+                return 'run_complete';
+            }
+        default:
+            return type;
+    }
 }
