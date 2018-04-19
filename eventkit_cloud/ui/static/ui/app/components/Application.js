@@ -516,14 +516,14 @@ export class Application extends Component {
                                         >
                                             <Notifications />
                                         </IconButton>
-                                        {(this.props.notifications.unreadCount.unreadCount > 0) ?
-                                            <div
-                                                className="qa-Application-NotificationsIndicator"
-                                                style={styles.notificationsIndicator}
-                                            />
-                                            :
-                                            null
-                                        }
+                                        <div
+                                            className="qa-Application-NotificationsIndicator"
+                                            style={{
+                                                ...styles.notificationsIndicator,
+                                                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                                                transform: (this.props.notifications.unreadCount.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
+                                            }}
+                                        />
                                         <div ref={this.setNotificationsDropdownContainerRef}>
                                             <NotificationsDropdown
                                                 style={{

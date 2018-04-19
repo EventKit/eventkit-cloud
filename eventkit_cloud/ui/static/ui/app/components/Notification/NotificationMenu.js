@@ -102,19 +102,19 @@ export class NotificationMenu extends React.Component {
                     leftIcon={<OpenInNewIcon />}
                     onClick={this.handleView}
                 />
-                {this.props.notification.read ?
-                    <MenuItem
-                        style={styles.menuItem}
-                        primaryText="Mark As Unread"
-                        leftIcon={<FlagIcon />}
-                        onClick={this.handleMarkAsUnread}
-                    />
-                    :
+                {this.props.notification.unread ?
                     <MenuItem
                         style={styles.menuItem}
                         primaryText="Mark As Read"
                         leftIcon={<FlagIcon />}
                         onClick={this.handleMarkAsRead}
+                    />
+                    :
+                    <MenuItem
+                        style={styles.menuItem}
+                        primaryText="Mark As Unread"
+                        leftIcon={<FlagIcon />}
+                        onClick={this.handleMarkAsUnread}
                     />
                 }
                 <MenuItem

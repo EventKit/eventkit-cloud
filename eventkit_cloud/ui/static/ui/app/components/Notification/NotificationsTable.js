@@ -41,9 +41,9 @@ export class NotificationsTable extends React.Component {
     setSelected(notification, isSelected) {
         const selected = { ...this.state.selected };
         if (isSelected) {
-            selected[notification.uid] = notification;
+            selected[notification.id] = notification;
         } else {
-            delete selected[notification.uid];
+            delete selected[notification.id];
         }
 
         this.setState({ selected });
@@ -53,7 +53,7 @@ export class NotificationsTable extends React.Component {
         let selected = { ...this.state.selected };
         if (this.getSelectedCount() === 0) {
             this.props.notifications.notificationsSorted.map((notification) => {
-                selected[notification.uid] = notification;
+                selected[notification.id] = notification;
             });
         } else {
             selected = {};
@@ -178,10 +178,10 @@ export class NotificationsTable extends React.Component {
                     <TableBody displayRowCheckbox={false}>
                         {this.props.notifications.notificationsSorted.map((notification) => (
                             <NotificationsTableItem
-                                key={`NotificationsTableItem-${notification.uid}`}
+                                key={`NotificationsTableItem-${notification.id}`}
                                 notification={notification}
                                 router={this.props.router}
-                                isSelected={!!this.state.selected[notification.uid]}
+                                isSelected={!!this.state.selected[notification.id]}
                                 setSelected={this.setSelected}
                                 onMarkAsRead={this.props.onMarkAsRead}
                                 onMarkAsUnread={this.props.onMarkAsUnread}

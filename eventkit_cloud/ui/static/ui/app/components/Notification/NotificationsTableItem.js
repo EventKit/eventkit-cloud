@@ -104,7 +104,7 @@ export class NotificationsTableItem extends React.Component {
             <TableRow
                 style={{
                     ...styles.tableRow,
-                    backgroundColor: (this.props.notification.read) ? 'white' : '#d5e6f1',
+                    backgroundColor: (this.props.notification.unread) ? '#d5e6f1' : 'white',
                 }}
                 selectable={false}
             >
@@ -156,16 +156,7 @@ export class NotificationsTableItem extends React.Component {
                                     />
                                 </div>
                                 <div style={{ flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box' }}>
-                                    {this.props.notification.read ?
-                                        <FlatButton
-                                            label="Mark As Unread"
-                                            labelStyle={styles.optionButtonLabel}
-                                            icon={<FlagIcon style={styles.optionButtonLabel} />}
-                                            hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple={true}
-                                            onClick={this.handleMarkAsUnread}
-                                        />
-                                        :
+                                    {this.props.notification.unread ?
                                         <FlatButton
                                             label="Mark As Read"
                                             labelStyle={styles.optionButtonLabel}
@@ -173,6 +164,15 @@ export class NotificationsTableItem extends React.Component {
                                             hoverColor="rgba(0, 0, 0, 0)"
                                             disableTouchRipple={true}
                                             onClick={this.handleMarkAsRead}
+                                        />
+                                        :
+                                        <FlatButton
+                                            label="Mark As Unread"
+                                            labelStyle={styles.optionButtonLabel}
+                                            icon={<FlagIcon style={styles.optionButtonLabel} />}
+                                            hoverColor="rgba(0, 0, 0, 0)"
+                                            disableTouchRipple={true}
+                                            onClick={this.handleMarkAsUnread}
                                         />
                                     }
                                 </div>

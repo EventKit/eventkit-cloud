@@ -129,7 +129,7 @@ export class NotificationsDropdown extends React.Component {
                             >
                                 {notifications.map((notification, index) => (
                                     <NotificationGridItem
-                                        key={`Notification-${notification.uid}`}
+                                        key={`Notification-${notification.id}`}
                                         style={{
                                             ...styles.gridItem,
                                             borderTop: (index === 0) ? '1px solid lightgray' : '',

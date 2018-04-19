@@ -67,10 +67,10 @@ export class NotificationsTableMenu extends React.Component {
         const selectedNotificationsKeys = Object.keys(this.props.selectedNotifications);
         for (let uid of selectedNotificationsKeys) {
             const notification = this.props.selectedNotifications[uid];
-            if (notification.read) {
-                showMarkAsUnread = true;
-            } else {
+            if (notification.unread) {
                 showMarkAsRead = true;
+            } else {
+                showMarkAsUnread = true;
             }
 
             if (showMarkAsUnread && showMarkAsRead) {

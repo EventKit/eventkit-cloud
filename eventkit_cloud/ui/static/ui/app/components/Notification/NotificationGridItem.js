@@ -69,7 +69,7 @@ export class NotificationGridItem extends Component {
             <Paper
                 style={{
                     ...styles.root,
-                    backgroundColor: (this.props.notification.read) ? 'white' : '#d5e6f1',
+                    backgroundColor: (this.props.notification.unread) ? '#d5e6f1' : 'white',
                 }}
             >
                 {icon}
