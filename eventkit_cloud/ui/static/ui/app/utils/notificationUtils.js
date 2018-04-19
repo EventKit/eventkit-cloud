@@ -27,11 +27,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
         }
     };
 
-    let type = notification.verb.toLowerCase();
-    if (notification.actor) {
-        type = `${notification.actor.type.toLowerCase()}_${type}`;
-    }
-
+    const type = getNotificationType(notification);
     switch (type) {
         case 'job_started':
             return [
@@ -63,21 +59,6 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;is complete.</span>
             ];
-        case 'job_error':
-            return [
-                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
-                <Link
-                    key={`${notification.id}-Link`}
-                    to={`/status/${notification.actor.details.uid}`}
-                    href={`/status/${notification.actor.details.uid}`}
-                    style={styles.link}
-                    onClick={handleLinkClick}
-                    title={notification.actor.details.name}
-                >
-                    {notification.actor.details.name}
-                </Link>,
-                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;failed to complete.</span>
-            ];
         case 'job_deleted':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
@@ -92,6 +73,21 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                     {notification.actor.details.name}
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was deleted.</span>
+            ];
+        case 'job_error':
+            return [
+                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
+                <Link
+                    key={`${notification.id}-Link`}
+                    to={`/status/${notification.actor.details.uid}`}
+                    href={`/status/${notification.actor.details.uid}`}
+                    style={styles.link}
+                    onClick={handleLinkClick}
+                    title={notification.actor.details.name}
+                >
+                    {notification.actor.details.name}
+                </Link>,
+                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;failed to complete.</span>
             ];
         default:
             console.error(`Unsupported notification type '${type}'`, notification);
@@ -112,35 +108,39 @@ export function getNotificationIcon({ notification, iconStyle }) {
     const warningIcon = <Warning style={{...styles.icon, fill: '#F4D225'}} />;
     const errorIcon = <Error style={{...styles.icon, fill: '#CE4427'}} />;
 
-    const level = notification.level.toLowerCase();
-
-    switch (level) {
-        case 'info':
+    const type = getNotificationType(notification);
+    switch (type) {
+        case 'job_started':
             return infoIcon;
-        case 'success':
+        case 'job_complete':
             return checkCircleIcon;
-        case 'warning':
+        case 'job_deleted':
             return warningIcon;
-        case 'error':
+        case 'job_error':
             return errorIcon;
         default:
-            console.error(`Unsupported notification level '${level}'`, notification);
+            console.error(`Unsupported notification type '${type}'`, notification);
     }
 }
 
 export function getNotificationViewPath(notification) {
+    const type = getNotificationType(notification);
+    switch (type) {
+        case 'job_started':
+        case 'job_complete':
+        case 'job_deleted':
+        case 'job_error':
+            return `/status/${notification.actor.details.uid}`;
+        default:
+            console.error(`Unsupported notification type '${type}'`, notification);
+    }
+}
+
+function getNotificationType(notification) {
     let type = notification.verb.toLowerCase();
     if (notification.actor) {
         type = `${notification.actor.type.toLowerCase()}_${type}`;
     }
 
-    switch (type) {
-        case 'job_started':
-        case 'job_complete':
-        case 'job_error':
-        case 'job_deleted':
-            return `/status/${notification.actor.details.uid}`;
-        default:
-            console.error(`Unsupported notification type '${type}'`, notification);
-    }
+    return type;
 }
