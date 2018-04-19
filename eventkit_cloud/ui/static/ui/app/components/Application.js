@@ -55,6 +55,8 @@ export class Application extends Component {
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
+        this.autoGetNotificationsUnreadCount = this.autoGetNotificationsUnreadCount.bind(this);
+        this.autoGetNotifications = this.autoGetNotifications.bind(this);
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.getConfig = this.getConfig.bind(this);
         this.handleMouseOver = this.handleMouseOver.bind(this);
@@ -101,8 +103,8 @@ export class Application extends Component {
         window.addEventListener('click', this.handleClick);
         this.props.getNotificationsUnreadCount();
         this.props.getNotifications({ pageSize: this.notificationsPageSize });
-        this.notificationsUnreadCountIntervalId = setInterval(this.props.getNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
-        this.notificationsRefreshIntervalId = setInterval(this.props.getNotifications, this.notificationsRefreshInterval);
+        this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
+        this.notificationsRefreshIntervalId = setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -125,6 +127,14 @@ export class Application extends Component {
         window.removeEventListener('resize', this.handleResize);
         clearInterval(this.notificationsUnreadCountIntervalId);
         clearInterval(this.notificationsRefreshIntervalId);
+    }
+
+    autoGetNotificationsUnreadCount() {
+        this.props.getNotificationsUnreadCount({ isAuto: true });
+    }
+
+    autoGetNotifications() {
+        this.props.getNotifications({ isAuto: true });
     }
 
     onMenuItemClick() {

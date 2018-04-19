@@ -29,6 +29,7 @@ export class DashboardPage extends React.Component {
         this.refreshFeatured = this.refreshFeatured.bind(this);
         this.refreshRecentlyViewed = this.refreshRecentlyViewed.bind(this);
         this.refresh = this.refresh.bind(this);
+        this.autoRefresh = this.autoRefresh.bind(this);
         this.handleNotificationsViewAll = this.handleNotificationsViewAll.bind(this);
         this.handleFeaturedViewAll = this.handleFeaturedViewAll.bind(this);
         this.handleMyDataPacksViewAll = this.handleMyDataPacksViewAll.bind(this);
@@ -51,7 +52,7 @@ export class DashboardPage extends React.Component {
 
     componentDidMount() {
         this.props.getProviders();
-        this.refreshIntervalId = setInterval(this.refresh, this.refreshInterval);
+        this.refreshIntervalId = setInterval(this.autoRefresh, this.refreshInterval);
         this.refresh();
     }
 
@@ -149,56 +150,74 @@ export class DashboardPage extends React.Component {
         return 3;
     }
 
-    refreshNotifications({ showLoading = true } = {}) {
+    refreshNotifications({ isAuto = false } = {}) {
         const maxNotifications = this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows();
-        this.props.getNotifications({ pageSize: maxNotifications });
+        this.props.getNotifications({
+            pageSize: maxNotifications,
+            isAuto,
+        });
 
-        if (showLoading) {
+        // Only show loading if this was a user triggered refresh.
+        if (!isAuto) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.notifications = true;
             this.setState({ loadingSections });
         }
     }
 
-    refreshMyDataPacks({ showLoading = true } = {}) {
+    refreshMyDataPacks({ isAuto = false } = {}) {
         this.props.getRuns({
             pageSize: this.getGridColumns({ getMax: true }),
             ordering: '-started_at',
             ownerFilter: this.props.user.data.user.username,
+            isAuto,
         });
 
-        if (showLoading) {
+        // Only show loading if this was a user triggered refresh.
+        if (!isAuto) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.myDataPacks = true;
             this.setState({ loadingSections });
         }
     }
 
-    refreshFeatured({ showLoading = true } = {}) {
-        this.props.getFeaturedRuns({ pageSize: this.getGridWideColumns({ getMax: true }) });
+    refreshFeatured({ isAuto = false } = {}) {
+        this.props.getFeaturedRuns({
+            pageSize: this.getGridWideColumns({ getMax: true }),
+            isAuto,
+        });
 
-        if (showLoading) {
+        // Only show loading if this was a user triggered refresh.
+        if (!isAuto) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.featured = true;
             this.setState({ loadingSections });
         }
     }
 
-    refreshRecentlyViewed({ showLoading = true } = {}) {
-        this.props.getViewedJobs({ pageSize: this.getGridColumns({ getMax: true }) });
+    refreshRecentlyViewed({ isAuto = false } = {}) {
+        this.props.getViewedJobs({
+            pageSize: this.getGridColumns({ getMax: true }),
+            isAuto,
+        });
 
-        if (showLoading) {
+        // Only show loading if this was a user triggered refresh.
+        if (!isAuto) {
             const loadingSections = {...this.state.loadingSections};
             loadingSections.recentlyViewed = true;
             this.setState({ loadingSections });
         }
     }
 
-    refresh({ showLoading = true } = {}) {
-        this.refreshNotifications({ showLoading });
-        this.refreshMyDataPacks({ showLoading });
-        this.refreshFeatured({ showLoading });
-        this.refreshRecentlyViewed({ showLoading });
+    refresh({ isAuto = false } = {}) {
+        this.refreshNotifications({ isAuto });
+        this.refreshMyDataPacks({ isAuto });
+        this.refreshFeatured({ isAuto });
+        this.refreshRecentlyViewed({ isAuto });
+    }
+
+    autoRefresh() {
+        this.refresh({ isAuto: true });
     }
 
     handleNotificationsViewAll() {

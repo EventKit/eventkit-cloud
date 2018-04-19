@@ -13,6 +13,7 @@ export class NotificationsPage extends React.Component {
     constructor(props) {
         super(props);
         this.refresh = this.refresh.bind(this);
+        this.autoRefresh = this.autoRefresh.bind(this);
         this.isSameOrderType = this.isSameOrderType.bind(this);
         this.getHeaderStyle = this.getHeaderStyle.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
@@ -26,7 +27,7 @@ export class NotificationsPage extends React.Component {
     }
 
     componentDidMount() {
-        this.refreshIntervalId = setInterval(this.refresh, this.refreshInterval);
+        this.refreshIntervalId = setInterval(this.autoRefresh, this.refreshInterval);
         this.refresh();
     }
 
@@ -40,9 +41,16 @@ export class NotificationsPage extends React.Component {
         }
     }
 
-    refresh() {
+    refresh({ isAuto = false } = {}) {
         const pageSize = this.notificationsPage * this.notificationsPerPage;
-        this.props.getNotifications({ pageSize });
+        this.props.getNotifications({
+            pageSize,
+            isAuto,
+        });
+    }
+
+    autoRefresh() {
+        this.refresh({ isAuto: true });
     }
 
     isSameOrderType(unknown, known) {
@@ -58,7 +66,7 @@ export class NotificationsPage extends React.Component {
     }
 
     handleLoadMore() {
-
+        // TODO
     }
 
     render() {

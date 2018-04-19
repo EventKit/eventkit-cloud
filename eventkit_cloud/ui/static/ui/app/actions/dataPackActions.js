@@ -130,6 +130,10 @@ export function getFeaturedRuns(args) {
     return (dispatch, getState) => {
         const { featuredRunsList } = getState();
         if (featuredRunsList.fetching && featuredRunsList.cancelSource) {
+            // if this is not a direct request from the user, dont cancel ongoing requests
+            if (args.isAuto) {
+                return null;
+            }
             // if there is already a request in process we need to cancel it
             // before executing the current request
             featuredRunsList.cancelSource.cancel('Request is no longer valid, cancelling');

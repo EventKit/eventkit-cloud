@@ -30,7 +30,19 @@ export function viewedJob(jobuid) {
 }
 
 export function getViewedJobs(args = {}) {
-    return (dispatch) => {
+    return (dispatch, getState) => {
+        // Check if we should cancel the previous request due to a user action.
+        const state = getState();
+        if (state.userActivity.viewedJobs.fetching && state.userActivity.viewedJobs.cancelSource) {
+            if (args.isAuto) {
+                // Just ignore this request.
+                return null;
+            } else {
+                // Cancel the last request.
+                state.userActivity.viewedJobs.cancelSource.cancel('Request is no longer valid, cancelling.');
+            }
+        }
+
         const cancelSource = axios.CancelToken.source();
 
         dispatch({

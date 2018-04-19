@@ -3,7 +3,19 @@ import actions from './actionTypes';
 import cookie from 'react-cookie';
 
 export function getNotifications(args = {}) {
-    return (dispatch) => {
+    return (dispatch, getState) => {
+        // Check if we should cancel the previous request due to a user action.
+        const state = getState();
+        if (state.notifications.fetching && state.notifications.cancelSource) {
+            if (args.isAuto) {
+                // Just ignore this request.
+                return null;
+            } else {
+                // Cancel the last request.
+                state.notifications.cancelSource.cancel('Request is no longer valid, cancelling.');
+            }
+        }
+
         const cancelSource = axios.CancelToken.source();
 
         dispatch({
@@ -221,8 +233,20 @@ export function markAllNotificationsAsRead() {
     }
 }
 
-export function getNotificationsUnreadCount() {
-    return (dispatch) => {
+export function getNotificationsUnreadCount(args = {}) {
+    return (dispatch, getState) => {
+        // Check if we should cancel the previous request due to a user action.
+        const state = getState();
+        if (state.notifications.unreadCount.fetching && state.notifications.unreadCount.cancelSource) {
+            if (args.isAuto) {
+                // Just ignore this request.
+                return null;
+            } else {
+                // Cancel the last request.
+                state.notifications.unreadCount.cancelSource.cancel('Request is no longer valid, cancelling.');
+            }
+        }
+
         const cancelSource = axios.CancelToken.source();
 
         dispatch({
@@ -255,11 +279,11 @@ export function getNotificationsUnreadCount() {
 
 function cancelNotificationsSources(state) {
     // Avoid out-of-sync issues if we call this right as we're receiving notifications.
-    if (state.notifications.cancelSource) {
+    if (state.notifications.fetching && state.notifications.cancelSource) {
         state.notifications.cancelSource.cancel('Taking another action on notifications, cancelling.');
     }
 
-    if (state.notifications.unreadCount.cancelSource) {
+    if (state.notifications.unreadCount.fetching && state.notifications.unreadCount.cancelSource) {
         state.notifications.unreadCount.cancelSource.cancel('Taking another action on notifications, cancelling.');
     }
 }
