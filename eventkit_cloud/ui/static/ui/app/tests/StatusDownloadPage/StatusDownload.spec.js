@@ -187,6 +187,17 @@ describe('StatusDownload component', () => {
         expect(wrapper.state().isLoading).toBe(true);
     });
 
+    it('should render the no datapack message', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.datacartDetails.fetched = true;
+        nextProps.datacartDetails.data = [];
+        wrapper.setProps(nextProps);
+        expect(wrapper.find('.qa-StatusDownload-NoDatapack')).toHaveLength(1);
+        expect(wrapper.find(DataCartDetails)).toHaveLength(0);
+    });
+
     it('should display the circular progress if deleting', () => {
         const props = getProps();
         const wrapper = getWrapper(props);

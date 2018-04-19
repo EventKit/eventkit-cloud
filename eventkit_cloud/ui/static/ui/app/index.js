@@ -19,7 +19,6 @@ import CreateExport from './components/CreateDataPack/CreateExport';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
 import UserGroupsPage from './components/UserGroupsPage/UserGroupsPage';
 import NotificationsPage from './components/NotificationsPage/NotificationsPage';
-import { isBrowserValid } from './utils/generic';
 import { login, userActive } from './actions/userActions';
 
 
@@ -62,15 +61,12 @@ const UserHasAgreed = UserAuthWrapper({
 });
 
 function checkAuth(store) {
-    if (isBrowserValid()) {
-        return (nextState, replace) => {
-            const { user } = store.getState();
-            if (!user.data) {
-                store.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
-            }
-        };
-    }
-    return null;
+    return (nextState, replace) => {
+        const { user } = store.getState();
+        if (!user.data) {
+            store.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
+        }
+    };
 }
 
 render(
