@@ -105,7 +105,7 @@ export function getRuns(args = {}) {
                 newRun.job.permissions = {
                     value: newRun.job.visibility,
                     groups: newRun.job.permissions.groups,
-                    users: newRun.job.permissions.users,
+                    members: newRun.job.permissions.users,
                 };
                 return newRun;
             });

@@ -54,9 +54,20 @@ export function getViewedJobs(args = {}) {
                 range = response.headers['content-range'].split('-')[1];
             }
 
+            const viewedJobs = response.data.map((viewedJob) => {
+                const newViewedJob = { ...viewedJob };
+                const run = newViewedJob.last_export_run;
+                run.job.permissions = {
+                    value: run.job.visibility,
+                    groups: run.job.permissions.groups,
+                    members: run.job.permissions.users,
+                };
+                return newViewedJob;
+            });
+
             dispatch({
                 type: actions.RECEIVED_VIEWED_JOBS,
-                payload: response.data,
+                viewedJobs,
                 nextPage,
                 range,
             });

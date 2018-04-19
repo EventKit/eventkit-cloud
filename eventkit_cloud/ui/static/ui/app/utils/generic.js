@@ -1,7 +1,7 @@
 
 export function userIsDataPackAdmin(user, permissions, groups) {
     const { username } = user;
-    if (permissions.users[username] === 'ADMIN') {
+    if (permissions.members[username] === 'ADMIN') {
         return true;
     }
     const groupPermissions = Object.keys(permissions.groups);
