@@ -342,6 +342,7 @@ export class DashboardPage extends React.Component {
                                         {"You don't have any notifications."}
                                     </Paper>
                                 }
+                                rowMajor={false}
                             >
                                 {this.props.notifications.notificationsSorted.map((notification) => (
                                     <NotificationGridItem

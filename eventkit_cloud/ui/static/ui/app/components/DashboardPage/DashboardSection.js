@@ -170,22 +170,63 @@ export class DashboardSection extends React.Component {
                         index={this.state.pageIndex}
                         onChangeIndex={this.handlePageChange}
                     >
-                        {childrenPages.map((childrenPage, pageIndex) => (
-                            <GridList
-                                key={`${this.props.name}GridList${pageIndex}`}
-                                className={`qa-DashboardSection-${this.props.name}Grid`}
-                                cellHeight={this.props.cellHeight || 'auto'}
-                                style={styles.gridList}
-                                padding={this.props.gridPadding}
-                                cols={this.props.columns}
-                            >
-                                {childrenPage.map((child, index) => (
+                        {childrenPages.map((childrenPage, pageIndex) => {
+                            let content;
+                            if (this.props.rowMajor) {
+                                content = childrenPage.map((child, index) => (
                                     <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
                                         {child}
                                     </div>
-                                ))}
-                            </GridList>
-                        ))}
+                                ))
+                            } else {
+                                // For column-major layouts, create an inner single-column GridList for each column, so
+                                // that items each column gets filled completely before adding to the next one.
+                                const childrenColumns = [];
+                                let column = [];
+                                for (let child of childrenPage) {
+                                    column.push(child);
+                                    if (column.length >= this.props.rows) {
+                                        // Filled the column. Onto the next one.
+                                        childrenColumns.push(column);
+                                        column = [];
+                                    }
+                                }
+
+                                // Partial column at the end.
+                                if (column.length > 0) {
+                                    childrenColumns.push(column);
+                                }
+
+                                content = childrenColumns.map((childrenColumn, index) => (
+                                    <GridList
+                                        key={`${this.props.name}GridList${pageIndex}-Column${index}`}
+                                        className={`qa-DashboardSection-${this.props.name}Grid-Column${index}`}
+                                        cellHeight={this.props.cellHeight || 'auto'}
+                                        padding={this.props.gridPadding}
+                                        cols={1}
+                                    >
+                                        {childrenColumn.map((child, index) => (
+                                            <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
+                                                {child}
+                                            </div>
+                                        ))}
+                                    </GridList>
+                                ));
+                            }
+
+                            return (
+                                <GridList
+                                    key={`${this.props.name}GridList${pageIndex}`}
+                                    className={`qa-DashboardSection-${this.props.name}Grid`}
+                                    cellHeight={this.props.cellHeight || 'auto'}
+                                    style={styles.gridList}
+                                    padding={this.props.gridPadding}
+                                    cols={this.props.columns}
+                                >
+                                    {content}
+                                </GridList>
+                            );
+                        })}
                     </SwipeableViews>
                 }
             </div>
@@ -204,12 +245,14 @@ DashboardSection.propTypes = {
     cellHeight: PropTypes.number,
     gridPadding: PropTypes.number,
     rows: PropTypes.number,
+    rowMajor: PropTypes.bool,
 };
 
 DashboardSection.defaultProps = {
     style: {},
     rows: 1,
     gridPadding: 2,
+    rowMajor: true,
 };
 
 export default DashboardSection;
