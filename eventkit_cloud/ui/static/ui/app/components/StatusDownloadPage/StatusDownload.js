@@ -119,7 +119,7 @@ export class StatusDownload extends React.Component {
             },
             {
                 title: 'DataPack Info',
-                text: 'This is the name of the DataPack.',
+                text: 'This is the name that was entered for the name of the DataPack upon creation.',
                 selector: '.qa-DataCartDetails-div-name',
                 position: 'bottom',
                 style: tooltipStyle,
@@ -127,7 +127,7 @@ export class StatusDownload extends React.Component {
             },
             {
                 title: 'DataPack Status',
-                text: 'This is the status of the DataPack.  Here you can change the expiration date and permission of the DataPack.',
+                text: 'This is the status of the DataPack.  Status reports include: submitted, completed, and failed.  Here you can change the expiration date of the DataPack and also set the permission: Private or Shared.',
                 selector: '.qa-DataCartDetails-div-StatusContainer',
                 position: 'bottom',
                 style: tooltipStyle,

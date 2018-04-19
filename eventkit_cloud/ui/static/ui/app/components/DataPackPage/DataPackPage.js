@@ -223,8 +223,8 @@ export class DataPackPage extends React.Component {
                     style: tooltipStyle,
                 },
                 {
-                    title: 'Status and Download',
-                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                    title: 'Menu Options',
+                    text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
                     selector: '.qa-DataPackListItem-IconMenu',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -276,8 +276,8 @@ export class DataPackPage extends React.Component {
                     style: tooltipStyle,
                 },
                 {
-                    title: 'Status and Download',
-                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                    title: 'Menu Options',
+                    text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
                     selector: '.qa-DataPackGridItem-IconMenu',
                     position: 'bottom',
                     style: tooltipStyle,
@@ -328,8 +328,8 @@ export class DataPackPage extends React.Component {
                     style: tooltipStyle,
                 },
                 {
-                    title: 'Status and Download',
-                    text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                    title: 'Menu Options',
+                    text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
                     selector: '.qa-DataPackTableItem-IconMenu',
                     position: 'bottom',
                     style: tooltipStyle,

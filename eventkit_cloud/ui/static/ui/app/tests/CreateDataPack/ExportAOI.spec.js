@@ -1457,7 +1457,7 @@ describe('ExportAOI component', () => {
     it('callback function should draw fake bbox if none is currently drawn on map', () => {
         const callbackData = {
             action: "next",
-            index: 2,
+            index: 3,
             step: {
                 position: "bottom",
                 selector: ".qa-DataPackLinkButton-RaisedButton",

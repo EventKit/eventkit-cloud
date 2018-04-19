@@ -158,6 +158,7 @@ describe('Export Summary Component', () => {
 
     it('should call initializeOpenLayers  when card is expanded', () => {
         const props = getProps();
+        const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().initializeOpenLayers = sinon.spy();
         expect(wrapper.instance().initializeOpenLayers.called).toBe(false);
@@ -165,15 +166,14 @@ describe('Export Summary Component', () => {
         expect(wrapper.instance().initializeOpenLayers.calledOnce).toBe(true);
         wrapper.setState({ expanded: false });
         expect(wrapper.instance().initializeOpenLayers.calledOnce).toBe(true);
+        stateSpy.restore();
     });
 
     it('expandedChange should call setState', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
         wrapper.instance().expandedChange(true);
-        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
         stateSpy.restore();
     });
