@@ -728,11 +728,12 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
+
     logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
     include_files = []
-    metadata = {"name": normalize_name(job_name), "data_sources": {}}
-    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
-    metadata['data_sources'] = {export_provider_task.slug: {"name": export_provider_task.name}}
+    metadata = {"name": normalize_name(job_name), "bbox": export_provider_task.run.job.extents,
+                "data_sources": {export_provider_task.slug: {"name": export_provider_task.name}}}
     if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
         for export_task in export_provider_task.tasks.all():
             try:
@@ -742,15 +743,16 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
-            if os.path.splitext(filename)[1] == '.gpkg':
-                gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+            if os.path.splitext(filename)[1] in ['.gpkg']:
+                filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
                     export_provider_task.slug,
                     os.path.splitext(os.path.basename(filename))[0],
                     timezone.now().strftime('%Y%m%d'),
                 )
                 metadata['data_sources'][export_provider_task.slug]['file_path'] = os.path.join('data',
                                                                                                 export_provider_task.slug,
-                                                                                                gpkg_filepath)
+                                                                                                filepath)
+                metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                               export_task.name))
@@ -1020,7 +1022,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
     include_files = list([])
 
     provider_tasks = run.provider_tasks.all()
-    metadata = {"name": normalize_name(run.job.name), "data_sources": {}}
+    metadata = {"name": normalize_name(run.job.name), "bbox": run.job.extents, "data_sources": {}}
 
     for provider_task in provider_tasks:
         metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
@@ -1032,13 +1034,15 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                               provider_task.slug, filename)
-                if os.path.splitext(filename)[1] == '.gpkg':
+                if os.path.splitext(filename)[1] in ['.gpkg']:
                     gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now().strftime('%Y%m%d'),
                     )
                     metadata['data_sources'][provider_task.slug]['file_path'] = gpkg_filepath
+                    metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
+                        provider_task.slug)
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                                   export_task.name))
@@ -1143,9 +1147,12 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 if basename == "create_mxd.py":
                     # put the style file in the root of the zip
                     filename = basename
-                elif basename in ['template.gpkg', 'template-10-4.mxd', 'template-10-5.mxd']:
+                # elif basename in ['template-osm.gpkg', 'template-raster.gpkg', 'template-10-4.mxd', 'template-10-5.mxd', 'osm-10-5.lyr', 'osm-10-4.lyr', 'raster-10-5.lyr']:
+                elif os.path.dirname(absolute_file_path) == 'support':
                     # Put the support files in the correct directory.
                     filename = 'support/{0}'.format(basename)
+                elif basename == "__init__.py":
+                    continue
                 zipfile.write(
                     absolute_file_path,
                     arcname=filename
@@ -1154,7 +1161,6 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
-            logger.error(filepath)
             if filepath.endswith(".qgs") or filepath.endswith("metadata.json"):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
@@ -1567,3 +1573,22 @@ def get_function(function):
     function_object = getattr(module_object, function_name)
 
     return function_object
+
+
+def get_data_type_from_provider(provider_slug):
+    from ..jobs.models import DataProvider
+    data_types = {'wms': 'raster',
+                  'tms': 'raster',
+                  'wmts': 'raster',
+                  'wcs': 'raster',
+                  'wfs': 'vector',
+                  'osm': 'osm',
+                  'arcgis-feature': 'vector',
+                  'arcgis-raster': 'raster'}
+    data_provider = DataProvider.objects.get(slug=provider_slug)
+    type_name = data_provider.export_provider_type.type_name
+    type_mapped = data_types.get(type_name)
+    logger.error("ADDING THE TYPE: {0} {1}".format(type_name, type_mapped))
+    return type_mapped
+
+
