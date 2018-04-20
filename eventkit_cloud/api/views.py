@@ -1354,9 +1354,12 @@ class NotificationViewSet(viewsets.GenericViewSet):
         for n in notifications:
             serializer = NotificationSerializer(n)
             item = serializer.data
-            item['actor'] = serializer.serialize_component(n, n.actor_object_id, n.actor, request)
-            item['target'] = serializer.serialize_component(n, n.target_object_id, n.target, request)
-            item['action_object'] = serializer.serialize_component(n, n.action_object_object_id, n.action_object, request)
+            item['actor'] = serializer.serialize_referenced_object(
+                n, n.actor_content_type_id,n.actor_object_id, n.actor, request)
+            item['target'] = serializer.serialize_referenced_object(
+                n, n.target_content_type_id,n.target_object_id, n.target, request)
+            item['action_object'] = serializer.serialize_referenced_object(
+                n, n.action_object_content_type_id,n.action_object_object_id, n.action_object, request)
             payload.append(item)
         return payload
 
@@ -1366,7 +1369,11 @@ class NotificationViewSet(viewsets.GenericViewSet):
     @list_route(methods=['get'])
     def all(self, request, *args, **kwargs):
         notifications =  request.user.notifications.active()
-        payload = self.serialize_records(notifications,request)
+        page = self.paginate_queryset(notifications)
+        if page is not None:
+            payload = self.serialize_records(page, request)
+        else:
+            payload = self.serialize_records(notifications,request)
         return Response(payload, status=status.HTTP_200_OK)
 
     @list_route(methods=['get'])
