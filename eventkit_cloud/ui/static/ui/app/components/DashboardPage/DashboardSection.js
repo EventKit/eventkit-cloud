@@ -28,9 +28,9 @@ export class DashboardSection extends React.Component {
             },
             sectionHeader: {
                 margin: '12px 0 13px',
-                paddingLeft: `${spacing + halfGridPadding}px`,
-                paddingRight: `${spacing + halfGridPadding + scrollbarWidth}px`,
-                fontSize: '27px',
+                paddingLeft: (window.innerWidth > 575) ? `${spacing + halfGridPadding}px` : '12px',
+                paddingRight: (window.innerWidth > 575) ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
+                fontSize: (window.innerWidth > 575) ? '27px' : '18px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase',
@@ -70,12 +70,12 @@ export class DashboardSection extends React.Component {
                 height: 'auto',
                 margin: '0',
                 paddingLeft: `${spacing}px`,
-                paddingRight: `${spacing + scrollbarWidth}px`,
+                paddingRight: (window.innerWidth > 575) ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
             },
             viewAll: {
                 color: 'rgb(69, 152, 191)',
                 textTransform: 'uppercase',
-                fontSize: '14px',
+                fontSize: (window.innerWidth > 575) ? '14px' : '12px',
                 cursor: 'pointer',
                 marginLeft: '18px',
             },
@@ -145,15 +145,16 @@ export class DashboardSection extends React.Component {
                                     </Tab>
                                 ))}
                             </Tabs>
-                            <a
-                                style={{
-                                    ...styles.viewAll,
-                                    visibility: this.props.onViewAll ? 'visible' : 'hidden'
-                                }}
-                                onClick={this.props.onViewAll}
-                            >
-                                View All
-                            </a>
+                            {this.props.onViewAll ?
+                                <a
+                                    style={styles.viewAll}
+                                    onClick={this.props.onViewAll}
+                                >
+                                    View All
+                                </a>
+                                :
+                                null
+                            }
                         </div>
                         :
                         null
