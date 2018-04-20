@@ -36,14 +36,9 @@ export class DashboardPage extends React.Component {
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
+        this.isLoading = this.isLoading.bind(this);
         this.state = {
             loadingPage: true,
-            loadingSections: {
-                notifications: true,
-                myDataPacks: true,
-                featured: true,
-                recentlyViewed: true,
-            },
             shareOpen: false,
             targetRun: null,
         };
@@ -61,51 +56,26 @@ export class DashboardPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        const loadingSections = {...this.state.loadingSections};
-
-        // Notifications.
-        if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
-            loadingSections.notifications = false;
-        }
-
-        // My datapacks.
-        if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
-            loadingSections.myDataPacks = false;
-        }
-
-        // Featured datapacks.
-        if (nextProps.featuredRunsList.fetched && !this.props.featuredRunsList.fetched) {
-            loadingSections.featured = false;
-        }
-
-        // Received viewed datapacks.
-        if (nextProps.userActivity.viewedJobs.fetched && !this.props.userActivity.viewedJobs.fetched) {
-            loadingSections.recentlyViewed = false;
-        }
-
         // Only show page loading once, before all sections have initially loaded.
         let loadingPage = this.state.loadingPage;
         if (loadingPage) {
-            loadingPage = false;
-            for (const loadingSection of Object.values(loadingSections)) {
-                if (loadingSection) {
-                    loadingPage = true;
-                    break;
-                }
-            }
-
-            if (nextProps.updatePermissions.updating) {
-                loadingPage = true;
-            }
+            this.setState({
+                loadingPage: (
+                    !nextProps.notifications.fetched ||
+                    !nextProps.runsList.fetched ||
+                    !nextProps.featuredRunsList.fetched ||
+                    !nextProps.userActivity.viewedJobs.fetched
+                )
+            });
         }
-
-        this.setState({
-            loadingPage: loadingPage,
-            loadingSections: loadingSections,
-        });
 
         // Deleted datapack.
         if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+            this.refresh();
+        }
+
+        // Updated permissions.
+        if (nextProps.updatePermissions.updated && !this.props.updatePermissions.updated) {
             this.refresh();
         }
     }
@@ -246,6 +216,14 @@ export class DashboardPage extends React.Component {
         this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
     }
 
+    isLoading() {
+        return (
+            this.state.loadingPage ||
+            this.props.runsDeletion.deleting ||
+            this.props.updatePermissions.updating
+        );
+    }
+
     render() {
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
@@ -311,16 +289,25 @@ export class DashboardPage extends React.Component {
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
                 />
-                {this.state.loadingPage ?
-                    <div style={styles.loadingOverlay}>
-                        <CircularProgress
-                            style={styles.loadingPage}
-                            color="#4598bf"
-                            size={50}
-                        />
+                {this.isLoading() ?
+                    <div
+                        style={{
+                            zIndex: 10,
+                            position: 'absolute',
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0,0,0,0.2)',
+                        }}
+                    >
+                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                            <CircularProgress
+                                style={{ margin: 'auto', display: 'block' }}
+                                color="#4598bf"
+                                size={50}
+                            />
+                        </div>
                     </div>
-                    :
-                    null
+                    : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
                     {this.state.loadingPage ?
