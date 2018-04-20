@@ -693,7 +693,12 @@ export class ExportInfo extends React.Component {
                                 Area of Interest (AOI)
                             </div>
                             <div style={style.sectionBottom}>
-                                <CustomTableRow title="Area" data="1,000 sq km" containerStyle={{ fontSize: '16px' }} />
+                                <CustomTableRow
+                                    className="qa-ExportInfo-area"
+                                    title="Area"
+                                    data={this.props.exportInfo.areaStr}
+                                    containerStyle={{ fontSize: '16px' }}
+                                />
                                 <div style={style.mapCard}>
                                     <Card
                                         expandable
