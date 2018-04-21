@@ -743,7 +743,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
-            if os.path.splitext(filename)[1] in ['.gpkg']:
+            if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
                 filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
                     export_provider_task.slug,
                     os.path.splitext(os.path.basename(filename))[0],
@@ -1034,7 +1034,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                               provider_task.slug, filename)
-                if os.path.splitext(filename)[1] in ['.gpkg']:
+                if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
                     gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
@@ -1577,10 +1577,11 @@ def get_function(function):
 
 def get_data_type_from_provider(provider_slug):
     from ..jobs.models import DataProvider
+    # NOTE TIF here is a place holder until we figure out how to support other formats.
     data_types = {'wms': 'raster',
                   'tms': 'raster',
                   'wmts': 'raster',
-                  'wcs': 'raster',
+                  'wcs': 'tif',
                   'wfs': 'vector',
                   'osm': 'osm',
                   'arcgis-feature': 'vector',

@@ -64,6 +64,9 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     mxd = arcpy.mapping.MapDocument(file_name)
     df = mxd.activeDataFrame
     for layer_name, layer_info in metadata['data_sources'].iteritems():
+        # Figure out geotiff later.
+        if layer_info['type'] == 'tif':
+            continue
         file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), layer_info['file_path']))
         layer_from_file = arcpy.mapping.Layer(get_layer_file(layer_info['type'], get_version()))
         layer_from_file.name = layer_info['name']
