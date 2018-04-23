@@ -830,32 +830,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEquals(0, len(result))
 
-    def test_filter_runs_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs/filter'
-        url = reverse('api:runs-filter')
-        self.assertEquals(expected, url)
-        query = '{0}?job_uid={1}'.format(url, self.job.uid)
-        response = self.client.get(query)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        self.assertEquals(response.data, [])
-
 
 class TestExportTaskViewSet(APITestCase):
     """
