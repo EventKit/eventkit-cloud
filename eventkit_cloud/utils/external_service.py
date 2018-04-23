@@ -79,7 +79,7 @@ class ExternalRasterServiceToGeopackage(object):
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
-            raise ConfigurationError("Configuration is required for raster data providers")
+            raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
         if not conf_dict.get('grids'):
             conf_dict['grids'] = {'geodetic': {'srs': 'EPSG:4326',
