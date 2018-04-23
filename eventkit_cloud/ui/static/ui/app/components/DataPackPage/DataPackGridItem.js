@@ -44,6 +44,7 @@ export class DataPackGridItem extends Component {
         this.state = {
             expanded: false,
             overflow: false,
+            titleOverflow: false,
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
@@ -262,6 +263,7 @@ export class DataPackGridItem extends Component {
                 height: window.innerWidth < 768 ? '42px' : '51px',
                 overflow: this.state.overflow ? 'visible' : 'hidden',
                 position: 'relative',
+                zIndex: 1000,
             },
             titleLink: {
                 color: 'inherit',
@@ -296,7 +298,8 @@ export class DataPackGridItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
+                            <div
+                                style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
                                 <Link
                                     to={`/status/${this.props.run.job.uid}`}
                                     href={`/status/${this.props.run.job.uid}`}
