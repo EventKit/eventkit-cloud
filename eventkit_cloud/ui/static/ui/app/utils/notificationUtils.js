@@ -29,7 +29,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
 
     const type = getNotificationType(notification);
     switch (type) {
-        case 'run_start':
+        case 'exportrun_start':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -44,7 +44,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;has started.</span>
             ];
-        case 'run_complete':
+        case 'exportrun_complete':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -59,7 +59,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;is complete.</span>
             ];
-        case 'run_delete':
+        case 'exportrun_delete':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -74,7 +74,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was deleted.</span>
             ];
-        case 'run_error':
+        case 'exportrun_error':
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -110,13 +110,13 @@ export function getNotificationIcon({ notification, iconStyle }) {
 
     const type = getNotificationType(notification);
     switch (type) {
-        case 'run_start':
+        case 'exportrun_start':
             return infoIcon;
-        case 'run_complete':
+        case 'exportrun_complete':
             return checkCircleIcon;
-        case 'run_delete':
+        case 'exportrun_delete':
             return warningIcon;
-        case 'run_error':
+        case 'exportrun_error':
             return errorIcon;
         default:
             console.error(`Unsupported notification type '${type}'`, notification);
@@ -126,10 +126,10 @@ export function getNotificationIcon({ notification, iconStyle }) {
 export function getNotificationViewPath(notification) {
     const type = getNotificationType(notification);
     switch (type) {
-        case 'run_start':
-        case 'run_complete':
-        case 'run_delete':
-        case 'run_error':
+        case 'exportrun_start':
+        case 'exportrun_complete':
+        case 'exportrun_delete':
+        case 'exportrun_error':
             return `/status/${notification.actor.details.job.uid}`;
         default:
             console.error(`Unsupported notification type '${type}'`, notification);
@@ -144,11 +144,11 @@ function getNotificationType(notification) {
 
     const level = notification.level.toLowerCase();
     switch (type) {
-        case 'run_end':
+        case 'exportrun_end':
             if (level === 'error') {
-                return 'run_error';
+                return 'exportrun_error';
             } else {
-                return 'run_complete';
+                return 'exportrun_complete';
             }
         default:
             return type;
