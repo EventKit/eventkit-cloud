@@ -201,7 +201,7 @@ class DefaultDataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DataProviderTask
-        fields = ('name', 'status', 'display', 'tasks')
+        fields = ('name', 'status', 'display', 'tasks', 'provider_slug')
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
