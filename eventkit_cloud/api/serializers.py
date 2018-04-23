@@ -763,20 +763,20 @@ class NotificationSerializer(serializers.ModelSerializer):
         model = Notification
         fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
 
-    def serialize_component(self, obj, id, component, request):
-        response = {}
-        if id > 0: response['id'] = id
+    def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
 
-        if isinstance(component, User):
-            response['type'] = 'User'
-            response['details'] =   UserSerializer(component).data
-        if isinstance(component, Job):
+        response = {}
+        if referenced_object_id > 0:
+            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+            response['id'] = referenced_object_id
+
+        if isinstance(referenced_object, User):
+            response['details'] =   UserSerializer(referenced_object).data
+        if isinstance(referenced_object, Job):
             job = Job.objects.get(pk=obj.actor_object_id)
-            response['type'] = 'Job'
             response['details'] = ListJobSerializer(job,context={'request': request}).data
-        if isinstance(component, ExportRun):
+        if isinstance(referenced_object, ExportRun):
             run = ExportRun.objects.get(pk=obj.actor_object_id)
-            response['type'] = 'Run'
             response['details'] = ExportRunSerializer(run,context={'request': request}).data
 
         return response
