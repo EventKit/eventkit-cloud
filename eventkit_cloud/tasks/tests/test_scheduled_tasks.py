@@ -96,8 +96,9 @@ class TestCheckProviderAvailabilityTask(TestCase):
         statuses = DataProviderStatus.objects.filter(related_provider=first_provider)
         self.assertEqual(len(statuses), 2)
         most_recent_first_provider_status = statuses.order_by('-id')[0]
-        self.assertEqual(most_recent_first_provider_status.status, 'SUCCESS')
-        self.assertEqual(most_recent_first_provider_status.message, 'Export should proceed without issues.')
+        self.assertEqual(most_recent_first_provider_status.status, CheckResults.SUCCESS.value[0]['status'])
+        self.assertEqual(most_recent_first_provider_status.status_type, CheckResults.SUCCESS.value[0]['type'])
+        self.assertEqual(most_recent_first_provider_status.message, CheckResults.SUCCESS.value[0]['message'])
 
 
 class TestEmailNotifications(TestCase):

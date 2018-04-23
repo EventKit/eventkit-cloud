@@ -1,31 +1,23 @@
 import React, { Component, PropTypes } from 'react';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
 import CircularProgress from 'material-ui/CircularProgress';
-import CheckIcon from 'material-ui/svg-icons/navigation/check';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class GroupsDropDownMenu extends Component {
+    constructor(props) {
+        super(props);
+        this.scrollToTop = this.scrollToTop.bind(this);
+    }
+
+    scrollToTop() {
+        if (this.props.open && this.scrollbar) {
+            this.scrollbar.scrollToTop();
+        }
+    }
+
     render() {
         const styles = {
-            menuItem: {
-                fontSize: '14px',
-                overflow: 'hidden',
-                color: '#707274',
-            },
-            menuItemInner: {
-                padding: '0px',
-                margin: '0px 22px 0px 16px',
-                height: '48px',
-            },
-            menuItemText: {
-                maxWidth: '236px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: 'inline-block',
-            },
             loadingBackground: {
                 position: 'absolute',
                 left: 0,
@@ -43,11 +35,9 @@ export class GroupsDropDownMenu extends Component {
             },
         };
 
-        const { groups } = this.props;
-
         return (
             <Popover
-                style={{ overflowY: 'hidden', margin: '0px 10px' }}
+                style={{ overflowY: 'hidden' }}
                 open={this.props.open}
                 anchorEl={this.props.anchorEl}
                 anchorOrigin={this.props.anchorOrigin}
@@ -55,56 +45,32 @@ export class GroupsDropDownMenu extends Component {
                 onRequestClose={this.props.onClose}
                 className="qa-GroupsDropDownMenu-Popover"
             >
-                {this.props.groupsLoading ?
+                {this.props.loading ?
                     <div style={styles.loadingBackground}>
-                        <CircularProgress color="#4598bf" style={styles.loading} className="qa-GroupsDropDownMenu-loading" />
+                        <CircularProgress
+                            color="#4598bf"
+                            style={styles.loading}
+                            className="qa-GroupsDropDownMenu-loading"
+                        />
                     </div>
                     :
                     null
                 }
                 <Menu
                     autoWidth={false}
-                    style={{ width: '320px' }}
-                    listStyle={{ paddingTop: '0px', paddingBottom: '0px', width: '320px' }}
+                    style={{ width: this.props.width }}
+                    listStyle={{ paddingTop: '0px', paddingBottom: '0px', width: this.props.width }}
                     className="qa-GroupsDropDownMenu-Menu"
                 >
                     <CustomScrollbar
                         autoHeight
                         autoHeightMax={300}
-                        style={{ maxWidth: '320px' }}
+                        style={{ maxWidth: this.props.width }}
+                        ref={(instance) => { this.scrollbar = instance; }}
                         className="qa-GroupsDropDownMenu-CustomScrollbar"
                     >
                         <div>
-                            {groups.map(group => (
-                                <MenuItem
-                                    key={`${group.id}`}
-                                    style={styles.menuItem}
-                                    innerDivStyle={styles.menuItemInner}
-                                    onTouchTap={() => { this.props.onMenuItemClick(group); }}
-                                    className="qa-GroupsDropDownMenu-MenuItem-group"
-                                >
-                                    <div
-                                        style={{ ...styles.menuItemText, maxWidth: this.props.selectedGroups.includes(group.id) ? '236px' : '284px' }}
-                                        className="qa-GroupsDropDownMenu-groupName"
-                                    >
-                                        {group.name}
-                                    </div>
-                                    { this.props.selectedGroups.includes(group.id) ?
-                                        <CheckIcon style={{ margin: 12, fill: '#707274' }} className="qa-GroupsDropDownMenu-CheckIcon" />
-                                        :
-                                        null
-                                    }
-                                </MenuItem>
-                            ))}
-                            <Divider className="qa-GroupsDropDownMenu-Divider" />
-                            <MenuItem
-                                style={styles.menuItem}
-                                innerDivStyle={styles.menuItemInner}
-                                onTouchTap={this.props.onNewGroupClick}
-                                className="qa-GroupsDropDownMenu-MenuItem-newGroup"
-                            >
-                                <span>Share with New Group</span>
-                            </MenuItem>
+                            {this.props.children}
                         </div>
                     </CustomScrollbar>
                 </Menu>
@@ -114,19 +80,18 @@ export class GroupsDropDownMenu extends Component {
 }
 
 GroupsDropDownMenu.defaultProps = {
+    loading: false,
     anchorEl: null,
     anchorOrigin: { horizontal: 'right', vertical: 'top' },
     targetOrigin: { horizontal: 'right', vertical: 'top' },
+    children: null,
+    width: 320,
 };
 
 GroupsDropDownMenu.propTypes = {
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
-    onMenuItemClick: PropTypes.func.isRequired,
-    onNewGroupClick: PropTypes.func.isRequired,
-    selectedGroups: PropTypes.arrayOf(PropTypes.number).isRequired,
-    groupsLoading: PropTypes.bool.isRequired,
+    loading: PropTypes.bool,
     anchorEl: PropTypes.object,
     anchorOrigin: PropTypes.shape({
         horizontal: PropTypes.string,
@@ -136,6 +101,14 @@ GroupsDropDownMenu.propTypes = {
         horizontal: PropTypes.string,
         vertical: PropTypes.string,
     }),
+    children: PropTypes.oneOfType([
+        PropTypes.node,
+        PropTypes.arrayOf(PropTypes.node),
+    ]),
+    width: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.string,
+    ]),
 };
 
 export default GroupsDropDownMenu;

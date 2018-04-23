@@ -21,6 +21,20 @@
         min-height: 430px;
       }
 
+      .no-ie {
+        background-color: #111823;
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+        color: #fff;
+        padding: 40px;
+        text-align: center;
+      }
+
       .ol-scale-line {
         background: rgba(0,0,0,0);
       }
@@ -56,8 +70,28 @@
   <body>
 
     <div id='root'></div>
-    <script src="build/node-modules.js"></script>
-    <script src="build/bundle.js"></script>
-
+    <script>
+      var body = document.getElementsByTagName('body')[0];
+      try {
+          CSS.supports('transform', 'translateY(-50%)');
+          var node_modules = document.createElement("script");
+          var bundle = document.createElement("script");
+          node_modules.type = "text/javascript";
+          bundle.type = "text/javascript";
+          node_modules.async = '';
+          bundle.async = '';
+          node_modules.src = "build/node-modules.js";
+          bundle.src = "build/bundle.js";
+          body.appendChild(node_modules);
+          body.appendChild(bundle);
+      } catch (error) {
+          console.error('Browser is not supported by EventKit');
+          body.innerHTML = "<div class='no-ie'>\
+            <p>The browser you are using is not supported by EventKit.</p>\
+            <p>EventKit does not support any versions of Internet Explorer or other legacy browsers.</p>\
+            <p>Please use a modern browser to access EventKit (we recommend Chrome).</p>\
+          </div>";
+      }
+    </script>
   </body>
 </html>
