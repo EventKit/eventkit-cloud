@@ -96,7 +96,7 @@ class TestAuthResult(TransactionTestCase):
                        create=True):
                 # Confirm that a base HTTPSConnection picks up key and cert files
                 conn = httplib.HTTPSConnection()
-                getenv.assert_called_with("test-provider-slug_CERT")
+                getenv.assert_called_with("test_provider_slug_CERT")
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
                 cert_tempfile.write.assert_called_once_with("key and cert contents")
 
