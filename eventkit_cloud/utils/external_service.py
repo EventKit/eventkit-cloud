@@ -1,20 +1,17 @@
 from __future__ import absolute_import
 
 from ..utils import auth_requests
-from mapproxy.script.conf.app import config_command
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 
-from mapproxy.config.config import load_config, base_config, load_default_config
+from mapproxy.config.config import load_config, load_default_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
 from django.conf import settings
 import yaml
-from django.core.files.temp import NamedTemporaryFile
 import logging
 from django.db import connections
-import requests
 from pysqlite2 import dbapi2 as sqlite3
 from .geopackage import (get_tile_table_names, get_zoom_levels_table,
                          get_table_tile_matrix_information, set_gpkg_contents_bounds)
@@ -231,19 +228,6 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
         seed_template['coverages']['geom']['bbox'] = bbox
 
     return seed_template
-
-
-def create_conf_from_url(service_url):
-    temp_file = NamedTemporaryFile()
-    params = ['--capabilities', service_url, '--output', temp_file.name, '--force']
-    config_command(params)
-
-    conf_dict = None
-    try:
-        conf_dict = yaml.load(temp_file)
-    except yaml.YAMLError as exc:
-        logger.error(exc)
-    return conf_dict
 
 
 def check_service(conf_dict, provider_name=None):

@@ -5,7 +5,7 @@ from mock import Mock, patch, MagicMock
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
-from ..external_service import ( ExternalRasterServiceToGeopackage, create_conf_from_url,
+from ..external_service import ( ExternalRasterServiceToGeopackage,
                                  check_service, get_cache_template, CustomLogger, check_zoom_levels )
 from mapproxy.config.config import load_default_config
 from uuid import uuid4
@@ -22,37 +22,6 @@ class TestGeopackage(TransactionTestCase):
         self.task_process = self.task_process_patcher.start()
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
-
-    @patch('eventkit_cloud.utils.external_service.yaml')
-    @patch('eventkit_cloud.utils.external_service.NamedTemporaryFile')
-    @patch('eventkit_cloud.utils.external_service.config_command')
-    def test_create_conf_from_url(self, config_command, temp, yaml):
-        test_file = NamedTemporaryFile()
-        url = 'http://example.url/'
-        test_yaml = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        temp.return_value = test_file
-        config_command.return_value = test_yaml
-        yaml.load.return_value = real_yaml.load(test_yaml)
-        cmd = ['--capabilities', '{}'.format(url), '--output', '{}'.format(test_file.name), '--force']
-        w2g = create_conf_from_url(url)
-        config_command.assert_called_once_with(cmd)
-        self.assertEqual(w2g, real_yaml.load(test_yaml))
-
-    @patch('eventkit_cloud.utils.external_service.check_service')
-    @patch('eventkit_cloud.utils.external_service.yaml')
-    @patch('eventkit_cloud.utils.external_service.NamedTemporaryFile')
-    @patch('eventkit_cloud.utils.external_service.config_command')
-    def test_create_conf_from_arcgis(self, config_command, temp, yaml, check_service):
-        test_file = NamedTemporaryFile()
-        url = 'http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer'
-        test_yaml = "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\nsources:\r\n  imagery_arcgis:\r\n    type: arcgis\r\n    grid: webmercator\r\n    req:\r\n      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n      layers: \r\n        show: 0\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        temp.return_value = test_file
-        config_command.return_value = test_yaml
-        yaml.load.return_value = real_yaml.load(test_yaml)
-        cmd = ['--capabilities', '{}'.format(url), '--output', '{}'.format(test_file.name), '--force']
-        w2g = create_conf_from_url(url)
-        config_command.assert_called_once_with(cmd)
-        self.assertEqual(w2g, real_yaml.load(test_yaml))
 
     @patch('eventkit_cloud.utils.external_service.auth_requests.patch_https')
     @patch('eventkit_cloud.utils.external_service.set_gpkg_contents_bounds')
