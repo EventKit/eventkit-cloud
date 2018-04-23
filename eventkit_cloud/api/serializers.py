@@ -762,5 +762,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         if isinstance(referenced_object, ExportRun):
             run = ExportRun.objects.get(pk=obj.actor_object_id)
             response['details'] = ExportRunSerializer(run,context={'request': request}).data
+        if isinstance(referenced_object, Group):
+            response['details'] = GroupSerializer(referenced_object).data
 
         return response
