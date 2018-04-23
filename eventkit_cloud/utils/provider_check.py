@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
 from django.utils.translation import ugettext as _
+from django.conf import settings
 from enum import Enum
 import json
 import logging
@@ -10,7 +12,10 @@ import requests
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
 
+from django.conf import settings
+
 from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
 
@@ -33,39 +38,50 @@ class CheckResults(Enum):
         (NB: for OWS sources in some cases, GetCapabilities may return 200 while GetMap/Coverage/Feature returns 403.
         In these cases, a success case will be falsely reported instead of ERR_UNAUTHORIZED.)
     """
-    TIMEOUT = {"status": "ERR_TIMEOUT",
+    TIMEOUT = {"status": "ERR",
+               "type": "TIMEOUT",
                "message": _("Your connection has timed out; the provider may be offline. Refresh to try again.")},
 
-    CONNECTION = {"status": "ERR_CONNECTION",
+    CONNECTION = {"status": "ERR",
+                  "type": "CONNECTION",
                   "message": _("A connection to this data provider could not be established.")},
 
-    UNAUTHORIZED = {"status": "ERR_UNAUTHORIZED",
+    UNAUTHORIZED = {"status": "ERR",
+                    "type": "UNAUTHORIZED",
                     "message": _("Authorization is required to connect to this data provider.")},
 
-    NOT_FOUND = {"status": "ERR_NOT_FOUND",
+    NOT_FOUND = {"status": "ERR",
+                 "type": "NOT_FOUND",
                  "message": _("The data provider was not found on the server (status 404).")},
 
-    SSL_EXCEPTION = {"status": "WARN_SSL_EXCEPTION",
+    SSL_EXCEPTION = {"status": "WARN",
+                     "type": "SSL_EXCEPTION",
                      "message": _("Could not connect securely to provider; possibly missing client certificate")},
 
-    UNAVAILABLE = {"status": "WARN_UNAVAILABLE",
+    UNAVAILABLE = {"status": "WARN",
+                   "type": "UNAVAILABLE",
                    "message": _("This data provider may be unavailable (status %(status)s).")},
 
-    UNKNOWN_FORMAT = {"status": "WARN_UNKNOWN_FORMAT",
+    UNKNOWN_FORMAT = {"status": "WARN",
+                      "type": "UNKNOWN_FORMAT",
                       "message": _("This data provider returned metadata in an unexpected format; "
                                    "errors may occur when creating the DataPack.")},
 
-    LAYER_NOT_AVAILABLE = {"status": "WARN_LAYER_NOT_AVAILABLE",
+    LAYER_NOT_AVAILABLE = {"status": "WARN",
+                           "type": "LAYER_NOT_AVAILABLE",
                            "message": _("This data provider does not offer the requested layer.")},
 
-    NO_INTERSECT = {"status": "WARN_NO_INTERSECT",
+    NO_INTERSECT = {"status": "WARN",
+                    "type": "NO_INTERSECT",
                     "message": _("The selected AOI does not intersect the data provider's layer.")},
 
-    NO_URL = {"status": "WARN_NO_URL",
+    NO_URL = {"status": "WARN",
+              "type": "NO_URL",
               "message": _("No Service URL was found in the data provider config; "
                            "availability cannot be checked")},
 
     SUCCESS = {"status": "SUCCESS",
+               "type": "SUCCESS",
                "message": _("Export should proceed without issues.")},
 
 
@@ -94,6 +110,7 @@ class ProviderCheck(object):
         self.slug = slug
         self.result = CheckResults.SUCCESS
         self.timeout = 10
+        self.verify = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
@@ -118,7 +135,8 @@ class ProviderCheck(object):
                 self.result = CheckResults.NO_URL
                 return None
 
-            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout)
+            response = auth_requests.get(self.service_url, slug=self.slug, params=self.query, timeout=self.timeout,
+                                         verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
@@ -134,7 +152,7 @@ class ProviderCheck(object):
                 self.result = CheckResults.UNAVAILABLE
                 return None
 
-        except requests.exceptions.ConnectTimeout as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
             return None
@@ -171,7 +189,7 @@ class ProviderCheck(object):
             self.validate_response(response)
 
         result_json = json.dumps(self.result.value[0]) % self.token_dict
-        logger.debug("Provider check returning result: {}".format(result_json))
+        logger.debug("Provider check returning result: %s", result_json)
         return result_json
 
 
@@ -189,38 +207,39 @@ class OverpassProviderCheck(ProviderCheck):
         try:
             if not self.service_url:
                 self.result = CheckResults.NO_URL
-                return None
+                return
 
-            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout)
+            response = auth_requests.post(url=self.service_url, slug=self.slug, data="out meta;", timeout=self.timeout,
+                                          verify=self.verify)
 
             self.token_dict['status'] = response.status_code
 
             if response.status_code in [401, 403]:
                 self.result = CheckResults.UNAUTHORIZED
-                return None
+                return
 
             if response.status_code == 404:
                 self.result = CheckResults.NOT_FOUND
-                return None
+                return
 
             if not response.ok:
                 self.result = CheckResults.UNAVAILABLE
-                return None
+                return
 
-        except requests.exceptions.ConnectTimeout as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
-            return None
+            return
 
         except requests.exceptions.SSLError as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
             self.result = CheckResults.SSL_EXCEPTION
-            return None
+            return
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
             logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
             self.result = CheckResults.CONNECTION
-            return None
+            return
 
 
 class OWSProviderCheck(ProviderCheck):
@@ -239,8 +258,8 @@ class OWSProviderCheck(ProviderCheck):
         self.query = {
             "VERSION": "1.0.0",
             "REQUEST": "GetCapabilities"
-            # Amended with "SERVICE" parameter by subclasses
         }
+        # Amended with "SERVICE" parameter by subclasses
 
         # If service or version parameters are left in query string, it can lead to a protocol error and false negative
         self.service_url = re.sub(r"(?i)(version|service|request)=.*?(&|$)", "", self.service_url)
@@ -330,13 +349,13 @@ class WCSProviderCheck(OWSProviderCheck):
         # Get names of available coverages
         coverage_offers = content_meta.findall("coverageofferingbrief")
 
-        cover_names = map(lambda c: (c, c.find("name")), coverage_offers)
-        if len(cover_names) == 0:  # No coverages are offered
+        cover_names = [(c, c.find("name")) for c in coverage_offers]
+        if not cover_names:  # No coverages are offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
         covers = [c for c, n in cover_names if n is not None and self.layer == n.text]
-        if len(covers) == 0:  # Requested coverage is not offered
+        if not covers:  # Requested coverage is not offered
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
@@ -351,7 +370,7 @@ class WCSProviderCheck(OWSProviderCheck):
         pos = envelope.getchildren()
         # Make sure there aren't any surprises
         coord_pattern = re.compile(r"^-?\d+(\.\d+)? -?\d+(\.\d+)?$")
-        if len(pos) == 0 or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
+        if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
             return None
 
         x1, y1 = map(float, pos[0].text.split(' '))
@@ -385,11 +404,11 @@ class WFSProviderCheck(OWSProviderCheck):
         feature_types = feature_type_list.findall("featuretype")
 
         # Get layer names
-        feature_names = map(lambda f: (f, f.find("name")), feature_types)
+        feature_names = [(ft, ft.find("name")) for ft in feature_types]
         logger.debug("WFS layers offered: {}".format([n.text for f, n in feature_names if n]))
         features = [f for f, n in feature_names if n is not None and self.layer == n.text]
 
-        if len(features) == 0:
+        if not features:
             self.result = CheckResults.LAYER_NOT_AVAILABLE
             return None
 
@@ -437,10 +456,10 @@ class WMSProviderCheck(OWSProviderCheck):
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = map(lambda l: (l, l.find("name")), layers)
-        logger.debug("WMS layers offered: {}".format([n.text for l,n in layer_names if n]))
+        layer_names = [(l, l.find("name")) for l in layers]
+        logger.debug("WMS layers offered: {}".format([n.text for l, n in layer_names if n]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
-        if len(layer) == 0:
+        if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
             self.result = CheckResults.SUCCESS
             return None
@@ -481,15 +500,15 @@ class WMTSProviderCheck(OWSProviderCheck):
         # Flatten nested layers to single list
         layers = contents.findall("layer")
         sublayers = layers
-        while len(sublayers) > 0:
+        while sublayers:
             sublayers = [l for layer in sublayers for l in layer.findall("layer")]
             layers.extend(sublayers)
 
         # Get layer names
-        layer_names = map(lambda l: (l, l.find("title")), layers)
-        logger.debug("WMTS layers offered: {}".format([n.text for l,n in layer_names if n is not None]))
+        layer_names = [(l, l.find("title")) for l in layers]
+        logger.debug("WMTS layers offered: {}".format([n.text for l, n in layer_names if n is not None]))
         layer = [l for l, n in layer_names if n is not None and self.layer == n.text]
-        if len(layer) == 0:
+        if not layer:
             # Since layer name is not consistently available for WM(T)S, just skip layer-dependent checks
             self.result = CheckResults.SUCCESS
             return None
@@ -510,7 +529,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         bbox = map(float, southwest + northeast)
         return bbox
 
-      
+
 class TMSProviderCheck(ProviderCheck):
 
     def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
@@ -523,6 +542,7 @@ PROVIDER_CHECK_MAP = {
     "wcs": WCSProviderCheck,
     "wms": WMSProviderCheck,
     "osm": OverpassProviderCheck,
+    "osm-generic": OverpassProviderCheck,
     "wmts": WMTSProviderCheck,
     "arcgis-raster": ProviderCheck,
     "arcgis-feature": ProviderCheck,
@@ -541,3 +561,19 @@ def get_provider_checker(type_slug):
         return PROVIDER_CHECK_MAP[type_slug]
     except KeyError:
         return ProviderCheck
+
+
+def perform_provider_check(provider, geojson):
+    provider_type = str(provider.export_provider_type)
+
+    url = str(provider.url)
+    if url == '' and 'osm' in provider_type:
+        url = settings.OVERPASS_API_URL
+
+    checker_type = get_provider_checker(provider_type)
+    checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
+    response = checker.check()
+
+    logger.info("Status of provider '{}': {}".format(str(provider.name), response))
+
+    return response

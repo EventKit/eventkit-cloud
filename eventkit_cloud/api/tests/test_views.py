@@ -22,7 +22,7 @@ from ..views import get_models, get_provider_task, ExportRunViewSet
 from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
-    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
+    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ...core.models import GroupPermission
 from mock import patch, Mock
@@ -47,11 +47,7 @@ class TestJobViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         original_selection = GeometryCollection(Point(1,1), LineString((5.625, 48.458),(0.878, 44.339)))
@@ -167,11 +163,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
 
     def test_get_job_detail_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
+        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -197,6 +189,21 @@ class TestJobViewSet(APITestCase):
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEquals(response['Content-Length'], '0')
         self.assertEquals(response['Content-Language'], 'en')
+
+    def test_delete_job_no_permission(self,):
+        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
+        token = Token.objects.create(user=user)
+        # reset the client credentials to the new user
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        url = reverse('api:jobs-detail', args=[self.job.uid])
+        response = self.client.delete(url)
+        # test the response headers
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
 
     def test_create_zipfile(self):
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -498,11 +505,12 @@ class TestJobViewSet(APITestCase):
         self.assertIsNotNone(response.data['featured'])
         self.assertTrue(response.data['success'])
 
-        request_data = {"featured": True, "published" : False}
+        request_data = {"featured": True, "published" : False, "visibility" : VisibilityState.SHARED.value }
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['featured'])
         self.assertIsNotNone(response.data['published'])
+        self.assertIsNotNone(response.data['visibility'])
         self.assertTrue(response.data['success'])
 
 class TestBBoxSearch(APITestCase):
@@ -521,11 +529,8 @@ class TestBBoxSearch(APITestCase):
         url = reverse('api:jobs-list')
         # create dummy user
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+
         # setup token authentication
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -610,9 +615,8 @@ class TestExportRunViewSet(APITestCase):
 
     def setUp(self,):
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
                                 HTTP_ACCEPT='application/json; version=1.0',
@@ -629,6 +633,7 @@ class TestExportRunViewSet(APITestCase):
         provider_task.formats.add(*formats)
 
         self.job.provider_tasks.add(provider_task)
+        self.job.visibility=VisibilityState.PUBLIC.value
         self.job.save()
         self.job_uid = str(self.job.uid)
         self.export_run = ExportRun.objects.create(job=self.job, user=self.user)
@@ -736,34 +741,6 @@ class TestExportRunViewSet(APITestCase):
         mock_invalid_licenses.return_value = []
         self.assertTrue(ExportRunViewSet.validate_licenses(queryset))
 
-
-
-    def test_retrieve_run_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs/{0}'.format(self.run_uid)
-        url = reverse('api:runs-detail', args=[self.run_uid])
-        self.assertEquals(expected, url)
-        response = self.client.get(url)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        # self.assertEquals(response.data, {'detail': 'Not found.'})
-        self.assertEquals(response.data, [])
-
     def test_list_runs(self,):
         expected = '/api/runs'
         url = reverse('api:runs-list')
@@ -789,31 +766,6 @@ class TestExportRunViewSet(APITestCase):
         self.assertTrue("InvalidLicense" in result[0].get('detail'))
         self.assertEquals(response.status_code, 400)
 
-    def test_list_runs_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs'
-        url = reverse('api:runs-list')
-        self.assertEquals(expected, url)
-        query = '{0}?job_uid={1}'.format(url, self.job.uid)
-        response = self.client.get(query)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        self.assertEquals(response.data, [])
 
     def test_filter_runs(self,):
         expected = '/api/runs/filter'
@@ -878,33 +830,6 @@ class TestExportRunViewSet(APITestCase):
         # make sure no runs are returned as they should have been filtered out
         self.assertEquals(0, len(result))
 
-    def test_filter_runs_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
-        token = Token.objects.create(user=user)
-        # reset the client credentials to the new user
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
-                                HTTP_ACCEPT='application/json; version=1.0',
-                                HTTP_ACCEPT_LANGUAGE='en',
-                                HTTP_HOST='testserver')
-        expected = '/api/runs/filter'
-        url = reverse('api:runs-filter')
-        self.assertEquals(expected, url)
-        query = '{0}?job_uid={1}'.format(url, self.job.uid)
-        response = self.client.get(query)
-        self.assertIsNotNone(response)
-        # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-
-        # test significant content
-        self.assertEquals(response.data, [])
-
-
 class TestExportTaskViewSet(APITestCase):
     """
     Test cases for ExportTaskViewSet
@@ -927,13 +852,11 @@ class TestExportTaskViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo', is_active=True)
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))
         the_geom = GEOSGeometry(bbox, srid=4326)
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
-                                      the_geom=the_geom)
+                                      the_geom=the_geom, visibility=VisibilityState.PUBLIC.value )
 
         formats = ExportFormat.objects.all()
         provider = DataProvider.objects.first()
@@ -1000,11 +923,7 @@ class TestExportTaskViewSet(APITestCase):
         self.assertEqual(et.status, TaskStates.SUCCESS.value)
 
     def test_patch_cancel_task_no_permissions(self,):
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            user = User.objects.create_user(
-                username='other_user', email='other_user@demo.com', password='demo'
-            )
+        user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
         token = Token.objects.create(user=user)
         # reset the client credentials to the new user
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -1064,11 +983,7 @@ class TestLicenseViewSet(APITestCase):
 
     def setUp(self,):
         group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         self.licenses = [License.objects.create(slug='test1', name='name1', text='text1')]
         self.licenses += [License.objects.create(slug='test0', name='name0', text='text0')]
         token = Token.objects.create(user=self.user)
@@ -1125,11 +1040,7 @@ class TestUserDataViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
-            mock_group.objects.get.return_value = self.group
-            self.user = User.objects.create_user(
-                username='demo', email='demo@demo.com', password='demo'
-            )
+        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo')
         self.licenses = [License.objects.create(slug='test1', name='Test1', text='text')]
         self.licenses += [License.objects.create(slug='test2', name='Test2', text='text')]
         token = Token.objects.create(user=self.user)
@@ -1211,22 +1122,25 @@ class TestGroupDataViewSet(APITestCase):
                                 HTTP_HOST='testserver')
 
         self.testName = "Omaha 319"
+        group, created = Group.objects.get_or_create(name=self.testName)
+        self.groupid = group.id
+        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermission.Permissions.ADMIN.value)
 
-    def insert_test_group(self):
+    def test_insert_group(self):
         expected = '/api/groups'
         url = reverse('api:groups-list')
         self.assertEquals(expected, url)
-        payload = {'name' : self.testName}
+        payload = {'name' : "Any group"}
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
-        self.groupid = response.data["id"]
 
-
-    def test_insert_group(self):
-        self.insert_test_group()
+    def test_duplicate_group(self):
+        url = reverse('api:groups-list')
+        payload = {'name': "oMaHa 319"}
+        response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
+        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_get_list(self):
-        self.insert_test_group()
         url = reverse('api:groups-list')
         response = self.client.get(url)
         self.assertIsNotNone(response)
@@ -1236,17 +1150,15 @@ class TestGroupDataViewSet(APITestCase):
 
 
     def test_get_group(self):
-        self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         data= json.loads(response.content)
         self.groupid = data["id"]
         self.assertEquals(data["name"], self.testName)
-        self.assertEquals(len(data["members"]),1)
+        self.assertEquals(len(data["members"]),0)
         self.assertEquals(len(data["administrators"]), 1)
 
     def test_set_membership(self):
-        self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_200_OK)
@@ -1254,6 +1166,8 @@ class TestGroupDataViewSet(APITestCase):
 
         # add a user to group members and to group administrators
 
+        groupdata['members'].append( 'user_1')
+        groupdata['administrators'].append( 'user_1')
         groupdata['members'].append( 'user_2')
         groupdata['administrators'].append( 'user_2')
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
@@ -1266,6 +1180,7 @@ class TestGroupDataViewSet(APITestCase):
         # remove user_2 from members
 
         groupdata['members'] = ['user_1']
+        groupdata['administrators'] = ['user_1']
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEquals(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
@@ -1281,12 +1196,11 @@ class TestGroupDataViewSet(APITestCase):
 
     def test_leave_group(self):
         # ensure the group is created
-        self.insert_test_group()
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        # check add user_2 as member and only admin
+        # check add user_2 as member and only one admin
         group_data = json.loads(response.content)
         group_data['members'] = ['user_1', 'user_2']
         group_data['administrators'] = ['user_2']
@@ -1306,7 +1220,6 @@ class TestGroupDataViewSet(APITestCase):
         group_data = json.loads(response.content)
         self.assertEquals(len(group_data['members']), 1)
         self.assertEquals(group_data['members'][0], 'user_2')
-
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):

@@ -8,7 +8,7 @@ import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
-import SocialPerson from 'material-ui/svg-icons/social/person';
+import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
@@ -222,14 +222,14 @@ export class DataPackGridItem extends Component {
             },
             publishedIcon: {
                 float: 'right',
-                color: '#bcdfbb',
+                color: 'grey',
                 fontSize: '20px',
                 marginRight: '5px',
             },
             ownerLabel: {
                 float: 'right',
                 color: 'grey',
-                padding: '0px, 10px',
+                paddingTop: '5px',
                 margin: '0px',
                 fontSize: cardTextFontSize,
             },
@@ -332,14 +332,23 @@ export class DataPackGridItem extends Component {
                                     primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen}
                                 />
-                                {this.props.run.user === this.props.user.data.user.username ?
-                                    <MenuItem
-                                        key="delete"
-                                        className="qa-DataPackGridItem-MenuItem-delete"
-                                        style={{ fontSize: cardTextFontSize }}
-                                        primaryText="Delete Export"
-                                        onClick={this.showDeleteDialog}
-                                    />
+                                {this.props.adminPermission ?
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackGridItem-MenuItem-delete"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackGridItem-MenuItem-share"
+                                            style={{ fontSize: cardTextFontSize }}
+                                            primaryText="Share"
+                                            onClick={() => this.props.openShare(this.props.run)}
+                                        />,
+                                    ]
                                     :
                                     null
                                 }
@@ -398,11 +407,11 @@ export class DataPackGridItem extends Component {
                             :
                             <p style={styles.ownerLabel}>{this.props.run.user}</p>
                         }
-                        {this.props.run.job.published ?
+                        {this.props.run.job.permissions.value !== 'PRIVATE' ?
                             <SocialGroup style={styles.publishedIcon} />
                             :
 
-                            <SocialPerson style={styles.unpublishedIcon} />
+                            <Lock style={styles.unpublishedIcon} />
                         }
                     </span>
                 </CardActions>
@@ -420,6 +429,8 @@ DataPackGridItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    openShare: PropTypes.func.isRequired,
+    adminPermission: PropTypes.bool.isRequired,
 };
 
 export default DataPackGridItem;
