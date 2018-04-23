@@ -44,6 +44,9 @@ export class ExportInfo extends React.Component {
             licenseDialogOpen: false,
             providers: props.providers,
             refreshTooltipOpen: false,
+            exportNameMaxLength: 100,
+            exportDescriptionMaxLength: 250,
+            projectNameMaxLength: 100,
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -70,7 +73,25 @@ export class ExportInfo extends React.Component {
         }
     }
 
+    componentWillMount() {
+        if (this.props.exportInfo.exportName.length > 0) {
+            const exportNameMaxLength = 100 - this.props.exportInfo.exportName.length;
+            this.setState({exportNameMaxLength : exportNameMaxLength});
+        }
+
+        if (this.props.exportInfo.datapackDescription.length > 0) {
+            const exportDescriptionMaxLength = 250 - this.props.exportInfo.datapackDescription.length;
+            this.setState({exportDescriptionMaxLength : exportDescriptionMaxLength});
+        }
+
+        if (this.props.exportInfo.projectName.length > 0) {
+            const projectNameMaxLength = 100 - this.props.exportInfo.projectName.length;
+            this.setState({projectNameMaxLength : projectNameMaxLength});
+        }
+    }
+
     componentDidMount() {
+
         // if the state does not have required data disable next
         if (!this.hasRequiredFields(this.props.exportInfo)) {
             this.props.setNextDisabled();
@@ -452,7 +473,7 @@ export class ExportInfo extends React.Component {
                                     style={style.textField}
                                     inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                     hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={100}
+                                    maxLength={this.state.exportNameMaxLength}
                                 />
                                 <CustomTextField
                                     className="qa-ExportInfo-input-description"
@@ -467,7 +488,7 @@ export class ExportInfo extends React.Component {
                                     style={style.textField}
                                     textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                     hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={250}
+                                    maxLength={this.state.exportDescriptionMaxLength}
                                 />
                                 <CustomTextField
                                     className="qa-ExportInfo-input-project"
@@ -481,7 +502,7 @@ export class ExportInfo extends React.Component {
                                     style={style.textField}
                                     inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
                                     hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={100}
+                                    maxLength={this.state.projectNameMaxLength}
                                 />
                             </div>
 
