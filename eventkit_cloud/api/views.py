@@ -1374,7 +1374,7 @@ class NotificationViewSet(viewsets.GenericViewSet):
             payload = self.serialize_records(page, request)
         else:
             payload = self.serialize_records(notifications,request)
-        return Response(payload, status=status.HTTP_200_OK)
+        return self.get_paginated_response(payload)
 
     @list_route(methods=['get'])
     def read(self, request, *args, **kwargs):
