@@ -466,26 +466,29 @@ class JobViewSet(viewsets.ModelViewSet):
         response['success'] = True
         return Response(response, status=status.HTTP_200_OK)
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, uid=None, *args, **kwargs):
         """
         Delete a job.
+        * uid: optional job uid lookup field
         * return: The status of the delete.
         """
-        return super(JobViewSet, self).destroy(self, request, *args, **kwargs)
+        return super(JobViewSet, self).destroy(self, request, uid, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, uid=None, *args, **kwargs):
         """
         Look up a single job by uid value.
+        * uid: optional job uid lookup field
         * return: The selected job.
         """
-        return super(JobViewSet, self).retrieve(self, request, *args, **kwargs)
+        return super(JobViewSet, self).retrieve(self, request, uid, *args, **kwargs)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, uid=None, *args, **kwargs):
         """
         Update a job object, looked up by uid.
+        * uid: optional job uid lookup field
         * return: The status of the update.
         """
-        return super(JobViewSet, self).update(self, request, *args, **kwargs)
+        return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
@@ -500,17 +503,19 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_field = 'slug'
     ordering = ['description']
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, slug=None, *args, **kwargs):
         """
+        * slug: optional slug value of export format
         * return: A list of format types.
         """
-        return super(ExportFormatViewSet, self).list(self, request, *args, **kwargs)
+        return super(ExportFormatViewSet, self).list(self, request, slug, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, slug=None, *args, **kwargs):
         """
+        * slug: optional slug value of export format
         * return: A single format object matching the provided slug value.
         """
-        return super(ExportFormatViewSet, self).retrieve(self, request, *args, **kwargs)
+        return super(ExportFormatViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -542,17 +547,19 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception:
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, slug=None, *args, **kwargs):
         """
+        * slug: optional slug value of license
         * return: A list of license objects.
         """
-        return super(LicenseViewSet, self).list(self, request, *args, **kwargs)
+        return super(LicenseViewSet, self).list(self, request, slug, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, slug=None, *args, **kwargs):
         """
+        * slug: optional slug value of license
         * return: A single license object matching the provided slug value.
         """
-        return super(LicenseViewSet, self).retrieve(self, request, *args, **kwargs)
+        return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
@@ -606,19 +613,21 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             logger.error(e.message)
             return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, slug=None, *args, **kwargs):
         """
         List all data providers.
+        * slug: optional lookup field
         * return: A list of data providers.
         """
-        return super(DataProviderViewSet, self).list(self, request, *args, **kwargs)
+        return super(DataProviderViewSet, self).list(self, request, slug, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, slug=None, *args, **kwargs):
         """
         Look up a single data provider by slug value.
+        * slug: optional lookup field
         * return: The data provider with the given slug.
         """
-        return super(DataProviderViewSet, self).retrieve(self, request, *args, **kwargs)
+        return super(DataProviderViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -630,19 +639,21 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.all()
     lookup_field = 'uid'
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, uid=None, *args, **kwargs):
         """
         List all regions.
+        * uid: optional lookup field
         * return: A list of regions.
         """
-        return super(RegionViewSet, self).list(self, request, *args, **kwargs)
+        return super(RegionViewSet, self).list(self, request, uid, *args, **kwargs)
 
-    def retrieve(self, request, *args, **kwargs):
+    def retrieve(self, request, uid=None, *args, **kwargs):
         """
         Look up a single region by slug value.
+        * uid: optional lookup field
         * return: The region with the given slug.
         """
-        return super(RegionViewSet, self).retrieve(self, request, *args, **kwargs)
+        return super(RegionViewSet, self).retrieve(self, request, uid, *args, **kwargs)
 
 
 class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
@@ -906,12 +917,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         """
         return super(ExportRunViewSet, self).create(self, request, *args, **kwargs)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, uid=None, *args, **kwargs):
         """
         Update a run.
+        * uid: optional lookup field
         * return: The status of the update.
         """
-        return super(ExportRunViewSet, self).update(self, request, *args, **kwargs)
+        return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
@@ -943,12 +955,13 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request, uid=None, *args, **kwargs):
         """
         List all tasks.
+        * uid: optional lookup field
         * return: A list of all tasks.
         """
-        return super(ExportTaskViewSet, self).list(self, request, *args, **kwargs)
+        return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
 class DataProviderTaskViewSet(viewsets.ModelViewSet):
@@ -1001,26 +1014,29 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         """
         return super(DataProviderTaskViewSet, self).list(self, request, *args, **kwargs)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request, uid=None, *args, **kwargs):
         """
         Create a data provider task object.
+        * uid: optional lookup field
         * return: The status of the object creation.
         """
-        return super(DataProviderTaskViewSet, self).create(self, request, *args, **kwargs)
+        return super(DataProviderTaskViewSet, self).create(self, request, uid, *args, **kwargs)
 
-    def destroy(self, request, *args, **kwargs):
+    def destroy(self, request, uid=None, *args, **kwargs):
         """
         Delete a data provider task object.
+        * uid: optional lookup field
         * return: The status of the deletion.
         """
-        return super(DataProviderTaskViewSet, self).destroy(self, request, *args, **kwargs)
+        return super(DataProviderTaskViewSet, self).destroy(self, request, uid, *args, **kwargs)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, uid=None, *args, **kwargs):
         """
         Update a data provider task object.
+        * uid: optional lookup field
         * return: The status of the update.
         """
-        return super(DataProviderTaskViewSet, self).update(self, request, *args, **kwargs)
+        return super(DataProviderTaskViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class UserDataViewSet(viewsets.GenericViewSet):
