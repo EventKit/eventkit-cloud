@@ -2,7 +2,7 @@
 import logging
 import os
 import requests
-from mock import Mock, patch, MagicMock
+from mock import Mock, patch, MagicMock, ANY
 from django.conf import settings
 from django.test import TransactionTestCase
 from string import Template
@@ -21,16 +21,33 @@ class TestWCSConverter(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
+    @patch('eventkit_cloud.utils.wcs.auth_requests.get_cred')
+    @patch('eventkit_cloud.utils.wcs.os.write')
     @patch('eventkit_cloud.utils.wcs.os.path.exists')
-    def test_convert_geotiff(self, exists):
+    def test_convert_geotiff(self, exists, write, get_cred):
         geotiff = '/path/to/geotiff.tif'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
         name = 'Great export'
-        service_url = 'http://my-service.org/some-server/wcs?'
+        service_url = 'http://my-service.org/some-server/wcs?map=testMap.map'
         cmd = Template("gdal_translate -projwin $minX $maxY $maxX $minY -of gtiff $type $wcs $out")
+        expected_wcs_xml = Template("""<WCS_GDAL>
+              <ServiceURL>$url</ServiceURL>
+              <CoverageName>$coverage</CoverageName>
+              <PreferredFormat>GeoTIFF</PreferredFormat>
+              <GetCoverageExtra>&amp;crs=EPSG:4326$params</GetCoverageExtra>
+              <DescribeCoverageExtra>$params</DescribeCoverageExtra>
+              <UserPwd>$userpwd</UserPwd>
+              <HttpAuth>ANY</HttpAuth>
+            </WCS_GDAL>""").safe_substitute({
+            'url': service_url.split('?')[0] + '?',
+            'coverage': layer,
+            'params': '&amp;map=testMap.map',
+            'userpwd': 'testUser:testPass',
+        })
 
         exists.return_value = True
+        get_cred.return_value = ("testUser", "testPass")
         self.task_process.return_value = Mock(exitcode=0)
 
         wcs_conv = WCSConverter(out=geotiff,
@@ -45,6 +62,7 @@ class TestWCSConverter(TransactionTestCase):
         out = wcs_conv.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(os.path.dirname(geotiff))
+        write.assert_called_once_with(ANY, expected_wcs_xml)
 
         cmd = cmd.safe_substitute({'out': geotiff, 'wcs': wcs_conv.wcs_xml_path, 'minX': bbox[0], 'minY': bbox[1],
                                    'maxX': bbox[2], 'maxY': bbox[3], 'type': ''})
