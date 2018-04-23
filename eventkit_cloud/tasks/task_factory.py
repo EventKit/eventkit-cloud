@@ -9,7 +9,7 @@ import itertools
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-from ..core.models import JobPermission
+from ..core.models import JobPermission,JobPermissionLevel
 
 
 from celery import chain
@@ -203,7 +203,7 @@ def create_run(job_uid, user=None):
             if not user:
                 user = job.user
 
-            perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.ADMIN.value)
+            perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
             if  not job.id in job_ids:
                 raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                     job.user.username, job.name
