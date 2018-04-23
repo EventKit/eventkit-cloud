@@ -182,6 +182,7 @@ class DefaultDataProviderTaskRecordSerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
     display = serializers.SerializerMethodField()
     tasks = serializers.SerializerMethodField()
+    provider_slug = serializers.SerializerMethodField()
 
     def get_status(self, obj):
         return 'PENDING'
@@ -194,6 +195,9 @@ class DefaultDataProviderTaskRecordSerializer(serializers.ModelSerializer):
 
     def get_tasks(self, obj):
         return []
+
+    def get_provider_slug(self, obj):
+        return obj.provider.slug
 
     class Meta:
         model = DataProviderTask
