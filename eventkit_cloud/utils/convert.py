@@ -33,8 +33,8 @@ class Convert(object):
     
     def get(self, query):
         result = self.get_data(query)
-        
-        if('error' in result and result['error'] == 'Invalid token'):
+         
+        if(result and 'error' in result and result['error'] == 'Invalid token'):
             authenticate()
             result = self.get_data(query)
         return result
@@ -43,8 +43,14 @@ class Convert(object):
         url = getattr(settings, 'CONVERT_API_URL')
         args = { "from":"mgrs", "to":"decdeg","q":str(query)}
         try: 
+            
             response = requests.get(url, params=args, headers=getAuthHeaders())
-            return response.json()
+
+            logger.info(response.text)    
+            if('ERROR' not in response.text):
+                return response.json()
+            else:
+                return
         except requests.exceptions.RequestException as e:
             logger.error(e)
             return

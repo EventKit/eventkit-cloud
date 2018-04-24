@@ -141,9 +141,9 @@ def search(request):
         mgrs_data = convert.get(q)
 
         # if no feature geom return nothing
-        if not mgrs_data.get('geometry'):
+        if not mgrs_data or not mgrs_data.get('geometry'):
             return HttpResponse(status=204, content_type="application/json")
-
+        
         features = []
         # save the mgrs feature to return later
         if not mgrs_data.get('properties'):
