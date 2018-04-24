@@ -15,6 +15,7 @@ import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
 import { getDatacartDetails } from '../../actions/statusDownloadActions';
+import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 import isEqual from 'lodash/isEqual';
@@ -64,6 +65,8 @@ export class BreadcrumbStepper extends React.Component {
                 this.hideLoading();
                 browserHistory.push(`/status/${nextProps.jobuid}`);
                 this.props.clearJobInfo();
+                this.props.getNotifications();
+                this.props.getNotificationsUnreadCount();
             }
         }
         if (nextProps.jobError) {
@@ -428,6 +431,8 @@ BreadcrumbStepper.propTypes = {
     getFormats: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
     routes: PropTypes.array.isRequired,
+    getNotifications: PropTypes.func.isRequired,
+    getNotificationsUnreadCount: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -467,6 +472,12 @@ function mapDispatchToProps(dispatch) {
         },
         getFormats: () => {
             dispatch(getFormats());
+        },
+        getNotifications: (args) => {
+            dispatch(getNotifications(args));
+        },
+        getNotificationsUnreadCount: (args) => {
+            dispatch(getNotificationsUnreadCount(args))
         },
     };
 }
