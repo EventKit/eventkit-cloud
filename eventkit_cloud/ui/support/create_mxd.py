@@ -44,7 +44,7 @@ def get_temp_mxd(metadata, verify=False):
 
         # Create a copy of the mxd to avoid single use locking issues.
         shutil.copyfile(template_file, temp_file.name)
-        update_mxd_from_metadata(temp_file.name, metadata, verify=False)
+        update_mxd_from_metadata(temp_file.name, metadata, verify=verify)
         yield temp_file.name
     finally:
         temp_file.close()
@@ -74,14 +74,13 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
         arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
         # Get instance of layer from MXD, not the template file.
         layer = arcpy.mapping.ListLayers(mxd)[0]
-        ext = update_layers(layer, file_path)
+        update_layers(layer, file_path, verify=verify)
         del layer
     logger.debug('Getting dataframes...')
     df = mxd.activeDataFrame
 
     df.extent = arcpy.Extent(*metadata['bbox'])
 
-    # df.zoomToSelectedFeatures()
     mxd.activeView = df.name
     arcpy.RefreshActiveView()
     mxd.save()
@@ -141,7 +140,7 @@ def get_version():
         raise
 
 
-def update_layers(layer, file_path):
+def update_layers(layer, file_path, verify=False):
     """
     :param layer: An Arc Layer object to be updated.
     :param file_path: A new datasource.
@@ -158,7 +157,7 @@ def update_layers(layer, file_path):
             try:
                 # Try to update the extents based on the layers
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
-                lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, True)
+                lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
                 if lyr.isFeatureLayer:
                     # print arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages()
                     logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
@@ -185,7 +184,7 @@ def create_mxd(mxd=None, metadata=None, verify=False):
             return open_mxd_file.read()
 
 
-def create_mxd_process(mxd=None, gpkg=None, verify=False):
+def create_mxd_process(mxd=None, metadata=None, verify=False):
     """
     This wraps create_mxd to overcome issues with licensing by running in a unique process.
     Updates the template mxd with a new gpkg datasource. If an mxd is provided the result is written to that file.
