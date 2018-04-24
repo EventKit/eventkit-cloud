@@ -8,6 +8,7 @@ import json
 from django.core.cache import cache
 from ..geocode_auth import getAuthHeaders
 
+
 logger = logging.getLogger(__name__)
 
 class TestGeoCodeAuth(TestCase):
@@ -20,7 +21,7 @@ class TestGeoCodeAuth(TestCase):
     def testGetHeadersWithNoURL(self):        
         self.assertEquals(getAuthHeaders(), {})
 
-    @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="./readme.md", GEOCODING_AUTH_KEY="./readme.md")
+    @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE-----", GEOCODING_AUTH_KEY="-----BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----")
     def testGetHeaders(self):
         testJwt = {'token': 'hello_world'}
         self.mock_requests.get(settings.GEOCODING_AUTH_URL, text=json.dumps(testJwt), status_code=200)
