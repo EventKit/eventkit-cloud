@@ -82,6 +82,8 @@ export class NotificationMenu extends React.Component {
             },
         };
 
+        const viewPath = getNotificationViewPath(this.props.notification);
+
         return (
             <IconMenu
                 style={this.props.style}
@@ -96,12 +98,16 @@ export class NotificationMenu extends React.Component {
                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                 open={this.state.forceClose ? false : undefined}
             >
-                <MenuItem
-                    style={styles.menuItem}
-                    primaryText="View"
-                    leftIcon={<OpenInNewIcon />}
-                    onClick={this.handleView}
-                />
+                {viewPath ?
+                    <MenuItem
+                        style={styles.menuItem}
+                        primaryText="View"
+                        leftIcon={<OpenInNewIcon />}
+                        onClick={this.handleView}
+                    />
+                    :
+                    null
+                }
                 {this.props.notification.unread ?
                     <MenuItem
                         style={styles.menuItem}

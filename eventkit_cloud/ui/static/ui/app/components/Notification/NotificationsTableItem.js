@@ -4,7 +4,6 @@ import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
-import moment from 'moment';
 import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import NotificationMenu from './NotificationMenu';
@@ -99,6 +98,7 @@ export class NotificationsTableItem extends React.Component {
 
         const icon = getNotificationIcon({ notification: this.props.notification });
         const message = getNotificationMessage({ notification: this.props.notification });
+        const viewPath = getNotificationViewPath(this.props.notification);
 
         return (
             <TableRow
@@ -146,14 +146,18 @@ export class NotificationsTableItem extends React.Component {
                         {(window.innerWidth > 1280) ?
                             <div style={{ display: 'flex', flex: '1' }}>
                                 <div style={{ flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box' }}>
-                                    <FlatButton
-                                        label="View"
-                                        labelStyle={styles.optionButtonLabel}
-                                        icon={<OpenInNewIcon style={styles.optionButtonLabel} />}
-                                        hoverColor="rgba(0, 0, 0, 0)"
-                                        disableTouchRipple={true}
-                                        onClick={this.handleView}
-                                    />
+                                    {viewPath ?
+                                        <FlatButton
+                                            label="View"
+                                            labelStyle={styles.optionButtonLabel}
+                                            icon={<OpenInNewIcon style={styles.optionButtonLabel} />}
+                                            hoverColor="rgba(0, 0, 0, 0)"
+                                            disableTouchRipple={true}
+                                            onClick={this.handleView}
+                                        />
+                                        :
+                                        null
+                                    }
                                 </div>
                                 <div style={{ flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box' }}>
                                     {this.props.notification.unread ?
