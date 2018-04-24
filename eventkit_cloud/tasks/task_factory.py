@@ -9,7 +9,7 @@ import itertools
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-from ..core.models import JobPermission
+from ..core.models import JobPermission,JobPermissionLevel
 
 
 from celery import chain
@@ -34,7 +34,7 @@ from .task_runners import (
     ExportArcGISFeatureServiceTaskRunner
 )
 
-from ..core.helpers import sendnotification, NotificationVerbs
+from ..core.helpers import sendnotification, NotificationVerb
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -203,7 +203,7 @@ def create_run(job_uid, user=None):
             if not user:
                 user = job.user
 
-            perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.ADMIN.value)
+            perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
             if  not job.id in job_ids:
                 raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                     job.user.username, job.name
@@ -221,7 +221,7 @@ def create_run(job_uid, user=None):
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
             job.last_export_run = run
             job.save()
-            sendnotification(run, run.user, NotificationVerbs.START.value, None, None, "info", '')
+            sendnotification(run, run.user, NotificationVerb.RUN_STARTED.value, None, None, "info", '')
             run_uid = run.uid
             logger.debug('Saved run with id: {0}'.format(str(run_uid)))
             return run_uid

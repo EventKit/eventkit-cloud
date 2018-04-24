@@ -3,7 +3,7 @@ from django.dispatch.dispatcher import receiver
 from django.contrib.auth.models import Group, User
 
 from ..jobs.models import Job
-from ..core.models import JobPermission
+from ..core.models import JobPermission,JobPermissionLevel
 
 import logging
 logger = logging.getLogger(__name__)
@@ -30,6 +30,6 @@ def job_post_save(sender, instance, created, **kwargs):
 
     if created :
         jp = JobPermission.objects.create(job=instance, content_object=instance.user,
-                                          permission=JobPermission.Permissions.ADMIN.value)
+                                          permission=JobPermissionLevel.ADMIN.value)
         jp.save()
 

@@ -16,9 +16,9 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from ..core.models import GroupPermission, JobPermission
+from ..core.models import GroupPermission, JobPermission,JobPermissionLevel
 from notifications.models import Notification
-from ..core.helpers import sendnotification, NotificationVerbs
+from ..core.helpers import sendnotification, NotificationVerb
 
 
 from eventkit_cloud.jobs.models import (
@@ -110,7 +110,7 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return all objects user can view."""
 
-        perms, job_ids = JobPermission.userjobs(self.request.user, JobPermission.Permissions.READ.value )
+        perms, job_ids = JobPermission.userjobs(self.request.user, JobPermissionLevel.READ.value )
 
         return Job.objects.filter(
              Q(visibility=VisibilityState.PUBLIC.value) | Q(pk__in=job_ids))
@@ -471,7 +471,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
         # Does the user have admin permission to make changes to this job?
 
-        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
             return Response([{'detail': 'ADMIN permission is required to update this job.'}],
                             status.HTTP_400_BAD_REQUEST)
@@ -520,7 +520,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         return Response([{'detail': "unidentified user or group : %s" % key}],
                                         status.HTTP_400_BAD_REQUEST)
                     perm = set[key]
-                    if not perm in JobPermission.Permissions.__members__:
+                    if not perm in JobPermissionLevel.__members__:
                         return Response([{'detail': "invalid permission value : %s" % perm}],
                                         status.HTTP_400_BAD_REQUEST)
 
@@ -586,7 +586,7 @@ class JobViewSet(viewsets.ModelViewSet):
         # Does the user have admin permission to make changes to this job?
 
         logger.info("DELETE REQUEST")
-        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         logger.info("JOB IDS %s %s" % (job.id, job_ids))
 
         if not job.id in job_ids:
@@ -798,7 +798,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         job = instance.job
 
 
-        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
                             status.HTTP_400_BAD_REQUEST)
@@ -1398,12 +1398,14 @@ class GroupViewSet(viewsets.ModelViewSet):
             users = User.objects.filter(username__in=newusers).all()
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
+                sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP.value, group, None, "info", permission)
 
             ## Remove existing users for this permission level
 
             removedusers = list(set(currentusers) - set(targetusers))
             users = User.objects.filter(username__in=removedusers).all()
             for user in users:
+                sendnotification(request.user, user, NotificationVerb.REMOVED_FROM_GROUP.value, group, None, "info", permission)
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
                 for perm in perms: perm.delete()
 
@@ -1598,7 +1600,7 @@ def get_job_ids_via_permissions(permissions):
     master_job_list = []
     initialized = False
     for group in groups:
-        perms, job_ids = JobPermission.groupjobs(group, JobPermission.Permissions.READ.value)
+        perms, job_ids = JobPermission.groupjobs(group, JobPermissionLevel.READ.value)
         temp_list = master_job_list
         if not initialized:
             master_job_list = job_ids
@@ -1608,7 +1610,7 @@ def get_job_ids_via_permissions(permissions):
 
     users = User.objects.filter(username__in=usernames)
     for user in users:
-        perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value,include_groups=False)
+        perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.READ.value,include_groups=False)
         temp_list = master_job_list
         if not initialized:
             master_job_list = job_ids

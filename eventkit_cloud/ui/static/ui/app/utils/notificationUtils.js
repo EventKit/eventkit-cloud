@@ -5,6 +5,17 @@ import Warning from 'material-ui/svg-icons/alert/warning';
 import Error from 'material-ui/svg-icons/alert/error';
 import { Link } from 'react-router';
 
+const verbs = {
+    run_started: 'run_started',
+    run_completed: 'run_completed',
+    run_failed: 'run_failed',
+    run_deleted: 'run_deleted',
+    run_canceled: 'run_canceled',
+    removed_from_group: 'removed_from_group',
+    added_to_group: 'added_to_group',
+    set_as_group_admin: 'set_as_group_admin',
+};
+
 // NOTE: This should ideally be a NotificationMessage component, but we need to return the bare elements without
 // a wrapper to solve the middle text truncation problem. With React 16 we'll be able to do this from a component
 // by using fragments (https://reactjs.org/docs/fragments.html).
@@ -27,9 +38,9 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
         }
     };
 
-    const type = getNotificationType(notification);
-    switch (type) {
-        case 'exportrun_start':
+    const verb = notification.verb.toLowerCase();
+    switch (verb) {
+        case verbs.run_started:
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -44,7 +55,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;has started.</span>
             ];
-        case 'exportrun_complete':
+        case verbs.run_completed:
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -59,7 +70,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;is complete.</span>
             ];
-        case 'exportrun_delete':
+        case verbs.run_deleted:
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -74,7 +85,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 </Link>,
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was deleted.</span>
             ];
-        case 'exportrun_error':
+        case verbs.run_failed:
             return [
                 <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
                 <Link
@@ -90,7 +101,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;failed to complete.</span>
             ];
         default:
-            console.error(`Unsupported notification type '${type}'`, notification);
+            console.error(`Unsupported notification verb '${verb}'`, notification);
     }
 }
 
@@ -108,49 +119,30 @@ export function getNotificationIcon({ notification, iconStyle }) {
     const warningIcon = <Warning style={{...styles.icon, fill: '#F4D225'}} />;
     const errorIcon = <Error style={{...styles.icon, fill: '#CE4427'}} />;
 
-    const type = getNotificationType(notification);
-    switch (type) {
-        case 'exportrun_start':
+    const verb = notification.verb.toLowerCase();
+    switch (verb) {
+        case verbs.run_started:
             return infoIcon;
-        case 'exportrun_complete':
+        case verbs.run_completed:
             return checkCircleIcon;
-        case 'exportrun_delete':
+        case verbs.run_deleted:
             return warningIcon;
-        case 'exportrun_error':
+        case verbs.run_failed:
             return errorIcon;
         default:
-            console.error(`Unsupported notification type '${type}'`, notification);
+            console.error(`Unsupported notification verb '${verb}'`, notification);
     }
 }
 
 export function getNotificationViewPath(notification) {
-    const type = getNotificationType(notification);
-    switch (type) {
-        case 'exportrun_start':
-        case 'exportrun_complete':
-        case 'exportrun_delete':
-        case 'exportrun_error':
+    const verb = notification.verb.toLowerCase();
+    switch (verb) {
+        case verbs.run_started:
+        case verbs.run_completed:
+        case verbs.run_deleted:
+        case verbs.run_failed:
             return `/status/${notification.actor.details.job.uid}`;
         default:
-            console.error(`Unsupported notification type '${type}'`, notification);
-    }
-}
-
-function getNotificationType(notification) {
-    let type = notification.verb.toLowerCase();
-    if (notification.actor) {
-        type = `${notification.actor.type.toLowerCase()}_${type}`;
-    }
-
-    const level = notification.level.toLowerCase();
-    switch (type) {
-        case 'exportrun_end':
-            if (level === 'error') {
-                return 'exportrun_error';
-            } else {
-                return 'exportrun_complete';
-            }
-        default:
-            return type;
+            console.error(`Unsupported notification verb '${verb}'`, notification);
     }
 }
