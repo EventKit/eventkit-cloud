@@ -13,44 +13,34 @@ export class NotificationsPage extends React.Component {
     constructor(props) {
         super(props);
         this.refresh = this.refresh.bind(this);
-        this.autoRefresh = this.autoRefresh.bind(this);
         this.isSameOrderType = this.isSameOrderType.bind(this);
         this.getHeaderStyle = this.getHeaderStyle.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
+        this.itemsPerPage = 12;
         this.state = {
             loadingPage: true,
+            loading: true,
+            pageSize: this.itemsPerPage,
         };
-        this.refreshInterval = 10000;
-        this.notificationsPerPage = 10;
-        this.notificationsPage = 1;
     }
 
     componentDidMount() {
-        this.refreshIntervalId = setInterval(this.autoRefresh, this.refreshInterval);
         this.refresh();
-    }
-
-    componentWillUnmount() {
-        clearInterval(this.refreshIntervalId);
     }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
-            this.setState({ loadingPage: false });
+            this.setState({
+                loadingPage: false,
+                loading: false,
+            });
         }
     }
 
-    refresh({ isAuto = false } = {}) {
-        const pageSize = this.notificationsPage * this.notificationsPerPage;
-        this.props.getNotifications({
-            pageSize,
-            isAuto,
-        });
-    }
-
-    autoRefresh() {
-        this.refresh({ isAuto: true });
+    refresh() {
+        this.props.getNotifications({ pageSize: this.state.pageSize });
+        this.setState({ loading: true });
     }
 
     isSameOrderType(unknown, known) {
@@ -66,7 +56,11 @@ export class NotificationsPage extends React.Component {
     }
 
     handleLoadMore() {
-        // TODO
+        if (this.props.notifications.nextPage) {
+            this.setState({
+                pageSize: this.state.pageSize + this.itemsPerPage,
+            }, this.refresh);
+        }
     }
 
     render() {
@@ -97,19 +91,6 @@ export class NotificationsPage extends React.Component {
                 paddingLeft: '10px',
                 height: '35px',
             },
-            loadingOverlay: {
-                position: 'absolute',
-                height: '100%',
-                width: '100%',
-                background: 'rgba(0,0,0,0.5)',
-                zIndex: '100',
-            },
-            loadingPage: {
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-            },
             content: {
                 marginBottom: '12px',
                 maxWidth: '1920px',
@@ -139,6 +120,14 @@ export class NotificationsPage extends React.Component {
             },
         };
 
+        const notifications = this.props.notifications.notificationsSorted.slice(0, this.state.pageSize);
+
+        let range = '';
+        if (this.props.notifications.range) {
+            const rangeParts = this.props.notifications.range.split('/');
+            range = (rangeParts.length === 2) ? `${notifications.length}/${rangeParts[1]}` : '';
+        }
+
         return (
             <div style={styles.root}>
                 <AppBar
@@ -148,23 +137,32 @@ export class NotificationsPage extends React.Component {
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
                 />
-                {this.state.loadingPage ?
-                    <div style={styles.loadingOverlay}>
-                        <CircularProgress
-                            style={styles.loadingPage}
-                            color="#4598bf"
-                            size={50}
-                        />
+                {this.state.loading ?
+                    <div
+                        style={{
+                            zIndex: 10,
+                            position: 'absolute',
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0,0,0,0.2)',
+                        }}
+                    >
+                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
+                            <CircularProgress
+                                style={{ margin: 'auto', display: 'block' }}
+                                color="#4598bf"
+                                size={50}
+                            />
+                        </div>
                     </div>
-                    :
-                    null
+                    : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
                     {this.state.loadingPage ?
                         null
                         :
                         <div style={styles.content}>
-                            {(this.props.notifications.notificationsSorted.length === 0) ?
+                            {(notifications.length === 0) ?
                                 <Paper
                                     className="qa-NotifcationsPage-NoData"
                                     style={styles.noData}
@@ -176,6 +174,7 @@ export class NotificationsPage extends React.Component {
                                     {(window.innerWidth > 768) ?
                                         <NotificationsTable
                                             notifications={this.props.notifications}
+                                            notificationsArray={notifications}
                                             router={this.props.router}
                                         />
                                         :
@@ -188,7 +187,7 @@ export class NotificationsPage extends React.Component {
                                                 padding={2}
                                                 cols={1}
                                             >
-                                                {this.props.notifications.notificationsSorted.map((notification) => (
+                                                {notifications.map((notification) => (
                                                     <NotificationGridItem
                                                         key={`Notification-${notification.id}`}
                                                         notification={notification}
@@ -199,7 +198,7 @@ export class NotificationsPage extends React.Component {
                                         </div>
                                     }
                                     <LoadButtons
-                                        range={this.props.notifications.range}
+                                        range={range}
                                         handleLoadMore={this.handleLoadMore}
                                         loadMoreDisabled={!this.props.notifications.nextPage}
                                     />
@@ -215,6 +214,7 @@ export class NotificationsPage extends React.Component {
 
 NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,
+    notifications: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {

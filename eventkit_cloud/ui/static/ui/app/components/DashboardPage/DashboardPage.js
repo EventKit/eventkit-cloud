@@ -24,7 +24,6 @@ export class DashboardPage extends React.Component {
         this.getGridWideColumns = this.getGridWideColumns.bind(this);
         this.getNotificationsColumns = this.getNotificationsColumns.bind(this);
         this.getNotificationsRows = this.getNotificationsRows.bind(this);
-        this.refreshNotifications = this.refreshNotifications.bind(this);
         this.refreshMyDataPacks = this.refreshMyDataPacks.bind(this);
         this.refreshFeatured = this.refreshFeatured.bind(this);
         this.refreshRecentlyViewed = this.refreshRecentlyViewed.bind(this);
@@ -42,17 +41,14 @@ export class DashboardPage extends React.Component {
             shareOpen: false,
             targetRun: null,
         };
-        this.refreshInterval = 10000;
     }
 
     componentDidMount() {
         this.props.getProviders();
-        this.refreshIntervalId = setInterval(this.autoRefresh, this.refreshInterval);
+        this.props.getNotifications({
+            pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
+        });
         this.refresh();
-    }
-
-    componentWillUnmount() {
-        clearInterval(this.refreshIntervalId);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -120,21 +116,6 @@ export class DashboardPage extends React.Component {
         return 3;
     }
 
-    refreshNotifications({ isAuto = false } = {}) {
-        const maxNotifications = this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows();
-        this.props.getNotifications({
-            pageSize: maxNotifications,
-            isAuto,
-        });
-
-        // Only show loading if this was a user triggered refresh.
-        if (!isAuto) {
-            const loadingSections = {...this.state.loadingSections};
-            loadingSections.notifications = true;
-            this.setState({ loadingSections });
-        }
-    }
-
     refreshMyDataPacks({ isAuto = false } = {}) {
         this.props.getRuns({
             pageSize: this.getGridColumns({ getMax: true }),
@@ -142,13 +123,6 @@ export class DashboardPage extends React.Component {
             ownerFilter: this.props.user.data.user.username,
             isAuto,
         });
-
-        // Only show loading if this was a user triggered refresh.
-        if (!isAuto) {
-            const loadingSections = {...this.state.loadingSections};
-            loadingSections.myDataPacks = true;
-            this.setState({ loadingSections });
-        }
     }
 
     refreshFeatured({ isAuto = false } = {}) {
@@ -156,13 +130,6 @@ export class DashboardPage extends React.Component {
             pageSize: this.getGridWideColumns({ getMax: true }),
             isAuto,
         });
-
-        // Only show loading if this was a user triggered refresh.
-        if (!isAuto) {
-            const loadingSections = {...this.state.loadingSections};
-            loadingSections.featured = true;
-            this.setState({ loadingSections });
-        }
     }
 
     refreshRecentlyViewed({ isAuto = false } = {}) {
@@ -170,17 +137,9 @@ export class DashboardPage extends React.Component {
             pageSize: this.getGridColumns({ getMax: true }),
             isAuto,
         });
-
-        // Only show loading if this was a user triggered refresh.
-        if (!isAuto) {
-            const loadingSections = {...this.state.loadingSections};
-            loadingSections.recentlyViewed = true;
-            this.setState({ loadingSections });
-        }
     }
 
     refresh({ isAuto = false } = {}) {
-        this.refreshNotifications({ isAuto });
         this.refreshMyDataPacks({ isAuto });
         this.refreshFeatured({ isAuto });
         this.refreshRecentlyViewed({ isAuto });

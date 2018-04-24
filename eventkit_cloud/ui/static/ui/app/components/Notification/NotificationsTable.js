@@ -52,7 +52,7 @@ export class NotificationsTable extends React.Component {
     handleSelectAllCheck() {
         let selected = { ...this.state.selected };
         if (this.getSelectedCount() === 0) {
-            this.props.notifications.notificationsSorted.map((notification) => {
+            this.props.notificationsArray.map((notification) => {
                 selected[notification.id] = notification;
             });
         } else {
@@ -63,7 +63,7 @@ export class NotificationsTable extends React.Component {
     }
 
     getSelectAllCheckedIcon() {
-        if (this.getSelectedCount() === this.props.notifications.notificationsSorted.length) {
+        if (this.getSelectedCount() === this.props.notificationsArray.length) {
             return <CheckboxIcon />;
         } else {
             return <IndeterminateCheckboxIcon />;
@@ -176,7 +176,7 @@ export class NotificationsTable extends React.Component {
                         </TableRow>
                     </TableHeader>
                     <TableBody displayRowCheckbox={false}>
-                        {this.props.notifications.notificationsSorted.map((notification) => (
+                        {this.props.notificationsArray.map((notification) => (
                             <NotificationsTableItem
                                 key={`NotificationsTableItem-${notification.id}`}
                                 notification={notification}
@@ -198,6 +198,7 @@ export class NotificationsTable extends React.Component {
 
 NotificationsTable.propTypes = {
     notifications: PropTypes.object.isRequired,
+    notificationsArray: PropTypes.arrayOf(PropTypes.object).isRequired,
     router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,

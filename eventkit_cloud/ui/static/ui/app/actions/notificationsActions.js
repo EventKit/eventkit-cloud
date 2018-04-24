@@ -24,14 +24,14 @@ export function getNotifications(args = {}) {
             cancelSource,
         });
 
-        const pageSize = args.pageSize || 10;
-        const page = args.page || 1;
-
-        let params = `page_size=${pageSize}&page=${page}`;
+        const params = {
+            page_size: args.pageSize || 12,
+        };
 
         return axios({
-            url: `/api/notifications/all?${params}`,
+            url: '/api/notifications/all',
             method: 'GET',
+            params,
             cancelToken: cancelSource.token,
         }).then((response) => {
             let nextPage = false;
