@@ -140,6 +140,8 @@ export function notificationsReducer(state = initialState.notifications, action)
                     unreadCount: action.unreadCount,
                 },
             };
+        case types.USER_LOGGED_OUT:
+            return initialState.notifications;
         default:
             return state;
     }

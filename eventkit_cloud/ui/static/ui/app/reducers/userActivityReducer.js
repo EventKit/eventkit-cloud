@@ -40,6 +40,8 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     cancelSource: null
                 }
             };
+        case types.USER_LOGGED_OUT:
+            return initialState.userActivity;
         default:
             return state;
     }
