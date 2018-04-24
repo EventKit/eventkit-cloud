@@ -15,7 +15,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, JobPermission,JobPermissionLevel
 from notifications.models import Notification
-from ..core.helpers import sendnotification, NotificationVerbs
+from ..core.helpers import sendnotification, NotificationVerb
 
 
 from eventkit_cloud.jobs.models import (
@@ -1328,14 +1328,14 @@ class GroupViewSet(viewsets.ModelViewSet):
             users = User.objects.filter(username__in=newusers).all()
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
-                sendnotification(request.user, user, NotificationVerbs.JOIN.value, group, None, "info", permission)
+                sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP.value, group, None, "info", permission)
 
             ## Remove existing users for this permission level
 
             removedusers = list(set(currentusers) - set(targetusers))
             users = User.objects.filter(username__in=removedusers).all()
             for user in users:
-                sendnotification(request.user, user, NotificationVerbs.REMOVE.value, group, None, "info", permission)
+                sendnotification(request.user, user, NotificationVerb.REMOVED_FROM_GROUP.value, group, None, "info", permission)
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
                 for perm in perms: perm.delete()
 

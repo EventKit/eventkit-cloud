@@ -111,10 +111,15 @@ def sendnotification(actor, recipient, verb, action_object, target, level, descr
         logger.info( "notify errror ignored: %s" % err)
 
 
-class NotificationVerbs(Enum):
-    START = "START"
-    END   = "END"
-    DELETE = "DELETE"
-    JOIN = "JOIN"
-    REMOVE = "REMOVE"
+class NotificationVerb(Enum):
+    RUN_STARTED = "run_started"
+    RUN_COMPLETED = "run_completed"
+    RUN_FAILED = "run_failed"
+    RUN_DELETED = "run_deleted"
+    RUN_CANCELED = "run_canceled"
+    REMOVED_FROM_GROUP = "removed_from_group"
+    ADDED_TO_GROUP = "added_to_group"
+    SET_AS_GROUP_ADMIN = "set_as_group_admin"
+
+
 

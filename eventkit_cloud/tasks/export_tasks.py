@@ -35,7 +35,7 @@ from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
-from ..core.helpers import sendnotification, NotificationVerbs
+from ..core.helpers import sendnotification, NotificationVerb
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
@@ -1184,6 +1184,7 @@ class FinalizeRunBase(LockingTask):
             logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
         notification_level = 'success'
+        verb = NotificationVerb.RUN_COMPLETED.value
         provider_tasks = run.provider_tasks.all()
 
         # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
@@ -1197,16 +1198,18 @@ class FinalizeRunBase(LockingTask):
         if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
             notification_level = 'warning'
+            verb = NotificationVerb.RUN_FAILED.value
         if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
             notification_level = 'warning'
+            verb = NotificationVerb.RUN_CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
         run.save()
 
         # sendnotification to user via django notifications
 
-        sendnotification(run, run.job.user, NotificationVerbs.END.value, None, None, notification_level, run.status)
+        sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
 
         # send notification email to user
         hostname = settings.HOSTNAME
@@ -1264,6 +1267,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     if run.job.include_zipfile and not run.zipfile_url:
         logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
+    verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = 'success'
     provider_tasks = run.provider_tasks.all()
 
@@ -1271,8 +1275,10 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
         notification_level = 'warning'
+        verb = NotificationVerb.RUN_FAILED.value
     if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
         run.status = TaskStates.CANCELED.value
+        verb = NotificationVerb.RUN_CANCELED.value
         notification_level = 'warning'
     finished = timezone.now()
     run.finished_at = finished
@@ -1280,7 +1286,7 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
 
     #sendnotification to user via django notifications
 
-    sendnotification(run, run.job.user, NotificationVerbs.END.value, None, None, notification_level,  run.status)
+    sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
 
     # send notification email to user
     hostname = settings.HOSTNAME
