@@ -4,8 +4,10 @@ import logging
 import os
 from string import Template
 import subprocess
-from ..tasks.task_process import TaskProcess
 import tempfile
+from ..tasks.task_process import TaskProcess
+
+from ..utils import auth_requests
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ class WCSConverter(object):
         self.service_url = service_url
         self.layer = layer
         self.debug = debug
+        self.name = name
         self.service_type = service_type
         self.task_uid = task_uid
         self.wcs_xml = Template(
@@ -44,7 +47,12 @@ class WCSConverter(object):
               <PreferredFormat>GeoTIFF</PreferredFormat>
               <GetCoverageExtra>&amp;crs=EPSG:4326$params</GetCoverageExtra>
               <DescribeCoverageExtra>$params</DescribeCoverageExtra>
+              $auth
             </WCS_GDAL>""")
+        self.wcs_xml_auth = Template(
+            """<UserPwd>$userpwd</UserPwd>
+              <HttpAuth>ANY</HttpAuth>"""
+        )
         self.params = ""
         self.wcs_xml_path = None # determined after mkstemp call
         if self.bbox:
@@ -68,6 +76,9 @@ class WCSConverter(object):
         if not os.path.exists(os.path.dirname(self.out)):
             os.makedirs(os.path.dirname(self.out), 6600)
 
+        # Get username and password from url params, if possible
+        cred = auth_requests.get_cred(slug=self.name, url=self.service_url)
+
         try:
             # Isolate url params
             self.params = "&amp;" + self.service_url.split('?')[1].replace('&', '&amp;')
@@ -77,12 +88,14 @@ class WCSConverter(object):
 
         # Create temporary WCS description XML file for gdal_translate
         (wcs_xml_fd, self.wcs_xml_path) = tempfile.mkstemp()
+        wcs_xml_auth_string = self.wcs_xml_auth.safe_substitute({"userpwd": ":".join(cred)}) if cred else ""
         wcs_xml_string = self.wcs_xml.safe_substitute({
             'url': self.service_url,
             'coverage': self.layer,
-            'params': self.params
+            'params': self.params,
+            'auth': wcs_xml_auth_string
         })
-        logger.debug("Creating temporary WCS XML at {}:\n{}".format(self.wcs_xml_path, wcs_xml_string))
+        logger.debug("Creating temporary WCS XML at %s:\n%s", self.wcs_xml_path, wcs_xml_string)
         os.write(wcs_xml_fd, wcs_xml_string)
         os.close(wcs_xml_fd)
 
@@ -101,9 +114,12 @@ class WCSConverter(object):
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception("WCS translation failed with code {}: \n{}\n{}".format(task_process.exitcode, convert_cmd, wcs_xml_string))
+            raise Exception("WCS translation failed with code %s: \n%s\n%s",
+                            task_process.exitcode,
+                            convert_cmd,
+                            wcs_xml_string)
         if self.debug:
-            logger.debug('gdal_translate returned: %s' % task_process.exitcode)
+            logger.debug('gdal_translate returned: %s', task_process.exitcode)
 
         os.remove(self.wcs_xml_path)
 
