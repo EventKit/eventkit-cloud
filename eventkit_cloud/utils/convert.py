@@ -44,9 +44,7 @@ class Convert(object):
         args = { "from":"mgrs", "to":"decdeg","q":str(query)}
         try: 
             
-            response = requests.get(url, params=args, headers=getAuthHeaders())
-
-            logger.info(response.text)    
+            response = requests.get(url, params=args, headers=getAuthHeaders())  
             if('ERROR' not in response.text):
                 return response.json()
             else:

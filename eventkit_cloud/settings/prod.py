@@ -69,7 +69,7 @@ GEOCODING_AUTH_KEY = os.getenv('GEOCODING_AUTH_KEY', None)
 CONVERT_API_URL = os.getenv('CONVERT_API_URL', 'http://172.17.0.1:4000/v1/convert')
 
 # zoom extents of reverse geocode point result (in degrees)
-REVERSE_GEOCODE_ZOOM = 0.1;
+REVERSE_GEOCODE_ZOOM = 0.1
 
 """
 Maximum extent of a Job
