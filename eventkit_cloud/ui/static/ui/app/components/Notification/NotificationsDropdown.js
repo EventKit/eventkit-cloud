@@ -73,7 +73,7 @@ export class NotificationsDropdown extends React.Component {
             gridItem: {
                 padding: '10px',
                 boxShadow: 'none',
-                borderBottom: '1px solid lightgray',
+                borderBottom: '1px solid rgb(224, 224, 224)',
                 borderRadius: '0',
             },
             noData: {
@@ -132,7 +132,7 @@ export class NotificationsDropdown extends React.Component {
                                         key={`Notification-${notification.id}`}
                                         style={{
                                             ...styles.gridItem,
-                                            borderTop: (index === 0) ? '1px solid lightgray' : '',
+                                            borderTop: (index === 0) ? '1px solid rgb(224, 224, 224)' : '',
                                         }}
                                         notification={notification}
                                         onView={this.props.onNavigate}
