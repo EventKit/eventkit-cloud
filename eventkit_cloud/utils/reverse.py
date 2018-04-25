@@ -92,7 +92,7 @@ class ReverseGeocodeAdapter:
         if not self.url:
             return
         response = self.get_response(payload)
-        if('error' in response and response['error'] == 'Invalid token'):
+        if('error' in response and response['error'] == 'Expired token'):
             authenticate()
             response = self.get_response(payload)
         assert (isinstance(response, dict))

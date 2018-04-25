@@ -34,7 +34,7 @@ class Convert(object):
     def get(self, query):
         result = self.get_data(query)
          
-        if(result and 'error' in result and result['error'] == 'Invalid token'):
+        if(result and 'error' in result and result['error'] == 'Expired token'):
             authenticate()
             result = self.get_data(query)
         return result
