@@ -134,10 +134,12 @@ export default {
         notifications: {},
         notificationsSorted: [],
         error: null,
+        cancelSource: null,
         unreadCount: {
             fetching: false,
             fetched: false,
             unreadCount: 0,
+            cancelSource: null,
         },
     },
 };

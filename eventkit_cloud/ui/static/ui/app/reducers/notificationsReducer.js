@@ -26,7 +26,7 @@ export function notificationsReducer(state = initialState.notifications, action)
                 notificationsSorted: getSortedNotifications(notifications),
                 nextPage: action.nextPage,
                 range: action.range,
-                error: action.error,
+                error: null,
                 cancelSource: null,
             };
         }
@@ -35,7 +35,6 @@ export function notificationsReducer(state = initialState.notifications, action)
                 ...state,
                 fetching: false,
                 fetched: false,
-                notifications: [],
                 error: action.error,
                 cancelSource: null,
             };
@@ -129,16 +128,31 @@ export function notificationsReducer(state = initialState.notifications, action)
                     ...state.unreadCount,
                     fetching: true,
                     fetched: false,
+                    error: null,
+                    cancelSource: action.cancelSource,
                 },
             };
         case types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT:
             return {
                 ...state,
                 unreadCount: {
+                    ...state.unreadCount,
                     fetching: false,
                     fetched: true,
                     unreadCount: action.unreadCount,
+                    cancelSource: null,
                 },
+            };
+        case types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR:
+            return {
+                ...state,
+                unreadCount: {
+                    ...state.unreadCount,
+                    fetching: false,
+                    fetched: false,
+                    error: action.error,
+                    cancelSource: null,
+                }
             };
         case types.USER_LOGGED_OUT:
             return initialState.notifications;

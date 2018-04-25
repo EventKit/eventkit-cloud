@@ -55,8 +55,6 @@ export class Application extends Component {
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
-        this.autoGetNotificationsUnreadCount = this.autoGetNotificationsUnreadCount.bind(this);
-        this.autoGetNotifications = this.autoGetNotifications.bind(this);
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.getConfig = this.getConfig.bind(this);
         this.handleMouseOver = this.handleMouseOver.bind(this);
@@ -64,6 +62,10 @@ export class Application extends Component {
         this.handleResize = this.handleResize.bind(this);
         this.handleClick = this.handleClick.bind(this);
         this.logout = this.logout.bind(this);
+        this.startListeningForNotifications = this.startListeningForNotifications.bind(this);
+        this.stopListeningForNotifications = this.stopListeningForNotifications.bind(this);
+        this.autoGetNotificationsUnreadCount = this.autoGetNotificationsUnreadCount.bind(this);
+        this.autoGetNotifications = this.autoGetNotifications.bind(this);
         this.startCheckingForAutoLogout = this.startCheckingForAutoLogout.bind(this);
         this.stopCheckingForAutoLogout = this.stopCheckingForAutoLogout.bind(this);
         this.startSendingUserActivePings = this.startSendingUserActivePings.bind(this);
@@ -101,10 +103,6 @@ export class Application extends Component {
         this.getConfig();
         window.addEventListener('resize', this.handleResize);
         window.addEventListener('click', this.handleClick);
-        this.props.getNotificationsUnreadCount();
-        this.props.getNotifications({ pageSize: this.notificationsPageSize });
-        this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
-        this.notificationsRefreshIntervalId = setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -116,25 +114,18 @@ export class Application extends Component {
                 }
                 this.startCheckingForAutoLogout();
                 this.startSendingUserActivePings();
+                this.startListeningForNotifications();
             } else {
                 this.stopCheckingForAutoLogout();
                 this.stopSendingUserActivePings();
+                this.stopListeningForNotifications();
             }
         }
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
-        clearInterval(this.notificationsUnreadCountIntervalId);
-        clearInterval(this.notificationsRefreshIntervalId);
-    }
-
-    autoGetNotificationsUnreadCount() {
-        this.props.getNotificationsUnreadCount({ isAuto: true });
-    }
-
-    autoGetNotifications() {
-        this.props.getNotifications({ isAuto: true });
+        this.stopListeningForNotifications();
     }
 
     onMenuItemClick() {
@@ -174,6 +165,44 @@ export class Application extends Component {
     logout() {
         this.props.closeDrawer();
         this.props.router.push('/logout');
+    }
+
+    startListeningForNotifications() {
+        if (this.notificationsUnreadCountIntervalId || this.notificationsRefreshIntervalId) {
+            console.warn('Already listening for notifications.');
+            return;
+        }
+
+        // Unread notifications count.
+        this.props.getNotificationsUnreadCount();
+        this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
+
+        // Notifications.
+        this.props.getNotifications({ pageSize: this.notificationsPageSize });
+        this.notificationsRefreshIntervalId = setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
+    }
+
+    stopListeningForNotifications() {
+        if (!this.notificationsUnreadCountIntervalId || !this.notificationsRefreshIntervalId) {
+            console.warn('Already stopped listening for notifications.');
+            return;
+        }
+
+        // Unread notifications count.
+        clearInterval(this.notificationsUnreadCountIntervalId);
+        this.notificationsUnreadCountIntervalId = null;
+
+        // Notifications.
+        clearInterval(this.notificationsRefreshIntervalId);
+        this.notificationsRefreshIntervalId = null;
+    }
+
+    autoGetNotificationsUnreadCount() {
+        this.props.getNotificationsUnreadCount({ isAuto: true });
+    }
+
+    autoGetNotifications() {
+        this.props.getNotifications({ isAuto: true });
     }
 
     startCheckingForAutoLogout() {
