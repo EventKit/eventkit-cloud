@@ -475,7 +475,7 @@ describe('ExportAOI component', () => {
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
         const clearSpy = sinon.spy(utils, 'clearDraw');
-        const areaSpy = sinon.stub(utils, 'hasArea').returns(true);
+        const areaSpy = sinon.stub(utils, 'allHaveArea').returns(true);
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
         const fitSpy = sinon.spy(View.prototype, 'fit');
         const wrapper = getWrapper(props);
@@ -1330,7 +1330,7 @@ describe('ExportAOI component', () => {
         props.updateAoiInfo = sinon.spy();
         props.setNextDisabled = sinon.spy();
         const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
-        const areaStub = sinon.stub(utils, 'hasArea').returns(true);
+        const areaStub = sinon.stub(utils, 'allHaveArea').returns(true);
         const wrapper = getWrapper(props);
         wrapper.instance().resetAoi();
         expect(readSpy.calledOnce).toBe(true);

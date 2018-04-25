@@ -296,6 +296,7 @@ UI_CONFIG = {
     'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
     'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', '© OpenStreetMap'),
     'MAX_DATAPACK_EXPIRATION_DAYS': os.environ.get('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
+    'MAX_DATAPACK_AOI_SQ_KM': os.environ.get('MAX_DATAPACK_AOI_SQ_KM', ''),
 }
 
 if os.environ.get('USE_S3'):

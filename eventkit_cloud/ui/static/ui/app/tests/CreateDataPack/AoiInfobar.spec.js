@@ -29,7 +29,7 @@ describe('AoiInfobar component', () => {
             showRevert: false,
             onRevertClick: () => {},
             clickZoomToSelection: () => {},
-            onBufferClick: () => {},
+            handleBufferClick: () => {},
         }
     };
 
@@ -108,16 +108,16 @@ describe('AoiInfobar component', () => {
         expect(props.onRevertClick.calledOnce).toBe(true);
     });
 
-    it('clicking on buffer button should call onBufferClick', () => {
+    it('clicking on buffer button should call handleBufferClick', () => {
         const props = getProps();
         props.aoiInfo.geojson = geojson;
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.onBufferClick = sinon.spy();
+        props.handleBufferClick = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.find('.qa-AoiInfobar-buffer-button').find('button').simulate('click');
-        expect(props.onBufferClick.calledOnce).toBe(true);
+        expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 
     it('should show an alert icon which calls showAlert on click', () => {

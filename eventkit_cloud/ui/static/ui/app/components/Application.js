@@ -572,7 +572,17 @@ Application.propTypes = {
 };
 
 Application.childContextTypes = {
-    config: PropTypes.object,
+    config: PropTypes.shape({
+        BANNER_BACKGROUND_COLOR: PropTypes.string,
+        BANNER_TEXT: PropTypes.string,
+        BANNER_TEXT_COLOR: PropTypes.string,
+        BASEMAP_COPYRIGHT: PropTypes.string,
+        BASEMAP_URL: PropTypes.string,
+        LOGIN_DISCLAIMER: PropTypes.string,
+        MAX_DATAPACK_AOI_SQ_KM: PropTypes.string,
+        MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
+        VERSION: PropTypes.string,
+    }),
 };
 
 function mapStateToProps(state) {

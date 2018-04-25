@@ -16,7 +16,7 @@ describe('AlertCallout component', () => {
             show: true,
             value: 0,
             valid: true,
-            onBufferClick: () => {},
+            handleBufferClick: () => {},
             handleBufferChange: () => {},
             closeBufferDialog: () => {},
         }
@@ -64,12 +64,12 @@ describe('AlertCallout component', () => {
         expect(props.closeBufferDialog.calledOnce).toBe(true);
     });
 
-    it('Update button should call onBufferClick', () => {
+    it('Update button should call handleBufferClick', () => {
         const props = getProps();
-        props.onBufferClick = sinon.spy();
+        props.handleBufferClick = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.find(RaisedButton).find('button').simulate('click');
-        expect(props.onBufferClick.calledOnce).toBe(true);
+        expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 
     it('Clear icon should call closeBufferDialog on click', () => {
