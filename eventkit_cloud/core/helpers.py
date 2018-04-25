@@ -103,12 +103,11 @@ def load_land_vectors(db_conn=None, url=None):
 # notify.send(actor, recipient, verb, action_object, target, level, description, all required. None value is OK)
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
-    logger.info("**** NOTIFY  %s %s %s" % (actor,recipient,verb))
     try:
         result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
                              level=level,description=description)
     except Exception as err:
-        logger.info( "notify errror ignored: %s" % err)
+        logger.info( "notify error ignored: %s" % err)
 
 
 class NotificationVerb(Enum):
@@ -120,6 +119,6 @@ class NotificationVerb(Enum):
     REMOVED_FROM_GROUP = "removed_from_group"
     ADDED_TO_GROUP = "added_to_group"
     SET_AS_GROUP_ADMIN = "set_as_group_admin"
-
+    UNSET_AS_GROUP_ADMIN = "removed_as_group_admin"
 
 
