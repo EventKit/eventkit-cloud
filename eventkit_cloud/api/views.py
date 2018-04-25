@@ -1282,6 +1282,8 @@ class GroupViewSet(viewsets.ModelViewSet):
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
                                                        permission=GroupPermission.Permissions.MEMBER.value)
+                        sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP,
+                                         group, None, "info", GroupPermission.Permissions.MEMBER.value)
 
         if "administrators" in request.data:
             for admin in request.data["administrators"]:
@@ -1290,6 +1292,8 @@ class GroupViewSet(viewsets.ModelViewSet):
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
                                                        permission=GroupPermission.Permissions.ADMIN.value)
+                        sendnotification(request.user, user, NotificationVerb.SET_AS_GROUP_ADMIN.value,
+                                         group, None, "info", GroupPermission.Permissions.ADMIN.value)
 
         group = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
@@ -1396,16 +1400,22 @@ class GroupViewSet(viewsets.ModelViewSet):
 
             newusers = list(set(targetusers) - set(currentusers))
             users = User.objects.filter(username__in=newusers).all()
+            verb = NotificationVerb.ADDED_TO_GROUP.value
+            if permissionlabel == 'administrators': verb = NotificationVerb.SET_AS_GROUP_ADMIN.value
+
+
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
-                sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP.value, group, None, "info", permission)
+                sendnotification(request.user, user, verb, group, None, "info", permission)
 
             ## Remove existing users for this permission level
 
             removedusers = list(set(currentusers) - set(targetusers))
             users = User.objects.filter(username__in=removedusers).all()
+            verb = NotificationVerb.REMOVED_FROM_GROUP.value
+            if permissionlabel == 'administrators': verb = NotificationVerb.UNSET_AS_GROUP_ADMIN.value
             for user in users:
-                sendnotification(request.user, user, NotificationVerb.REMOVED_FROM_GROUP.value, group, None, "info", permission)
+                sendnotification(request.user, user, verb, group, None, "info", permission)
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
                 for perm in perms: perm.delete()
 
