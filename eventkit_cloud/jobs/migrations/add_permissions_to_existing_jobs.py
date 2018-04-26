@@ -4,15 +4,12 @@ from django.db import migrations
 from django.contrib.auth.models import Group, User
 
 from ..models import Job
-
-
-
+from ...core.models import JobPermission
 
 def add_permissions(apps, schema_editor):
-    JobPermission = apps.get_model("core", "JobPermission")
     for job in Job.objects.all():
         jp = JobPermission.objects.create(job=job, content_object=job.user,
-                                      permission=JobPermission.Permissions.ADMIN.value)
+                                          permission=JobPermission.Permissions.ADMIN.value)
         jp.save()
 
 
