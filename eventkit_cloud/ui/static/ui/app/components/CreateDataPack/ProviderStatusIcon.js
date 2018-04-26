@@ -33,7 +33,6 @@ export class ProviderStatusIcon extends Component {
     }
 
     render() {
-
         var style = {
             base: {
                 display: 'inline-block',
@@ -124,8 +123,12 @@ export class ProviderStatusIcon extends Component {
     }
 }
 
+ProviderStatusIcon.defaultProps = {
+    availability: {},
+};
+
 ProviderStatusIcon.propTypes = {
-    availability: PropTypes.object.isRequired,
-}
+    availability: PropTypes.object,
+};
 
 export default ProviderStatusIcon;
