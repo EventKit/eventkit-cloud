@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import numeral from 'numeral';
 import debounce from 'lodash/debounce';
-import Info from 'material-ui/svg-icons/action/info';
+import axios from 'axios';
+import cookie from 'react-cookie';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -16,6 +16,8 @@ import ScaleLine from 'ol/control/scaleline';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 
+import Info from 'material-ui/svg-icons/action/info';
+import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
 import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
@@ -23,16 +25,14 @@ import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import axios from 'axios';
-import cookie from 'react-cookie';
-import ProviderStatusIcon from './ProviderStatusIcon'
+import ProviderStatusIcon from './ProviderStatusIcon';
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
-import ol3mapCss from '../../styles/ol3map.css';
-import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh'
 import BaseTooltip from '../BaseTooltip';
-
+import { getSqKmString } from '../../utils/generic';
+import ol3mapCss from '../../styles/ol3map.css';
+import background from '../../../images/topoBackground.jpg';
 
 export class ExportInfo extends React.Component {
     constructor(props) {
@@ -42,6 +42,7 @@ export class ExportInfo extends React.Component {
             formatsDialogOpen: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
+            // we make a local copy of providers for editing
             providers: props.providers,
             refreshTooltipOpen: false,
         };
@@ -50,24 +51,17 @@ export class ExportInfo extends React.Component {
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
-        this.setLicenseOpen = this.setLicenseOpen.bind(this);
+        this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleFormatsClose = this.handleFormatsClose.bind(this);
         this.handleFormatsOpen = this.handleFormatsOpen.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
+        this.handleRefreshTooltipOpen = this.handleRefreshTooltipOpen.bind(this);
+        this.handleRefreshTooltipClose = this.handleRefreshTooltipClose.bind(this);
         this.expandedChange = this.expandedChange.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
-
-        // Populate provider state attributes specific to this component
-        if (this.state.providers) {
-            this.state.providers.forEach((provider,pi) => {
-
-                if (provider.availability === undefined)
-                    provider.availability = {};
-
-            });
-        }
+        this.onRefresh = this.onRefresh.bind(this);
     }
 
     componentDidMount() {
@@ -77,12 +71,12 @@ export class ExportInfo extends React.Component {
         }
 
         // calculate the area of the AOI
-        const areaStr = this.setArea();
+        const areaStr = getSqKmString(this.props.geojson);
 
         // Will need to change this once we are allowing other formats
         // since formats is checked and disabled we can't track user selection
         const formats = [];
-        formats.push(this.refs.formatsCheckbox.props.name);
+        formats.push(this.formatsCheckbox.props.name);
         this.props.updateExportInfo({
             ...this.props.exportInfo,
             areaStr,
@@ -113,7 +107,7 @@ export class ExportInfo extends React.Component {
 
         // make requests to check provider availability
         if (this.state.providers) {
-            this.fetch = setInterval(this.state.providers.forEach((provider,pi) => {
+            this.fetch = setInterval(this.state.providers.forEach((provider) => {
                 if (provider.display === false) return;
                 this.checkAvailability(provider);
             }), 30000);
@@ -187,60 +181,55 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    checkAvailability(provider) {
-        const data = {'geojson': this.props.geojson};
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
-        axios({
-            url: '/api/providers/' + provider.slug + '/status',
-            method: 'POST',
-            data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        }).then((response) => {
-            provider.availability = JSON.parse(response.data);
-            provider.availability.slug = provider.slug;
-            this.setState({ providers: [provider, ...this.state.providers] });
-
-        }).catch((error) => {
-            console.log(error);
-            provider.availability = {
-                status: "WARN",
-                type: "CHECK_FAILURE",
-                message: "An error occurred while checking this provider's availability."
-            };
-            provider.availability.slug = provider.slug;
-            this.setState({ providers: [provider, ...this.state.providers] });
-        });
-    }
-
     onRefresh() {
-        this.state.providers.forEach((provider, ix) => {
-            provider.availability = {};
-        });
-        this.setState({ providers: [...this.state.providers] });
+        // make a copy of providers and set availability to empty json
+        const providers = this.state.providers.map(provider => (
+            { ...provider, availability: {} }
+        ));
+        // update state with the new copy of providers
+        this.setState({ providers });
 
-        this.state.providers.forEach((provider, ix) => {
+        // check all of providers again
+        providers.forEach((provider) => {
             this.checkAvailability(provider);
         });
     }
 
-    setArea() {
-        const source = new VectorSource({ wrapX: true });
-        const geojson = new GeoJSON();
-        const features = geojson.readFeatures(this.props.geojson, {
-            featureProjection: 'EPSG:3857',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeatures(features);
-        let area = 0;
-        features.forEach((feature) => {
-            area += feature.getGeometry().getArea() / 1000000;
-        });
-        const areaStr = numeral(area).format('0,0');
-        return `${areaStr} sq km`;
-    }
+    checkAvailability(provider) {
+        // make a copy of the provider to edit
+        const newProvider = { ...provider };
 
-    setLicenseOpen() {
-        this.setState({ licenseDialogOpen: true });
+        const data = { geojson: this.props.geojson };
+        const csrfmiddlewaretoken = cookie.load('csrftoken');
+        axios({
+            url: `/api/providers/${provider.slug}/status`,
+            method: 'POST',
+            data,
+            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+        }).then((response) => {
+            newProvider.availability = JSON.parse(response.data);
+            newProvider.availability.slug = provider.slug;
+            this.setState((prevState) => {
+                // make a copy of state providers and replace the one we updated
+                const providers = [...prevState.providers];
+                providers.splice(providers.indexOf(provider), 1, newProvider);
+                return { providers };
+            });
+        }).catch((error) => {
+            console.log(error);
+            newProvider.availability = {
+                status: 'WARN',
+                type: 'CHECK_FAILURE',
+                message: "An error occurred while checking this provider's availability.",
+            };
+            newProvider.availability.slug = provider.slug;
+            this.setState((prevState) => {
+                // make a copy of state providers and replace the one we updated
+                const providers = [...prevState.providers];
+                providers.splice(providers.indexOf(provider), 1, newProvider);
+                return { providers };
+            });
+        });
     }
 
     handleFormatsClose() {
@@ -259,16 +248,20 @@ export class ExportInfo extends React.Component {
         this.setState({ projectionsDialogOpen: true });
     }
 
+    handleLicenseOpen() {
+        this.setState({ licenseDialogOpen: true });
+    }
+
     handleLicenseClose() {
         this.setState({ licenseDialogOpen: false });
     }
 
-    handleRefreshTooltipOpen(e) {
+    handleRefreshTooltipOpen() {
         this.setState({ refreshTooltipOpen: true });
         return false;
     }
 
-    handleRefreshTooltipClose(e) {
+    handleRefreshTooltipClose() {
         this.setState({ refreshTooltipOpen: false });
         return false;
     }
@@ -352,7 +345,7 @@ export class ExportInfo extends React.Component {
             root: {
                 width: '100%',
                 height: window.innerHeight - 180,
-                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
+                backgroundImage: `url(${background})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -421,7 +414,7 @@ export class ExportInfo extends React.Component {
             },
         };
 
-        const providers = this.props.providers.filter(provider => (provider.display !== false));
+        const providers = this.state.providers.filter(provider => (provider.display !== false));
 
         // We only display geopackage as a format option for right now.
         const formats = this.props.formats.filter(format => (format.slug === 'gpkg'));
@@ -443,7 +436,6 @@ export class ExportInfo extends React.Component {
                                     className="qa-ExportInfo-input-name"
                                     id="nameField"
                                     name="exportName"
-                                    ref="exportName"
                                     underlineStyle={style.underlineStyle}
                                     underlineFocusStyle={style.underlineStyle}
                                     onChange={this.onNameChange}
@@ -489,22 +481,24 @@ export class ExportInfo extends React.Component {
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
                                 <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
-                                    <span className="qa-ExportInfo-ListHeaderItem"
+                                    <span
+                                        className="qa-ExportInfo-ListHeaderItem"
                                         style={style.providerListHeading}
                                     >
                                         DATA PROVIDERS
                                     </span>
-                                    <span className="qa-ExportInfo-ListHeaderItem"
+                                    <span
+                                        className="qa-ExportInfo-ListHeaderItem"
                                         style={{ marginLeft: '75%' }}
                                     >
                                         AVAILABILITY
                                         <NavigationRefresh
                                             style={style.refreshIcon}
-                                            onMouseOver={this.handleRefreshTooltipOpen.bind(this)}
-                                            onMouseOut={this.handleRefreshTooltipClose.bind(this)}
-                                            onTouchStart={this.handleRefreshTooltipOpen.bind(this)}
-                                            onTouchEnd={this.handleRefreshTooltipClose.bind(this)}
-                                            onTouchTap={this.onRefresh.bind(this)}
+                                            onMouseOver={this.handleRefreshTooltipOpen}
+                                            onMouseOut={this.handleRefreshTooltipClose}
+                                            onTouchStart={this.handleRefreshTooltipOpen}
+                                            onTouchEnd={this.handleRefreshTooltipClose}
+                                            onTouchTap={this.onRefresh}
                                         />
                                         <BaseTooltip
                                             show={this.state.refreshTooltipOpen}
@@ -513,12 +507,12 @@ export class ExportInfo extends React.Component {
                                                 left: '-69px',
                                                 bottom: '33px',
                                             }}
-                                            onMouseOver={this.handleRefreshTooltipOpen.bind(this)}
-                                            onMouseOut={this.handleRefreshTooltipClose.bind(this)}
-                                            onTouchTap={this.onRefresh.bind(this)}
+                                            onMouseOver={this.handleRefreshTooltipOpen}
+                                            onMouseOut={this.handleRefreshTooltipClose}
+                                            onTouchTap={this.onRefresh}
                                         >
-                                    <div>You may try to resolve errors by running the availability check again.</div>
-                                </BaseTooltip>
+                                            <div>You may try to resolve errors by running the availability check again.</div>
+                                        </BaseTooltip>
                                     </span>
                                 </div>
                                 <List className="qa-ExportInfo-List" style={{ width: '100%', fontSize: '16px' }}>
@@ -533,7 +527,7 @@ export class ExportInfo extends React.Component {
                                                     <div style={{ whiteSpace: 'pre-wrap' }}>
                                                         <i>
                                                             Use of this data is governed by&nbsp;
-                                                            <a onClick={this.setLicenseOpen} style={{ cursor: 'pointer', color: '#4598bf' }}>
+                                                            <a onClick={this.handleLicenseOpen} style={{ cursor: 'pointer', color: '#4598bf' }}>
                                                                 {provider.license.name}
                                                             </a>
                                                         </i>
@@ -570,7 +564,7 @@ export class ExportInfo extends React.Component {
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon
-                                                        baseStyle={{ 'left': '80%' }}
+                                                        baseStyle={{ left: '80%' }}
                                                         tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
                                                     />
@@ -635,7 +629,7 @@ export class ExportInfo extends React.Component {
                                         <Checkbox
                                             className="qa-ExportInfo-CheckBox-formats"
                                             key={format.slug}
-                                            ref="formatsCheckbox"
+                                            ref={(instance) => { this.formatsCheckbox = instance; }}
                                             label={format.name}
                                             labelStyle={{ fontWeight: 'normal', fontSize: '16px', width: '90%' }}
                                             name={format.slug}
@@ -718,19 +712,19 @@ function mapDispatchToProps(dispatch) {
 }
 
 ExportInfo.contextTypes = {
-    config: React.PropTypes.object,
+    config: PropTypes.object,
 };
 
 ExportInfo.propTypes = {
     geojson: PropTypes.object.isRequired,
     exportInfo: PropTypes.object.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     nextEnabled: PropTypes.bool.isRequired,
     handlePrev: PropTypes.func.isRequired,
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
-    formats: React.PropTypes.array,
+    formats: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default connect(
