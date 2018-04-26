@@ -162,7 +162,7 @@ export class DataPackDetails extends Component {
                         key={provider.uid}
                         onSelectionToggle={this.onSelectionToggle}
                         onProviderCancel={this.props.onProviderCancel}
-                        updateSelectionNumber={this.updateSelectionNumber} 
+                        updateSelectionNumber={this.updateSelectionNumber}
                         provider={provider}
                         selectedProviders={this.state.selectedProviders}
                         providers={this.props.providers}

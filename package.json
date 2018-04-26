@@ -6,7 +6,6 @@
   "dependencies": {
     "axios": "~0.15.3",
     "babel-polyfill": "~6.23.0",
-    "detect-browser": "~2.0.0",
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
     "material-ui": "~0.18.0",
@@ -79,6 +78,7 @@
       "**/*.{js,jsx}",
       "!**/coverage/**",
       "!**/setupFile.js",
+      "!**/initialState.js",
       "!**/webpack.config.js",
       "!**/build/**",
       "!**/staticfiles/**",

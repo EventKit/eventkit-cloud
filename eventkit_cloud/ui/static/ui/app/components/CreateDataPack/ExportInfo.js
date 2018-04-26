@@ -57,7 +57,6 @@ export class ExportInfo extends React.Component {
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.expandedChange = this.expandedChange.bind(this);
-        this.toggleCheckbox = this.toggleCheckbox.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
 
         // Populate provider state attributes specific to this component
@@ -204,7 +203,8 @@ export class ExportInfo extends React.Component {
         }).catch((error) => {
             console.log(error);
             provider.availability = {
-                status: "WARN_CHECK_FAILURE",
+                status: "WARN",
+                type: "CHECK_FAILURE",
                 message: "An error occurred while checking this provider's availability."
             };
             provider.availability.slug = provider.slug;
@@ -271,13 +271,6 @@ export class ExportInfo extends React.Component {
     handleRefreshTooltipClose(e) {
         this.setState({ refreshTooltipOpen: false });
         return false;
-    }
-
-    toggleCheckbox(event, checked) {
-        this.props.updateExportInfo({
-            ...this.props.exportInfo,
-            makePublic: checked,
-        });
     }
 
     expandedChange(expanded) {
@@ -445,61 +438,50 @@ export class ExportInfo extends React.Component {
                             rounded
                         >
                             <div id="mainHeading" className="qa-ExportInfo-mainHeading" style={style.heading}>Enter General Information</div>
-                            <CustomTextField
-                                className="qa-ExportInfo-input-name"
-                                id="nameField"
-                                name="exportName"
-                                ref="exportName"
-                                underlineStyle={style.underlineStyle}
-                                underlineFocusStyle={style.underlineStyle}
-                                onChange={this.onNameChange}
-                                defaultValue={this.props.exportInfo.exportName}
-                                hintText="Datapack Name"
-                                style={style.textField}
-                                inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                maxLength={100}
-                            />
-                            <CustomTextField
-                                className="qa-ExportInfo-input-description"
-                                id="descriptionField"
-                                underlineStyle={style.underlineStyle}
-                                underlineFocusStyle={style.underlineStyle}
-                                name="datapackDescription"
-                                onChange={this.onDescriptionChange}
-                                defaultValue={this.props.exportInfo.datapackDescription}
-                                hintText="Description"
-                                multiLine
-                                style={style.textField}
-                                textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                maxLength={250}
-                            />
-                            <CustomTextField
-                                className="qa-ExportInfo-input-project"
-                                id="projectField"
-                                underlineStyle={style.underlineStyle}
-                                underlineFocusStyle={style.underlineStyle}
-                                name="projectName"
-                                onChange={this.onProjectChange}
-                                defaultValue={this.props.exportInfo.projectName}
-                                hintText="Project Name"
-                                style={style.textField}
-                                inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                maxLength={100}
-                            />
-                            <div>
-                                <Checkbox
-                                    className="qa-ExportInfo-CheckBox-publish"
-                                    name="makePublic"
-                                    onCheck={this.toggleCheckbox}
-                                    defaultChecked={this.props.exportInfo.makePublic}
-                                    style={{ left: '0px', paddingLeft: '5px', margin: '30px 0px' }}
-                                    label="Make Public"
-                                    labelStyle={{ fontWeight: 'normal', fontSize: '16px' }}
-                                    checkedIcon={<ActionCheckCircle className="qa-ExportInfo-ActionCheckCircle" style={{ fill: '#55ba63' }} />}
-                                    uncheckedIcon={<UncheckedCircle className="qa-ExportInfo-UncheckedCircle" style={{ fill: '4598bf' }} />}
+                            <div style={{ marginBottom: '30px' }}>
+                                <CustomTextField
+                                    className="qa-ExportInfo-input-name"
+                                    id="nameField"
+                                    name="exportName"
+                                    ref="exportName"
+                                    underlineStyle={style.underlineStyle}
+                                    underlineFocusStyle={style.underlineStyle}
+                                    onChange={this.onNameChange}
+                                    defaultValue={this.props.exportInfo.exportName}
+                                    hintText="Datapack Name"
+                                    style={style.textField}
+                                    inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                    maxLength={100}
+                                />
+                                <CustomTextField
+                                    className="qa-ExportInfo-input-description"
+                                    id="descriptionField"
+                                    underlineStyle={style.underlineStyle}
+                                    underlineFocusStyle={style.underlineStyle}
+                                    name="datapackDescription"
+                                    onChange={this.onDescriptionChange}
+                                    defaultValue={this.props.exportInfo.datapackDescription}
+                                    hintText="Description"
+                                    multiLine
+                                    style={style.textField}
+                                    textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                    maxLength={250}
+                                />
+                                <CustomTextField
+                                    className="qa-ExportInfo-input-project"
+                                    id="projectField"
+                                    underlineStyle={style.underlineStyle}
+                                    underlineFocusStyle={style.underlineStyle}
+                                    name="projectName"
+                                    onChange={this.onProjectChange}
+                                    defaultValue={this.props.exportInfo.projectName}
+                                    hintText="Project Name"
+                                    style={style.textField}
+                                    inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                    maxLength={100}
                                 />
                             </div>
 

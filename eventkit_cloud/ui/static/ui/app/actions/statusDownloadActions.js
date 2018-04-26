@@ -13,7 +13,16 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         // get the list of runs (DataPacks) that are associated with the job UID.
         // We take only the first one for now since multiples are currently disabled.
         // However we leave it in an array for future proofing.
-        const data = [{ ...response.data[0] }];
+        const data = [];
+        if (response.data.length) {
+            data.push({ ...response.data[0] });
+            data[0].job.permissions = {
+                value: data[0].job.visibility,
+                groups: data[0].job.permissions.groups,
+                members: data[0].job.permissions.users,
+            };
+        }
+
         dispatch({
             type: types.DATACART_DETAILS_RECEIVED,
             datacartDetails: {
@@ -122,20 +131,26 @@ export function updateExpiration(uid, expiration) {
     };
 }
 
-export function updatePermission(uid, value) {
+export function updateDataCartPermissions(uid, permissions) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_PERMISSION });
         const csrftoken = cookie.load('csrftoken');
+        const data = {};
+        data.permissions = {
+            groups: permissions.groups,
+            users: permissions.members,
+        };
+        data.visibility = permissions.value;
 
         return axios({
             url: `/api/jobs/${uid}`,
             method: 'PATCH',
-            data: { published: value },
+            data,
             headers: { 'X-CSRFToken': csrftoken },
-        }).then(() => {
-            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS });
-        }).catch((error) => {
-            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data });
-        });
+        }).then(() => (
+            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS })
+        )).catch(error => (
+            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data })
+        ));
     };
 }

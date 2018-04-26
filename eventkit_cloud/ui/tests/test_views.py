@@ -106,6 +106,122 @@ class TestUIViews(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.content, 'Providers or BBOX were not supplied in the request')
 
+    @patch('eventkit_cloud.ui.views.is_lat_lon')
+    @patch('eventkit_cloud.ui.views.is_mgrs')
+    @patch('eventkit_cloud.ui.views.Convert')
+    @patch('eventkit_cloud.ui.views.ReverseGeocode')
+    @patch('eventkit_cloud.ui.views.Geocode')
+    def test_search(self, mock_geocode, mock_reverse, mock_convert, mock_is_mgrs, mock_is_lat_lon):
+        empty_request = self.client.get('/search')
+        self.assertEqual(empty_request.status_code, 204)
+
+        mock_is_mgrs.return_value = True
+        with self.settings(CONVERT_API_URL=None):
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEquals(response.status_code, 501)
+            self.assertEquals(response.content, 'No Convert API specified')
+
+        with self.settings(CONVERT_API_URL="url", REVERSE_GEOCODING_API_URL=None):
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 501)
+            self.assertEqual(response.content, 'No Reverse Geocode API specified')
+
+        with self.settings(CONVERT_API_URL="url", REVERSE_GEOCODING_API_URL="url"):
+            convert = Mock()
+            convert.get.return_value = {}
+            mock_convert.return_value = convert
+
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 204)
+
+            convert.get.return_value = {
+                'geometry': {
+                    'coordinates': [1, 1]
+                }
+            }
+            feature = {
+                'geometry': {
+                    'coordinates': [1, 1]
+                },
+                'properties': {
+                    'bbox': [
+                        1 - .05,
+                        1 - .05,
+                        1 + .05,
+                        1 + .05
+                    ]
+                },
+                'source': 'MGRS'
+            }
+            expected = json.dumps({'features': [feature]})
+
+            reverse = Mock()
+            reverse.search.return_value = {}
+            mock_reverse.return_value = reverse
+
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, expected)
+
+            reverse.search.return_value = {'features': [feature]}
+            expected = json.dumps({'features': [feature, feature]})
+
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, expected)
+
+        mock_is_mgrs.return_value = False
+        mock_is_lat_lon.return_value = [1, 1]
+
+        with self.settings(REVERSE_GEOCODING_API_URL=None):
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 501)
+            self.assertEqual(response.content, 'No Reverse Geocode API specified')
+
+        with self.settings(REVERSE_GEOCODING_API_URL="url"):
+            reverse = Mock()
+            reverse.search.return_value = {}
+            mock_reverse.return_value = reverse
+
+            point_feature = {
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [1, 1]
+                },
+                "source": "Coordinate",
+                "type": "Feature",
+                "properties": {
+                    "name": "1 N, 1 E",
+                    "bbox": [
+                        1 - 0.05,
+                        1 - 0.05,
+                        1 + 0.05,
+                        1 + 0.05
+                    ]
+                }
+            }
+            expected = json.dumps({'features': [point_feature]})
+
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, expected)
+
+            reverse.search.return_value = {'features': [point_feature]}
+            expected = json.dumps({'features': [point_feature, point_feature]})
+
+            response = self.client.get('/search', {'query': 'some query'})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.content, expected)
+
+        mock_is_lat_lon.return_value = False
+        geocode = Mock()
+        geocode.search.return_value = {'features': ['features go here']}
+        mock_geocode.return_value = geocode
+
+        response = self.client.get('/search', {'query': 'some query'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, json.dumps({'features': ['features go here']}))
+
     @patch('eventkit_cloud.ui.views.Geocode')
     def test_geocode_view(self, mock_geocode):
         expected_result = {"something": "value"}

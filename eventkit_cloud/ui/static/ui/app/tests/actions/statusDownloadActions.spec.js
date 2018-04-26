@@ -18,6 +18,7 @@ describe('statusDownload actions', () => {
             duration: '0:00:04.199825',
             user: 'admin',
             status: 'COMPLETED',
+            visibility: 'PRIVATE',
             job: {
                 uid: '123',
                 name: 'Test1',
@@ -26,7 +27,10 @@ describe('statusDownload actions', () => {
                 url: 'http://cloud.eventkit.test/api/jobs/123',
                 extent: {},
                 selection: '',
-                published: false,
+                permissions: {
+                    groups: {},
+                    users: {},
+                },
             },
             provider_tasks: [],
             zipfile_url: 'http://cloud.eventkit.test/downloads/123/test.zip',
@@ -40,6 +44,22 @@ describe('statusDownload actions', () => {
         const expectedActions = [
             { type: types.GETTING_DATACART_DETAILS },
             { type: types.DATACART_DETAILS_RECEIVED, datacartDetails: { data: expectedRuns } },
+        ];
+
+        const store = mockStore({ datacartDetails: {} });
+
+        return store.dispatch(actions.getDatacartDetails('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('getDatacartDetails should return an empty array if there are no results', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        mock.onGet('/api/runs?job_uid=123456789').reply(200, []);
+        const expectedActions = [
+            { type: types.GETTING_DATACART_DETAILS },
+            { type: types.DATACART_DETAILS_RECEIVED, datacartDetails: { data: [] } },
         ];
 
         const store = mockStore({ datacartDetails: {} });
@@ -210,7 +230,7 @@ describe('statusDownload actions', () => {
             });
     });
 
-    it('updatePermission should dispatch a patch and update the published state on the job', () => {
+    it('updateDataCartPermissions should dispatch a patch and update the published state on the job', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
 
         mock.onPatch('/api/jobs/123456789').reply(204);
@@ -221,13 +241,18 @@ describe('statusDownload actions', () => {
 
         const store = mockStore({ updatePermission: {} });
 
-        return store.dispatch(actions.updatePermission('123456789', 'true'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        return store.dispatch(actions.updateDataCartPermissions('123456789', {
+            permissions: {
+                value: 'SHARED',
+                groups: { group_one: 'READ' },
+                members: { admin: 'ADMIN' },
+            },
+        })).then(() => {
+            expect(store.getActions()).toEqual(expectedActions);
+        });
     });
 
-    it('updatePermission should dispatch an error', () => {
+    it('updateDataCartPermissions should dispatch an error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
 
         mock.onPatch('/api/jobs/123').reply(400, 'oh no an error');
@@ -238,9 +263,14 @@ describe('statusDownload actions', () => {
 
         const store = mockStore({ updatePermission: {} });
 
-        return store.dispatch(actions.updatePermission('123', 'true'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        return store.dispatch(actions.updateDataCartPermissions('123', {
+            permissions: {
+                value: 'SHARED',
+                groups: { group_one: 'READ' },
+                members: { admin: 'ADMIN' },
+            },
+        })).then(() => {
+            expect(store.getActions()).toEqual(expectedActions);
+        });
     });
 });
