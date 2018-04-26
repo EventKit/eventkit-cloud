@@ -2,7 +2,7 @@ import React from 'react';
 import pure from 'recompose/pure';
 import SvgIcon from 'material-ui/SvgIcon';
 
-let IndeterminateIcon = (props) => (
+let IrregularPolygon = (props) => (
     <SvgIcon {...props}>
         <path d="M20.4,19.6c-0.1,0-0.1-0.1-0.2-0.1l-0.3-7.4c0.6-0.3,1-1,1-1.8c0-1.1-0.9-1.9-2-1.9c-0.2,0-0.3,0-0.4,0.1L13,3.4
         c0.1-0.2,0.1-0.5,0.1-0.7c0-1.1-0.9-1.9-2-1.9c-1.1,0-1.9,0.9-1.9,2c0,0.2,0,0.3,0.1,0.4L3.8,9C3.7,9,3.5,9,3.4,9
@@ -12,8 +12,8 @@ let IndeterminateIcon = (props) => (
     </SvgIcon>
 );
 
-IndeterminateIcon = pure(IndeterminateIcon);
-IndeterminateIcon.displayName = 'IndeterminateIcon';
-IndeterminateIcon.muiName = 'SvgIcon';
+IrregularPolygon = pure(IrregularPolygon);
+IrregularPolygon.displayName = 'IrregularPolygon';
+IrregularPolygon.muiName = 'SvgIcon';
 
-export default IndeterminateIcon;
+export default IrregularPolygon;
