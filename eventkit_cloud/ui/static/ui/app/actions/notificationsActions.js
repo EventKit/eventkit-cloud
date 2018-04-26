@@ -78,12 +78,9 @@ export function markNotificationsAsRead(notifications) {
     return (dispatch, getState) => {
         cancelNotificationsSources(getState());
 
-        const cancelSource = axios.CancelToken.source();
-
         dispatch({
             type: actions.MARKING_NOTIFICATIONS_AS_READ,
             notifications,
-            cancelSource,
         });
 
         const data = [];
@@ -97,7 +94,6 @@ export function markNotificationsAsRead(notifications) {
         return axios({
             url: '/api/notifications/mark',
             method: 'POST',
-            cancelToken: cancelSource.token,
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
             data,
         }).then(() => {
@@ -122,12 +118,9 @@ export function markNotificationsAsUnread(notifications) {
     return (dispatch, getState) => {
         cancelNotificationsSources(getState());
 
-        const cancelSource = axios.CancelToken.source();
-
         dispatch({
             type: actions.MARKING_NOTIFICATIONS_AS_UNREAD,
             notifications,
-            cancelSource,
         });
 
         const data = [];
@@ -141,7 +134,6 @@ export function markNotificationsAsUnread(notifications) {
         return axios({
             url: '/api/notifications/mark',
             method: 'POST',
-            cancelToken: cancelSource.token,
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
             data,
         }).then(() => {
@@ -166,12 +158,9 @@ export function removeNotifications(notifications) {
     return (dispatch, getState) => {
         cancelNotificationsSources(getState());
 
-        const cancelSource = axios.CancelToken.source();
-
         dispatch({
             type: actions.REMOVING_NOTIFICATIONS,
             notifications,
-            cancelSource,
         });
 
         const data = [];
@@ -185,7 +174,6 @@ export function removeNotifications(notifications) {
         return axios({
             url: '/api/notifications/mark',
             method: 'POST',
-            cancelToken: cancelSource.token,
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
             data,
         }).then(() => {
@@ -210,17 +198,13 @@ export function markAllNotificationsAsRead() {
     return (dispatch, getState) => {
         cancelNotificationsSources(getState());
 
-        const cancelSource = axios.CancelToken.source();
-
         dispatch({
             type: actions.MARKING_ALL_NOTIFICATIONS_AS_READ,
-            cancelSource,
         });
 
         return axios({
             url: '/api/notifications/mark_all_as_read',
             method: 'POST',
-            cancelToken: cancelSource.token,
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {
             dispatch({
