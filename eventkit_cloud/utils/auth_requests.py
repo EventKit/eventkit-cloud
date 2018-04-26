@@ -46,7 +46,8 @@ def find_cert_var(slug=None):
     :return: Cert contents if found
     """
     if slug:
-        cert = os.getenv(slug + "_CERT") or os.getenv(slug.upper() + "_CERT")
+        env_slug = slug.replace('-', '_')
+        cert = os.getenv(env_slug + "_CERT") or os.getenv(env_slug.upper() + "_CERT")
     else:
         cert = None
 
@@ -83,7 +84,8 @@ def get_cred(slug=None, url=None, params=None):
     # Check for environment variable
     cred = None
     if slug:
-        cred = os.getenv(slug + "_CRED") or os.getenv(slug.upper() + "_CRED")
+        env_slug = slug.replace('-', '_')
+        cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED")
     if cred is not None and ":" in cred and all(cred.split(":")):
         logger.debug("Found credentials for %s in env var", slug)
         return cred.split(":")
