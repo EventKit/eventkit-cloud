@@ -148,14 +148,6 @@ export class ExportSummary extends Component {
             },
         };
 
-        const formats = [];
-        this.props.allFormats.forEach((format) => {
-            if (this.props.formats.includes(format.slug)) {
-                formats.push(format.name);
-            }
-        });
-        const formatDesc = formats.join(', ');
-
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         return (
             <div id="root" style={style.root}>
@@ -184,11 +176,6 @@ export class ExportSummary extends Component {
                                     className="qa-ExportSummary-project"
                                     title="Project / Category"
                                     data={this.props.projectName}
-                                />
-                                <CustomTableRow
-                                    className="qa-ExportSummary-formats"
-                                    title="File Formats"
-                                    data={formatDesc}
                                 />
                                 <CustomTableRow
                                     className="qa-ExportSummary-sources"
@@ -243,7 +230,6 @@ function mapStateToProps(state) {
         projectName: state.exportInfo.projectName,
         providers: state.exportInfo.providers,
         areaStr: state.exportInfo.areaStr,
-        formats: state.exportInfo.formats,
     };
 }
 
@@ -252,14 +238,12 @@ ExportSummary.contextTypes = {
 };
 
 ExportSummary.propTypes = {
-    geojson: PropTypes.object,
-    exportName: PropTypes.string,
-    datapackDescription: PropTypes.string,
-    projectName: PropTypes.string,
-    providers: PropTypes.array,
-    areaStr: PropTypes.string,
-    formats: PropTypes.array,
-    allFormats: PropTypes.array,
+    geojson: PropTypes.object.isRequired,
+    exportName: PropTypes.string.isRequired,
+    datapackDescription: PropTypes.string.isRequired,
+    projectName: PropTypes.string.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    areaStr: PropTypes.string.isRequired,
 };
 
 export default connect(
