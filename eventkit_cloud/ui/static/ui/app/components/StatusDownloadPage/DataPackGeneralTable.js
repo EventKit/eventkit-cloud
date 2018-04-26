@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import Info from 'material-ui/svg-icons/action/info';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DataCartGeneralTable extends Component {
@@ -67,18 +67,18 @@ export class DataCartGeneralTable extends Component {
         };
 
         return (
-            <div style={{ marginTop: '-5px', marginLeft: '-5px' }} className="qa-DataPackGeneralTable">
-                <DataPackTableRow
+            <div className="qa-DataPackGeneralTable">
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-description"
                     title="Description"
                     data={this.props.dataPack.job.description}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-project"
                     title="Project / Category"
                     data={this.props.dataPack.job.event}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
                     dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
@@ -106,7 +106,7 @@ export class DataCartGeneralTable extends Component {
                         ))
                     }
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-formats"
                     title="File Formats"
                     data={
@@ -133,7 +133,7 @@ export class DataCartGeneralTable extends Component {
                         ))
                     }
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-projection"
                     title="Projection"
                     data={
