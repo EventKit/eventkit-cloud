@@ -8,7 +8,7 @@ import Check from 'material-ui/svg-icons/navigation/check';
 import Edit from 'material-ui/svg-icons/image/edit';
 import Lock from 'material-ui/svg-icons/action/lock-outline';
 import moment from 'moment';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackStatusTable extends Component {
@@ -239,8 +239,8 @@ export class DataPackStatusTable extends Component {
         }
 
         return (
-            <div style={{ marginLeft: '-5px', marginTop: '-5px' }}>
-                <DataPackTableRow
+            <div>
+                <CustomTableRow
                     title="Export"
                     data={this.props.status}
                     titleStyle={{ backgroundColor: this.props.statusColor }}
@@ -249,11 +249,11 @@ export class DataPackStatusTable extends Component {
                         color: this.props.statusFontColor,
                     }}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     title="Expiration"
                     data={expirationData}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     title="Permissions"
                     dataStyle={{ flexWrap: 'wrap' }}
                     data={permissionData}
