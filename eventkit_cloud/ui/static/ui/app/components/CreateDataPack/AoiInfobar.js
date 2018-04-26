@@ -55,7 +55,7 @@ export class AoiInfobar extends Component {
         } else if (type.includes('LINE')) {
             return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <IrregularPolygon style={iconStyle} />;
+            return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" />;
         }
         return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" />;
     }

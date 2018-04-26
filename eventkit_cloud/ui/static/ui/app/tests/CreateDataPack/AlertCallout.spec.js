@@ -11,6 +11,8 @@ describe('AlertCallout component', () => {
         {
             style: {},
             onClose: () => {},
+            title: 'test title',
+            body: 'test body',
         }
     );
 
@@ -25,10 +27,8 @@ describe('AlertCallout component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AlertCallout')).toHaveLength(1);
-        expect(wrapper.find('.qa-AlertCallout-arrow')).toHaveLength(1);
-        expect(wrapper.find('.qa-AlertCallout-box')).toHaveLength(1);
-        expect(wrapper.find('.qa-AlertCallout-header').text()).toEqual('There must be a buffer.');
-        expect(wrapper.find('.qa-AlertCallout-body').text()).toEqual('Please add a buffer before moving forward.');
+        expect(wrapper.find('.qa-AlertCallout-title').text()).toEqual('test title');
+        expect(wrapper.find('.qa-AlertCallout-body').text()).toEqual('test body');
     });
 
     it('should call onClose when the clear icon is clicked', () => {

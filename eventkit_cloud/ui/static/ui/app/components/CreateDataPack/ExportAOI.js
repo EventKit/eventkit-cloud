@@ -338,7 +338,7 @@ export class ExportAOI extends Component {
                         description: 'Draw',
                         selectionType: 'free',
                     });
-                    const enable = this.shouldEnableNext(this.props.aoiInfo.geojson);
+                    const enable = this.shouldEnableNext(geojson);
                     if (enable) {
                         this.props.setNextEnabled();
                     } else {
@@ -357,7 +357,7 @@ export class ExportAOI extends Component {
                     description: 'Box',
                     selectionType: 'box',
                 });
-                const enable = this.shouldEnableNext(this.props.aoiInfo.geojson);
+                const enable = this.shouldEnableNext(geojson);
                 if (enable) {
                     this.props.setNextEnabled();
                 } else {
@@ -492,7 +492,7 @@ export class ExportAOI extends Component {
                     geojson,
                 });
                 this.showInvalidDrawWarning(false);
-                const enable = this.shouldEnableNext(this.props.aoiInfo.geojson);
+                const enable = this.shouldEnableNext(geojson);
                 if (enable) {
                     this.props.setNextEnabled();
                 } else {
@@ -711,8 +711,10 @@ export class ExportAOI extends Component {
     }
 
     shouldEnableNext(geojson) {
-        return allHaveArea(geojson)
-        && getSqKm(geojson) <= Number(this.context.config.MAX_DATAPACK_AOI_SQ_KM);
+        const area = allHaveArea(geojson);
+        const max = Number(this.context.config.MAX_DATAPACK_AOI_SQ_KM);
+        if (!max || !area) return area;
+        return getSqKm(geojson) <= max;
     }
 
     render() {

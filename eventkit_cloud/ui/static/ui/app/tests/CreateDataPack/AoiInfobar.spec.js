@@ -11,6 +11,7 @@ import ActionRestore from 'material-ui/svg-icons/action/restore';
 import Triangle from 'material-ui/svg-icons/image/details';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
+import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
 
@@ -20,6 +21,7 @@ describe('AoiInfobar component', () => {
         return {
             aoiInfo: {
                 geojson: {},
+                originalGeojson: {},
                 geomType: null,
                 title: null,
                 description: null,
@@ -73,14 +75,13 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.title = 'fake title';
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AoiInfobar')).toHaveLength(1);
-        expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST (AOI)');
+        expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST');
         expect(wrapper.find('.qa-AoiInfobar-button-zoom')).toHaveLength(1);
-        expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toEqual(' ZOOM TO SELECTION');
+        expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toEqual(' ZOOM TO');
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
-        expect(wrapper.find('.qa-AoiInfobar-name').text()).toEqual('fake title');
+        expect(wrapper.find('.qa-AoiInfobar-name').text()).toEqual('0 sq km fake title');
         expect(wrapper.find('.qa-AoiInfobar-description').text()).toEqual('fake description');
-        expect(wrapper.find('img')).toHaveLength(1);
-        expect(wrapper.find('img').hasClass('qa-AoiInfobar-icon-polygon')).toBe(true);
+        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(1);
     });
 
     it('clicking on zoom button should call clickZoomToSelection', () => {
@@ -89,7 +90,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.geojson = geojson;
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = 'fake title';
+        props.aoiInfo.title = '0 sq km fake title';
         const wrapper = getWrapper(props);
         wrapper.find('.qa-AoiInfobar-button-zoom').simulate('click');
         expect(props.clickZoomToSelection.calledOnce).toEqual(true);
@@ -100,7 +101,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.geojson = geojson;
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
-        props.aoiInfo.title = 'fake title';
+        props.aoiInfo.title = '0 sq km fake title';
         props.showRevert = true;
         props.onRevertClick = sinon.spy();
         const wrapper = getWrapper(props);
@@ -126,7 +127,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.showAlert = true;
+        props.maxAoiSqKm = 0.0000000001;
         const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
@@ -140,7 +141,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ImageCropSquare
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-box"
             />
         );
@@ -153,7 +154,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Extent
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-mapview"
             />
         );
@@ -166,7 +167,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ActionRoom
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-point"
             />
         );
@@ -179,7 +180,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Line
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-line"
             />
         );
@@ -187,30 +188,26 @@ describe('AoiInfobar component', () => {
         expect(icon).toEqual(expected);
     });
 
-    it('getIcon should return img tag', () => {
+    it('getIcon should return IrregularPolygon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <img
-                src="test-file-stub"
-                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+            <IrregularPolygon
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-polygon"
-                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Polygon', '');
         expect(icon).toEqual(expected);
     });
 
-    it('getIcon should return img tag', () => {
+    it('getIcon should return IrregularPolygon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <img
-                src="test-file-stub"
-                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+            <IrregularPolygon
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-polygon"
-                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Collection', '');
@@ -222,7 +219,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <AlertWarning
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{ width: '35px', height: '35px' }}
                 className="qa-AoiInfobar-icon-no-selection"
             />
         );
@@ -256,7 +253,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.showAlert = true;
+        props.maxAoiSqKm = '500';
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });

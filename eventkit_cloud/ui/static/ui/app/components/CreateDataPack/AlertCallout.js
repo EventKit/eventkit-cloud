@@ -19,7 +19,7 @@ export class AlertCallout extends Component {
                 className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout`}
                 style={this.props.style}
             >
-                <p style={{ minHeight: '20px' }}>
+                <p style={{ minHeight: '20px' }} className="qa-AlertCallout-title">
                     <strong>{this.props.title}</strong>
                     <Clear
                         className="qa-AlertCallout-alert-close"
@@ -27,7 +27,9 @@ export class AlertCallout extends Component {
                         onClick={this.props.onClose}
                     />
                 </p>
-                {this.props.body}
+                <div className="qa-AlertCallout-body">
+                    {this.props.body}
+                </div>
             </div>
         );
     }

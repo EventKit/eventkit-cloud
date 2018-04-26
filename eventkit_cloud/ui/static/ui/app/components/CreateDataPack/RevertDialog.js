@@ -27,7 +27,7 @@ export class RevertDialog extends Component {
         } else if (type.includes('LINE')) {
             return <Line style={iconStyle} className="qa-RevertDialog-icon-line" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <IrregularPolygon style={iconStyle} />;
+            return <IrregularPolygon style={iconStyle} className="qa-RevertDialog-icon-polygon" />;
         }
         return <AlertWarning style={iconStyle} className="qa-RevertDialog-icon-no-selection" />;
     }

@@ -25,6 +25,7 @@ import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar.js';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning.js';
 import DropZone from '../../components/MapTools/DropZone.js';
 import * as utils from '../../utils/mapUtils';
+import * as generic from '../../utils/generic';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -58,7 +59,7 @@ describe('ExportAOI component', () => {
         {
             aoiInfo: {
                 geojson: {},
-                orginalGeojson: {},
+                originalGeojson: {},
                 geomType: null,
                 title: null,
                 description: null,
@@ -88,7 +89,10 @@ describe('ExportAOI component', () => {
     );
 
     const getWrapper = (props) => {
-        const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };        
+        const config = {
+            BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
+            MAX_DATAPACK_AOI_SQ_KM: '20000',
+        };
         return mount(<ExportAOI {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
@@ -479,6 +483,7 @@ describe('ExportAOI component', () => {
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
         const fitSpy = sinon.spy(View.prototype, 'fit');
         const wrapper = getWrapper(props);
+        const enableStub = sinon.stub(wrapper.instance(), 'shouldEnableNext').returns(true);
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
         const hasPointOrLineStub = sinon.stub(utils, 'hasPointOrLine')
             .returns(false);
@@ -507,21 +512,23 @@ describe('ExportAOI component', () => {
         fitSpy.restore();
         addSpy.restore();
         hasPointOrLineStub.restore();
+        enableStub.restore();
     });
 
     it('setMapView should clear the drawing, calculate map extent add feature, and update aoiInfo and next enabled', () => {
         const props = getProps();
+        // props.aoiInfo.geojson = geojson;
         props.updateAoiInfo = sinon.spy();
         props.setNextEnabled = sinon.spy();
         const clearSpy = sinon.spy(utils, 'clearDraw');
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
-        const serializeSpy = sinon.spy(utils, 'serialize');
         const wrapper = getWrapper(props);
         const calcSpy = sinon.spy(View.prototype, 'calculateExtent');
         const fromExtentSpy = sinon.spy(Polygon, 'fromExtent');
         const getCoordSpy = sinon.spy(Polygon.prototype, 'getCoordinates');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
+        const enableStub = sinon.stub(wrapper.instance(), 'shouldEnableNext').returns(true);
         wrapper.instance().setMapView();
         expect(clearSpy.calledOnce).toBe(true);
         expect(calcSpy.calledOnce).toBe(true);
@@ -529,18 +536,17 @@ describe('ExportAOI component', () => {
         expect(getCoordSpy.called).toBe(true);
         expect(unwrapSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
-        expect(serializeSpy.calledOnce).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
         clearSpy.restore();
         unwrapSpy.restore();
         createSpy.restore();
-        serializeSpy.restore();
         calcSpy.restore();
         fromExtentSpy.restore();
         getCoordSpy.restore();
         addSpy.restore();
+        enableStub.restore();
     });
 
     it('updateMode should set interactions false then activate BBOX interaction', () => {
@@ -716,7 +722,7 @@ describe('ExportAOI component', () => {
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
         const updateSpy = wrapper.instance().updateMode = sinon.spy();
-        const geom = new Polygon([[ 
+        const geom = new Polygon([[
             [100.0, 0.0],
             [101.0, 0.0],
             [101.0, 1.0],
@@ -1287,6 +1293,7 @@ describe('ExportAOI component', () => {
         const addStub = sinon.stub(VectorSource.prototype, 'addFeatures');
         const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures')
             .returns([fakeFeature]);
+        const enableStub = sinon.stub(wrapper.instance(), 'shouldEnableNext').returns(true);        
         wrapper.instance().bufferFeatures = geojson;
         expect(wrapper.instance().bufferMapFeature(111)).toBe(true);
         expect(addStub.calledOnce).toBe(true);
@@ -1297,6 +1304,7 @@ describe('ExportAOI component', () => {
 
         addStub.restore();
         readStub.restore();
+        enableStub.restore();
     });
 
     it('openResetDialog should set showReset to true', () => {
@@ -1330,8 +1338,8 @@ describe('ExportAOI component', () => {
         props.updateAoiInfo = sinon.spy();
         props.setNextDisabled = sinon.spy();
         const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
-        const areaStub = sinon.stub(utils, 'allHaveArea').returns(true);
         const wrapper = getWrapper(props);
+        const enableStub = sinon.stub(wrapper.instance(), 'shouldEnableNext').returns(true);
         wrapper.instance().resetAoi();
         expect(readSpy.calledOnce).toBe(true);
         expect(readSpy.calledWith(geojson, {
@@ -1347,27 +1355,42 @@ describe('ExportAOI component', () => {
             buffer: 0,
         })).toBe(true);
         expect(stateSpy.calledWith({ showReset: false })).toBe(true);
-        expect(areaStub.calledOnce).toBe(true);
         expect(props.setNextDisabled.called).toBe(false);
         readSpy.restore();
         clearSpy.restore();
         addSpy.restore();
         stateSpy.restore();
+        enableStub.restore();
+    });
+
+    it('shouldEnabledNext should rturn false if not all feature have area', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const areaStub = sinon.stub(utils, 'allHaveArea').returns(false);
+        const enable = wrapper.instance().shouldEnableNext({});
+        expect(enable).toBe(false);
         areaStub.restore();
     });
 
-    it('doesMapHaveFeatures should return false the json is empty', () => {
+    it('shouldEnableNext should return false if the area exceeds the limit', () => {
         const props = getProps();
-        props.aoiInfo.geojson = {};
         const wrapper = getWrapper(props);
-        expect(wrapper.instance().doesMapHaveFeatures()).toBe(false);
+        const areaStub = sinon.stub(utils, 'allHaveArea').returns(true);
+        const getStub = sinon.stub(generic, 'getSqKm').returns(9999999);
+        const enable = wrapper.instance().shouldEnableNext({});
+        expect(enable).toBe(false);
+        areaStub.restore();
+        getStub.restore();
     });
 
-    it('doesMapHaveFeatures should return true if the json is not empty', () => {
+    it('shouldEnableNext should return true', () => {
         const props = getProps();
-        props.aoiInfo.geojson = geojson;
-        props.aoiInfo.geomType = 'Polygon';
         const wrapper = getWrapper(props);
-        expect(wrapper.instance().doesMapHaveFeatures()).toBe(true);
+        const areaStub = sinon.stub(utils, 'allHaveArea').returns(true);
+        const getStub = sinon.stub(generic, 'getSqKm').returns(10);
+        const enable = wrapper.instance().shouldEnableNext({});
+        expect(enable).toBe(true);
+        areaStub.restore();
+        getStub.restore();
     });
 });

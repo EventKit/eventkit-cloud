@@ -163,7 +163,10 @@ export class BufferDialog extends Component {
         let warning = null;
         if (over) {
             warning = (
-                <div style={{ position: 'relative', display: 'inline-block', marginRight: '5px' }}>
+                <div
+                    className="qa-BufferDialog-warning"
+                    style={{ position: 'relative', display: 'inline-block', marginRight: '5px' }}
+                >
                     <AlertWarning
                         onClick={this.showAlert}
                         style={styles.warning}
