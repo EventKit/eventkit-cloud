@@ -1,7 +1,7 @@
 import React, { PropTypes, Component } from 'react';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
 import DataPackGeneralTable from './DataPackGeneralTable';
@@ -54,7 +54,7 @@ export class DataCartDetails extends Component {
                 alignContent: 'flex-start',
                 color: 'black',
                 fontWeight: 'bold',
-                marginBottom: '10px',
+                marginBottom: '5px',
             },
         };
 
@@ -80,8 +80,8 @@ export class DataCartDetails extends Component {
 
         return (
             <div>
-                <div style={{ marginLeft: '-5px', marginTop: '-5px' }} className="qa-DataCartDetails-div-name">
-                    <DataPackTableRow
+                <div className="qa-DataCartDetails-div-name">
+                    <CustomTableRow
                         className="qa-DataCartDetails-name"
                         title="Name"
                         data={this.props.cartDetails.job.name}

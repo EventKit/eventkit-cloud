@@ -10,7 +10,7 @@ import Tile from 'ol/layer/tile';
 import Attribution from 'ol/control/attribution';
 import ScaleLine from 'ol/control/scaleline';
 import Zoom from 'ol/control/zoom';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 import { getSqKmString } from '../../utils/generic';
 import ol3mapCss from '../../styles/ol3map.css';
 
@@ -82,12 +82,11 @@ export class DataPackAoiInfo extends Component {
     render() {
         return (
             <div>
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackAoiInfo-area"
                     title="Area"
                     data={getSqKmString(this.props.extent)}
                     dataStyle={{ wordBreak: 'break-all' }}
-                    containerStyle={{ paddingLeft: '0px' }}
                 />
                 <div className="qa-DataPackAoiInfo-div-map" id="summaryMap" style={{ maxHeight: '400px', marginTop: '10px' }} />
             </div>

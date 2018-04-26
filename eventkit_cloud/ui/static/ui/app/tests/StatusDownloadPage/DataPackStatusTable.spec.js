@@ -5,7 +5,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import DatePicker from 'material-ui/DatePicker';
 import Edit from 'material-ui/svg-icons/image/edit';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
+import CustomTableRow from '../../components/CustomTableRow';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 
@@ -46,7 +46,7 @@ describe('DataPackStatusTable component', () => {
     it('should render basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(DataPackTableRow)).toHaveLength(3);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(3);
         expect(wrapper.find(DatePicker)).toHaveLength(1);
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
     });
