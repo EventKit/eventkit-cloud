@@ -564,16 +564,16 @@ export class Application extends Component {
                                             }}
                                         />
                                         <div ref={this.setNotificationsDropdownContainerRef}>
-                                            <NotificationsDropdown
-                                                style={{
-                                                    opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
-                                                    pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
-                                                    transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
-                                                }}
-                                                notifications={this.props.notifications}
-                                                router={this.props.router}
-                                                onNavigate={this.handleNotificationsDropdownNavigate}
-                                            />
+                                            {/*<NotificationsDropdown*/}
+                                                {/*style={{*/}
+                                                    {/*opacity: (this.state.showNotificationsDropdown) ? '1' : '0',*/}
+                                                    {/*pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',*/}
+                                                    {/*transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',*/}
+                                                {/*}}*/}
+                                                {/*notifications={this.props.notifications}*/}
+                                                {/*router={this.props.router}*/}
+                                                {/*onNavigate={this.handleNotificationsDropdownNavigate}*/}
+                                            {/*/>*/}
                                         </div>
                                     </div>
                                 </div>
@@ -605,7 +605,7 @@ export class Application extends Component {
                             onClick={this.onMenuItemClick}
                             innerDivStyle={styles.menuItem}
                         >
-                            <IndexLink
+                            <Link
                                 className="qa-Application-Link-exports"
                                 style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/exports') }}
                                 activeStyle={styles.activeLink}
@@ -616,7 +616,7 @@ export class Application extends Component {
                             >
                                 <AVLibraryBooks style={styles.icon} />
                                 DataPack Library
-                            </IndexLink>
+                            </Link>
                         </MenuItem>
                         <MenuItem
                             className="qa-Application-MenuItem-create"

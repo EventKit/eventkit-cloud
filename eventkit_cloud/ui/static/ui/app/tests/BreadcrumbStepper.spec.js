@@ -29,6 +29,11 @@ describe('BreadcrumbStepper component', () => {
             areaStr: '',
             formats: ['gpkg'],
         },
+        router: {
+            push: () => {},
+            setRouteLeaveHook: () => {},
+        },
+        routes: [],
         formats,
         submitJob: () => {},
         getProviders: () => {},
@@ -38,6 +43,8 @@ describe('BreadcrumbStepper component', () => {
         clearAoiInfo: () => {},
         clearExportInfo: () => {},
         clearJobInfo: () => {},
+        getNotifications: () => {},
+        getNotificationsUnreadCount: () => {},
     });
     const getWrapper = props => (
         shallow(<BreadcrumbStepper {...props} />, {
@@ -380,6 +387,53 @@ describe('BreadcrumbStepper component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ loading: false })).toBe(true);
         stateSpy.restore();
+    });
+
+    it('should set the modified flag when aoiInfo or exportInfo changes', () => {
+        const wrapper = getWrapper(getProps());
+        expect(wrapper.state().modified).toBe(false);
+        wrapper.setProps({ aoiInfo: {} });
+        expect(wrapper.state().modified).toBe(true);
+        wrapper.setState({ modified: false });
+        wrapper.setProps({ exportInfo: {} });
+        expect(wrapper.state().modified).toBe(true);
+    });
+
+    it('should set leave route and show leave warning dialog when navigating away with changes', () => {
+        const wrapper = getWrapper(getProps());
+        const instance = wrapper.instance();
+        wrapper.setState({ modified: true });
+        instance.routeLeaveHook({ pathname: '/someRoute' });
+        expect(instance.leaveRoute).toBe('/someRoute');
+        expect(wrapper.state().showLeaveWarningDialog).toBe(true);
+    });
+
+    it('should set modified flag to "false" when submitting a datapack', () => {
+        const wrapper = getWrapper(getProps());
+        const instance = wrapper.instance();
+        wrapper.setState({ modified: true });
+        instance.submitDatapack();
+        expect(wrapper.state().modified).toBe(false);
+    });
+
+    it('should hide leave warning dialog when clicking cancel', () => {
+        const wrapper = getWrapper(getProps());
+        const instance = wrapper.instance();
+        wrapper.setState({ showLeaveWarningDialog: true });
+        instance.leaveRoute = '/someRoute';
+        instance.handleLeaveWarningDialogCancel();
+        expect(wrapper.state().showLeaveWarningDialog).toBe(false);
+        expect(instance.leaveRoute).toBe(null);
+    });
+
+    it('should push the leave route when clicking confirm in leave warning dialog', () => {
+        const wrapper = getWrapper(getProps());
+        const instance = wrapper.instance();
+        instance.props.router.push = sinon.spy();
+        instance.leaveRoute = '/someRoute';
+        instance.handleLeaveWarningDialogConfirm();
+        expect(instance.props.router.push.calledOnce).toBe(true);
+        expect(instance.props.router.push.getCall(0).args[0]).toBe('/someRoute');
     });
 });
 

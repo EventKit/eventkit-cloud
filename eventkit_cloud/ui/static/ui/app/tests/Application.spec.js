@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { mount, shallow } from 'enzyme';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
@@ -23,18 +23,40 @@ import ConfirmDialog from '../components/Dialog/ConfirmDialog';
 describe('Application component', () => {
     const getProps = () => {
         return {
-            openDrawer: () => {},
-            closeDrawer: () => {},
             userData: {},
             drawer: 'open',
+            router: {
+                push: () => {},
+                location: {
+                    pathname: '/exports',
+                },
+            },
+            notifications: {
+                fetching: false,
+                fetched: false,
+                notifications: {},
+                notificationsSorted: [],
+                unreadCount: {
+                    fetching: false,
+                    fetched: false,
+                    unreadCount: 0,
+                },
+            },
+            openDrawer: () => {},
+            closeDrawer: () => {},
             userActive: () => {},
-            router: { push: () => {} },
+            getNotifications: () => {},
+            getNotificationsUnreadCount: () => {},
         };
-    }
+    };
 
-    const getWrapper = (props) => {
+    const getMountedWrapper = (props) => {
         return mount(<Application {...props} />);
-    }
+    };
+
+    const getShallowWrapper = (props) => {
+        return shallow(<Application {...props} />);
+    };
 
     const mountFunc = Application.prototype.componentDidMount;
 
@@ -48,7 +70,7 @@ describe('Application component', () => {
 
     it('should render the basic elements', () => {
         const props = getProps();
-        const wrapper = getWrapper(props);
+        const wrapper = getMountedWrapper(props);
         expect(wrapper.find(MuiThemeProvider)).toHaveLength(1);
         expect(wrapper.find(Banner)).toHaveLength(1);
         expect(wrapper.find('header')).toHaveLength(1);
@@ -56,59 +78,66 @@ describe('Application component', () => {
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(6);
-        expect(wrapper.find(MenuItem).at(0).text()).toEqual('DataPack Library');
-        expect(wrapper.find(MenuItem).at(0).find(AVLibraryBooks)).toHaveLength(1);
+        expect(wrapper.find(MenuItem)).toHaveLength(7);
+        expect(wrapper.find(MenuItem).at(0).text()).toEqual('Dashboard');
+        expect(wrapper.find(MenuItem).at(0).find(Dashboard)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(0).find(IndexLink)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(1).text()).toEqual('Create DataPack');
-        expect(wrapper.find(MenuItem).at(1).find(ContentAddBox)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(1).text()).toEqual('DataPack Library');
+        expect(wrapper.find(MenuItem).at(1).find(AVLibraryBooks)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(1).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(2).text()).toEqual('Members and Groups');
-        expect(wrapper.find(MenuItem).at(2).find(SocialGroup)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(2).text()).toEqual('Create DataPack');
+        expect(wrapper.find(MenuItem).at(2).find(ContentAddBox)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(2).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(3).text()).toEqual('About EventKit');
-        expect(wrapper.find(MenuItem).at(3).find(ActionInfoOutline)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(3).text()).toEqual('Members and Groups');
+        expect(wrapper.find(MenuItem).at(3).find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(3).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(4).text()).toEqual('Account Settings');
-        expect(wrapper.find(MenuItem).at(4).find(SocialPerson)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(4).text()).toEqual('About EventKit');
+        expect(wrapper.find(MenuItem).at(4).find(ActionInfoOutline)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(4).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(5).text()).toEqual('Log Out');
-        expect(wrapper.find(MenuItem).at(5).find(ActionExitToApp)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(5).text()).toEqual('Account Settings');
+        expect(wrapper.find(MenuItem).at(5).find(SocialPerson)).toHaveLength(1);
         expect(wrapper.find(MenuItem).at(5).find(Link)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(6).text()).toEqual('Log Out');
+        expect(wrapper.find(MenuItem).at(6).find(ActionExitToApp)).toHaveLength(1);
+        expect(wrapper.find(MenuItem).at(6).find(Link)).toHaveLength(1);
     });
 
     it('the menu items should call handleMouseOver with the route name', () => {
         const props = getProps();
         const handleSpy = sinon.spy();
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().handleMouseOver = handleSpy;
         expect(handleSpy.called).toBe(false);
-        wrapper.find('.qa-Application-Link-exports').simulate('mouseEnter');
+        wrapper.find('.qa-Application-Link-dashboard').simulate('mouseEnter');
         expect(handleSpy.callCount).toBe(1);
-        expect(handleSpy.calledWith('exports')).toBe(true);
+        expect(handleSpy.calledWith('/dashboard')).toBe(true);
+
+        wrapper.find('.qa-Application-Link-exports').simulate('mouseEnter');
+        expect(handleSpy.callCount).toBe(2);
+        expect(handleSpy.calledWith('/exports')).toBe(true);
 
         wrapper.find('.qa-Application-Link-create').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(2);
-        expect(handleSpy.calledWith('create')).toBe(true);
+        expect(handleSpy.callCount).toBe(3);
+        expect(handleSpy.calledWith('/create')).toBe(true);
 
         wrapper.find('.qa-Application-Link-about').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(3);
-        expect(handleSpy.calledWith('about')).toBe(true);
+        expect(handleSpy.callCount).toBe(4);
+        expect(handleSpy.calledWith('/about')).toBe(true);
 
         wrapper.find('.qa-Application-Link-account').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(4);
-        expect(handleSpy.calledWith('account')).toBe(true);
+        expect(handleSpy.callCount).toBe(5);
+        expect(handleSpy.calledWith('/account')).toBe(true);
 
         wrapper.find('.qa-Application-Link-logout').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(5);
-        expect(handleSpy.calledWith('logout')).toBe(true);
+        expect(handleSpy.callCount).toBe(6);
+        expect(handleSpy.calledWith('/logout')).toBe(true);
     });
 
     it('should call openDrawer when user data is added and window width is >= 1200', () => {
         const props = getProps();
         props.userData = null;
         props.openDrawer = sinon.spy();
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         const nextProps = getProps();
         nextProps.userData = {data: {}};
         window.resizeTo(1200, 1000);
@@ -125,7 +154,7 @@ describe('Application component', () => {
         const getStub = sinon.stub(Application.prototype, 'getConfig');
         const eventSpy = sinon.spy(window, 'addEventListener');
         const props = getProps();
-        const wrapper = getWrapper(props);
+        const wrapper = getMountedWrapper(props);
         expect(getStub.calledOnce).toBe(true);
         expect(eventSpy.called).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
@@ -135,10 +164,9 @@ describe('Application component', () => {
     });
 
     it('should remove event listener on unmount', () => {
-        const unmountSpy = sinon.spy(Application.prototype, 'componentWillUnmount');
         const eventSpy = sinon.spy(window, 'removeEventListener');
         const props = getProps();
-        const wrapper = getWrapper(props);
+        const wrapper = getMountedWrapper(props);
         const resize = wrapper.instance().handleResize;
         expect(eventSpy.called).toBe(false);
         wrapper.unmount();
@@ -150,7 +178,7 @@ describe('Application component', () => {
     it('handleResize should call forceUpdate', () => {
         const updateSpy = sinon.spy(Application.prototype, 'forceUpdate');
         const props = getProps();
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         expect(updateSpy.called).toBe(false);
         wrapper.instance().handleResize();
         expect(updateSpy.calledOnce).toBe(true);
@@ -162,7 +190,7 @@ describe('Application component', () => {
         props.openDrawer = sinon.spy();
         props.closeDrawer = sinon.spy();
         props.drawer = 'open';
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().handleToggle();
         expect(props.closeDrawer.calledOnce).toBe(true);
         wrapper.setProps({...props, drawer: 'closed'});
@@ -173,7 +201,7 @@ describe('Application component', () => {
     it('onMenuItemClick should call handleToggle if screen size is smaller than 1200', () => {
         const props = getProps();
         const toggleSpy = sinon.spy(Application.prototype, 'handleToggle');
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         window.resizeTo(1300, 900);
         expect(window.innerWidth).toEqual(1300);
         wrapper.instance().onMenuItemClick();
@@ -187,7 +215,7 @@ describe('Application component', () => {
 
     it('getChildContext should return config', () => {
         const props = getProps();
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.setState({config: {key: 'value'}});
         const context = wrapper.instance().getChildContext();
         expect(context).toEqual({config: {key: 'value'}});
@@ -200,7 +228,7 @@ describe('Application component', () => {
             LOGIN_DISCLAIMER: 'Test string',
         });
         const stateSpy = sinon.spy(Application.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         await wrapper.instance().getConfig();
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ config: { LOGIN_DISCLAIMER: 'Test string' } })).toBe(true);
@@ -210,7 +238,7 @@ describe('Application component', () => {
     it('handleMouseOver should set the passed in route as the hovered state', () => {
         const props = getProps();
         const stateSpy = sinon.spy();
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().setState = stateSpy;
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleMouseOver('test string');
@@ -221,7 +249,7 @@ describe('Application component', () => {
     it('handleMouseOut should set the hovered state to an empty string', () => {
         const props = getProps();
         const stateSpy = sinon.spy();
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().setState = stateSpy;
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleMouseOut();
@@ -235,7 +263,7 @@ describe('Application component', () => {
         // Set auto logout time to 5 minutes from now.
         props.autoLogoutAt = new Date(Date.now() + (5 * 60 * 1000));
         props.autoLogoutWarningAt = new Date(Date.now() - 1000);
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
@@ -248,7 +276,7 @@ describe('Application component', () => {
         // Set auto logout time to 60 seconds from now.
         props.autoLogoutAt = new Date(Date.now() + (60 * 1000));
         props.autoLogoutWarningAt = new Date(Date.now() - 1000);
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
@@ -261,21 +289,21 @@ describe('Application component', () => {
         // Set auto logout time to 1 second in the past.
         props.autoLogoutAt = new Date(Date.now() - 1000);
         props.autoLogoutWarningAt = new Date(Date.now());
-        const wrapper = getWrapper(props);
+        const wrapper = getShallowWrapper(props);
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLoggedOutDialog).toBe(true);
     });
 
     it('handleLogoutClick should set showLogoutDialog to true', () => {
-        const wrapper = getWrapper(getProps());
+        const wrapper = getShallowWrapper(getProps());
         expect(wrapper.state().showLogoutDialog).toBe(false);
         wrapper.instance().handleLogoutClick();
         expect(wrapper.state().showLogoutDialog).toBe(true);
     });
 
     it('handleLogoutDialogCancel should set showLogoutDialog to false', () => {
-        const wrapper = getWrapper(getProps());
+        const wrapper = getShallowWrapper(getProps());
         wrapper.setState({
             showLogoutDialog: true,
         });
@@ -283,14 +311,15 @@ describe('Application component', () => {
         expect(wrapper.state().showLogoutDialog).toBe(false);
     });
 
-    it('handleLogoutDialogConfirm should set showLogoutDialog to false and call logout()', () => {
+    it('handleLogoutDialogConfirm() should set showLogoutDialog to false and call logout()', () => {
         const logoutSpy = sinon.spy(Application.prototype, 'logout');
-        const wrapper = getWrapper(getProps());
+        const wrapper = getShallowWrapper(getProps());
         wrapper.setState({
             showLogoutDialog: true,
         });
         wrapper.instance().handleLogoutDialogConfirm();
         expect(wrapper.state().showLogoutDialog).toBe(false);
         expect(logoutSpy.calledOnce).toBe(true);
+        logoutSpy.restore();
     });
 });

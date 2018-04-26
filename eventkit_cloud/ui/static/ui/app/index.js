@@ -72,7 +72,7 @@ function checkAuth(store) {
 render(
     <Provider store={store}>
         <Router history={history}>
-            <Redirect from="/" to="/exports" />
+            <Redirect from="/" to="/dashboard" />
             <Route path="/" component={Application} onEnter={checkAuth(store)}>
                 <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
                 <Route path="/logout" component={Logout} />

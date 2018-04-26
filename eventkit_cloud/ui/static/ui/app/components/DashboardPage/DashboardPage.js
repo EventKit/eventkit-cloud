@@ -49,6 +49,11 @@ export class DashboardPage extends React.Component {
             pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
         });
         this.refresh();
+        this.autoRefreshIntervalId = setInterval(this.autoRefresh, 10000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.autoRefreshIntervalId);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -71,7 +76,7 @@ export class DashboardPage extends React.Component {
         }
 
         // Updated permissions.
-        if (nextProps.updatePermissions.updated && !this.props.updatePermissions.updated) {
+        if (nextProps.updatePermission.updated && !this.props.updatePermission.updated) {
             this.refresh();
         }
     }
@@ -179,7 +184,7 @@ export class DashboardPage extends React.Component {
         return (
             this.state.loadingPage ||
             this.props.runsDeletion.deleting ||
-            this.props.updatePermissions.updating
+            this.props.updatePermission.updating
         );
     }
 
@@ -345,6 +350,7 @@ export class DashboardPage extends React.Component {
                                 null
                                 :
                                 <DashboardSection
+                                    className="qa-DashboardSection-Featured"
                                     title="Featured"
                                     name="Featured"
                                     columns={this.getGridWideColumns()}
@@ -446,11 +452,17 @@ DashboardPage.propTypes = {
     getProviders: PropTypes.func.isRequired,
     deleteRuns: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
-    updatePermissions: PropTypes.shape({
+    updatePermission: PropTypes.shape({
         updating: PropTypes.bool,
         updated: PropTypes.bool,
         error: PropTypes.array,
     }).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
 };
 
 function mapStateToProps(state) {
@@ -462,7 +474,7 @@ function mapStateToProps(state) {
         runsDeletion: state.runsDeletion,
         runsList: state.runsList,
         featuredRunsList: state.featuredRunsList,
-        updatePermissions: state.updatePermission,
+        updatePermission: state.updatePermission,
     };
 }
 

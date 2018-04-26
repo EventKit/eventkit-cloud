@@ -127,6 +127,11 @@ describe('DataPackPage component', () => {
                 updated: false,
                 error: null,
             },
+            location: {
+                query: {
+                    collection: '',
+                },
+            },
         };
     };
 
@@ -411,6 +416,7 @@ describe('DataPackPage component', () => {
             providers,
             geojson,
             permissions,
+            isAuto: false,
         }];
         wrapper.setState({
             status,

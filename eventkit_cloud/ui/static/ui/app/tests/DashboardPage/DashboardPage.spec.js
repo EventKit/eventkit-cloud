@@ -18,11 +18,6 @@ describe('DashboardPage component', () => {
                         username: 'admin',
                     },
                 },
-                viewedJobs: {
-                    fetching: false,
-                    fetched: false,
-                    viewedJobs: [],
-                },
             },
             runsList: {
                 fetching: false,
@@ -37,12 +32,37 @@ describe('DashboardPage component', () => {
             runsDeletion: {
                 deleted: false,
             },
+            userActivity: {
+                viewedJobs: {
+                    fetching: false,
+                    fetched: true,
+                    viewedJobs: [],
+                },
+            },
+            notifications: {
+                fetching: false,
+                fetched: false,
+                notifications: {},
+                notificationsSorted: [],
+                unreadCount: {
+                    fetching: false,
+                    fetched: false,
+                    unreadCount: 0,
+                },
+            },
+            updatePermission: {
+                updating: false,
+                updated: false,
+            },
+            groups: [],
             refresh: () => {},
             getRuns: () => {},
             getFeaturedRuns: () => {},
             getViewedJobs: () => {},
             getProviders: () => {},
             deleteRuns: () => {},
+            getNotifications: () => {},
+            updateDataCartPermissions: () => {},
         }
     }
 
@@ -64,6 +84,11 @@ describe('DashboardPage component', () => {
                 uid: '2',
                 job: {
                     uid: '2',
+                    permissions: {
+                        value: '',
+                        groups: {},
+                        members: {},
+                    },
                 },
             },
             {
@@ -71,13 +96,18 @@ describe('DashboardPage component', () => {
                 uid: '1',
                 job: {
                     uid: '1',
+                    permissions: {
+                        value: '',
+                        groups: {},
+                        members: {},
+                    },
                 },
             },
         ];
     }
 
-    function loadNoDataPacks(wrapper) {
-        const props = wrapper.props();
+    function loadEmptyData(wrapper) {
+        const props = wrapper.instance().props;
         wrapper.setProps({
             ...props,
             runsList: {
@@ -90,19 +120,26 @@ describe('DashboardPage component', () => {
                 fetched: true,
                 runs: [],
             },
-            user: {
-                ...props.user,
+            userActivity: {
+                ...props.userActivity,
                 viewedJobs: {
+                    ...props.userActivity.viewedJobs,
                     fetching: false,
                     fetched: true,
                     viewedJobs: [],
                 },
             },
+            notifications: {
+                ...props.notifications,
+                fetching: false,
+                fetched: true,
+                notifications: [],
+            },
         });
     }
 
-    function loadDataPacks(wrapper) {
-        const props = wrapper.props();
+    function loadData(wrapper) {
+        const props = wrapper.instance().props;
         const runs = getRuns();
         wrapper.setProps({
             ...props,
@@ -116,9 +153,10 @@ describe('DashboardPage component', () => {
                 fetched: true,
                 runs: runs,
             },
-            user: {
-                ...props.user,
+            userActivity: {
+                ...props.userActivity,
                 viewedJobs: {
+                    ...props.userActivity.viewedJobs,
                     fetching: false,
                     fetched: true,
                     viewedJobs: [
@@ -126,6 +164,12 @@ describe('DashboardPage component', () => {
                         {last_export_run: runs[1]},
                     ],
                 },
+            },
+            notifications: {
+                ...props.notifications,
+                fetching: false,
+                fetched: true,
+                notifications: [],
             },
         });
     }
@@ -137,62 +181,42 @@ describe('DashboardPage component', () => {
 
     it('should hide loading indicator after page has loaded', () => {
         const wrapper = getShallowWrapper();
-        loadDataPacks(wrapper);
+        loadData(wrapper);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
     });
 
     it('should render basic components after page has loaded', () => {
         const wrapper = getShallowWrapper();
-        loadDataPacks(wrapper);
-        expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find('.qa-Dashboard-RecentlyViewedHeader')).toHaveLength(1);
-        expect(wrapper.find('.qa-Dashboard-FeaturedHeader')).toHaveLength(1);
-        expect(wrapper.find('.qa-Dashboard-MyDataPacksHeader')).toHaveLength(1);
-    });
-
-    it('should render messages when data is not available', () => {
-        const wrapper = getShallowWrapper();
-        loadNoDataPacks(wrapper);
-        expect(wrapper.find('.qa-Dashboard-MyDataPacks-NoData')).toHaveLength(1);
-        expect(wrapper.find('.qa-Dashboard-RecentlyViewed-NoData')).toHaveLength(1);
-        expect(wrapper.find(GridList)).toHaveLength(0);
-    });
-
-    it('should render datapacks after data is loaded', () => {
-        const wrapper = getShallowWrapper();
-        loadDataPacks(wrapper);
-        expect(wrapper.find('.qa-Dashboard-MyDataPacks-NoData')).toHaveLength(0);
-        expect(wrapper.find('.qa-Dashboard-RecentlyViewed-NoData')).toHaveLength(0);
-        expect(wrapper.find(GridList)).toHaveLength(3);
-        expect(wrapper.find(GridList).at(0).find(DataPackGridItem)).toHaveLength(2);
-        expect(wrapper.find(GridList).at(1).find(DataPackGridItem)).toHaveLength(2);
-        expect(wrapper.find(GridList).at(2).find(DataPackGridItem)).toHaveLength(2);
+        loadData(wrapper);
+        expect(wrapper.find('.qa-Dashboard-AppBar')).toHaveLength(1);
+        expect(wrapper.find('.qa-DashboardSection-RecentlyViewed')).toHaveLength(1);
+        expect(wrapper.find('.qa-DashboardSection-Featured')).toHaveLength(1);
+        expect(wrapper.find('.qa-DashboardSection-MyDataPacks')).toHaveLength(1);
     });
 
     it('should refresh the page periodically', () => {
         jest.useFakeTimers();
         const refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
         const wrapper = getMountedWrapper();
-        loadNoDataPacks(wrapper);
-        expect(refreshSpy.calledOnce).toBe(true);
-        expect(setInterval.mock.calls.length).toEqual(1);
-        expect(setInterval.mock.calls[0][1]).toEqual(wrapper.instance().refreshInterval);
+        loadEmptyData(wrapper);
+        expect(refreshSpy.callCount).toBe(1);
         jest.runOnlyPendingTimers();
-        expect(refreshSpy.calledTwice).toBe(true);
+        expect(refreshSpy.callCount).toBe(2);
         jest.runOnlyPendingTimers();
-        expect(refreshSpy.calledThrice).toBe(true);
+        expect(refreshSpy.callCount).toBe(3);
+        refreshSpy.restore();
     });
 
     it('should refresh page when deleting datapack', () => {
         const wrapper = getShallowWrapper();
         const instance = wrapper.instance();
         instance.refresh = sinon.spy();
-        loadDataPacks(wrapper);
+        loadData(wrapper);
         wrapper.setProps({
             runsDeletion: {
                 deleted: true,
             },
         });
-        expect(instance.refresh.calledOnce).toBe(true);
+        expect(instance.refresh.callCount).toBe(1);
     });
 });
