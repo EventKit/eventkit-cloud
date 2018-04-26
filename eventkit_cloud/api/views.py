@@ -1372,9 +1372,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             request_admins = request.data["administrators"]
             if len(request_admins) < 1:
                 return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
-
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
-
         # if name in request we need to change the group name
         if "name" in request.data:
             name = request.data["name"]
@@ -1413,7 +1411,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             removedusers = list(set(currentusers) - set(targetusers))
             users = User.objects.filter(username__in=removedusers).all()
             verb = NotificationVerb.REMOVED_FROM_GROUP.value
-            if permissionlabel == 'administrators': verb = NotificationVerb.UNSET_AS_GROUP_ADMIN.value
+            if permissionlabel == 'administrators': verb = NotificationVerb.REMOVED_AS_GROUP_ADMIN.value
             for user in users:
                 sendnotification(request.user, user, verb, group, None, "info", permission)
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
