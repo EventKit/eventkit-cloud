@@ -119,6 +119,6 @@ class NotificationVerb(Enum):
     REMOVED_FROM_GROUP = "removed_from_group"
     ADDED_TO_GROUP = "added_to_group"
     SET_AS_GROUP_ADMIN = "set_as_group_admin"
-    UNSET_AS_GROUP_ADMIN = "removed_as_group_admin"
+    REMOVED_AS_GROUP_ADMIN = "removed_as_group_admin"
 
 
