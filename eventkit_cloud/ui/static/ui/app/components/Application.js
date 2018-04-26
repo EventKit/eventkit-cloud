@@ -564,16 +564,17 @@ export class Application extends Component {
                                             }}
                                         />
                                         <div ref={this.setNotificationsDropdownContainerRef}>
-                                            {/*<NotificationsDropdown*/}
-                                                {/*style={{*/}
-                                                    {/*opacity: (this.state.showNotificationsDropdown) ? '1' : '0',*/}
-                                                    {/*pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',*/}
-                                                    {/*transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',*/}
-                                                {/*}}*/}
-                                                {/*notifications={this.props.notifications}*/}
-                                                {/*router={this.props.router}*/}
-                                                {/*onNavigate={this.handleNotificationsDropdownNavigate}*/}
-                                            {/*/>*/}
+                                            <NotificationsDropdown
+                                                style={{
+                                                    opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
+                                                    pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
+                                                    transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
+                                                }}
+                                                notifications={this.props.notifications}
+                                                router={this.props.router}
+                                                onNavigate={this.handleNotificationsDropdownNavigate}
+                                                store={this.props.store}
+                                            />
                                         </div>
                                     </div>
                                 </div>

@@ -1,7 +1,9 @@
 import React from 'react';
+import { Provider } from "react-redux";
 import axios from 'axios';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
+import configureMockStore from "redux-mock-store";
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
@@ -19,6 +21,9 @@ import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
 import { Application } from '../components/Application';
 import ConfirmDialog from '../components/Dialog/ConfirmDialog';
+
+const mockStore = configureMockStore();
+const store = mockStore({});
 
 describe('Application component', () => {
     const getProps = () => {
@@ -42,6 +47,7 @@ describe('Application component', () => {
                     unreadCount: 0,
                 },
             },
+            store,
             openDrawer: () => {},
             closeDrawer: () => {},
             userActive: () => {},
