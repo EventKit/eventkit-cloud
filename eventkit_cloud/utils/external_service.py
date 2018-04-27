@@ -91,7 +91,7 @@ class ExternalRasterServiceToGeopackage(object):
         try:
             conf_dict['caches']['cache']['cache']['filename'] = self.gpkgfile
         except KeyError:
-            conf_dict['caches']['cache'] = get_cache_template(["{0}_{1}".format(self.layer, self.service_type)],
+            conf_dict['caches']['cache'] = get_cache_template(["{0}".format(self.layer)],
                                                               [grids for grids in conf_dict.get('grids')],
                                                               self.gpkgfile, table_name=self.layer)
 
@@ -99,7 +99,7 @@ class ExternalRasterServiceToGeopackage(object):
 
         # Prevent the service from failing if source has missing tiles.
         for source in conf_dict.get('sources') or []:
-            if 'wmts' in source:
+            if conf_dict['sources'][source].get('type') == 'tile':
                 conf_dict['sources'][source]['transparent'] = True
                 # You can set any number of error codes here, and mapproxy will ignore them any time they appear and
                 # just skip the tile instead (normally it retries the tile for a very long time before finally erroring

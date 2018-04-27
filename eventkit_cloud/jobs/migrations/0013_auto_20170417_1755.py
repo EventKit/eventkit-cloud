@@ -35,7 +35,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='exportprovider',
             name='config',
-            field=models.TextField(blank=True, default='', help_text='This is an optional field to put in additional configuration.', null=True, verbose_name='Configuration'),
+            field=models.TextField(blank=True, default='', help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a mapproxy configuration with a 
+                              `Sources` key of imagery and a Service Layer name of imagery, the validator will also 
+                              require a layers section, but this isn't used. 
+                              OSM Services require a YAML configuration.""", null=True, verbose_name='Configuration'),
         ),
         migrations.DeleteModel(
             name='ExportConfig',
