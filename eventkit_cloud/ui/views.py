@@ -127,6 +127,7 @@ def search(request):
     if not q:
         return HttpResponse(status=204, content_type="application/json")
 
+    error_string = "An unknown error occurred while querying for results, please contact an administrator."
     degree_range = 0.05
     if is_mgrs(q):
         # check for necessary settings
@@ -142,7 +143,7 @@ def search(request):
             mgrs_data = convert.get(q)
         except Exception:
             return HttpResponse(
-                content="An unknown error occured while querying for results, please contact an administrator",
+                content=error_string,
                 status=500
             )
 
@@ -172,7 +173,7 @@ def search(request):
             })
         except Exception:
             return HttpResponse(
-                content="An unknown error occured while querying for results, please contact an administrator",
+                content=error_string,
                 status=500
             )
 
@@ -198,7 +199,7 @@ def search(request):
             })
         except Exception:
             return HttpResponse(
-                content="An unknown error occured while querying for results, please contact an administrator",
+                content=error_string,
                 status=500
             )
 
@@ -239,7 +240,7 @@ def search(request):
             result = geocode.search(q)
         except Exception:
             return HttpResponse(
-                content="An unknown error occured while querying for results, please contact an administrator",
+                content=error_string,
                 status=500
             )
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
