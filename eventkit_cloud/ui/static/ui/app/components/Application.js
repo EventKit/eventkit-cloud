@@ -178,7 +178,10 @@ export class Application extends Component {
         this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
 
         // Notifications.
-        this.props.getNotifications({ pageSize: this.notificationsPageSize });
+        this.props.getNotifications({
+            notificationsPageSize: this.notificationsPageSize,
+            isAuto: true,
+        });
         this.notificationsRefreshIntervalId = setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
     }
 
@@ -202,7 +205,10 @@ export class Application extends Component {
     }
 
     autoGetNotifications() {
-        this.props.getNotifications({ isAuto: true });
+        this.props.getNotifications({
+            notificationsPageSize: this.notificationsPageSize,
+            isAuto: true,
+        });
     }
 
     startCheckingForAutoLogout() {

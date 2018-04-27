@@ -123,7 +123,7 @@ export class DashboardPage extends React.Component {
 
     refreshMyDataPacks({ isAuto = false } = {}) {
         this.props.getRuns({
-            pageSize: this.getGridColumns({ getMax: true }),
+            pageSize: this.getGridColumns({ getMax: true }) * 3,
             ordering: '-started_at',
             ownerFilter: this.props.user.data.user.username,
             isAuto,
@@ -132,14 +132,14 @@ export class DashboardPage extends React.Component {
 
     refreshFeatured({ isAuto = false } = {}) {
         this.props.getFeaturedRuns({
-            pageSize: this.getGridWideColumns({ getMax: true }),
+            pageSize: this.getGridWideColumns({ getMax: true }) * 3,
             isAuto,
         });
     }
 
     refreshRecentlyViewed({ isAuto = false } = {}) {
         this.props.getViewedJobs({
-            pageSize: this.getGridColumns({ getMax: true }),
+            pageSize: this.getGridColumns({ getMax: true }) * 3,
             isAuto,
         });
     }
