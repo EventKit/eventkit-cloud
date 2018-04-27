@@ -50,11 +50,15 @@ export function getViewedJobs(args = {}) {
             cancelSource: cancelSource,
         });
 
-        const pageSize = args.pageSize || 10;
+        const params = {
+            activity: 'viewed',
+            page_size: args.pageSize || 12,
+        };
 
         return axios({
-            url: `/api/user/activity/jobs?activity=viewed&page_size=${pageSize}`,
+            url: '/api/user/activity/jobs',
             method: 'GET',
+            params,
             cancelToken: cancelSource.token,
         }).then((response) => {
             let nextPage = false;
