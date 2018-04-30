@@ -6,19 +6,12 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 
 import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
 import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import ScaleLine from 'ol/control/scaleline';
-import Attribution from 'ol/control/attribution';
-import Zoom from 'ol/control/zoom';
 
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import CustomTableRow from '../../components/CustomTableRow';
 
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -84,23 +77,12 @@ describe('Export Summary Component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(6);
         expect(wrapper.find('#form')).toHaveLength(1);
         expect(wrapper.find('#mainHeading').text()).toEqual('Preview and Run Export');
         expect(wrapper.find('#subHeading').text()).toEqual('Please make sure all the information below is correct.');
         expect(wrapper.find('#export-information-heading').text()).toEqual('Export Information');
-        expect(wrapper.find('#name').find('td').first().text()).toEqual('Name');
-        expect(wrapper.find('#name').find('td').last().text()).toEqual('name');
-        expect(wrapper.find('#description').find('td').first().text()).toEqual('Description');
-        expect(wrapper.find('#description').find('td').last().text()).toEqual('description');
-        expect(wrapper.find('#project').find('td').first().text()).toEqual('Project / Category');
-        expect(wrapper.find('#project').find('td').last().text()).toEqual('project');
-        expect(wrapper.find('#formats').find('td').first().text()).toEqual('File Formats');
-        expect(wrapper.find('#formats').find('td').last().text()).toEqual('Geopackage');
-        expect(wrapper.find('#layers').find('td').first().text()).toEqual('Data Sources');
-        expect(wrapper.find('#layers').find('td').last().text()).toEqual('one');
         expect(wrapper.find('#aoi-heading').text()).toEqual('Area of Interest (AOI)');
-        expect(wrapper.find('#aoi-area').find('td').first().text()).toEqual('Area');
-        expect(wrapper.find('#aoi-area').find('td').last().text()).toEqual('12 sq km');
         expect(wrapper.find('#aoi-map')).toHaveLength(1);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
