@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Info from 'material-ui/svg-icons/action/info';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
+import CustomTableRow from '../../components/CustomTableRow';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
@@ -61,7 +61,7 @@ describe('DataPackGeneralTable component', () => {
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(DataPackTableRow)).toHaveLength(5);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(5);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
     });
 
