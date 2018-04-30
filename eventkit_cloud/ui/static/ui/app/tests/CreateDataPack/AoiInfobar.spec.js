@@ -253,7 +253,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.maxAoiSqKm = '500';
+        props.maxAoiSqKm = 500;
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });

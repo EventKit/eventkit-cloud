@@ -236,7 +236,7 @@ export class AoiInfobar extends Component {
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
         const totalArea = getSqKmString(this.props.aoiInfo.geojson);
-        const maxArea = Number(this.props.maxAoiSqKm);
+        const maxArea = this.props.maxAoiSqKm;
         const over = maxArea && maxArea < getSqKm(this.props.aoiInfo.geojson);
 
         const bufferAlert = (
@@ -357,7 +357,7 @@ export class AoiInfobar extends Component {
 }
 
 AoiInfobar.defaultProps = {
-    maxAoiSqKm: '',
+    maxAoiSqKm: null,
 };
 
 AoiInfobar.propTypes = {
@@ -371,7 +371,7 @@ AoiInfobar.propTypes = {
         buffer: PropTypes.number,
     }).isRequired,
     showRevert: PropTypes.bool.isRequired,
-    maxAoiSqKm: PropTypes.string,
+    maxAoiSqKm: PropTypes.number,
     onRevertClick: PropTypes.func.isRequired,
     clickZoomToSelection: PropTypes.func.isRequired,
     handleBufferClick: PropTypes.func.isRequired,

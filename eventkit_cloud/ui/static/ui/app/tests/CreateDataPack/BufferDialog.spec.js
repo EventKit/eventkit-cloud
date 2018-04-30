@@ -60,14 +60,14 @@ describe('AlertCallout component', () => {
 
     it('should render a warning if the area exceeds the aoi limit', () => {
         const props = getProps();
-        props.maxAoiSqKm = '-200';
+        props.maxAoiSqKm = -200;
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
     });
 
     it('should render the alert popup', () => {
         const props = getProps();
-        props.maxAoiSqKm = '-200';
+        props.maxAoiSqKm = -200;
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(0);
         wrapper.setState({ showAlert: true });

@@ -712,7 +712,7 @@ export class ExportAOI extends Component {
 
     shouldEnableNext(geojson) {
         const area = allHaveArea(geojson);
-        const max = Number(this.context.config.MAX_DATAPACK_AOI_SQ_KM);
+        const max = this.context.config.MAX_DATAPACK_AOI_SQ_KM;
         if (!max || !area) return area;
         return getSqKm(geojson) <= max;
     }
