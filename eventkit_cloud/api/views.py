@@ -1292,7 +1292,12 @@ class GroupViewSet(viewsets.ModelViewSet):
         if "administrators" in request.data:
             request_admins = request.data["administrators"]
             if len(request_admins) < 1:
-                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
+                error_data = {"errors": [{"status": status.HTTP_403_FORBIDDEN,
+                                          "title": _('Not Permitted'),
+                                          "detail": _(
+                                              'You must assign another group administator before you can perform this action')
+                                          }]}
+                return Response(error_data, status=status.HTTP_403_FORBIDDEN)
 
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
 

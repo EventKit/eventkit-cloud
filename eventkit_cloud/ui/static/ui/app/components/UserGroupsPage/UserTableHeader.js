@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import { TableHeaderColumn } from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
@@ -7,6 +6,8 @@ import IconButton from 'material-ui/IconButton';
 import Group from 'material-ui/svg-icons/social/group';
 import Sort from 'material-ui/svg-icons/content/sort';
 import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
+import Checked from 'material-ui/svg-icons/toggle/check-box';
+import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
@@ -17,6 +18,8 @@ export class UserTableHeaderColumn extends Component {
         this.handleClose = this.handleClose.bind(this);
         this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
+        this.select = this.props.onSelect.bind(this, true);
+        this.deselect = this.props.onSelect.bind(this, false);
         this.state = {
             open: false,
             popoverAnchor: null,
@@ -47,6 +50,9 @@ export class UserTableHeaderColumn extends Component {
             headerColumn: {
                 color: '#707274',
                 fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                height: '56px',
             },
             iconMenu: {
                 width: '24px',
@@ -59,6 +65,7 @@ export class UserTableHeaderColumn extends Component {
                 height: '24px',
                 width: '24pz',
                 verticalAlign: 'middle',
+                flex: '0 0 auto',
             },
             dropDown: {
                 height: '24px',
@@ -95,57 +102,64 @@ export class UserTableHeaderColumn extends Component {
             },
         };
 
+        const checkbox = this.props.selected ? <Checked onClick={this.deselect} /> : <Unchecked onClick={this.select} />;
+
         return (
-            <TableHeaderColumn
-                colSpan="1"
+            <div
                 style={styles.headerColumn}
-                className="qa-UserTableHeaderColumn"
+                className="qa-UserTableHeader"
             >
-                <div>
-                    <strong className="qa-UserTableHeaderColumn-selectedCount">
-                        {this.props.selectedUsers.length} Selected
-                    </strong>
-                    { this.props.selectedUsers.length ?
-                        <IconButton
-                            style={styles.iconButton}
-                            iconStyle={{ color: '#4598bf' }}
-                            onClick={this.handleOpen}
-                            className="qa-UserTableHeaderColumn-IconButton-options"
+                <div style={{ display: 'flex', flex: '0 0 auto', paddingLeft: '24px', alignItems: 'center' }}>
+                    {checkbox}
+                </div>
+                <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
+                    <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
+                        <strong className="qa-UserTableHeaderColumn-selectedCount">
+                            {this.props.selectedUsers.length} Selected
+                        </strong>
+                    
+                        { this.props.selectedUsers.length ?
+                            <IconButton
+                                style={styles.iconButton}
+                                iconStyle={{ color: '#4598bf' }}
+                                onClick={this.handleOpen}
+                                className="qa-UserTableHeaderColumn-IconButton-options"
+                            >
+                                <Group />
+                                <DropDown />
+                            </IconButton>
+                            :
+                            null
+                        }
+                        <GroupsDropDownMenu
+                            open={this.state.open}
+                            anchorEl={this.state.popoverAnchor}
+                            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+                            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+                            onClose={this.handleClose}
+                            loading={this.props.groupsLoading}
+                            width={200}
+                            className="qa-UserTableRowColumn-GroupsDropDownMenu"
                         >
-                            <Group />
-                            <DropDown />
-                        </IconButton>
-                        :
-                        null
-                    }
-                    <GroupsDropDownMenu
-                        open={this.state.open}
-                        anchorEl={this.state.popoverAnchor}
-                        anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-                        targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-                        onClose={this.handleClose}
-                        loading={this.props.groupsLoading}
-                        width={200}
-                        className="qa-UserTableRowColumn-GroupsDropDownMenu"
-                    >
-                        {this.props.groups.map(group => (
-                            <GroupsDropDownMenuItem
-                                key={group.id}
-                                group={group}
-                                onClick={this.handleGroupItemClick}
-                                selected={this.props.selectedGroups.includes(group.id)}
-                            />
-                        ))}
-                        <Divider className="qa-UserTableRowColumn-Divider" />
-                        <MenuItem
-                            style={styles.menuItem}
-                            innerDivStyle={styles.menuItemInner}
-                            onClick={this.handleNewGroupClick}
-                            className="qa-UserTableRowColumn-MenuItem-newGroup"
-                        >
-                            <span>Share with New Group</span>
-                        </MenuItem>
-                    </GroupsDropDownMenu>
+                            {this.props.groups.map(group => (
+                                <GroupsDropDownMenuItem
+                                    key={group.id}
+                                    group={group}
+                                    onClick={this.handleGroupItemClick}
+                                    selected={this.props.selectedGroups.includes(group.id)}
+                                />
+                            ))}
+                            <Divider className="qa-UserTableRowColumn-Divider" />
+                            <MenuItem
+                                style={styles.menuItem}
+                                innerDivStyle={styles.menuItemInner}
+                                onClick={this.handleNewGroupClick}
+                                className="qa-UserTableRowColumn-MenuItem-newGroup"
+                            >
+                                <span>Share with New Group</span>
+                            </MenuItem>
+                        </GroupsDropDownMenu>
+                    </div>
                     <IconMenu
                         value={this.props.sortValue}
                         onChange={this.props.handleSortChange}
@@ -179,12 +193,14 @@ export class UserTableHeaderColumn extends Component {
                         />
                     </IconMenu>
                 </div>
-            </TableHeaderColumn>
+            </div>
         );
     }
 }
 
 UserTableHeaderColumn.propTypes = {
+    selected: PropTypes.bool.isRequired,
+    onSelect: PropTypes.func.isRequired,
     sortValue: PropTypes.string.isRequired,
     handleSortChange: PropTypes.func.isRequired,
     selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,

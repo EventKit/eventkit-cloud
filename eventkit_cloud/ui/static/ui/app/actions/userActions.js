@@ -111,7 +111,7 @@ export function userActive() {
 export function getUsers(params) {
     return (dispatch, getState) => {
         // get the current user information
-        const loggedInUser = getState().user.data.user;
+        // const loggedInUser = getState().user.data.user;
 
         dispatch({ type: actions.FETCHING_USERS });
 
@@ -129,8 +129,8 @@ export function getUsers(params) {
             const ungroupedUsers = Number(response.headers['not-grouped-users']);
 
             // filter out the current user from the list
-            const users = response.data.filter(user => (user.user.username !== loggedInUser.username));
-            
+            // const users = response.data.filter(user => (user.user.username !== loggedInUser.username));
+            const users = response.data;
             dispatch({
                 type: actions.FETCHED_USERS,
                 users,

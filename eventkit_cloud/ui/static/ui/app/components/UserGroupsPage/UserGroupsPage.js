@@ -16,8 +16,11 @@ import ArrowLeft from 'material-ui/svg-icons/hardware/keyboard-arrow-left';
 import ArrowRight from 'material-ui/svg-icons/hardware/keyboard-arrow-right';
 import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
-import UserTableRowColumn from './UserTableRowColumn';
-import UserTableHeaderColum from './UserTableHeaderColumn';
+import UserTableHeaderColumn from './UserTableHeaderColumn';
+import SelfTableRowColumn from './SelfTableRowColumn';
+import UserRow from './UserTableRow';
+import OwnUserRow from './OwnUserRow';
+import UserHeader from './UserTableHeader';
 import GroupsDrawer from './GroupsDrawer';
 import CreateGroupDialog from './CreateGroupDialog';
 import LeaveGroupDialog from './LeaveGroupDialog';
@@ -209,7 +212,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleSelectAll(selected) {
-        if (selected === 'all') {
+        if (selected) {
             // if all are selected we need to set selected state with all
             this.setState({ selectedUsers: [...this.props.users.users] });
         } else {
@@ -225,6 +228,17 @@ export class UserGroupsPage extends Component {
             users.push(this.props.users.users[ix]);
         });
         this.setState({ selectedUsers: users });
+    }
+
+    handleUserSelect(user) {
+        const selected = [...this.state.selectedUsers];
+        const ix = selected.findIndex(u => u.user.username === user.user.username);
+        if (ix > -1) {
+            selected.splice(ix, 1);
+        } else {
+            selected.push(user);
+        }
+        this.setState({ selectedUsers: selected });
     }
 
     handleSearchKeyDown(event) {
@@ -325,7 +339,14 @@ export class UserGroupsPage extends Component {
     }
 
     handleLeaveClick() {
-        this.props.updateGroup(this.state.targetGroup.id);
+        // if the user is an admin we want to remove them from admins and users
+        // if the user is not an admin the api will ignore the options and just remove the user
+        const administrators = this.state.targetGroup.administrators
+            .filter(username => username !== this.props.user.username);
+        const members = this.state.targetGroup.members
+            .filter(username => username !== this.props.user.username);
+        const options = { administrators, members };
+        this.props.updateGroup(this.state.targetGroup.id, options);
         this.handleLeaveClose();
     }
 
@@ -539,8 +560,11 @@ export class UserGroupsPage extends Component {
             },
         };
 
+        console.log(this.props.location.query);
+
         const ownedGroups = [];
         const sharedGroups = [];
+        const otherGroups = [];
         // split the user group into groups owned by the logged in user,
         // and groups shared with logged in user
         this.props.groups.groups.forEach((group) => {
@@ -548,6 +572,8 @@ export class UserGroupsPage extends Component {
                 ownedGroups.push(group);
             } else if (group.members.includes(this.props.user.username)) {
                 sharedGroups.push(group);
+            } else {
+                otherGroups.push(group);
             }
         });
 
@@ -569,16 +595,23 @@ export class UserGroupsPage extends Component {
             });
         }
 
-        const showAdmin = !['all', 'new', 'ungrouped'].includes(this.state.drawerSelection) && !this.props.users.fetching;
-        const rows = this.props.users.users.map((user, ix) => (
-            // we should be filtering out the logged in user here
-            <TableRow
-                key={user.user.username}
-                style={styles.tableRow}
-                selected={this.state.selectedUsers.includes(user)}
-                rowNumber={ix}
-            >
-                <UserTableRowColumn
+        // get a list of all the usernames from selected users
+        const selectedUsernames = this.state.selectedUsers.map(user => user.user.username);
+        // if viewing all, new, or ungrouped, we want to show the admin buttons
+        const showAdminLabel = !['all', 'new', 'ungrouped'].includes(this.state.drawerSelection) && !this.props.users.fetching;
+        const showAdminButton = !this.props.users.fetching && ownedGroups.find(group => group.id === this.state.drawerSelection) !== undefined;
+        
+        let ownUser = null;
+        const ownIX = this.props.users.users.findIndex(u => u.user.username === this.props.user.username);
+        const users = [...this.props.users.users];
+        
+        if (ownIX > -1) {
+            const [user] = users.splice(ownIX, 1);
+            ownUser = (
+                <OwnUserRow
+                    key={user.user.username}
+                    selected={selectedUsernames.indexOf(user.user.username) > -1}
+                    onSelect={this.handleUserSelect.bind(this)}
                     user={user}
                     groups={ownedGroups}
                     groupsLoading={this.state.usersUpdating.includes(user.user.username)}
@@ -587,15 +620,16 @@ export class UserGroupsPage extends Component {
                     handleMakeAdmin={this.handleMakeAdmin}
                     handleDemoteAdmin={this.handleDemoteAdmin}
                     isAdmin={
-                        showAdmin && this.props.groups.groups.find(group => (
+                        this.props.groups.groups.find(group => (
                             group.id === this.state.drawerSelection
                             && group.administrators.includes(user.user.username)
                         )) !== undefined
                     }
-                    showAdminLabel={showAdmin}
+                    showAdminButton={showAdminButton}
+                    showAdminLabel={showAdminLabel}
                 />
-            </TableRow>
-        ));
+            );
+        }
 
         return (
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
@@ -672,49 +706,44 @@ export class UserGroupsPage extends Component {
                                     :
                                     null
                                 }
-                                <Table
-                                    selectable
-                                    multiSelectable
-                                    onRowSelection={this.handleSelectAll}
-                                    allRowsSelected={this.state.selectedUsers.length === this.props.users.users.length}
-                                    className="qa-UserGroupsPage-headerTable"
-                                >
-                                    <TableHeader
-                                        style={{ zIndex: 2 }}
-                                        displaySelectAll
-                                        adjustForCheckbox
-                                        enableSelectAll
-                                    >
-                                        <TableRow>
-                                            <UserTableHeaderColum
-                                                selectedUsers={this.state.selectedUsers}
-                                                selectedGroups={commonGroups}
-                                                sortValue={this.state.sort}
-                                                handleSortChange={this.handleSortChange}
-                                                groups={ownedGroups}
-                                                groupsLoading={!!this.state.usersUpdating.length}
-                                                handleGroupItemClick={this.handleMultiUserChange}
-                                                handleNewGroupClick={this.handleNewGroupClick}
-                                            />
-                                        </TableRow>
-                                    </TableHeader>
-                                </Table>
+                                <UserHeader
+                                    selected={this.state.selectedUsers.length === this.props.users.users.length}
+                                    onSelect={this.handleSelectAll}
+                                    selectedUsers={this.state.selectedUsers}
+                                    selectedGroups={commonGroups}
+                                    sortValue={this.state.sort}
+                                    handleSortChange={this.handleSortChange}
+                                    groups={ownedGroups}
+                                    groupsLoading={!!this.state.usersUpdating.length}
+                                    handleGroupItemClick={this.handleMultiUserChange}
+                                    handleNewGroupClick={this.handleNewGroupClick}
+                                />
                             </div>
-                            <Table
-                                selectable
-                                multiSelectable
-                                onRowSelection={this.handleIndividualSelect}
-                                style={{ borderBottom: '1px solid rgb(224, 224, 224)' }}
-                                className="qa-UserGroupsPage-bodyTable"
-                            >
-                                <TableBody
-                                    displayRowCheckbox
-                                    showRowHover
-                                    deselectOnClickaway={false}
-                                >
-                                    {rows}
-                                </TableBody>
-                            </Table>
+                            
+                            {ownUser}
+                            {users.map(user => (
+                                <UserRow
+                                    key={user.user.username}
+                                    selected={selectedUsernames.indexOf(user.user.username) > -1}
+                                    onSelect={this.handleUserSelect.bind(this)}
+                                    user={user}
+                                    groups={ownedGroups}
+                                    groupsLoading={this.state.usersUpdating.includes(user.user.username)}
+                                    handleGroupItemClick={this.handleSingleUserChange}
+                                    handleNewGroupClick={this.handleNewGroupClick}
+                                    handleMakeAdmin={this.handleMakeAdmin}
+                                    handleDemoteAdmin={this.handleDemoteAdmin}
+                                    isAdmin={
+                                        this.props.groups.groups.find(group => (
+                                            group.id === this.state.drawerSelection
+                                            && group.administrators.includes(user.user.username)
+                                        )) !== undefined
+                                    }
+                                    showAdminButton={showAdminButton}
+                                    showAdminLabel={showAdminLabel}
+                                />
+                            ))}
+                            <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
                         </div>
                     </CustomScrollbar>
                 </div>
@@ -724,6 +753,7 @@ export class UserGroupsPage extends Component {
                     open={this.state.drawerOpen || !mobile}
                     ownedGroups={ownedGroups}
                     sharedGroups={sharedGroups}
+                    otherGroups={otherGroups}
                     usersCount={this.props.users.total}
                     newCount={this.props.users.new}
                     ungroupedCount={this.props.users.ungrouped}

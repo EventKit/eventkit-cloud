@@ -1,11 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import IconButton from 'material-ui/IconButton';
-import { TableRowColumn } from 'material-ui/Table';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import Group from 'material-ui/svg-icons/social/group';
 import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
+import Checked from 'material-ui/svg-icons/toggle/check-box';
+import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
@@ -18,6 +19,7 @@ export class UserTableRowColumn extends Component {
         this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
         this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
         this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
+        this.onSelect = this.props.onSelect.bind(this, this.props.user);
         this.state = {
             open: false,
             popoverAnchor: null,
@@ -60,6 +62,8 @@ export class UserTableRowColumn extends Component {
                 color: '#707274',
                 fontSize: '14px',
                 whiteSpace: 'normal',
+                display: 'flex',
+                borderTop: '1px solid #e0e0e0',
             },
             iconMenu: {
                 width: '24px',
@@ -77,13 +81,13 @@ export class UserTableRowColumn extends Component {
             adminContainer: {
                 display: 'flex',
                 margin: '0px 30px 0px 20px',
+                alignItems: 'center',
             },
             admin: {
                 backgroundColor: '#4598bf',
                 color: '#fff',
                 padding: '4px 11px',
                 fontSize: '11px',
-                alignSelf: 'center',
                 cursor: 'pointer',
             },
             notAdmin: {
@@ -91,7 +95,6 @@ export class UserTableRowColumn extends Component {
                 color: '#fff',
                 padding: '4px 11px',
                 fontSize: '11px',
-                alignSelf: 'center',
                 opacity: '0.8',
                 cursor: 'pointer',
             },
@@ -108,31 +111,17 @@ export class UserTableRowColumn extends Component {
             },
         };
 
-        // get "rest" of props needed to pass to MUI component
-        const {
-            user,
-            groups,
-            groupsLoading,
-            handleGroupItemClick,
-            handleNewGroupClick,
-            handleMakeAdmin,
-            handleDemoteAdmin,
-            isAdmin,
-            showAdminLabel,
-            ...rest
-        } = this.props;
-
-        let name = user.user.username;
-        if (user.user.first_name && user.user.last_name) {
-            name = `${user.user.first_name} ${user.user.last_name}`;
+        let name = this.props.user.user.username;
+        if (this.props.user.user.first_name && this.props.user.user.last_name) {
+            name = `${this.props.user.user.first_name} ${this.props.user.user.last_name}`;
         }
-        const email = user.user.email || 'No email provided';
+        const email = this.props.user.user.email || 'No email provided';
 
         let adminLabel = null;
-        if (showAdminLabel) {
+        if (this.props.showAdminButton) {
             adminLabel = (
                 <div style={styles.adminContainer}>
-                    {isAdmin ?
+                    {this.props.isAdmin ?
                         <EnhancedButton
                             style={styles.admin}
                             onClick={this.handleDemoteAdminClick}
@@ -149,15 +138,25 @@ export class UserTableRowColumn extends Component {
                     }
                 </div>
             );
+        } else if (this.props.showAdminLabel && this.props.isAdmin) {
+            adminLabel = (
+                <div style={styles.adminContainer}>
+                        ADMIN
+                </div>
+            );
         }
 
+        const checkbox = this.props.selected ? <Checked onClick={this.onSelect} /> : <Unchecked onClick={this.onSelect} />;
+
         return (
-            <TableRowColumn
-                {...rest}
+            <div
                 style={styles.tableRowColumn}
                 className="qa-UserTableRowColumn"
             >
-                <div style={{ display: 'flex' }}>
+                <div style={{ display: 'flex', flex: '0 0 auto', paddingLeft: '24px', alignItems: 'center' }}>
+                    {checkbox}
+                </div>
+                <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
                         <div className="qa-UserTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
                             <strong>{name}</strong>
@@ -180,7 +179,7 @@ export class UserTableRowColumn extends Component {
                         open={this.state.open}
                         anchorEl={this.state.popoverAnchor}
                         onClose={this.handleClose}
-                        loading={groupsLoading}
+                        loading={this.props.groupsLoading}
                         width={200}
                         className="qa-UserTableRowColumn-GroupsDropDownMenu"
                     >
@@ -189,7 +188,7 @@ export class UserTableRowColumn extends Component {
                                 key={group.id}
                                 group={group}
                                 onClick={this.handleGroupItemClick}
-                                selected={user.groups.includes(group.id)}
+                                selected={this.props.user.groups.includes(group.id)}
                             />
                         ))}
                         <Divider className="qa-UserTableRowColumn-Divider" />
@@ -203,7 +202,7 @@ export class UserTableRowColumn extends Component {
                         </MenuItem>
                     </GroupsDropDownMenu>
                 </div>
-            </TableRowColumn>
+            </div>
         );
     }
 }
@@ -212,11 +211,14 @@ UserTableRowColumn.defaultProps = {
     handleMakeAdmin: () => { console.error('Make admin function not provided'); },
     handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
     isAdmin: false,
+    showAdminButton: false,
     showAdminLabel: false,
     style: {},
 };
 
 UserTableRowColumn.propTypes = {
+    selected: PropTypes.bool.isRequired,
+    onSelect: PropTypes.func.isRequired,
     user: PropTypes.shape({
         user: PropTypes.shape({
             first_name: PropTypes.string,
@@ -233,6 +235,7 @@ UserTableRowColumn.propTypes = {
     handleMakeAdmin: PropTypes.func,
     handleDemoteAdmin: PropTypes.func,
     isAdmin: PropTypes.bool,
+    showAdminButton: PropTypes.bool,
     showAdminLabel: PropTypes.bool,
     style: PropTypes.object,
 };

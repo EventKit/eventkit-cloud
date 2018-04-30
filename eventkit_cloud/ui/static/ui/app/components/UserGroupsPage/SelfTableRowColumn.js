@@ -1,58 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import IconButton from 'material-ui/IconButton';
 import { TableRowColumn } from 'material-ui/Table';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import Group from 'material-ui/svg-icons/social/group';
 import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import GroupsDropDownMenu from './GroupsDropDownMenu';
-import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
-export class UserTableRowColumn extends Component {
-    constructor(props) {
-        super(props);
-        this.handleOpen = this.handleOpen.bind(this);
-        this.handleClose = this.handleClose.bind(this);
-        this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
-        this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
-        this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
-        this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
-        this.state = {
-            open: false,
-            popoverAnchor: null,
-        };
-    }
-
-    handleOpen(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.setState({ open: true, popoverAnchor: e.currentTarget });
-    }
-
-    handleClose() {
-        this.setState({ open: false });
-    }
-
-    handleNewGroupClick() {
-        this.handleClose();
-        this.props.handleNewGroupClick([this.props.user]);
-    }
-
-    handleGroupItemClick(group) {
-        this.props.handleGroupItemClick(group, this.props.user);
-    }
-
-    handleMakeAdminClick(e) {
-        e.stopPropagation();
-        this.props.handleMakeAdmin(this.props.user);
-    }
-
-    handleDemoteAdminClick(e) {
-        e.stopPropagation();
-        this.props.handleDemoteAdmin(this.props.user);
-    }
-
+export class SelfTableRowColumn extends Component {
     render() {
         const styles = {
             tableRowColumn: {
@@ -87,6 +40,7 @@ export class UserTableRowColumn extends Component {
                 cursor: 'pointer',
             },
             notAdmin: {
+                // color: '#707274',
                 backgroundColor: '#ccc',
                 color: '#fff',
                 padding: '4px 11px',
@@ -95,30 +49,15 @@ export class UserTableRowColumn extends Component {
                 opacity: '0.8',
                 cursor: 'pointer',
             },
-            menuItem: {
-                fontSize: '14px',
-                overflow: 'hidden',
-                color: '#707274',
-            },
-            menuItemInner: {
-                padding: '0px',
-                margin: '0px 22px 0px 16px',
-                height: '48px',
-                display: 'flex',
-            },
         };
 
         // get "rest" of props needed to pass to MUI component
         const {
             user,
-            groups,
-            groupsLoading,
-            handleGroupItemClick,
-            handleNewGroupClick,
             handleMakeAdmin,
             handleDemoteAdmin,
             isAdmin,
-            showAdminLabel,
+            showAdminButton,
             ...rest
         } = this.props;
 
@@ -129,7 +68,7 @@ export class UserTableRowColumn extends Component {
         const email = user.user.email || 'No email provided';
 
         let adminLabel = null;
-        if (showAdminLabel) {
+        if (showAdminButton) {
             adminLabel = (
                 <div style={styles.adminContainer}>
                     {isAdmin ?
@@ -155,14 +94,14 @@ export class UserTableRowColumn extends Component {
             <TableRowColumn
                 {...rest}
                 style={styles.tableRowColumn}
-                className="qa-UserTableRowColumn"
+                className="qa-SelfTableRowColumn"
             >
                 <div style={{ display: 'flex' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
-                        <div className="qa-UserTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
+                        <div className="qa-SelfTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
                             <strong>{name}</strong>
                         </div>
-                        <div className="qa-UserTableRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
+                        <div className="qa-SelfTableRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
                             {email}
                         </div>
                     </div>
@@ -171,52 +110,27 @@ export class UserTableRowColumn extends Component {
                         style={styles.iconButton}
                         iconStyle={{ color: '#4598bf' }}
                         onClick={this.handleOpen}
-                        className="qa-UserTableRowColumn-IconButton-options"
+                        className="qa-SelfTableRowColumn-IconButton-options"
+                        disabled
                     >
                         <Group />
                         <ArrowDown />
                     </IconButton>
-                    <GroupsDropDownMenu
-                        open={this.state.open}
-                        anchorEl={this.state.popoverAnchor}
-                        onClose={this.handleClose}
-                        loading={groupsLoading}
-                        width={200}
-                        className="qa-UserTableRowColumn-GroupsDropDownMenu"
-                    >
-                        {this.props.groups.map(group => (
-                            <GroupsDropDownMenuItem
-                                key={group.id}
-                                group={group}
-                                onClick={this.handleGroupItemClick}
-                                selected={user.groups.includes(group.id)}
-                            />
-                        ))}
-                        <Divider className="qa-UserTableRowColumn-Divider" />
-                        <MenuItem
-                            style={styles.menuItem}
-                            innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleNewGroupClick}
-                            className="qa-UserTableRowColumn-MenuItem-newGroup"
-                        >
-                            <span>Share with New Group</span>
-                        </MenuItem>
-                    </GroupsDropDownMenu>
                 </div>
             </TableRowColumn>
         );
     }
 }
 
-UserTableRowColumn.defaultProps = {
+SelfTableRowColumn.defaultProps = {
     handleMakeAdmin: () => { console.error('Make admin function not provided'); },
     handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
     isAdmin: false,
-    showAdminLabel: false,
+    showAdminButton: false,
     style: {},
 };
 
-UserTableRowColumn.propTypes = {
+SelfTableRowColumn.propTypes = {
     user: PropTypes.shape({
         user: PropTypes.shape({
             first_name: PropTypes.string,
@@ -226,15 +140,11 @@ UserTableRowColumn.propTypes = {
         }),
         groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groupsLoading: PropTypes.bool.isRequired,
-    handleGroupItemClick: PropTypes.func.isRequired,
-    handleNewGroupClick: PropTypes.func.isRequired,
     handleMakeAdmin: PropTypes.func,
     handleDemoteAdmin: PropTypes.func,
     isAdmin: PropTypes.bool,
-    showAdminLabel: PropTypes.bool,
+    showAdminButton: PropTypes.bool,
     style: PropTypes.object,
 };
 
-export default UserTableRowColumn;
+export default SelfTableRowColumn;

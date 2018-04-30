@@ -24,7 +24,7 @@ export class GroupsDrawer extends Component {
                 color: '#4598bf',
             },
             groupsHeading: {
-                padding: '30px 24px 5px',
+                padding: '30px 20px 5px',
                 color: '#707274',
                 display: 'block',
             },
@@ -32,9 +32,12 @@ export class GroupsDrawer extends Component {
                 fill: '#4598bf',
                 height: '20px',
                 width: '17px',
-                marginLeft: '10px',
+                marginLeft: '5px',
                 verticalAlign: 'text-top',
                 cursor: 'pointer',
+            },
+            innerDiv: {
+                padding: '0px 48px 0px 20px',
             },
             menuItemText: {
                 width: '178px',
@@ -43,17 +46,18 @@ export class GroupsDrawer extends Component {
             },
             menuItemIcon: {
                 fill: '#ce4427',
+                opacity: '0.7',
                 width: '17px',
                 cursor: 'pointer',
             },
-            ownedGroupName: {
+            groupName: {
                 textOverflow: 'ellipsis',
                 overflow: 'hidden',
                 flex: '0 1 auto',
                 paddingRight: '5px',
             },
             sharedGroupsHeading: {
-                padding: '10px 24px 5px',
+                padding: '10px 20px 5px',
                 color: '#707274',
                 display: 'block',
             },
@@ -61,7 +65,7 @@ export class GroupsDrawer extends Component {
                 fill: '#4598bf',
                 height: '20px',
                 width: '17px',
-                marginLeft: '10px',
+                marginLeft: '5px',
                 verticalAlign: 'text-top',
                 cursor: 'pointer',
             },
@@ -89,18 +93,21 @@ export class GroupsDrawer extends Component {
                         <MenuItem
                             primaryText={`All Members (${this.props.usersCount})`}
                             style={styles.simpleMenuItem}
+                            innerDivStyle={styles.innerDiv}
                             className="qa-GroupsDrawer-allMembers"
                             value="all"
                         />
                         <MenuItem
-                            primaryText={`New (${this.props.newCount})`}
+                            primaryText={`New Members (${this.props.newCount})`}
                             style={styles.simpleMenuItem}
+                            innerDivStyle={styles.innerDiv}
                             className="qa-GroupsDrawer-new"
                             value="new"
                         />
                         <MenuItem
                             primaryText={`Not Grouped (${this.props.ungroupedCount})`}
                             style={styles.simpleMenuItem}
+                            innerDivStyle={styles.innerDiv}
                             className="qa-GroupsDrawer-notGrouped"
                             value="ungrouped"
                         />
@@ -122,15 +129,15 @@ export class GroupsDrawer extends Component {
                                 value={group.id}
                                 primaryText={
                                     <div style={{ display: 'flex', maxWidth: '178px' }}>
-                                        <div style={styles.ownedGroupName}>
+                                        <div style={styles.groupName}>
                                             {group.name}
                                         </div>
                                         <div style={{ flex: '0 0 auto' }}>
-                                            ({group.members.length - 1})
+                                            ({group.members.length})
                                         </div>
                                     </div>
                                 }
-                                innerDivStyle={{ paddingRight: '48px' }}
+                                innerDivStyle={styles.innerDiv}
                                 style={{ color: '#4598bf' }}
                                 rightIcon={
                                     <IconMenu
@@ -149,6 +156,12 @@ export class GroupsDrawer extends Component {
                                             onClick={() => { this.props.onRenameGroupClick(group); }}
                                         />
                                         <MenuItem
+                                            className="qa-GroupsDrawer-group-leave"
+                                            primaryText="Leave Group"
+                                            style={{ color: '#ce4427', opacity: '0.7' }}
+                                            onClick={() => { this.props.onLeaveGroupClick(group); }}
+                                        />
+                                        <MenuItem
                                             className="qa-GroupsDrawer-group-delete"
                                             primaryText="Delete Group"
                                             style={{ color: '#ce4427', opacity: '0.7' }}
@@ -160,13 +173,13 @@ export class GroupsDrawer extends Component {
                             />
                         ))}
 
-                        <Divider style={{ marginTop: '40px' }} className="qa-GroupsDrawer-Divider" />
+                        <Divider style={{ marginTop: '16px' }} className="qa-GroupsDrawer-Divider" />
 
                         <span
                             style={styles.sharedGroupsHeading}
                             className="qa-GroupsDrawer-sharedGroupsHeading"
                         >
-                            <strong>SHARED WITH ME</strong>
+                            <strong>GROUPS SHARED WITH ME</strong>
                             <InfoIcon
                                 style={styles.sharedGroupsInfoIcon}
                                 onClick={this.props.onSharedInfoClick}
@@ -176,14 +189,19 @@ export class GroupsDrawer extends Component {
                         {this.props.sharedGroups.map(group => (
                             <MenuItem
                                 key={group.name}
+                                value={group.id}
                                 primaryText={
-                                    <div style={styles.menuItemText}>
-                                        {group.name}
+                                    <div style={{ display: 'flex', maxWidth: '178px' }}>
+                                        <div style={styles.groupName}>
+                                            {group.name}
+                                        </div>
+                                        <div style={{ flex: '0 0 auto' }}>
+                                            ({group.members.length})
+                                        </div>
                                     </div>
                                 }
-                                style={{ color: '#707274', opacity: '0.7' }}
-                                innerDivStyle={{ paddingRight: '48px' }}
-                                disabled
+                                style={{ color: '#4598bf' }}
+                                innerDivStyle={styles.innerDiv}
                                 rightIcon={
                                     <IndeterminateIcon
                                         style={styles.menuItemIcon}
@@ -192,6 +210,39 @@ export class GroupsDrawer extends Component {
                                     />
                                 }
                                 className="qa-GroupsDrawer-sharedGroupItem"
+                            />
+                        ))}
+
+                        <Divider style={{ marginTop: '16px' }} className="qa-GroupsDrawer-Divider" />
+
+                        <span
+                            style={styles.sharedGroupsHeading}
+                            className="qa-GroupsDrawer-allGroupsHeading"
+                        >
+                            <strong>OTHER GROUPS</strong>
+                            <InfoIcon
+                                style={styles.sharedGroupsInfoIcon}
+                                onClick={this.props.onSharedInfoClick}
+                                className="qa-GroupsDrawer-allGroupsInfoIcon"
+                            />
+                        </span>
+                        {this.props.otherGroups.map(group => (
+                            <MenuItem
+                                key={group.name}
+                                value={group.id}
+                                primaryText={
+                                    <div style={{ display: 'flex', maxWidth: '178px' }}>
+                                        <div style={styles.groupName}>
+                                            {group.name}
+                                        </div>
+                                        <div style={{ flex: '0 0 auto' }}>
+                                            ({group.members.length})
+                                        </div>
+                                    </div>
+                                }
+                                style={{ color: '#4598bf' }}
+                                innerDivStyle={styles.innerDiv}
+                                className="qa-GroupsDrawer-otherGroupItem"
                             />
                         ))}
                     </Menu>
@@ -215,6 +266,12 @@ GroupsDrawer.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     sharedGroups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    otherGroups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
