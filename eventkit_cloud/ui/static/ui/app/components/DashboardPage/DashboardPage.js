@@ -13,6 +13,7 @@ import DataPackWideItem from './DataPackWideItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
+import { getGroups } from '../../actions/userGroupsActions';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -44,6 +45,7 @@ export class DashboardPage extends React.Component {
     }
 
     componentDidMount() {
+        this.props.getGroups();
         this.props.getProviders();
         this.props.getNotifications({
             pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
@@ -65,7 +67,8 @@ export class DashboardPage extends React.Component {
                     !nextProps.notifications.fetched ||
                     !nextProps.runsList.fetched ||
                     !nextProps.featuredRunsList.fetched ||
-                    !nextProps.userActivity.viewedJobs.fetched
+                    !nextProps.userActivity.viewedJobs.fetched ||
+                    !nextProps.groups.fetched
                 )
             });
         }
@@ -335,7 +338,7 @@ export class DashboardPage extends React.Component {
                                             key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
                                             onRunDelete={this.props.deleteRuns}
                                             providers={this.props.providers}
-                                            adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups)}
+                                            adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups.groups)}
                                             openShare={this.handleShareOpen}
                                             gridName="RecentlyViewed"
                                             index={index}
@@ -404,7 +407,7 @@ export class DashboardPage extends React.Component {
                                         key={`MyDataPacksDataPack-${run.created_at}`}
                                         onRunDelete={this.props.deleteRuns}
                                         providers={this.props.providers}
-                                        adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups)}
+                                        adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups.groups)}
                                         openShare={this.handleShareOpen}
                                         gridName="MyDataPacks"
                                         index={index}
@@ -457,12 +460,7 @@ DashboardPage.propTypes = {
         updated: PropTypes.bool,
         error: PropTypes.array,
     }).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.shape({
-        id: PropTypes.number,
-        name: PropTypes.string,
-        members: PropTypes.arrayOf(PropTypes.string),
-        administrators: PropTypes.arrayOf(PropTypes.string),
-    })).isRequired,
+    groups: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -475,6 +473,7 @@ function mapStateToProps(state) {
         runsList: state.runsList,
         featuredRunsList: state.featuredRunsList,
         updatePermission: state.updatePermission,
+        groups: state.groups,
     };
 }
 
@@ -487,6 +486,7 @@ function mapDispatchToProps(dispatch) {
         deleteRuns: (uid) => dispatch(deleteRuns(uid)),
         getNotifications: (args) => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
+        getGroups: () => dispatch(getGroups()),
     };
 }
 
