@@ -1,30 +1,18 @@
 import React, { PropTypes, Component } from 'react';
 import moment from 'moment';
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import Attribution from 'ol/control/attribution';
-import ScaleLine from 'ol/control/scaleline';
-import Zoom from 'ol/control/zoom';
 import DataPackDetails from './DataPackDetails';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 import DataPackStatusTable from './DataPackStatusTable';
 import DataPackOptions from './DataPackOptions';
-import ol3mapCss from '../../styles/ol3map.css';
 import DataPackGeneralTable from './DataPackGeneralTable';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { DataCartInfoTable } from './DataCartInfoTable';
+import DataPackAoiInfo from './DataPackAoiInfo';
 
 export class DataCartDetails extends Component {
     constructor(props) {
         super(props);
         this.setDates = this.setDates.bind(this);
-        this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleExpirationChange = this.handleExpirationChange.bind(this);
         this.handlePermissionsChange = this.handlePermissionsChange.bind(this);
         this.state = {
@@ -34,7 +22,6 @@ export class DataCartDetails extends Component {
     }
 
     componentDidMount() {
-        this.initializeOpenLayers();
         this.setDates();
     }
 
@@ -46,60 +33,6 @@ export class DataCartDetails extends Component {
         m.add(maxDays, 'days');
         const maxDate = m.toDate();
         this.setState({ minDate, maxDate });
-    }
-
-    initializeOpenLayers() {
-        const base = new Tile({
-            source: new XYZ({
-                url: this.context.config.BASEMAP_URL,
-                wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
-            }),
-        });
-
-        this.map = new Map({
-            interactions: interaction.defaults({
-                keyboard: false,
-                altShiftDragRotate: false,
-                pinchRotate: false,
-                mouseWheelZoom: false,
-            }),
-            layers: [base],
-            target: 'summaryMap',
-            view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
-                zoom: 2,
-                minZoom: 2,
-                maxZoom: 22,
-            }),
-            controls: [
-                new ScaleLine({
-                    className: ol3mapCss.olScaleLine,
-                }),
-                new Attribution({
-                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
-                }),
-            ],
-        });
-        const source = new VectorSource({ wrapX: true });
-        const geojson = new GeoJSON();
-        const features = geojson.readFeatures(this.props.cartDetails.job.extent, {
-            featureProjection: 'EPSG:3857',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeatures(features);
-        const layer = new VectorLayer({
-            source,
-        });
-
-        this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
     handlePermissionsChange(permissions) {
@@ -121,7 +54,7 @@ export class DataCartDetails extends Component {
                 alignContent: 'flex-start',
                 color: 'black',
                 fontWeight: 'bold',
-                marginBottom: '10px',
+                marginBottom: '5px',
             },
         };
 
@@ -147,8 +80,8 @@ export class DataCartDetails extends Component {
 
         return (
             <div>
-                <div style={{ marginLeft: '-5px', marginTop: '-5px' }} className="qa-DataCartDetails-div-name">
-                    <DataPackTableRow
+                <div className="qa-DataCartDetails-div-name">
+                    <CustomTableRow
                         className="qa-DataCartDetails-name"
                         title="Name"
                         data={this.props.cartDetails.job.name}
@@ -211,7 +144,7 @@ export class DataCartDetails extends Component {
                     <div className="qa-DataCartDetails-div-aoi" style={styles.subHeading}>
                         Selected Area of Interest (AOI)
                     </div>
-                    <div className="qa-DataCartDetails-div-map" id="summaryMap" style={{ maxHeight: '400px' }} />
+                    <DataPackAoiInfo extent={this.props.cartDetails.job.extent} />
                 </div>
                 <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer">
                     <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>
@@ -225,10 +158,6 @@ export class DataCartDetails extends Component {
         );
     }
 }
-
-DataCartDetails.contextTypes = {
-    config: PropTypes.object,
-};
 
 DataCartDetails.defaultProps = {
     updatingExpiration: false,

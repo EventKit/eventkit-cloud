@@ -7,6 +7,7 @@ import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
+import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import Joyride from 'react-joyride';
 
@@ -188,12 +189,14 @@ describe('StatusDownload component', () => {
 
     beforeAll(() => {
         StatusDownload.prototype.componentDidMount = sinon.spy();
-        DataCartDetails.prototype.initializeOpenLayers = sinon.spy();
+        DataPackAoiInfo.prototype.render = sinon.spy(() => null);
+        DataPackAoiInfo.prototype.initializeOpenLayers = sinon.spy();
     });
 
     afterAll(() => {
         StatusDownload.prototype.componentDidMount = didMount;
-        DataCartDetails.prototype.initializeOpenLayers.restore();
+        DataPackAoiInfo.prototype.render.restore();
+        DataPackAoiInfo.prototype.initializeOpenLayers.restore();
     });
 
     it('should render all the basic components', () => {

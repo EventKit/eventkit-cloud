@@ -1,31 +1,15 @@
 import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import moment from 'moment';
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import Feature from 'ol/feature';
-import Attribution from 'ol/control/attribution';
-import ScaleLine from 'ol/control/scaleline';
-import Zoom from 'ol/control/zoom';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
-
-// this polyfills requestAnimationFrame in the test browser, required for ol3
-raf.polyfill();
+import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 
 describe('DataCartDetails component', () => {
     const muiTheme = getMuiTheme();
@@ -34,10 +18,14 @@ describe('DataCartDetails component', () => {
 
     beforeAll(() => {
         DataCartDetails.prototype.componentDidMount = sinon.spy();
+        DataPackAoiInfo.prototype.render = sinon.spy(() => null);
+        DataPackAoiInfo.prototype.initializeOpenLayers = sinon.spy();
     });
 
     afterAll(() => {
         DataCartDetails.prototype.componentDidMount = didMount;
+        DataPackAoiInfo.prototype.render.restore();
+        DataPackAoiInfo.prototype.initializeOpenLayers.restore();
     });
 
     const getProps = () => (
@@ -58,13 +46,7 @@ describe('DataCartDetails component', () => {
 
     const getWrapper = props => (
         mount(<DataCartDetails {...props} />, {
-            context: {
-                muiTheme,
-                config: {
-                    BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-                    BASEMAP_COPYRIGHT: 'my copyright',
-                },
-            },
+            context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
             },
@@ -83,7 +65,6 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find('.qa-DataCartDetails-div-generalInfo')).toHaveLength(1);
         expect(wrapper.find(DataPackGeneralTable)).toHaveLength(1);
         expect(wrapper.find('.qa-DataCartDetails-div-aoi')).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-map')).toHaveLength(1);
         expect(wrapper.find('.qa-DataCartDetails-div-exportInfo')).toHaveLength(1);
         expect(wrapper.find(DataCartInfoTable)).toHaveLength(1);
     });
@@ -108,15 +89,12 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
     });
 
-    it('should call initializeOpenLayers and setMaxDate set on mount', () => {
+    it('should call setMaxDate set on mount', () => {
         const props = getProps();
-        const initStub = sinon.stub(DataCartDetails.prototype, 'initializeOpenLayers');
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
         DataCartDetails.prototype.componentDidMount = didMount;
         const wrapper = getWrapper(props);
-        expect(initStub.calledOnce).toBe(true);
         expect(dateStub.calledOnce).toBe(true);
-        initStub.restore();
         dateStub.restore();
         DataCartDetails.prototype.componentDidMount = sinon.spy();
     });
@@ -137,17 +115,6 @@ describe('DataCartDetails component', () => {
         expect(stateStub.calledWith({ minDate, maxDate })).toBe(true);
         stateStub.restore();
         clock.restore();
-    });
-
-    it('initializeOpenLayers should construct a map and add it to the DOM', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const fakeFeatures = [new Feature()];
-        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures').returns(fakeFeatures);
-        const fitStub = sinon.stub(View.prototype, 'fit').returns();
-        wrapper.instance().initializeOpenLayers();
-        readStub.restore();
-        fitStub.restore();
     });
 
     it('handlePermissionsChange should call onUpdateDataCartPermissions', () => {
