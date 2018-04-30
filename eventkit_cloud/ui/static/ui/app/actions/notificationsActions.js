@@ -102,14 +102,10 @@ export function markNotificationsAsRead(notifications) {
                 notifications,
             });
         }).catch((error) => {
-            if (axios.isCancel(error)) {
-                console.log(error.message);
-            } else {
-                dispatch({
-                    type: actions.MARK_NOTIFICATIONS_AS_READ_ERROR,
-                    error: error.response.data,
-                });
-            }
+            dispatch({
+                type: actions.MARK_NOTIFICATIONS_AS_READ_ERROR,
+                error: error.response.data,
+            });
         });
     };
 }
@@ -142,14 +138,10 @@ export function markNotificationsAsUnread(notifications) {
                 notifications,
             });
         }).catch((error) => {
-            if (axios.isCancel(error)) {
-                console.log(error.message);
-            } else {
-                dispatch({
-                    type: actions.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
-                    error: error.response.data,
-                });
-            }
+            dispatch({
+                type: actions.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
+                error: error.response.data,
+            });
         });
     };
 }
@@ -182,14 +174,10 @@ export function removeNotifications(notifications) {
                 notifications,
             });
         }).catch((error) => {
-            if (axios.isCancel(error)) {
-                console.log(error.message);
-            } else {
-                dispatch({
-                    type: actions.REMOVE_NOTIFICATIONS_ERROR,
-                    error: error.response.data,
-                });
-            }
+            dispatch({
+                type: actions.REMOVE_NOTIFICATIONS_ERROR,
+                error: error.response.data,
+            });
         });
     };
 }
@@ -211,14 +199,10 @@ export function markAllNotificationsAsRead() {
                 type: actions.MARKED_ALL_NOTIFICATIONS_AS_READ,
             });
         }).catch((error) => {
-            if (axios.isCancel(error)) {
-                console.log(error.message);
-            } else {
-                dispatch({
-                    type: actions.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
-                    error: error.response.data,
-                });
-            }
+            dispatch({
+                type: actions.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
+                error: error.response.data,
+            });
         });
     }
 }

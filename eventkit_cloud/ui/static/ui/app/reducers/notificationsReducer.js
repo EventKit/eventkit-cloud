@@ -61,6 +61,11 @@ export function notificationsReducer(state = initialState.notifications, action)
                 },
             };
         }
+        case types.MARK_NOTIFICATIONS_AS_READ_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         case types.MARKING_NOTIFICATIONS_AS_UNREAD: {
             const notifications = { ...state.notifications };
             let unreadCount = state.unreadCount.unreadCount;
@@ -84,6 +89,11 @@ export function notificationsReducer(state = initialState.notifications, action)
                 },
             };
         }
+        case types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         case types.MARKING_ALL_NOTIFICATIONS_AS_READ:
             const notifications = { ...state.notifications };
             for (let id of Object.keys(notifications)) {
@@ -100,6 +110,11 @@ export function notificationsReducer(state = initialState.notifications, action)
                     ...state.unreadCount,
                     unreadCount: 0,
                 }
+            };
+        case types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR:
+            return {
+                ...state,
+                error: action.error,
             };
         case types.REMOVING_NOTIFICATIONS: {
             let notifications = { ...state.notifications };
@@ -121,6 +136,11 @@ export function notificationsReducer(state = initialState.notifications, action)
                 }
             };
         }
+        case types.REMOVE_NOTIFICATIONS_ERROR:
+            return {
+                ...state,
+                error: action.error,
+            };
         case types.FETCHING_NOTIFICATIONS_UNREAD_COUNT:
             return {
                 ...state,
@@ -152,7 +172,7 @@ export function notificationsReducer(state = initialState.notifications, action)
                     fetched: false,
                     error: action.error,
                     cancelSource: null,
-                }
+                },
             };
         case types.USER_LOGGED_OUT:
             return initialState.notifications;
@@ -161,7 +181,7 @@ export function notificationsReducer(state = initialState.notifications, action)
     }
 }
 
-function getSortedNotifications(notificationsObj) {
+export function getSortedNotifications(notificationsObj) {
     const notificationsSorted = values(notificationsObj);
     notificationsSorted.sort((a, b) => b.timestamp - a.timestamp);
     return notificationsSorted;
