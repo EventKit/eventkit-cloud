@@ -10,6 +10,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import Joyride from 'react-joyride';
 import Help from 'material-ui/svg-icons/action/help';
 import { DrawerTimeout } from '../../actions/exportsActions';
+import { Config } from '../../config';
 
 export class Account extends Component {
     constructor(props) {
@@ -32,129 +33,7 @@ export class Account extends Component {
     }
 
     componentDidMount() {
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                color: '#8b9396',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            },
-        };
-
-        const welcomeTooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            arrow: {
-                display: 'none',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                display: 'none',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                display: 'none',
-            },
-        };
-
-        const steps = [
-            {
-                title: 'Welcome to the Account Settings Page',
-                text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.',
-                selector: '.qa-Account-AppBar',
-                position: 'top',
-                style: welcomeTooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'License Agreement Info',
-                text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.',
-                selector: '.qa-UserLicense-ArrowDown',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Agree to Licenses',
-                text: 'Once you’ve reviewed the licenses, you can agree to them individually.',
-                selector: '.qa-UserLicense-Checkbox',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Agree to Licenses',
-                text: 'Or you can choose to agree to them collectively.',
-                selector: '.qa-LicenseInfo-Checkbox',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Save Agreements',
-                text: 'Once you have selected the licenses to agree to, click Save Changes.',
-                selector: '.qa-SaveButton-RaisedButton-SaveChanges',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Navigate Application',
-                text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.',
-                selector: '.qa-Application-MenuItem-exports',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Navigate Application',
-                text: 'Or to create your own DataPack.',
-                selector: '.qa-Application-MenuItem-create',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-        ];
-
+        const steps = Config.JOYRIDE.Account;
         this.joyrideAddSteps(steps);
     }
 

@@ -19,6 +19,7 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 import Joyride from 'react-joyride';
 import Help from 'material-ui/svg-icons/action/help';
 import BaseDialog from '../../components/Dialog/BaseDialog';
+import { Config } from '../../config';
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 
@@ -44,137 +45,7 @@ export class StatusDownload extends React.Component {
         this.props.getGroups();
         this.startTimer();
 
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                color: '#8b9396',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            },
-        };
-
-        const welcomeTooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            arrow: {
-                display: 'none',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                display: 'none',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                display: 'none',
-            },
-        };
-
-        const steps = [
-            {
-                title: 'Welcome to the Status & Download Page',
-                text: 'You can review relevant information about the DataPack here such as its creation date, Area of Interest, and which data is included.  Most importantly, you can download the data.',
-                selector: '.qa-StatusDownload-AppBar',
-                position: 'top',
-                style: welcomeTooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'DataPack Info',
-                text: 'This is the name that was entered for the name of the DataPack upon creation.',
-                selector: '.qa-DataCartDetails-div-name',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'DataPack Status',
-                text: 'This is the status of the DataPack.  Status reports include: submitted, completed, and failed.  Here you can change the expiration date of the DataPack and also set the permission: Private or Shared.',
-                selector: '.qa-DataCartDetails-div-StatusContainer',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'DataPack Download Options',
-                text: 'Here you will find download options for the DataPack. <br> Each data source has its own table where you can view status of the current downloadable files.',
-                selector: '.qa-DataCartDetails-div-downloadOptionsContainer',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Other Options',
-                text: 'Here you can run the DataPack again which will refresh the data.  You can clone, which will create a new DataPack using the existing specifications.  From there you can make tweaks to the AOI, the selected data sources, and the metadata (e.g., the name of the DataPack, the permissions).  And you can delete the DataPack.',
-                selector: '.qa-DataCartDetails-div-otherOptionsContainer',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'General Information',
-                text: 'Here you will find general information related to the DataPack.  ',
-                selector: '.qa-DataCartDetails-div-generalInfoContainer',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'AOI',
-                text: 'This is the selected area of interest for the DataPack.',
-                selector: '.qa-DataCartDetails-div-map',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Export Information',
-                text: 'This contains information specific to the export.',
-                selector: '.qa-DataCartDetails-div-exportInfoContainer',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-        ];
-
+        const steps = Config.JOYRIDE.StatusAndDownload;
         this.joyrideAddSteps(steps);
     }
 

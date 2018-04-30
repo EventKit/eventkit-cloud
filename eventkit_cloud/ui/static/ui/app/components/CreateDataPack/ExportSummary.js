@@ -18,6 +18,7 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar';
 import ol3mapCss from '../../styles/ol3map.css';
 import Joyride from 'react-joyride';
+import { Config } from '../../config';
 
 export class ExportSummary extends Component {
     constructor(props) {
@@ -31,59 +32,8 @@ export class ExportSummary extends Component {
     }
 
     componentDidMount(){
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf'
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf'
-            },
-            skip: {
-                color: '#8b9396'
-            },
-            back: {
-                color: '#8b9396'
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            }
-        }
 
-        const steps = [
-            {
-                title: 'Verify Information',
-                text: 'Verify the information entered is correct before proceeding.',
-                selector: '.qa-ExportSummary-div',
-                position: 'bottom',
-                style: tooltipStyle,
-            }, {
-                title: 'Go Back to Edit',
-                text: 'If you need to make changes before submitting, use the small blue arrow to navigate back.',
-                selector: '.qa-BreadcrumbStepper-FloatingActionButton-previous',
-                position: 'bottom',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Submit DataPack',
-                text: 'Once ready, click the large green button to kick off the DataPack submission process.  You will be redirected to the Status and Download page.',
-                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case2',
-                position: 'bottom',
-                style: tooltipStyle,
-            },
-        ];
-
+        const steps = Config.JOYRIDE.ExportSummary;
         this.joyrideAddSteps(steps);
     }
 

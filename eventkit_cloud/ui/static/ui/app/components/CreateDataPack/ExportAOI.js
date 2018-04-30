@@ -33,7 +33,7 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
 import DropZone from '../MapTools/DropZone';
 import BufferDialog from './BufferDialog';
 import RevertDialog from './RevertDialog';
-import { updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled } from '../../actions/exportsActions';
+import { updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled, clearExportInfo } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
 import {
@@ -44,6 +44,7 @@ import {
     getDominantGeometry } from '../../utils/mapUtils';
 import Joyride from 'react-joyride';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
+import { Config } from '../../config';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -125,106 +126,7 @@ export class ExportAOI extends Component {
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
 
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                color: '#8b9396',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            },
-        };
-        const welcomeTooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                color: '#8b9396',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            arrow: {
-                display: 'none',
-            },
-            hole: {
-                display: 'none',
-            },
-        };
-
-        const steps = [
-            {
-                title: 'Welcome to the Create Datapack page.',
-                text: 'Creating DataPacks is the core function of EventKit. The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.',
-                selector: '.qa-BreadcrumbStepper-div-content',
-                position: 'bottom',
-                style: welcomeTooltipStyle,
-            },
-            {
-                title: 'Search for location',
-                text: 'EventKit has several gazetteers that are searchable from the location search box, just start typing a location name and options appear. MGRS coordinates can also be used. Once a location is selected, the map automatically navigates to that location.',
-                selector: '.bootstrap-typeahead-input',
-                position: 'bottom',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Define',
-                text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>You can also upload a GeoJSON, KML, GeoPackage, or zipped shapefile using the file import option.',
-                selector: '.qa-DrawAOIToolbar-div',
-                position: 'left',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Cancel Selection',
-                text: 'Cancel or clear selection by clicking the "X".',
-                selector: '.qa-DrawBoxButton-button',
-                position: 'left',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Go to next step',
-                text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.',
-                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
-                position: 'left',
-                style: tooltipStyle,
-            },
-        ];
-
+        const steps = Config.JOYRIDE.ExportAOI;
         this.joyrideAddSteps(steps);
     }
 
@@ -816,6 +718,7 @@ export class ExportAOI extends Component {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             if (this.state.fakeData === true) {
                 this.props.clearAoiInfo();
+                this.props.clearExportInfo();
                 this.handleResetMap();
                 this.setState({ fakeData: false });
             } else {
@@ -996,6 +899,7 @@ ExportAOI.propTypes = {
     geocode: PropTypes.object,
     updateAoiInfo: PropTypes.func,
     clearAoiInfo: PropTypes.func,
+    clearExportInfo: PropTypes.func,
     setNextDisabled: PropTypes.func,
     setNextEnabled: PropTypes.func,
     getGeocode: PropTypes.func,
@@ -1036,6 +940,9 @@ function mapDispatchToProps(dispatch) {
         },
         resetGeoJSONFile: () => {
             dispatch(resetGeoJSONFile());
+        },
+        clearExportInfo: () => {
+            dispatch(clearExportInfo());
         },
     };
 }

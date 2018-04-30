@@ -33,6 +33,7 @@ import ol3mapCss from '../../styles/ol3map.css';
 import Joyride from 'react-joyride';
 import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
 import BaseTooltip from '../BaseTooltip';
+import { Config } from '../../config';
 
 
 export class ExportInfo extends React.Component {
@@ -120,60 +121,89 @@ export class ExportInfo extends React.Component {
             }), 30000);
         }
 
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                color: '#8b9396',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            },
-        };
+        // const tooltipStyle = {
+        //     backgroundColor: 'white',
+        //     borderRadius: '0',
+        //     color: 'black',
+        //     mainColor: '#ff4456',
+        //     textAlign: 'left',
+        //     header: {
+        //         textAlign: 'left',
+        //         fontSize: '20px',
+        //         borderColor: '#4598bf',
+        //     },
+        //     main: {
+        //         paddingTop: '20px',
+        //         paddingBottom: '20px',
+        //     },
+        //     button: {
+        //         color: 'white',
+        //         backgroundColor: '#4598bf',
+        //     },
+        //     skip: {
+        //         color: '#8b9396',
+        //     },
+        //     back: {
+        //         color: '#8b9396',
+        //     },
+        //     hole: {
+        //         backgroundColor: 'rgba(226,226,226, 0.2)',
+        //     },
+        // };
 
-        const steps = [
-            {
-                title: 'Enter General Information',
-                text: 'Enter the general details and identifying information about the DataPack.',
-                selector: '.qa-ExportInfo-input-name',
-                position: 'bottom',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Choose your sources',
-                text: 'Choose the data sources desired for the DataPack.',
-                selector: '.qa-ExportInfo-List',
-                position: 'left',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Go to next step',
-                text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
-                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case1',
-                position: 'left',
-                style: tooltipStyle,
-            },
-        ];
+        // const steps = [
+        //     {
+        //         title: 'Enter General Information',
+        //         text: 'Enter the general details and identifying information about the DataPack.',
+        //         selector: '.qa-ExportInfo-input-name',
+        //         position: 'bottom',
+        //         style: tooltipStyle,
+        //     },
+        //     {
+        //         title: 'Choose your sources',
+        //         text: 'Choose the data sources desired for the DataPack.',
+        //         selector: '.qa-ExportInfo-List',
+        //         position: 'left',
+        //         style: tooltipStyle,
+        //     },
+        //     {
+        //         title: 'Check the source availability',
+        //         text: 'This indicates the data source availability.  If the source is available, a green check mark will be displayed.  If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.',
+        //         selector: '.qa-ProviderStatusIcon',
+        //         position: 'left',
+        //         style: tooltipStyle,
+        //     },
+        //     {
+        //         title: 'Projection',
+        //         text: 'At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.  This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions of EventKit.',
+        //         selector: '#projectionCheckbox',
+        //         position: 'left',
+        //         style: tooltipStyle,
+        //     },
+        //     {
+        //         title: 'File Formats',
+        //         text: 'At this time, EventKit has the ability to export one file format.  EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.',
+        //         selector: '#formatsCheckbox',
+        //         position: 'left',
+        //         style: tooltipStyle,
+        //     },
+        //     {
+        //         title: 'Review Selected AOI',
+        //         text: 'Expand the map to review the AOI that was selected on the previous screen.',
+        //         selector: '.qa-ExportInfo-CardHeader-map',
+        //         position: 'left',
+        //         style: tooltipStyle,
+        //     },
+        //     {
+        //         title: 'Go to next step',
+        //         text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
+        //         selector: '.qa-BreadcrumbStepper-FloatingActionButton-case1',
+        //         position: 'left',
+        //         style: tooltipStyle,
+        //     },
+        // ];
 
+        const steps = Config.JOYRIDE.exportInfo;
         this.joyrideAddSteps(steps);
     }
 
@@ -429,7 +459,7 @@ export class ExportInfo extends React.Component {
 
         }
 
-        if (data.index === 2 && data.type === 'tooltip:before') {
+        if (data.index === 6 && data.type === 'tooltip:before') {
             this.props.setNextEnabled();
         }
     }

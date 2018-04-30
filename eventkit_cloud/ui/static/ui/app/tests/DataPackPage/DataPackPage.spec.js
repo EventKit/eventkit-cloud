@@ -58,17 +58,17 @@ describe('DataPackPage component', () => {
         mainColor: '#ff4456',
         textAlign: 'left',
         header: {
-            textAlign: 'left',
+        textAlign: 'left',
             fontSize: '20px',
             borderColor: '#4598bf',
-        },
+    },
         main: {
             paddingTop: '20px',
-            paddingBottom: '20px',
+                paddingBottom: '20px',
         },
         button: {
             color: 'white',
-            backgroundColor: '#4598bf',
+                backgroundColor: '#4598bf',
         },
         skip: {
             display: 'none',
