@@ -328,4 +328,37 @@ describe('Application component', () => {
         expect(logoutSpy.calledOnce).toBe(true);
         logoutSpy.restore();
     });
+
+    it('should start listening for notifications on user login', () => {
+        const startListeningForNotificationsSpy = sinon.spy(Application.prototype, 'startListeningForNotifications');
+        const props = {
+            ...getProps(),
+            userData: null,
+        };
+        const wrapper = getMountedWrapper(props);
+        const instance = wrapper.instance();
+        expect(startListeningForNotificationsSpy.callCount).toBe(0);
+        expect(instance.notificationsRefreshIntervalId).toBe(null);
+        expect(instance.notificationsUnreadCountIntervalId).toBe(null);
+        wrapper.setProps({
+            userData: {},
+        });
+        expect(startListeningForNotificationsSpy.callCount).toBe(1);
+        expect(instance.notificationsRefreshIntervalId).not.toBe(null);
+        expect(instance.notificationsUnreadCountIntervalId).not.toBe(null);
+        startListeningForNotificationsSpy.restore();
+    });
+
+    it('should stop listening for notifications on user logout', () => {
+        const stopListeningForNotificationsSpy = sinon.spy(Application.prototype, 'stopListeningForNotifications');
+        const wrapper = getMountedWrapper(getProps());
+        const instance = wrapper.instance();
+        wrapper.setProps({
+            userData: null,
+        });
+        expect(stopListeningForNotificationsSpy.callCount).toBe(1);
+        expect(instance.notificationsRefreshIntervalId).toBe(null);
+        expect(instance.notificationsUnreadCountIntervalId).toBe(null);
+        stopListeningForNotificationsSpy.restore();
+    });
 });

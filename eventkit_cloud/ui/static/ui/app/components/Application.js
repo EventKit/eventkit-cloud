@@ -91,6 +91,8 @@ export class Application extends Component {
         this.notificationsUnreadCountRefreshInterval = 10000;
         this.notificationsRefreshInterval = 10000;
         this.notificationsPageSize = 10;
+        this.notificationsUnreadCountIntervalId = null;
+        this.notificationsRefreshIntervalId = null;
     }
 
     getChildContext() {
