@@ -656,5 +656,18 @@ describe('DataPackPage component', () => {
         expect(props.updateDataCartPermissions.calledWith(target.job.uid, permissions)).toBe(true);
         closeStub.restore();
     });
+
+    it('should set ownerFilter to the current user if passed "myDataPacks" as the collection in the querystring', () => {
+        const props = {
+            ...getProps(),
+            location: {
+                query: {
+                    collection: 'myDataPacks',
+                },
+            },
+        };
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().ownerFilter).toEqual(props.user.data.user.username);
+    });
 });
 
