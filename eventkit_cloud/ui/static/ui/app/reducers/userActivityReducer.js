@@ -35,7 +35,6 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     ...state.viewedJobs,
                     fetching: false,
                     fetched: false,
-                    viewedJobs: [],
                     error: action.error,
                     cancelSource: null
                 }
