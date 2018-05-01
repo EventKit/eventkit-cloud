@@ -14,6 +14,8 @@ import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { getGroups } from '../../actions/userGroupsActions';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
+import { getUsers } from '../../actions/userActions';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -42,20 +44,24 @@ export class DashboardPage extends React.Component {
             shareOpen: false,
             targetRun: null,
         };
+        this.autoRefreshIntervalId = null;
+        this.autoRefreshInterval = 10000;
     }
 
     componentDidMount() {
+        this.props.getUsers();
         this.props.getGroups();
         this.props.getProviders();
         this.props.getNotifications({
             pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
         });
         this.refresh();
-        this.autoRefreshIntervalId = setInterval(this.autoRefresh, 10000);
+        this.autoRefreshIntervalId = setInterval(this.autoRefresh, this.autoRefreshInterval);
     }
 
     componentWillUnmount() {
         clearInterval(this.autoRefreshIntervalId);
+        this.autoRefreshIntervalId = null;
     }
 
     componentWillReceiveProps(nextProps) {
@@ -68,6 +74,7 @@ export class DashboardPage extends React.Component {
                     !nextProps.runsList.fetched ||
                     !nextProps.featuredRunsList.fetched ||
                     !nextProps.userActivity.viewedJobs.fetched ||
+                    !nextProps.users.fetched ||
                     !nextProps.groups.fetched
                 )
             });
@@ -166,7 +173,7 @@ export class DashboardPage extends React.Component {
     }
 
     handleMyDataPacksViewAll() {
-        browserHistory.push(`/exports?collection=myDataPacks`);
+        browserHistory.push('/exports?collection=myDataPacks');
     }
 
     handleShareOpen(run) {
@@ -418,6 +425,23 @@ export class DashboardPage extends React.Component {
                         </div>
                     }
                 </CustomScrollbar>
+                {this.state.shareOpen && this.state.targetRun ?
+                    <DataPackShareDialog
+                        show
+                        onClose={this.handleShareClose}
+                        onSave={this.handleShareSave}
+                        user={this.props.user.data}
+                        groups={this.props.groups.groups}
+                        members={this.props.users.users}
+                        permissions={this.state.targetRun.job.permissions}
+                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
+                        canUpdateAdmin
+                        warnPublic
+                    />
+                    :
+                    null
+                }
             </div>
         );
     }
@@ -460,6 +484,7 @@ DashboardPage.propTypes = {
         updated: PropTypes.bool,
         error: PropTypes.array,
     }).isRequired,
+    users: PropTypes.object.isRequired,
     groups: PropTypes.object.isRequired,
 };
 
@@ -473,6 +498,7 @@ function mapStateToProps(state) {
         runsList: state.runsList,
         featuredRunsList: state.featuredRunsList,
         updatePermission: state.updatePermission,
+        users: state.users,
         groups: state.groups,
     };
 }
@@ -486,6 +512,7 @@ function mapDispatchToProps(dispatch) {
         deleteRuns: (uid) => dispatch(deleteRuns(uid)),
         getNotifications: (args) => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
+        getUsers: () => dispatch(getUsers()),
         getGroups: () => dispatch(getGroups()),
     };
 }
