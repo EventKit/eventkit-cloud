@@ -54,7 +54,7 @@ describe('DashboardPage component', () => {
                 updating: false,
                 updated: false,
             },
-            groups: [],
+            groups: {},
             refresh: () => {},
             getRuns: () => {},
             getFeaturedRuns: () => {},
@@ -63,6 +63,7 @@ describe('DashboardPage component', () => {
             deleteRuns: () => {},
             getNotifications: () => {},
             updateDataCartPermissions: () => {},
+            getGroups: () => {},
         }
     }
 
@@ -135,6 +136,10 @@ describe('DashboardPage component', () => {
                 fetched: true,
                 notifications: [],
             },
+            groups: {
+                fetching: false,
+                fetched: true,
+            },
         });
     }
 
@@ -170,6 +175,10 @@ describe('DashboardPage component', () => {
                 fetching: false,
                 fetched: true,
                 notifications: [],
+            },
+            groups: {
+                fetching: false,
+                fetched: true,
             },
         });
     }
