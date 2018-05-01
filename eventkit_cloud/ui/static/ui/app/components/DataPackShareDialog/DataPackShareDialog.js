@@ -162,15 +162,26 @@ export class DataPackShareDialog extends Component {
             },
         };
 
-        let body = null;
         if (this.state.showShareInfo) {
-            body = (
-                <ShareInfoBody
-                    view={this.state.view}
-                    onReturn={this.hideShareInfo}
-                />
+            return (
+                <ShareBaseDialog
+                    show={this.props.show}
+                    onClose={this.props.onClose}
+                    handleSave={this.handleSave}
+                    title={this.props.title}
+                    submitButtonLabel={this.props.submitButtonLabel}
+                    className="qa-DataPackShareDialog"
+                >
+                    <ShareInfoBody
+                        view={this.state.view}
+                        onReturn={this.hideShareInfo}
+                    />
+                </ShareBaseDialog>
             );
-        } else if (this.state.view === 'groups') {
+        }
+
+        let body = null;
+        if (this.state.view === 'groups') {
             body = (
                 <GroupsBody
                     groups={this.props.groups}
