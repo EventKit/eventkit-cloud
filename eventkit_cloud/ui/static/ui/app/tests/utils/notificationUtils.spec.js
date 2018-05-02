@@ -1,5 +1,6 @@
 import React from 'react';
 import { shallow } from 'enzyme';
+import sinon from 'sinon';
 import { Link } from 'react-router';
 import InfoIcon from 'material-ui/svg-icons/action/info';
 import CheckCircleIcon from 'material-ui/svg-icons/action/check-circle';
@@ -26,10 +27,16 @@ describe('notificationUtils', () => {
             },
         };
 
-        const message = utils.getNotificationMessage({ notification });
+        const onLinkClickSpy = sinon.spy();
+        const message = utils.getNotificationMessage({
+            notification,
+            onLinkClick: onLinkClickSpy,
+        });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
+        messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        expect(onLinkClickSpy.callCount).toBe(1);
         expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;has started.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
@@ -48,10 +55,16 @@ describe('notificationUtils', () => {
             },
         };
 
-        const message = utils.getNotificationMessage({ notification });
+        const onLinkClickSpy = sinon.spy();
+        const message = utils.getNotificationMessage({
+            notification,
+            onLinkClick: onLinkClickSpy,
+        });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
+        messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        expect(onLinkClickSpy.callCount).toBe(1);
         expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;was canceled.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
@@ -70,10 +83,16 @@ describe('notificationUtils', () => {
             },
         };
 
-        const message = utils.getNotificationMessage({ notification });
+        const onLinkClickSpy = sinon.spy();
+        const message = utils.getNotificationMessage({
+            notification,
+            onLinkClick: onLinkClickSpy,
+        });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
+        messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        expect(onLinkClickSpy.callCount).toBe(1);
         expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;is complete.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
@@ -92,10 +111,16 @@ describe('notificationUtils', () => {
             },
         };
 
-        const message = utils.getNotificationMessage({ notification });
+        const onLinkClickSpy = sinon.spy();
+        const message = utils.getNotificationMessage({
+            notification,
+            onLinkClick: onLinkClickSpy,
+        });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
+        messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        expect(onLinkClickSpy.callCount).toBe(1);
         expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;failed to complete.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
@@ -114,10 +139,16 @@ describe('notificationUtils', () => {
             },
         };
 
-        const message = utils.getNotificationMessage({ notification });
+        const onLinkClickSpy = sinon.spy();
+        const message = utils.getNotificationMessage({
+            notification,
+            onLinkClick: onLinkClickSpy,
+        });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
+        messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
+        expect(onLinkClickSpy.callCount).toBe(1);
         expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;was deleted.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
