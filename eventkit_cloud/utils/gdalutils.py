@@ -20,7 +20,7 @@ def open_ds(ds_path):
     """
 
     # TODO: Can be a DB Connection
-    #if not os.path.isfile(ds_path):
+    # if not os.path.isfile(ds_path):
     #    raise Exception("Could not find file {}".format(ds_path))
 
     # Attempt to open as gdal dataset (raster)
@@ -62,23 +62,34 @@ def cleanup_ds(ds):
         del ds
 
 
-def driver_for(ds_path):
+def get_meta(ds_path):
     """
     Given a path to a raster or vector dataset, return the appropriate driver type.
     :param ds_path: String: Path to dataset
-    :return: Tuple: (Short name of GDAL driver for dataset, True if dataset is a raster type)
+    :return: Metadata dict
+        driver: Short name of GDAL driver for dataset
+        is_raster: True if dataset is a raster type
+        nodata: NODATA value for all bands if all bands have the same one, otherwise None (raster sets only)
     """
 
     ds = None
+    ret = {'driver': None,
+           'is_raster': None,
+           'nodata': None}
     try:
         ds = open_ds(ds_path)
 
         if isinstance(ds, gdal.Dataset):
-            ret = (ds.GetDriver().ShortName, True)
+            ret['driver'] = ds.GetDriver().ShortName
+            ret['is_raster'] = True
+            if ds.RasterCount:
+                bands = list(set([ds.GetRasterBand(i+1).GetNoDataValue() for i in range(ds.RasterCount)]))
+                if len(bands) == 1:
+                    ret['nodata'] = bands[0]
+
         elif isinstance(ds, ogr.DataSource):
-            ret = (ds.GetDriver().GetName(), False)
-        else:
-            ret = (None, None)
+            ret['driver'] = ds.GetDriver().GetName()
+            ret['is_raster'] = False
 
         if ret[0]:
             logger.debug("Identified dataset {0} as {1}".format(ds_path, ret[0]))
@@ -89,17 +100,6 @@ def driver_for(ds_path):
 
     finally:
         cleanup_ds(ds)
-
-
-def is_raster(ds_path):
-    """
-    Given a path to a dataset, indicates whether that dataset is a raster format.
-    Throws exception if the path is invalid or the dataset cannot be identified.
-    :param ds_path: Path to a dataset
-    :return: True if dataset is a raster type, False if vector
-    """
-    _, raster = driver_for(ds_path)
-    return raster
 
 
 def is_envelope(geojson_path):
@@ -150,15 +150,15 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
         os.rename(out_dataset, in_dataset)
 
-    (driver, raster) = driver_for(in_dataset)
+    meta = get_meta(in_dataset)
 
     if not fmt:
-        fmt = driver or 'gpkg'
+        fmt = meta['driver'] or 'gpkg'
 
     band_type = ""
     if table:
         cmd_template = Template("ogr2ogr -update -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
-    elif raster:
+    elif meta['is_raster']:
         cmd_template = Template("gdalwarp -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
@@ -183,8 +183,12 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             boundary = temp_boundfile.name
 
     try:
-        # dstalpha = "" if is_envelope(boundary) else "-dstalpha"  # TODO: use this for ES-397 if it works
-        dstalpha = "-dstalpha"
+
+        if meta['nodata'] is None and not is_envelope(in_dataset):
+            dstalpha = "-dstalpha"
+        else:
+            dstalpha = ""
+
         if table:
             cmd = cmd_template.safe_substitute({'boundary': boundary,
                                                 'fmt': fmt,
@@ -229,7 +233,8 @@ def convert(dataset=None, fmt=None, task_uid=None):
     if not dataset:
         raise Exception("Could not open input file: {0}".format(dataset))
 
-    (driver, raster) = driver_for(dataset)
+    meta = get_meta(dataset)
+    driver, is_raster = meta['driver'], meta['is_raster']
 
     if not fmt or not driver or driver.lower() == fmt.lower():
         return dataset
@@ -238,7 +243,7 @@ def convert(dataset=None, fmt=None, task_uid=None):
     os.rename(dataset, in_ds)
 
     band_type = ""
-    if raster:
+    if is_raster:
         cmd_template = Template("gdalwarp -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
