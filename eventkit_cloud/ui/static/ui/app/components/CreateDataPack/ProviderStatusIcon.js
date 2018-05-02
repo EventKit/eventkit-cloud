@@ -33,7 +33,6 @@ export class ProviderStatusIcon extends Component {
     }
 
     render() {
-
         var style = {
             base: {
                 display: 'inline-block',
@@ -50,20 +49,24 @@ export class ProviderStatusIcon extends Component {
 
         let avail = this.props.availability.status ?
                 this.props.availability :
-                {status: "PENDING", message: "This data provider's availability is being checked."};
-
-        let statusStr = avail.status + " ";
+                {status: "PENDING", type: "PENDING", message: "This data provider's availability is being checked."};
 
         let StatusIcon;
         let title;
         let messagePrefix;
         let otherProps = {};
-        switch (statusStr.slice(0, statusStr.indexOf("_"))) {
+        switch (avail.status.toUpperCase()) {
             case 'SUCCESS':
                 style.icon['color'] = 'rgba(0, 192, 0, 0.87)';
                 StatusIcon = ActionDone;
                 title = "Success";
                 messagePrefix = "No problems: ";
+                break;
+            case 'FATAL':
+                style.icon['color'] = 'rgba(128, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = "Cannot Select";
+                messagePrefix = "";
                 break;
             case 'ERR':
                 style.icon['color'] = 'rgba(192, 0, 0, 0.87)';
@@ -78,12 +81,12 @@ export class ProviderStatusIcon extends Component {
                 messagePrefix = "Availability compromised: ";
                 break;
             case 'PENDING':
+            default:
                 style.icon['color'] = 'rgba(0, 0, 0, 0.87)';
                 StatusIcon = CircularProgress;
                 title = "Checking Availability"
                 messagePrefix = "";
                 otherProps = {thickness: 2};
-            default:
                 break;
         }
 
@@ -126,8 +129,12 @@ export class ProviderStatusIcon extends Component {
     }
 }
 
+ProviderStatusIcon.defaultProps = {
+    availability: {},
+};
+
 ProviderStatusIcon.propTypes = {
-    availability: PropTypes.object.isRequired,
-}
+    availability: PropTypes.object,
+};
 
 export default ProviderStatusIcon;

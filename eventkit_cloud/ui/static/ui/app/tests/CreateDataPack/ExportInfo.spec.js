@@ -17,9 +17,8 @@ import GeoJSON from 'ol/format/geojson';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
-
-import axios from 'axios'
-import MockAdapter from 'axios-mock-adapter';
+import * as utils from '../../utils/generic';
+import check from 'material-ui/svg-icons/navigation/check';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -51,7 +50,6 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
-                makePublic: false,
             },
             providers: [],
             formats,
@@ -122,14 +120,14 @@ describe('ExportInfo component', () => {
         props.updateExportInfo = sinon.spy();
         props.setNextDisabled = sinon.spy();
         const mountSpy = sinon.spy(ExportInfo.prototype, 'componentDidMount');
-        const areaSpy = sinon.spy(ExportInfo.prototype, 'setArea');
+        const areaSpy = sinon.spy(utils, 'getSqKmString');
         const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
-        expect(areaSpy.calledOnce).toBe(true);
+        // expect(areaSpy.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
             areaStr: expectedString,
@@ -219,7 +217,7 @@ describe('ExportInfo component', () => {
 
     it('onChangeCheck should add a provider', () => {
         const appProviders = [{ name: 'one' }, { name: 'two' }];
-        const exportProviders = [{ name: 'one', availability: {} }];
+        const exportProviders = [{ name: 'one' }];
         const event = { target: { name: 'two', checked: true } };
         const props = getProps();
         props.updateExportInfo = sinon.spy();
@@ -230,7 +228,7 @@ describe('ExportInfo component', () => {
         expect(props.updateExportInfo.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
-            providers: [{ name: 'one', availability: {} }, { name: 'two', availability: {} }],
+            providers: [{ name: 'one' }, { name: 'two' }],
         })).toBe(true);
     });
 
@@ -251,17 +249,23 @@ describe('ExportInfo component', () => {
         })).toBe(true);
     });
 
-    it('toggleCheckbox should update exportInfo with new makePublic state', () => {
+    it('onRefresh should setState with empty availability and call checkAvailability', () => {
         const props = getProps();
-        props.updateExportInfo = sinon.spy();
+        props.providers = [{ name: 'one' }, { name: 'two' }];
+        props.exportInfo.providers = [...props.providers];
         const wrapper = getWrapper(props);
-        const newState = !props.exportInfo.makePublic;
-        wrapper.instance().toggleCheckbox({}, newState);
-        expect(props.updateExportInfo.called).toBe(true);
-        expect(props.updateExportInfo.calledWith({
-            ...props.exportInfo,
-            makePublic: newState,
-        })).toBe(true);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const checkStub = sinon.stub(wrapper.instance(), 'checkAvailability');
+        wrapper.instance().onRefresh();
+        const expected = [
+            { name: 'one', availability: {} },
+            { name: 'two', availability: {} },
+        ];
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ providers: expected }));
+        expect(checkStub.calledTwice).toBe(true);
+        stateStub.restore();
+        checkStub.restore();
     });
 
     it('expandedChange should setState', () => {
@@ -274,6 +278,89 @@ describe('ExportInfo component', () => {
         wrapper.instance().expandedChange(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
+        stateSpy.restore();
+    });
+
+    it('handleFormatsClose should setState to false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleFormatsClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ formatsDialogOpen: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleFormatsOpen should setState to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleFormatsOpen();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ formatsDialogOpen: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleProjectionsOpen should setState to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleProjectionsOpen();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ projectionsDialogOpen: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleProjectionsClose should setState to false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleProjectionsClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ projectionsDialogOpen: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleLicenseOpen should setState to true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleLicenseOpen();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ licenseDialogOpen: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleLicenseClose should setState to false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleLicenseClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ licenseDialogOpen: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleRefreshTooltipOpen should setState true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const ret = wrapper.instance().handleRefreshTooltipOpen();
+        expect(ret).toEqual(false);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ refreshTooltipOpen: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleRefreshTooltipClose should setState false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const ret = wrapper.instance().handleRefreshTooltipClose();
+        expect(ret).toBe(false);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ refreshTooltipOpen: false })).toBe(true);
+        stateStub.restore();
     });
 
     it('hasRequiredFields should return whether the exportInfo required fields are filled', () => {
@@ -293,18 +380,6 @@ describe('ExportInfo component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.instance().hasRequiredFields(invalid)).toBe(false);
         expect(wrapper.instance().hasRequiredFields(valid)).toBe(true);
-    });
-
-    it('setArea should construct an area string and update exportInfo', () => {
-        const expectedString = '12,393 sq km';
-        const props = getProps();
-        props.updateExportInfo = sinon.spy();
-        // dont run component did mount so setArea is not called yet
-        const mountFunc = ExportInfo.prototype.componentDidMount;
-        ExportInfo.prototype.componentDidMount = () => {};
-        const wrapper = getWrapper(props);
-        wrapper.instance().setArea();
-        ExportInfo.prototype.componentDidMount = mountFunc;
     });
 
     it('initializeOpenLayers should create a map and add layer', () => {

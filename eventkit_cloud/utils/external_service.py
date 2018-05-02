@@ -1,27 +1,23 @@
 from __future__ import absolute_import
 
-from datetime import datetime
-from mapproxy.script.conf.app import config_command
+from ..utils import auth_requests
 from mapproxy.seed.seeder import seed
-from mapproxy.seed.config import SeedingConfiguration, SeedConfigurationError
-from mapproxy.seed.spec import validate_seed_conf
+from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
-from mapproxy.config.spec import validate_options
 
-from mapproxy.config.config import load_config, base_config, load_default_config
+from mapproxy.config.config import load_config, load_default_config
 from mapproxy.seed import seeder
 from mapproxy.seed.util import ProgressLog
 from django.conf import settings
 import yaml
-from django.core.files.temp import NamedTemporaryFile
 import logging
 from django.db import connections
-import requests
 from pysqlite2 import dbapi2 as sqlite3
 from .geopackage import (get_tile_table_names, get_zoom_levels_table,
                          get_table_tile_matrix_information, set_gpkg_contents_bounds)
 
 logger = logging.getLogger(__name__)
+
 
 class CustomLogger(ProgressLog):
 
@@ -80,7 +76,7 @@ class ExternalRasterServiceToGeopackage(object):
         if self.config:
             conf_dict = yaml.load(self.config)
         else:
-            conf_dict = create_conf_from_url(self.service_url)
+            raise ConfigurationError("MapProxy configuration is required for raster data providers")
 
         if not conf_dict.get('grids'):
             conf_dict['grids'] = {'geodetic': {'srs': 'EPSG:4326',
@@ -95,7 +91,7 @@ class ExternalRasterServiceToGeopackage(object):
         try:
             conf_dict['caches']['cache']['cache']['filename'] = self.gpkgfile
         except KeyError:
-            conf_dict['caches']['cache'] = get_cache_template(["{0}_{1}".format(self.layer, self.service_type)],
+            conf_dict['caches']['cache'] = get_cache_template(["{0}".format(self.layer)],
                                                               [grids for grids in conf_dict.get('grids')],
                                                               self.gpkgfile, table_name=self.layer)
 
@@ -103,7 +99,7 @@ class ExternalRasterServiceToGeopackage(object):
 
         # Prevent the service from failing if source has missing tiles.
         for source in conf_dict.get('sources') or []:
-            if 'wmts' in source:
+            if conf_dict['sources'][source].get('type') == 'tile':
                 conf_dict['sources'][source]['transparent'] = True
                 # You can set any number of error codes here, and mapproxy will ignore them any time they appear and
                 # just skip the tile instead (normally it retries the tile for a very long time before finally erroring
@@ -157,7 +153,9 @@ class ExternalRasterServiceToGeopackage(object):
 
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
-            check_service(conf_dict)
+            auth_requests.patch_https(self.name)
+            auth_requests.patch_mapproxy_opener_cache(slug=self.name)
+            check_service(conf_dict, self.name)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
@@ -232,25 +230,13 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
     return seed_template
 
 
-def create_conf_from_url(service_url):
-    temp_file = NamedTemporaryFile()
-    params = ['--capabilities', service_url, '--output', temp_file.name, '--force']
-    config_command(params)
-
-    conf_dict = None
-    try:
-        conf_dict = yaml.load(temp_file)
-    except yaml.YAMLError as exc:
-        logger.error(exc)
-    return conf_dict
-
-
-def check_service(conf_dict):
+def check_service(conf_dict, provider_name=None):
     """
     Used to verify the state of the service before running the seed task. This is used to prevent an invalid url from
     being seeded.  MapProxy's default behavior is to either cache a blank tile or to retry, that behavior can be altered,
     in the cache settings (i.e. `get_cache_template`).
     :param conf_dict: A MapProxy configuration as a dict.
+    :param provider_name: (optional) Provider slug, used for client cert authentication if available
     :return: None if valid, otherwise exception is raised.
     """
 
@@ -259,7 +245,7 @@ def check_service(conf_dict):
             continue
         tile = {'x': '1', 'y': '1', 'z': '1'}
         url = conf_dict['sources'][source].get('url') % tile
-        response = requests.get(url, verify=False)
+        response = auth_requests.get(url, slug=provider_name, verify=False)
         if response.status_code in [401, 403]:
             logger.error("The provider has invalid credentials with status code {0} and the text: \n{1}".format(
                 response.status_code, response.text))

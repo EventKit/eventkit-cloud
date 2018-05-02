@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 import json
 import logging
 import uuid
+from enum import Enum
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
@@ -79,7 +80,7 @@ class License(TimeStampedModelMixin):
 
 class UserLicense(TimeStampedModelMixin):
     """
-    Model to hold which licenses a User acknowledges. 
+    Model to hold which licenses a User acknowledges.
     """
     user = models.ForeignKey(User)
     license = models.ForeignKey(License)
@@ -148,13 +149,19 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
                                            help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True)
+    max_selection = models.DecimalField(verbose_name="Max selection area", default=250, max_digits=12, decimal_places=3,
+                                        help_text="This is the maximum area in square kilometers that can be exported "
+                                                  "from this provider in a single DataPack.")
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
-                                     help_text="This determines the starting zoom level a tile export will seed from")
+                                     help_text="This determines the starting zoom level the tile export will seed from.")
     level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
-                                   help_text="This determine what zoom level your tile export will seed to")
+                                   help_text="This determines the highest zoom level the tile export will seed to.")
     config = models.TextField(default='', null=True, blank=True,
                               verbose_name="Configuration",
-                              help_text="This is an optional field to put in additional configuration.")
+                              help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
+                              with a Sources key of imagery and a Service Layer name of imagery; the validator also
+                              requires a layers section, but this isn't used.
+                              OSM Services also require a YAML configuration.""")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
     zip = models.BooleanField(default=False)
@@ -176,6 +183,21 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
 
     def __unicode__(self,):
         return '{0}'.format(self.name)
+
+
+class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that remembers the last recorded status of a data provider.
+    """
+    status = models.CharField(max_length=10, blank=True)
+    status_type = models.CharField(max_length=25, blank=True)
+    message = models.CharField(max_length=150, blank=True)
+    last_check_time = models.DateTimeField(null=True)
+    related_provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='data_provider_status')
+
+    class Meta:
+        verbose_name_plural = 'data provider statuses'
+        ordering = ['-last_check_time']
 
 
 class Region(UIDMixin, TimeStampedModelMixin):
@@ -225,15 +247,24 @@ class DataProviderTask(models.Model):
         return '{0} - {1}'.format(self.uid, self.provider)
 
 
+class VisibilityState(Enum):
+    PRIVATE = "PRIVATE"
+    PUBLIC  = "PUBLIC"
+    SHARED  = "SHARED"
+
 class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
     """
+
+
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
         kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
+
+
 
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
@@ -243,6 +274,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
+    visibility = models.CharField(max_length=10,default=VisibilityState.PRIVATE.value)
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
@@ -352,17 +384,6 @@ class ExportProfile(models.Model):
 
     def __str__(self):
         return '{0}'.format(self.name)
-
-
-def user_owns_job(user=None, job_uid=None):
-    if not job_uid or not user:
-        return False
-    job = Job.objects.get(uid=job_uid)
-    if job.user == user or job.published:
-        return True
-    else:
-        return False
-
 
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):

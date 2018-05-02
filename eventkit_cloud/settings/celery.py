@@ -33,6 +33,10 @@ CELERYBEAT_SCHEDULE = {
     'expire-runs': {
         'task': 'Expire Runs',
         'schedule': crontab(minute='0', hour='0', day_of_week='*')
+    },
+    'provider-statuses': {
+        'task': 'Check Provider Availability',
+        'schedule': crontab(minute='*/{}'.format(os.getenv('PROVIDER_CHECK_INTERVAL', '30')))
     }
 }
 

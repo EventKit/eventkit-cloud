@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import Info from 'material-ui/svg-icons/action/info';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DataCartGeneralTable extends Component {
@@ -55,32 +55,33 @@ export class DataCartGeneralTable extends Component {
 
         const styles = {
             tableRowInfoIcon: {
-                marginLeft: '10px',
+                marginLeft: '5px',
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
                 display: 'inlineBlock',
                 fill: '#4598bf',
                 verticalAlign: 'middle',
+                marginRight: '10px',
             },
         };
 
         return (
-            <div style={{ marginTop: '-5px', marginLeft: '-5px' }} className="qa-DataPackGeneralTable">
-                <DataPackTableRow
+            <div className="qa-DataPackGeneralTable">
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-description"
                     title="Description"
                     data={this.props.dataPack.job.description}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-project"
                     title="Project / Category"
                     data={this.props.dataPack.job.event}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
-                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
+                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
                     data={
                         providerTasks.map(providerTask => (
                             <div key={providerTask.name} style={{ margin: '5px 0px' }}>
@@ -105,7 +106,7 @@ export class DataCartGeneralTable extends Component {
                         ))
                     }
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-formats"
                     title="File Formats"
                     data={
@@ -125,14 +126,14 @@ export class DataCartGeneralTable extends Component {
                                 >
                                     <div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
                                         EventKit provides all geospatial data in the GeoPackage (.gpkg) format.
-                                            Additional format support will be added in subsequent versions.
+                                        Additional format support will be added in subsequent versions.
                                     </div>
                                 </BaseDialog>
                             </div>
                         ))
                     }
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-projection"
                     title="Projection"
                     data={

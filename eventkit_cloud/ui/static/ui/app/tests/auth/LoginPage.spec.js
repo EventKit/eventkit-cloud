@@ -5,7 +5,6 @@ import Paper from 'material-ui/Paper';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { LoginPage } from '../../components/auth/LoginPage';
-import BrowserWarning from '../../components/auth/BrowserWarning';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import * as utils from '../../utils/generic';
@@ -65,15 +64,6 @@ describe('LoginPage component', () => {
         expect(wrapper.find(Paper).last().find('strong').text()).toEqual('ATTENTION');
         expect(wrapper.find(CustomScrollbar).last().childAt(0).childAt(1)
             .text()).toEqual('This is a disclaimer');
-        isValidStub.restore();
-    });
-
-    it('should display the browser warning if user browser is not valid', () => {
-        const isValidStub = sinon.stub(utils, 'isBrowserValid')
-            .returns(false);
-        const wrapper = getWrapper({});
-        expect(wrapper.find(BrowserWarning)).toHaveLength(1);
-        expect(wrapper.find(Paper)).toHaveLength(0);
         isValidStub.restore();
     });
 });

@@ -1,31 +1,15 @@
 import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import moment from 'moment';
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import Feature from 'ol/feature';
-import Attribution from 'ol/control/attribution';
-import ScaleLine from 'ol/control/scaleline';
-import Zoom from 'ol/control/zoom';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
-
-// this polyfills requestAnimationFrame in the test browser, required for ol3
-raf.polyfill();
+import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 
 describe('DataCartDetails component', () => {
     const muiTheme = getMuiTheme();
@@ -34,10 +18,14 @@ describe('DataCartDetails component', () => {
 
     beforeAll(() => {
         DataCartDetails.prototype.componentDidMount = sinon.spy();
+        DataPackAoiInfo.prototype.render = sinon.spy(() => null);
+        DataPackAoiInfo.prototype.initializeOpenLayers = sinon.spy();
     });
 
     afterAll(() => {
         DataCartDetails.prototype.componentDidMount = didMount;
+        DataPackAoiInfo.prototype.render.restore();
+        DataPackAoiInfo.prototype.initializeOpenLayers.restore();
     });
 
     const getProps = () => (
@@ -47,7 +35,7 @@ describe('DataCartDetails component', () => {
             maxResetExpirationDays: '30',
             zipFileProp: null,
             onUpdateExpiration: () => {},
-            onUpdatePermission: () => {},
+            onUpdateDataCartPermissions: () => {},
             onRunDelete: () => {},
             onRunRerun: () => {},
             onClone: () => {},
@@ -58,13 +46,7 @@ describe('DataCartDetails component', () => {
 
     const getWrapper = props => (
         mount(<DataCartDetails {...props} />, {
-            context: {
-                muiTheme,
-                config: {
-                    BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-                    BASEMAP_COPYRIGHT: 'my copyright',
-                },
-            },
+            context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
             },
@@ -83,7 +65,6 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find('.qa-DataCartDetails-div-generalInfo')).toHaveLength(1);
         expect(wrapper.find(DataPackGeneralTable)).toHaveLength(1);
         expect(wrapper.find('.qa-DataCartDetails-div-aoi')).toHaveLength(1);
-        expect(wrapper.find('.qa-DataCartDetails-div-map')).toHaveLength(1);
         expect(wrapper.find('.qa-DataCartDetails-div-exportInfo')).toHaveLength(1);
         expect(wrapper.find(DataCartInfoTable)).toHaveLength(1);
     });
@@ -108,30 +89,14 @@ describe('DataCartDetails component', () => {
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
     });
 
-    it('should call initializeOpenLayers, setPermission, and setMaxDate set on mount', () => {
+    it('should call setMaxDate set on mount', () => {
         const props = getProps();
-        const initStub = sinon.stub(DataCartDetails.prototype, 'initializeOpenLayers');
-        const permissionStub = sinon.stub(DataCartDetails.prototype, 'setPermission');
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
         DataCartDetails.prototype.componentDidMount = didMount;
         const wrapper = getWrapper(props);
-        expect(initStub.calledOnce).toBe(true);
-        expect(permissionStub.calledOnce).toBe(true);
         expect(dateStub.calledOnce).toBe(true);
-        initStub.restore();
-        permissionStub.restore();
         dateStub.restore();
         DataCartDetails.prototype.componentDidMount = sinon.spy();
-    });
-
-    it('setPermission should set the state for published permission', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().setPermission();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: props.cartDetails.job.published })).toBe(true);
-        stateStub.restore();
     });
 
     it('setMaxDate should set the min and max dates', () => {
@@ -152,41 +117,18 @@ describe('DataCartDetails component', () => {
         clock.restore();
     });
 
-    it('initializeOpenLayers should construct a map and add it to the DOM', () => {
+    it('handlePermissionsChange should call onUpdateDataCartPermissions', () => {
         const props = getProps();
+        props.onUpdateDataCartPermissions = sinon.spy();
         const wrapper = getWrapper(props);
-        const fakeFeatures = [new Feature()];
-        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures').returns(fakeFeatures);
-        const fitStub = sinon.stub(View.prototype, 'fit').returns();
-        wrapper.instance().initializeOpenLayers();
-        readStub.restore();
-        fitStub.restore();
-    });
-
-    it('handlePermissionChange should state to true and call onUpdatePermission', () => {
-        const props = getProps();
-        props.onUpdatePermission = sinon.spy();
-        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handlePermissionChange({}, 0, 1);
-        expect(props.onUpdatePermission.calledOnce).toBe(true);
-        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, true)).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handlePermissionChange should state to false and call onUpdatePermission', () => {
-        const props = getProps();
-        props.onUpdatePermission = sinon.spy();
-        const stateStub = sinon.spy(DataCartDetails.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handlePermissionChange({}, 0, 2);
-        expect(props.onUpdatePermission.calledOnce).toBe(true);
-        expect(props.onUpdatePermission.calledWith(props.cartDetails.job.uid, false)).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ permission: false })).toBe(true);
-        stateStub.restore();
+        const permissions = {
+            value: 'PUBLIC',
+            groups: {},
+            members: {},
+        };
+        wrapper.instance().handlePermissionsChange(permissions);
+        expect(props.onUpdateDataCartPermissions.calledOnce).toBe(true);
+        expect(props.onUpdateDataCartPermissions.calledWith(props.cartDetails.job.uid, permissions)).toBe(true);
     });
 
     it('handleExpirationChange should call onUpdateExpiration', () => {
@@ -213,10 +155,14 @@ const run = {
         event: 'test',
         description: 'test',
         url: 'http://cloud.eventkit.test/api/jobs/67890',
-        published: true,
         formats: [
             'Geopackage',
         ],
+        permissions: {
+            value: 'PRIVATE',
+            groups: {},
+            members: {},
+        },
     },
     provider_tasks: [
         {
@@ -245,6 +191,7 @@ const run = {
     ],
     zipfile_url: null,
     expiration: '2017-08-01T00:00:00Z',
+    members: [],
 };
 
 const providers = [

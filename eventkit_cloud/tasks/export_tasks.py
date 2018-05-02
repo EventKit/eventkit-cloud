@@ -566,6 +566,15 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     if selection:
         # Test if json.
         json.loads(selection)
+
+        # Test against max AOI size
+        from ..jobs.models import DataProvider
+        max_selection = DataProvider.objects.get(slug=provider_slug).max_selection
+        aoi_area = gdalutils.get_area(selection)
+        logger.debug("Selected area is %s km^2; max for provider %s is %s", aoi_area, provider_slug, max_selection)
+        if 0 < max_selection < aoi_area:
+            raise Exception("AOI is too large for this provider")
+
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
         with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
@@ -615,7 +624,7 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
+        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff)
 
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 

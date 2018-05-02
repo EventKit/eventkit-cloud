@@ -16,11 +16,13 @@ import Zoom from 'ol/control/zoom';
 import Paper from 'material-ui/Paper';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar';
+import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
 
 export class ExportSummary extends Component {
     constructor(props) {
         super(props);
+        this.expandedChange = this.expandedChange.bind(this);
         this.state = {
             expanded: false,
         };
@@ -137,32 +139,6 @@ export class ExportSummary extends Component {
                 paddingTop: '25px',
                 paddingBottom: '10px',
             },
-            tdHeading: {
-                verticalAlign: 'top',
-                padding: '10px',
-                height: '35px',
-                fontSize: '16px',
-                width: '33%',
-                backgroundColor: '#f8f8f8',
-                fontWeight: 'bold',
-                color: 'black',
-            },
-            tdData: {
-                padding: '10px',
-                height: '35px',
-                fontSize: '16px',
-                width: '66%',
-                backgroundColor: '#f8f8f8',
-                fontWeight: 'normal',
-                color: '#8b9396',
-            },
-            table: {
-                width: '100%',
-                height: '100%',
-                border: '0px solid black',
-                borderSpacing: '5px',
-                borderCollapse: 'separate',
-            },
             mapCard: {
                 paddingBottom: '20px',
                 paddingTop: '15px',
@@ -194,51 +170,45 @@ export class ExportSummary extends Component {
                                 <div id="export-information-heading" className="qa-ExportSummary-exportHeading" style={style.exportHeading}>
                                     Export Information
                                 </div>
-                                <table style={style.table} id="export-information">
-                                    <tbody>
-                                        <tr id="name" className="qa-ExportSummary-tr-name">
-                                            <td style={style.tdHeading}>Name</td>
-                                            <td style={style.tdData}>{this.props.exportName}</td>
-                                        </tr>
-                                        <tr id="description" className="qa-ExportSummary-tr-description">
-                                            <td style={style.tdHeading}>Description</td>
-                                            <td style={style.tdData}>{this.props.datapackDescription}</td>
-                                        </tr>
-                                        <tr id="project" className="qa-ExportSummary-tr-category">
-                                            <td style={style.tdHeading}>Project&nbsp;/ Category</td>
-                                            <td style={style.tdData}>{this.props.projectName}</td>
-                                        </tr>
-                                        <tr id="published" className="qa-ExportSummary-tr-published">
-                                            <td style={style.tdHeading}>Published</td>
-                                            <td style={style.tdData}>{this.props.makePublic.toString()}</td>
-                                        </tr>
-                                        <tr id="formats" className="qa-ExportSummary-tr-formats">
-                                            <td style={style.tdHeading}>File Formats</td>
-                                            <td style={style.tdData}>{formatDesc}</td>
-                                        </tr>
-                                        <tr id="layers" className="qa-ExportSummary-tr-layers">
-                                            <td style={style.tdHeading} rowSpan={providers.length}>Layer Data</td>
-                                            <td style={style.tdData}>{providers.map(provider => <p key={provider.uid}>{provider.name}</p>)}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <CustomTableRow
+                                    className="qa-ExportSummary-name"
+                                    title="Name"
+                                    data={this.props.exportName}
+                                />
+                                <CustomTableRow
+                                    className="qa-ExportSummary-description"
+                                    title="Description"
+                                    data={this.props.datapackDescription}
+                                />
+                                <CustomTableRow
+                                    className="qa-ExportSummary-project"
+                                    title="Project / Category"
+                                    data={this.props.projectName}
+                                />
+                                <CustomTableRow
+                                    className="qa-ExportSummary-formats"
+                                    title="File Formats"
+                                    data={formatDesc}
+                                />
+                                <CustomTableRow
+                                    className="qa-ExportSummary-sources"
+                                    title="Data Sources"
+                                    data={providers.map(provider => <p style={{ width: '100%' }} key={provider.uid}>{provider.name}</p>)}
+                                />
                                 <div id="aoi-heading" className="qa-ExportSummary-aoiHeading" style={style.exportHeading}>
                                     Area of Interest (AOI)
                                 </div>
-                                <table style={style.table} id="aoi-area" className="qa-ExportSummary-tr-area">
-                                    <tbody>
-                                        <tr>
-                                            <td style={style.tdHeading}>Area</td>
-                                            <td style={style.tdData}>{this.props.areaStr}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <CustomTableRow
+                                    className="qa-ExportsSummary-area"
+                                    title="Area"
+                                    data={this.props.areaStr}
+                                />
                             </div>
                             <div id="aoi-map" className="qa-ExportSummary-map" style={style.mapCard}>
                                 <Card
                                     className="qa-ExportSummary-Card"
                                     expandable
-                                    onExpandChange={this.expandedChange.bind(this)}
+                                    onExpandChange={this.expandedChange}
                                 >
                                     <CardHeader
                                         className="qa-ExportSummary-CardHeader"
@@ -271,7 +241,6 @@ function mapStateToProps(state) {
         exportName: state.exportInfo.exportName,
         datapackDescription: state.exportInfo.datapackDescription,
         projectName: state.exportInfo.projectName,
-        makePublic: state.exportInfo.makePublic,
         providers: state.exportInfo.providers,
         areaStr: state.exportInfo.areaStr,
         formats: state.exportInfo.formats,
@@ -279,7 +248,7 @@ function mapStateToProps(state) {
 }
 
 ExportSummary.contextTypes = {
-    config: PropTypes.object
+    config: PropTypes.object,
 };
 
 ExportSummary.propTypes = {
@@ -287,7 +256,6 @@ ExportSummary.propTypes = {
     exportName: PropTypes.string,
     datapackDescription: PropTypes.string,
     projectName: PropTypes.string,
-    makePublic: PropTypes.bool,
     providers: PropTypes.array,
     areaStr: PropTypes.string,
     formats: PropTypes.array,
