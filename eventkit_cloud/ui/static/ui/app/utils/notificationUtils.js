@@ -1,8 +1,8 @@
 import React from 'react';
-import Info from 'material-ui/svg-icons/action/info';
-import CheckCircle from 'material-ui/svg-icons/action/check-circle';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import Error from 'material-ui/svg-icons/alert/error';
+import InfoIcon from 'material-ui/svg-icons/action/info';
+import CheckCircleIcon from 'material-ui/svg-icons/action/check-circle';
+import WarningIcon from 'material-ui/svg-icons/alert/warning';
+import ErrorIcon from 'material-ui/svg-icons/alert/error';
 import { Link } from 'react-router';
 
 const verbs = {
@@ -146,6 +146,7 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
             ];
         default:
             console.error(`Unsupported notification verb '${verb}'`, notification);
+            return null;
     }
 }
 
@@ -158,13 +159,19 @@ export function getNotificationIcon({ notification, iconStyle }) {
         },
     };
 
-    const infoIcon = <Info style={{...styles.icon, fill: '#4598BF'}} />;
-    const checkCircleIcon = <CheckCircle style={{...styles.icon, fill: '#55BA63'}} />;
-    const warningIcon = <Warning style={{...styles.icon, fill: '#F4D225'}} />;
-    const errorIcon = <Error style={{...styles.icon, fill: '#CE4427'}} />;
+    const infoIcon = <InfoIcon style={{...styles.icon, fill: '#4598BF'}} />;
+    const checkCircleIcon = <CheckCircleIcon style={{...styles.icon, fill: '#55BA63'}} />;
+    const warningIcon = <WarningIcon style={{...styles.icon, fill: '#F4D225'}} />;
+    const errorIcon = <ErrorIcon style={{...styles.icon, fill: '#CE4427'}} />;
 
     const verb = notification.verb.toLowerCase();
     switch (verb) {
+        case verbs.runStarted:
+        case verbs.addedToGroup:
+        case verbs.removedFromGroup:
+        case verbs.setAsGroupAdmin:
+        case verbs.removedAsGroupAdmin:
+            return infoIcon;
         case verbs.runCompleted:
             return checkCircleIcon;
         case verbs.runDeleted:
@@ -173,7 +180,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
         case verbs.runFailed:
             return errorIcon;
         default:
-            return infoIcon;
+            return null;
     }
 }
 
