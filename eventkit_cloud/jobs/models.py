@@ -158,7 +158,10 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
                                    help_text="This determines the highest zoom level the tile export will seed to.")
     config = models.TextField(default='', null=True, blank=True,
                               verbose_name="Configuration",
-                              help_text="This is an optional field to put in additional configuration.")
+                              help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
+                              with a Sources key of imagery and a Service Layer name of imagery; the validator also
+                              requires a layers section, but this isn't used.
+                              OSM Services also require a YAML configuration.""")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
     zip = models.BooleanField(default=False)

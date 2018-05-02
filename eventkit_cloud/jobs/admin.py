@@ -118,14 +118,12 @@ class DataProviderForm(forms.ModelForm):
 
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
-        if service_type in ['wms', 'wmts']:
-            if not config:
-                return
+        if service_type in ['wms', 'wmts', 'tms']:
             from ..utils.external_service import ExternalRasterServiceToGeopackage, \
                                                  ConfigurationError
             service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
-                conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
+                service.get_check_config()
             except ConfigurationError as e:
                 raise forms.ValidationError(e.message)
 

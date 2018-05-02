@@ -19,7 +19,7 @@ class TestClient(TestCase):
 
         self.url = 'http://example.dev'
         self.username = "user"
-        self.password = "password"
+        self.pcode = "pcode"
         cookies = {'csrftoken': 'token'}
 
         self.mock_requests.get("{0}/api/login".format(self.url), status_code=200)
@@ -27,7 +27,7 @@ class TestClient(TestCase):
         self.mock_requests.get(self.url, status_code=200, cookies=cookies)
         self.mock_requests.get("{0}/create".format(self.url), status_code=200, cookies=cookies)
         with self.settings(SESSION_COOKIE_DOMAIN=self.url):
-            self.client = EventKitClient(self.url, self.username, self.password)
+            self.client = EventKitClient(self.url, self.username, self.pcode)
 
     def test_get_providers(self):
         expected_response = {"provider": "provider_name"}
