@@ -7,8 +7,7 @@ import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
-
-const irregularPolygon = require('../../../images/ic_irregularpolygon_black_24px.svg');
+import IrregularPolygon from '../icons/IrregularPolygon';
 
 export class RevertDialog extends Component {
     getIcon(geomType, source) {
@@ -28,7 +27,7 @@ export class RevertDialog extends Component {
         } else if (type.includes('LINE')) {
             return <Line style={iconStyle} className="qa-RevertDialog-icon-line" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <img src={irregularPolygon} style={{ ...iconStyle, width: '32px' }} className="qa-RevertDialog-icon-polygon" alt="" />;            
+            return <IrregularPolygon style={iconStyle} className="qa-RevertDialog-icon-polygon" />;
         }
         return <AlertWarning style={iconStyle} className="qa-RevertDialog-icon-no-selection" />;
     }
