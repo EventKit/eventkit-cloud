@@ -22,9 +22,6 @@ export class DataPackWideItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
-        this.state = {
-            providerDescs: {},
-        };
     }
 
     componentDidMount() {
@@ -107,39 +104,7 @@ export class DataPackWideItem extends Component {
     }
 
     render() {
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
-            return (
-                <ListItem
-                    key={key}
-                    style={{
-                        backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                        fontWeight: 'bold',
-                        width: '100%',
-                        zIndex: 0,
-                    }}
-                    nestedListStyle={{ padding: '0px' }}
-                    primaryText={key}
-                    initiallyOpen={false}
-                    primaryTogglesNestedList={false}
-                    nestedItems={[
-                        <ListItem
-                            key={1}
-                            primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{
-                                backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                                fontSize: '14px',
-                                width: '100%',
-                                zIndex: 0,
-                            }}
-                        />,
-                    ]}
-                />
-
-            );
-        });
-
         const cardHeight = this.props.height || 'auto';
-
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
@@ -273,8 +238,6 @@ DataPackWideItem.contextTypes = {
 
 DataPackWideItem.propTypes = {
     run: PropTypes.object.isRequired,
-    user: PropTypes.object.isRequired,
-    providers: PropTypes.array.isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     height: PropTypes.string,

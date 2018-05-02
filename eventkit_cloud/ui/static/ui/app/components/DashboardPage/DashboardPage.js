@@ -373,9 +373,7 @@ export class DashboardPage extends React.Component {
                                         <DataPackWideItem
                                             className="qa-DashboardSection-FeaturedGrid-WideItem"
                                             run={run}
-                                            user={this.props.user}
                                             key={`FeaturedDataPack-${run.created_at}`}
-                                            providers={this.props.providers}
                                             gridName="Featured"
                                             index={index}
                                             height="335px"
