@@ -155,7 +155,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
                                      help_text="This determines the starting zoom level the tile export will seed from.")
     level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
-                                   help_text="This determines the zoom level the tile export will seed to.")
+                                   help_text="This determines the highest zoom level the tile export will seed to.")
     config = models.TextField(default='', null=True, blank=True,
                               verbose_name="Configuration",
                               help_text="This is an optional field to put in additional configuration.")
