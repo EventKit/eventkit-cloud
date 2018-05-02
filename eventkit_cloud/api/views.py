@@ -626,6 +626,7 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception:
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
+
 class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
