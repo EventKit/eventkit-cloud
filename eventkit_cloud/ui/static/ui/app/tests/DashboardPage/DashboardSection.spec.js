@@ -37,12 +37,17 @@ describe('DashboardSection component', () => {
     });
 
     it('should render the basic elements', () => {
-        const props = getProps();
+        const props = {
+            ...getProps(),
+            onViewAll: () => {},
+        };
         const wrapper = getShallowWrapper(props, generateChildren(props.columns, 1));
         expect(wrapper.find('.qa-DashboardSection-Header')).toHaveLength(1);
         expect(wrapper.find('.qa-DashboardSection-Header-Title')).toHaveLength(1);
         expect(wrapper.find('.qa-DashboardSection-Header-Title').text()).toBe(props.title);
         expect(wrapper.find('.qa-DashboardSection-Page')).toHaveLength(1);
+        expect(wrapper.find('.qa-DashboardSection-ViewAll')).toHaveLength(1);
+        expect(wrapper.find('.qa-DashboardSection-ViewAll').text()).toBe('View All');
         expect(wrapper.find(Tabs)).toHaveLength(1);
         expect(wrapper.find(Tab)).toHaveLength(3);
         expect(wrapper.find(SwipeableViews)).toHaveLength(1);
@@ -109,15 +114,6 @@ describe('DashboardSection component', () => {
         expect(wrapper.find('.qa-DashboardSection-Tab').get(0).props.style).not.toHaveProperty('pointerEvents', 'none');
         expect(wrapper.find('.qa-DashboardSection-Tab').get(1).props.style).not.toHaveProperty('pointerEvents', 'none');
         expect(wrapper.find('.qa-DashboardSection-Tab').get(2).props.style).not.toHaveProperty('pointerEvents', 'none');
-    });
-
-    it('should display "View All" button when a handler is provided', () => {
-        const props = {
-            ...getProps(),
-            onViewAll: () => {},
-        };
-        const wrapper = getShallowWrapper(props, generateChildren(1, 1));
-        expect(wrapper.find('.qa-DashboardSection-ViewAll')).toHaveLength(1);
     });
 
     it('should not display "View All" button when a handler is not provided', () => {
