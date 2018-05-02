@@ -113,10 +113,13 @@ export class DashboardSection extends React.Component {
         return (
             <div style={styles.root}>
                 <div
-                    className={`qa-DashboardSection-${this.props.name}Header`}
+                    className={'qa-DashboardSection-Header'}
                     style={styles.sectionHeader}
                 >
-                    <div style={styles.sectionHeaderLeft}>
+                    <div
+                        className={'qa-DashboardSection-Header-Title'}
+                        style={styles.sectionHeaderLeft}
+                    >
                         {this.props.title}
                     </div>
                     {(childrenPages.length > 0) ?
@@ -129,7 +132,8 @@ export class DashboardSection extends React.Component {
                             >
                                 {[...Array(maxPages)].map((nothing, pageIndex) => (
                                     <Tab
-                                        key={`${this.props.name}Tab${pageIndex}`}
+                                        key={`DashboardSection-${this.props.name}-Tab${pageIndex}`}
+                                        className={'qa-DashboardSection-Tab'}
                                         value={pageIndex}
                                         style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
                                         disableTouchRipple={true}
@@ -147,6 +151,7 @@ export class DashboardSection extends React.Component {
                             </Tabs>
                             {this.props.onViewAll ?
                                 <a
+                                    className={'qa-DashboardSection-ViewAll'}
                                     style={styles.viewAll}
                                     onClick={this.props.onViewAll}
                                 >
@@ -175,7 +180,10 @@ export class DashboardSection extends React.Component {
                             let content;
                             if (this.props.rowMajor) {
                                 content = childrenPage.map((child, index) => (
-                                    <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
+                                    <div
+                                        key={`DashboardSection-${this.props.name}-Page${pageIndex}-Item${index}`}
+                                        className={'qa-DashboardSection-Page-Item'}
+                                    >
                                         {child}
                                     </div>
                                 ))
@@ -198,16 +206,19 @@ export class DashboardSection extends React.Component {
                                     childrenColumns.push(column);
                                 }
 
-                                content = childrenColumns.map((childrenColumn, index) => (
+                                content = childrenColumns.map((childrenColumn, columnIndex) => (
                                     <GridList
-                                        key={`${this.props.name}GridList${pageIndex}-Column${index}`}
-                                        className={`qa-DashboardSection-${this.props.name}Grid-Column${index}`}
+                                        key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}`}
+                                        className={'qa-DashboardSection-Page-Column'}
                                         cellHeight={this.props.cellHeight || 'auto'}
                                         padding={this.props.gridPadding}
                                         cols={1}
                                     >
                                         {childrenColumn.map((child, index) => (
-                                            <div key={`DashboardSection-${this.props.name}Grid-Item${index}Container`}>
+                                            <div
+                                                key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}-Item${index}`}
+                                                className={'qa-DashboardSection-Page-Item'}
+                                            >
                                                 {child}
                                             </div>
                                         ))}
@@ -217,8 +228,8 @@ export class DashboardSection extends React.Component {
 
                             return (
                                 <GridList
-                                    key={`${this.props.name}GridList${pageIndex}`}
-                                    className={`qa-DashboardSection-${this.props.name}Grid`}
+                                    key={`DashboardSection-${this.props.name}-Page${pageIndex}`}
+                                    className={'qa-DashboardSection-Page'}
                                     cellHeight={this.props.cellHeight || 'auto'}
                                     style={styles.gridList}
                                     padding={this.props.gridPadding}
