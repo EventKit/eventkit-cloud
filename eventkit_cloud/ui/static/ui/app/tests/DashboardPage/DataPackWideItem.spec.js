@@ -6,43 +6,43 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardTitle, CardText } from 'material-ui/Card';
 import { DataPackWideItem } from '../../components/DashboardPage/DataPackWideItem';
 
-const muiTheme = getMuiTheme();
-
-beforeAll(() => {
-    DataPackWideItem.prototype.initMap = sinon.spy();
-});
-
-afterAll(() => {
-    DataPackWideItem.prototype.initMap.restore();
-});
-
-function getMountedWrapper(props = getProps()) {
-    return mount(<DataPackWideItem {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
-    });
-}
-
-function getProps() {
-    return {
-        run: {
-            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-            started_at: '2017-03-10T15:52:35.637331Z',
-            finished_at: '2017-03-10T15:52:39.837Z',
-            job: {
-                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                name: 'Test1',
-                event: 'Test1 event',
-                description: 'Test1 description',
-            },
-            expiration: '2017-03-24T15:52:35.637258Z',
-        },
-        gridName: 'test',
-        index: 0,
-    };
-}
-
 describe('DataPackWideItem component', () => {
+    const muiTheme = getMuiTheme();
+
+    beforeAll(() => {
+        DataPackWideItem.prototype.initMap = sinon.spy();
+    });
+
+    afterAll(() => {
+        DataPackWideItem.prototype.initMap.restore();
+    });
+
+    function getProps() {
+        return {
+            run: {
+                uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+                started_at: '2017-03-10T15:52:35.637331Z',
+                finished_at: '2017-03-10T15:52:39.837Z',
+                job: {
+                    uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                    name: 'Test1',
+                    event: 'Test1 event',
+                    description: 'Test1 description',
+                },
+                expiration: '2017-03-24T15:52:35.637258Z',
+            },
+            gridName: 'test',
+            index: 0,
+        };
+    }
+
+    function getMountedWrapper(props = getProps()) {
+        return mount(<DataPackWideItem {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
+        });
+    }
+
     it('should display general run information', () => {
         const props = getProps();
         const wrapper = getMountedWrapper(props);
