@@ -21,7 +21,7 @@ export class NotificationsDropdown extends React.Component {
     }
 
     handleViewAll() {
-        if (this.props.onView('/notifications')) {
+        if (this.props.onNavigate('/notifications')) {
             this.props.router.push('/notifications');
         }
     }
@@ -135,7 +135,7 @@ export class NotificationsDropdown extends React.Component {
                                             borderTop: (index === 0) ? '1px solid rgb(224, 224, 224)' : '',
                                         }}
                                         notification={notification}
-                                        onView={this.props.onView}
+                                        onView={this.props.onNavigate}
                                         router={this.props.router}
                                     />
                                 ))}
@@ -159,12 +159,12 @@ NotificationsDropdown.propTypes = {
     style: PropTypes.object,
     notifications: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
-    onView: PropTypes.func,
+    onNavigate: PropTypes.func,
 };
 
 NotificationsDropdown.defaultProps = {
     style: {},
-    onView: () => { return true; },
+    onNavigate: () => { return true; },
 };
 
 function mapDispatchToProps(dispatch) {
