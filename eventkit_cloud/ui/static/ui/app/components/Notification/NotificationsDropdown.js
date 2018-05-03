@@ -93,11 +93,23 @@ export class NotificationsDropdown extends React.Component {
 
         return (
             <div style={styles.root}>
-                <div style={styles.pointer}></div>
+                <div
+                    className={'qa-NotificationsDropdown-Pointer'}
+                    style={styles.pointer}
+                />
                 <Paper style={styles.paper}>
-                    <div style={styles.header}>
-                        <span style={styles.headerTitle}>Notifications</span>
+                    <div
+                        className={'qa-NotificationsDropdown-Header'}
+                        style={styles.header}
+                    >
+                        <span
+                            className={'qa-NotificationsDropdown-Header-Title'}
+                            style={styles.headerTitle}
+                        >
+                            Notifications
+                        </span>
                         <a
+                            className={'qa-NotificationsDropdown-Header-MarkAllAsRead'}
                             style={styles.headerLink}
                             onClick={this.props.markAllNotificationsAsRead}
                         >
@@ -143,6 +155,7 @@ export class NotificationsDropdown extends React.Component {
                     }
                     <div style={{ marginTop: '25px', textAlign: 'center' }}>
                         <Link
+                            className={'qa-NotificationsDropdown-ViewAll'}
                             style={styles.viewAll}
                             onClick={this.handleViewAll}
                         >
