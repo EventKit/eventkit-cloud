@@ -12,6 +12,7 @@ import Triangle from 'material-ui/svg-icons/image/details';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
 import RevertDialog from '../../components/CreateDataPack/RevertDialog';
+import IrregularPolygon from '../../components/icons/IrregularPolygon';
 
 describe('AlertCallout component', () => {
     const muiTheme = getMuiTheme();
@@ -139,11 +140,9 @@ describe('AlertCallout component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <img
-                src="test-file-stub"
-                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+            <IrregularPolygon
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-polygon"
-                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Polygon', '');
@@ -154,11 +153,9 @@ describe('AlertCallout component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expected = (
-            <img
-                src="test-file-stub"
-                style={{ width: '32px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+            <IrregularPolygon
+                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
                 className="qa-RevertDialog-icon-polygon"
-                alt=""
             />
         );
         const icon = wrapper.instance().getIcon('Collection', '');

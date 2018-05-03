@@ -61,8 +61,8 @@ describe('DataPackGeneralTable component', () => {
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(CustomTableRow)).toHaveLength(5);
-        expect(wrapper.find(BaseDialog)).toHaveLength(3);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(4);
+        expect(wrapper.find(BaseDialog)).toHaveLength(2);
     });
 
     it('Source Info icon should call handleProviderOpen on click', () => {
@@ -97,28 +97,6 @@ describe('DataPackGeneralTable component', () => {
         wrapper.instance().handleProviderClose();
         expect(statestub.calledOnce).toBe(true);
         expect(statestub.calledWith({ providerDialogOpen: false })).toBe(true);
-        statestub.restore();
-    });
-
-    it('handleFormatsOpen should set format dialog to open', () => {
-        const props = getProps();
-        const statestub = sinon.stub(DataPackGeneralTable.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        expect(statestub.called).toBe(false);
-        wrapper.instance().handleFormatsOpen();
-        expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ formatsDialogOpen: true })).toBe(true);
-        statestub.restore();
-    });
-
-    it('handleFormatClose should set the format dialog to closed', () => {
-        const props = getProps();
-        const statestub = sinon.stub(DataPackGeneralTable.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        expect(statestub.called).toBe(false);
-        wrapper.instance().handleFormatsClose();
-        expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ formatsDialogOpen: false })).toBe(true);
         statestub.restore();
     });
 

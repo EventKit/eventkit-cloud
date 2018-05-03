@@ -29,8 +29,9 @@ class TestValidators(TestCase):
 
     def test_validate_bbox(self,):
 
-        bbox = validate_bbox(self.extents, user=self.user)
-        self.assertIsInstance(bbox, Polygon)
+        with self.settings(JOB_MAX_EXTENT=99999999):
+            bbox = validate_bbox(self.extents, user=self.user)
+            self.assertIsInstance(bbox, Polygon)
 
         with self.settings(JOB_MAX_EXTENT=1):
             with self.assertRaises(ValidationError):
@@ -86,8 +87,9 @@ class TestValidators(TestCase):
 
     def test_validate_selection(self):
         data = {'selection': self.selection}
-        geom = validate_selection(data)
-        self.assertIsInstance(geom, Polygon)
+        with self.settings(JOB_MAX_EXTENT=99999999):
+            geom = validate_selection(data)
+            self.assertIsInstance(geom, Polygon)
 
         with self.assertRaises(ValidationError):
             data = {'selection': []}

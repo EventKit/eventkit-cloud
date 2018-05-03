@@ -66,14 +66,22 @@ export function isLatLon(c) {
 }
 
 export function getSqKm(geojson) {
+    let area = 0;
+    if (!geojson.features) {
+        return area;
+    }
     const Geojson = new GeoJSON();
     const features = Geojson.readFeatures(geojson, {
         featureProjection: 'EPSG:3857',
         dataProjection: 'EPSG:4326',
     });
-    let area = 0;
+
     features.forEach((feature) => {
-        area += feature.getGeometry().getArea() / 1000000;
+        try {
+            area += feature.getGeometry().getArea() / 1000000;
+        } catch (e) {
+            area += 0;
+        }
     });
     return area;
 }
