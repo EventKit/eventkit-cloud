@@ -50,11 +50,6 @@ export function getNotifications(args = {}) {
                 range = response.headers['content-range'].split('-')[1];
             }
 
-            // Convert timestamp strings to moments.
-            for (let notification of response.data) {
-                notification.timestamp = moment(notification.timestamp);
-            }
-
             dispatch({
                 type: actions.RECEIVED_NOTIFICATIONS,
                 notifications: response.data,

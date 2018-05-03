@@ -4,6 +4,7 @@ import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import moment from 'moment';
 import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import NotificationMenu from './NotificationMenu';
@@ -132,10 +133,10 @@ export class NotificationsTableItem extends React.Component {
                     style={styles.dateRowColumn}
                 >
                     <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
-                        {this.props.notification.timestamp.format('M/D/YY')}
+                        {moment(this.props.notification.timestamp).format('M/D/YY')}
                     </div>
                     <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
-                        {this.props.notification.timestamp.format('h:mma')}
+                        {moment(this.props.notification.timestamp).format('h:mma')}
                     </div>
                 </TableRowColumn>
                 <TableRowColumn
