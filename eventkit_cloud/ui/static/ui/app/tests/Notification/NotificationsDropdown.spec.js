@@ -72,7 +72,7 @@ describe('NotificationsDropdown component', () => {
                 notificationsSorted: [],
             },
             router: {
-                push: sinon.spy(),
+                push: () => {},
             },
             markAllNotificationsAsRead: () => {},
         };
