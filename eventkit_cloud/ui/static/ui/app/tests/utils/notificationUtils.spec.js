@@ -21,6 +21,7 @@ const group = {
 describe('notificationUtils', () => {
     it('should correctly handle "run_started" notification', () => {
         const notification = {
+            id: '1',
             verb: 'run_started',
             actor: {
                 details: run,
@@ -49,6 +50,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_canceled" notification', () => {
         const notification = {
+            id: '1',
             verb: 'run_canceled',
             actor: {
                 details: run,
@@ -77,6 +79,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_completed" notification', () => {
         const notification = {
+            id: '1',
             verb: 'run_completed',
             actor: {
                 details: run,
@@ -105,6 +108,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_failed" notification', () => {
         const notification = {
+            id: '1',
             verb: 'run_failed',
             actor: {
                 details: run,
@@ -133,6 +137,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "run_deleted" notification', () => {
         const notification = {
+            id: '1',
             verb: 'run_deleted',
             actor: {
                 details: run,
@@ -161,6 +166,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "added_to_group" notification', () => {
         const notification = {
+            id: '1',
             verb: 'added_to_group',
             action_object: {
                 details: group,
@@ -182,6 +188,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "removed_from_group" notification', () => {
         const notification = {
+            id: '1',
             verb: 'removed_from_group',
             action_object: {
                 details: group,
@@ -203,6 +210,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "set_as_group_admin" notification', () => {
         const notification = {
+            id: '1',
             verb: 'set_as_group_admin',
             action_object: {
                 details: group,
@@ -224,6 +232,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle "removed_as_group_admin" notification', () => {
         const notification = {
+            id: '1',
             verb: 'removed_as_group_admin',
             action_object: {
                 details: group,
@@ -245,6 +254,7 @@ describe('notificationUtils', () => {
 
     it('should correctly handle unsupported notification verbs', () => {
         const notification = {
+            id: '1',
             verb: 'some_unsupported_verb',
         };
 

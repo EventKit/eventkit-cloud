@@ -11,6 +11,7 @@ describe('NotificationGridItem component', () => {
     function getProps() {
         return {
             notification: {
+                id: '1',
                 verb: 'run_completed',
                 actor: {
                     details: {
