@@ -51,9 +51,16 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
     switch (verb) {
         case verbs.runStarted:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    DataPack&nbsp;
+                </span>,
                 <Link
                     key={`${notification.id}-Link`}
+                    className={'qa-NotificationMessage-Link'}
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -62,13 +69,26 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 >
                     {notification.actor.details.job.name}
                 </Link>,
-                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;has started.</span>
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    &nbsp;has started.
+                </span>
             ];
         case verbs.runCanceled:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    DataPack&nbsp;
+                </span>,
                 <Link
                     key={`${notification.id}-Link`}
+                    className={'qa-NotificationMessage-Link'}
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -77,13 +97,26 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 >
                     {notification.actor.details.job.name}
                 </Link>,
-                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was canceled.</span>
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    &nbsp;was canceled.
+                </span>
             ];
         case verbs.runCompleted:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    DataPack&nbsp;
+                </span>,
                 <Link
                     key={`${notification.id}-Link`}
+                    className={'qa-NotificationMessage-Link'}
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -92,13 +125,26 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 >
                     {notification.actor.details.job.name}
                 </Link>,
-                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;is complete.</span>
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    &nbsp;is complete.
+                </span>
             ];
         case verbs.runFailed:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    DataPack&nbsp;
+                </span>,
                 <Link
                     key={`${notification.id}-Link`}
+                    className={'qa-NotificationMessage-Link'}
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -107,13 +153,26 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 >
                     {notification.actor.details.job.name}
                 </Link>,
-                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;failed to complete.</span>
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    &nbsp;failed to complete.
+                </span>
             ];
         case verbs.runDeleted:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>DataPack&nbsp;</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    DataPack&nbsp;
+                </span>,
                 <Link
                     key={`${notification.id}-Link`}
+                    className={'qa-NotificationMessage-Link'}
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -122,27 +181,81 @@ export function getNotificationMessage({ notification, textStyle, linkStyle, onL
                 >
                     {notification.actor.details.job.name}
                 </Link>,
-                <span key={`${notification.id}-span1`} style={styles.text}>&nbsp;was deleted.</span>
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    &nbsp;was deleted.
+                </span>
             ];
         case verbs.addedToGroup:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>Added to group&nbsp;</span>,
-                <span key={`${notification.id}-span1`} style={styles.textBold}>{notification.action_object.details.name}</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    Added to group&nbsp;
+                </span>,
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.textBold}
+                >
+                    {notification.action_object.details.name}
+                </span>,
             ];
         case verbs.removedFromGroup:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>Removed from group&nbsp;</span>,
-                <span key={`${notification.id}-span1`} style={styles.textBold}>{notification.action_object.details.name}</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    Removed from group&nbsp;
+                </span>,
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.textBold}
+                >
+                    {notification.action_object.details.name}
+                    </span>,
             ];
         case verbs.setAsGroupAdmin:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>Set as admin of group&nbsp;</span>,
-                <span key={`${notification.id}-span1`} style={styles.textBold}>{notification.action_object.details.name}</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    Set as admin of group&nbsp;
+                </span>,
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.textBold}
+                >
+                    {notification.action_object.details.name}
+                </span>,
             ];
         case verbs.removedAsGroupAdmin:
             return [
-                <span key={`${notification.id}-span0`} style={styles.text}>Removed as admin of group&nbsp;</span>,
-                <span key={`${notification.id}-span1`} style={styles.textBold}>{notification.action_object.details.name}</span>,
+                <span
+                    key={`${notification.id}-span0`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.text}
+                >
+                    Removed as admin of group&nbsp;
+                </span>,
+                <span
+                    key={`${notification.id}-span1`}
+                    className={'qa-NotificationMessage-Text'}
+                    style={styles.textBold}
+                >
+                    {notification.action_object.details.name}
+                </span>,
             ];
         default:
             console.error(`Unsupported notification verb '${verb}'`, notification);
@@ -159,10 +272,10 @@ export function getNotificationIcon({ notification, iconStyle }) {
         },
     };
 
-    const infoIcon = <InfoIcon style={{...styles.icon, fill: '#4598BF'}} />;
-    const checkCircleIcon = <CheckCircleIcon style={{...styles.icon, fill: '#55BA63'}} />;
-    const warningIcon = <WarningIcon style={{...styles.icon, fill: '#F4D225'}} />;
-    const errorIcon = <ErrorIcon style={{...styles.icon, fill: '#CE4427'}} />;
+    const infoIcon = <InfoIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#4598BF'}} />;
+    const checkCircleIcon = <CheckCircleIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#55BA63'}} />;
+    const warningIcon = <WarningIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#F4D225'}} />;
+    const errorIcon = <ErrorIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#CE4427'}} />;
 
     const verb = notification.verb.toLowerCase();
     switch (verb) {

@@ -1,10 +1,10 @@
 import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
 import { Paper } from 'material-ui';
-import moment from 'moment';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMenu from './NotificationMenu';
+import moment from 'moment';
 
 export class NotificationGridItem extends Component {
     constructor(props) {
@@ -75,8 +75,11 @@ export class NotificationGridItem extends Component {
                 {icon}
                 {message}
                 <div style={{flex: '1'}}></div>
-                <div style={styles.date}>
-                    {this.props.notification.timestamp.fromNow()}
+                <div
+                    className={'qa-NotificationGridItem-Date'}
+                    style={styles.date}
+                >
+                    {moment(this.props.notification.timestamp).fromNow()}
                 </div>
                 <NotificationMenu
                     notification={this.props.notification}
