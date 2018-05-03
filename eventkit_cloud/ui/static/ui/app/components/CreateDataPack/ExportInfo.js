@@ -50,6 +50,7 @@ export class ExportInfo extends React.Component {
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
+        this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
@@ -64,7 +65,9 @@ export class ExportInfo extends React.Component {
 
     componentDidMount() {
         // if the state does not have required data disable next
-        if (!this.hasRequiredFields(this.props.exportInfo)) {
+        if (!this.hasRequiredFields(this.props.exportInfo) ||
+            this.hasDisallowedSelection(this.props.exportInfo)) {
+
             this.props.setNextDisabled();
         }
 
@@ -109,7 +112,9 @@ export class ExportInfo extends React.Component {
 
     componentWillReceiveProps(nextProps) {
         // if required fields are fulfilled enable next
-        if (this.hasRequiredFields(nextProps.exportInfo)) {
+        if (this.hasRequiredFields(nextProps.exportInfo) &&
+            !this.hasDisallowedSelection(nextProps.exportInfo)) {
+
             if (!nextProps.nextEnabled) {
                 this.props.setNextEnabled();
             }
@@ -261,6 +266,15 @@ export class ExportInfo extends React.Component {
             && exportInfo.datapackDescription
             && exportInfo.projectName
             && exportInfo.providers.length > 0;
+    }
+
+    hasDisallowedSelection(exportInfo) {
+        // if any unacceptable providers are selected return true, else return false
+        return exportInfo.providers.some((provider) => {
+            // short-circuiting means that this shouldn't be called until provider.availability
+            // is populated, but if it's not, return false
+            return provider.availability && provider.availability.status.toUpperCase() === 'FATAL';
+        });
     }
 
     initializeOpenLayers() {
@@ -564,6 +578,13 @@ export class ExportInfo extends React.Component {
                                             primaryText={<div style={{ whiteSpace: 'pre-wrap' }}>{provider.service_description}</div>}
                                             disabled
                                             style={style.serviceDescription}
+                                        />);
+                                        nestedItems.push(<ListItem
+                                            className="qa-ExportInfo-ListItem-provMaxAoi"
+                                            key={nestedItems.length}
+                                            primaryText={<div style={{ whiteSpace: 'pre-wrap' }}><span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>{((provider.max_selection == null || provider.max_selection == "" || parseFloat(provider.max_selection) <= 0) ? "unlimited" : (provider.max_selection + " km²"))}</div>}
+                                            disabled
+                                            style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
                                         />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';

@@ -22,8 +22,12 @@ export function getGeocode(query) {
                 });
                 dispatch({ type: 'RECEIVED_GEOCODE', data });
             })
-            .catch((error) => {
-                dispatch({ type: 'GEOCODE_ERROR', error });
+            .catch((e) => {
+                let error = e.response.data;
+                if (!error) {
+                    error = 'An unknown error has occured';
+                }
+                dispatch({ type: 'FETCH_GEOCODE_ERROR', error });
             });
     };
 }
