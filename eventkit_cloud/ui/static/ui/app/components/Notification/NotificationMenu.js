@@ -93,7 +93,8 @@ export class NotificationMenu extends React.Component {
                         iconStyle={styles.menuButtonIcon}
                     >
                         <MoreVertIcon />
-                    </IconButton>}
+                    </IconButton>
+                }
                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                 open={this.state.forceClose ? false : undefined}
