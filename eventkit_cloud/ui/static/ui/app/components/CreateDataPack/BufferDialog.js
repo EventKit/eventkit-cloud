@@ -3,9 +3,29 @@ import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import Slider from 'material-ui/Slider';
+import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import Clear from 'material-ui/svg-icons/content/clear';
+import AlertCallout from './AlertCallout';
+import { getSqKm, getSqKmString } from '../../utils/generic';
 
 export class BufferDialog extends Component {
+    constructor(props) {
+        super(props);
+        this.showAlert = this.showAlert.bind(this);
+        this.closeAlert = this.closeAlert.bind(this);
+        this.state = {
+            showAlert: false,
+        };
+    }
+
+    showAlert() {
+        this.setState({ showAlert: true });
+    }
+
+    closeAlert() {
+        this.setState({ showAlert: false });
+    }
+
     render() {
         const styles = {
             background: {
@@ -31,7 +51,7 @@ export class BufferDialog extends Component {
             },
             header: {
                 margin: '0px',
-                padding: '15px',
+                padding: '15px 15px 10px',
                 fontSize: '16px',
                 lineHeight: '32px',
             },
@@ -85,6 +105,21 @@ export class BufferDialog extends Component {
                 fill: '#4598bf',
                 cursor: 'pointer',
             },
+            warning: {
+                height: '20px',
+                width: '20px',
+                fill: '#CE4427',
+                verticalAlign: 'middle',
+                cursor: 'pointer',
+            },
+            callOut: {
+                bottom: '40px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '220px',
+                color: '#ce4427',
+                textAlign: 'left',
+            },
         };
 
         const bufferActions = [
@@ -105,7 +140,7 @@ export class BufferDialog extends Component {
                 disableTouchRipple
                 label="Update AOI"
                 primary
-                onClick={this.props.onBufferClick}
+                onClick={this.props.handleBufferClick}
                 disabled={!this.props.valid}
             />,
         ];
@@ -117,6 +152,45 @@ export class BufferDialog extends Component {
         const sliderColor = this.props.valid ? '#4598bf' : '#d32f2f';
         this.context.muiTheme.slider.selectionColor = sliderColor;
 
+        let over = false;
+        const maxAoi = this.props.maxAoiSqKm;
+        const totalArea = getSqKmString(this.props.aoi);
+        const size = getSqKm(this.props.aoi);
+        if (maxAoi && maxAoi < size) {
+            over = true;
+        }
+
+        let warning = null;
+        if (over) {
+            warning = (
+                <div
+                    className="qa-BufferDialog-warning"
+                    style={{ position: 'relative', display: 'inline-block', marginRight: '5px' }}
+                >
+                    <AlertWarning
+                        onClick={this.showAlert}
+                        style={styles.warning}
+                    />
+                    {this.state.showAlert ?
+                        <AlertCallout
+                            onClose={this.closeAlert}
+                            orientation="top"
+                            title="Your AOI is too large!"
+                            body={
+                                <p>
+                                    The max size allowed for the AOI is {maxAoi} sq km and yours is {totalArea}.
+                                    Please reduce the size of your buffer and/or polygon
+                                </p>
+                            }
+                            style={styles.callOut}
+                        />
+                        :
+                        null
+                    }
+                </div>
+            );
+        }
+
         return (
             <div>
                 <div className="qa-BufferDialog-background" style={styles.background} />
@@ -126,27 +200,31 @@ export class BufferDialog extends Component {
                             <div style={{ display: 'inline-block' }}>
                                 <span>
                                     BUFFER AOI
-                                    &nbsp;
-                                    &nbsp;
-                                    <TextField
-                                        type="number"
-                                        name="buffer-value"
-                                        value={this.props.value}
-                                        onChange={this.props.handleBufferChange}
-                                        style={styles.textField}
-                                        inputStyle={{ color: this.props.valid ? 'grey' : '#d32f2f' }}
-                                        underlineStyle={styles.underline}
-                                        underlineFocusStyle={styles.underlineFocus}
-                                    />
-                                    <span style={{ fontSize: '16px', color: 'grey' }}>m</span>
                                 </span>
                             </div>
                         </strong>
                         <Clear style={styles.clear} onClick={this.props.closeBufferDialog} />
                     </div>
                     <div className="qa-BufferDialog-body" style={styles.body}>
+                        <div style={{ paddingBottom: '10px', display: 'flex' }}>
+                            <TextField
+                                type="number"
+                                name="buffer-value"
+                                value={this.props.value}
+                                onChange={this.props.handleBufferChange}
+                                style={styles.textField}
+                                inputStyle={{ color: this.props.valid ? 'grey' : '#d32f2f' }}
+                                underlineStyle={styles.underline}
+                                underlineFocusStyle={styles.underlineFocus}
+                            />
+                            <span style={{ fontSize: '16px', color: 'grey' }}>m</span>
+                            <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? '#ce4427' : 'initial' }}>
+                                {warning}
+                                {getSqKmString(this.props.aoi)} total AOI
+                            </div>
+                        </div>
                         <div style={{ textAlign: 'center' }}>
-                            <table style={{ width: 'calc(100% - 20px)', position: 'relative', left: '10px' }}>
+                            <table style={{ width: '100%', position: 'relative' }}>
                                 <thead>
                                     <tr>
                                         <td>
@@ -192,6 +270,10 @@ export class BufferDialog extends Component {
     }
 }
 
+BufferDialog.defaultProps = {
+    maxAoiSqKm: null,
+};
+
 BufferDialog.contextTypes = {
     muiTheme: PropTypes.object.isRequired,
 };
@@ -200,9 +282,11 @@ BufferDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     value: PropTypes.number.isRequired,
     valid: PropTypes.bool.isRequired,
-    onBufferClick: PropTypes.func.isRequired,
-    handleBufferChange: PropTypes.func,
+    handleBufferClick: PropTypes.func.isRequired,
+    handleBufferChange: PropTypes.func.isRequired,
     closeBufferDialog: PropTypes.func.isRequired,
+    aoi: PropTypes.object.isRequired,
+    maxAoiSqKm: PropTypes.number,
 };
 
 export default BufferDialog;

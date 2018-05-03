@@ -132,7 +132,7 @@ describe('exportInfo reducer', () => {
             projectName: '',
             providers: [],
             areaStr: '',
-            formats: [],
+            formats: ['gpkg'],
         });
     });
 
@@ -184,7 +184,7 @@ describe('exportInfo reducer', () => {
             projectName: '',
             providers: [],
             areaStr: '',
-            layers: '',
+            formats: ['gpkg'],
         });
     });
 });

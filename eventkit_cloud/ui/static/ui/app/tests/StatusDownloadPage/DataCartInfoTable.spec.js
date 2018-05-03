@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import moment from 'moment';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
+import CustomTableRow from '../../components/CustomTableRow';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
 
 describe('DataCartInfoTable component', () => {
@@ -17,6 +17,6 @@ describe('DataCartInfoTable component', () => {
     const wrapper = mount(<DataCartInfoTable {...props} />);
 
     it('should render the 4 needed rows', () => {
-        expect(wrapper.find(DataPackTableRow)).toHaveLength(4);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(4);
     });
 });

@@ -1,13 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 
-export class DataPackTableRow extends Component {
+export class CustomTableRow extends Component {
     render() {
         const styles = {
             container: {
                 display: 'flex',
                 flex: '0 1 auto',
                 width: '100%',
-                padding: '5px',
+                padding: '5px 0px',
                 ...this.props.containerStyle,
             },
             title: {
@@ -22,6 +22,7 @@ export class DataPackTableRow extends Component {
             data: {
                 display: 'flex',
                 flex: '1 1 auto',
+                flexWrap: 'wrap',
                 backgroundColor: '#f8f8f8',
                 color: '#8b9396',
                 paddingRight: '10px',
@@ -36,33 +37,27 @@ export class DataPackTableRow extends Component {
 
         return (
             <div
-                className="qa-DataPackTableRow"
+                className="qa-CustomTableRow"
                 style={styles.container}
             >
-                <div
-                    style={styles.title}
-                >
+                <div style={styles.title}>
                     <strong>{this.props.title}</strong>
                 </div>
-                <div
-                    style={styles.data}
-                >
-
-                        {this.props.data}
-
+                <div style={styles.data}>
+                    {this.props.data}
                 </div>
             </div>
         );
     }
 }
 
-DataPackTableRow.defaultProps = {
+CustomTableRow.defaultProps = {
     containerStyle: {},
     titleStyle: {},
     dataStyle: {},
 };
 
-DataPackTableRow.propTypes = {
+CustomTableRow.propTypes = {
     title: PropTypes.string.isRequired,
     data: PropTypes.oneOfType([
         PropTypes.string,
@@ -74,4 +69,4 @@ DataPackTableRow.propTypes = {
     dataStyle: PropTypes.object,
 };
 
-export default DataPackTableRow;
+export default CustomTableRow;
