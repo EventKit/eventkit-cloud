@@ -78,7 +78,7 @@ export class Application extends Component {
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.getButtonBackgroundColor = this.getButtonBackgroundColor.bind(this);
         this.setNotificationsDropdownContainerRef = this.setNotificationsDropdownContainerRef.bind(this);
-        this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
+        this.handleNotificationsDropdownView = this.handleNotificationsDropdownView.bind(this);
         this.state = {
             config: {},
             hovered: '',
@@ -406,7 +406,7 @@ export class Application extends Component {
         this.notificationsDropdownContainerRef = ref;
     }
 
-    handleNotificationsDropdownNavigate() {
+    handleNotificationsDropdownView() {
         this.setState({
             showNotificationsDropdown: false
         });
@@ -580,7 +580,7 @@ export class Application extends Component {
                                                 }}
                                                 notifications={this.props.notifications}
                                                 router={this.props.router}
-                                                onNavigate={this.handleNotificationsDropdownNavigate}
+                                                onView={this.handleNotificationsDropdownView}
                                                 store={this.props.store}
                                             />
                                         </div>
