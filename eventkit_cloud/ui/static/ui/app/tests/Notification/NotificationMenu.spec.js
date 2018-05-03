@@ -71,7 +71,6 @@ describe('NotificationMenu component', () => {
         expect(wrapper.find(MenuItem).get(1).props.onClick).toBe(instance.handleMarkAsUnread);
     });
 
-    // TODO: Menu item handlers
     it('should call onView() with notification', () => {
         const props = {
             ...getProps(),
