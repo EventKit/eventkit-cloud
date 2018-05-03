@@ -40,7 +40,6 @@ export class ExportInfo extends React.Component {
         super(props);
         this.state = {
             expanded: false,
-            formatsDialogOpen: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
             // we make a local copy of providers for editing
@@ -55,8 +54,6 @@ export class ExportInfo extends React.Component {
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
-        this.handleFormatsClose = this.handleFormatsClose.bind(this);
-        this.handleFormatsOpen = this.handleFormatsOpen.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.handleRefreshTooltipOpen = this.handleRefreshTooltipOpen.bind(this);
@@ -77,14 +74,9 @@ export class ExportInfo extends React.Component {
         // calculate the area of the AOI
         const areaStr = getSqKmString(this.props.geojson);
 
-        // Will need to change this once we are allowing other formats
-        // since formats is checked and disabled we can't track user selection
-        const formats = [];
-        formats.push(this.formatsCheckbox.props.name);
         this.props.updateExportInfo({
             ...this.props.exportInfo,
             areaStr,
-            formats,
         });
 
         // set up debounce functions for user text input
@@ -236,14 +228,6 @@ export class ExportInfo extends React.Component {
                 return { providers };
             });
         });
-    }
-
-    handleFormatsClose() {
-        this.setState({ formatsDialogOpen: false });
-    }
-
-    handleFormatsOpen() {
-        this.setState({ formatsDialogOpen: true });
     }
 
     handleProjectionsClose() {
@@ -464,9 +448,6 @@ export class ExportInfo extends React.Component {
 
         const providers = this.state.providers.filter(provider => (provider.display !== false));
 
-        // We only display geopackage as a format option for right now.
-        const formats = this.props.formats.filter(format => (format.slug === 'gpkg'));
-
         return (
             <div id="root" className="qa-ExportInfo-root" style={style.root}>
                 <CustomScrollbar>
@@ -679,37 +660,6 @@ export class ExportInfo extends React.Component {
                                     </BaseDialog>
                                 </div>
                             </div>
-
-                            <div id="formatsHeader" className="qa-ExportInfo-formatsHeader" style={style.heading}>Select Export File Formats</div>
-                            <div id="formatsCheckbox" style={style.sectionBottom}>
-                                {formats.map(format => (
-                                    <div key={format.slug} style={style.checkboxLabel}>
-                                        <Checkbox
-                                            className="qa-ExportInfo-CheckBox-formats"
-                                            key={format.slug}
-                                            ref={(instance) => { this.formatsCheckbox = instance; }}
-                                            label={format.name}
-                                            labelStyle={{ fontWeight: 'normal', fontSize: '16px', width: '90%' }}
-                                            name={format.slug}
-                                            style={{ display: 'inlineBlock' }}
-                                            defaultChecked
-                                            disabled
-                                            checkedIcon={<ActionCheckCircle />}
-                                        />
-                                        <Info onTouchTap={this.handleFormatsOpen} style={style.infoIcon} />
-                                        <BaseDialog
-                                            show={this.state.formatsDialogOpen}
-                                            title="Format Information"
-                                            onClose={this.handleFormatsClose}
-                                        >
-                                            <div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
-                                                EventKit provides all geospatial data in the GeoPackage (.gpkg) format.
-                                                 Additional format support will be added in subsequent versions.
-                                            </div>
-                                        </BaseDialog>
-                                    </div>
-                                ))}
-                            </div>
                             <div id="aoiHeader" className="qa-ExportInfo-AoiHeader" style={style.heading}>
                                 Area of Interest (AOI)
                             </div>
@@ -765,7 +715,6 @@ function mapStateToProps(state) {
         exportInfo: state.exportInfo,
         providers: state.providers,
         nextEnabled: state.stepperNextEnabled,
-        formats: state.formats,
     };
 }
 
@@ -796,7 +745,6 @@ ExportInfo.propTypes = {
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
-    formats: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default connect(
