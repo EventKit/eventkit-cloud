@@ -1156,11 +1156,10 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 if basename == "create_mxd.py":
                     # put the style file in the root of the zip
                     filename = basename
-                # elif basename in ['template-osm.gpkg', 'template-raster.gpkg', 'template-10-4.mxd', 'template-10-5.mxd', 'osm-10-5.lyr', 'osm-10-4.lyr', 'raster-10-5.lyr']:
                 elif os.path.dirname(absolute_file_path) == 'support':
                     # Put the support files in the correct directory.
                     filename = 'support/{0}'.format(basename)
-                elif basename == "__init__.py":
+                elif basename == "__init__.py" or ".pyc" in basename:
                     continue
                 zipfile.write(
                     absolute_file_path,

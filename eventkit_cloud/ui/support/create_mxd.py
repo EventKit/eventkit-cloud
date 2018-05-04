@@ -12,6 +12,7 @@ import shutil
 from contextlib import contextmanager
 from multiprocessing import Pool
 import json
+
 # import argparse
 
 logger = logging.getLogger('create_mxd')
@@ -26,10 +27,13 @@ try:
 except Exception:
     BASE_DIR = os.path.dirname(__file__)
 
+SUPPORTED_VERSIONS = ["10.5.1", "10.5"]
+
 try:
     import arcpy
 except Exception:
-    print("Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script.  Please ensure that it is installed.  If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS.")
+    print(
+        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script.  Please ensure that it is installed.  If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS.")
     raise
 
 
@@ -63,12 +67,20 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     """
     mxd = arcpy.mapping.MapDocument(file_name)
     df = mxd.activeDataFrame
+    version = get_version()
     for layer_name, layer_info in metadata['data_sources'].iteritems():
         # Figure out geotiff later.
         if layer_info['type'] == 'tif':
             continue
         file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), layer_info['file_path']))
-        layer_from_file = arcpy.mapping.Layer(get_layer_file(layer_info['type'], get_version()))
+        layer_file = get_layer_file(layer_info['type'], version)
+        if not layer_file:
+            print(
+                "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(layer_name, version))
+            if version == '10.5':
+                print("However with your version of ArcMap you can still drag and drop this layer onto the Map.")
+            continue
+        layer_from_file = arcpy.mapping.Layer(layer_file)
         layer_from_file.name = layer_info['name']
         print('Adding layer: {0}...'.format(layer_from_file.name))
         arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
@@ -98,10 +110,6 @@ def get_mxd_template(version):
         template_file_name = "template-10-5.mxd"
     elif '10.4' in version:
         template_file_name = "template-10-4.mxd"
-    else:
-        print('The current version of ArcGIS is {0} however this script only supports versions 10.4 and 10.5.'.format(
-            version))
-        raise Exception("Invalid Version")
     template_file = os.path.abspath(os.path.join(BASE_DIR, "support", template_file_name))
     if not os.path.isfile(template_file):
         print('This script requires an mxd template file which was not found.')
@@ -116,27 +124,27 @@ def get_layer_file(type, version):
     :param version: arcgis version (i.e. 10.5)
     :return: The file path to the correct layer.
     """
-    if '10.5' in version:
-        layer_basename = "{0}-10-5.lyr".format(type)
-    else:
-        layer_basename = "{0}-10-4.lyr".format(type)
+    layer_basename = "{0}-{1}.lyr".format(type, version.replace('.', '-'))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "support", layer_basename))
-    if not os.path.isfile(layer_file):
-        print('This script requires a lyr template file which was not found.')
-        raise Exception("File Not Found: {0}".format(layer_file))
-    return layer_file
+    print("fetching layer template: {0}".format(layer_file))
+    if os.path.isfile(layer_file):
+        return layer_file
+    return None
 
 
 def get_version():
     """
-
     :return: Returns the version of arcmap that is installed.
     """
 
     try:
-        return arcpy.GetInstallInfo().get('Version')
+        version = arcpy.GetInstallInfo().get('Version')
+        if version in SUPPORTED_VERSIONS:
+            return version
+        raise Exception("UNSUPPORTED VERSION")
     except:
-        print('Unable to determine ArcGIS version.  This script only supports versions 10.4 and 10.5.')
+        print('Unable to determine ArcGIS version.  This script only supports versions {0}'.format(
+            str(SUPPORTED_VERSIONS)))
         raise
 
 
