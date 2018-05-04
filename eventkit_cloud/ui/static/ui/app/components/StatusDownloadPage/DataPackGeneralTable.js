@@ -8,15 +8,12 @@ export class DataCartGeneralTable extends Component {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
-        this.handleFormatsOpen = this.handleFormatsOpen.bind(this);
-        this.handleFormatsClose = this.handleFormatsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.state = {
             providerName: '',
             providerDescription: '',
             providerDialogOpen: false,
-            formatsDialogOpen: false,
             projectionsDialogOpen: false,
         };
     }
@@ -30,14 +27,6 @@ export class DataCartGeneralTable extends Component {
         const providerDescription = propsProvider.service_description.toString();
         const providerName = propsProvider.name.toString();
         this.setState({ providerDescription, providerName, providerDialogOpen: true });
-    }
-
-    handleFormatsClose() {
-        this.setState({ formatsDialogOpen: false });
-    }
-
-    handleFormatsOpen() {
-        this.setState({ formatsDialogOpen: true });
     }
 
     handleProjectionsClose() {
@@ -100,33 +89,6 @@ export class DataCartGeneralTable extends Component {
                                 >
                                     <div style={{ paddingTop: '20px', wordWrap: 'break-word' }}>
                                         {this.state.providerDescription}
-                                    </div>
-                                </BaseDialog>
-                            </div>
-                        ))
-                    }
-                />
-                <CustomTableRow
-                    className="qa-DataPackGeneralTable-formats"
-                    title="File Formats"
-                    data={
-                        this.props.dataPack.job.formats.map(format => (
-                            <div key={format}>
-                                {format}
-                                <Info
-                                    className="qa-DataPackGeneralTable-Info-formats"
-                                    onClick={this.handleFormatsOpen}
-                                    style={styles.tableRowInfoIcon}
-                                />
-                                <BaseDialog
-                                    className="qa-DataCartGeneralTable-BaseDialog-formats"
-                                    show={this.state.formatsDialogOpen}
-                                    title="Format Information"
-                                    onClose={this.handleFormatsClose}
-                                >
-                                    <div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
-                                        EventKit provides all geospatial data in the GeoPackage (.gpkg) format.
-                                        Additional format support will be added in subsequent versions.
                                     </div>
                                 </BaseDialog>
                             </div>

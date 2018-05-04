@@ -14,7 +14,7 @@ from StringIO import StringIO
 
 from django.conf import settings
 
-from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils import auth_requests, gdalutils
 from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
@@ -80,6 +80,10 @@ class CheckResults(Enum):
               "message": _("No Service URL was found in the data provider config; "
                            "availability cannot be checked")},
 
+    TOO_LARGE = {"status": "FATAL",
+                 "type": "SELECTION_TOO_LARGE",
+                 "message": _("The selected AOI is larger than the maximum allowed size for this data provider.")},
+
     SUCCESS = {"status": "SUCCESS",
                "type": "SUCCESS",
                "message": _("Export should proceed without issues.")},
@@ -96,7 +100,7 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=None):
         """
         Initialize this ProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
@@ -108,6 +112,7 @@ class ProviderCheck(object):
         self.query = None
         self.layer = layer
         self.slug = slug
+        self.max_area = max_area
         self.result = CheckResults.SUCCESS
         self.timeout = 10
         self.verify = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
@@ -124,6 +129,22 @@ class ProviderCheck(object):
             logger.debug("AOI was not given")
 
         self.token_dict = {}  # Parameters to include in message field of response
+
+    def check_area(self):
+        """
+        Return True if the AOI selection's area is lower than the maximum for this provider, otherwise False.
+        :return: True if AOI is lower than area limit
+        """
+        if self.aoi is None or self.max_area <= 0:
+            return True
+
+        gj = self.aoi.ExportToJson()
+
+        # Can't use self.aoi.GetArea() here, since it treats coordinates as cartesian, not spherical,
+        # and would try to give an answer in square degrees.
+        # Coordinate transformation doesn't work either, so it's up to an estimation function in gdalutils.
+        area = gdalutils.get_area(gj)
+        return area < self.max_area
 
     def get_check_response(self):
         """
@@ -184,9 +205,12 @@ class ProviderCheck(object):
         """
         self.result = CheckResults.SUCCESS
 
-        response = self.get_check_response()
-        if response is not None:
-            self.validate_response(response)
+        if self.check_area():
+            response = self.get_check_response()
+            if response is not None:
+                self.validate_response(response)
+        else:
+            self.result = CheckResults.TOO_LARGE
 
         result_json = json.dumps(self.result.value[0]) % self.token_dict
         logger.debug("Provider check returning result: %s", result_json)
@@ -532,8 +556,8 @@ class WMTSProviderCheck(OWSProviderCheck):
 
 class TMSProviderCheck(ProviderCheck):
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None):
-        super(TMSProviderCheck, self).__init__(service_url, layer, aoi_geojson, slug)
+    def __init__(self, service_url, *args, **kwargs):
+        super(TMSProviderCheck, self).__init__(service_url, *args, **kwargs)
         self.service_url = self.service_url.format(z='0', y='0', x='0')
 
 
@@ -546,7 +570,7 @@ PROVIDER_CHECK_MAP = {
     "wmts": WMTSProviderCheck,
     "arcgis-raster": ProviderCheck,
     "arcgis-feature": ProviderCheck,
-    "tms": TMSProviderCheck
+    "tms": TMSProviderCheck,
 }
 
 
@@ -571,7 +595,7 @@ def perform_provider_check(provider, geojson):
         url = settings.OVERPASS_API_URL
 
     checker_type = get_provider_checker(provider_type)
-    checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug)
+    checker = checker_type(service_url=url, layer=provider.layer, aoi_geojson=geojson, slug=provider.slug, max_area=provider.max_selection)
     response = checker.check()
 
     logger.info("Status of provider '{}': {}".format(str(provider.name), response))

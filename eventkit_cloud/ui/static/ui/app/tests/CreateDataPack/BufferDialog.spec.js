@@ -7,6 +7,7 @@ import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import Slider from 'material-ui/Slider';
 import Clear from 'material-ui/svg-icons/content/clear';
+import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import BufferDialog from '../../components/CreateDataPack/BufferDialog';
 
 describe('AlertCallout component', () => {
@@ -16,9 +17,10 @@ describe('AlertCallout component', () => {
             show: true,
             value: 0,
             valid: true,
-            onBufferClick: () => {},
+            handleBufferClick: () => {},
             handleBufferChange: () => {},
             closeBufferDialog: () => {},
+            aoi: {},
         }
     );
 
@@ -56,6 +58,22 @@ describe('AlertCallout component', () => {
         expect(wrapper.find('.qa-BufferDialog-background')).toHaveLength(0);
     });
 
+    it('should render a warning if the area exceeds the aoi limit', () => {
+        const props = getProps();
+        props.maxAoiSqKm = -200;
+        const wrapper = getWrapper(props);
+        expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
+    });
+
+    it('should render the alert popup', () => {
+        const props = getProps();
+        props.maxAoiSqKm = -200;
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(AlertCallout)).toHaveLength(0);
+        wrapper.setState({ showAlert: true });
+        expect(wrapper.find(AlertCallout)).toHaveLength(1);
+    });
+
     it('Close buttons should call closeBufferDialog', () => {
         const props = getProps();
         props.closeBufferDialog = sinon.spy();
@@ -64,12 +82,12 @@ describe('AlertCallout component', () => {
         expect(props.closeBufferDialog.calledOnce).toBe(true);
     });
 
-    it('Update button should call onBufferClick', () => {
+    it('Update button should call handleBufferClick', () => {
         const props = getProps();
-        props.onBufferClick = sinon.spy();
+        props.handleBufferClick = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.find(RaisedButton).find('button').simulate('click');
-        expect(props.onBufferClick.calledOnce).toBe(true);
+        expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 
     it('Clear icon should call closeBufferDialog on click', () => {
@@ -78,5 +96,25 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         wrapper.find(Clear).simulate('click');
         expect(props.closeBufferDialog.calledOnce).toBe(true);
+    });
+
+    it('showAlert should set showAlert true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().showAlert();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAlert: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('closeAlert should set showAlert false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().closeAlert();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAlert: false })).toBe(true);
+        stateStub.restore();
     });
 });

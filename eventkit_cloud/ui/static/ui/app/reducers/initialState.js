@@ -63,7 +63,7 @@ export default {
         projectName: '',
         providers: [],
         areaStr: '',
-        formats: [],
+        formats: ['gpkg'],
     },
     providers: [],
     stepperNextEnabled: false,

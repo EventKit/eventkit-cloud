@@ -152,13 +152,19 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
                                            help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
     export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True)
+    max_selection = models.DecimalField(verbose_name="Max selection area", default=250, max_digits=12, decimal_places=3,
+                                        help_text="This is the maximum area in square kilometers that can be exported "
+                                                  "from this provider in a single DataPack.")
     level_from = models.IntegerField(verbose_name="Seed from level", default=0, null=True, blank=True,
-                                     help_text="This determines the starting zoom level a tile export will seed from")
+                                     help_text="This determines the starting zoom level the tile export will seed from.")
     level_to = models.IntegerField(verbose_name="Seed to level", default=10, null=True, blank=True,
-                                   help_text="This determine what zoom level your tile export will seed to")
+                                   help_text="This determines the highest zoom level the tile export will seed to.")
     config = models.TextField(default='', null=True, blank=True,
                               verbose_name="Configuration",
-                              help_text="This is an optional field to put in additional configuration.")
+                              help_text="""WMS, TMS, WMTS, and ArcGIS-Raster require a MapProxy YAML configuration
+                              with a Sources key of imagery and a Service Layer name of imagery; the validator also
+                              requires a layers section, but this isn't used.
+                              OSM Services also require a YAML configuration.""")
     user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
     license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
     zip = models.BooleanField(default=False)
