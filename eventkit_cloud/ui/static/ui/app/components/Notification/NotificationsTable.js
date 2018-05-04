@@ -1,9 +1,7 @@
 import React, { PropTypes } from 'react';
-import { connect } from 'react-redux';
 import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui';
 import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
-import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import NotificationsTableItem from './NotificationsTableItem';
 import NotificationsTableMenu from './NotificationsTableMenu';
 
@@ -152,9 +150,9 @@ export class NotificationsTable extends React.Component {
                                     <NotificationsTableMenu
                                         style={styles.multiMenu}
                                         selectedNotifications={this.state.selected}
-                                        onMarkAsRead={this.props.onMultiMarkAsRead}
-                                        onMarkAsUnread={this.props.onMultiMarkAsUnread}
-                                        onRemove={this.props.onMultiRemove}
+                                        onMarkAsRead={this.props.onMarkAsRead}
+                                        onMarkAsUnread={this.props.onMarkAsUnread}
+                                        onRemove={this.props.onRemove}
                                         onMarkAllAsRead={this.props.onMarkAllAsRead}
                                     />
                                 </div>
@@ -205,20 +203,6 @@ NotificationsTable.propTypes = {
     onRemove: PropTypes.func,
     onMarkAllAsRead: PropTypes.func,
     onView: PropTypes.func,
-    onMultiMarkAsRead: PropTypes.func,
-    onMultiMarkAsUnread: PropTypes.func,
-    onMultiRemove: PropTypes.func,
 };
 
-function mapDispatchToProps(dispatch) {
-    return {
-        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
-        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
-        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
-    };
-}
-
-export default connect(
-    null,
-    mapDispatchToProps,
-)(NotificationsTable);
+export default NotificationsTable;
