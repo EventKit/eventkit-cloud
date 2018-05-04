@@ -31,8 +31,8 @@ export class NotificationsDropdown extends React.Component {
             root: {
                 position: 'absolute',
                 top: '80px',
-                left: (window.innerWidth > 768) ? '-2px' : '-66px',
-                width: (window.innerWidth > 768) ? 'auto' : `${window.innerWidth - 8}px`,
+                left: (window.innerWidth > 768) ? '-2px' : '-67px',
+                width: (window.innerWidth > 768) ? 'auto' : `${window.innerWidth - 6}px`,
                 zIndex: '100',
                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
                 transformOrigin: (window.innerWidth > 768) ? '37px -21px' : '101px -21px',
