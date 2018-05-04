@@ -56,7 +56,7 @@ describe('NotificationsTableItem component', () => {
         expect(wrapper.find('.qa-NotificationsTableItem-Checkbox').find(Checkbox)).toHaveLength(1);
         const content = wrapper.find('.qa-NotificationsTableItem-Content');
         expect(content.find('.qa-NotificationIcon')).toHaveLength(1);
-        expect(content.find('.qa-NotificationMessage-Text')).toHaveLength(2);
+        expect(content.find('.qa-NotificationMessage-Text')).toHaveLength(1);
         expect(content.find('.qa-NotificationMessage-Link')).toHaveLength(1);
         const date = wrapper.find('.qa-NotificationsTableItem-Date');
         expect(date.childAt(0).text()).toBe(moment(props.notification.timestamp).format('M/D/YY'));
