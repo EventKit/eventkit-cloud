@@ -8,7 +8,6 @@ import CloseIcon from 'material-ui/svg-icons/navigation/close';
 import { NotificationsTableItem } from '../../components/Notification/NotificationsTableItem';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
-import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 
 describe('NotificationsTableItem component', () => {
     beforeEach(() => {
@@ -195,7 +194,6 @@ describe('NotificationsTableItem component', () => {
     it('should continue handleMarkAsRead() if parent returns true in onMarkAsRead()', () => {
         const props = {
             ...getProps(),
-            onMarkAsRead: () => { return true; },
             markNotificationsAsRead: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -292,5 +290,20 @@ describe('NotificationsTableItem component', () => {
         instance.handleRemove();
         expect(instance.props.removeNotifications.callCount).toBe(1);
         expect(instance.props.removeNotifications.calledWith([props.notification])).toBe(true);
+    });
+
+    it('should show a non-white background color for unread notifications', () => {
+        const wrapper = getShallowWrapper();
+        expect(wrapper.find(TableRow).get(0).props.style.backgroundColor).not.toBe('white');
+    });
+
+    it('should show a white background color for read notifications', () => {
+        const props = getProps();
+        props.notification = {
+            ...props.notification,
+            unread: false,
+        };
+        const wrapper = getShallowWrapper(props);
+        expect(wrapper.find(TableRow).get(0).props.style.backgroundColor).toBe('white');
     });
 });
