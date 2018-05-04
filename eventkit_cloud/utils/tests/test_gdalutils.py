@@ -115,6 +115,7 @@ class TestGdalUtils(TestCase):
             dataset
         )
         get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True, 'nodata': None}
+        is_envelope_mock.return_value = False
         self.task_process.return_value = Mock(exitcode=0)
         clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
