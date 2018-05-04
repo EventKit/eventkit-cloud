@@ -194,6 +194,7 @@ export class NotificationsTableItem extends React.Component {
                             </div>
                             :
                             <NotificationMenu
+                                className={'qa-NotificationsTableItem-NotificationMenu'}
                                 notification={this.props.notification}
                                 router={this.props.router}
                                 onMarkAsRead={this.props.onMarkAsRead}

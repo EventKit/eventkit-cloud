@@ -272,10 +272,10 @@ export function getNotificationIcon({ notification, iconStyle }) {
         },
     };
 
-    const infoIcon = <InfoIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#4598BF'}} />;
-    const checkCircleIcon = <CheckCircleIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#55BA63'}} />;
-    const warningIcon = <WarningIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#F4D225'}} />;
-    const errorIcon = <ErrorIcon className={'qa-Notification-Icon'} style={{...styles.icon, fill: '#CE4427'}} />;
+    const infoIcon = <InfoIcon className={'qa-NotificationIcon'} style={{...styles.icon, fill: '#4598BF'}} />;
+    const checkCircleIcon = <CheckCircleIcon className={'qa-NotificationIcon'} style={{...styles.icon, fill: '#55BA63'}} />;
+    const warningIcon = <WarningIcon className={'qa-NotificationIcon'} style={{...styles.icon, fill: '#F4D225'}} />;
+    const errorIcon = <ErrorIcon className={'qa-NotificationIcon'} style={{...styles.icon, fill: '#CE4427'}} />;
 
     const verb = notification.verb.toLowerCase();
     switch (verb) {
