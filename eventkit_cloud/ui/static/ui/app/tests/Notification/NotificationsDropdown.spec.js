@@ -3,7 +3,6 @@ import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { CircularProgress, Paper } from 'material-ui';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
-import { NotificationGridItem } from '../../components/Notification/NotificationGridItem';
 
 const mockNotifications = {
     '1': {
@@ -16,7 +15,7 @@ const mockNotifications = {
                 },
             },
         },
-        timestamp: 1525299970716,
+        timestamp: '2018-05-04T17:32:04.716806Z',
         unread: true,
     },
     '2': {
@@ -29,7 +28,7 @@ const mockNotifications = {
                 },
             },
         },
-        timestamp: 1525299972716,
+        timestamp: '2018-05-04T17:34:04.716806Z',
         unread: true,
     },
 };

@@ -14,13 +14,13 @@ const mockNotifications = {
     "1": {
         id: 1,
         unread: true,
-        timestamp: 0,
+        timestamp: '2018-05-04T17:32:04.716806Z',
     },
     "2": {
         id: 2,
         unread: false,
-        timestamp: 1,
-    }
+        timestamp: '2018-05-04T17:33:04.716806Z',
+    },
 };
 
 const mockNotificationsArray = [

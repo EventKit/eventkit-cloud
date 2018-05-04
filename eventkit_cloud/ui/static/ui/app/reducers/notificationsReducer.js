@@ -1,6 +1,7 @@
 import initialState from './initialState';
 import types from '../actions/actionTypes';
 import values from 'lodash/values';
+import moment from 'moment';
 
 export function notificationsReducer(state = initialState.notifications, action) {
     switch (action.type) {
@@ -183,6 +184,6 @@ export function notificationsReducer(state = initialState.notifications, action)
 
 export function getSortedNotifications(notificationsObj) {
     const notificationsSorted = values(notificationsObj);
-    notificationsSorted.sort((a, b) => b.timestamp - a.timestamp);
+    notificationsSorted.sort((a, b) => moment(b.timestamp) - moment(a.timestamp));
     return notificationsSorted;
 }

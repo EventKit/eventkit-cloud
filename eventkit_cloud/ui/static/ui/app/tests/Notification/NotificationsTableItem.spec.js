@@ -26,7 +26,7 @@ describe('NotificationsTableItem component', () => {
                         },
                     },
                 },
-                timestamp: 1525299972716,
+                timestamp: '2018-05-04T17:32:04.716806Z',
                 unread: true,
             },
             isSelected: true,
