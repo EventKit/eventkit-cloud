@@ -95,8 +95,7 @@ class TestSupport(TestCase):
         with patch('eventkit_cloud.ui.support.create_mxd.os') as mock_os:
             mock_os.path.isfile.return_value = False
             mock_os.path.abspath.return_value = example_layer
-            with self.assertRaises(Exception):
-                get_layer_file(layer_type, arc_version)
+            self.assertIsNone(get_layer_file(layer_type, arc_version))
 
     def test_update_layers(self):
         from ..support.create_mxd import update_layers
