@@ -6,7 +6,7 @@ from mock import Mock, patch, call
 from uuid import uuid4
 from django.test import TestCase
 
-from ..gdalutils import open_ds, cleanup_ds, clip_dataset, convert, get_meta
+from ..gdalutils import open_ds, cleanup_ds, is_envelope, clip_dataset, convert, get_meta
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +28,14 @@ class TestGdalUtils(TestCase):
         self.task_process.return_value = Mock(exitcode=0)
 
         ds_mock = Mock(spec=gdal.Dataset)
+        ds_mock.RasterCount = 0
         open_ds_mock.return_value = ds_mock
         ds_mock.GetDriver.return_value.ShortName = 'gtiff'
         expected_meta = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
-        ds_mock.RasterCount.return_value = 2
+        ds_mock.RasterCount = 2
         ds_mock.GetRasterBand.return_value.GetNoDataValue.return_value = -32768.0
         expected_meta = {'driver': 'gtiff', 'is_raster': True, 'nodata': -32768.0}
         returned_meta = get_meta(dataset_path)
@@ -42,8 +43,7 @@ class TestGdalUtils(TestCase):
 
         ds_mock = Mock(spec=ogr.DataSource)
         open_ds_mock.return_value = ds_mock
-        ds_mock.GetDriver.return_value.GetName = 'gpkg'
-        open_ds_mock.return_value = Mock(spec=ogr.DataSource)
+        ds_mock.GetDriver.return_value.GetName.return_value = 'gpkg'
         expected_meta = {'driver': 'gpkg', 'is_raster': False, 'nodata': None}
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
@@ -53,9 +53,47 @@ class TestGdalUtils(TestCase):
         returned_meta = get_meta(dataset_path)
         self.assertEqual(expected_meta, returned_meta)
 
+    def test_is_envelope(self):
+        envelope_gj = """{"type": "MultiPolygon",
+            "coordinates": [ [
+                [   [0,0],
+                    [1,0],
+                    [1,1],
+                    [0,1],
+                    [0,0]
+                ]
+            ] ]
+        }"""
+        triangle_gj = """{"type": "MultiPolygon",
+            "coordinates": [ [
+                [   [0,0],
+                    [1,0],
+                    [0,1],
+                    [0,0]
+                ]
+            ] ]
+        }"""
+        non_env_gj = """{"type": "MultiPolygon",
+            "coordinates": [ [
+                [   [0,0],
+                    [1.5,0],
+                    [1,1],
+                    [0,1],
+                    [0,0]
+                ]
+            ] ]
+        }"""
+        empty_gj = ""
+
+        self.assertTrue(is_envelope(envelope_gj))
+        self.assertFalse(is_envelope(triangle_gj))
+        self.assertFalse(is_envelope(non_env_gj))
+        self.assertFalse(is_envelope(empty_gj))
+
+    @patch('eventkit_cloud.utils.gdalutils.is_envelope')
     @patch('eventkit_cloud.utils.gdalutils.get_meta')
     @patch('eventkit_cloud.utils.gdalutils.os.path.isfile')
-    def test_clip_dataset(self, isfile, get_meta_mock):
+    def test_clip_dataset(self, isfile, get_meta_mock, is_envelope_mock):
 
         isfile.return_value = True
 
@@ -68,31 +106,47 @@ class TestGdalUtils(TestCase):
         in_dataset = "/path/to/old_dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdalwarp -cutline {0} -crop_to_cutline -of {1} {2} {3} {4}".format(
+        expected_cmd = "gdalwarp -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
             geojson_file,
+            "-dstalpha",
             fmt,
             band_type,
             in_dataset,
             dataset
         )
-        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True}
+        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': True, 'nodata': None}
         self.task_process.return_value = Mock(exitcode=0)
         clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
 
-
         # Geotiff
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdalwarp -cutline {0} -crop_to_cutline -dstalpha -of {1} {2} {3} {4}".format(
+        expected_cmd = "gdalwarp -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
             geojson_file,
+            "",
             fmt,
             band_type,
             in_dataset,
             dataset
         )
-        get_meta_mock.return_value = ('gtiff', True)
+        get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
+        is_envelope_mock.return_value = True  # So, no need for -dstalpha
+        clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
+        self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
+                                                             stderr=-1, stdout=-1)
+
+        # Geotiff with non-envelope polygon cutline
+        expected_cmd = "gdalwarp -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+            geojson_file,
+            "-dstalpha",
+            fmt,
+            band_type,
+            in_dataset,
+            dataset
+        )
+        is_envelope_mock.return_value = False
         clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
@@ -105,7 +159,7 @@ class TestGdalUtils(TestCase):
             dataset,
             in_dataset
         )
-        get_meta_mock.return_value = ('gpkg', False)
+        get_meta_mock.return_value = {'driver': 'gpkg', 'is_raster': False}
         clip_dataset(boundary=geojson_file, in_dataset=in_dataset, out_dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
@@ -140,7 +194,7 @@ class TestGdalUtils(TestCase):
             in_dataset,
             dataset
         )
-        get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True}
+        get_meta_mock.return_value = {'driver': 'gtiff', 'is_raster': True, 'nodata': None}
         self.task_process.return_value = Mock(exitcode=0)
         convert(dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,

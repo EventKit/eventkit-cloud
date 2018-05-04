@@ -91,8 +91,8 @@ def get_meta(ds_path):
             ret['driver'] = ds.GetDriver().GetName()
             ret['is_raster'] = False
 
-        if ret[0]:
-            logger.debug("Identified dataset {0} as {1}".format(ds_path, ret[0]))
+        if ret['driver']:
+            logger.debug("Identified dataset {0} as {1}".format(ds_path, ret['driver']))
         else:
             logger.debug("Could not identify dataset {0}".format(ds_path))
 
@@ -110,16 +110,21 @@ def is_envelope(geojson_path):
     :return: True if
     """
     try:
-        with open(geojson_path, "r") as gf:
-            geojson = json.load(gf)
-            p = geojson['coordinates'][0][0]
-            if len(p) != 5 or p[4] != p[0]:
-                return False
-            ret = len(set([c[0] for c in p])) == len(set([c[1] for c in p])) == 2
-            logger.debug("Checking if boundary is envelope: %s for %s", ret, p)
-            return ret
+        geojson = ""
+        if not os.path.isfile(geojson_path) and isinstance(geojson_path, str):
+            geojson = json.loads(geojson_path)
+        else:
+            with open(geojson_path, "r") as gf:
+                geojson = json.load(gf)
 
-    except (IndexError, IOError):
+        p = geojson['coordinates'][0][0]
+        if len(p) != 5 or p[4] != p[0]:
+            return False
+        ret = len(set([c[0] for c in p])) == len(set([c[1] for c in p])) == 2
+        logger.debug("Checking if boundary is envelope: %s for %s", ret, p)
+        return ret
+
+    except (IndexError, IOError, ValueError):
         # Unparseable JSON or unreadable file: play it safe
         return False
 
@@ -184,7 +189,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
     try:
 
-        if meta['nodata'] is None and not is_envelope(in_dataset):
+        if meta.get('nodata') is None and not is_envelope(in_dataset):
             dstalpha = "-dstalpha"
         else:
             dstalpha = ""
