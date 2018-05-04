@@ -55,7 +55,7 @@ export class NotificationsDropdown extends React.Component {
             header: {
                 display: 'flex',
                 alignItems: 'center',
-                padding: (window.innerWidth > 768) ? '28px 28px 20px' : '18px 18px 20px',
+                padding: (window.innerWidth > 768) ? '28px 28px 20px' : '18px 18px 18px',
             },
             headerTitle: {
                 fontSize: '22px',
