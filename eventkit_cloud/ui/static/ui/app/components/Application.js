@@ -542,6 +542,7 @@ export class Application extends Component {
                             iconElementLeft={
                                 <div>
                                     <IconButton
+                                        className={'qa-Application-AppBar-MenuButton'}
                                         style={styles.menuButton}
                                         iconStyle={styles.menuButtonIcon}
                                         touchRippleColor="white"
@@ -551,6 +552,7 @@ export class Application extends Component {
                                     </IconButton>
                                     <div style={{ display: 'inline-block', position: 'relative' }}>
                                         <IconButton
+                                            className={'qa-Application-AppBar-NotificationsButton'}
                                             style={{
                                                 ...styles.notificationsButton,
                                                 backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ? '#4598BF' : '',
@@ -564,7 +566,7 @@ export class Application extends Component {
                                             <Notifications />
                                         </IconButton>
                                         <div
-                                            className="qa-Application-NotificationsIndicator"
+                                            className="qa-Application-AppBar-NotificationsIndicator"
                                             style={{
                                                 ...styles.notificationsIndicator,
                                                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',

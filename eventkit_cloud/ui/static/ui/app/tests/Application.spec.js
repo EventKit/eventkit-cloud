@@ -21,6 +21,7 @@ import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
 import { Application } from '../components/Application';
 import ConfirmDialog from '../components/Dialog/ConfirmDialog';
+import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 
 const mockStore = configureMockStore();
 const store = mockStore({});
@@ -81,6 +82,10 @@ describe('Application component', () => {
         expect(wrapper.find(Banner)).toHaveLength(1);
         expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
+        expect(wrapper.find(NotificationsDropdown)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
@@ -360,5 +365,69 @@ describe('Application component', () => {
         expect(instance.notificationsRefreshIntervalId).toBe(null);
         expect(instance.notificationsUnreadCountIntervalId).toBe(null);
         stopListeningForNotificationsSpy.restore();
+    });
+
+    it('should change notifications button background color when viewing notifications page', () => {
+        const wrapper = getMountedWrapper(getProps());
+        const button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
+        expect(button.props().style.backgroundColor).toBe('');
+        wrapper.setProps({
+            router: {
+                location: {
+                    pathname: '/notifications',
+                },
+            },
+        });
+        expect(button.props().style.backgroundColor).toBe('#4598BF');
+        wrapper.setProps({
+            router: {
+                location: {
+                    pathname: '/exports',
+                },
+            },
+        });
+        expect(button.props().style.backgroundColor).toBe('');
+    });
+
+    it('should scale the notifications indicator up/down when unread count is positive/zero', () => {
+        const wrapper = getMountedWrapper(getProps());
+        const indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
+        expect(indicator.props().style.transform).toBe('scale(0)');
+        wrapper.setProps({
+            notifications: {
+                notifications: {},
+                notificationsSorted: [],
+                unreadCount: {
+                    unreadCount: 1,
+                },
+            },
+        });
+        expect(indicator.props().style.transform).toBe('scale(1)');
+        wrapper.setProps({
+            notifications: {
+                notifications: {},
+                notificationsSorted: [],
+                unreadCount: {
+                    unreadCount: 0,
+                },
+            },
+        });
+        expect(indicator.props().style.transform).toBe('scale(0)');
+    });
+
+    it('should open/close notifications dropdown when notifications button is clicked', () => {
+        const wrapper = getMountedWrapper(getProps());
+        const dropdown = wrapper.find(NotificationsDropdown);
+        expect(dropdown.props().style.opacity).toBe('0');
+        expect(dropdown.props().style.pointerEvents).toBe('none');
+        expect(dropdown.props().style.transform).toBe('scale(0)');
+        wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click');
+        expect(dropdown.props().style.opacity).toBe('1');
+        expect(dropdown.props().style.pointerEvents).toBe('auto');
+        expect(dropdown.props().style.transform).toBe('scale(1)');
+        wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click');
+        expect(dropdown.props().style.opacity).toBe('0');
+        expect(dropdown.props().style.pointerEvents).toBe('none');
+        expect(dropdown.props().style.transform).toBe('scale(0)');
     });
 });
