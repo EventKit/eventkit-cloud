@@ -33,7 +33,6 @@ export class ProviderStatusIcon extends Component {
     }
 
     render() {
-
         var style = {
             base: {
                 display: 'inline-block',
@@ -62,6 +61,12 @@ export class ProviderStatusIcon extends Component {
                 StatusIcon = ActionDone;
                 title = "Success";
                 messagePrefix = "No problems: ";
+                break;
+            case 'FATAL':
+                style.icon['color'] = 'rgba(128, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = "Cannot Select";
+                messagePrefix = "";
                 break;
             case 'ERR':
                 style.icon['color'] = 'rgba(192, 0, 0, 0.87)';
@@ -124,8 +129,12 @@ export class ProviderStatusIcon extends Component {
     }
 }
 
+ProviderStatusIcon.defaultProps = {
+    availability: {},
+};
+
 ProviderStatusIcon.propTypes = {
-    availability: PropTypes.object.isRequired,
-}
+    availability: PropTypes.object,
+};
 
 export default ProviderStatusIcon;

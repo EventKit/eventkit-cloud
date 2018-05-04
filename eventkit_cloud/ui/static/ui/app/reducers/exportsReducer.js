@@ -69,8 +69,8 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
             projectName: '',
             providers: [],
             areaStr: '',
-            layers: '',
-        }
+            formats: ['gpkg'],
+        };
     default:
         return state;
     }

@@ -1,3 +1,5 @@
+import numeral from 'numeral';
+import GeoJSON from 'ol/format/geojson';
 
 export function userIsDataPackAdmin(user, permissions, groups) {
     const { username } = user;
@@ -61,4 +63,31 @@ export function isLatLon(c) {
         return parsedCoordArray;
     }
     return false;
+}
+
+export function getSqKm(geojson) {
+    let area = 0;
+    if (!geojson.features) {
+        return area;
+    }
+    const Geojson = new GeoJSON();
+    const features = Geojson.readFeatures(geojson, {
+        featureProjection: 'EPSG:3857',
+        dataProjection: 'EPSG:4326',
+    });
+
+    features.forEach((feature) => {
+        try {
+            area += feature.getGeometry().getArea() / 1000000;
+        } catch (e) {
+            area += 0;
+        }
+    });
+    return area;
+}
+
+export function getSqKmString(geojson) {
+    const area = getSqKm(geojson);
+    const areaStr = numeral(area).format('0,0');
+    return `${areaStr} sq km`;
 }

@@ -163,9 +163,10 @@ class GeoNames(GeocodeAdapter):
         return {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': query}
 
     def create_geojson(self, response):
-        logger.error(response)
+        if not response.get('geonames'):
+            raise Exception("Geocoder did not return 'geonames' in the response")
         features = []
-        for result in response.get('geonames'):
+        for result in response.get('geonames', []):
             feature = self.get_feature(bbox=self.get_bbox(result.pop('bbox', None)), properties=result)
             features += [feature]
         return self.get_feature_collection(features=features)
@@ -191,8 +192,10 @@ class Pelias(GeocodeAdapter):
         return {'text': query, 'geometries': 'point,polygon'}
 
     def create_geojson(self, response):
+        if not response.get('features'):
+            raise Exception("Geocoder did not return 'features' in the response")
         features = []
-        for feature in response.get('features'):
+        for feature in response.get('features', []):
             feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
             features += [feature]
         return self.get_feature_collection(features=features)
