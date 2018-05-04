@@ -29,6 +29,7 @@ describe('NotificationsTableItem component', () => {
                 timestamp: 1525299972716,
                 unread: true,
             },
+            isSelected: true,
             router: {
                 push: sinon.spy(),
             },
@@ -305,5 +306,18 @@ describe('NotificationsTableItem component', () => {
         };
         const wrapper = getShallowWrapper(props);
         expect(wrapper.find(TableRow).get(0).props.style.backgroundColor).toBe('white');
+    });
+
+    it('should pass correct props to checkbox', () => {
+        const props = {
+            ...getProps(),
+            setSelected: sinon.spy(),
+        };
+        const wrapper = getShallowWrapper(props);
+        const checkbox = wrapper.find('.qa-NotificationsTableItem-Checkbox').find(Checkbox).get(0);
+        expect(checkbox.props.checked).toBe(props.isSelected);
+        checkbox.props.onCheck({}, false);
+        expect(props.setSelected.callCount).toBe(1);
+        expect(props.setSelected.calledWith(props.notification, false)).toBe(true);
     });
 });
