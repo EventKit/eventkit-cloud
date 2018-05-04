@@ -634,15 +634,15 @@ describe('mapUtils', () => {
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
     });
 
-    it('hasArea should return false if there are no features', () => {
+    it('allHaveArea should return false if there are no features', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [],
         };
-        expect(utils.hasArea(collection)).toBe(false);
+        expect(utils.allHaveArea(collection)).toBe(false);
     });
 
-    it('hasArea should return false if polygon has no area', () => {
+    it('allHaveArea should return false if polygon has no area', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [
@@ -661,10 +661,10 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.hasArea(collection)).toBe(false);
+        expect(utils.allHaveArea(collection)).toBe(false);
     });
 
-    it('hasArea should return false for points (no getArea func in ol)', () => {
+    it('allHaveArea should return false for points (no getArea func in ol)', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [
@@ -680,10 +680,10 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.hasArea(collection)).toBe(false);
+        expect(utils.allHaveArea(collection)).toBe(false);
     });
 
-    it('hasArea should retunr true', () => {
+    it('allHaveArea should retunr true', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [
@@ -702,7 +702,7 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.hasArea(collection)).toBe(true);
+        expect(utils.allHaveArea(collection)).toBe(true);
     });
 
     it('getDominantGeometry should return Point', () => {
