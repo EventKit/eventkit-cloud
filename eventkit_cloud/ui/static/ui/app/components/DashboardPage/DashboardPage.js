@@ -9,7 +9,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import { getProviders } from '../../actions/exportsActions';
 import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
-import DataPackWideItem from './DataPackWideItem';
+import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
@@ -370,7 +370,7 @@ export class DashboardPage extends React.Component {
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
                                     {this.props.featuredRunsList.runs.map((run, index) => (
-                                        <DataPackWideItem
+                                        <DataPackFeaturedItem
                                             className="qa-DashboardSection-FeaturedGrid-WideItem"
                                             run={run}
                                             key={`FeaturedDataPack-${run.created_at}`}

@@ -4,17 +4,17 @@ import { mount } from 'enzyme';
 import moment from 'moment';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardTitle, CardText } from 'material-ui/Card';
-import { DataPackWideItem } from '../../components/DashboardPage/DataPackWideItem';
+import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';
 
-describe('DataPackWideItem component', () => {
+describe('DataPackFeaturedItem component', () => {
     const muiTheme = getMuiTheme();
 
     beforeAll(() => {
-        DataPackWideItem.prototype.initMap = sinon.spy();
+        DataPackFeaturedItem.prototype.initMap = sinon.spy();
     });
 
     afterAll(() => {
-        DataPackWideItem.prototype.initMap.restore();
+        DataPackFeaturedItem.prototype.initMap.restore();
     });
 
     function getProps() {
@@ -37,7 +37,7 @@ describe('DataPackWideItem component', () => {
     }
 
     function getMountedWrapper(props = getProps()) {
-        return mount(<DataPackWideItem {...props} />, {
+        return mount(<DataPackFeaturedItem {...props} />, {
             context: { muiTheme },
             childContextTypes: { muiTheme: React.PropTypes.object },
         });

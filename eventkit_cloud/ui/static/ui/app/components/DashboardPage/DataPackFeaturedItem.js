@@ -1,7 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import { Link } from 'react-router';
 import { Card, CardTitle, CardText } from 'material-ui/Card';
-import { ListItem } from 'material-ui/List';
 import moment from 'moment';
 import isUndefined from 'lodash/isUndefined';
 import Map from 'ol/map';
@@ -18,7 +17,7 @@ import ScaleLine from 'ol/control/scaleline';
 
 import ol3mapCss from '../../styles/ol3map.css';
 
-export class DataPackWideItem extends Component {
+export class DataPackFeaturedItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
@@ -232,15 +231,15 @@ export class DataPackWideItem extends Component {
     }
 }
 
-DataPackWideItem.contextTypes = {
+DataPackFeaturedItem.contextTypes = {
     config: React.PropTypes.object,
 };
 
-DataPackWideItem.propTypes = {
+DataPackFeaturedItem.propTypes = {
     run: PropTypes.object.isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     height: PropTypes.string,
 };
 
-export default DataPackWideItem;
+export default DataPackFeaturedItem;
