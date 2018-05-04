@@ -40,6 +40,7 @@ describe('NotificationGridItem component', () => {
         const props = getProps();
         const wrapper = getShallowWrapper(props);
         expect(wrapper.find(Paper)).toHaveLength(1);
+        expect(wrapper.find(Paper).find('.qa-NotificationIcon')).toHaveLength(1);
         expect(wrapper.find(Paper).find('.qa-NotificationMessage-Text')).toHaveLength(2);
         expect(wrapper.find(Paper).find('.qa-NotificationMessage-Link')).toHaveLength(1);
         expect(wrapper.find('.qa-NotificationGridItem-Date')).toHaveLength(1);
