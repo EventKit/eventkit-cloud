@@ -6,6 +6,8 @@ import InfoIcon from 'material-ui/svg-icons/action/info';
 import CheckCircleIcon from 'material-ui/svg-icons/action/check-circle';
 import WarningIcon from 'material-ui/svg-icons/alert/warning';
 import ErrorIcon from 'material-ui/svg-icons/alert/error';
+import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
+import RemoveCircleIcon from 'material-ui/svg-icons/content/remove-circle';
 import * as utils from '../../utils/notificationUtils';
 
 const run = {
@@ -34,11 +36,10 @@ describe('notificationUtils', () => {
             onLinkClick: onLinkClickSpy,
         });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
         messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
         expect(onLinkClickSpy.callCount).toBe(1);
-        expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;has started.</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>&nbsp;has started processing.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
@@ -63,11 +64,10 @@ describe('notificationUtils', () => {
             onLinkClick: onLinkClickSpy,
         });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
         messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
         expect(onLinkClickSpy.callCount).toBe(1);
-        expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;was canceled.</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>&nbsp;has been canceled.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
@@ -92,11 +92,10 @@ describe('notificationUtils', () => {
             onLinkClick: onLinkClickSpy,
         });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
         messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
         expect(onLinkClickSpy.callCount).toBe(1);
-        expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;is complete.</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>&nbsp;is complete.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
@@ -121,11 +120,10 @@ describe('notificationUtils', () => {
             onLinkClick: onLinkClickSpy,
         });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
         messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
         expect(onLinkClickSpy.callCount).toBe(1);
-        expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;failed to complete.</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>&nbsp;failed to complete.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
@@ -150,15 +148,14 @@ describe('notificationUtils', () => {
             onLinkClick: onLinkClickSpy,
         });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>DataPack&nbsp;</span>).text());
         expect(messageWrapper.find(Link).childAt(0).text()).toBe(notification.actor.details.job.name);
         messageWrapper.find(Link).get(0).props.onClick({ preventDefault: () => {} });
         expect(onLinkClickSpy.callCount).toBe(1);
-        expect(messageWrapper.find('span').at(1).text()).toEqual(shallow(<span>&nbsp;was deleted.</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>&nbsp;has been deleted.</span>).text());
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
-        expect(iconWrapper.find(WarningIcon)).toHaveLength(1);
+        expect(iconWrapper.find(RemoveCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
         expect(viewPath).toBe(`/status/${notification.actor.details.job.uid}`);
@@ -175,12 +172,12 @@ describe('notificationUtils', () => {
 
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>Added to group&nbsp;</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been added to"}&nbsp;</span>).text());
         expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
-        expect(iconWrapper.find(InfoIcon)).toHaveLength(1);
+        expect(iconWrapper.find(AddCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
         expect(viewPath).toBe('/groups');
@@ -197,12 +194,12 @@ describe('notificationUtils', () => {
 
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>Removed from group&nbsp;</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been removed from"}&nbsp;</span>).text());
         expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
-        expect(iconWrapper.find(InfoIcon)).toHaveLength(1);
+        expect(iconWrapper.find(RemoveCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
         expect(viewPath).toBe('/groups');
@@ -219,12 +216,12 @@ describe('notificationUtils', () => {
 
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>Set as admin of group&nbsp;</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been set as an admin of"}&nbsp;</span>).text());
         expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
-        expect(iconWrapper.find(InfoIcon)).toHaveLength(1);
+        expect(iconWrapper.find(AddCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
         expect(viewPath).toBe('/groups');
@@ -241,12 +238,12 @@ describe('notificationUtils', () => {
 
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
-        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>Removed as admin of group&nbsp;</span>).text());
+        expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been removed as an admin of"}&nbsp;</span>).text());
         expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
-        expect(iconWrapper.find(InfoIcon)).toHaveLength(1);
+        expect(iconWrapper.find(RemoveCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
         expect(viewPath).toBe('/groups');
