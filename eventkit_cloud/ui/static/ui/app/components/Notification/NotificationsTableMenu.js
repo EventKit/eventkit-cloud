@@ -91,17 +91,9 @@ export class NotificationsTableMenu extends React.Component {
                 anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
                 targetOrigin={{ horizontal: 'left', vertical: 'top' }}
             >
-                {showMarkAsUnread ?
-                    <MenuItem
-                        primaryText="Mark As Unread"
-                        leftIcon={<FlagIcon/>}
-                        onClick={this.handleMarkAsUnread}
-                    />
-                    :
-                    null
-                }
                 {showMarkAsRead ?
                     <MenuItem
+                        className={'qa-NotificationsTableMenu-MarkAsRead'}
                         primaryText="Mark As Read"
                         leftIcon={<FlagIcon />}
                         onClick={this.handleMarkAsRead}
@@ -109,8 +101,19 @@ export class NotificationsTableMenu extends React.Component {
                     :
                     null
                 }
+                {showMarkAsUnread ?
+                    <MenuItem
+                        className={'qa-NotificationsTableMenu-MarkAsUnread'}
+                        primaryText="Mark As Unread"
+                        leftIcon={<FlagIcon/>}
+                        onClick={this.handleMarkAsUnread}
+                    />
+                    :
+                    null
+                }
                 {(selectedNotificationsKeys.length > 0) ?
                     <MenuItem
+                        className={'qa-NotificationsTableMenu-Remove'}
                         primaryText="Remove"
                         leftIcon={<CloseIcon />}
                         onClick={this.handleRemove}
@@ -124,6 +127,7 @@ export class NotificationsTableMenu extends React.Component {
                     null
                 }
                 <MenuItem
+                    className={'qa-NotificationsTableMenu-MarkAllAsRead'}
                     style={styles.markAllAsRead}
                     primaryText="Mark All As Read"
                     onClick={this.handleMarkAllAsRead}
