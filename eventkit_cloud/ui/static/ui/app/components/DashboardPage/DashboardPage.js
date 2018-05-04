@@ -365,7 +365,7 @@ export class DashboardPage extends React.Component {
                                     name="Featured"
                                     columns={this.getGridWideColumns()}
                                     gridPadding={this.getGridPadding()}
-                                    cellHeight={335}
+                                    cellHeight={(window.innerWidth > 768) ? 335 : 435}
                                     providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
@@ -376,7 +376,7 @@ export class DashboardPage extends React.Component {
                                             key={`FeaturedDataPack-${run.created_at}`}
                                             gridName="Featured"
                                             index={index}
-                                            height="335px"
+                                            height={(window.innerWidth > 768) ? '335px' : '435px'}
                                         />
                                     ))}
                                 </DashboardSection>

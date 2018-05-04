@@ -110,68 +110,83 @@ export class DataPackFeaturedItem extends Component {
                 position: 'relative',
                 height: cardHeight,
             },
+            content: {
+                display: 'flex',
+                flexWrap: 'nowrap',
+                height: cardHeight,
+                flexDirection: (window.innerWidth > 768) ? 'row' : 'column',
+            },
+            map: {
+                flex: '67',
+                maxWidth: (window.innerWidth > 768) ? '67%' : '',
+                maxHeight: (window.innerWidth > 768) ? '' : '67%',
+                boxSizing: 'border-box',
+                backgroundColor: 'none',
+                order: (window.innerWidth > 768) ? '1' : '2',
+            },
+            info: {
+                flex: '33',
+                maxWidth: (window.innerWidth > 768) ? '33%' : '100%',
+                maxHeight: (window.innerWidth > 768) ? '' : '33%',
+                boxSizing: 'border-box',
+                padding: (window.innerWidth > 768) ? '17px 24px 20px' : '12px 16px 14px',
+                order: (window.innerWidth > 768) ? '2' : '1',
+            },
+            infoHeader: {
+                paddingBottom: '14px',
+                display: 'flex',
+                flexDirection: (window.innerWidth > 768) ? 'column': 'row',
+                maxWidth: '100%',
+            },
             cardTitle: {
                 wordWrap: 'break-word',
-                padding: '17px 24px 20px',
                 fontWeight: 'bold',
                 textTransform: 'uppercase',
                 boxSizing: 'border-box',
-                flex: '0',
+                maxWidth: '100%',
+                padding: '0',
             },
             cardTitle2: {
                 fontSize: 22,
-                height: '36px',
+            },
+            titleLink: {
+                color: 'inherit',
+                width: '100%',
+                margin: '0px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                WebkitLineClamp: 2,
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                wordWrap: 'break-word',
             },
             cardSubtitle: {
-                fontSize: window.innerWidth < 768 ? '10px' : '12px',
+                display: (window.innerWidth > 768) ? '' : 'none',
+                fontSize: (window.innerWidth > 768) ? '12px' : '10px',
                 fontWeight: 'normal',
+                color: 'rgba(0, 0, 0, 0.54)',
+                marginBottom: '16px',
+            },
+            cardTextContainer: {
+                padding: '0px',
+                position: 'relative',
+                boxSizing: 'border-box',
+                overflow: 'hidden',
             },
             cardText: {
-                position: 'absolute',
                 wordWrap: 'break-word',
                 width: '100%',
                 backgroundColor: '#f7f8f8',
                 zIndex: 2,
-                padding: '0px 24px 0px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                WebkitLineClamp: window.innerWidth < 1024 ? 10 : 8,
+                WebkitLineClamp:
+                    (window.innerWidth > 1024) ? 6 :
+                    (window.innerWidth > 768) ? 7 : 2,
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
-                fontSize: window.innerWidth < 1024 ? '14px' : '16px',
-                lineHeight: window.innerWidth < 1024 ? 'inherit' : '1.5',
-            },
-            cardTextContainer: {
-                padding: '0px',
-                marginBottom: '10px',
-                position: 'relative',
-                boxSizing: 'border-box',
-                flex: '1',
-                overflow: 'hidden',
-            },
-            titleLink: {
-                color: 'inherit',
-                display: 'block',
-                width: '100%',
-                height: '36px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                margin: '0px',
-            },
-            map: {
-                flex: '66',
-                maxWidth: '66%',
-                boxSizing: 'border-box',
-                padding: '0px 2px',
-                backgroundColor: 'none',
-            },
-            info: {
-                flex: '33',
-                maxWidth: '33%',
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'column',
+                fontSize: (window.innerWidth > 1024) ? '16px' : '14px',
+                lineHeight: (window.innerWidth > 1024) ? '1.5' : 'inherit',
             },
         };
 
@@ -180,7 +195,7 @@ export class DataPackFeaturedItem extends Component {
                 style={styles.card}
                 key={this.props.run.uid}
             >
-                <div style={{display: 'flex', flexWrap: 'nowrap', height: cardHeight}}>
+                <div style={styles.content}>
                     <div
                         id={this.getMapId()}
                         style={styles.map}
@@ -191,10 +206,9 @@ export class DataPackFeaturedItem extends Component {
                             titleColor="#4598bf"
                             style={styles.cardTitle}
                             titleStyle={styles.cardTitle2}
-                            subtitleStyle={styles.cardSubtitle}
                             title={
                                 <div>
-                                    <div style={{display: 'inline-block', width: '100%', height: '36px'}}>
+                                    <div style={{display: 'inline-block', width: '100%'}}>
                                         <Link
                                             to={`/status/${this.props.run.job.uid}`}
                                             href={`/status/${this.props.run.job.uid}`}
@@ -206,7 +220,7 @@ export class DataPackFeaturedItem extends Component {
                                 </div>
                             }
                             subtitle={
-                                <div>
+                                <div style={styles.cardSubtitle}>
                                     <div
                                         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                     >
