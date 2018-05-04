@@ -13,8 +13,6 @@ export class NotificationsPage extends React.Component {
     constructor(props) {
         super(props);
         this.refresh = this.refresh.bind(this);
-        this.isSameOrderType = this.isSameOrderType.bind(this);
-        this.getHeaderStyle = this.getHeaderStyle.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
         this.itemsPerPage = 12;
@@ -41,14 +39,6 @@ export class NotificationsPage extends React.Component {
     refresh() {
         this.props.getNotifications({ pageSize: this.state.pageSize });
         this.setState({ loading: true });
-    }
-
-    isSameOrderType(unknown, known) {
-        return unknown.replace(/-/, '') == known.replace(/-/, '');
-    }
-
-    getHeaderStyle(isActive) {
-        return isActive ? {color: '#000', fontWeight: 'bold'} : {color: 'inherit'}
     }
     
     getGridPadding() {
@@ -131,9 +121,9 @@ export class NotificationsPage extends React.Component {
         return (
             <div style={styles.root}>
                 <AppBar
-                    className="qa-Notifications-AppBar"
+                    className={'qa-Notifications-AppBar'}
                     style={styles.appBar}
-                    title="Notifications"
+                    title={'Notifications'}
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
                 />
@@ -150,7 +140,7 @@ export class NotificationsPage extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 style={{ margin: 'auto', display: 'block' }}
-                                color="#4598bf"
+                                color={'#4598bf'}
                                 size={50}
                             />
                         </div>
@@ -161,16 +151,19 @@ export class NotificationsPage extends React.Component {
                     {this.state.loadingPage ?
                         null
                         :
-                        <div style={styles.content}>
+                        <div
+                            className={'qa-NotificationsPage-Content'}
+                            style={styles.content}
+                        >
                             {(notifications.length === 0) ?
                                 <Paper
-                                    className="qa-NotifcationsPage-NoData"
+                                    className={'qa-NotificationsPage-Content-NoData'}
                                     style={styles.noData}
                                 >
                                     {"You don't have any notifications."}
                                 </Paper>
                                 :
-                                <div>
+                                <div className={'qa-NotificationsPage-Content-Notifications'}>
                                     {(window.innerWidth > 768) ?
                                         <NotificationsTable
                                             notifications={this.props.notifications}
@@ -178,24 +171,21 @@ export class NotificationsPage extends React.Component {
                                             router={this.props.router}
                                         />
                                         :
-                                        <div>
-                                            <GridList
-                                                key="NotificationsPageGridList"
-                                                className="qa-NotificationsPage-Grid"
-                                                cellHeight="auto"
-                                                style={styles.gridList}
-                                                padding={2}
-                                                cols={1}
-                                            >
-                                                {notifications.map((notification) => (
-                                                    <NotificationGridItem
-                                                        key={`Notification-${notification.id}`}
-                                                        notification={notification}
-                                                        router={this.props.router}
-                                                    />
-                                                ))}
-                                            </GridList>
-                                        </div>
+                                        <GridList
+                                            className={'qa-NotificationsPage-Content-Notifications-Grid'}
+                                            cellHeight={'auto'}
+                                            style={styles.gridList}
+                                            padding={2}
+                                            cols={1}
+                                        >
+                                            {notifications.map((notification) => (
+                                                <NotificationGridItem
+                                                    key={`Notification-${notification.id}`}
+                                                    notification={notification}
+                                                    router={this.props.router}
+                                                />
+                                            ))}
+                                        </GridList>
                                     }
                                     <LoadButtons
                                         range={range}
