@@ -27,7 +27,7 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
         text: {
             ...textStyle,
             whiteSpace: 'nowrap',
-            fontSize: (window.innerWidth >= 768) ? '16px' : '12px',
+            fontSize: (window.innerWidth >= 512) ? '16px' : '12px',
         },
         link: {
             ...textStyle,
@@ -35,6 +35,7 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
             color: '#337ab7',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
+            fontSize: (window.innerWidth >= 512) ? '16px' : '12px',
         },
     };
 

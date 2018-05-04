@@ -31,16 +31,17 @@ export class NotificationsDropdown extends React.Component {
             root: {
                 position: 'absolute',
                 top: '80px',
-                left: '-2px',
+                left: (window.innerWidth > 768) ? '-2px' : '-66px',
+                width: (window.innerWidth > 768) ? 'auto' : `${window.innerWidth - 8}px`,
                 zIndex: '100',
                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                transformOrigin: '37px -21px',
+                transformOrigin: (window.innerWidth > 768) ? '37px -21px' : '101px -21px',
                 ...this.props.style,
             },
             pointer: {
                 position: 'absolute',
                 top: '-12px',
-                left: '25px',
+                left: (window.innerWidth > 768) ? '25px' : '89px',
                 width: '25px',
                 height: '25px',
                 background: 'white',
@@ -48,13 +49,13 @@ export class NotificationsDropdown extends React.Component {
                 borderTopRightRadius: '3px',
             },
             paper: {
-                width: '633px',
-                padding: '28px 28px 24px',
+                width: (window.innerWidth > 768) ? '633px' : '100%',
+                paddingBottom: (window.innerWidth > 768) ? '24px' : '18px',
             },
             header: {
                 display: 'flex',
                 alignItems: 'center',
-                marginBottom: '20px',
+                padding: (window.innerWidth > 768) ? '28px 28px 20px' : '18px 18px 20px',
             },
             headerTitle: {
                 fontSize: '22px',
@@ -68,7 +69,7 @@ export class NotificationsDropdown extends React.Component {
             },
             gridList: {
                 width: '100%',
-                padding: '0',
+                padding: (window.innerWidth > 768) ? '0 18px' : '0 4px',
             },
             gridItem: {
                 padding: '10px',
@@ -81,15 +82,20 @@ export class NotificationsDropdown extends React.Component {
                 fontSize: '18px',
                 color: 'rgba(0, 0, 0, 0.54)',
             },
+            viewAllContainer: {
+                marginTop: (window.innerWidth > 768) ? '24px' : '18px',
+                textAlign: 'center'
+            },
             viewAll: {
                 color: '#337ab7',
-                fontSize: '22px',
+                fontSize: (window.innerWidth > 768) ? '22px' : '18px',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
             },
         };
 
-        const notifications = this.props.notifications.notificationsSorted.slice(0, 10);
+        const maxNotifications = (window.innerHeight > 768) ? 10 : 8;
+        const notifications = this.props.notifications.notificationsSorted.slice(0, maxNotifications);
 
         return (
             <div style={styles.root}>
@@ -153,7 +159,7 @@ export class NotificationsDropdown extends React.Component {
                                 ))}
                             </GridList>
                     }
-                    <div style={{ marginTop: '25px', textAlign: 'center' }}>
+                    <div style={styles.viewAllContainer}>
                         <Link
                             className={'qa-NotificationsDropdown-ViewAll'}
                             style={styles.viewAll}
