@@ -31,7 +31,7 @@ def rollback_permissions(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('jobs', '0028_merge_20180417_1723'),
+        ('jobs', '0030_set_last_export_run'),
     ]
 
     operations = [
