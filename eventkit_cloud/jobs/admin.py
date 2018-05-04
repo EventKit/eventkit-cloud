@@ -103,6 +103,7 @@ class DataProviderForm(forms.ModelForm):
                   'service_description',
                   'layer',
                   'export_provider_type',
+                  'max_selection',
                   'level_from',
                   'level_to',
                   'config',

@@ -2,6 +2,7 @@
 from osgeo import gdal, ogr
 import json
 import logging
+import math
 import os
 import subprocess
 from string import Template
@@ -100,6 +101,34 @@ def get_meta(ds_path):
 
     finally:
         cleanup_ds(ds)
+
+
+def get_area(geojson):
+    """
+    Given a GeoJSON string or object, return an approximation of its geodesic area in km�.
+    The geometry must contain a single polygon with a single ring, no holes.
+    Based on Chamberlain and Duquette's algorithm: https://trs.jpl.nasa.gov/bitstream/handle/2014/41271/07-0286.pdf
+    :param geojson: GeoJSON selection area
+    :return: area of geojson ring in square kilometers
+    """
+    earth_r = 6371  # km
+
+    def rad(d):
+        return math.pi*d/180
+
+    if isinstance(geojson, str):
+        geojson = json.loads(geojson)
+
+    ring = geojson['coordinates'][0]
+    if len(ring) < 4:
+        return 0
+
+    ring.append(ring[-2])  # convenient for circular indexing
+    a = 0
+    for i in range(len(ring) - 2):
+        a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
+    result = abs(a * (earth_r**2) / 2)
+    return result
 
 
 def is_envelope(geojson_path):
