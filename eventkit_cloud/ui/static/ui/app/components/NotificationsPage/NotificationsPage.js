@@ -104,8 +104,8 @@ export class NotificationsPage extends React.Component {
             },
             noData: {
                 margin: `0 ${10 + this.getGridPadding()/2}px`,
-                padding: '29px',
-                fontSize: '25px',
+                padding: '22px',
+                fontSize: '18px',
                 color: 'rgba(0, 0, 0, 0.54)',
             },
         };
