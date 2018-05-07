@@ -62,6 +62,12 @@ export class ProviderStatusIcon extends Component {
                 title = "Success";
                 messagePrefix = "No problems: ";
                 break;
+            case 'FATAL':
+                style.icon['color'] = 'rgba(128, 0, 0, 0.87)';
+                StatusIcon = AlertError;
+                title = "Cannot Select";
+                messagePrefix = "";
+                break;
             case 'ERR':
                 style.icon['color'] = 'rgba(192, 0, 0, 0.87)';
                 StatusIcon = AlertError;

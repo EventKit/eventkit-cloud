@@ -110,7 +110,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ showShareInfo: true });
-        const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
+        const body = mount(wrapper.find(ShareBaseDialog).props().children, {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
