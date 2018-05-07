@@ -62,7 +62,7 @@ export function getRuns(args = {}) {
             data.geojson = JSON.stringify(args.geojson);
         }
         if (args.permissions && args.permissions.value) {
-            params.visibility = this.state.permissions.value;
+            params.visibility = args.permissions.value;
 
             if (params.visibility === 'SHARED') {
                 const groups = Object.keys(args.permissions.groups);
