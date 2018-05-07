@@ -3,8 +3,8 @@ import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Table } from 'material-ui/Table';
-import UserTableRowColumn from '../../components/UserGroupsPage/UserTableRowColumn';
-import UserTableHeaderColumn from '../../components/UserGroupsPage/UserTableHeaderColumn';
+import UserRowColumn from '../../components/UserGroupsPage/UserRowColumn';
+import UserHeaderColumn from '../../components/UserGroupsPage/UserHeaderColumn';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/CreateGroupDialog';
 import LeaveGroupDialog from '../../components/UserGroupsPage/LeaveGroupDialog';
@@ -123,8 +123,8 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar')).toHaveLength(1);
         expect(wrapper.find('.qa-UserGroupsPage-search')).toHaveLength(1);
         expect(wrapper.find(Table)).toHaveLength(2);
-        expect(wrapper.find(UserTableHeaderColumn)).toHaveLength(1);
-        expect(wrapper.find(UserTableRowColumn)).toHaveLength(3);
+        expect(wrapper.find(UserHeaderColumn)).toHaveLength(1);
+        expect(wrapper.find(UserRowColumn)).toHaveLength(3);
         expect(wrapper.find(GroupsDrawer)).toHaveLength(1);
         expect(wrapper.find(CreateGroupDialog)).toHaveLength(1);
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
@@ -143,7 +143,7 @@ describe('UserGroupsPage component', () => {
             ],
         });
         let expectedGroups = [];
-        expect(wrapper.find(UserTableHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
+        expect(wrapper.find(UserHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
         wrapper.setState({
             selectedUsers: [
                 props.users.users[0],
@@ -151,7 +151,7 @@ describe('UserGroupsPage component', () => {
             ],
         });
         expectedGroups = [1];
-        expect(wrapper.find(UserTableHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
+        expect(wrapper.find(UserHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
     });
 
     it('componentDidMount should call makeUserRequest and getGroups', () => {

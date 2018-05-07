@@ -37,7 +37,7 @@ export class GroupsDropDownMenu extends Component {
 
         return (
             <Popover
-                style={{ overflowY: 'hidden' }}
+                style={{ overflowY: 'hidden', boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.2)' }}
                 open={this.props.open}
                 anchorEl={this.props.anchorEl}
                 anchorOrigin={this.props.anchorOrigin}

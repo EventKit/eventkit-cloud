@@ -9,15 +9,15 @@ import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import Checked from 'material-ui/svg-icons/toggle/check-box';
 import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
-import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
-export class UserTableHeaderColumn extends Component {
+export class UserHeader extends Component {
     constructor(props) {
         super(props);
         this.handleOpen = this.handleOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
-        this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
+        this.handleAddUsersClick = this.handleAddUsersClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
+        this.handleRemoveUsersClick = this.handleRemoveUsersClick.bind(this);
         this.select = this.props.onSelect.bind(this, true);
         this.deselect = this.props.onSelect.bind(this, false);
         this.state = {
@@ -32,17 +32,22 @@ export class UserTableHeaderColumn extends Component {
     }
 
     handleClose() {
-        this.setState({ open: false, popoverAnchor: null }, () => { console.log('closed'); });
+        this.setState({ open: false, popoverAnchor: null });
     }
 
-    handleGroupItemClick(group) {
+    handleAddUsersClick() {
         this.handleClose();
-        this.props.handleGroupItemClick(group);
+        this.props.handleAddUsers(this.props.selectedUsers);
     }
 
     handleNewGroupClick() {
         this.handleClose();
-        this.props.handleNewGroupClick(this.props.selectedUsers);
+        this.props.handleNewGroup(this.props.selectedUsers);
+    }
+
+    handleRemoveUsersClick() {
+        this.handleClose();
+        this.props.handleRemoveUsers(this.props.selectedUsers);
     }
 
     render() {
@@ -72,23 +77,6 @@ export class UserTableHeaderColumn extends Component {
                 fontSize: '14px',
                 float: 'right',
             },
-            dropDownLabel: {
-                height: '24px',
-                lineHeight: '24px',
-                padding: '0px',
-                display: 'inline-block',
-                color: '#4598bf',
-            },
-            dropDownIcon: {
-                padding: '0px',
-                height: '24px',
-                width: '24px',
-                position: 'relative',
-                right: '0',
-                top: '0px',
-                border: 'none',
-                fill: '#4598bf',
-            },
             menuItem: {
                 fontSize: '14px',
                 overflow: 'hidden',
@@ -102,19 +90,42 @@ export class UserTableHeaderColumn extends Component {
             },
         };
 
-        const checkbox = this.props.selected ? <Checked onClick={this.deselect} /> : <Unchecked onClick={this.select} />;
+        const checkbox = this.props.selected ?
+            <Checked onClick={this.deselect} />
+            :
+            <Unchecked onClick={this.select} />;
+
+        let removeButton = null;
+        if (this.props.showRemoveButton) {
+            removeButton = (
+                <MenuItem
+                    style={{ ...styles.menuItem, color: '#ce4427' }}
+                    innerDivStyle={styles.menuItemInner}
+                    onTouchTap={this.handleRemoveUsersClick}
+                    className="qa-UserRowColumn-MenuItem-remove"
+                >
+                    <span>Remove User(s)</span>
+                </MenuItem>
+            );
+        }
 
         return (
             <div
                 style={styles.headerColumn}
-                className="qa-UserTableHeader"
+                className="qa-UserHeader"
             >
-                <div style={{ display: 'flex', flex: '0 0 auto', paddingLeft: '24px', alignItems: 'center' }}>
+                <div style={{
+                    display: 'flex',
+                    flex: '0 0 auto',
+                    paddingLeft: '24px',
+                    alignItems: 'center',
+                }}
+                >
                     {checkbox}
                 </div>
                 <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
                     <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center' }}>
-                        <strong className="qa-UserTableHeaderColumn-selectedCount">
+                        <strong className="qa-UserHeader-selectedCount">
                             {this.props.selectedUsers.length} Selected
                         </strong>
                     
@@ -123,7 +134,7 @@ export class UserTableHeaderColumn extends Component {
                                 style={styles.iconButton}
                                 iconStyle={{ color: '#4598bf' }}
                                 onClick={this.handleOpen}
-                                className="qa-UserTableHeaderColumn-IconButton-options"
+                                className="qa-UserHeader-IconButton-options"
                             >
                                 <Group />
                                 <DropDown />
@@ -137,59 +148,63 @@ export class UserTableHeaderColumn extends Component {
                             anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
                             targetOrigin={{ horizontal: 'left', vertical: 'top' }}
                             onClose={this.handleClose}
-                            loading={this.props.groupsLoading}
                             width={200}
-                            className="qa-UserTableRowColumn-GroupsDropDownMenu"
+                            className="qa-UserHeader-GroupsDropDownMenu"
                         >
-                            {this.props.groups.map(group => (
-                                <GroupsDropDownMenuItem
-                                    key={group.id}
-                                    group={group}
-                                    onClick={this.handleGroupItemClick}
-                                    selected={this.props.selectedGroups.includes(group.id)}
-                                />
-                            ))}
-                            <Divider className="qa-UserTableRowColumn-Divider" />
                             <MenuItem
                                 style={styles.menuItem}
                                 innerDivStyle={styles.menuItemInner}
-                                onClick={this.handleNewGroupClick}
-                                className="qa-UserTableRowColumn-MenuItem-newGroup"
+                                onTouchTap={this.handleAddUsersClick}
+                                className="qa-UserHeader-MenuItem-editGroups"
                             >
-                                <span>Share with New Group</span>
+                                <span>Add to Existing Group</span>
                             </MenuItem>
+                            <Divider className="qa-UserHeader-Divider" />
+                            <MenuItem
+                                style={styles.menuItem}
+                                innerDivStyle={styles.menuItemInner}
+                                onTouchTap={this.handleNewGroupClick}
+                                className="qa-UserHeader-MenuItem-newGroup"
+                            >
+                                <span>Add to New Group</span>
+                            </MenuItem>
+                            <Divider className="qa-UserHeader-Divider" />
+                            {removeButton}
+
+
+
                         </GroupsDropDownMenu>
                     </div>
                     <IconMenu
-                        value={this.props.sortValue}
-                        onChange={this.props.handleSortChange}
+                        value={this.props.orderingValue}
+                        onChange={this.props.handleOrderingChange}
                         iconButtonElement={<IconButton style={{ padding: '0px', height: '24px' }}><Sort /><DropDown /></IconButton>}
                         style={styles.dropDown}
                         menuItemStyle={{ color: '#707274', fontSize: '14px' }}
                         selectedMenuItemStyle={{ color: '#4598bf', fontSize: '14px' }}
                         anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        className="qa-UserTableHeaderColumn-DropDownMenu-sort"
+                        className="qa-UserHeader-DropDownMenu-sort"
                     >
                         <MenuItem
                             value="username"
                             primaryText="Username A-Z"
-                            className="qa-UserTableHeaderColumn-MenuItem-sortAZ"
+                            className="qa-UserHeader-MenuItem-sortAZ"
                         />
                         <MenuItem
                             value="-username"
                             primaryText="Username Z-A"
-                            className="qa-UserTableHeaderColumn-MenuItem-sortZA"
+                            className="qa-UserHeader-MenuItem-sortZA"
                         />
                         <MenuItem
                             value="-date_joined"
                             primaryText="Newest"
-                            className="qa-UserTableHeaderColumn-MenuItem-sortNewest"
+                            className="qa-UserHeader-MenuItem-sortNewest"
                         />
                         <MenuItem
                             value="date_joined"
                             primaryText="Oldest"
-                            className="qa-UserTableHeaderColumn-MenuItem-sortOldest"
+                            className="qa-UserHeader-MenuItem-sortOldest"
                         />
                     </IconMenu>
                 </div>
@@ -198,17 +213,21 @@ export class UserTableHeaderColumn extends Component {
     }
 }
 
-UserTableHeaderColumn.propTypes = {
-    selected: PropTypes.bool.isRequired,
-    onSelect: PropTypes.func.isRequired,
-    sortValue: PropTypes.string.isRequired,
-    handleSortChange: PropTypes.func.isRequired,
-    selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    selectedGroups: PropTypes.arrayOf(PropTypes.number).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groupsLoading: PropTypes.bool.isRequired,
-    handleGroupItemClick: PropTypes.func.isRequired,
-    handleNewGroupClick: PropTypes.func.isRequired,
+UserHeader.defaultProps = {
+    handleRemoveUsers: () => { console.error('No remove users handler supplied'); },
+    showRemoveButton: false,
 };
 
-export default UserTableHeaderColumn;
+UserHeader.propTypes = {
+    selected: PropTypes.bool.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    orderingValue: PropTypes.string.isRequired,
+    handleOrderingChange: PropTypes.func.isRequired,
+    handleAddUsers: PropTypes.func.isRequired,
+    handleRemoveUsers: PropTypes.func,
+    selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    handleNewGroup: PropTypes.func.isRequired,
+    showRemoveButton: PropTypes.bool,
+};
+
+export default UserHeader;

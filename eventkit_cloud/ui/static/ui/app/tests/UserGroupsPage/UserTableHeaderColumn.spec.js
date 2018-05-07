@@ -5,9 +5,9 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { TableHeaderColumn } from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
 import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDownMenu';
-import { UserTableHeaderColumn } from '../../components/UserGroupsPage/UserTableHeaderColumn';
+import { UserHeaderColumn } from '../../components/UserGroupsPage/UserHeaderColumn';
 
-describe('UserTableHeaderColumn component', () => {
+describe('UserHeaderColumn component', () => {
     const muiTheme = getMuiTheme();
 
     const getProps = () => (
@@ -31,7 +31,7 @@ describe('UserTableHeaderColumn component', () => {
     );
 
     const getWrapper = props => (
-        mount(<UserTableHeaderColumn {...props} />, {
+        mount(<UserHeaderColumn {...props} />, {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
@@ -51,15 +51,15 @@ describe('UserTableHeaderColumn component', () => {
         const props = getProps();
         props.selectedUsers = [];
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-UserTableHeaderColumn-IconButton-options')).toHaveLength(0);
+        expect(wrapper.find('.qa-UserHeaderColumn-IconButton-options')).toHaveLength(0);
         wrapper.setProps({ selectedUsers: [0] });
-        expect(wrapper.find('.qa-UserTableHeaderColumn-IconButton-options')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserHeaderColumn-IconButton-options')).toHaveLength(1);
     });
 
     it('handleOpen should prevent default and set state', () => {
         const fakeEvent = { preventDefault: sinon.spy(), currentTarget: null };
         const props = getProps();
-        const stateStub = sinon.stub(UserTableHeaderColumn.prototype, 'setState');
+        const stateStub = sinon.stub(UserHeaderColumn.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().handleOpen(fakeEvent);
         expect(fakeEvent.preventDefault.calledOnce).toBe(true);
@@ -70,7 +70,7 @@ describe('UserTableHeaderColumn component', () => {
 
     it('handleClose should setState', () => {
         const props = getProps();
-        const stateStub = sinon.stub(UserTableHeaderColumn.prototype, 'setState');
+        const stateStub = sinon.stub(UserHeaderColumn.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().handleClose();
         expect(stateStub.calledOnce).toBe(true);
@@ -81,7 +81,7 @@ describe('UserTableHeaderColumn component', () => {
     it('handleGroupItemClick should call handleClose and props.handleGroupItemClick', () => {
         const props = getProps();
         props.handleGroupItemClick = sinon.spy();
-        const closeStub = sinon.stub(UserTableHeaderColumn.prototype, 'handleClose');
+        const closeStub = sinon.stub(UserHeaderColumn.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         const group = { id: 1 };
         wrapper.instance().handleGroupItemClick(group);
@@ -94,7 +94,7 @@ describe('UserTableHeaderColumn component', () => {
     it('handleNewGroupClick should call handleClose and handleNewGroupClick', () => {
         const props = getProps();
         props.handleNewGroupClick = sinon.spy();
-        const closeStub = sinon.stub(UserTableHeaderColumn.prototype, 'handleClose');
+        const closeStub = sinon.stub(UserHeaderColumn.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleNewGroupClick();
         expect(closeStub.calledOnce).toBe(true);

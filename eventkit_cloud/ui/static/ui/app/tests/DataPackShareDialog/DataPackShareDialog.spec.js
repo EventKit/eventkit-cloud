@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
-import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
+import ShareBaseDialog from '../../components/Dialog/ShareBaseDialog';
 import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
 import MembersBody from '../../components/DataPackShareDialog/MembersBody';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';

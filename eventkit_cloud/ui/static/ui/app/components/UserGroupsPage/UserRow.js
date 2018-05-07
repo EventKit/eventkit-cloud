@@ -2,28 +2,38 @@ import React, { Component, PropTypes } from 'react';
 import IconButton from 'material-ui/IconButton';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Group from 'material-ui/svg-icons/social/group';
+import Person from 'material-ui/svg-icons/social/person';
 import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import Checked from 'material-ui/svg-icons/toggle/check-box';
 import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
-import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
-export class UserTableRowColumn extends Component {
+export class UserRowColumn extends Component {
     constructor(props) {
         super(props);
+        this.handleMouseOver = this.handleMouseOver.bind(this);
+        this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleOpen = this.handleOpen.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.handleAddUserClick = this.handleAddUserClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
-        this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
         this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
         this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
+        this.handleRemoveUserClick = this.handleRemoveUserClick.bind(this);
         this.onSelect = this.props.onSelect.bind(this, this.props.user);
         this.state = {
             open: false,
             popoverAnchor: null,
+            hovered: false,
         };
+    }
+
+    handleMouseOver() {
+        this.setState({ hovered: true });
+    }
+
+    handleMouseOut() {
+        this.setState({ hovered: false });
     }
 
     handleOpen(e) {
@@ -36,33 +46,40 @@ export class UserTableRowColumn extends Component {
         this.setState({ open: false });
     }
 
+    handleAddUserClick() {
+        this.handleClose();
+        this.props.handleAddUser([this.props.user]);
+    }
+
     handleNewGroupClick() {
         this.handleClose();
-        this.props.handleNewGroupClick([this.props.user]);
+        this.props.handleNewGroup([this.props.user]);
     }
 
-    handleGroupItemClick(group) {
-        this.props.handleGroupItemClick(group, this.props.user);
-    }
-
-    handleMakeAdminClick(e) {
-        e.stopPropagation();
+    handleMakeAdminClick() {
+        this.handleClose();
         this.props.handleMakeAdmin(this.props.user);
     }
 
-    handleDemoteAdminClick(e) {
-        e.stopPropagation();
+    handleDemoteAdminClick() {
+        this.handleClose();
         this.props.handleDemoteAdmin(this.props.user);
+    }
+
+    handleRemoveUserClick() {
+        this.handleClose();
+        this.props.handleRemoveUser(this.props.user);
     }
 
     render() {
         const styles = {
-            tableRowColumn: {
+            row: {
                 ...this.props.style,
                 color: '#707274',
                 fontSize: '14px',
                 whiteSpace: 'normal',
                 display: 'flex',
+                backgroundColor: this.state.hovered ? '#4598bf33' : '#fff',
                 borderTop: '1px solid #e0e0e0',
             },
             iconMenu: {
@@ -111,6 +128,43 @@ export class UserTableRowColumn extends Component {
             },
         };
 
+        let adminButton = null;
+        if (this.props.showAdminButton) {
+            let adminButtonText = 'Make Administrator';
+            let adminFunction = this.handleMakeAdminClick;
+            if (this.props.isAdmin) {
+                adminButtonText = 'Demote Administrator';
+                adminFunction = this.handleDemoteAdminClick;
+            }
+
+            adminButton = ([
+                <MenuItem
+                    key="makeAdminMenuItem"
+                    style={styles.menuItem}
+                    innerDivStyle={styles.menuItemInner}
+                    onTouchTap={adminFunction}
+                    className="qa-UserRowColumn-MenuItem-makeAdmin"
+                >
+                    <span>{adminButtonText}</span>
+                </MenuItem>,
+                <Divider key="makeAdminDivider" className="qa-UserRowColumn-Divider" />,
+            ]);
+        }
+
+        let removeButton = null;
+        if (this.props.showRemoveButton) {
+            removeButton = (
+                <MenuItem
+                    style={{ ...styles.menuItem, color: '#ce4427' }}
+                    innerDivStyle={styles.menuItemInner}
+                    onTouchTap={this.handleRemoveUserClick}
+                    className="qa-UserRowColumn-MenuItem-remove"
+                >
+                    <span>Remove User</span>
+                </MenuItem>
+            );
+        }
+        
         let name = this.props.user.user.username;
         if (this.props.user.user.first_name && this.props.user.user.last_name) {
             name = `${this.props.user.user.first_name} ${this.props.user.user.last_name}`;
@@ -118,27 +172,7 @@ export class UserTableRowColumn extends Component {
         const email = this.props.user.user.email || 'No email provided';
 
         let adminLabel = null;
-        if (this.props.showAdminButton) {
-            adminLabel = (
-                <div style={styles.adminContainer}>
-                    {this.props.isAdmin ?
-                        <EnhancedButton
-                            style={styles.admin}
-                            onClick={this.handleDemoteAdminClick}
-                        >
-                            ADMIN
-                        </EnhancedButton>
-                        :
-                        <EnhancedButton
-                            style={styles.notAdmin}
-                            onClick={this.handleMakeAdminClick}
-                        >
-                            ADMIN
-                        </EnhancedButton>
-                    }
-                </div>
-            );
-        } else if (this.props.showAdminLabel && this.props.isAdmin) {
+        if (this.props.showAdminLabel && this.props.isAdmin) {
             adminLabel = (
                 <div style={styles.adminContainer}>
                         ADMIN
@@ -150,18 +184,28 @@ export class UserTableRowColumn extends Component {
 
         return (
             <div
-                style={styles.tableRowColumn}
-                className="qa-UserTableRowColumn"
+                style={styles.row}
+                className="qa-UserRowColumn"
+                onMouseOver={this.handleMouseOver}
+                onMouseOut={this.handleMouseOut}
+                onFocus={this.handleMouseOver}
+                onBlur={this.handleMouseOut}
             >
-                <div style={{ display: 'flex', flex: '0 0 auto', paddingLeft: '24px', alignItems: 'center' }}>
+                <div style={{
+                    display: 'flex',
+                    flex: '0 0 auto',
+                    paddingLeft: '24px',
+                    alignItems: 'center',
+                }}
+                >
                     {checkbox}
                 </div>
                 <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
-                        <div className="qa-UserTableRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
+                        <div className="qa-UserRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
                             <strong>{name}</strong>
                         </div>
-                        <div className="qa-UserTableRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
+                        <div className="qa-UserRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
                             {email}
                         </div>
                     </div>
@@ -170,36 +214,40 @@ export class UserTableRowColumn extends Component {
                         style={styles.iconButton}
                         iconStyle={{ color: '#4598bf' }}
                         onClick={this.handleOpen}
-                        className="qa-UserTableRowColumn-IconButton-options"
+                        className="qa-UserRowColumn-IconButton-options"
                     >
-                        <Group />
+                        <Person />
                         <ArrowDown />
                     </IconButton>
                     <GroupsDropDownMenu
                         open={this.state.open}
                         anchorEl={this.state.popoverAnchor}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                         onClose={this.handleClose}
-                        loading={this.props.groupsLoading}
                         width={200}
-                        className="qa-UserTableRowColumn-GroupsDropDownMenu"
+                        className="qa-UserRowColumn-GroupsDropDownMenu"
                     >
-                        {this.props.groups.map(group => (
-                            <GroupsDropDownMenuItem
-                                key={group.id}
-                                group={group}
-                                onClick={this.handleGroupItemClick}
-                                selected={this.props.user.groups.includes(group.id)}
-                            />
-                        ))}
-                        <Divider className="qa-UserTableRowColumn-Divider" />
+                        <MenuItem
+                            style={styles.menuItem}
+                            innerDivStyle={styles.menuItemInner}
+                            onTouchTap={this.handleAddUserClick}
+                            className="qa-UserRowColumn-MenuItem-editGroups"
+                        >
+                            <span>Add to Existing Group</span>
+                        </MenuItem>
+                        <Divider className="qa-UserRowColumn-Divider" />
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
                             onTouchTap={this.handleNewGroupClick}
-                            className="qa-UserTableRowColumn-MenuItem-newGroup"
+                            className="qa-UserRowColumn-MenuItem-newGroup"
                         >
-                            <span>Share with New Group</span>
+                            <span>Add to New Group</span>
                         </MenuItem>
+                        <Divider className="qa-UserRowColumn-Divider" />
+                        {adminButton}
+                        {removeButton}
                     </GroupsDropDownMenu>
                 </div>
             </div>
@@ -207,16 +255,18 @@ export class UserTableRowColumn extends Component {
     }
 }
 
-UserTableRowColumn.defaultProps = {
+UserRowColumn.defaultProps = {
     handleMakeAdmin: () => { console.error('Make admin function not provided'); },
     handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
+    handleRemoveUser: () => { console.error('Remove user function not provided'); },
     isAdmin: false,
     showAdminButton: false,
     showAdminLabel: false,
+    showRemoveButton: false,
     style: {},
 };
 
-UserTableRowColumn.propTypes = {
+UserRowColumn.propTypes = {
     selected: PropTypes.bool.isRequired,
     onSelect: PropTypes.func.isRequired,
     user: PropTypes.shape({
@@ -228,16 +278,16 @@ UserTableRowColumn.propTypes = {
         }),
         groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groupsLoading: PropTypes.bool.isRequired,
-    handleGroupItemClick: PropTypes.func.isRequired,
-    handleNewGroupClick: PropTypes.func.isRequired,
+    handleNewGroup: PropTypes.func.isRequired,
+    handleAddUser: PropTypes.func.isRequired,
     handleMakeAdmin: PropTypes.func,
     handleDemoteAdmin: PropTypes.func,
+    handleRemoveUser: PropTypes.func,
     isAdmin: PropTypes.bool,
     showAdminButton: PropTypes.bool,
     showAdminLabel: PropTypes.bool,
+    showRemoveButton: PropTypes.bool,
     style: PropTypes.object,
 };
 
-export default UserTableRowColumn;
+export default UserRowColumn;

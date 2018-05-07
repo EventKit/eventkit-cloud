@@ -8,10 +8,18 @@ import Divider from 'material-ui/Divider';
 import Vert from 'material-ui/svg-icons/navigation/more-vert';
 import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
-import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-box';
+import ActionSearch from 'material-ui/svg-icons/action/search';
 import CustomScrollbar from '../CustomScrollbar';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import { TextField } from 'material-ui';
 
 export class GroupsDrawer extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            text: '',
+        };
+    }
     render() {
         const styles = {
             drawer: {
@@ -23,32 +31,26 @@ export class GroupsDrawer extends Component {
             simpleMenuItem: {
                 color: '#4598bf',
             },
-            groupsHeading: {
-                padding: '30px 20px 5px',
+            heading: {
+                padding: '10px 20px 5px',
+                display: 'block',
+                fontSize: '18px',
+            },
+            subHeading: {
+                padding: '10px 20px 5px',
                 color: '#707274',
                 display: 'block',
             },
             addGroupIcon: {
                 fill: '#4598bf',
-                height: '20px',
+                height: '24px',
                 width: '17px',
-                marginLeft: '5px',
-                verticalAlign: 'text-top',
+                marginRight: '5px',
+                verticalAlign: 'bottom',
                 cursor: 'pointer',
             },
             innerDiv: {
                 padding: '0px 48px 0px 20px',
-            },
-            menuItemText: {
-                width: '178px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-            },
-            menuItemIcon: {
-                fill: '#ce4427',
-                opacity: '0.7',
-                width: '17px',
-                cursor: 'pointer',
             },
             groupName: {
                 textOverflow: 'ellipsis',
@@ -56,18 +58,22 @@ export class GroupsDrawer extends Component {
                 flex: '0 1 auto',
                 paddingRight: '5px',
             },
-            sharedGroupsHeading: {
-                padding: '10px 20px 5px',
-                color: '#707274',
-                display: 'block',
-            },
-            sharedGroupsInfoIcon: {
+            infoIcon: {
                 fill: '#4598bf',
                 height: '20px',
                 width: '17px',
-                marginLeft: '5px',
+                marginLeft: '10px',
                 verticalAlign: 'text-top',
                 cursor: 'pointer',
+            },
+            groupActionList: {
+                paddingTop: '4px',
+                paddingBottom: '4px',
+            },
+            groupActionItem: {
+                fontSize: '14px',
+                minHeight: '36px',
+                lineHeight: '36px',
             },
         };
 
@@ -79,7 +85,63 @@ export class GroupsDrawer extends Component {
                 containerStyle={styles.drawer}
                 className="qa-GroupsDrawer-Drawer"
             >
-                <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar">
+                <Menu
+                    disableAutoFocus
+                    autoWidth={false}
+                    desktop
+                    width={250}
+                    className="qa-GroupsDrawer-Menu"
+                    onChange={this.props.onSelectionChange}
+                    selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#e8eef5' }}
+                    value={this.props.selectedValue}
+                >
+                    <span
+                        style={styles.heading}
+                        className="qa-GroupsDrawer-membersHeading"
+                    >
+                        <strong>MEMBERS</strong>
+                    </span>
+                    <MenuItem
+                        primaryText={`All (${this.props.usersCount})`}
+                        style={styles.simpleMenuItem}
+                        innerDivStyle={styles.innerDiv}
+                        className="qa-GroupsDrawer-allMembers"
+                        value="all"
+                    />
+                </Menu>
+                <Divider className="qa-GroupsDrawer-Divider" />
+                
+                <span
+                    style={styles.heading}
+                    className="qa-GroupsDrawer-membersHeading"
+                >
+                    <strong>GROUPS</strong>
+                    <EnhancedButton
+                        style={{ fontSize: '13px', color: '#4598bf', float: 'right', lineHeight: '24px', padding: '0px 10px' }}
+                        onClick={this.props.onNewGroupClick}
+                    >
+                        <AddCircleIcon
+                            style={styles.addGroupIcon}
+                            className="qa-GroupsDrawer-addGroupIcon"
+                        />
+                        <strong>NEW GROUP</strong>
+                    </EnhancedButton>
+                </span>
+                <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{ height: 'calc(100% - 145px)' }} >
+                    <div style={{ padding: '10px 20px 5px' }}>
+                        <ActionSearch style={{ marginTop: '2px', height: '28px', width: '28px', verticalAlign: 'top' }} />
+                        <TextField
+                            id="group-search"
+                            type="search"
+                            hintText="Search Groups"
+                            hintStyle={{ bottom: 0 }}
+                            style={{ width: '170px', height: '30px', lineHeight: '30px', padding: '0px 10px 0px 5px' }}
+                            underlineStyle={{ bottom: '3px', borderBottom: 'none #fff' }}
+                            underlineFocusStyle={{ borderBottom: '1px solid #4598bf', width: 'calc(100% - 15px)' }}
+                            value={this.state.text}
+                            onChange={(e, v) => { this.setState({ text: v }); }}
+                        />
+                    </div>
                     <Menu
                         disableAutoFocus
                         autoWidth={false}
@@ -90,37 +152,15 @@ export class GroupsDrawer extends Component {
                         selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#e8eef5' }}
                         value={this.props.selectedValue}
                     >
-                        <MenuItem
-                            primaryText={`All Members (${this.props.usersCount})`}
-                            style={styles.simpleMenuItem}
-                            innerDivStyle={styles.innerDiv}
-                            className="qa-GroupsDrawer-allMembers"
-                            value="all"
-                        />
-                        <MenuItem
-                            primaryText={`New Members (${this.props.newCount})`}
-                            style={styles.simpleMenuItem}
-                            innerDivStyle={styles.innerDiv}
-                            className="qa-GroupsDrawer-new"
-                            value="new"
-                        />
-                        <MenuItem
-                            primaryText={`Not Grouped (${this.props.ungroupedCount})`}
-                            style={styles.simpleMenuItem}
-                            innerDivStyle={styles.innerDiv}
-                            className="qa-GroupsDrawer-notGrouped"
-                            value="ungrouped"
-                        />
-
                         <span
-                            style={styles.groupsHeading}
+                            style={styles.subHeading}
                             className="qa-GroupsDrawer-groupsHeading"
                         >
-                            <strong>MY GROUPS</strong>
-                            <AddCircleIcon
-                                style={styles.addGroupIcon}
-                                onClick={this.props.onNewGroupClick}
-                                className="qa-GroupsDrawer-addGroupIcon"
+                            <strong>ADMINISTRATOR</strong>
+                            <InfoIcon
+                                style={styles.infoIcon}
+                                onClick={this.props.onAdministratorInfoClick}
+                                className="qa-GroupsDrawer-infoIcon"
                             />
                         </span>
                         {this.props.ownedGroups.map(group => (
@@ -146,7 +186,8 @@ export class GroupsDrawer extends Component {
                                                 <Vert />
                                             </IconButton>
                                         }
-                                        menuItemStyle={{ fontSize: '14px' }}
+                                        listStyle={styles.groupActionList}
+                                        menuItemStyle={styles.groupActionItem}
                                         className="qa-GroupsDrawer-groupOptions"
                                     >
                                         <MenuItem
@@ -173,17 +214,15 @@ export class GroupsDrawer extends Component {
                             />
                         ))}
 
-                        <Divider style={{ marginTop: '16px' }} className="qa-GroupsDrawer-Divider" />
-
                         <span
-                            style={styles.sharedGroupsHeading}
+                            style={styles.subHeading}
                             className="qa-GroupsDrawer-sharedGroupsHeading"
                         >
-                            <strong>GROUPS SHARED WITH ME</strong>
+                            <strong>MEMBER ONLY</strong>
                             <InfoIcon
-                                style={styles.sharedGroupsInfoIcon}
-                                onClick={this.props.onSharedInfoClick}
-                                className="qa-GroupsDrawer-sharedGroupsInfoIcon"
+                                style={styles.infoIcon}
+                                onClick={this.props.onMemberInfoClick}
+                                className="qa-GroupsDrawer-infoIcon"
                             />
                         </span>
                         {this.props.sharedGroups.map(group => (
@@ -203,27 +242,37 @@ export class GroupsDrawer extends Component {
                                 style={{ color: '#4598bf' }}
                                 innerDivStyle={styles.innerDiv}
                                 rightIcon={
-                                    <IndeterminateIcon
-                                        style={styles.menuItemIcon}
-                                        onClick={() => { this.props.onLeaveGroupClick(group); }}
-                                        className="qa-GroupsDrawer-sharedGroupItem-icon"
-                                    />
+                                    <IconMenu
+                                        iconButtonElement={
+                                            <IconButton style={{ padding: '0px', width: '24px', height: '24px' }}>
+                                                <Vert />
+                                            </IconButton>
+                                        }
+                                        listStyle={styles.groupActionList}
+                                        menuItemStyle={styles.groupActionItem}
+                                        className="qa-GroupsDrawer-groupOptions"
+                                    >
+                                        <MenuItem
+                                            className="qa-GroupsDrawer-group-leave"
+                                            primaryText="Leave Group"
+                                            style={{ color: '#ce4427', opacity: '0.7' }}
+                                            onClick={() => { this.props.onLeaveGroupClick(group); }}
+                                        />
+                                    </IconMenu>
                                 }
                                 className="qa-GroupsDrawer-sharedGroupItem"
                             />
                         ))}
 
-                        <Divider style={{ marginTop: '16px' }} className="qa-GroupsDrawer-Divider" />
-
                         <span
-                            style={styles.sharedGroupsHeading}
+                            style={styles.subHeading}
                             className="qa-GroupsDrawer-allGroupsHeading"
                         >
-                            <strong>OTHER GROUPS</strong>
+                            <strong>ALL OTHERS</strong>
                             <InfoIcon
-                                style={styles.sharedGroupsInfoIcon}
-                                onClick={this.props.onSharedInfoClick}
-                                className="qa-GroupsDrawer-allGroupsInfoIcon"
+                                style={styles.infoIcon}
+                                onClick={this.props.onOtherInfoClick}
+                                className="qa-GroupsDrawer-infoIcon"
                             />
                         </span>
                         {this.props.otherGroups.map(group => (
@@ -278,10 +327,10 @@ GroupsDrawer.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     usersCount: PropTypes.number.isRequired,
-    newCount: PropTypes.number.isRequired,
-    ungroupedCount: PropTypes.number.isRequired,
     onNewGroupClick: PropTypes.func.isRequired,
-    onSharedInfoClick: PropTypes.func.isRequired,
+    onAdministratorInfoClick: PropTypes.func.isRequired,
+    onMemberInfoClick: PropTypes.func.isRequired,
+    onOtherInfoClick: PropTypes.func.isRequired,
     onLeaveGroupClick: PropTypes.func.isRequired,
     onDeleteGroupClick: PropTypes.func.isRequired,
     onRenameGroupClick: PropTypes.func.isRequired,

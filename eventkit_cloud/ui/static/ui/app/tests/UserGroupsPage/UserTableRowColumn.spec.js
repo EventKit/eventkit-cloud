@@ -5,9 +5,9 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import IconButton from 'material-ui/IconButton';
 import { TableRowColumn } from 'material-ui/Table';
 import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDownMenu';
-import { UserTableRowColumn } from '../../components/UserGroupsPage/UserTableRowColumn';
+import { UserRowColumn } from '../../components/UserGroupsPage/UserRowColumn';
 
-describe('UserTableRowColumn component', () => {
+describe('UserRowColumn component', () => {
     const muiTheme = getMuiTheme();
 
     const getProps = () => (
@@ -32,7 +32,7 @@ describe('UserTableRowColumn component', () => {
     );
 
     const getWrapper = props => (
-        mount(<UserTableRowColumn {...props} />, {
+        mount(<UserRowColumn {...props} />, {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: PropTypes.object,
@@ -54,8 +54,8 @@ describe('UserTableRowColumn component', () => {
         props.user.user.last_name = '';
         props.user.user.email = '';
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-UserTableRowColumn-name').text()).toEqual(props.user.user.username);
-        expect(wrapper.find('.qa-UserTableRowColumn-email').text()).toEqual('No email provided');
+        expect(wrapper.find('.qa-UserRowColumn-name').text()).toEqual(props.user.user.username);
+        expect(wrapper.find('.qa-UserRowColumn-email').text()).toEqual('No email provided');
     });
 
     it('handleOpen should preventDefault, stopPropagation, and setState', () => {
@@ -65,7 +65,7 @@ describe('UserTableRowColumn component', () => {
             currentTarget: null,
         };
         const props = getProps();
-        const stateSpy = sinon.spy(UserTableRowColumn.prototype, 'setState');
+        const stateSpy = sinon.spy(UserRowColumn.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().handleOpen(fakeEvent);
         expect(fakeEvent.preventDefault.calledOnce).toBe(true);
@@ -77,7 +77,7 @@ describe('UserTableRowColumn component', () => {
 
     it('handleClose should setState', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(UserTableRowColumn.prototype, 'setState');
+        const stateSpy = sinon.spy(UserRowColumn.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().handleClose();
         expect(stateSpy.calledOnce).toBe(true);
@@ -88,7 +88,7 @@ describe('UserTableRowColumn component', () => {
     it('handleNewGroupClick should call handle close and hande new group click', () => {
         const props = getProps();
         props.handleNewGroupClick = sinon.spy();
-        const closeSpy = sinon.spy(UserTableRowColumn.prototype, 'handleClose');
+        const closeSpy = sinon.spy(UserRowColumn.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleNewGroupClick();
         expect(closeSpy.calledOnce).toBe(true);

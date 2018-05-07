@@ -1,48 +1,24 @@
 import React, { Component, PropTypes } from 'react';
-import IconButton from 'material-ui/IconButton';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Group from 'material-ui/svg-icons/social/group';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import GroupsDropDownMenu from './GroupsDropDownMenu';
-import GroupsDropDownMenuItem from './GroupsDropDownMenuItem';
 
-export class UserTableRowColumn extends Component {
+export class OwnUserRow extends Component {
     constructor(props) {
         super(props);
-        this.handleOpen = this.handleOpen.bind(this);
-        this.handleClose = this.handleClose.bind(this);
-        this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
-        this.handleGroupItemClick = this.handleGroupItemClick.bind(this);
+        this.handleMouseOver = this.handleMouseOver.bind(this);
+        this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
         this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
-        this.onSelect = this.props.onSelect.bind(this, this.props.user);
         this.state = {
-            open: false,
-            popoverAnchor: null,
-        };
+            hovered: false,
+        }
     }
 
-    handleOpen(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.setState({ open: true, popoverAnchor: e.currentTarget });
+    handleMouseOver() {
+        this.setState({ hovered: true });
     }
 
-    handleClose() {
-        this.setState({ open: false });
-    }
-
-    handleNewGroupClick() {
-        this.handleClose();
-        this.props.handleNewGroupClick([this.props.user]);
-    }
-
-    handleGroupItemClick(group) {
-        this.props.handleGroupItemClick(group, this.props.user);
+    handleMouseOut() {
+        this.setState({ hovered: false });
     }
 
     handleMakeAdminClick(e) {
@@ -57,20 +33,34 @@ export class UserTableRowColumn extends Component {
 
     render() {
         const styles = {
-            tableRowColumn: {
+            row: {
                 ...this.props.style,
                 color: '#707274',
                 fontSize: '14px',
                 whiteSpace: 'normal',
                 display: 'flex',
-                borderTop: '1px solid #e0e0e0',
-                backgroundColor: 'rgba(0,0,0,0.05)',
+                borderTop: '1px solid rgba(0, 0, 0, 0.2)',
+                borderBottom: '1px solid rgba(0, 0, 0, 0.2)',
+                backgroundColor: this.state.hovered ? '#4598bf33' : 'rgba(0, 0, 0, 0.05)',
             },
-            iconMenu: {
-                width: '24px',
-                height: '40px',
-                margin: '0px 12px',
-                float: 'right',
+            checkbox: {
+                display: 'flex',
+                flex: '0 0 auto',
+                paddingLeft: '24px',
+                alignItems: 'center',
+            },
+            userInfo: {
+                display: 'flex',
+                flexWrap: 'wrap',
+                wordBreak: 'break-word',
+                width: '100%',
+            },
+            me: {
+                display: 'flex',
+                flex: '1 1 auto',
+                alignItems: 'center',
+                paddingLeft: '15px',
+                fontWeight: 800,
             },
             iconButton: {
                 padding: '0px',
@@ -99,17 +89,6 @@ export class UserTableRowColumn extends Component {
                 opacity: '0.8',
                 cursor: 'pointer',
             },
-            menuItem: {
-                fontSize: '14px',
-                overflow: 'hidden',
-                color: '#707274',
-            },
-            menuItemInner: {
-                padding: '0px',
-                margin: '0px 22px 0px 16px',
-                height: '48px',
-                display: 'flex',
-            },
         };
 
         let name = this.props.user.user.username;
@@ -119,27 +98,7 @@ export class UserTableRowColumn extends Component {
         const email = this.props.user.user.email || 'No email provided';
 
         let adminLabel = null;
-        if (this.props.showAdminButton) {
-            adminLabel = (
-                <div style={styles.adminContainer}>
-                    {this.props.isAdmin ?
-                        <EnhancedButton
-                            style={styles.admin}
-                            onClick={this.handleDemoteAdminClick}
-                        >
-                            ADMIN
-                        </EnhancedButton>
-                        :
-                        <EnhancedButton
-                            style={styles.notAdmin}
-                            onClick={this.handleMakeAdminClick}
-                        >
-                            ADMIN
-                        </EnhancedButton>
-                    }
-                </div>
-            );
-        } else if (this.props.showAdminLabel && this.props.isAdmin) {
+        if (this.props.showAdminLabel && this.props.isAdmin) {
             adminLabel = (
                 <div style={styles.adminContainer}>
                         ADMIN
@@ -147,78 +106,41 @@ export class UserTableRowColumn extends Component {
             );
         }
 
-        const checkbox = this.props.selected ? <Checked onClick={this.onSelect} /> : <Unchecked onClick={this.onSelect} />;
-
         return (
             <div
-                style={styles.tableRowColumn}
-                className="qa-UserTableRowColumn"
+                style={styles.row}
+                className="qa-OwnUserRow"
+                onMouseOver={this.handleMouseOver}
+                onMouseOut={this.handleMouseOut}
+                onFocus={this.handleMouseOver}
+                onBlur={this.handleMouseOut}
             >
-                <div style={{ display: 'flex', flex: '0 0 auto', paddingLeft: '24px', alignItems: 'center' }}>
-                    {checkbox}
-                </div>
+                <div style={{ padding: '28px 24px' }} />
                 <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', flex: '0 1 auto' }}>
-                        <div className="qa-UserTableRowColumn-name" style={{ display: 'flex', flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word', alignItems: 'center' }}>
-                            {name}
+                    <div>
+                        <div className="qa-OwnUserRow-name" style={styles.userInfo}>
+                            <strong>{name}</strong>
+                        </div>
+                        <div className="qa-OwnUserRow-email" style={styles.userInfo}>
+                            {email}
                         </div>
                     </div>
-                    <div style={{ display: 'flex', flex: '1 1 auto', alignItems: 'center', padding: '0px 10px', fontWeight: 800 }}>(ME)</div>
+                    <div style={styles.me}>(me)</div>
                     {adminLabel}
-                    <IconButton
-                        style={styles.iconButton}
-                        iconStyle={{ color: '#707274' }}
-                        onClick={this.handleOpen}
-                        className="qa-UserTableRowColumn-IconButton-options"
-                        disabled
-                    >
-                        <Group />
-                        <ArrowDown />
-                    </IconButton>
-                    <GroupsDropDownMenu
-                        open={this.state.open}
-                        anchorEl={this.state.popoverAnchor}
-                        onClose={this.handleClose}
-                        loading={this.props.groupsLoading}
-                        width={200}
-                        className="qa-UserTableRowColumn-GroupsDropDownMenu"
-                    >
-                        {this.props.groups.map(group => (
-                            <GroupsDropDownMenuItem
-                                key={group.id}
-                                group={group}
-                                onClick={this.handleGroupItemClick}
-                                selected={this.props.user.groups.includes(group.id)}
-                            />
-                        ))}
-                        <Divider className="qa-UserTableRowColumn-Divider" />
-                        <MenuItem
-                            style={styles.menuItem}
-                            innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleNewGroupClick}
-                            className="qa-UserTableRowColumn-MenuItem-newGroup"
-                        >
-                            <span>Share with New Group</span>
-                        </MenuItem>
-                    </GroupsDropDownMenu>
                 </div>
+                <div style={{ padding: '28px 24px' }} />
             </div>
         );
     }
 }
 
-UserTableRowColumn.defaultProps = {
-    handleMakeAdmin: () => { console.error('Make admin function not provided'); },
-    handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
+OwnUserRow.defaultProps = {
     isAdmin: false,
-    showAdminButton: false,
     showAdminLabel: false,
     style: {},
 };
 
-UserTableRowColumn.propTypes = {
-    selected: PropTypes.bool.isRequired,
-    onSelect: PropTypes.func.isRequired,
+OwnUserRow.propTypes = {
     user: PropTypes.shape({
         user: PropTypes.shape({
             first_name: PropTypes.string,
@@ -228,16 +150,9 @@ UserTableRowColumn.propTypes = {
         }),
         groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groupsLoading: PropTypes.bool.isRequired,
-    handleGroupItemClick: PropTypes.func.isRequired,
-    handleNewGroupClick: PropTypes.func.isRequired,
-    handleMakeAdmin: PropTypes.func,
-    handleDemoteAdmin: PropTypes.func,
     isAdmin: PropTypes.bool,
-    showAdminButton: PropTypes.bool,
     showAdminLabel: PropTypes.bool,
     style: PropTypes.object,
 };
 
-export default UserTableRowColumn;
+export default OwnUserRow;
