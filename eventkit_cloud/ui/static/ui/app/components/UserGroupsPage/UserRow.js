@@ -130,10 +130,10 @@ export class UserRowColumn extends Component {
 
         let adminButton = null;
         if (this.props.showAdminButton) {
-            let adminButtonText = 'Make Administrator';
+            let adminButtonText = 'Grant Admin Rights';
             let adminFunction = this.handleMakeAdminClick;
             if (this.props.isAdmin) {
-                adminButtonText = 'Demote Administrator';
+                adminButtonText = 'Remove Admin Rights';
                 adminFunction = this.handleDemoteAdminClick;
             }
 

@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import {Tabs, Tab} from 'material-ui/Tabs';
 import Checked from 'material-ui/svg-icons/toggle/check-box';
 import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import Indeterminate from '../../icons/IndeterminateIcon';
@@ -10,6 +11,7 @@ export class AddMembersDialog extends Component {
         super(props);
         this.getGroupIcon = this.getGroupIcon.bind(this);
         this.getDisabledGroups = this.getDisabledGroups.bind(this);
+        this.handleSave = this.handleSave.bind(this);
         this.handleCheck = this.handleCheck.bind(this);
         this.handleUncheck = this.handleUncheck.bind(this);
         this.handleSelectAll = this.handleSelectAll.bind(this);
@@ -34,10 +36,13 @@ export class AddMembersDialog extends Component {
     }
 
     getDisabledGroups() {
-        console.log(this.props.groups);
         return this.props.groups.filter(group =>
             this.props.selectedUsers.every(user =>
                 group.members.indexOf(user.user.username) > -1));
+    }
+
+    handleSave() {
+        this.props.onSave(this.state.selection, this.props.selectedUsers);
     }
 
     handleCheck(group) {
@@ -118,7 +123,7 @@ export class AddMembersDialog extends Component {
             <ShareBaseDialog
                 show={this.props.show}
                 onClose={this.props.onClose}
-                handleSave={this.props.onSave}
+                handleSave={this.handleSave}
                 title="EDIT GROUP ASSIGNMENTS"
                 submitButtonLabel="SAVE"
                 className="qa-AddMembersDialog"
@@ -162,6 +167,31 @@ export class AddMembersDialog extends Component {
                         </div>
                     );
                 })}
+                <Tabs
+                    inkBarStyle={{ backgroundColor: '#4598bf' }}
+                    tabItemContainerStyle={{ backgroundColor: '#fff', borderBottom: '2px #ddd solid' }}
+                >
+                    <Tab
+                        label="UNASSIGNED"
+                        value="0"
+                        style={{ color: '#707274' }}
+                        buttonStyle={{ height: '36px' }}
+                    >
+                        <div>
+                            UNASSIGNED GROUPS GO HERE
+                        </div>
+                    </Tab>
+                    <Tab
+                        label="ASSIGNED"
+                        value="1"
+                        style={{ color: '#707274' }}
+                        buttonStyle={{ height: '36px' }}
+                    >
+                        <div>
+                            ASSIGNED GROUPS GO HERE
+                        </div>
+                    </Tab>
+                </Tabs>
             </ShareBaseDialog>
         );
     }

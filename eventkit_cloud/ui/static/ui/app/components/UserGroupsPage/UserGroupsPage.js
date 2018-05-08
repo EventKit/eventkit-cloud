@@ -4,13 +4,9 @@ import { browserHistory } from 'react-router';
 import AppBar from 'material-ui/AppBar';
 import RaisedButton from 'material-ui/RaisedButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import IconButton from 'material-ui/IconButton';
 import TextField from 'material-ui/TextField';
-import MenuIcon from 'material-ui/svg-icons/navigation/menu';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import InfoIcon from 'material-ui/svg-icons/action/info-outline';
-// import ArrowLeft from 'material-ui/svg-icons/hardware/keyboard-arrow-left';
-// import ArrowRight from 'material-ui/svg-icons/hardware/keyboard-arrow-right';
 import AddCircle from 'material-ui/svg-icons/content/add-circle';
 import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
@@ -41,7 +37,6 @@ export class UserGroupsPage extends Component {
         super(props);
         this.getQueryGroup = this.getQueryGroup.bind(this);
         this.getGroupTitle = this.getGroupTitle.bind(this);
-        // this.getMemberText = this.getMemberText.bind(this);
         this.makeUserRequest = this.makeUserRequest.bind(this);
         this.toggleDrawer = this.toggleDrawer.bind(this);
         this.handleSelectAll = this.handleSelectAll.bind(this);
@@ -57,8 +52,6 @@ export class UserGroupsPage extends Component {
         this.handleRenameClose = this.handleRenameClose.bind(this);
         this.handleRenameInput = this.handleRenameInput.bind(this);
         this.handleRenameSave = this.handleRenameSave.bind(this);
-        // this.handleSingleUserChange = this.handleSingleUserChange.bind(this);
-        this.handleMultiUserChange = this.handleMultiUserChange.bind(this);
         this.handleNewGroup = this.handleNewGroup.bind(this);
         this.handleAddUsers = this.handleAddUsers.bind(this);
         this.handleLeaveGroupClick = this.handleLeaveGroupClick.bind(this);
@@ -74,6 +67,8 @@ export class UserGroupsPage extends Component {
         this.handleDemoteAdmin = this.handleDemoteAdmin.bind(this);
         this.handleRemoveUser = this.handleRemoveUser.bind(this);
         this.handleRemoveUserBatch = this.handleRemoveUserBatch.bind(this);
+        this.handleBatchAdminRights = this.handleBatchAdminRights.bind(this);
+        this.handleAddUsersSave = this.handleAddUsersSave.bind(this);
         this.handleUserSelect = this.handleUserSelect.bind(this);
         this.showAddUsersDialog = this.showAddUsersDialog.bind(this);
         this.hideAddUsersDialog = this.hideAddUsersDialog.bind(this);
@@ -198,29 +193,6 @@ export class UserGroupsPage extends Component {
         return null;
     }
 
-    getUpdatedGroupMembers(group, members) {
-        // check if any of the members are not already in the group
-        const notInGroupMembers = members.filter(m => (!group.members.includes(m.user.username)));
-        let updatedMembers = [...group.members];
-        const updatedAdmins = [...group.administrators];
-        // if at least one member is not in the group we will add them all
-        if (notInGroupMembers.length > 0) {
-            updatedMembers = [...updatedMembers, ...members.map(m => m.user.username)];
-        // if all members are in the group we remove them and also remove them from admin list
-        } else {
-            members.forEach((m) => {
-                updatedMembers.splice(updatedMembers.indexOf(m.user.username), 1);
-                const adminIX = updatedAdmins.indexOf(m.user.username);
-                if (adminIX !== -1) updatedAdmins.splice(adminIX, 1);
-            });
-        }
-        // create the new group and replace members and admins
-        const newGroup = { ...group };
-        newGroup.members = updatedMembers;
-        newGroup.administrators = updatedAdmins;
-        return newGroup;
-    }
-
     getGroupTitle(group) {
         const selection = this.props.location.query.groups || 'all';
         if (selection === 'all') return 'All Members';
@@ -229,12 +201,6 @@ export class UserGroupsPage extends Component {
         }
         return `${group.name} Members`;
     }
-
-    // getMemberText(group) {
-    //     const selection = this.props.location.query.groups || 'all';
-    //     if (selection === 'all' || !group || window.innerWidth < 768) return '';
-    //     return `${group.members.length} Members with ${group.administrators.length} Administrators`;
-    // }
 
     makeUserRequest(options = { groups: null, ordering: null, search: null }) {
         const params = { ...this.props.location.query };
@@ -380,22 +346,6 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    // handleSingleUserChange(group, user) {
-    //     const newGroup = this.getUpdatedGroupMembers(group, [user]);
-    //     this.props.updateGroup(newGroup.id, {
-    //         members: newGroup.members,
-    //         administrators: newGroup.administrators,
-    //     });
-    // }
-
-    handleMultiUserChange(group) {
-        const newGroup = this.getUpdatedGroupMembers(group, [...this.state.selectedUsers]);
-        this.props.updateGroup(newGroup.id, {
-            members: newGroup.members,
-            administrators: newGroup.administrators,
-        });
-    }
-
     handleLeaveGroupClick(group) {
         this.setState({ targetGroup: group });
         this.handleLeaveOpen();
@@ -493,10 +443,40 @@ export class UserGroupsPage extends Component {
         if (!group) {
             return;
         }
-        const newGroup = this.getUpdatedGroupMembers(group, [...users]);
-        this.props.updateGroup(newGroup.id, {
-            members: newGroup.members,
-            administrators: newGroup.administrators,
+        const usernames = users.map(user => user.user.username);
+        const members = group.members
+            .filter(username => usernames.indexOf(username) < 0);
+        const administrators = group.administrators
+            .filter(username => usernames.indexOf(username) < 0);
+        this.props.updateGroup(group.id, {
+            members,
+            administrators,
+        });
+    }
+
+    handleBatchAdminRights(users) {
+        const group = this.getQueryGroup();
+        if (!group) {
+            return;
+        }
+        let administrators = [];
+        const usernames = users.map(user => user.user.username);
+        const removing = users.every(user => group.administrators.indexOf(user.user.username) > -1);
+        if (removing) {
+            administrators = group.administrators
+                .filter(username => usernames.indexOf(username) < 0);
+        } else {
+            administrators = [...group.administrators, ...usernames];
+        }
+        this.props.updateGroup(group.id, { administrators });
+    }
+
+    handleAddUsersSave(groups, users) {
+        this.hideAddUsersDialog();
+        const usernames = users.map(user => user.user.username);
+        groups.forEach((group) => {
+            const members = [...group.members, ...usernames];
+            this.props.updateGroup(group.id, { members });
         });
     }
 
@@ -707,8 +687,9 @@ export class UserGroupsPage extends Component {
         }
 
         const queryGroup = this.getQueryGroup();
-        // check if the logged in user is and admin of the current group
+        // check if the logged in user is an admin of the current group
         const ownedQueryGroup = this.getQueryGroup(ownedGroups);
+        const otherQueryGroup = this.getQueryGroup(otherGroups);
 
         let addMembersBtn = null;
         if (this.getQueryGroup(ownedGroups)) {
@@ -752,13 +733,24 @@ export class UserGroupsPage extends Component {
                 <OwnUserRow
                     key={user.user.username}
                     user={user}
-                    handleMakeAdmin={this.handleMakeAdmin}
                     handleDemoteAdmin={this.handleDemoteAdmin}
+                    handleRemoveUser={this.handleRemoveUser}
                     isAdmin={queryGroup && queryGroup.administrators.includes(user.user.username)}
                     showAdminButton={showAdminButton}
                     showAdminLabel={showAdminLabel}
+                    showRemoveButton={otherQueryGroup === undefined}
                 />
             );
+        }
+
+        if (this.props.location.query.ordering === 'admin' && !!queryGroup) {
+            users.sort((a, b) => {
+                const aIsAdmin = queryGroup.administrators.includes(a.user.username);
+                const bIsAdmin = queryGroup.administrators.includes(b.user.username);
+                if (aIsAdmin && !bIsAdmin) return -1;
+                if (bIsAdmin && !aIsAdmin) return 1;
+                return 0;
+            });
         }
 
         return (
@@ -803,19 +795,10 @@ export class UserGroupsPage extends Component {
                                 onClick={this.handleCreateOpen}
                             /> : null }
                         {smallViewport ?
-                            <IconButton
-                                style={{
-                                    padding: '0px',
-                                    height: '35px',
-                                    lineHeight: '35px',
-                                    marginRight: '-12px',
-                                    marginLeft: '5px',
-                                }}
-                                onClick={this.toggleDrawer}
-                                iconStyle={{ verticalAlign: 'middle' }}
-                            >
-                                <MenuIcon style={{ verticalAlign: 'middle' }} />
-                            </IconButton>
+                            
+                            <EnhancedButton onClick={this.toggleDrawer} style={{ fontSize: '12px', color: '#4598bf', padding: '0px 10px', margin: '0px -10px 0px 5px' }}>
+                                {`${this.state.drawerOpen ? 'HIDE' : 'SHOW'} PAGE MENU`}
+                            </EnhancedButton>
                             :
                             null
                         }
@@ -838,9 +821,6 @@ export class UserGroupsPage extends Component {
                                 {this.getGroupTitle(queryGroup)}
                             </div>
                             {addMembersBtn}
-                            {/*<div style={{ display: 'flex', color: '#707274', flex: '1 1 auto', justifyContent: 'flex-end', fontSize: '15px', height: '24px', lineHeight: '24px' }}>
-                                {this.getMemberText(queryGroup)}
-                            </div>*/}
                         </div>
                         <TextField
                             style={styles.container}
@@ -857,15 +837,15 @@ export class UserGroupsPage extends Component {
                             selected={this.state.selectedUsers.length === users.length}
                             onSelect={this.handleSelectAll}
                             selectedUsers={this.state.selectedUsers}
-                            selectedGroups={commonGroups}
+                            selectedGroup={queryGroup}
                             orderingValue={this.props.location.query.ordering || 'username'}
                             handleOrderingChange={this.handleOrderingChange}
                             handleRemoveUsers={this.handleRemoveUserBatch}
-                            groups={ownedGroups}
-                            handleGroupItemClick={this.handleMultiUserChange}
                             handleNewGroup={this.handleNewGroup}
                             handleAddUsers={this.handleAddUsers}
+                            handleAdminRights={this.handleBatchAdminRights}
                             showRemoveButton={!!ownedQueryGroup}
+                            showAdminButton={showAdminButton}
                         />
                         
                     </div>
@@ -932,7 +912,7 @@ export class UserGroupsPage extends Component {
                 <AddMembersDialog
                     show={this.state.showAddUsers}
                     onClose={this.hideAddUsersDialog}
-                    onSave={this.hideAddUsersDialog}
+                    onSave={this.handleAddUsersSave}
                     groups={ownedGroups}
                     selectedUsers={this.state.addUsers}
                 />

@@ -1,16 +1,24 @@
 import React, { Component, PropTypes } from 'react';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import IconButton from 'material-ui/IconButton';
+import MenuItem from 'material-ui/MenuItem';
+import Divider from 'material-ui/Divider';
+import Person from 'material-ui/svg-icons/social/person';
+import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
+import GroupsDropDownMenu from './GroupsDropDownMenu';
 
 export class OwnUserRow extends Component {
     constructor(props) {
         super(props);
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
-        this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
+        this.handleOpen = this.handleOpen.bind(this);
+        this.handleClose = this.handleClose.bind(this);
         this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
+        this.handleRemoveUserClick = this.handleRemoveUserClick.bind(this);
         this.state = {
             hovered: false,
-        }
+            open: false,
+        };
     }
 
     handleMouseOver() {
@@ -21,14 +29,24 @@ export class OwnUserRow extends Component {
         this.setState({ hovered: false });
     }
 
-    handleMakeAdminClick(e) {
+    handleOpen(e) {
+        e.preventDefault();
         e.stopPropagation();
-        this.props.handleMakeAdmin(this.props.user);
+        this.setState({ open: true, popoverAnchor: e.currentTarget });
     }
 
-    handleDemoteAdminClick(e) {
-        e.stopPropagation();
+    handleClose() {
+        this.setState({ open: false });
+    }
+
+    handleDemoteAdminClick() {
+        this.handleClose();
         this.props.handleDemoteAdmin(this.props.user);
+    }
+
+    handleRemoveUserClick() {
+        this.handleClose();
+        this.props.handleRemoveUser(this.props.user);
     }
 
     render() {
@@ -89,7 +107,50 @@ export class OwnUserRow extends Component {
                 opacity: '0.8',
                 cursor: 'pointer',
             },
+            menuItem: {
+                fontSize: '14px',
+                overflow: 'hidden',
+                color: '#ce4427',
+            },
+            menuItemInner: {
+                padding: '0px',
+                margin: '0px 22px 0px 16px',
+                height: '48px',
+                display: 'flex',
+            },
         };
+
+        let adminButton = null;
+        if (this.props.showAdminButton && this.props.isAdmin) {
+            adminButton = ([
+                <MenuItem
+                    key="adminMenuItem"
+                    style={styles.menuItem}
+                    innerDivStyle={styles.menuItemInner}
+                    onTouchTap={this.handleDemoteAdminClick}
+                    className="qa-UserRowColumn-MenuItem-makeAdmin"
+                >
+                    <span>Remove Admin Rights</span>
+                </MenuItem>,
+                <Divider key="makeAdminDivider" className="qa-UserRowColumn-Divider" />,
+            ]);
+        }
+
+        let removeButton = null;
+        if (this.props.showRemoveButton) {
+            removeButton = (
+                <MenuItem
+                    style={styles.menuItem}
+                    innerDivStyle={styles.menuItemInner}
+                    onTouchTap={this.handleRemoveUserClick}
+                    className="qa-UserRowColumn-MenuItem-remove"
+                >
+                    <span>Leave Group</span>
+                </MenuItem>
+            );
+        }
+
+        const iconDisabled = !removeButton && !adminButton;
 
         let name = this.props.user.user.username;
         if (this.props.user.user.first_name && this.props.user.user.last_name) {
@@ -127,8 +188,29 @@ export class OwnUserRow extends Component {
                     </div>
                     <div style={styles.me}>(me)</div>
                     {adminLabel}
+                    <IconButton
+                        style={styles.iconButton}
+                        iconStyle={{ color: iconDisabled ? '#707274' : '#4598bf' }}
+                        onClick={this.handleOpen}
+                        disabled={iconDisabled}
+                        className="qa-UserRowColumn-IconButton-options"
+                    >
+                        <Person />
+                        <ArrowDown />
+                    </IconButton>
+                    <GroupsDropDownMenu
+                        open={this.state.open}
+                        anchorEl={this.state.popoverAnchor}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        onClose={this.handleClose}
+                        width={200}
+                        className="qa-UserRowColumn-GroupsDropDownMenu"
+                    >
+                        {adminButton}
+                        {removeButton}
+                    </GroupsDropDownMenu>
                 </div>
-                <div style={{ padding: '28px 24px' }} />
             </div>
         );
     }
@@ -136,7 +218,11 @@ export class OwnUserRow extends Component {
 
 OwnUserRow.defaultProps = {
     isAdmin: false,
+    handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
+    handleRemoveUser: () => { console.error('Remove user function not provided'); },
+    showAdminButton: false,
     showAdminLabel: false,
+    showRemoveButton: false,
     style: {},
 };
 
@@ -150,8 +236,12 @@ OwnUserRow.propTypes = {
         }),
         groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
+    handleDemoteAdmin: PropTypes.func,
+    handleRemoveUser: PropTypes.func,
     isAdmin: PropTypes.bool,
+    showAdminButton: PropTypes.bool,
     showAdminLabel: PropTypes.bool,
+    showRemoveButton: PropTypes.bool,
     style: PropTypes.object,
 };
 

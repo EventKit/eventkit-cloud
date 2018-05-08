@@ -3,12 +3,13 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
-import Group from 'material-ui/svg-icons/social/group';
+import Person from 'material-ui/svg-icons/social/person';
 import Sort from 'material-ui/svg-icons/content/sort';
 import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
 import Checked from 'material-ui/svg-icons/toggle/check-box';
 import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
+import ConfirmDialog from '../Dialog/ConfirmDialog';
 
 export class UserHeader extends Component {
     constructor(props) {
@@ -18,11 +19,16 @@ export class UserHeader extends Component {
         this.handleAddUsersClick = this.handleAddUsersClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
         this.handleRemoveUsersClick = this.handleRemoveUsersClick.bind(this);
+        this.handleAdminRightsClick = this.handleAdminRightsClick.bind(this);
+        this.handleOpenAdminConfirm = this.handleOpenAdminConfirm.bind(this);
+        this.handleCloseAdminConfirm = this.handleCloseAdminConfirm.bind(this);
+        this.handleConfirmAdminAction = this.handleConfirmAdminAction.bind(this);
         this.select = this.props.onSelect.bind(this, true);
         this.deselect = this.props.onSelect.bind(this, false);
         this.state = {
             open: false,
             popoverAnchor: null,
+            showAdminConfirm: false,
         };
     }
 
@@ -48,6 +54,25 @@ export class UserHeader extends Component {
     handleRemoveUsersClick() {
         this.handleClose();
         this.props.handleRemoveUsers(this.props.selectedUsers);
+    }
+
+    handleAdminRightsClick() {
+        this.handleClose();
+        this.props.handleAdminRights(this.props.selectedUsers);
+    }
+
+    handleOpenAdminConfirm() {
+        this.handleClose();
+        this.setState({ showAdminConfirm: true });
+    }
+
+    handleCloseAdminConfirm() {
+        this.setState({ showAdminConfirm: false });
+    }
+
+    handleConfirmAdminAction() {
+        this.handleCloseAdminConfirm();
+        this.props.handleAdminRights(this.props.selectedUsers);
     }
 
     render() {
@@ -109,6 +134,32 @@ export class UserHeader extends Component {
             );
         }
 
+        let confirmationText = 'Are you sure you want to proceed with this action?';
+        let adminButton = null;
+        if (this.props.showAdminButton) {
+            let adminLabel = '';
+            if (this.props.selectedGroup) {
+                const allAdmins = this.props.selectedUsers.every(user =>
+                    this.props.selectedGroup.administrators.indexOf(user.user.username) > -1);
+                if (allAdmins) adminLabel = 'Remove Admin Rights';
+                else adminLabel = 'Grant Admin Rights';
+                confirmationText = `Are you sure you want to ${adminLabel.toLowerCase()} for the (${this.props.selectedUsers.length}) selected members?`;
+            }
+
+            adminButton = ([
+                <MenuItem
+                    key="makeAdminMenuItem"
+                    style={styles.menuItem}
+                    innerDivStyle={styles.menuItemInner}
+                    onTouchTap={this.handleOpenAdminConfirm}
+                    className="qa-UserRowColumn-MenuItem-makeAdmin"
+                >
+                    <span>{adminLabel}</span>
+                </MenuItem>,
+                <Divider key="makeAdminDivider" className="qa-UserRowColumn-Divider" />,
+            ]);
+        }
+
         return (
             <div
                 style={styles.headerColumn}
@@ -136,7 +187,7 @@ export class UserHeader extends Component {
                                 onClick={this.handleOpen}
                                 className="qa-UserHeader-IconButton-options"
                             >
-                                <Group />
+                                <Person />
                                 <DropDown />
                             </IconButton>
                             :
@@ -169,10 +220,8 @@ export class UserHeader extends Component {
                                 <span>Add to New Group</span>
                             </MenuItem>
                             <Divider className="qa-UserHeader-Divider" />
+                            {adminButton}
                             {removeButton}
-
-
-
                         </GroupsDropDownMenu>
                     </div>
                     <IconMenu
@@ -206,8 +255,22 @@ export class UserHeader extends Component {
                             primaryText="Oldest"
                             className="qa-UserHeader-MenuItem-sortOldest"
                         />
+                        <MenuItem
+                            value="admin"
+                            primaryText="Administrator"
+                            className="qa-UserHeader-MenuItem-sortAdmin"
+                        />
                     </IconMenu>
                 </div>
+                <ConfirmDialog
+                    show={this.state.showAdminConfirm}
+                    title="Are you sure?"
+                    onCancel={this.handleCloseAdminConfirm}
+                    onConfirm={this.handleConfirmAdminAction}
+                    isDestructive
+                >
+                    {confirmationText}
+                </ConfirmDialog>
             </div>
         );
     }
@@ -215,7 +278,10 @@ export class UserHeader extends Component {
 
 UserHeader.defaultProps = {
     handleRemoveUsers: () => { console.error('No remove users handler supplied'); },
+    handleAdminRights: () => { console.error('No admin rights handler supplied'); },
+    selectedGroup: null,
     showRemoveButton: false,
+    showAdminButton: false,
 };
 
 UserHeader.propTypes = {
@@ -225,9 +291,17 @@ UserHeader.propTypes = {
     handleOrderingChange: PropTypes.func.isRequired,
     handleAddUsers: PropTypes.func.isRequired,
     handleRemoveUsers: PropTypes.func,
+    handleAdminRights: PropTypes.func,
     selectedUsers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    selectedGroup: PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    }),
     handleNewGroup: PropTypes.func.isRequired,
     showRemoveButton: PropTypes.bool,
+    showAdminButton: PropTypes.bool,
 };
 
 export default UserHeader;
