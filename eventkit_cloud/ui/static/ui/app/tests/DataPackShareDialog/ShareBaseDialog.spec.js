@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Dialog from 'material-ui/Dialog';
-import ShareBaseDialog from '../../components/Dialog/ShareBaseDialog';
+import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 
 
 describe('MembersHeaderRow component', () => {

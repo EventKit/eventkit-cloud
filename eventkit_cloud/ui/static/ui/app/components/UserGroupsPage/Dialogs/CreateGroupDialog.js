@@ -43,6 +43,7 @@ export class CreateGroupDialog extends Component {
                     maxLength={50}
                     onChange={this.props.onInputChange}
                     value={this.props.value}
+                    autoFocus
                     style={{
                         width: '100%',
                     }}

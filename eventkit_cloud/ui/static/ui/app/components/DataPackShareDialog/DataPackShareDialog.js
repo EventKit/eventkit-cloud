@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
-import ShareBaseDialog from '../Dialog/ShareBaseDialog';
+import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
 import MembersBody from './MembersBody';
 import ShareInfoBody from './ShareInfoBody';
