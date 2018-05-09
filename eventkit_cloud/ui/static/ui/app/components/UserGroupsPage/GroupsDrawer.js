@@ -128,20 +128,6 @@ export class GroupsDrawer extends Component {
                     </EnhancedButton>
                 </span>
                 <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{ height: 'calc(100% - 145px)' }} >
-                    <div style={{ padding: '10px 20px 5px' }}>
-                        <ActionSearch style={{ marginTop: '2px', height: '28px', width: '28px', verticalAlign: 'top' }} />
-                        <TextField
-                            id="group-search"
-                            type="search"
-                            hintText="Search Groups"
-                            hintStyle={{ bottom: 0 }}
-                            style={{ width: '170px', height: '30px', lineHeight: '30px', padding: '0px 10px 0px 5px' }}
-                            underlineStyle={{ bottom: '3px', borderBottom: 'none #fff' }}
-                            underlineFocusStyle={{ borderBottom: '1px solid #4598bf', width: 'calc(100% - 15px)' }}
-                            value={this.state.text}
-                            onChange={(e, v) => { this.setState({ text: v }); }}
-                        />
-                    </div>
                     <Menu
                         disableAutoFocus
                         autoWidth={false}

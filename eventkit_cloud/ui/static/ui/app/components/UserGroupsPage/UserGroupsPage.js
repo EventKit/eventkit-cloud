@@ -691,32 +691,6 @@ export class UserGroupsPage extends Component {
         const ownedQueryGroup = this.getQueryGroup(ownedGroups);
         const otherQueryGroup = this.getQueryGroup(otherGroups);
 
-        let addMembersBtn = null;
-        if (this.getQueryGroup(ownedGroups)) {
-            addMembersBtn = (
-                <EnhancedButton
-                    style={{
-                        color: '#fff',
-                        backgroundColor: '#4598bf',
-                        padding: '0px 10px',
-                        height: '28px',
-                        lineHeight: '24px',
-                        fontSize: '12px',
-                    }}
-                >
-                    <AddCircle style={{
-                        color: '#fff',
-                        verticalAlign: 'top',
-                        height: '24px',
-                        width: '14px',
-                        marginRight: '5px',
-                    }}
-                    />
-                    MEMBERS
-                </EnhancedButton>
-            );
-        }
-
         // get a list of all the usernames from selected users
         const selectedUsernames = this.state.selectedUsers.map(user => user.user.username);
         // if viewing all, new, or ungrouped, we want to show the admin buttons
@@ -820,7 +794,6 @@ export class UserGroupsPage extends Component {
                             }}>
                                 {this.getGroupTitle(queryGroup)}
                             </div>
-                            {addMembersBtn}
                         </div>
                         <TextField
                             style={styles.container}
