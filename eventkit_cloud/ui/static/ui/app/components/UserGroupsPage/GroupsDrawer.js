@@ -5,21 +5,14 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
 import Divider from 'material-ui/Divider';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import Vert from 'material-ui/svg-icons/navigation/more-vert';
 import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
-import ActionSearch from 'material-ui/svg-icons/action/search';
 import CustomScrollbar from '../CustomScrollbar';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import { TextField } from 'material-ui';
+
 
 export class GroupsDrawer extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            text: '',
-        };
-    }
     render() {
         const styles = {
             drawer: {
@@ -41,13 +34,20 @@ export class GroupsDrawer extends Component {
                 color: '#707274',
                 display: 'block',
             },
-            addGroupIcon: {
+            newGroupIcon: {
                 fill: '#4598bf',
                 height: '24px',
                 width: '17px',
                 marginRight: '5px',
                 verticalAlign: 'bottom',
                 cursor: 'pointer',
+            },
+            newGroupBtn: {
+                fontSize: '13px',
+                color: '#4598bf',
+                float: 'right',
+                lineHeight: '24px',
+                padding: '0px 10px',
             },
             innerDiv: {
                 padding: '0px 48px 0px 20px',
@@ -110,23 +110,24 @@ export class GroupsDrawer extends Component {
                     />
                 </Menu>
                 <Divider className="qa-GroupsDrawer-Divider" />
-                
+
                 <span
                     style={styles.heading}
                     className="qa-GroupsDrawer-membersHeading"
                 >
                     <strong>GROUPS</strong>
                     <EnhancedButton
-                        style={{ fontSize: '13px', color: '#4598bf', float: 'right', lineHeight: '24px', padding: '0px 10px' }}
+                        style={styles.newGroupBtn}
                         onClick={this.props.onNewGroupClick}
                     >
                         <AddCircleIcon
-                            style={styles.addGroupIcon}
-                            className="qa-GroupsDrawer-addGroupIcon"
+                            style={styles.newGroupIcon}
+                            className="qa-GroupsDrawer-newGroupIcon"
                         />
                         <strong>NEW GROUP</strong>
                     </EnhancedButton>
                 </span>
+
                 <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{ height: 'calc(100% - 145px)' }} >
                     <Menu
                         disableAutoFocus

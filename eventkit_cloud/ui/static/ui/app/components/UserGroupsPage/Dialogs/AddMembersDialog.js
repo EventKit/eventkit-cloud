@@ -17,7 +17,7 @@ import CustomScrollbar from '../../CustomScrollbar';
 export class AddMembersDialog extends Component {
     constructor(props) {
         super(props);
-        this.getEnabledCheckbox = this.getEnabledCheckbox.bind(this);
+        this.getUnassignedCheckbox = this.getUnassignedCheckbox.bind(this);
         this.getHeaderCheckbox = this.getHeaderCheckbox.bind(this);
         this.handleSave = this.handleSave.bind(this);
         this.handleClose = this.handleClose.bind(this);
@@ -28,12 +28,14 @@ export class AddMembersDialog extends Component {
         this.handleDeselectAll = this.handleDeselectAll.bind(this);
         this.handleSearchInput = this.handleSearchInput.bind(this);
         this.handleResize = this.handleResize.bind(this);
-        this.toggleSort = this.toggleSort.bind(this);
+        this.toggleSortName = this.toggleSortName.bind(this);
+        this.toggleSortSelected = this.toggleSortSelected.bind(this);
         this.state = this.getInitialState();
     }
 
     getInitialState() {
         return {
+            // possible sort values: ['name', '-name', 'selected', '-selected'];
             sort: 'name',
             search: '',
             selection: [],
@@ -50,7 +52,7 @@ export class AddMembersDialog extends Component {
         window.removeEventListener('resize', this.handleResize);
     }
 
-    getEnabledCheckbox(group) {
+    getUnassignedCheckbox(group) {
         const checkbox = { height: '28px', width: '28px', cursor: 'pointer' };
         if (this.state.selection.indexOf(group) > -1) {
             return <Checked style={checkbox} onClick={() => { this.handleUncheck(group); }} />;
@@ -69,18 +71,18 @@ export class AddMembersDialog extends Component {
     }
 
     getGroupSplit(groups, users) {
-        const disabled = [];
-        const enabled = [];
+        const assigned = [];
+        const unassigned = [];
         groups.forEach((group) => {
             const isEveryUserInGroup = users.every(user =>
                 group.members.indexOf(user.user.username) > -1);
             if (isEveryUserInGroup) {
-                disabled.push(group);
+                assigned.push(group);
             } else {
-                enabled.push(group);
+                unassigned.push(group);
             }
         });
-        return [enabled, disabled];
+        return [unassigned, assigned];
     }
 
     handleSave() {
@@ -137,10 +139,9 @@ export class AddMembersDialog extends Component {
         return groups.filter(group => group.name.toUpperCase().includes(SEARCH));
     }
 
-    sortGroups(groups, sort) {
-        console.log('sorting', sort);
+    sortGroupNames(groups, sort) {
         let modifier = 1;
-        if (sort.includes('-')) {
+        if (sort === '-name') {
             modifier = -1;
         }
         return groups.sort((a, b) => {
@@ -152,18 +153,40 @@ export class AddMembersDialog extends Component {
         });
     }
 
-    toggleSort() {
+    sortGroupSelected(groups, sort, selection) {
+        let modifier = 1;
+        if (sort === '-selected') {
+            modifier = -1;
+        }
+        return groups.sort((a, b) => {
+            const aSelected = !!selection.find(s => s.id === a.id);
+            const bSelected = !!selection.find(s => s.id === b.id);
+            if (aSelected && !bSelected) return -1 * modifier;
+            if (!aSelected && bSelected) return 1 * modifier;
+            return 0;
+        });
+    }
+
+    toggleSortName() {
         const { sort } = this.state;
-        if (sort.includes('-')) {
-            this.setState({ sort: 'name' });
-        } else {
+        if (sort === 'name') {
             this.setState({ sort: '-name' });
+        } else {
+            this.setState({ sort: 'name' });
+        }
+    }
+
+    toggleSortSelected() {
+        const { sort } = this.state;
+        if (sort === 'selected') {
+            this.setState({ sort: '-selected' });
+        } else {
+            this.setState({ sort: 'selected' });
         }
     }
 
     render() {
         const styles = {
-
             dialog: {
                 width: 'calc(100% - 32px)',
                 height: '100%',
@@ -196,8 +219,6 @@ export class AddMembersDialog extends Component {
                 backgroundColor: '#4598bf',
                 borderRadius: '0px',
             },
-
-
             textField: {
                 fontSize: '14px',
                 backgroundColor: 'whitesmoke',
@@ -218,26 +239,42 @@ export class AddMembersDialog extends Component {
                 width: '100%',
                 lineHeight: '28px',
                 alignItems: 'center',
-                padding: '12px 12px 12px 0px',
+                padding: '12px 48px 8px 0px',
                 fontSize: '14px',
             },
             arrow: {
                 height: '28px',
+                width: '28px',
                 verticalAlign: 'top',
             },
-            unassigned: {
+            unassignedTab: {
                 color: '#707274',
-                display: 'flex',
-                flex: '0 0 auto',
-                width: 'auto',
-                borderBottom: this.state.tab === 0 ? '2px solid #4598bf' : '2px #ddd solid',
+                width: '155px',
+                borderBottom: this.state.tab === 0 ?
+                    '2px solid #4598bf' : '2px #ddd solid',
             },
-            assigned: {
+            assignedTab: {
                 color: '#707274',
+                width: '155px',
+                borderBottom: this.state.tab === 1 ?
+                    '2px solid #4598bf' : '2px #ddd solid',
+            },
+            tabButton: {
+                height: '36px',
+                padding: '0px 32px',
+            },
+            row: {
                 display: 'flex',
+                width: '100%',
+                backgroundColor: 'whitesmoke',
+                alignItems: 'center',
+                padding: '12px 48px 12px 24px',
+                marginBottom: '10px',
+            },
+            name: {
                 flex: '1 1 auto',
-                width: 'auto',
-                borderBottom: this.state.tab === 1 ? '2px solid #4598bf' : '2px #ddd solid',
+                fontWeight: 800,
+                color: '#000',
             },
         };
 
@@ -245,14 +282,13 @@ export class AddMembersDialog extends Component {
         if (this.state.search) {
             groups = this.searchGroups(groups, this.state.search);
         }
+        groups = this.sortGroupNames(groups, this.state.sort);
 
-        if (this.state.sort) {
-            groups = this.sortGroups(groups, this.state.sort);
+        if (this.state.sort.includes('selected')) {
+            groups = this.sortGroupSelected(groups, this.state.sort, this.state.selection);
         }
 
-        const [enabled, disabled] = this.getGroupSplit(groups, this.props.selectedUsers);
-
-        const headerCheckbox = this.getHeaderCheckbox(enabled.length, this.state.selection.length);
+        const [unassigned, assigned] = this.getGroupSplit(groups, this.props.selectedUsers);
 
         const searchbar = (
             <CustomTextField
@@ -270,14 +306,17 @@ export class AddMembersDialog extends Component {
             />
         );
 
-        const sort = (
+        const sortName = label => (
             <EnhancedButton
-                onClick={this.toggleSort}
-                style={{ padding: '0px 10px' }}
-                
+                onClick={this.toggleSortName}
+                style={{
+                    padding: '0px 10px',
+                    color: this.state.sort.includes('name') ? '#4598bf' : 'inherit',
+                }}
+                className="qa-AddMembersDialog-sortName"
             >
-                NAME
-                {this.state.sort.includes('-') ?
+                {label}
+                {this.state.sort === '-name' ?
                     <ArrowUp style={styles.arrow} />
                     :
                     <ArrowDown style={styles.arrow} />
@@ -285,9 +324,27 @@ export class AddMembersDialog extends Component {
             </EnhancedButton>
         );
 
+        const sortSelected = (
+            <EnhancedButton
+                onClick={this.toggleSortSelected}
+                style={{
+                    padding: '0px 10px',
+                    color: this.state.sort.includes('selected') ? '#4598bf' : 'inherit',
+                }}
+                className="qa-AddMembersDialog-sortSelected"
+            >
+                {this.state.sort === '-selected' ?
+                    <ArrowUp style={styles.arrow} />
+                    :
+                    <ArrowDown style={styles.arrow} />
+                }
+                {`(${this.state.selection.length}) SELECTED`}
+            </EnhancedButton>
+        );
+
         const actions = [
             <RaisedButton
-                className="qa-ShareBaseDialog-save"
+                className="qa-AddMembersDialog-save"
                 style={{ margin: '0px' }}
                 labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
                 buttonStyle={{ borderRadius: '0px' }}
@@ -299,7 +356,7 @@ export class AddMembersDialog extends Component {
                 disabled={false}
             />,
             <FlatButton
-                className="qa-ShareBaseDialog-cancel"
+                className="qa-AddMembersDialog-cancel"
                 style={{ margin: '0px', float: 'left' }}
                 labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
                 backgroundColor="#fff"
@@ -310,15 +367,15 @@ export class AddMembersDialog extends Component {
         ];
 
         const title = (
-            <div className="qa-ShareBaseDialog-title">
-                <strong>EDIT GROUP ASSIGNMENTS</strong>
+            <div className="qa-AddMembersDialog-title">
+                <strong>ASSIGN TO EXISTING GROUPS</strong>
                 <Clear style={styles.clear} onClick={this.handleClose} />
             </div>
         );
 
         return (
             <Dialog
-                className="qa-AddMembersDialog-Dialog"
+                className="qa-AddMembersDialog"
                 contentStyle={styles.dialog}
                 bodyStyle={styles.body}
                 actions={actions}
@@ -332,50 +389,48 @@ export class AddMembersDialog extends Component {
                 autoDetectWindowHeight={false}
                 repositionOnUpdate={false}
             >
-                <p style={{ marginBottom: '20px' }}>
-                    <strong>You may only assign members to existing groups here one time.</strong>
-                     To edit a group member assignment, you must go to the desired group.
-                     You may view user assigned groups below.
+                <p style={{ marginBottom: '20px' }} className="qa-AddMembersDialog-description">
+                    <strong>
+                        Here, you may only assign members to existing groups <i>one time.</i>
+                    </strong>
+                    &nbsp;To edit group member assignments, you must go to the member's assigned group.
+                    &nbsp;You may view user group assignments below under the 'ASSIGNED' tab.
                 </p>
                 <Tabs
                     value={this.state.tab}
                     onChange={this.handleTabChange}
-                    inkBarStyle={{ display: 'none', backgroundColor: '#4598bf' }}
+                    inkBarStyle={{ backgroundColor: '#ddd', width: '100%', left: '0%' }}
                     tabItemContainerStyle={{ backgroundColor: '#fff' }}
+                    className="qa-AddMembersDialog-Tabs"
                 >
                     <Tab
                         label="UNASSIGNED"
                         value={0}
-                        style={styles.unassigned}
-                        buttonStyle={{ height: '36px', padding: '0px 32px' }}
+                        style={styles.unassignedTab}
+                        buttonStyle={styles.tabButton}
+                        className="qa-AddMembersDialog-Tab-unassigned"
                     >
                         {searchbar}
-                        <div style={styles.header}>
+                        <div style={styles.header} className="qa-AddMembersDialog-unassignedHeader">
                             <div style={{ flex: '1 1 auto' }}>
-                                {sort}
+                                {sortName('NAME')}
                             </div>
-                            <div style={{ flex: '0 0 auto', margin: '0px 10px' }}>{`(${this.state.selection.length}) ASSIGNED`}</div>
+                            {sortSelected}
                             <div style={{ flex: '0 0 auto', justifyContent: 'flex-end', height: '28px' }}>
-                                {headerCheckbox}
+                                {this.getHeaderCheckbox(unassigned.length, this.state.selection.length)}
                             </div>
                         </div>
                         <CustomScrollbar
-                            style={{ height: this.state.mobile ? window.innerHeight - 500 + 43 : window.innerHeight - 596 + 43 }}
+                            style={{ height: this.state.mobile ? window.innerHeight - 457 : window.innerHeight - 553 }}
                         >
-                            {enabled.map(group => (
+                            {unassigned.map(group => (
                                 <div
                                     key={group.name}
-                                    style={{
-                                        display: 'flex',
-                                        width: '100%',
-                                        backgroundColor: 'whitesmoke',
-                                        alignItems: 'center',
-                                        padding: '12px',
-                                        marginBottom: '10px',
-                                    }}
+                                    style={styles.row}
+                                    className="qa-AddMembersDialog-unassignedRow"
                                 >
-                                    <div style={{ flex: '1 1 auto', fontWeight: 800, color: '#000' }}>{group.name}</div>
-                                    {this.getEnabledCheckbox(group)}
+                                    <div style={styles.name}>{group.name}</div>
+                                    {this.getUnassignedCheckbox(group)}
                                 </div>
                             ))}
                         </CustomScrollbar>
@@ -383,35 +438,29 @@ export class AddMembersDialog extends Component {
                     <Tab
                         label="ASSIGNED"
                         value={1}
-                        style={styles.assigned}
-                        buttonStyle={{ height: '36px', padding: '0px 32px', alignItems: 'flex-start' }}
+                        style={styles.assignedTab}
+                        buttonStyle={styles.tabButton}
+                        className="qa-AddMembersDialog-Tab-assigned"
                     >
                         {searchbar}
-                        <div style={styles.header}>
+                        <div style={styles.header} className="qa-AddMembersDialog-assignedHeader">
                             <div style={{ flex: '1 1 auto' }}>
-                                {sort}
+                                {sortName(`GROUP ASSIGNMENTS (${assigned.length})`)}
                             </div>
-                            <div style={{ flex: '0 0 auto', margin: '0px 10px' }}>{`(${disabled.length}) ASSIGNED`}</div>
                             <div style={{ flex: '0 0 auto', justifyContent: 'flex-end', height: '28px' }}>
-                                <Checked style={{ height: '28px', width: '28px', fill: '#9d9d9d' }} />
+                                <span style={{ marginRight: '-24px' }}>(View Only)</span>
                             </div>
                         </div>
                         <CustomScrollbar
-                            style={{ height: this.state.mobile ? window.innerHeight - 500 + 43 : window.innerHeight - 596 + 43 }}
+                            style={{ height: this.state.mobile ? window.innerHeight - 457 : window.innerHeight - 553 }}
                         >
-                            {disabled.map(group => (
+                            {assigned.map(group => (
                                 <div
+                                    className="qa-AddMembersDialog-assignedRow"
                                     key={group.name}
-                                    style={{
-                                        display: 'flex',
-                                        width: '100%',
-                                        backgroundColor: 'whitesmoke',
-                                        alignItems: 'center',
-                                        padding: '12px',
-                                        marginBottom: '10px',
-                                    }}
+                                    style={styles.row}
                                 >
-                                    <div style={{ flex: '1 1 auto', fontWeight: 800, color: '#000' }}>{group.name}</div>
+                                    <div style={styles.name}>{group.name}</div>
                                     <Checked style={{ height: '28px', width: '28px', fill: '#9d9d9d' }} />
                                 </div>
                             ))}

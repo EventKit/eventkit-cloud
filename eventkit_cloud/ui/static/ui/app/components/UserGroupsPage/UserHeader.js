@@ -141,9 +141,16 @@ export class UserHeader extends Component {
             if (this.props.selectedGroup) {
                 const allAdmins = this.props.selectedUsers.every(user =>
                     this.props.selectedGroup.administrators.indexOf(user.user.username) > -1);
-                if (allAdmins) adminLabel = 'Remove Admin Rights';
-                else adminLabel = 'Grant Admin Rights';
-                confirmationText = `Are you sure you want to ${adminLabel.toLowerCase()} for the (${this.props.selectedUsers.length}) selected members?`;
+                if (allAdmins) {
+                    adminLabel = 'Remove Admin Rights';
+                } else {
+                    adminLabel = 'Grant Admin Rights';
+                }
+                confirmationText = `Are you sure you want to ${
+                    adminLabel.toLowerCase()
+                } for the (${
+                    this.props.selectedUsers.length
+                }) selected members?`;
             }
 
             adminButton = ([
@@ -179,7 +186,7 @@ export class UserHeader extends Component {
                         <strong className="qa-UserHeader-selectedCount">
                             {this.props.selectedUsers.length} Selected
                         </strong>
-                    
+
                         { this.props.selectedUsers.length ?
                             <IconButton
                                 style={styles.iconButton}
@@ -227,7 +234,9 @@ export class UserHeader extends Component {
                     <IconMenu
                         value={this.props.orderingValue}
                         onChange={this.props.handleOrderingChange}
-                        iconButtonElement={<IconButton style={{ padding: '0px', height: '24px' }}><Sort /><DropDown /></IconButton>}
+                        iconButtonElement={
+                            <IconButton style={{ padding: '0px', height: '24px' }}><Sort /><DropDown /></IconButton>
+                        }
                         style={styles.dropDown}
                         menuItemStyle={{ color: '#707274', fontSize: '14px' }}
                         selectedMenuItemStyle={{ color: '#4598bf', fontSize: '14px' }}

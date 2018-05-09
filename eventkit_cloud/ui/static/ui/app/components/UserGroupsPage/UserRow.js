@@ -82,6 +82,11 @@ export class UserRowColumn extends Component {
                 backgroundColor: this.state.hovered ? '#4598bf33' : '#fff',
                 borderTop: '1px solid #e0e0e0',
             },
+            info: {
+                flexBasis: '100%',
+                flexWrap: 'wrap',
+                wordBreak: 'break-word',
+            },
             iconMenu: {
                 width: '24px',
                 height: '40px',
@@ -164,7 +169,7 @@ export class UserRowColumn extends Component {
                 </MenuItem>
             );
         }
-        
+
         let name = this.props.user.user.username;
         if (this.props.user.user.first_name && this.props.user.user.last_name) {
             name = `${this.props.user.user.first_name} ${this.props.user.user.last_name}`;
@@ -180,7 +185,10 @@ export class UserRowColumn extends Component {
             );
         }
 
-        const checkbox = this.props.selected ? <Checked onClick={this.onSelect} /> : <Unchecked onClick={this.onSelect} />;
+        const checkbox = this.props.selected ?
+            <Checked onClick={this.onSelect} />
+            :
+            <Unchecked onClick={this.onSelect} />;
 
         return (
             <div
@@ -202,10 +210,10 @@ export class UserRowColumn extends Component {
                 </div>
                 <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
-                        <div className="qa-UserRowColumn-name" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
+                        <div className="qa-UserRowColumn-name" style={styles.info}>
                             <strong>{name}</strong>
                         </div>
-                        <div className="qa-UserRowColumn-email" style={{ flexBasis: '100%', flexWrap: 'wrap', wordBreak: 'break-word' }}>
+                        <div className="qa-UserRowColumn-email" style={styles.info}>
                             {email}
                         </div>
                     </div>

@@ -23,12 +23,7 @@ import MemberInfoDialog from './Dialogs/MemberInfoDialog';
 import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
-import {
-    getGroups,
-    deleteGroup,
-    createGroup,
-    updateGroup,
-} from '../../actions/userGroupsActions';
+import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
 import { isViewportXS, isViewportS } from '../../utils/viewport';
 
@@ -40,7 +35,6 @@ export class UserGroupsPage extends Component {
         this.makeUserRequest = this.makeUserRequest.bind(this);
         this.toggleDrawer = this.toggleDrawer.bind(this);
         this.handleSelectAll = this.handleSelectAll.bind(this);
-        this.handleIndividualSelect = this.handleIndividualSelect.bind(this);
         this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleOrderingChange = this.handleOrderingChange.bind(this);
@@ -66,7 +60,7 @@ export class UserGroupsPage extends Component {
         this.handleMakeAdmin = this.handleMakeAdmin.bind(this);
         this.handleDemoteAdmin = this.handleDemoteAdmin.bind(this);
         this.handleRemoveUser = this.handleRemoveUser.bind(this);
-        this.handleRemoveUserBatch = this.handleRemoveUserBatch.bind(this);
+        this.handleBatchRemoveUser = this.handleBatchRemoveUser.bind(this);
         this.handleBatchAdminRights = this.handleBatchAdminRights.bind(this);
         this.handleAddUsersSave = this.handleAddUsersSave.bind(this);
         this.handleUserSelect = this.handleUserSelect.bind(this);
@@ -145,7 +139,8 @@ export class UserGroupsPage extends Component {
             if (this.state.selectedUsers.length) {
                 const fixedSelection = [];
                 this.state.selectedUsers.forEach((user) => {
-                    const newUser = nextProps.users.users.find(nextUser => nextUser.user.username === user.user.username);
+                    const newUser = nextProps.users.users
+                        .find(nextUser => nextUser.user.username === user.user.username);
                     if (newUser) {
                         fixedSelection.push(newUser);
                     }
@@ -242,20 +237,16 @@ export class UserGroupsPage extends Component {
     handleSelectAll(selected) {
         if (selected) {
             // if all are selected we need to set selected state with all
-            this.setState({ selectedUsers: [...this.props.users.users.filter(user => user.user.username !== this.props.user.username)] });
+            this.setState({
+                selectedUsers: [
+                    ...this.props.users.users
+                        .filter(user => user.user.username !== this.props.user.username),
+                ],
+            });
         } else {
             // if all are deselected we need to set selected to an empty array
             this.setState({ selectedUsers: [] });
         }
-    }
-
-    handleIndividualSelect(selected) {
-        // update the state with all selected users
-        const users = [];
-        selected.forEach((ix) => {
-            users.push(this.props.users.users[ix]);
-        });
-        this.setState({ selectedUsers: users });
     }
 
     handleUserSelect(user) {
@@ -438,7 +429,7 @@ export class UserGroupsPage extends Component {
         this.props.updateGroup(group.id, { administrators, members });
     }
 
-    handleRemoveUserBatch(users) {
+    handleBatchRemoveUser(users) {
         const group = this.getQueryGroup();
         if (!group) {
             return;
@@ -569,14 +560,22 @@ export class UserGroupsPage extends Component {
                 paddingRight: '0px',
                 lineHeight: '35px',
             },
+            drawerButton: {
+                fontSize: '12px',
+                color: '#4598bf',
+                padding: '0px 10px',
+                margin: '0px -10px 0px 5px',
+            },
+            newGroupIcon: {
+                color: '#fff',
+                height: '35px',
+                width: '18px',
+                verticalAlign: 'bottom',
+                marginRight: '5px',
+            },
             body: {
                 height: bodyHeight,
                 width: bodyWidth,
-            },
-            bodyContent: {
-                maxWidth: '1000px',
-                margin: 'auto',
-                position: 'relative',
             },
             fixedHeader: {
                 paddingTop: 15,
@@ -592,6 +591,14 @@ export class UserGroupsPage extends Component {
                 flexWrap: 'wrap',
                 margin: '0px 24px 10px',
                 lineHeight: '30px',
+            },
+            memberText: {
+                fontWeight: 700,
+                fontSize: '17px',
+                flex: '0 0 auto',
+                marginRight: '10px',
+                height: '24px',
+                lineHeight: '24px',
             },
             container: {
                 color: 'white',
@@ -620,8 +627,13 @@ export class UserGroupsPage extends Component {
                 borderBottom: '2px solid #4498c0',
                 bottom: '0px',
             },
-            tableRow: {
-                height: '56px',
+            ownUser: {
+                position: 'sticky',
+                top: 0,
+                left: 0,
+                zIndex: 3,
+                backgroundColor: '#fff',
+                boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
             },
             loadingBackground: {
                 position: 'absolute',
@@ -696,11 +708,11 @@ export class UserGroupsPage extends Component {
         // if viewing all, new, or ungrouped, we want to show the admin buttons
         const showAdminLabel = this.props.location.query.groups && !this.props.users.fetching;
         const showAdminButton = showAdminLabel && !!ownedQueryGroup;
-        
+
         let ownUser = null;
         const ownIX = this.props.users.users.findIndex(u => u.user.username === this.props.user.username);
         const users = [...this.props.users.users];
-        
+
         if (ownIX > -1) {
             const [user] = users.splice(ownIX, 1);
             ownUser = (
@@ -731,7 +743,6 @@ export class UserGroupsPage extends Component {
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
                 {
                     <AppBar
-                        className="qa-UserGroupsPage-AppBar"
                         title={
                             <div style={{ lineHeight: '35px' }}>
                                 Members and Groups
@@ -744,20 +755,13 @@ export class UserGroupsPage extends Component {
                         style={styles.header}
                         titleStyle={styles.headerTitle}
                         showMenuIconButton={false}
+                        className="qa-UserGroupsPage-AppBar"
                     >
                         {!xsmallViewport ?
                             <RaisedButton
-                                className="qa-UserGroupsPage-RaisedButton-create"
                                 label={
                                     <div>
-                                        <AddCircle style={{
-                                            color: '#fff',
-                                            height: '35px',
-                                            width: '18px',
-                                            verticalAlign: 'bottom',
-                                            marginRight: '5px',
-                                        }}
-                                        />
+                                        <AddCircle style={styles.newGroupIcon} />
                                         New Group
                                     </div>
                                 }
@@ -767,10 +771,18 @@ export class UserGroupsPage extends Component {
                                 buttonStyle={{ borderRadius: '0px', backgroundColor: '#4598bf' }}
                                 overlayStyle={{ borderRadius: '0px' }}
                                 onClick={this.handleCreateOpen}
-                            /> : null }
+                                className="qa-UserGroupsPage-RaisedButton-create"
+                            />
+                            :
+                            null
+                        }
+
                         {smallViewport ?
-                            
-                            <EnhancedButton onClick={this.toggleDrawer} style={{ fontSize: '12px', color: '#4598bf', padding: '0px 10px', margin: '0px -10px 0px 5px' }}>
+                            <EnhancedButton
+                                onClick={this.toggleDrawer}
+                                style={styles.drawerButton}
+                                className="qa-UserGroupsPage-drawerButton"
+                            >
                                 {`${this.state.drawerOpen ? 'HIDE' : 'SHOW'} PAGE MENU`}
                             </EnhancedButton>
                             :
@@ -783,15 +795,8 @@ export class UserGroupsPage extends Component {
                         style={styles.fixedHeader}
                         className="qa-UserGroupsPage-fixedHeader"
                     >
-                        <div style={styles.memberTitle}>
-                            <div style={{
-                                fontWeight: 700,
-                                fontSize: '17px',
-                                flex: '0 0 auto',
-                                marginRight: '10px',
-                                height: '24px',
-                                lineHeight: '24px',
-                            }}>
+                        <div style={styles.memberTitle} className="qa-UserGroupsPage-title">
+                            <div style={styles.memberText}>
                                 {this.getGroupTitle(queryGroup)}
                             </div>
                         </div>
@@ -813,34 +818,22 @@ export class UserGroupsPage extends Component {
                             selectedGroup={queryGroup}
                             orderingValue={this.props.location.query.ordering || 'username'}
                             handleOrderingChange={this.handleOrderingChange}
-                            handleRemoveUsers={this.handleRemoveUserBatch}
+                            handleRemoveUsers={this.handleBatchRemoveUser}
                             handleNewGroup={this.handleNewGroup}
                             handleAddUsers={this.handleAddUsers}
                             handleAdminRights={this.handleBatchAdminRights}
                             showRemoveButton={!!ownedQueryGroup}
                             showAdminButton={showAdminButton}
+                            className="qa-UserGroupsPage-UserHeader"
                         />
-                        
+
                     </div>
-                    <div
-                        style={{
-                            maxWidth: '1000px',
-                            margin: 'auto',
-                            position: 'relative',
-                        }}
-                    >
+                    <div style={{ maxWidth: '1000px', margin: 'auto', position: 'relative' }}>
                         <CustomScrollbar
                             style={{ height: bodyHeight - 155, width: '100%' }}
                             className="qa-UserGroupsPage-CustomScrollbar"
                         >
-                            <div style={{
-                                position: 'sticky',
-                                top: 0,
-                                left: 0,
-                                zIndex: 3,
-                                backgroundColor: '#fff',
-                                boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
-                            }}>
+                            <div style={styles.ownUser}>
                                 {ownUser}
                             </div>
                             {users.map(user => (
@@ -855,10 +848,14 @@ export class UserGroupsPage extends Component {
                                     handleMakeAdmin={this.handleMakeAdmin}
                                     handleDemoteAdmin={this.handleDemoteAdmin}
                                     handleRemoveUser={this.handleRemoveUser}
-                                    isAdmin={!!queryGroup && queryGroup.administrators.includes(user.user.username)}
+                                    isAdmin={
+                                        !!queryGroup
+                                        && queryGroup.administrators.includes(user.user.username)
+                                    }
                                     showAdminButton={showAdminButton}
                                     showAdminLabel={showAdminLabel}
                                     showRemoveButton={!!ownedQueryGroup}
+                                    className="qa-UserGroupsPage-UserRow"
                                 />
                             ))}
                             <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
@@ -873,7 +870,6 @@ export class UserGroupsPage extends Component {
                     sharedGroups={sharedGroups}
                     otherGroups={otherGroups}
                     usersCount={this.props.users.total}
-                    className="qa-UserGroupsPage-drawer"
                     onNewGroupClick={this.handleCreateOpen}
                     onAdministratorInfoClick={this.showAdministratorInfoDialog}
                     onMemberInfoClick={this.showMemberInfoDialog}
@@ -881,6 +877,7 @@ export class UserGroupsPage extends Component {
                     onLeaveGroupClick={this.handleLeaveGroupClick}
                     onDeleteGroupClick={this.handleDeleteGroupClick}
                     onRenameGroupClick={this.handleRenameOpen}
+                    className="qa-UserGroupsPage-drawer"
                 />
                 <AddMembersDialog
                     show={this.state.showAddUsers}
@@ -888,6 +885,7 @@ export class UserGroupsPage extends Component {
                     onSave={this.handleAddUsersSave}
                     groups={ownedGroups}
                     selectedUsers={this.state.addUsers}
+                    className="qa-UserGroupsPage-addMembersDialog"
                 />
                 <CreateGroupDialog
                     show={this.state.showCreate}
@@ -917,14 +915,22 @@ export class UserGroupsPage extends Component {
                     onSave={this.handleRenameSave}
                     onInputChange={this.handleRenameInput}
                     value={this.state.renameInput}
-                    valid={this.props.groups.groups.find(group => group.name === this.state.renameInput) === undefined}
+                    valid={
+                        this.props.groups.groups.find(group =>
+                            group.name === this.state.renameInput) === undefined
+                    }
+                    className="qa-UserGroupsPage-RenameGroupDialog"
                 />
                 { this.props.groups.fetching || this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
                     <div style={styles.loadingBackground}>
                         <div style={styles.loadingContainer}>
-                            <CircularProgress color="#4598bf" style={styles.loading} className="qa-UserGroupsPage-loading" />
+                            <CircularProgress
+                                color="#4598bf"
+                                style={styles.loading}
+                                className="qa-UserGroupsPage-loading"
+                            />
                         </div>
                     </div>
                     :
@@ -938,7 +944,10 @@ export class UserGroupsPage extends Component {
                 >
                     {this.state.errors.map(error => (
                         <div className="qa-UserGroupsPage-error" key={error.detail}>
-                            <Warning className="qa-UserGroupsPage-errorIcon" style={styles.errorIcon} />
+                            <Warning
+                                className="qa-UserGroupsPage-errorIcon"
+                                style={styles.errorIcon}
+                            />
                             {error.detail}
                         </div>
                     ))}
@@ -962,9 +971,21 @@ export class UserGroupsPage extends Component {
                     </div>
                 </BaseDialog>
 
-                <AdministratorInfoDialog onClose={this.hideAdministratorInfoDialog} show={this.state.showAdministratorInfo} />
-                <MemberInfoDialog onClose={this.hideMemberInfoDialog} show={this.state.showMemberInfo} />
-                <OtherInfoDialog onClose={this.hideOtherInfoDialog} show={this.state.showOtherInfo} />
+                <AdministratorInfoDialog
+                    onClose={this.hideAdministratorInfoDialog}
+                    show={this.state.showAdministratorInfo}
+                    className="qa-UserGroupsPage-AdministratorInfoDialog"
+                />
+                <MemberInfoDialog
+                    onClose={this.hideMemberInfoDialog}
+                    show={this.state.showMemberInfo}
+                    className="qa-UserGroupsPage-MemberInfoDialog"
+                />
+                <OtherInfoDialog
+                    onClose={this.hideOtherInfoDialog}
+                    show={this.state.showOtherInfo}
+                    className="qa-UserGroupsPage-OtherInfoDialog"
+                />
             </div>
         );
     }
