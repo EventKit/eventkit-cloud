@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('tasks', '0025_auto_20180213_2021'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('jobs', '0029_add_permissions_to_existing_jobs'),
+        ('jobs', 'add_permissions_to_existing_jobs'),
     ]
 
     operations = [

@@ -1428,7 +1428,7 @@ class GroupViewSet(viewsets.ModelViewSet):
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
                                                        permission=GroupPermission.Permissions.MEMBER.value)
-                        sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP,
+                        sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP.value,
                                          group, None, "info", GroupPermission.Permissions.MEMBER.value)
 
         if "administrators" in request.data:
