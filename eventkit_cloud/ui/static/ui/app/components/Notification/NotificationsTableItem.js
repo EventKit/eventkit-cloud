@@ -50,7 +50,7 @@ export class NotificationsTableItem extends React.Component {
                 transition: 'background-color 0.25s',
             },
             tableRowColumn: {
-                padding: '0 10px',
+                padding: '0 15px',
                 color: 'rgba(0, 0, 0, 0.54)',
                 fontSize: '18px',
             },

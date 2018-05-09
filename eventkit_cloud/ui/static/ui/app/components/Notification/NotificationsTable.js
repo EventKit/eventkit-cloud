@@ -83,7 +83,7 @@ export class NotificationsTable extends React.Component {
                 height: '50px',
             },
             tableHeaderColumn: {
-                padding: '0 10px',
+                padding: '0 15px',
                 textAlign: 'left',
             },
             contentHeaderColumnWrapper: {
@@ -118,6 +118,7 @@ export class NotificationsTable extends React.Component {
                 textAlign: (window.innerWidth > 1280) ? 'center' : 'right',
                 width: (window.innerWidth > 1600) ? '600px' :
                        (window.innerWidth > 1280) ? '435px' : '60px',
+                padding: '0 15px 0 0',
             },
         };
 
@@ -161,9 +162,7 @@ export class NotificationsTable extends React.Component {
                                 className="qa-NotificationsTable-TableHeaderColumn-Date"
                                 style={styles.dateHeaderColumn}
                             >
-                                <span style={{ marginRight: '40px' }}>
-                                    Date
-                                </span>
+                                Date
                             </TableHeaderColumn>
                             <TableHeaderColumn
                                 className="qa-NotificationsTable-TableHeaderColumn-Options"
