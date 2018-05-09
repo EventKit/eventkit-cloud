@@ -23,17 +23,22 @@ const topoPattern = require('../../../images/ek_topo_pattern.png');
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props);
+        this.initialState = this.initialState.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
-        this.state = {
+        this.state = this.initialState();
+    }
+
+    initialState() {
+        return {
             isLoading: true,
             error: null,
         };
     }
 
     componentDidMount() {
-        this.props.getDatacartDetails(this.props.params.jobuid);
-        this.props.viewedJob(this.props.params.jobuid);
+        this.props.getDatacartDetails(this.props.router.params.jobuid);
+        this.props.viewedJob(this.props.router.params.jobuid);
         this.props.getProviders();
         this.props.getUsers();
         this.props.getGroups();
@@ -48,14 +53,14 @@ export class StatusDownload extends React.Component {
             this.setState({ error: nextProps.exportReRun.error });
         }
         if (nextProps.exportReRun.fetched && !this.props.exportReRun.fetched) {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
             this.startTimer();
         }
         if (nextProps.expirationState.updated && !this.props.expirationState.updated) {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
         if (nextProps.permissionState.updated && !this.props.permissionState.updated) {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
         if (nextProps.datacartDetails.fetched && !this.props.datacartDetails.fetched) {
             if (this.state.isLoading) {
@@ -94,10 +99,16 @@ export class StatusDownload extends React.Component {
                     this.timer = null;
                     window.clearTimeout(this.timeout);
                     this.timeout = window.setTimeout(() => {
-                        this.props.getDatacartDetails(this.props.params.jobuid);
+                        this.props.getDatacartDetails(this.props.router.params.jobuid);
                     }, 270000);
                 }
             }
+        }
+        if (nextProps.location !== this.props.location) {
+            // Refresh the entire component.
+            this.componentWillUnmount();
+            this.setState(this.initialState());
+            this.componentDidMount();
         }
     }
 
@@ -145,7 +156,7 @@ export class StatusDownload extends React.Component {
     startTimer() {
         window.clearInterval(this.timer);
         this.timer = window.setInterval(() => {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
         }, 5000);
     }
 
@@ -287,7 +298,6 @@ StatusDownload.contextTypes = {
 };
 
 StatusDownload.propTypes = {
-    params: PropTypes.shape({ jobuid: PropTypes.string }).isRequired,
     datacartDetails: PropTypes.object.isRequired,
     getDatacartDetails: PropTypes.func.isRequired,
     clearDataCartDetails: PropTypes.func.isRequired,
@@ -326,6 +336,8 @@ StatusDownload.propTypes = {
     })).isRequired,
     getUsers: PropTypes.func.isRequired,
     getGroups: PropTypes.func.isRequired,
+    router: PropTypes.object.isRequired,
+    location: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
