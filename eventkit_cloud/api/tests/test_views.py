@@ -1254,7 +1254,7 @@ class TestUserJobActivityViewSet(APITestCase):
         expected = '/api/user/activity/jobs'
         url = reverse('api:user_job_activity-list')
         self.assertEqual(expected, url)
-        response = self.client.get(url + '?activity=viewed')
+        response = self.client.get(url + '?activity=viewed&page_size=10')
         self.assertIsNotNone(response)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         data = json.loads(response.content)
@@ -1263,7 +1263,7 @@ class TestUserJobActivityViewSet(APITestCase):
     def test_create_viewed(self):
         # Get our current number of viewed jobs to compare against.
         url = reverse('api:user_job_activity-list')
-        response = self.client.get(url + '?activity=viewed')
+        response = self.client.get(url + '?activity=viewed&page_size=10')
         prev_viewed_jobs_count = len(json.loads(response.content))
 
         # Post a new job view.
@@ -1274,7 +1274,7 @@ class TestUserJobActivityViewSet(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         # Get our new number of viewed jobs and compare.
-        response = self.client.get(url + '?activity=viewed')
+        response = self.client.get(url + '?activity=viewed&page_size=10')
         viewed_jobs = json.loads(response.content)
         self.assertEqual(len(viewed_jobs), prev_viewed_jobs_count + 1)
 
