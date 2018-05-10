@@ -226,7 +226,6 @@ export class UserGroupsPage extends Component {
             // if group in options is not null or undefined we use that
             params.groups = options.groups;
         }
-
         this.props.getUsers(params);
     }
 

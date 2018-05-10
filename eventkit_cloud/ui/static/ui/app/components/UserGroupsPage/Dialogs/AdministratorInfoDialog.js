@@ -12,9 +12,12 @@ export class AdministratorInfoDialog extends Component {
                 show
                 onClose={this.props.onClose}
                 title="ADMINISTRATOR GROUPS"
-                className="qa-AdministratorInfoDialog-sharedInfo"
+                className="qa-AdministratorInfoDialog"
             >
-                <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
+                <div
+                    style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}
+                    className="qa-AdministratorInfoDialog-body"
+                >
                     <div>
                         <span>For groups that you are an administrator of:</span>
                         <ul style={{ paddingLeft: '20px' }}>

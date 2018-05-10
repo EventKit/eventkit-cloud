@@ -12,9 +12,12 @@ export class OtherInfoDialog extends Component {
                 show
                 onClose={this.props.onClose}
                 title="OTHER GROUPS"
-                className="qa-OtherInfoDialog-sharedInfo"
+                className="qa-OtherInfoDialog"
             >
-                <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
+                <div
+                    style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}
+                    className="qa-OtherInfoDialog-body"
+                >
                     <div>
                         <span>For groups that you are NOT a member of:</span>
                         <ul style={{ paddingLeft: '20px' }}>

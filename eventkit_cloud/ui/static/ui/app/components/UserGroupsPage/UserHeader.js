@@ -19,7 +19,6 @@ export class UserHeader extends Component {
         this.handleAddUsersClick = this.handleAddUsersClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
         this.handleRemoveUsersClick = this.handleRemoveUsersClick.bind(this);
-        this.handleAdminRightsClick = this.handleAdminRightsClick.bind(this);
         this.handleOpenAdminConfirm = this.handleOpenAdminConfirm.bind(this);
         this.handleCloseAdminConfirm = this.handleCloseAdminConfirm.bind(this);
         this.handleConfirmAdminAction = this.handleConfirmAdminAction.bind(this);
@@ -56,11 +55,6 @@ export class UserHeader extends Component {
         this.props.handleRemoveUsers(this.props.selectedUsers);
     }
 
-    handleAdminRightsClick() {
-        this.handleClose();
-        this.props.handleAdminRights(this.props.selectedUsers);
-    }
-
     handleOpenAdminConfirm() {
         this.handleClose();
         this.setState({ showAdminConfirm: true });
@@ -77,7 +71,7 @@ export class UserHeader extends Component {
 
     render() {
         const styles = {
-            headerColumn: {
+            header: {
                 color: '#707274',
                 fontSize: '14px',
                 display: 'flex',
@@ -127,7 +121,7 @@ export class UserHeader extends Component {
                     style={{ ...styles.menuItem, color: '#ce4427' }}
                     innerDivStyle={styles.menuItemInner}
                     onTouchTap={this.handleRemoveUsersClick}
-                    className="qa-UserRowColumn-MenuItem-remove"
+                    className="qa-UserHeader-MenuItem-remove"
                 >
                     <span>Remove User(s)</span>
                 </MenuItem>
@@ -159,17 +153,17 @@ export class UserHeader extends Component {
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
                     onTouchTap={this.handleOpenAdminConfirm}
-                    className="qa-UserRowColumn-MenuItem-makeAdmin"
+                    className="qa-UserHeader-MenuItem-makeAdmin"
                 >
                     <span>{adminLabel}</span>
                 </MenuItem>,
-                <Divider key="makeAdminDivider" className="qa-UserRowColumn-Divider" />,
+                <Divider key="makeAdminDivider" className="qa-UserHeader-Divider" />,
             ]);
         }
 
         return (
             <div
-                style={styles.headerColumn}
+                style={styles.header}
                 className="qa-UserHeader"
             >
                 <div style={{
@@ -235,7 +229,9 @@ export class UserHeader extends Component {
                         value={this.props.orderingValue}
                         onChange={this.props.handleOrderingChange}
                         iconButtonElement={
-                            <IconButton style={{ padding: '0px', height: '24px' }}><Sort /><DropDown /></IconButton>
+                            <IconButton style={{ padding: '0px', height: '24px' }}>
+                                <Sort /><DropDown />
+                            </IconButton>
                         }
                         style={styles.dropDown}
                         menuItemStyle={{ color: '#707274', fontSize: '14px' }}

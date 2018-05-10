@@ -12,9 +12,12 @@ export class MemberInfoDialog extends Component {
                 show
                 onClose={this.props.onClose}
                 title="MEMBER GROUPS"
-                className="qa-MemberInfoDialog-sharedInfo"
+                className="qa-MemberInfoDialog"
             >
-                <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
+                <div
+                    style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}
+                    className="qa-MemberInfoDialog-body"
+                >
                     <div>
                         <span>For groups that you are a member of:</span>
                         <ul style={{ paddingLeft: '20px' }}>

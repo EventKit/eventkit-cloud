@@ -8,7 +8,7 @@ import Checked from 'material-ui/svg-icons/toggle/check-box';
 import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 
-export class UserRowColumn extends Component {
+export class UserRow extends Component {
     constructor(props) {
         super(props);
         this.handleMouseOver = this.handleMouseOver.bind(this);
@@ -148,11 +148,11 @@ export class UserRowColumn extends Component {
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
                     onTouchTap={adminFunction}
-                    className="qa-UserRowColumn-MenuItem-makeAdmin"
+                    className="qa-UserRow-MenuItem-makeAdmin"
                 >
                     <span>{adminButtonText}</span>
                 </MenuItem>,
-                <Divider key="makeAdminDivider" className="qa-UserRowColumn-Divider" />,
+                <Divider key="makeAdminDivider" className="qa-UserRow-Divider" />,
             ]);
         }
 
@@ -163,7 +163,7 @@ export class UserRowColumn extends Component {
                     style={{ ...styles.menuItem, color: '#ce4427' }}
                     innerDivStyle={styles.menuItemInner}
                     onTouchTap={this.handleRemoveUserClick}
-                    className="qa-UserRowColumn-MenuItem-remove"
+                    className="qa-UserRow-MenuItem-remove"
                 >
                     <span>Remove User</span>
                 </MenuItem>
@@ -193,7 +193,7 @@ export class UserRowColumn extends Component {
         return (
             <div
                 style={styles.row}
-                className="qa-UserRowColumn"
+                className="qa-UserRow"
                 onMouseOver={this.handleMouseOver}
                 onMouseOut={this.handleMouseOut}
                 onFocus={this.handleMouseOver}
@@ -210,10 +210,10 @@ export class UserRowColumn extends Component {
                 </div>
                 <div style={{ display: 'flex', flex: '1 1 auto', padding: '8px 24px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', flex: '1 1 auto' }}>
-                        <div className="qa-UserRowColumn-name" style={styles.info}>
+                        <div className="qa-UserRow-name" style={styles.info}>
                             <strong>{name}</strong>
                         </div>
-                        <div className="qa-UserRowColumn-email" style={styles.info}>
+                        <div className="qa-UserRow-email" style={styles.info}>
                             {email}
                         </div>
                     </div>
@@ -222,7 +222,7 @@ export class UserRowColumn extends Component {
                         style={styles.iconButton}
                         iconStyle={{ color: '#4598bf' }}
                         onClick={this.handleOpen}
-                        className="qa-UserRowColumn-IconButton-options"
+                        className="qa-UserRow-IconButton-options"
                     >
                         <Person />
                         <ArrowDown />
@@ -234,26 +234,26 @@ export class UserRowColumn extends Component {
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                         onClose={this.handleClose}
                         width={200}
-                        className="qa-UserRowColumn-GroupsDropDownMenu"
+                        className="qa-UserRow-GroupsDropDownMenu"
                     >
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
                             onTouchTap={this.handleAddUserClick}
-                            className="qa-UserRowColumn-MenuItem-editGroups"
+                            className="qa-UserRow-MenuItem-editGroups"
                         >
                             <span>Add to Existing Group</span>
                         </MenuItem>
-                        <Divider className="qa-UserRowColumn-Divider" />
+                        <Divider className="qa-UserRow-Divider" />
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
                             onTouchTap={this.handleNewGroupClick}
-                            className="qa-UserRowColumn-MenuItem-newGroup"
+                            className="qa-UserRow-MenuItem-newGroup"
                         >
                             <span>Add to New Group</span>
                         </MenuItem>
-                        <Divider className="qa-UserRowColumn-Divider" />
+                        <Divider className="qa-UserRow-Divider" />
                         {adminButton}
                         {removeButton}
                     </GroupsDropDownMenu>
@@ -263,7 +263,7 @@ export class UserRowColumn extends Component {
     }
 }
 
-UserRowColumn.defaultProps = {
+UserRow.defaultProps = {
     handleMakeAdmin: () => { console.error('Make admin function not provided'); },
     handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
     handleRemoveUser: () => { console.error('Remove user function not provided'); },
@@ -274,7 +274,7 @@ UserRowColumn.defaultProps = {
     style: {},
 };
 
-UserRowColumn.propTypes = {
+UserRow.propTypes = {
     selected: PropTypes.bool.isRequired,
     onSelect: PropTypes.func.isRequired,
     user: PropTypes.shape({
@@ -298,4 +298,4 @@ UserRowColumn.propTypes = {
     style: PropTypes.object,
 };
 
-export default UserRowColumn;
+export default UserRow;

@@ -128,11 +128,11 @@ export class OwnUserRow extends Component {
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
                     onTouchTap={this.handleDemoteAdminClick}
-                    className="qa-UserRowColumn-MenuItem-makeAdmin"
+                    className="qa-OwnUserRow-MenuItem-makeAdmin"
                 >
                     <span>Remove Admin Rights</span>
                 </MenuItem>,
-                <Divider key="makeAdminDivider" className="qa-UserRowColumn-Divider" />,
+                <Divider key="makeAdminDivider" className="qa-OwnUserRow-Divider" />,
             ]);
         }
 
@@ -143,7 +143,7 @@ export class OwnUserRow extends Component {
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
                     onTouchTap={this.handleRemoveUserClick}
-                    className="qa-UserRowColumn-MenuItem-remove"
+                    className="qa-OwnUserRow-MenuItem-remove"
                 >
                     <span>Leave Group</span>
                 </MenuItem>
@@ -161,7 +161,7 @@ export class OwnUserRow extends Component {
         let adminLabel = null;
         if (this.props.showAdminLabel && this.props.isAdmin) {
             adminLabel = (
-                <div style={styles.adminContainer}>
+                <div style={styles.adminContainer} className="qa-OwnUserRow-adminLabel">
                         ADMIN
                 </div>
             );
@@ -193,7 +193,7 @@ export class OwnUserRow extends Component {
                         iconStyle={{ color: iconDisabled ? '#707274' : '#4598bf' }}
                         onClick={this.handleOpen}
                         disabled={iconDisabled}
-                        className="qa-UserRowColumn-IconButton-options"
+                        className="qa-OwnUserRow-IconButton-options"
                     >
                         <Person />
                         <ArrowDown />
@@ -205,7 +205,7 @@ export class OwnUserRow extends Component {
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                         onClose={this.handleClose}
                         width={200}
-                        className="qa-UserRowColumn-GroupsDropDownMenu"
+                        className="qa-OwnUserRow-GroupsDropDownMenu"
                     >
                         {adminButton}
                         {removeButton}
