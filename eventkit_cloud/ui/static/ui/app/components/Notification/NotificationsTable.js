@@ -204,4 +204,12 @@ NotificationsTable.propTypes = {
     onView: PropTypes.func,
 };
 
+NotificationsTable.defaultProps = {
+    onMarkAsRead: undefined,
+    onMarkAsUnread: undefined,
+    onRemove: undefined,
+    onMarkAllAsRead: undefined,
+    onView: undefined,
+};
+
 export default NotificationsTable;

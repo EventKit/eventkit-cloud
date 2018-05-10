@@ -146,6 +146,7 @@ NotificationMenu.propTypes = {
 };
 
 NotificationMenu.defaultProps = {
+    style: {},
     onMarkAsRead: () => { return true; },
     onMarkAsUnread: () => { return true; },
     onRemove: () => { return true; },

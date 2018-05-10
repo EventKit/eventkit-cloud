@@ -96,4 +96,9 @@ LoadButtons.propTypes = {
     loadMoreDisabled: PropTypes.bool.isRequired,
 };
 
+LoadButtons.defaultProps = {
+    handleLoadLess: undefined,
+    loadLessDisabled: false,
+};
+
 export default LoadButtons;

@@ -262,8 +262,11 @@ DashboardSection.propTypes = {
 
 DashboardSection.defaultProps = {
     style: {},
-    rows: 1,
+    onViewAll: undefined,
+    noDataElement: undefined,
+    cellHeight: undefined,
     gridPadding: 2,
+    rows: 1,
     rowMajor: true,
 };
 

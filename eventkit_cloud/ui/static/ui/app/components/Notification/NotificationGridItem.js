@@ -106,6 +106,9 @@ NotificationGridItem.propTypes = {
 
 NotificationGridItem.defaultProps = {
     style: {},
+    onMarkAsRead: undefined,
+    onMarkAsUnread: undefined,
+    onRemove: undefined,
     onView: () => { return true; },
 };
 

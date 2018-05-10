@@ -256,4 +256,8 @@ DataPackFeaturedItem.propTypes = {
     height: PropTypes.string,
 };
 
+DataPackFeaturedItem.defaultProps = {
+    height: undefined,
+};
+
 export default DataPackFeaturedItem;
