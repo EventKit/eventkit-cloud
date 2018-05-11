@@ -20,7 +20,7 @@ from eventkit_cloud.jobs.models import (
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
-from ..utils.provider_check import get_provider_checker
+from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
 from rest_framework import filters, permissions, status, views, viewsets
@@ -320,6 +320,18 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       }]}
                             return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
+
+                        for provider_task in job.provider_tasks.all():
+                            provider = provider_task.provider
+                            max_selection = provider.max_selection
+                            if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                status_code = status.HTTP_400_BAD_REQUEST
+                                error_data = {"errors": [{"status": status_code,
+                                                          "title": _('Selection area too large'),
+                                                          "detail": _('The selected area is too large '
+                                                                      'for provider \'%s\'') % provider.name}]}
+                                return Response(error_data, status=status_code)
+
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: {0}'.format(preset))
