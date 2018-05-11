@@ -137,33 +137,32 @@ class JobPermission(TimeStampedModelMixin):
         perms = []
         job_ids = []
 
+        # get all the jobs this user has been explicitly assigned to
+
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+        if not include_groups:
+            return (perms, job_ids)
+
+        # Now do the same for groups that the user belongs to
+
+        group_ids = []
+        for gp in GroupPermission.objects.filter(user=user):
+            group_ids.append(gp.group.id)
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group),
+                                               object_id__in=group_ids):
+            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+                perms.append(jp)
+                job_ids.append(jp.job.id)
+
+
         # super users can do anything to any job
 
         if user.is_superuser:
-            for job in Job.objects.all():
-                job_ids.append(job.id)
-
-        else:
-            # get all the jobs this user has been explicitly assigned to
-
-            for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
-                if level == JobPermission.Permissions.READ.value or jp.permission == level:
-                    perms.append(jp)
-                    job_ids.append(jp.job.id)
-
-            if not include_groups:
-                return (perms, job_ids)
-
-            # Now do the same for groups that the user belongs to
-
-            group_ids = []
-            for gp in GroupPermission.objects.filter(user=user):
-                group_ids.append(gp.group.id)
-            for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group),
-                                                   object_id__in=group_ids):
-                if level == JobPermission.Permissions.READ.value or jp.permission == level:
-                    perms.append(jp)
-                    job_ids.append(jp.job.id)
+            job_ids = [job.id for job in Job.objects.all()]
 
         return (perms, job_ids)
 
