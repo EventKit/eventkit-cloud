@@ -25,8 +25,10 @@ def download(request):
         job = Job.objects.get(uid=job_id)
 
         size = request.GET.get('size')
-        if size:
+        if size and size != 'None':
             size = int(size) / 1024 / 1024.00
+        else:
+            size = None
 
         user_download = UserDownload.objects.create(user=user, provider=provider, size=size, job=job)
         user_download.save()
