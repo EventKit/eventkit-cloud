@@ -30,7 +30,7 @@ export class DashboardSection extends React.Component {
                 margin: '12px 0 13px',
                 paddingLeft: (window.innerWidth > 575) ? `${spacing + halfGridPadding}px` : '12px',
                 paddingRight: (window.innerWidth > 575) ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
-                fontSize: (window.innerWidth > 575) ? '27px' : '18px',
+                fontSize: (window.innerWidth > 575) ? '22px' : '18px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase',
