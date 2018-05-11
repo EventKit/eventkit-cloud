@@ -9,6 +9,7 @@ import os
 import shutil
 import socket
 import traceback
+from urllib import urlencode
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from django.conf import settings
@@ -145,7 +146,8 @@ class LockingTask(UserDetailsBase):
         super(LockingTask, self).after_return(*args, **kwargs)
 
 
-def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None):
+def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None,
+                           size=None, redirect=False):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
         @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
@@ -153,6 +155,12 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
             generally can be ignored
         @return A url to reach filepath.
     """
+    from ..tasks.models import ExportRun
+
+    run = ExportRun.objects.get(uid=run_uid)
+    job = run.job
+    user = job.user.username
+
     download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     download_url_root = settings.EXPORT_MEDIA_ROOT
     run_dir = os.path.join(download_filesystem_root, run_uid)
@@ -161,7 +169,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        download_url = s3.upload_to_s3(
+        direct_download_url = s3.upload_to_s3(
             run_uid,
             os.path.join(provider_slug, filename),
             download_filename
@@ -173,13 +181,20 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         except OSError as e:
             logger.info(e)
 
-        download_url = os.path.join(download_url_root, run_uid, download_filename)
+        direct_download_url = os.path.join(download_url_root, run_uid, download_filename)
 
         download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
 
-    return download_url
+    params = {'url': direct_download_url, 'user': user, 'provider': provider_slug, 'job': job.uid, 'size': size}
+    download_url = '/download?' + urlencode(params)
+    if redirect:
+        ret_url = download_url
+    else:
+        ret_url = direct_download_url
+
+    return ret_url
 
 
 # ExportTaskRecord abstract base class and subclasses.
@@ -192,10 +207,11 @@ class ExportTask(LockingTask):
     abort_on_error = False
 
     def __call__(self, *args, **kwargs):
+
+        from ..tasks.models import FileProducingTaskResult, ExportTaskRecord, ExportRun
         task_uid = kwargs.get('task_uid')
 
         try:
-            from ..tasks.models import (FileProducingTaskResult, ExportTaskRecord)
             task = ExportTaskRecord.objects.get(uid=task_uid)
 
             try:
@@ -247,11 +263,13 @@ class ExportTask(LockingTask):
                 ext
             )
 
+            export_run = ExportRun.objects.get(uid=run_uid)
+            user = export_run.user.username
             # construct the download url
             skip_copy = (task.name == 'OverpassQuery')
             download_url = make_file_downloadable(
                 output_url, run_uid, provider_slug=provider_slug, skip_copy=skip_copy,
-                download_filename=download_filename
+                download_filename=download_filename, redirect=True
             )
 
             # save the task and task result
@@ -932,13 +950,16 @@ class FinalizeRunHookTask(LockingTask):
 
     def save_files_produced(self, new_files, run_uid):
         if len(new_files) > 0:
-            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord
+            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord, ExportRun
 
             for file_path in new_files:
                 filename = os.path.split(file_path)[-1]
                 provider_slug = os.path.split(file_path)[-2]
+
+                export_run = ExportRun.objects.get(uid=run_uid)
                 size = os.path.getsize(file_path)
-                url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug)
+                url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
+                                             redirect=True)
 
                 result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
                 task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)

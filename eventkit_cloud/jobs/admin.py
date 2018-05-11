@@ -10,7 +10,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus, UserDownload
 
 
 logger = logging.getLogger(__name__)
@@ -187,9 +187,24 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
     def has_add_permission(self, request, obj=None):
         return False
 
+
+class UserDownloadAdmin(admin.ModelAdmin):
+    """
+    User download records
+    """
+    model = UserDownload
+    readonly_fields = ('user', 'provider', 'job')
+    list_display = ('user', 'provider', 'job')
+    list_filter = ('user', 'provider', 'job')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
 admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
+admin.site.register(UserDownload, UserDownloadAdmin)
