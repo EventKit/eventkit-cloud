@@ -249,13 +249,13 @@ export class AddMembersDialog extends Component {
             },
             unassignedTab: {
                 color: '#707274',
-                width: '155px',
+                width: '175px',
                 borderBottom: this.state.tab === 0 ?
                     '2px solid #4598bf' : '2px #ddd solid',
             },
             assignedTab: {
                 color: '#707274',
-                width: '155px',
+                width: '175px',
                 borderBottom: this.state.tab === 1 ?
                     '2px solid #4598bf' : '2px #ddd solid',
             },
@@ -368,7 +368,7 @@ export class AddMembersDialog extends Component {
 
         const title = (
             <div className="qa-AddMembersDialog-title">
-                <strong>ASSIGN TO EXISTING GROUPS</strong>
+                <strong>ADD TO EXISTING GROUPS</strong>
                 <Clear style={styles.clear} onClick={this.handleClose} />
             </div>
         );
@@ -390,11 +390,9 @@ export class AddMembersDialog extends Component {
                 repositionOnUpdate={false}
             >
                 <p style={{ marginBottom: '20px' }} className="qa-AddMembersDialog-description">
-                    <strong>
-                        Here, you may only assign members to existing groups <i>one time.</i>
-                    </strong>
-                    &nbsp;To edit group member assignments, you must go to the member's assigned group.
-                    &nbsp;You may view user group assignments below under the 'ASSIGNED' tab.
+                    <strong>You can add selected members to the groups listed in the &apos;AVAILABLE GROUPS&apos; tab.</strong>
+                    &nbsp;For additional reference, groups that already contain those selected members are listed in the &apos;ALREADY IN GROUPS&apos; tab.
+                    &nbsp;To make further edits, go to the individual group on the Members and Groups page.
                 </p>
                 <Tabs
                     value={this.state.tab}
@@ -404,7 +402,7 @@ export class AddMembersDialog extends Component {
                     className="qa-AddMembersDialog-Tabs"
                 >
                     <Tab
-                        label="UNASSIGNED"
+                        label="AVAILABLE GROUPS"
                         value={0}
                         style={styles.unassignedTab}
                         buttonStyle={styles.tabButton}
@@ -436,7 +434,7 @@ export class AddMembersDialog extends Component {
                         </CustomScrollbar>
                     </Tab>
                     <Tab
-                        label="ASSIGNED"
+                        label="ALREADY IN GROUPS"
                         value={1}
                         style={styles.assignedTab}
                         buttonStyle={styles.tabButton}
