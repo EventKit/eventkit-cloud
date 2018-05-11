@@ -321,16 +321,18 @@ class JobViewSet(viewsets.ModelViewSet):
                             return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
 
-                        for provider_task in job.provider_tasks.all():
-                            provider = provider_task.provider
-                            max_selection = provider.max_selection
-                            if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
-                                status_code = status.HTTP_400_BAD_REQUEST
-                                error_data = {"errors": [{"status": status_code,
-                                                          "title": _('Selection area too large'),
-                                                          "detail": _('The selected area is too large '
-                                                                      'for provider \'%s\'') % provider.name}]}
-                                return Response(error_data, status=status_code)
+                        # Check max area (skip for superusers)
+                        if not self.request.user.is_superuser:
+                            for provider_task in job.provider_tasks.all():
+                                provider = provider_task.provider
+                                max_selection = provider.max_selection
+                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                    status_code = status.HTTP_400_BAD_REQUEST
+                                    error_data = {"errors": [{"status": status_code,
+                                                              "title": _('Selection area too large'),
+                                                              "detail": _('The selected area is too large '
+                                                                          'for provider \'%s\'') % provider.name}]}
+                                    return Response(error_data, status=status_code)
 
                         if preset:
                             """Get the tags from the uploaded preset."""
