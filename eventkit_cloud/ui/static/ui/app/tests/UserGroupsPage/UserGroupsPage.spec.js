@@ -3,13 +3,14 @@ import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-// import UserRowColumn from '../../components/UserGroupsPage/UserRowColumn';
-// import UserHeaderColumn from '../../components/UserGroupsPage/UserHeaderColumn';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
 import LeaveGroupDialog from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
 import DeleteGroupDialog from '../../components/UserGroupsPage/Dialogs/DeleteGroupDialog';
 import BaseDialog from '../../components/Dialog/BaseDialog';
+import UserRow from '../../components/UserGroupsPage/UserRow';
+import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
+import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
 
 describe('UserGroupsPage component', () => {
@@ -127,37 +128,15 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find('.qa-UserGroupsPage-RaisedButton-create')).toHaveLength(1);
         expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar')).toHaveLength(1);
         expect(wrapper.find('.qa-UserGroupsPage-search')).toHaveLength(1);
-        // expect(wrapper.find(Table)).toHaveLength(2);
-        // expect(wrapper.find(UserHeaderColumn)).toHaveLength(1);
-        // expect(wrapper.find(UserRowColumn)).toHaveLength(3);
+        expect(wrapper.find(UserHeader)).toHaveLength(1);
+        expect(wrapper.find(OwnUserRow)).toHaveLength(1);
+        expect(wrapper.find(UserRow)).toHaveLength(2);
         expect(wrapper.find(GroupsDrawer)).toHaveLength(1);
         expect(wrapper.find(CreateGroupDialog)).toHaveLength(1);
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(7);
     });
-
-    // it('should give the table header a list of groups that all selected users share', () => {
-    //     const props = getProps();
-    //     const wrapper = getWrapper(props);
-    //     wrapper.setState({
-    //         selectedUsers: [
-    //             props.users.users[0],
-    //             props.users.users[1],
-    //             props.users.users[2],
-    //         ],
-    //     });
-    //     let expectedGroups = [];
-    //     expect(wrapper.find(UserHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
-    //     wrapper.setState({
-    //         selectedUsers: [
-    //             props.users.users[0],
-    //             props.users.users[1],
-    //         ],
-    //     });
-    //     expectedGroups = [1];
-    //     expect(wrapper.find(UserHeaderColumn).props().selectedGroups).toEqual(expectedGroups);
-    // });
 
     it('componentDidMount should call makeUserRequest and getGroups', () => {
         const props = getProps();
@@ -171,6 +150,25 @@ describe('UserGroupsPage component', () => {
         makeRequestStub.restore();
         // re-stub it since afterAll will restore it when tests are finished
         sinon.stub(UserGroupsPage.prototype, 'componentDidMount');
+    });
+
+    it('componentWillReceiveProps should handle a query change', () => {
+        const props = getProps();
+        props.location.query = { ordering: 'username', group: '2' };
+        const requestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
+        const wrapper = getWrapper(props);
+        const nextProps = getProps();
+        nextProps.location.query = { ordering: 'username', group: '1' };
+        wrapper.setProps(nextProps);
+        expect(requestStub.calledOnce).toBe(true);
+        expect(requestStub.calledWith(nextProps.location.query)).toBe(true);
+        const lastProps = getProps();
+        lastProps.location.query = { ordering: 'username' };
+        wrapper.setProps(lastProps);
+        expect(requestStub.calledTwice).toBe(true);
+        expect(requestStub.calledWith(lastProps.location.query)).toBe(true);
+        requestStub.restore();
+
     });
 
     it('componentWillReceiveProps should handle users fetched', () => {
@@ -265,6 +263,42 @@ describe('UserGroupsPage component', () => {
         showStub.restore();
     });
 
+    it('getQueryGroup should return null if there is no query group found', () => {
+        const props = getProps();
+        props.location.query = { ordering: 'username' };
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getQueryGroup()).toBe(null);
+    });
+
+    it('getQueryGroup should return the correct group object', () => {
+        const props = getProps();
+        props.location.query = { ordering: 'username', groups: String(props.groups.groups[0].id) };
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getQueryGroup()).toEqual(props.groups.groups[0]);
+    });
+
+    it('getGroupTitle should return "All Members"', () => {
+        const props = getProps();
+        props.location.query = { ordering: 'username' };
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getGroupTitle()).toEqual('All Members');
+    });
+
+    it('getGroupTitle should return "No Members Matching Group Found"', () => {
+        const props = getProps();
+        props.location.query = { groups: 'some group' };
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getGroupTitle()).toEqual('No Members Matching Group Found');
+    });
+
+    it('getGroupTitle should return the group name', () => {
+        const props = getProps();
+        props.location.query = { groups: String(props.groups.groups[0]) };
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getGroupTitle(props.groups.groups[0]))
+            .toEqual(`${props.groups.groups[0].name} Members`);
+    });
+
     it('makeUserRequest should make the default request', () => {
         const props = getProps();
         props.location.query = {};
@@ -324,6 +358,31 @@ describe('UserGroupsPage component', () => {
         stateStub.restore();
     });
 
+    it('handleUserSelect should remove the user from selection', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const selection = props.users.users;
+        wrapper.setState({ selectedUsers: selection });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleUserSelect(props.users.users[0]);
+        const [removedUser, ...expectedUsers] = props.users.users;
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ selectedUsers: expectedUsers })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('handleUserSelect should add the user to the selection', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const selection = props.users.users;
+        wrapper.setState({ selectedUsers: selection });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const newUser = { user: { username: 'new' } };
+        wrapper.instance().handleUserSelect(newUser);
+        const expectedUsers = [...selection, newUser];
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ selectedUsers: expectedUsers }));
+    });
 
     it('handleSearchKeyDown should set query with search text', () => {
         const props = getProps();
@@ -467,6 +526,18 @@ describe('UserGroupsPage component', () => {
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
         stateStub.restore();
+    });
+
+    it('handleAddUsers should set state and show Add dialog', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const openStub = sinon.stub(wrapper.instance(), 'showAddUsersDialog');
+        const { users } = props.users;
+        wrapper.instance().handleAddUsers(users);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ addUsers: users })).toBe(true);
+        expect(openStub.calledOnce).toBe(true);
     });
 
     it('handleLeaveGroupClick should set targetGroup and call leave open', () => {
@@ -636,6 +707,132 @@ describe('UserGroupsPage component', () => {
         expect(props.updateGroup.calledWith(groupId, { administrators: expectedAdmins })).toBe(true);
     });
 
+    it('handleRemoveUser should not updateGroup if no queryGroup is found', () => {
+        const props = getProps();
+        props.updateGroup = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleRemoveUser();
+        expect(props.updateGroup.called).toBe(false);
+    });
+
+    it('handleRemoveUser should update the group with user removed', () => {
+        const props = getProps();
+        props.location.query = { groups: '1' };
+        props.updateGroup = sinon.spy();
+        const wrapper = getWrapper(props);
+        const user = props.users.users[0];
+        wrapper.instance().handleRemoveUser(user);
+        expect(props.updateGroup.calledOnce).toBe(true);
+        expect(props.updateGroup.calledWith(1)).toBe(true);
+    });
+
+    it('handleBatchRemoveUser should not update group if no query group is found', () => {
+        const props = getProps();
+        props.updateGroup = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleBatchRemoveUser();
+        expect(props.updateGroup.called).toBe(false);
+    });
+
+    it('handleBatchRemoveUser should remove users and updateGroup', () => {
+        const props = getProps();
+        const group = {
+            id: 12,
+            name: 'twelve',
+            members: ['1', '2', '3'],
+            administrators: ['1', '2', '3'],
+        };
+        props.location.query = { groups: '12' };
+        props.groups.groups.push(group);
+        props.updateGroup = sinon.spy();
+        const wrapper = getWrapper(props);
+        const users = [
+            { user: { username: '1' } },
+            { user: { username: '2' } },
+        ];
+        wrapper.instance().handleBatchRemoveUser(users);
+        expect(props.updateGroup.calledOnce).toBe(true);
+        expect(props.updateGroup.calledWith(group.id, {
+            members: ['3'],
+            administrators: ['3'],
+        })).toBe(true);
+    });
+
+    it('handleBatchAdminRights should not updateGroup if there is no queryGroup', () => {
+        const props = getProps();
+        props.updateGroup = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleBatchAdminRights();
+        expect(props.updateGroup.called).toBe(false);
+    });
+
+    it('handleBatchAdminRights should update group with new admins', () => {
+        const props = getProps();
+        props.updateGroup = sinon.spy();
+        props.location.query = { groups: String(props.groups.groups[0].id) };
+        const users = [
+            { user: { username: '1' } },
+            { user: { username: '2' } },
+        ];
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleBatchAdminRights(users);
+        const expectedAdmins = [...props.groups.groups[0].administrators, '1', '2'];
+        expect(props.updateGroup.calledOnce).toBe(true);
+        expect(props.updateGroup.calledWith(props.groups.groups[0].id, {
+            administrators: expectedAdmins,
+        })).toBe(true);
+    });
+
+    it('handleBatchAdminRighs should update group with removed admins', () => {
+        const props = getProps();
+        props.updateGroup = sinon.spy();
+        props.location.query = { groups: String(props.groups.groups[0].id) };
+        const users = [{ user: { username: 'user_one' } }];
+        const wrapper = getWrapper(props);
+        wrapper.instance().handleBatchAdminRights(users);
+        expect(props.updateGroup.calledOnce).toBe(true);
+        expect(props.updateGroup.calledWith(props.groups.groups[0].id, { administrators: [] })).toBe(true);
+    });
+
+    it('handleAddUsersSave should hide the dialog and update each group with new members', () => {
+        const props = getProps();
+        props.updateGroup = sinon.spy();
+        const groups = [
+            { id: 0, members: [] },
+            { id: 1, members: [] },
+        ];
+        const users = [
+            { user: { username: '1' } },
+            { user: { username: '2' } },
+        ];
+        const wrapper = getWrapper(props);
+        const hideStub = sinon.stub(wrapper.instance(), 'hideAddUsersDialog');
+        wrapper.instance().handleAddUsersSave(groups, users);
+        expect(hideStub.calledOnce).toBe(true);
+        expect(props.updateGroup.calledTwice).toBe(true);
+        expect(props.updateGroup.calledWith(groups[0].id, { members: ['1', '2'] })).toBe(true);
+        expect(props.updateGroup.calledWith(groups[1].id, { members: ['1', '2'] })).toBe(true);
+        hideStub.restore();
+    });
+
+    it('showAddUsersDialog should set state true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().showAddUsersDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAddUsers: true })).toBe(true);
+    });
+
+    it('hideAddUsersDialog should set state false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().hideAddUsersDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAddUsers: false })).toBe(true);
+    });
+
     it('showErrorDialog should set state with errors', () => {
         const props = getProps();
         const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
@@ -657,6 +854,26 @@ describe('UserGroupsPage component', () => {
         stateStub.restore();
     });
 
+    it('showAdministratorInfoDialog should set show to true', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().showAdministratorInfoDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAdministratorInfo: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('hideAdministratorInfoDialog should set show to false', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().hideAdministratorInfoDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAdministratorInfo: false })).toBe(true);
+        stateStub.restore();
+    });
+
     it('showMemberInfoDialog should set show to true', () => {
         const props = getProps();
         const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
@@ -674,6 +891,26 @@ describe('UserGroupsPage component', () => {
         wrapper.instance().hideMemberInfoDialog();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showMemberInfo: false })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('showOtherInfoDialog should set show to true', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().showOtherInfoDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showOtherInfo: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('hideOtherInfoDialog should set show to false', () => {
+        const props = getProps();
+        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().hideOtherInfoDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showOtherInfo: false })).toBe(true);
         stateStub.restore();
     });
 
