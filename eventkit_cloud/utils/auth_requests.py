@@ -87,7 +87,8 @@ def get_cred(slug=None, url=None, params=None):
         env_slug = slug.replace('-', '_')
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED")
     if cred is not None and ":" in cred and all(cred.split(":")):
-        cred = cred.replace('%40', '@')
+        cred = cred.replace('@', '%40')
+        cred = cred.replace('?', '%3F')
         logger.debug("Found credentials for %s in env var", slug)
         return cred.split(":")
 
@@ -125,7 +126,8 @@ def handle_basic_auth(func):
         cred = get_cred(slug=kwargs.pop("slug", None), url=url, params=kwargs.get("params", None))
         if cred:
             kwargs["auth"] = tuple(cred)
-        logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.iteritems()]))
+        logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v)
+                                                                             for k,v in kwargs.iteritems()]))
         response = func(url, **kwargs)
         return response
 
