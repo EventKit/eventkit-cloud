@@ -3,6 +3,7 @@ from osgeo import gdal, ogr
 import json
 import logging
 import math
+import time
 import os
 import subprocess
 from string import Template
@@ -105,7 +106,7 @@ def is_raster(ds_path):
 
 def get_area(geojson):
     """
-    Given a GeoJSON string or object, return an approximation of its geodesic area in km².
+    Given a GeoJSON string or object, return an approximation of its geodesic area in km^2.
     The geometry must contain a single polygon with a single ring, no holes.
     Based on Chamberlain and Duquette's algorithm: https://trs.jpl.nasa.gov/bitstream/handle/2014/41271/07-0286.pdf
     :param geojson: GeoJSON selection area
@@ -232,8 +233,17 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.debug("GDAL clip cmd: %s", cmd)
 
         task_process = TaskProcess(task_uid=task_uid)
-        task_process.start_process(cmd, shell=True, executable="/bin/bash",
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        attempts = 0
+        while attempts < 4:
+            try:
+                task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                break
+            except Exception as e:
+                logger.error(e)
+                attempts += 1
+                time.sleep(2)
+
     finally:
         if temp_boundfile:
             temp_boundfile.close()
