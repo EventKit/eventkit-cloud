@@ -87,6 +87,7 @@ def get_cred(slug=None, url=None, params=None):
         env_slug = slug.replace('-', '_')
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED")
     if cred is not None and ":" in cred and all(cred.split(":")):
+        cred = cred.replace('%40', '@')
         logger.debug("Found credentials for %s in env var", slug)
         return cred.split(":")
 
