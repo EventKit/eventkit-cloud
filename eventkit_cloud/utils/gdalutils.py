@@ -234,7 +234,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
         task_process = TaskProcess(task_uid=task_uid)
         attempts = 0
-        while attempts < 4:
+        while True:
             try:
                 task_process.start_process(cmd, shell=True, executable="/bin/bash",
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -242,6 +242,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             except Exception as e:
                 logger.error(e)
                 attempts += 1
+                if attempts > 3:
+                    raise e
                 time.sleep(2)
 
     finally:
