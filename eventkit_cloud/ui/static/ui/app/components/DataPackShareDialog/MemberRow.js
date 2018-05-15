@@ -111,6 +111,12 @@ export class MemberRow extends Component {
             );
         }
 
+        let name = this.props.member.user.username;
+        if (this.props.member.user.first_name && this.props.member.user.last_name) {
+            name = `${this.props.member.user.first_name} ${this.props.member.user.last_name}`;
+        }
+        const email = this.props.member.user.email || 'No email provided';
+
         return (
             <Card
                 key={this.props.member.user.username}
@@ -123,13 +129,14 @@ export class MemberRow extends Component {
                     title={
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={styles.text} className="qa-MemberRow-CardHeader-text">
-                                <div>
+                                <div style={{ wordBreak: 'break-word' }}>
                                     <strong>
-                                        <span style={{ wordBreak: 'break-word' }}>{this.props.member.user.first_name} </span>
-                                        <span style={{ wordBreak: 'break-word' }}>{this.props.member.user.last_name}</span>
+                                        {name}
                                     </strong>
                                 </div>
-                                <div style={{ wordBreak: 'break-word' }}>{this.props.member.user.email}</div>
+                                <div style={{ wordBreak: 'break-word' }}>
+                                    {email}
+                                </div>
                             </div>
                             {adminButton}
                             {groupIcon}
