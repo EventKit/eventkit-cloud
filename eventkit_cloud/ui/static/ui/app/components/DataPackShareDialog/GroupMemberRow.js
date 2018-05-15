@@ -2,6 +2,11 @@ import React, { Component, PropTypes } from 'react';
 
 export class GroupMemberRow extends Component {
     render() {
+        let name = this.props.member.user.username;
+        if (this.props.member.user.first_name && this.props.member.user.last_name) {
+            name = `${this.props.member.user.first_name} ${this.props.member.user.last_name}`;
+        }
+        const email = this.props.member.user.email || 'No email provided';
         return (
             <div
                 key={this.props.member.user.username}
@@ -10,12 +15,12 @@ export class GroupMemberRow extends Component {
             >
                 <div className="qa-GroupMemberRow-name" style={{ wordBreak: 'break-word' }}>
                     <strong>
-                        {this.props.member.user.first_name} {this.props.member.user.last_name}
+                        {name}
                         {this.props.isGroupAdmin ? ' (Group Admin)' : ''}
                     </strong>
                 </div>
                 <div className="qa-GroupMemberRow-email" style={{ wordBreak: 'break-word' }}>
-                    {this.props.member.user.email}
+                    {email}
                 </div>
             </div>
         );

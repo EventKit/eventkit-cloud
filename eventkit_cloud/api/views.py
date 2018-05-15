@@ -20,7 +20,7 @@ from eventkit_cloud.jobs.models import (
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
-from ..utils.provider_check import get_provider_checker
+from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
 from rest_framework import filters, permissions, status, views, viewsets
@@ -320,6 +320,20 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       }]}
                             return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
+
+                        # Check max area (skip for superusers)
+                        if not self.request.user.is_superuser:
+                            for provider_task in job.provider_tasks.all():
+                                provider = provider_task.provider
+                                max_selection = provider.max_selection
+                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                    status_code = status.HTTP_400_BAD_REQUEST
+                                    error_data = {"errors": [{"status": status_code,
+                                                              "title": _('Selection area too large'),
+                                                              "detail": _('The selected area is too large '
+                                                                          'for provider \'%s\'') % provider.name}]}
+                                    return Response(error_data, status=status_code)
+
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: {0}'.format(preset))
@@ -541,6 +555,22 @@ class JobViewSet(viewsets.ModelViewSet):
         response['success'] = True
         return Response(response, status=status.HTTP_200_OK)
 
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        Look up a single job by uid value.
+        * uid: optional job uid lookup field
+        * return: The selected job.
+        """
+        return super(JobViewSet, self).retrieve(self, request, uid, *args, **kwargs)
+
+    def update(self, request, uid=None, *args, **kwargs):
+        """
+        Update a job object, looked up by uid.
+        * uid: optional job uid lookup field
+        * return: The status of the update.
+        """
+        return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
+
     @list_route(methods=['post', ])
     def filter(self, request, *args, **kwargs):
         """
@@ -584,6 +614,7 @@ class JobViewSet(viewsets.ModelViewSet):
         super(JobViewSet, self).destroy(request, *args, **kwargs)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ###ExportFormat API endpoint.
@@ -595,6 +626,20 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ExportFormat.objects.all()
     lookup_field = 'slug'
     ordering = ['description']
+
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of export format
+        * return: A list of format types.
+        """
+        return super(ExportFormatViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of export format
+        * return: A single format object matching the provided slug value.
+        """
+        return super(ExportFormatViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -626,6 +671,21 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception:
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of license
+        * return: A list of license objects.
+        """
+        return super(LicenseViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of license
+        * return: A single license object matching the provided slug value.
+        """
+        return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
+
+
 class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
@@ -646,7 +706,10 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     @detail_route(methods=['get', 'post'])
     def status(self, request, slug=None, *args, **kwargs):
         """
-        :return:
+        Checks the status of a data provider to confirm that it is available.
+
+        * slug: The DataProvider object slug.
+        * return: The HTTP response of the data provider health check, in cases where there is no error. If the data provider does not exist, returns status 400 bad request.
         """
         try:
             geojson = self.request.data.get('geojson', None)
@@ -661,6 +724,22 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             logger.error(e.message)
             return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        List all data providers.
+        * slug: optional lookup field
+        * return: A list of data providers.
+        """
+        return super(DataProviderViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        Look up a single data provider by slug value.
+        * slug: optional lookup field
+        * return: The data provider with the given slug.
+        """
+        return super(DataProviderViewSet, self).retrieve(self, request, slug, *args, **kwargs)
+
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -670,6 +749,22 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Region.objects.all()
     lookup_field = 'uid'
+
+    def list(self, request, uid=None, *args, **kwargs):
+        """
+        List all regions.
+        * uid: optional lookup field
+        * return: A list of regions.
+        """
+        return super(RegionViewSet, self).list(self, request, uid, *args, **kwargs)
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        Look up a single region by slug value.
+        * uid: optional lookup field
+        * return: The region with the given slug.
+        """
+        return super(RegionViewSet, self).retrieve(self, request, uid, *args, **kwargs)
 
 
 class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
@@ -779,7 +874,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
-            Destroy a model instance.
+        Destroy a model instance.
         """
 
         instance = self.get_object()
@@ -941,6 +1036,21 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                                                                                   invalid_licenses))
         return True
 
+    def create(self, request, *args, **kwargs):
+        """
+        Create a run.
+        * return: The status of the creation.
+        """
+        return super(ExportRunViewSet, self).create(self, request, *args, **kwargs)
+
+    def update(self, request, uid=None, *args, **kwargs):
+        """
+        Update a run.
+        * uid: optional lookup field
+        * return: The status of the update.
+        """
+        return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
+
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -971,6 +1081,14 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
             context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list(self, request, uid=None, *args, **kwargs):
+        """
+        List all tasks.
+        * uid: optional lookup field
+        * return: A list of all tasks.
+        """
+        return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
 class DataProviderTaskViewSet(viewsets.ModelViewSet):
@@ -1003,6 +1121,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
+        """
+        Cancels an export provider task.
+        * param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
+        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
+        """
+
         export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
 
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
@@ -1010,6 +1134,36 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
 
         cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
+
+    def list(self, request, *args, **kwargs):
+        """
+        * return: A list of data provider task objects.
+        """
+        return super(DataProviderTaskViewSet, self).list(self, request, *args, **kwargs)
+
+    def create(self, request, uid=None, *args, **kwargs):
+        """
+        Create a data provider task object.
+        * uid: optional lookup field
+        * return: The status of the object creation.
+        """
+        return super(DataProviderTaskViewSet, self).create(self, request, uid, *args, **kwargs)
+
+    def destroy(self, request, uid=None, *args, **kwargs):
+        """
+        Delete a data provider task object.
+        * uid: optional lookup field
+        * return: The status of the deletion.
+        """
+        return super(DataProviderTaskViewSet, self).destroy(self, request, uid, *args, **kwargs)
+
+    def update(self, request, uid=None, *args, **kwargs):
+        """
+        Update a data provider task object.
+        * uid: optional lookup field
+        * return: The status of the update.
+        """
+        return super(DataProviderTaskViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class UserDataViewSet(viewsets.GenericViewSet):
@@ -1032,22 +1186,22 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
-            Update user data.
+        Update user data.
 
-            User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
-            with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to
-            download data.
+        User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
+        with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to
+        download data.
 
-            Request data can be posted as `application/json`.
+        Request data can be posted as `application/json`.
 
-            * request: the HTTP request in JSON.
+        * request: the HTTP request in JSON.
 
-            Example:
+        Example:
 
-                    {"accepted_licenses": {
-                        "odbl": true
-                        }
-                  }
+                {"accepted_licenses": {
+                    "odbl": true
+                    }
+              }
         """
 
         queryset = self.get_queryset().get(username=username)
@@ -1061,6 +1215,10 @@ class UserDataViewSet(viewsets.GenericViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request,  *args, **kwargs):
+        """
+        Get a list of users.
+        * return: A list of all users.
+        """
         full_queryset = self.get_queryset()
         queryset = full_queryset.exclude(id=request.user.id)
         total = len(queryset)
@@ -1078,10 +1236,9 @@ class UserDataViewSet(viewsets.GenericViewSet):
     @list_route(methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
         """
-             Member list from list of group ids
+        Member list from list of group ids
 
-             Example :  [ 32, 35, 36 ]
-
+        Example :  [ 32, 35, 36 ]
         """
 
         targets = request.data
@@ -1104,7 +1261,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, username=None):
         """
-             GET a user by username
+        GET a user by username
         """
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
@@ -1136,28 +1293,31 @@ class GroupViewSet(viewsets.ModelViewSet):
         return queryset
 
     def update(self, request, *args, **kwargs):
-        # we don't support calls to PUT for this viewset.
+        """
+        We don't support calls to PUT for this viewset.
+        * returns: 400 bad request
+        """
         return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         """
-            GET all groups
+        GET all groups
 
-            Sample result:
+        Sample result:
 
-                 [
-                    {
-                        "id": 54,
-                        "name": "Omaha 319",
-                        "members": [
-                          "user2",
-                          "admin"
-                        ],
-                        "administrators": [
-                          "admin"
-                        ]
-                      }
-                ]
+             [
+                {
+                    "id": 54,
+                    "name": "Omaha 319",
+                    "members": [
+                      "user2",
+                      "admin"
+                    ],
+                    "administrators": [
+                      "admin"
+                    ]
+                  }
+            ]
 
         """
         queryset = self.filter_queryset(self.get_queryset())
@@ -1167,15 +1327,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
-            create a new group and place  the current logged in user in the group and its administrators.
-            optionally, provide additional group members
+        create a new group and place  the current logged in user in the group and its administrators.
+        optionally, provide additional group members
 
 
-            Sample input:
+        Sample input:
 
-                {
-                    "name": "Omaha 319"
-                }
+            {
+                "name": "Omaha 319"
+            }
 
         """
 
@@ -1223,7 +1383,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, id=None):
         """
-            * get a group with a specific ID.  Return its data, including users in the group
+        * get a group with a specific ID.  Return its data, including users in the group
         """
         group = Group.objects.filter(id=id)[0]
         serializer = GroupSerializer(group)
@@ -1234,7 +1394,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     def destroy(self, request, id=None, *args, **kwargs):
 
         """
-            Destroy a group
+        Destroy a group
         """
 
         # Not permitted if the requesting user is not an administrator
@@ -1254,21 +1414,21 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
         """
-             Change the group's name, members, and administrators
+        Change the group's name, members, and administrators
 
 
-             Sample input:
+        Sample input:
 
-                 {
-                    "name": "Omaha 319"
-                    "members": [ "user2", "user3", "admin"],
-                    "administrators": [ "admin" ]
-                 }
+            {
+               "name": "Omaha 319"
+               "members": [ "user2", "user3", "admin"],
+               "administrators": [ "admin" ]
+            }
 
-            If a member wishes to remove themselves from a group they can make an patch request with no body.
-            However, this will not work if they are a admin of the group.
+        If a member wishes to remove themselves from a group they can make an patch request with no body.
+        However, this will not work if they are a admin of the group.
 
-         """
+        """
 
         group = Group.objects.filter(id=id)[0]
 

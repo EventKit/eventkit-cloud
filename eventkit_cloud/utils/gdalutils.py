@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 from osgeo import gdal, ogr
+import json
 import logging
+import math
 import os
 import subprocess
 from string import Template
+from tempfile import NamedTemporaryFile
 from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
@@ -100,10 +103,72 @@ def is_raster(ds_path):
     return raster
 
 
+def get_area(geojson):
+    """
+    Given a GeoJSON string or object, return an approximation of its geodesic area in km².
+    The geometry must contain a single polygon with a single ring, no holes.
+    Based on Chamberlain and Duquette's algorithm: https://trs.jpl.nasa.gov/bitstream/handle/2014/41271/07-0286.pdf
+    :param geojson: GeoJSON selection area
+    :return: area of geojson ring in square kilometers
+    """
+    earth_r = 6371  # km
+
+    def rad(d):
+        return math.pi*d/180
+
+    if isinstance(geojson, str):
+        geojson = json.loads(geojson)
+
+    if hasattr(geojson, 'geometry'):
+        geojson = geojson['geometry']
+
+    geom_type = geojson['type'].lower()
+    if geom_type == 'polygon':
+        polys = [geojson['coordinates']]
+    elif geom_type == 'multipolygon':
+        polys = geojson['coordinates']
+    else:
+        return RuntimeError("Invalid geometry type: %s" % geom_type)
+
+    a = 0
+    for poly in polys:
+        ring = poly[0]
+        if len(ring) < 4:
+            continue
+        ring.append(ring[-2])  # convenient for circular indexing
+        for i in range(len(ring) - 2):
+            a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
+
+    area = abs(a * (earth_r**2) / 2)
+    return area
+
+
+def is_envelope(geojson_path):
+    """
+    Given a path to a GeoJSON file, reads it and determines whether its coordinates correspond to a WGS84 bounding box,
+    i.e. lat1=lat2, lon2=lon3, lat3=lat4, lon4=lon1, to tell whether there's need for an alpha layer in the output
+    :param geojson_path: Path to GeoJSON selection file
+    :return: True if
+    """
+    try:
+        with open(geojson_path, "r") as gf:
+            geojson = json.load(gf)
+            p = geojson['coordinates'][0][0]
+            if len(p) != 5 or p[4] != p[0]:
+                return False
+            ret = len(set([c[0] for c in p])) == len(set([c[1] for c in p])) == 2
+            logger.debug("Checking if boundary is envelope: %s for %s", ret, p)
+            return ret
+
+    except (IndexError, IOError):
+        # Unparseable JSON or unreadable file: play it safe
+        return False
+
+
 def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
-    :param boundary: A geojson file or bbox to serve as a cutline
+    :param boundary: A geojson file or bbox (xmin, ymin, xmax, ymax) to serve as a cutline
     :param in_dataset: A raster or vector file to be clipped
     :param out_dataset: The dataset to put the clipped output in (if not specified will use in_dataset)
     :param fmt: Short name of output driver to use (defaults to input format)
@@ -135,35 +200,55 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     if table:
         cmd_template = Template("ogr2ogr -update -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
     elif raster:
-        cmd_template = Template("gdalwarp -cutline $boundary -crop_to_cutline -dstalpha -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template("gdalwarp -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
         cmd_template = Template("ogr2ogr -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
+    temp_boundfile = None
     if isinstance(boundary, list):
-        boundary = " ".join(str(i) for i in boundary)
+        boundary = " ".join(str(i) for i in boundary)  # ogr2ogr can handle bbox as params
+        if not table:  # gdalwarp needs a file
+            temp_boundfile = NamedTemporaryFile()
+            bounds_template = Template('{"type":"MultiPolygon","coordinates":[[[[$xmin,$ymin],'
+                                       '[$xmax,$ymin],[$xmax,$ymax],[$xmin,$ymax],[$xmin,$ymin]]]]}')
+            temp_boundfile.write(bounds_template.safe_substitute({
+                'xmin': boundary[0],
+                'ymin': boundary[1],
+                'xmax': boundary[2],
+                'ymax': boundary[3]
+            }))
+            temp_boundfile.flush()
+            boundary = temp_boundfile.name
 
-    if table:
-        cmd = cmd_template.safe_substitute({'boundary': boundary,
-                                            'fmt': fmt,
-                                            'type': band_type,
-                                            'in_ds': in_dataset,
-                                            'out_ds': out_dataset,
-                                            'table': table})
-    else:
-        cmd = cmd_template.safe_substitute({'boundary': boundary,
-                                            'fmt': fmt,
-                                            'type': band_type,
-                                            'in_ds': in_dataset,
-                                            'out_ds': out_dataset})
+    try:
+        # dstalpha = "" if is_envelope(boundary) else "-dstalpha"  # TODO: use this for ES-397 if it works
+        dstalpha = "-dstalpha"
+        if table:
+            cmd = cmd_template.safe_substitute({'boundary': boundary,
+                                                'fmt': fmt,
+                                                'type': band_type,
+                                                'in_ds': in_dataset,
+                                                'out_ds': out_dataset,
+                                                'table': table})
+        else:
+            cmd = cmd_template.safe_substitute({'boundary': boundary,
+                                                'fmt': fmt,
+                                                'dstalpha': dstalpha,
+                                                'type': band_type,
+                                                'in_ds': in_dataset,
+                                                'out_ds': out_dataset})
 
-    logger.debug(cmd)
+        logger.debug("GDAL clip cmd: %s", cmd)
 
-    task_process = TaskProcess(task_uid=task_uid)
-    task_process.start_process(cmd, shell=True, executable="/bin/bash",
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        task_process = TaskProcess(task_uid=task_uid)
+        task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    finally:
+        if temp_boundfile:
+            temp_boundfile.close()
 
     if task_process.exitcode != 0:
         logger.error('{0}'.format(task_process.stderr))
@@ -173,6 +258,14 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
 
 def convert(dataset=None, fmt=None, task_uid=None):
+    """
+    Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
+    If the dataset is already in the output format, returns the unaltered original.
+    :param dataset: Raster or vector file to be converted
+    :param fmt: Short format (e.g. gpkg, gtiff) to convert into
+    :param task_uid: A task uid to update
+    :return: Converted dataset, same filename as input
+    """
 
     if not dataset:
         raise Exception("Could not open input file: {0}".format(dataset))
@@ -199,7 +292,7 @@ def convert(dataset=None, fmt=None, task_uid=None):
                                         'in_ds': in_ds,
                                         'out_ds': dataset})
 
-    logger.debug(cmd)
+    logger.debug("GDAL convert cmd: %s", cmd)
 
     task_process = TaskProcess(task_uid=task_uid)
     task_process.start_process(cmd, shell=True, executable="/bin/bash",

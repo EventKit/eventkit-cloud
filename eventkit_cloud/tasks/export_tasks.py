@@ -561,11 +561,11 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     """
     result = result or {}
 
-    geojson_file = os.path.join(stage_dir,
-                                "{0}_selection.geojson".format(provider_slug))
+    geojson_file = os.path.join(stage_dir, "{0}_selection.geojson".format(provider_slug))
     if selection:
         # Test if json.
         json.loads(selection)
+
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
         with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
@@ -615,7 +615,7 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
+        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff)
 
     gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
