@@ -10,6 +10,7 @@ import yaml
 from ..utils import auth_requests
 from .gdalutils import get_dimensions, merge_geotiffs
 from django.conf import settings
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +169,7 @@ class WCSConverter(object):
         if len(geotiffs) > 1:
             self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
         else:
-            self.out = geotiffs[0]
+            shutil.copy(geotiffs[0], self.out)
 
     def convert(self, ):
         """
