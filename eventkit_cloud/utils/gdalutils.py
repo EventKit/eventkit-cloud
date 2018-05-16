@@ -149,7 +149,7 @@ def is_envelope(geojson_path):
     Given a path to a GeoJSON file, reads it and determines whether its coordinates correspond to a WGS84 bounding box,
     i.e. lat1=lat2, lon2=lon3, lat3=lat4, lon4=lon1, to tell whether there's need for an alpha layer in the output
     :param geojson_path: Path to GeoJSON selection file
-    :return: True if
+    :return: True if the given geojson is an envelope/bounding box, with one polygon and one ring.
     """
     try:
         geojson = ""
@@ -159,11 +159,27 @@ def is_envelope(geojson_path):
             with open(geojson_path, "r") as gf:
                 geojson = json.load(gf)
 
-        p = geojson['coordinates'][0][0]
-        if len(p) != 5 or p[4] != p[0]:
-            return False
-        ret = len(set([c[0] for c in p])) == len(set([c[1] for c in p])) == 2
-        logger.debug("Checking if boundary is envelope: %s for %s", ret, p)
+        geom_type = geojson['type'].lower()
+        if geom_type == 'polygon':
+            polys = [geojson['coordinates']]
+        elif geom_type == 'multipolygon':
+            polys = geojson['coordinates']
+        else:
+            return False  # Points/lines aren't envelopes
+
+        if len(polys) != 1:
+            return False  # Multipolygons aren't envelopes
+
+        poly = polys[0]
+        if len(poly) != 1:
+            return False  # Polygons with multiple rings aren't envelopes
+
+        ring = poly[0]
+        if len(ring) != 5 or ring[4] != ring[0]:
+            return False  # Envelopes need exactly four valid coordinates
+
+        # Envelopes will have exactly two unique coordinates, for both x and y, out of those four
+        ret = len(set([coord[0] for coord in ring])) == len(set([coord[1] for coord in ring])) == 2
         return ret
 
     except (IndexError, IOError, ValueError):
