@@ -3,7 +3,7 @@ from __future__ import absolute_import
 # This file is used to create an MXD file based on a datapack.  It needs to be run via the python application that is
 # packaged with arcgis.  For many users this is the default python, for other users they may have to specify this location
 # for example ('C:\Python27\ArcGIS10.5\python create_mxd.py').
-print("Creating an MXD file for your osm data...")
+print("Creating an MXD file for your data...")
 
 import os
 import logging
@@ -27,7 +27,7 @@ try:
 except Exception:
     BASE_DIR = os.path.dirname(__file__)
 
-SUPPORTED_VERSIONS = ["10.5.1", "10.5"]
+SUPPORTED_VERSIONS = ["10.5.1", "10.5", "10.4"]
 
 try:
     import arcpy
@@ -184,11 +184,11 @@ def create_mxd(mxd=None, metadata=None, verify=False):
     with get_temp_mxd(metadata, verify=verify) as temp_mxd_file:
         # copy temp file to permanent file if specified.
         if mxd:
-            print("writing file to {0}".format(mxd))
+            print("Writing file to {0}.".format(mxd))
             shutil.copy(temp_mxd_file, mxd)
             # return mxd
         with open(temp_mxd_file, 'rb') as open_mxd_file:
-            print("reading file {0}".format(mxd))
+            logger.info("reading file {0}".format(mxd))
             return open_mxd_file.read()
 
 

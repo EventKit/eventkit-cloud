@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from osgeo import gdal, ogr
+from osgeo import gdal, ogr, osr
 import json
 import logging
 import math
@@ -303,3 +303,67 @@ def convert(dataset=None, fmt=None, task_uid=None):
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
 
     return dataset
+
+
+def get_dimensions(bbox, scale):
+    """
+
+    :param bbox: A list [w, s, e, n].
+    :param scale: A scale in meters per pixel.
+    :return: A list [width, height] representing pixels
+    """
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+    return [int(width/scale), int(height/scale)]
+
+
+def get_line(coordinates):
+    """
+
+    :param coordinates: A list representing a single coordinate in decimal degrees.
+        Example: [[W/E, N/S], [W/E, N/S]]
+    :return: AN OGR geometry point.
+    """
+    # This line will implicitly be in EPSG:4326 because that is what the geojson standard specifies.
+    geojson = json.dumps({"type": "LineString", "coordinates": coordinates})
+    return ogr.CreateGeometryFromJson(geojson)
+
+
+def get_distance(point_a, point_b):
+    """
+    Takes two points, and converts them to a line, converts the geometry to mercator and returns length in meters.
+    The geometry is converted to mercator because length is based on the SRS unit of measure (meters for mercator).
+    :param point_a: A list representing a single point [W/E, N/S].
+    :param point_b: A list representing a single point [W/E, N/S].
+    :return: Distance in meters.
+    """
+    line = get_line([point_a, point_b])
+    reproject_geometry(line, 4326, 3857)
+    return line.Length()
+
+
+def reproject_geometry(geometry, from_srs, to_srs):
+    """
+
+    :param geometry: Converts an ogr geometry from one spatial reference system to another
+    :param from_srs:
+    :param to_srs:
+    :return:
+    """
+    return geometry.Transform(get_transform(from_srs, to_srs))
+
+
+def get_transform(from_srs, to_srs):
+    """
+
+    :param from_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
+    :param to_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
+    :return: An osr coordinate transformation object.
+    """
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(from_srs)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(to_srs)
+
+    return osr.CoordinateTransformation(source, target)

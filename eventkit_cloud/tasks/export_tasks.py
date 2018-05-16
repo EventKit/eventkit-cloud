@@ -678,12 +678,16 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining export for WCS services
     """
+    from ..tasks.models import ExportTaskRecord
+
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+
+    task = ExportTaskRecord.objects.get(uid=task_uid)
     try:
-        wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                    config=config, service_type=service_type, task_uid=task_uid, debug=True,
-                                    fmt="gtiff")
+        wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
+                                    name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
+                                    user_details=user_details)
         wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out

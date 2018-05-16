@@ -5,8 +5,10 @@ from osgeo import gdal, ogr
 from mock import Mock, patch, call
 from uuid import uuid4
 from django.test import TestCase
+import json
 
-from ..gdalutils import open_ds, cleanup_ds, clip_dataset, convert, driver_for
+from ..gdalutils import open_ds, cleanup_ds, clip_dataset, convert, driver_for, get_transform, get_distance, \
+    get_dimensions, get_line
 
 logger = logging.getLogger(__name__)
 
@@ -167,3 +169,21 @@ class TestGdalUtils(TestCase):
         convert(dataset=dataset, fmt=fmt, task_uid=self.task_uid)
         self.task_process().start_process.assert_called_with(expected_cmd, executable='/bin/bash', shell=True,
                                                              stderr=-1, stdout=-1)
+
+    def test_get_distance(self,):
+        expected_distance = 972.38
+        point_a = [-72.377162, 42.218109]
+        point_b = [-72.368493, 42.218903]
+        distance = get_distance(point_a, point_b)
+        self.assertEqual(int(expected_distance), int(distance))
+
+    @patch('eventkit_cloud.utils.gdalutils.get_distance')
+    def test_get_dimensions(self, mock_get_distance):
+        bbox = [0, 1, 2, 3]
+        scale = 10
+        expected_dim = [10, 20]
+        mock_get_distance.side_effect = [100, 200]
+        dim = get_dimensions(bbox, scale)
+        mock_get_distance.assert_has_calls(
+            [call([bbox[0], bbox[1]], [bbox[2], bbox[1]]), call([bbox[0], bbox[1]], [bbox[0], bbox[3]])])
+        self.assertEqual(dim, expected_dim)

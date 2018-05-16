@@ -50,15 +50,8 @@ class TestWCSConverter(TransactionTestCase):
         get_cred.return_value = ("testUser", "testPass")
         self.task_process.return_value = Mock(exitcode=0)
 
-        wcs_conv = WCSConverter(out=geotiff,
-                                bbox=bbox,
-                                service_url=service_url,
-                                layer=layer,
-                                debug=False,
-                                name=name,
-                                service_type=None,
-                                task_uid=self.task_uid,
-                                fmt="gtiff")
+        wcs_conv = WCSConverter(out=geotiff, bbox=bbox, service_url=service_url, layer=layer, debug=False, name=name,
+                                service_type=None, task_uid=self.task_uid, fmt="gtiff")
         out = wcs_conv.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(os.path.dirname(geotiff))
@@ -86,15 +79,8 @@ class TestWCSConverter(TransactionTestCase):
         exists.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
 
-        wcs_conv = WCSConverter(out=geotiff,
-                                bbox=bbox,
-                                service_url=service_url,
-                                layer=layer,
-                                debug=False,
-                                name=name,
-                                service_type=None,
-                                task_uid=self.task_uid,
-                                fmt="gpkg")
+        wcs_conv = WCSConverter(out=geotiff, bbox=bbox, service_url=service_url, layer=layer, debug=False, name=name,
+                                service_type=None, task_uid=self.task_uid, fmt="gpkg")
         out = wcs_conv.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(os.path.dirname(geotiff))
