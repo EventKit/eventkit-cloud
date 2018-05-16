@@ -18,6 +18,7 @@ from uuid import uuid4
 from string import Template
 from datetime import datetime
 import pytz
+import requests
 
 logger = get_task_logger(__name__)
 
@@ -38,7 +39,10 @@ def get_style_files():
     :return: A list of all of the static files used for styles (e.g. icons)
     """
     style_dir = os.path.join(os.path.dirname(__file__), 'static', 'ui', 'styles')
-    return get_file_paths(style_dir)
+    files = get_file_paths(style_dir)
+    support_dir = os.path.join(os.path.dirname(__file__), 'support')
+    files = get_file_paths(support_dir, files)
+    return files
 
 
 def generate_qgs_style(run_uid=None, export_provider_task=None):
@@ -93,8 +97,8 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     return style_file
 
 
-def get_file_paths(directory):
-    paths = {}
+def get_file_paths(directory, paths=None):
+    paths = paths or dict()
     with cd(directory):
         for dirpath, _, filenames in os.walk('./'):
             for f in filenames:

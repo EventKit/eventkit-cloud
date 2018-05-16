@@ -6,6 +6,11 @@ import argparse
 
 from eventkit_cloud.utils.client import EventKitClient
 
+import logging
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=os.getenv("LOG_LEVEL", "WARNING"))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('url', help='The EventKit instance base url (i.e. http://cloud.eventkit.test).')
@@ -28,7 +33,7 @@ def main():
     if not password:
         password = getpass.getpass("EventKit Password:")
 
-    client = EventKitClient(args.url, user, password)
+    client = EventKitClient(args.url.rstrip('/'), user, password)
     if args.sources:
         provider_tasks = []
         for provider in client.get_providers():
