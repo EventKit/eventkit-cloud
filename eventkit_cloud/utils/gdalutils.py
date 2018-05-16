@@ -105,7 +105,8 @@ def get_meta(ds_path):
 
 def get_area(geojson):
     """
-    Given a GeoJSON string or object, return an approximation of its geodesic area in km�.
+    Given a GeoJSON string or object, return an approximation of its geodesic area in km².
+
     The geometry must contain a single polygon with a single ring, no holes.
     Based on Chamberlain and Duquette's algorithm: https://trs.jpl.nasa.gov/bitstream/handle/2014/41271/07-0286.pdf
     :param geojson: GeoJSON selection area
@@ -119,16 +120,28 @@ def get_area(geojson):
     if isinstance(geojson, str):
         geojson = json.loads(geojson)
 
-    ring = geojson['coordinates'][0]
-    if len(ring) < 4:
-        return 0
+    if hasattr(geojson, 'geometry'):
+        geojson = geojson['geometry']
 
-    ring.append(ring[-2])  # convenient for circular indexing
+    geom_type = geojson['type'].lower()
+    if geom_type == 'polygon':
+        polys = [geojson['coordinates']]
+    elif geom_type == 'multipolygon':
+        polys = geojson['coordinates']
+    else:
+        return RuntimeError("Invalid geometry type: %s" % geom_type)
+
     a = 0
-    for i in range(len(ring) - 2):
-        a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
-    result = abs(a * (earth_r**2) / 2)
-    return result
+    for poly in polys:
+        ring = poly[0]
+        if len(ring) < 4:
+            continue
+        ring.append(ring[-2])  # convenient for circular indexing
+        for i in range(len(ring) - 2):
+            a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
+
+    area = abs(a * (earth_r**2) / 2)
+    return area
 
 
 def is_envelope(geojson_path):
