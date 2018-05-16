@@ -1237,7 +1237,8 @@ class FinalizeRunBase(LockingTask):
         stage_dir = None if retval is None else retval.get('stage_dir')
         try:
             if stage_dir and os.path.isdir(stage_dir):
-                shutil.rmtree(stage_dir)
+                if not os.getenv('KEEP_STAGE', False):
+                    shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1311,8 +1312,8 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     run = ExportRun.objects.get(uid=run_uid)
     try:
         if os.path.isdir(stage_dir):
-            # DON'T leave the stage_dir in place for debugging
-            shutil.rmtree(stage_dir)
+            if not os.getenv('KEEP_STAGE', False):
+                shutil.rmtree(stage_dir)
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 

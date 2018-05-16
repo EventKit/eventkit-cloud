@@ -2,13 +2,12 @@
 import logging
 import os
 from osgeo import gdal, ogr
-from mock import Mock, patch, call
+from mock import Mock, patch, call, MagicMock,ANY
 from uuid import uuid4
 from django.test import TestCase
-import json
 
 from ..gdalutils import open_ds, cleanup_ds, clip_dataset, convert, driver_for, get_transform, get_distance, \
-    get_dimensions, get_line
+    get_dimensions, get_line, merge_geotiffs
 
 logger = logging.getLogger(__name__)
 
@@ -187,3 +186,23 @@ class TestGdalUtils(TestCase):
         mock_get_distance.assert_has_calls(
             [call([bbox[0], bbox[1]], [bbox[2], bbox[1]]), call([bbox[0], bbox[1]], [bbox[0], bbox[3]])])
         self.assertEqual(dim, expected_dim)
+
+    @patch('eventkit_cloud.utils.gdalutils.TaskProcess')
+    def test_merge_geotiffs(self, mock_taskprocess):
+        in_files = ['1.tif', '2.tif', '3.tif', '4.tif']
+        out_file = 'merged.tif'
+        task_uid = "1234"
+        expected_command = "gdalwarp {0} {1}".format(' '.join(in_files), out_file)
+        mock_tp = MagicMock()
+        mock_tp.exitcode = 0
+        mock_taskprocess.return_value = mock_tp
+        result = merge_geotiffs(in_files, out_file, task_uid=task_uid)
+        mock_tp.start_process.called_once_with(expected_command, shell=True, executable="/bin/bash",
+                               stdout=ANY, stderr=ANY)
+        self.assertEqual(out_file, result)
+
+        with self.assertRaises(Exception):
+            mock_tp.exitcode = 1
+            merge_geotiffs(in_files, out_file, task_uid=task_uid)
+
+

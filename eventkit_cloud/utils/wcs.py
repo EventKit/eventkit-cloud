@@ -8,7 +8,7 @@ import tempfile
 from ..tasks.task_process import TaskProcess
 import yaml
 from ..utils import auth_requests
-from .gdalutils import get_dimensions
+from .gdalutils import get_dimensions, merge_geotiffs
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -122,38 +122,53 @@ class WCSConverter(object):
     def get_coverage_with_requests(self):
         logger.info("Using admin configuration for the WCS request.")
         service = self.config.get('service')
+        params = self.config.get('params')
         if not service:
             raise Exception('A service key needs to be defined to include the scale of source in meters')
+        coverages = service.get('coverages', params.get('COVERAGE'))
+        coverages = coverages.split(',')
+        if not coverages:
+            logger.error('No coverages were specified for this provider, please specify `coverages` under service or `COVERAGE` under params.')
+            raise Exception("Data source incorrectly configured.")
         logger.info("Getting Dimensions...")
         width, height = get_dimensions(self.bbox, int(service.get('scale')))
-        params = self.config.get('params')
         params['width'] = str(width)
         params['height'] = str(height)
         params['service'] = 'WCS'
         params['bbox'] = ','.join(map(str, self.bbox))
-        try:
-            req = auth_requests.get(self.service_url, params=params, slug=self.slug, stream=True,
-                                    verify=(not getattr(settings, 'DISABLE_SSL_VERIFICATION', False)))
-            logger.info("Getting the coverage: {0}".format(logger.error(req.url)))
+        geotiffs = []
+        for idx, coverage in enumerate(coverages):
+            params['COVERAGE'] = coverage
+            file_path, ext = os.path.splitext(self.out)
+            outfile = '{0}-{1}{2}'.format(file_path, idx, ext)
             try:
-                size = int(req.headers.get('content-length'))
-            except (ValueError, TypeError):
-                if req.content:
-                    size = len(req.content)
-                else:
-                    raise Exception("Overpass Query failed to return any data")
-            if not req:
-                logger.error(req.content)
-                raise Exception("WCS request for {0} failed.".format(self.name))
-            CHUNK = 1024 * 1024 * 2  # 2MB chunks
-            from audit_logging.file_logging import logging_open
-            with logging_open(self.out, 'wb', user_details=self.user_details) as fd:
-                for chunk in req.iter_content(CHUNK):
-                    fd.write(chunk)
-                    size += CHUNK
-        except Exception as e:
-            logger.error(e)
-            raise Exception("There was an error writing the file to disk.")
+                req = auth_requests.get(self.service_url, params=params, slug=self.slug, stream=True,
+                                        verify=(not getattr(settings, 'DISABLE_SSL_VERIFICATION', False)))
+                logger.info("Getting the coverage: {0}".format(req.url))
+                try:
+                    size = int(req.headers.get('content-length'))
+                except (ValueError, TypeError):
+                    if req.content:
+                        size = len(req.content)
+                    else:
+                        raise Exception("Overpass Query failed to return any data")
+                if not req:
+                    logger.error(req.content)
+                    raise Exception("WCS request for {0} failed.".format(self.name))
+                CHUNK = 1024 * 1024 * 2  # 2MB chunks
+                from audit_logging.file_logging import logging_open
+                with logging_open(outfile, 'wb', user_details=self.user_details) as fd:
+                    for chunk in req.iter_content(CHUNK):
+                        fd.write(chunk)
+                        size += CHUNK
+                geotiffs += [outfile]
+            except Exception as e:
+                logger.error(e)
+                raise Exception("There was an error writing the file to disk.")
+        if len(geotiffs) > 1:
+            self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
+        else:
+            self.out = geotiffs[0]
 
     def convert(self, ):
         """

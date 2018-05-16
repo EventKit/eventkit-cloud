@@ -367,3 +367,28 @@ def get_transform(from_srs, to_srs):
     target.ImportFromEPSG(to_srs)
 
     return osr.CoordinateTransformation(source, target)
+
+
+def merge_geotiffs(in_files, out_file, task_uid=None):
+    """
+
+    :param in_files: A list of geotiffs.
+    :param out_file:  A location for the result of the merge.
+    :param task_uid: A task uid to manage the subprocess.
+    :return: The out_file path.
+    """
+    cmd_template = Template("gdalwarp $in_ds $out_ds")
+    cmd = cmd_template.safe_substitute({'in_ds': ' '.join(in_files),
+                                        'out_ds': out_file})
+
+    logger.debug("GDAL merge cmd: {0}".format(cmd))
+
+    task_process = TaskProcess(task_uid=task_uid)
+    task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stderr))
+        raise Exception("GeoTIFF merge process failed with return code {0}".format(task_process.exitcode))
+
+    return out_file
