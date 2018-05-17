@@ -7,7 +7,7 @@ from uuid import uuid4
 from django.test import TestCase
 
 
-from ..gdalutils import open_ds, cleanup_ds, clip_dataset, convert, driver_for, get_transform, get_distance, \
+from ..gdalutils import open_ds, cleanup_ds, clip_dataset, convert, get_transform, get_distance, \
     get_dimensions, get_line, merge_geotiffs, get_meta
 
 
