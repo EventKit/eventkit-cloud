@@ -58,9 +58,9 @@ EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
 # url to overpass api endpoint
 # OVERPASS_API_URL = 'http://cloud.eventkit.test/overpass-api/interpreter'
 OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
-GEOCODING_API_URL = os.getenv('GEOCODING_API_URL', 'http://172.17.0.1:4000/v1/search')
+GEOCODING_API_URL = os.getenv('GEOCODING_API_URL', 'http://api.geonames.org/searchJSON')
 REVERSE_GEOCODING_API_URL = os.getenv('REVERSE_GEOCODING_API_URL', 'http://172.17.0.1:4000/v1/reverse')
-REVERSE_GEOCODING_API_TYPE = os.getenv('REVERSE_GEOCODING_API_TYPE', 'PELIAS')
+REVERSE_GEOCODING_API_TYPE = os.getenv('REVERSE_GEOCODING_API_TYPE', None)
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'PELIAS')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
 GEOCODING_AUTH_URL = os.getenv('GEOCODING_AUTH_URL', None)
@@ -361,3 +361,4 @@ AUTO_LOGOUT_SECONDS = int(os.getenv('AUTO_LOGOUT_SECONDS', 0))
 AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']
+    
