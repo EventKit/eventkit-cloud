@@ -32,13 +32,13 @@ class TestHelpers(TestCase):
     @patch('eventkit_cloud.ui.helpers.read_json_file')
     @patch('eventkit_cloud.ui.helpers.os.path.exists')
     @patch('eventkit_cloud.ui.helpers.subprocess')
-    @patch('eventkit_cloud.ui.helpers.driver_for')
+    @patch('eventkit_cloud.ui.helpers.get_meta')
     @patch('eventkit_cloud.ui.helpers.os.listdir')
     @patch('eventkit_cloud.ui.helpers.unzip_file')
     @patch('eventkit_cloud.ui.helpers.write_uploaded_file')
     @patch('eventkit_cloud.ui.helpers.os.mkdir')
     @patch('eventkit_cloud.ui.helpers.uuid4')
-    def test_file_to_geojson(self, uid, makedir, write, unzip, listdirs, driver, subproc, exists, reader, rm, split):
+    def test_file_to_geojson(self, uid, makedir, write, unzip, listdirs, meta, subproc, exists, reader, rm, split):
         geojson = {'type': 'FeatureCollection', 'other_stuff': {}}
         file = Mock()
         file.name = 'test_file.geojson'
@@ -48,7 +48,7 @@ class TestHelpers(TestCase):
         write.return_value = True
         unzip.return_value = False
         listdirs.return_value = []
-        driver.return_value = ('GeoJSON', False)
+        meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
         proc = Mock()
         proc.wait = Mock()
         subproc.Popen.return_value = proc
@@ -66,7 +66,7 @@ class TestHelpers(TestCase):
             self.assertEquals(ret, geojson)
             makedir.assert_called_once_with(dir)
             write.assert_called_once_with(file, expected_in_path)
-            driver.assert_called_once_with(expected_in_path)
+            meta.assert_called_once_with(expected_in_path)
             expected_cmd = "ogr2ogr -f geojson {0} {1}".format(expected_out_path, expected_in_path)
             subproc.Popen.assert_called_once_with(expected_cmd, shell=True, executable='/bin/bash')
             rm.assert_called_once_with(dir)
@@ -86,7 +86,7 @@ class TestHelpers(TestCase):
             self.assertEquals(ret, geojson)
             unzip.assert_called_once_with(expected_in_path, dir)
             listdirs.assert_called_with(dir)
-            driver.assert_called_with(updated_in_path)
+            meta.assert_called_with(updated_in_path)
             subproc.Popen.called_with(updated_cmd, shell=True, executable='/bin/bash')
 
             # It should raise an exception if there is no file extension
@@ -104,11 +104,15 @@ class TestHelpers(TestCase):
             # It should raise an exception if no driver can be found
             file.name = 'test.geojson'
             split.return_value = 'test', '.geojson'
-            driver.return_value = None, None
+            meta.return_value = {'driver': None, 'is_raster': None}
+            self.assertRaises(Exception, file_to_geojson, file)
+
+            # It should raise an exception if input file is not vector
+            meta.return_value = {'driver': 'GTiff', 'is_raster': True}
             self.assertRaises(Exception, file_to_geojson, file)
 
             # It should raise an exception if the subprocess throws one
-            driver.return_value = 'GeoJSON', False
+            meta.return_value = {'driver': 'GeoJSON', 'is_raster': False}
             subproc.Popen.side_effect = Exception('doh!')
             self.assertRaises(Exception, file_to_geojson, file)
 
