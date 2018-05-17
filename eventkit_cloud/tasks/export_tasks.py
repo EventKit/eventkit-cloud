@@ -35,7 +35,7 @@ from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
-from ..core.helpers import sendnotification, NotificationVerb
+from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
@@ -1192,7 +1192,7 @@ class FinalizeRunBase(LockingTask):
         if run.job.include_zipfile and not run.zipfile_url:
             logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
-        notification_level = 'success'
+        notification_level = NotificationLevel.SUCCESS.value
         verb = NotificationVerb.RUN_COMPLETED.value
         provider_tasks = run.provider_tasks.all()
 
@@ -1206,11 +1206,11 @@ class FinalizeRunBase(LockingTask):
         # mark run as incomplete if any tasks fail
         if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
-            notification_level = 'warning'
+            notification_level = NotificationLevel.WARNING.value
             verb = NotificationVerb.RUN_FAILED.value
         if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
-            notification_level = 'warning'
+            notification_level = NotificationLevel.WARNING.value
             verb = NotificationVerb.RUN_CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
@@ -1277,18 +1277,18 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
         logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
-    notification_level = 'success'
+    notification_level = NotificationLevel.SUCCESS.value
     provider_tasks = run.provider_tasks.all()
 
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
-        notification_level = 'warning'
+        notification_level = NotificationLevel.WARNING.value
         verb = NotificationVerb.RUN_FAILED.value
     if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
         run.status = TaskStates.CANCELED.value
         verb = NotificationVerb.RUN_CANCELED.value
-        notification_level = 'warning'
+        notification_level = NotificationLevel.WARNING.value
     finished = timezone.now()
     run.finished_at = finished
     run.save()

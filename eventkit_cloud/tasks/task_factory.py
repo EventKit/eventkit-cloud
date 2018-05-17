@@ -10,10 +10,9 @@ from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
 from ..core.models import JobPermission,JobPermissionLevel
-
+from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from celery import chain
-
 from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
                                                prepare_for_export_zip_task,
                                                zip_file_task,
@@ -33,8 +32,6 @@ from .task_runners import (
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
-
-from ..core.helpers import sendnotification, NotificationVerb
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -221,7 +218,7 @@ def create_run(job_uid, user=None):
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
             job.last_export_run = run
             job.save()
-            sendnotification(run, run.user, NotificationVerb.RUN_STARTED.value, None, None, "info", '')
+            sendnotification(run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, '')
             run_uid = run.uid
             logger.debug('Saved run with id: {0}'.format(str(run_uid)))
             return run_uid

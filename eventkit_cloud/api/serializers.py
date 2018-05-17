@@ -20,7 +20,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from notifications.models import Notification
 
-from ..core.models import GroupPermission, JobPermission
+from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -334,13 +334,13 @@ class GroupSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_members(instance):
         user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermission.Permissions.MEMBER.value)]
+            permission=GroupPermissionLevel.MEMBER.value)]
         return [user.username for user in User.objects.filter(id__in=user_ids).all()]
 
     @staticmethod
     def get_administrators(instance):
         user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermission.Permissions.ADMIN.value)]
+            permission=GroupPermissionLevel.ADMIN.value)]
         return [user.username for user in User.objects.filter(id__in=user_ids).all()]
         return []
 

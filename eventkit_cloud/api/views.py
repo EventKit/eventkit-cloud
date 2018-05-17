@@ -16,9 +16,9 @@ from django.contrib.contenttypes.models import ContentType
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from ..core.models import GroupPermission, JobPermission,JobPermissionLevel
+from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
 from notifications.models import Notification
-from ..core.helpers import sendnotification, NotificationVerb
+from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 
 from eventkit_cloud.jobs.models import (
@@ -56,9 +56,6 @@ from rest_framework_swagger import renderers
 from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
 import coreapi
-from notifications.signals import notify
-from notifications.models import Notification
-from ..core.helpers import sendnotification
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -524,7 +521,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         return Response([{'detail': "invalid permission value : %s" % perm}],
                                         status.HTTP_400_BAD_REQUEST)
 
-                    if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
+                    if perm == GroupPermissionLevel.ADMIN.value: admins += 1
 
             if admins == 0:
                 return Response([{'detail': "This job has no administrators."}],
@@ -1416,10 +1413,10 @@ class GroupViewSet(viewsets.ModelViewSet):
         group = Group.objects.get(pk=group_id)
         group.user_set.add(user)
         groupadmin = GroupPermission.objects.create(user=user, group=group,
-                                                    permission=GroupPermission.Permissions.ADMIN.value)
+                                                    permission=GroupPermissionLevel.ADMIN.value)
         groupadmin.save()
         groupmember = GroupPermission.objects.create(user=user, group=group,
-                                                     permission=GroupPermission.Permissions.MEMBER.value)
+                                                     permission=GroupPermissionLevel.MEMBER.value)
 
         if "members" in request.data:
             for member in request.data["members"]:
@@ -1427,9 +1424,9 @@ class GroupViewSet(viewsets.ModelViewSet):
                     user = User.objects.all().filter(username=member)[0]
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
-                                                       permission=GroupPermission.Permissions.MEMBER.value)
+                                                       permission=GroupPermissionLevel.MEMBER.value)
                         sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP.value,
-                                         group, None, "info", GroupPermission.Permissions.MEMBER.value)
+                                         group, None, NotificationLevel.INFO.value, GroupPermissionLevel.MEMBER.value)
 
         if "administrators" in request.data:
             for admin in request.data["administrators"]:
@@ -1437,9 +1434,9 @@ class GroupViewSet(viewsets.ModelViewSet):
                     user = User.objects.all().filter(username=admin)[0]
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
-                                                       permission=GroupPermission.Permissions.ADMIN.value)
+                                                       permission=GroupPermissionLevel.ADMIN.value)
                         sendnotification(request.user, user, NotificationVerb.SET_AS_GROUP_ADMIN.value,
-                                         group, None, "info", GroupPermission.Permissions.ADMIN.value)
+                                         group, None, NotificationLevel.INFO.value, GroupPermissionLevel.ADMIN.value)
 
         group = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
@@ -1505,7 +1502,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             perms = GroupPermission.objects.filter(
                 user=user,
                 group=group,
-                permission=GroupPermission.Permissions.MEMBER.value
+                permission=GroupPermissionLevel.MEMBER.value
             )
             # if the user is not an admin but is a member we remove them from the group
             if perms:
@@ -1527,8 +1524,8 @@ class GroupViewSet(viewsets.ModelViewSet):
                 group.save()
 
         # examine provided lists of administrators and members. Adjust as needed.
-        for item in [("members", GroupPermission.Permissions.MEMBER.value),
-                     ("administrators", GroupPermission.Permissions.ADMIN.value)]:
+        for item in [("members", GroupPermissionLevel.MEMBER.value),
+                     ("administrators", GroupPermissionLevel.ADMIN.value)]:
             permissionlabel = item[0]
             permission = item[1]
 
@@ -1550,7 +1547,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
-                sendnotification(request.user, user, verb, group, None, "info", permission)
+                sendnotification(request.user, user, verb, group, None, NotificationLevel.INFO.value, permission)
 
             ## Remove existing users for this permission level
 
@@ -1559,7 +1556,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             verb = NotificationVerb.REMOVED_FROM_GROUP.value
             if permissionlabel == 'administrators': verb = NotificationVerb.REMOVED_AS_GROUP_ADMIN.value
             for user in users:
-                sendnotification(request.user, user, verb, group, None, "info", permission)
+                sendnotification(request.user, user, verb, group, None, NotificationLevel.INFO.value, permission)
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
                 for perm in perms: perm.delete()
 

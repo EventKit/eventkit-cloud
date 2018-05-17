@@ -68,17 +68,15 @@ class UIDMixin(models.Model):
     class Meta:
         abstract = True
 
+class GroupPermissionLevel(Enum):
+    NONE = "NONE"
+    MEMBER = "MEMBER"
+    ADMIN = "ADMIN"
 
 class GroupPermission(TimeStampedModelMixin):
     """
     Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
     """
-
-    @staticmethod
-    class Permissions(Enum):
-        NONE = "NONE"
-        MEMBER = "MEMBER"
-        ADMIN = "ADMIN"
 
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group)

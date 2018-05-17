@@ -100,16 +100,11 @@ def load_land_vectors(db_conn=None, url=None):
     finally:
         logger.info("Finished loading land data.")
 
-# notify.send(actor, recipient, verb, action_object, target, level, description, all required. None value is OK)
-
-
-def sendnotification(actor, recipient, verb, action_object, target, level, description):
-    try:
-        result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
-                             level=level,description=description)
-    except Exception as err:
-        logger.info( "notify error ignored: %s" % err)
-
+class NotificationLevel(Enum):
+    SUCCESS = "success"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR  = "ERROR"
 
 class NotificationVerb(Enum):
     RUN_STARTED = "run_started"
@@ -123,3 +118,9 @@ class NotificationVerb(Enum):
     REMOVED_AS_GROUP_ADMIN = "removed_as_group_admin"
 
 
+def sendnotification(actor, recipient, verb, action_object, target, level, description):
+    try:
+        result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
+                             level=level,description=description)
+    except Exception as err:
+        logger.debug( "notify send error ignored: %s" % err)

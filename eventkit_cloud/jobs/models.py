@@ -402,11 +402,11 @@ class UserJobActivity(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
 
-def user_owns_job(user=None, job_uid=None):
+def user_created_job(user=None, job_uid=None):
     if not job_uid or not user:
         return False
     job = Job.objects.get(uid=job_uid)
-    if job.user == user or job.published:
+    if job.user == user:
         return True
     else:
         return False

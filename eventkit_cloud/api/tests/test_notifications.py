@@ -11,14 +11,7 @@ from rest_framework.test import APITestCase
 # from django.test import TestCase as APITestCase
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
-from ...jobs.models import ExportFormat, Job, DataProvider, \
-    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
-from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...tasks.export_tasks import TaskStates
-from ...core.models import GroupPermission
-from notifications.models import Notification
-from ...core.helpers import sendnotification, NotificationVerb
+from ...core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
 
 class TestNotifications(APITestCase):
@@ -41,7 +34,7 @@ class TestNotifications(APITestCase):
 
     def test_send(self, ):
         memo = "Note to myself"
-        level = "info"
+        level = NotificationLevel.SUCCESS.value
         verb = NotificationVerb.REMOVED_FROM_GROUP.value
 
         sendnotification(self.user1, self.user1, verb, None, None, level, memo)

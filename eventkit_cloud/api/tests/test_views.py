@@ -25,7 +25,7 @@ from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission
+from ...core.models import GroupPermission,GroupPermissionLevel
 from mock import patch, Mock
 
 
@@ -1125,7 +1125,7 @@ class TestGroupDataViewSet(APITestCase):
         self.testName = "Omaha 319"
         group, created = Group.objects.get_or_create(name=self.testName)
         self.groupid = group.id
-        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermission.Permissions.ADMIN.value)
+        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermissionLevel.ADMIN.value)
 
     def test_insert_group(self):
         expected = '/api/groups'
