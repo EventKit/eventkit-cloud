@@ -22,7 +22,7 @@ from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run
 from ..jobs.models import Job
 from ..ui.helpers import get_style_files
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
-                                  wait_for_providers_task, TaskStates)
+                                  wait_for_providers_task, TaskStates, add_license_file)
 
 from ..tasks.models import ExportRun, DataProviderTaskRecord
 from ..tasks.task_runners import create_export_task_record
@@ -110,10 +110,9 @@ class TaskFactory:
                 if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
                     type_name = provider_task_record.provider.export_provider_type.type_name
                     task_runner = self.type_task_map.get(type_name)()
-                    os.makedirs(os.path.join(run_dir, provider_task_record.provider.slug), 6600)
-                    stage_dir = os.path.join(
-                                run_dir,
-                                provider_task_record.provider.slug)
+
+                    stage_dir = os.path.join(run_dir, provider_task_record.provider.slug)
+                    os.makedirs(stage_dir, 6600)
 
                     args = {
                         'user': job.user,
@@ -137,6 +136,13 @@ class TaskFactory:
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
 
+                        # add license task to provider subtask chain
+                        provider_subtask_chain = chain(
+                            provider_subtask_chain, create_task(export_provider_task_uid=provider_task_uid,
+                                                                stage_dir=stage_dir, worker=worker,
+                                                                task=add_license_file, job_name=job.name)
+                        )
+
                         selection_task = create_task(
                             export_provider_task_uid=provider_task_uid,
                             stage_dir=stage_dir,
@@ -157,7 +163,7 @@ class TaskFactory:
                         if provider_task_record.provider.zip:
                             zip_export_provider_sig = get_zip_task_chain(export_provider_task_uid=provider_task_uid,
                                                                          stage_dir=stage_dir, worker=worker,
-                                                                         job_name=run.job.name)
+                                                                         job_name=job.name)
                             provider_subtask_chain = chain(
                                 provider_subtask_chain, zip_export_provider_sig
                             )

@@ -452,6 +452,21 @@ def osm_data_collection_task(
     return result
 
 
+@app.task(name="Add License File", bind=True, base=ExportTask, abort_on_error=True)
+def add_license_file(self, export_provider_task_uid, stage_dir, worker, job_name, result=None, *args, **kwargs):
+    from ..jobs.models import DataProvider
+    from ..tasks.models import DataProviderTaskRecord
+    license_text = DataProvider.objects.get(slug=DataProviderTaskRecord.objects.get(uid=export_provider_task_uid).slug)\
+        .license.text
+    license_file_path = os.path.join(stage_dir, 'license.txt')
+
+    with open(license_file_path, 'w') as license_file:
+        license_file.write(license_text)
+
+    result['license'] = license_file_path
+    return result
+
+
 @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
