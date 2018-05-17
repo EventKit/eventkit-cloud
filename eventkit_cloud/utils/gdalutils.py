@@ -12,6 +12,8 @@ from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
+MAX_DB_CONNECTION_RETRIES = 3
+
 
 def open_ds(ds_path):
     """
@@ -245,6 +247,12 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.debug("GDAL clip cmd: %s", cmd)
 
         task_process = TaskProcess(task_uid=task_uid)
+
+        # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
+        # retries as retrying forever would cause the job to never finish in the event that the database is down. An
+        # improved method would perhaps be to see if there are connection options to create a more reliable connection.
+        # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
+        # documentation.
         attempts = 0
         while True:
             try:
@@ -254,7 +262,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             except Exception as e:
                 logger.error(e)
                 attempts += 1
-                if attempts > 3:
+                if attempts > MAX_DB_CONNECTION_RETRIES:
                     raise e
                 time.sleep(2)
 
