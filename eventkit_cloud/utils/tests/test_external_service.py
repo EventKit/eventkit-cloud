@@ -5,7 +5,7 @@ from mock import Mock, patch, MagicMock
 from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
-from ..external_service import ( ExternalRasterServiceToGeopackage, create_conf_from_url,
+from ..external_service import ( ExternalRasterServiceToGeopackage,
                                  check_service, get_cache_template, CustomLogger, check_zoom_levels )
 from mapproxy.config.config import load_default_config
 from uuid import uuid4
@@ -23,37 +23,6 @@ class TestGeopackage(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.utils.external_service.yaml')
-    @patch('eventkit_cloud.utils.external_service.NamedTemporaryFile')
-    @patch('eventkit_cloud.utils.external_service.config_command')
-    def test_create_conf_from_url(self, config_command, temp, yaml):
-        test_file = NamedTemporaryFile()
-        url = 'http://example.url/'
-        test_yaml = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        temp.return_value = test_file
-        config_command.return_value = test_yaml
-        yaml.load.return_value = real_yaml.load(test_yaml)
-        cmd = ['--capabilities', '{}'.format(url), '--output', '{}'.format(test_file.name), '--force']
-        w2g = create_conf_from_url(url)
-        config_command.assert_called_once_with(cmd)
-        self.assertEqual(w2g, real_yaml.load(test_yaml))
-
-    @patch('eventkit_cloud.utils.external_service.check_service')
-    @patch('eventkit_cloud.utils.external_service.yaml')
-    @patch('eventkit_cloud.utils.external_service.NamedTemporaryFile')
-    @patch('eventkit_cloud.utils.external_service.config_command')
-    def test_create_conf_from_arcgis(self, config_command, temp, yaml, check_service):
-        test_file = NamedTemporaryFile()
-        url = 'http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer'
-        test_yaml = "layer:\r\n  - name: imagery\r\n    title: imagery\r\n    sources: [cache]\r\n\r\nsources:\r\n  imagery_arcgis:\r\n    type: arcgis\r\n    grid: webmercator\r\n    req:\r\n      url: http://server.arcgisonline.com/arcgis/rest/services/ESRI_Imagery_World_2D/MapServer\r\n      layers: \r\n        show: 0\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
-        temp.return_value = test_file
-        config_command.return_value = test_yaml
-        yaml.load.return_value = real_yaml.load(test_yaml)
-        cmd = ['--capabilities', '{}'.format(url), '--output', '{}'.format(test_file.name), '--force']
-        w2g = create_conf_from_url(url)
-        config_command.assert_called_once_with(cmd)
-        self.assertEqual(w2g, real_yaml.load(test_yaml))
-
     @patch('eventkit_cloud.utils.external_service.auth_requests.patch_https')
     @patch('eventkit_cloud.utils.external_service.set_gpkg_contents_bounds')
     @patch('eventkit_cloud.utils.external_service.check_zoom_levels')
@@ -67,11 +36,11 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.get_seed_template')
     def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds, patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
-        config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery_wmts:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
+        config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
         json_config = real_yaml.load(config)
         mapproxy_config = load_default_config()
         bbox = [-2, -2, 2, 2]
-        cache_template.return_value = {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}
+        cache_template.return_value = {'sources': ['imagery'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}
         seed_template.return_value = {'coverages': {'geom': {'srs': 'EPSG:4326', 'bbox': [-2, -2, 2, 2]}}, 'seeds': {'seed': {'coverages': ['geom'], 'refresh_before': {'minutes': 0}, 'levels': {'to': 10, 'from': 0}, 'caches': ['cache']}}}
         self.task_process.return_value = Mock(exitcode=0)
         w2g = ExternalRasterServiceToGeopackage(config=config,
@@ -90,11 +59,11 @@ class TestGeopackage(TransactionTestCase):
         connections.close_all.assert_called_once()
         self.assertEqual(result, gpkgfile)
 
-        cache_template.assert_called_once_with(["imagery_wmts"], [grids for grids in json_config.get('grids')], gpkgfile, table_name='imagery')
-        json_config['caches'] = {'cache': {'sources': ['imagery_wmts'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
+        cache_template.assert_called_once_with(["imagery"], [grids for grids in json_config.get('grids')], gpkgfile, table_name='imagery')
+        json_config['caches'] = {'cache': {'sources': ['imagery'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
         json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
-        json_config['sources']['imagery_wmts']['transparent'] = True
-        json_config['sources']['imagery_wmts']['on_error'] = {404: {'cache': False,'response': 'transparent'}}
+        json_config['sources']['imagery']['transparent'] = True
+        json_config['sources']['imagery']['on_error'] = {404: {'cache': False,'response': 'transparent'}}
         json_config['services'] = ['demo']
 
         patch_https.assert_called_once_with('imagery')

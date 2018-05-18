@@ -127,6 +127,7 @@ def search(request):
     if not q:
         return HttpResponse(status=204, content_type="application/json")
 
+    error_string = "An unknown error occurred while querying for results, please contact an administrator."
     degree_range = 0.05
     if is_mgrs(q):
         # check for necessary settings
@@ -138,7 +139,13 @@ def search(request):
 
         # make call to convert which should return a geojson feature of the MGRS location
         convert = Convert()
-        mgrs_data = convert.get(q)
+        try:
+            mgrs_data = convert.get(q)
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
 
         # if no feature geom return nothing
         if not mgrs_data.get('geometry'):
@@ -159,10 +166,17 @@ def search(request):
 
         # call reverse to get a list of results near the mgrs feature
         reverse = ReverseGeocode()
-        result = reverse.search({
-            "point.lat": mgrs_data.get('geometry').get('coordinates')[1],
-            "point.lon": mgrs_data.get('geometry').get('coordinates')[0]
-        })
+        try:
+            result = reverse.search({
+                "point.lat": mgrs_data.get('geometry').get('coordinates')[1],
+                "point.lon": mgrs_data.get('geometry').get('coordinates')[0]
+            })
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
+
         if result.get('features'):
             # add the mgrs feature with the search results and return together
             result['features'] = features + result['features']
@@ -178,10 +192,16 @@ def search(request):
 
         # make call to reverse geocode
         reverse = ReverseGeocode()
-        result = reverse.search({
-            "point.lat": coords[0],
-            "point.lon": coords[1]
-        })
+        try:
+            result = reverse.search({
+                "point.lat": coords[0],
+                "point.lon": coords[1]
+            })
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
 
         # create a feature representing the exact lat/lon being searched
         point_feature = {
@@ -216,7 +236,13 @@ def search(request):
     else:
         # make call to geocode with search
         geocode = Geocode()
-        result = geocode.search(q)
+        try:
+            result = geocode.search(q)
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
 
 
