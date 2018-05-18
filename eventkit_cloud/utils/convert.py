@@ -1,6 +1,6 @@
 from django.conf import settings
 from abc import ABCMeta, abstractmethod, abstractproperty
-from geocode_auth import getAuthHeaders, authenticate
+from geocode_auth import get_auth_headers, authenticate
 import logging
 import requests
 import json
@@ -30,25 +30,26 @@ class Convert(object):
 
     def search(self, query):
         return self.converter.get_data(query)
+
+    def get_response(self, url, payload):
+        response = requests.get(self.url, params=payload, headers=get_auth_headers())
+        if response.status_code in [401, 403]:
+            authenticate()
+            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            if not response.ok:
+                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                logger.error(error_message)
+                raise AuthenticationError(error_message)
+        return response
     
     def get(self, query):
-        result = self.get_data(query)
-         
-        if(result and 'error' in result and result['error'] == 'Expired token'):
-            authenticate()
-            result = self.get_data(query)
-        return result
-    
+        return self.get_data(query)
+
     def get_data(self, query):
         url = getattr(settings, 'CONVERT_API_URL')
-        args = { "from":"mgrs", "to":"decdeg","q":str(query)}
-        try: 
-            
-            response = requests.get(url, params=args, headers=getAuthHeaders())  
-            if('ERROR' not in response.text):
-                return response.json()
-            else:
-                return
+        args = {"from": "mgrs", "to": "decdeg", "q": str(query)}
+        try:
+            return self.get_response(url, args).json()
         except requests.exceptions.RequestException as e:
             logger.error(e)
             return

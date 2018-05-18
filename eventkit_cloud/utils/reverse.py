@@ -1,6 +1,6 @@
 from django.conf import settings
 import logging
-from geocode_auth import getAuthHeaders, authenticate
+from geocode_auth import get_auth_headers, authenticate
 from abc import ABCMeta, abstractmethod, abstractproperty
 import requests
 import json
@@ -75,9 +75,16 @@ class ReverseGeocodeAdapter:
         """
         pass
 
-
     def get_response(self, payload):
-        return requests.get(self.url, params=payload, headers=getAuthHeaders()).json()
+        response = requests.get(self.url, params=payload, headers=get_auth_headers())
+        if response.status_code in [401, 403]:
+            authenticate()
+            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            if not response.ok:
+                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                logger.error(error_message)
+                raise AuthenticationError(error_message)
+        return response
 
     def get_data(self, query):
         """

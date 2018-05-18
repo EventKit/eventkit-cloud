@@ -6,7 +6,7 @@ import requests_mock
 from django.conf import settings
 import json
 from django.core.cache import cache
-from ..geocode_auth import getAuthHeaders
+from ..geocode_auth import get_auth_headers
 
 
 logger = logging.getLogger(__name__)
@@ -19,16 +19,16 @@ class TestGeoCodeAuth(TestCase):
         self.addCleanup(self.mock_requests.stop)
 
     def testGetHeadersWithNoURL(self):        
-        self.assertEquals(getAuthHeaders(), {})
+        self.assertEquals(get_auth_headers(), {})
 
     @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE-----", GEOCODING_AUTH_KEY="-----BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----")
     def testGetHeaders(self):
         testJwt = {'token': 'hello_world'}
         self.mock_requests.get(settings.GEOCODING_AUTH_URL, text=json.dumps(testJwt), status_code=200)
-        self.assertEquals(getAuthHeaders(), {'Authorization': 'Bearer ' + testJwt['token']})
+        self.assertEquals(get_auth_headers(), {'Authorization': 'Bearer ' + testJwt['token']})
 
     @override_settings(GEOCODING_AUTH_URL="http://fake.url/")
     def testGetHeaders(self):        
         cacheValue = 'this_was_in_cache'
         cache.set('pelias_token', cacheValue, None)
-        self.assertEquals(getAuthHeaders(), {'Authorization': 'Bearer ' + cacheValue})
+        self.assertEquals(get_auth_headers(), {'Authorization': 'Bearer ' + cacheValue})

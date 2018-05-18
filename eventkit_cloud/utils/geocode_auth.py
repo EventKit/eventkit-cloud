@@ -9,31 +9,36 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-def getAuthHeaders():
+CACHE_TOKEN_TIMEOUT = 60 * 5  # 5 Minutes
+CACHE_TOKEN_KEY = 'pelias_token'
+
+
+def get_auth_headers():
+    headers = {}
     if getattr(settings, 'GEOCODING_AUTH_URL') is not None:
-        if cache.get('pelias_token') is None: 
-            authenticate()
-        return { 'Authorization' : 'Bearer ' + str(cache.get('pelias_token')) }
-    else:
-        return {}
+        token = cache.get(CACHE_TOKEN_KEY) or authenticate()
+        if token:
+            headers = {'Authorization': 'Bearer ' + str(token)}
+    return headers
+
 
 def authenticate():
     logger.info('Receiving new authentication token for geocoder')
-    try:  
-        certArray = getattr(settings, 'GEOCODING_AUTH_CERT').split("\\n")
-        certFile = tempfile.NamedTemporaryFile(suffix='.crt', delete=False)
-        for certLine in certArray:
-            certFile.write(certLine + '\n')
-        keyArray = getattr(settings, 'GEOCODING_AUTH_KEY').split("\\n")
-        for keyLine in keyArray:
-            certFile.write(keyLine + '\n')
-        certFile.flush()
-        certFile.close()
-
-        authResponse = requests.get(getattr(settings, 'GEOCODING_AUTH_URL'), verify=True, cert=(certFile.name), headers={ 'SSL_CLIENT_CERT': getattr(settings, 'GEOCODING_AUTH_CERT').replace('\\n','')})
-
-        cache.set('pelias_token', authResponse.json()['token'], None)
-        return 
+    try:
+        cert = getattr(settings, 'GEOCODING_AUTH_CERT', '')
+        with tempfile.NamedTemporaryFile(suffix='.crt', delete=False) as temp_file:
+            temp_file.write(cert.replace('\\n', '\n'))
+            temp_file.flush()
+            public_cert = ('').join(cert.partition('-----END CERTIFICATE-----')[:-1])
+            # clean line endings, the service wants the public cert without line returns.
+            public_cert = public_cert.replace('\n', '\\n').replace('\\n', '')
+            verify = not getattr(settings, "DISABLE_SSL_VERIFICATION")
+            auth_response = requests.get(getattr(settings, 'GEOCODING_AUTH_URL'), verify=verify, cert=temp_file.name,
+                                         headers={'SSL_CLIENT_CERT': public_cert}).json()
+            token = auth_response.get('token')
+            cache.set(CACHE_TOKEN_KEY, token, CACHE_TOKEN_TIMEOUT)
+            return token
     except requests.exceptions.RequestException as e:
-        logger.info(traceback.print_exc())
-        return
+        logger.error(traceback.print_exc())
+        cache.delete(CACHE_TOKEN_KEY)
+        return None
