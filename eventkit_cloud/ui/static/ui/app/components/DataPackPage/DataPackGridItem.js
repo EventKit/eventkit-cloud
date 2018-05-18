@@ -44,7 +44,6 @@ export class DataPackGridItem extends Component {
         this.state = {
             expanded: false,
             overflow: false,
-            titleOverflow: false,
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
@@ -150,36 +149,33 @@ export class DataPackGridItem extends Component {
     }
 
     render() {
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
-            return (
-                <ListItem
-                    key={key}
-                    style={{
-                        backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                        fontWeight: 'bold',
-                        width: '100%',
-                        zIndex: 0,
-                    }}
-                    nestedListStyle={{ padding: '0px' }}
-                    primaryText={key}
-                    initiallyOpen={false}
-                    primaryTogglesNestedList={false}
-                    nestedItems={[
-                        <ListItem
-                            key={1}
-                            primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{
-                                backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                                fontSize: '14px',
-                                width: '100%',
-                                zIndex: 0,
-                            }}
-                        />,
-                    ]}
-                />
-
-            );
-        });
+        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
+            <ListItem
+                key={key}
+                style={{
+                    backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                    fontWeight: 'bold',
+                    width: '100%',
+                    zIndex: 0,
+                }}
+                nestedListStyle={{ padding: '0px' }}
+                primaryText={key}
+                initiallyOpen={false}
+                primaryTogglesNestedList={false}
+                nestedItems={[
+                    <ListItem
+                        key={1}
+                        primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
+                        style={{
+                            backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                            fontSize: '14px',
+                            width: '100%',
+                            zIndex: 0,
+                        }}
+                    />,
+                ]}
+            />
+        ));
 
         const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
         const titleFontSize = 22;
@@ -298,8 +294,7 @@ export class DataPackGridItem extends Component {
                     subtitleStyle={styles.cardSubtitle}
                     title={
                         <div>
-                            <div
-                                style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
+                            <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
                                 <Link
                                     to={`/status/${this.props.run.job.uid}`}
                                     href={`/status/${this.props.run.job.uid}`}
