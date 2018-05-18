@@ -203,7 +203,7 @@ def create_run(job_uid, user=None):
                 user = job.user
 
             perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.ADMIN.value)
-            if  not job.id in job_ids:
+            if not job.id in job_ids:
                 raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                     job.user.username, job.name
                 ))
@@ -257,6 +257,7 @@ def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=Non
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=zip_export_provider, job_name=job_name)
     )
+
 
 def get_invalid_licenses(job, user=None):
     """

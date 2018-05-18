@@ -110,7 +110,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'test', 'formats': formats}],
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 1,
                                   'url': 'http://coolproviderurl.to',
@@ -211,7 +211,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
@@ -238,7 +238,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
@@ -303,7 +303,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
@@ -342,7 +342,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
@@ -393,7 +393,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': '',  # empty
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'formats': formats
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -410,7 +410,7 @@ class TestJobViewSet(APITestCase):
             'name': name,
             'description': 'Test description',
             'event': 'Test event',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -420,14 +420,13 @@ class TestJobViewSet(APITestCase):
         self.assertEquals('ValidationError', response.data['errors'][0]['title'])
         self.assertEquals('name: Ensure this field has no more than 100 characters.', response.data['errors'][0]['detail'])
 
-
     def test_missing_format_param(self,):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -441,7 +440,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
@@ -456,7 +455,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [
                 {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
@@ -529,7 +528,8 @@ class TestBBoxSearch(APITestCase):
         url = reverse('api:jobs-list')
         # create dummy user
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo',
+                                             is_superuser=True)
 
         # setup token authentication
         token = Token.objects.create(user=self.user)
