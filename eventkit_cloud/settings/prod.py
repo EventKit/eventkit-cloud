@@ -351,7 +351,7 @@ LOGGING = {
     },
 }
 
-DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
+DISABLE_SSL_VERIFICATION = True if 't' in os.environ.get('DISABLE_SSL_VERIFICATION').lower() else False
 
 LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
 
