@@ -46,6 +46,12 @@ export class AddMembersDialog extends Component {
 
     componentDidMount() {
         window.addEventListener('resize', this.handleResize);
+
+        // typically setState should not be called in componentDidMount since it will cause the component to
+        // render twice. However this is necessary since we need to measure a element to determine the proper height
+        // for another element.(Requires two render cycles)
+        // eslint-disable-next-line react/no-did-mount-set-state
+        this.setState(this.getInitialState());
     }
 
     componentWillUnmount() {
@@ -249,13 +255,15 @@ export class AddMembersDialog extends Component {
             },
             unassignedTab: {
                 color: '#707274',
-                width: '175px',
+                maxWidth: '175px',
+                flex: '1 1 auto',
                 borderBottom: this.state.tab === 0 ?
                     '2px solid #4598bf' : '2px #ddd solid',
             },
             assignedTab: {
                 color: '#707274',
-                width: '175px',
+                maxWidth: '175px',
+                flex: '1 1 auto',
                 borderBottom: this.state.tab === 1 ?
                     '2px solid #4598bf' : '2px #ddd solid',
             },
@@ -373,6 +381,25 @@ export class AddMembersDialog extends Component {
             </div>
         );
 
+        // calculate the height for our scrollbars //
+        // the dialog has a max height slightly smaller than window height
+        const reducedHeight = this.state.mobile ? 60 : 135;
+        const titleHeight = 82;
+        const tabHeight = 40;
+        const searchHeight = 56;
+        const sortHeight = 48;
+        let infoHeight = 0;
+        // we need to get the info paragraph height since it change change with screen size
+        if (this.infoP) {
+            infoHeight = this.infoP.clientHeight;
+        }
+        const footerHeight = 86;
+
+        // subract the sum of heights from our total window height to get the needed scrollbar height
+        const scrollbarHeight = window.innerHeight - (
+            reducedHeight + titleHeight + tabHeight + searchHeight + infoHeight + sortHeight + footerHeight + 18
+        );
+
         return (
             <Dialog
                 className="qa-AddMembersDialog"
@@ -388,8 +415,13 @@ export class AddMembersDialog extends Component {
                 actionsContainerStyle={styles.actions}
                 autoDetectWindowHeight={false}
                 repositionOnUpdate={false}
+                ref={(input) => { this.dialog = input; }}
             >
-                <p style={{ marginBottom: '20px' }} className="qa-AddMembersDialog-description">
+                <p
+                    ref={(input) => { this.infoP = input; }}
+                    style={{ marginBottom: '20px' }}
+                    className="qa-AddMembersDialog-description"
+                >
                     <strong>You can add selected members to the groups listed in the &apos;AVAILABLE GROUPS&apos; tab.</strong>
                     &nbsp;For additional reference, groups that already contain those selected members are listed in the &apos;ALREADY IN GROUPS&apos; tab.
                     &nbsp;To make further edits, go to the individual group on the Members and Groups page.
@@ -419,7 +451,7 @@ export class AddMembersDialog extends Component {
                             </div>
                         </div>
                         <CustomScrollbar
-                            style={{ height: this.state.mobile ? window.innerHeight - 457 : window.innerHeight - 553 }}
+                            style={{ height: scrollbarHeight }}
                         >
                             {unassigned.map(group => (
                                 <div
@@ -450,7 +482,7 @@ export class AddMembersDialog extends Component {
                             </div>
                         </div>
                         <CustomScrollbar
-                            style={{ height: this.state.mobile ? window.innerHeight - 457 : window.innerHeight - 553 }}
+                            style={{ height: scrollbarHeight }}
                         >
                             {assigned.map(group => (
                                 <div

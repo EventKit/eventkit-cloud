@@ -61,6 +61,7 @@ export class GroupsDropDownMenu extends Component {
                     style={{ width: this.props.width }}
                     listStyle={{ paddingTop: '0px', paddingBottom: '0px', width: this.props.width }}
                     className="qa-GroupsDropDownMenu-Menu"
+                    desktop
                 >
                     <CustomScrollbar
                         autoHeight
