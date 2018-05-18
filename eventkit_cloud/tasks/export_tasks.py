@@ -453,17 +453,22 @@ def osm_data_collection_task(
 
 
 @app.task(name="Add License File", bind=True, base=ExportTask, abort_on_error=True)
-def add_license_file(self, export_provider_task_uid, stage_dir, worker, job_name, result=None, *args, **kwargs):
+def add_license_file(self, result=None, *args, **kwargs):
     from ..jobs.models import DataProvider
     from ..tasks.models import DataProviderTaskRecord
-    license_text = DataProvider.objects.get(slug=DataProviderTaskRecord.objects.get(uid=export_provider_task_uid).slug)\
-        .license.text
-    license_file_path = os.path.join(stage_dir, 'license.txt')
+    data_provider_license = DataProvider.objects.get(
+        slug=DataProviderTaskRecord.objects.get(uid=kwargs['export_provider_task_uid']).slug).license
+
+    # DataProviders are not required to have a license
+    if data_provider_license is None:
+        return
+
+    license_file_path = os.path.join(kwargs['stage_dir'], 'license.lic')
 
     with open(license_file_path, 'w') as license_file:
-        license_file.write(license_text)
+        license_file.write(data_provider_license.text)
 
-    result['license'] = license_file_path
+    result['result'] = license_file_path
     return result
 
 
