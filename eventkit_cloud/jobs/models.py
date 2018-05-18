@@ -401,17 +401,6 @@ class UserJobActivity(models.Model):
     type = models.CharField(max_length=100, blank=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
-
-def user_created_job(user=None, job_uid=None):
-    if not job_uid or not user:
-        return False
-    job = Job.objects.get(uid=job_uid)
-    if job.user == user:
-        return True
-    else:
-        return False
-
-
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
         return MultiPolygon(geom, srid=geom.srid)
