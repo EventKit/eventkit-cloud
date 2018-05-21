@@ -68,17 +68,15 @@ class UIDMixin(models.Model):
     class Meta:
         abstract = True
 
+class GroupPermissionLevel(Enum):
+    NONE = "NONE"
+    MEMBER = "MEMBER"
+    ADMIN = "ADMIN"
 
 class GroupPermission(TimeStampedModelMixin):
     """
     Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
     """
-
-    @staticmethod
-    class Permissions(Enum):
-        NONE = "NONE"
-        MEMBER = "MEMBER"
-        ADMIN = "ADMIN"
 
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group)
@@ -98,12 +96,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 
+class JobPermissionLevel(Enum):
+    NONE = "NONE"
+    READ = "READ"
+    ADMIN = "ADMIN"
+
+
 class JobPermission(TimeStampedModelMixin):
-    @staticmethod
-    class Permissions(Enum):
-        NONE = "NONE"
-        READ = "READ"
-        ADMIN = "ADMIN"
 
     """
     Model associates users or groups with jobs
@@ -140,7 +139,7 @@ class JobPermission(TimeStampedModelMixin):
         # get all the jobs this user has been explicitly assigned to
 
         for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
-            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+            if level == JobPermissionLevel.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
@@ -154,7 +153,7 @@ class JobPermission(TimeStampedModelMixin):
             group_ids.append(gp.group.id)
         for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group),
                                                object_id__in=group_ids):
-            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+            if level == JobPermissionLevel.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
@@ -175,7 +174,7 @@ class JobPermission(TimeStampedModelMixin):
 
         for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(Group),
                                                object_id=group.id):
-            if level == JobPermission.Permissions.READ.value or jp.permission == level:
+            if level == JobPermissionLevel.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
