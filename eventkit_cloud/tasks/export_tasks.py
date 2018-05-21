@@ -26,7 +26,7 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files, generate_qgs_style, generate_license_file
+from ..ui.helpers import get_style_files, generate_qgs_style, add_license_file
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -756,7 +756,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # sorted while adding time allows comparisons in tests.
     include_files = sorted(list(set(include_files)))
     if include_files:
-        generate_license_file(export_provider_task, include_files)
+        add_license_file(export_provider_task, include_files)
         include_files.append(generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task))
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
@@ -1026,7 +1026,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     include_files += [full_file_path]
 
         # add the license for this provider
-        generate_license_file(provider_task, include_files)
+        add_license_file(provider_task, include_files)
 
     if include_files:
         # No need to add QGIS file if there aren't any files to be zipped.
