@@ -58,26 +58,6 @@ class TestSupport(TestCase):
         version = get_version()
         self.assertEqual(test_version, version)
 
-    def test_get_temp_mxd(self):
-        from ..support.create_mxd import get_temp_mxd
-
-        with patch('eventkit_cloud.ui.support.create_mxd.os') as mock_os, patch(
-                'eventkit_cloud.ui.support.create_mxd.shutil') as mock_shutil, patch(
-            'eventkit_cloud.ui.support.create_mxd.update_mxd_from_metadata') as mock_update_mxd_from_metadata, patch(
-            'eventkit_cloud.ui.support.create_mxd.tempfile') as mock_tempfile, patch(
-            'eventkit_cloud.ui.support.create_mxd.get_version') as mock_get_version, patch(
-            'eventkit_cloud.ui.support.create_mxd.get_mxd_template') as mock_get_mxd_template:
-            example_name = "name"
-            expected_name = "{0}.mxd".format(example_name)
-            mocked_temporary_file = MagicMock()
-            mocked_temporary_file.name = example_name
-            mock_tempfile.NamedTemporaryFile.return_value = mocked_temporary_file
-            metadata = {"some": "data"}
-            with get_temp_mxd(metadata) as mxd_file:
-                self.assertEqual(expected_name, mxd_file)
-            mocked_temporary_file.close.assert_has_calls([call(), call()])
-            mock_os.unlink.assert_called_once_with(expected_name)
-
     def test_get_layer_file(self):
         from ..support.create_mxd import get_layer_file
 
@@ -98,7 +78,7 @@ class TestSupport(TestCase):
             self.assertIsNone(get_layer_file(layer_type, arc_version))
 
     def test_update_layers(self):
-        from ..support.create_mxd import update_layers
+        from ..support.create_mxd import update_layer
 
         # layer is actually an arc layer object, but string is used here for tests.
         example_layer = "layer"
@@ -114,6 +94,6 @@ class TestSupport(TestCase):
         verify = True
 
         self.arcpy.mapping.ListLayers.return_value = [mock_layer, mock_layer2]
-        update_layers(example_layer, new_file_path, verify=verify)
+        update_layer(example_layer, new_file_path, verify=verify)
         mock_layer.findAndReplaceWorkspacePath.assert_called_once_with(old_file_path, new_file_path, verify)
         self.arcpy.RecalculateFeatureClassExtent_management.assert_called_once()
