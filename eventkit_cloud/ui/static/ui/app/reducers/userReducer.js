@@ -1,17 +1,17 @@
 import types from '../actions/actionTypes';
 
 export const userState = {
-    data: null,
-    isLoading: false,
-    patching: false,
-    patched: false,
-    error: null,
-    autoLogoutAt: null,
-    autoLogoutWarningAt: null,
+  data: null,
+  isLoading: false,
+  patching: false,
+  patched: false,
+  error: null,
+  autoLogoutAt: null,
+  autoLogoutWarningAt: null,
 };
 
 export function userReducer(state = userState, { type, payload, error }) {
-    switch (type) {
+  switch (type) {
     case types.USER_LOGGING_IN:
         return { ...state, isLoading: true };
     case types.USER_LOGGED_IN:

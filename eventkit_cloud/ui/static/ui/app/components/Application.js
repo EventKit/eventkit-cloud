@@ -5,12 +5,16 @@ import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
 import { Link, IndexLink } from 'react-router';
+import { IconButton } from 'material-ui';
+import Menu from 'material-ui/svg-icons/navigation/menu';
 import AVLibraryBooks from 'material-ui/svg-icons/av/library-books';
 import ContentAddBox from 'material-ui/svg-icons/content/add-box';
+import Dashboard from 'material-ui/svg-icons/action/dashboard';
 import ActionInfoOutline from 'material-ui/svg-icons/action/info-outline';
 import SocialPerson from 'material-ui/svg-icons/social/person';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
+import Notifications from 'material-ui/svg-icons/social/notifications';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Banner from './Banner';
@@ -18,7 +22,9 @@ import BaseDialog from './Dialog/BaseDialog';
 import logo from '../../images/eventkit-logo.1.png';
 import { DrawerTimeout } from '../actions/exportsActions';
 import { userActive } from '../actions/userActions';
+import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';
+import NotificationsDropdown from './Notification/NotificationsDropdown';
 
 require('../fonts/index.css');
 
@@ -54,7 +60,12 @@ export class Application extends Component {
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
         this.handleResize = this.handleResize.bind(this);
+        this.handleClick = this.handleClick.bind(this);
         this.logout = this.logout.bind(this);
+        this.startListeningForNotifications = this.startListeningForNotifications.bind(this);
+        this.stopListeningForNotifications = this.stopListeningForNotifications.bind(this);
+        this.autoGetNotificationsUnreadCount = this.autoGetNotificationsUnreadCount.bind(this);
+        this.autoGetNotifications = this.autoGetNotifications.bind(this);
         this.startCheckingForAutoLogout = this.startCheckingForAutoLogout.bind(this);
         this.stopCheckingForAutoLogout = this.stopCheckingForAutoLogout.bind(this);
         this.startSendingUserActivePings = this.startSendingUserActivePings.bind(this);
@@ -64,14 +75,24 @@ export class Application extends Component {
         this.handleLogoutDialogCancel = this.handleLogoutDialogCancel.bind(this);
         this.handleLogoutDialogConfirm = this.handleLogoutDialogConfirm.bind(this);
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
+        this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
+        this.getButtonBackgroundColor = this.getButtonBackgroundColor.bind(this);
+        this.setNotificationsDropdownContainerRef = this.setNotificationsDropdownContainerRef.bind(this);
+        this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
             config: {},
             hovered: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
             showLogoutDialog: false,
+            showNotificationsDropdown: false,
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
+        this.notificationsUnreadCountRefreshInterval = 10000;
+        this.notificationsRefreshInterval = 10000;
+        this.notificationsPageSize = 10;
+        this.notificationsUnreadCountIntervalId = null;
+        this.notificationsRefreshIntervalId = null;
     }
 
     getChildContext() {
@@ -83,6 +104,7 @@ export class Application extends Component {
     componentDidMount() {
         this.getConfig();
         window.addEventListener('resize', this.handleResize);
+        window.addEventListener('click', this.handleClick);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -94,15 +116,18 @@ export class Application extends Component {
                 }
                 this.startCheckingForAutoLogout();
                 this.startSendingUserActivePings();
+                this.startListeningForNotifications();
             } else {
                 this.stopCheckingForAutoLogout();
                 this.stopSendingUserActivePings();
+                this.stopListeningForNotifications();
             }
         }
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleResize);
+        this.stopListeningForNotifications();
     }
 
     onMenuItemClick() {
@@ -142,6 +167,50 @@ export class Application extends Component {
     logout() {
         this.props.closeDrawer();
         this.props.router.push('/logout');
+    }
+
+    startListeningForNotifications() {
+        if (this.notificationsUnreadCountIntervalId || this.notificationsRefreshIntervalId) {
+            console.warn('Already listening for notifications.');
+            return;
+        }
+
+        // Unread notifications count.
+        this.props.getNotificationsUnreadCount();
+        this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
+
+        // Notifications.
+        this.props.getNotifications({
+            notificationsPageSize: this.notificationsPageSize,
+            isAuto: true,
+        });
+        this.notificationsRefreshIntervalId = setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
+    }
+
+    stopListeningForNotifications() {
+        if (!this.notificationsUnreadCountIntervalId || !this.notificationsRefreshIntervalId) {
+            console.warn('Already stopped listening for notifications.');
+            return;
+        }
+
+        // Unread notifications count.
+        clearInterval(this.notificationsUnreadCountIntervalId);
+        this.notificationsUnreadCountIntervalId = null;
+
+        // Notifications.
+        clearInterval(this.notificationsRefreshIntervalId);
+        this.notificationsRefreshIntervalId = null;
+    }
+
+    autoGetNotificationsUnreadCount() {
+        this.props.getNotificationsUnreadCount({ isAuto: true });
+    }
+
+    autoGetNotifications() {
+        this.props.getNotifications({
+            notificationsPageSize: this.notificationsPageSize,
+            isAuto: true,
+        });
     }
 
     startCheckingForAutoLogout() {
@@ -282,6 +351,17 @@ export class Application extends Component {
         this.forceUpdate();
     }
 
+    handleClick(e) {
+        // Close the notifications dropdown if it's open and we click outside of it.
+        if (this.notificationsDropdownContainerRef && this.state.showNotificationsDropdown) {
+            if (!this.notificationsDropdownContainerRef.contains(e.target)) {
+                this.setState({
+                    showNotificationsDropdown: false
+                });
+            }
+        }
+    }
+
     handleMouseOver(route) {
         this.setState({ hovered: route });
     }
@@ -310,19 +390,83 @@ export class Application extends Component {
         this.logout();
     }
 
+    handleNotificationsButtonClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.setState({
+            showNotificationsDropdown: !this.state.showNotificationsDropdown,
+        });
+    }
+
+    getButtonBackgroundColor(route, activeColor = '#161e2e') {
+        return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
+    }
+
+    setNotificationsDropdownContainerRef(ref) {
+        this.notificationsDropdownContainerRef = ref;
+    }
+
+    handleNotificationsDropdownNavigate() {
+        this.setState({
+            showNotificationsDropdown: false
+        });
+
+        // Allow navigation to proceed.
+        return true;
+    }
+
     render() {
         const styles = {
             appBar: {
-                backgroundColor: 'black',
+                position: 'absolute',
+                bottom: '0',
+                width: '100%',
                 height: '70px',
-                top: '25px',
+                padding: '0',
+                backgroundColor: 'black',
+            },
+            menuButton: {
+                width: '70px',
+                height: '70px',
+            },
+            menuButtonIcon: {
+                width: '36px',
+                height: '36px',
+                color: 'white',
+            },
+            notificationsButton: {
+                width: '70px',
+                height: '70px',
+                transitionProperty: 'none',
+            },
+            notificationsButtonIcon: {
+                width: '38px',
+                height: '38px',
+                color: 'white',
+            },
+            notificationsIndicator: {
+                position: 'absolute',
+                top: '36%',
+                right: '29%',
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                backgroundColor: '#ce4427',
+                zIndex: '1',
+                pointerEvents: 'none',
             },
             img: {
+                width: (window.innerWidth > 768) ? '256px' :
+                       (window.innerWidth > 500) ? '200px' : '180px',
+                margin: '0 20px',
+            },
+            title: {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: (window.innerWidth > 768) ? 'center' : 'flex-end',
                 position: 'absolute',
-                left: '50%',
-                marginLeft: '-127px',
-                marginTop: '10px',
-                height: '50px',
+                width: '100%',
+                height: '100%',
             },
             drawer: {
                 width: '200px',
@@ -381,17 +525,70 @@ export class Application extends Component {
             })
         ));
 
+        const isLoggedIn = !!this.props.userData;
+
         return (
             <MuiThemeProvider muiTheme={muiTheme}>
                 <div style={{ backgroundColor: '#000' }}>
                     <Banner />
-                    <header className="qa-Application-header" style={{ height: '95px' }}>
+                    <header className="qa-Application-header" style={{ position: 'relative', height: '95px', zIndex: '1301' }}>
                         <AppBar
                             className="qa-Application-AppBar"
                             style={styles.appBar}
                             title={img}
-                            onLeftIconButtonTouchTap={this.handleToggle}
-                            showMenuIconButton={!!this.props.userData}
+                            titleStyle={styles.title}
+                            showMenuIconButton={isLoggedIn}
+                            iconStyleLeft={{margin: '0'}}
+                            iconElementLeft={
+                                <div>
+                                    <IconButton
+                                        className={'qa-Application-AppBar-MenuButton'}
+                                        style={styles.menuButton}
+                                        iconStyle={styles.menuButtonIcon}
+                                        touchRippleColor="white"
+                                        onClick={this.handleToggle}
+                                    >
+                                        <Menu />
+                                    </IconButton>
+                                    <div style={{ display: 'inline-block', position: 'relative' }}>
+                                        <IconButton
+                                            className={'qa-Application-AppBar-NotificationsButton'}
+                                            style={{
+                                                ...styles.notificationsButton,
+                                                backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ? '#4598BF' : '',
+                                            }}
+                                            iconStyle={styles.notificationsButtonIcon}
+                                            touchRippleColor="white"
+                                            onClick={this.handleNotificationsButtonClick}
+                                            onMouseEnter={() => this.handleMouseOver('/notifications')}
+                                            onMouseLeave={this.handleMouseOut}
+                                        >
+                                            <Notifications />
+                                        </IconButton>
+                                        <div
+                                            className="qa-Application-AppBar-NotificationsIndicator"
+                                            style={{
+                                                ...styles.notificationsIndicator,
+                                                transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                                                transform: (this.props.notifications.unreadCount.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
+                                            }}
+                                        />
+                                        <div ref={this.setNotificationsDropdownContainerRef}>
+                                            <NotificationsDropdown
+                                                style={{
+                                                    opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
+                                                    pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
+                                                    transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
+                                                }}
+                                                notifications={this.props.notifications}
+                                                router={this.props.router}
+                                                onNavigate={this.handleNotificationsDropdownNavigate}
+                                                store={this.props.store}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         />
                     </header>
                     <Drawer
@@ -401,23 +598,36 @@ export class Application extends Component {
                         docked
                         open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
+                        <MenuItem className={"qa-Application-MenuItem-dashboard"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <IndexLink
+                                className={"qa-Application-Link-dashboard"}
+                                style={{...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard')}}
+                                activeStyle={styles.activeLink}
+                                to="/dashboard"
+                                onMouseEnter={() => this.handleMouseOver('/dashboard')}
+                                onMouseLeave={this.handleMouseOut}
+                            >
+                                <Dashboard style={styles.icon}/>
+                                Dashboard
+                            </IndexLink>
+                        </MenuItem>
                         <MenuItem
                             className="qa-Application-MenuItem-exports"
                             onClick={this.onMenuItemClick}
                             innerDivStyle={styles.menuItem}
                         >
-                            <IndexLink
+                            <Link
                                 className="qa-Application-Link-exports"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'exports' ? '#161e2e' : '' }}
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/exports') }}
                                 activeStyle={styles.activeLink}
                                 to="/exports"
                                 href="/exports"
-                                onMouseEnter={() => this.handleMouseOver('exports')}
+                                onMouseEnter={() => this.handleMouseOver('/exports')}
                                 onMouseLeave={this.handleMouseOut}
                             >
                                 <AVLibraryBooks style={styles.icon} />
                                 DataPack Library
-                            </IndexLink>
+                            </Link>
                         </MenuItem>
                         <MenuItem
                             className="qa-Application-MenuItem-create"
@@ -426,9 +636,9 @@ export class Application extends Component {
                         >
                             <Link
                                 className="qa-Application-Link-create"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'create' ? '#161e2e' : '' }}
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/create') }}
                                 activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('create')}
+                                onMouseEnter={() => this.handleMouseOver('/create')}
                                 onMouseLeave={this.handleMouseOut}
                                 to="/create"
                                 href="/create"
@@ -458,9 +668,9 @@ export class Application extends Component {
                         <MenuItem className="qa-Application-MenuItem-about" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <Link
                                 className="qa-Application-Link-about"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'about' ? '#161e2e' : '' }}
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/about') }}
                                 activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('about')}
+                                onMouseEnter={() => this.handleMouseOver('/about')}
                                 onMouseLeave={this.handleMouseOut}
                                 to="/about"
                                 href="/about"
@@ -476,9 +686,9 @@ export class Application extends Component {
                         >
                             <Link
                                 className="qa-Application-Link-account"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'account' ? '#161e2e' : '' }}
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/account') }}
                                 activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('account')}
+                                onMouseEnter={() => this.handleMouseOver('/account')}
                                 onMouseLeave={this.handleMouseOut}
                                 to="/account"
                                 href="/account"
@@ -493,9 +703,9 @@ export class Application extends Component {
                         >
                             <Link
                                 className="qa-Application-Link-logout"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'logout' ? '#161e2e' : '' }}
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/logout') }}
                                 activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('logout')}
+                                onMouseEnter={() => this.handleMouseOver('/logout')}
                                 onMouseLeave={this.handleMouseOut}
                                 onClick={this.handleLogoutClick}
                             >
@@ -569,6 +779,9 @@ Application.propTypes = {
     }),
     autoLogoutAt: PropTypes.instanceOf(Date),
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
+    notifications: PropTypes.object.isRequired,
+    getNotificationsUnreadCount: PropTypes.func.isRequired,
+    getNotifications: PropTypes.func.isRequired,
 };
 
 Application.childContextTypes = {
@@ -591,6 +804,7 @@ function mapStateToProps(state) {
         userData: state.user.data,
         autoLogoutAt: state.user.autoLogoutAt,
         autoLogoutWarningAt: state.user.autoLogoutWarningAt,
+        notifications: state.notifications,
     };
 }
 
@@ -605,6 +819,12 @@ function mapDispatchToProps(dispatch) {
         },
         userActive: () => {
             dispatch(userActive());
+        },
+        getNotificationsUnreadCount: () => {
+            dispatch(getNotificationsUnreadCount());
+        },
+        getNotifications: (args) => {
+            dispatch(getNotifications(args));
         },
     };
 }

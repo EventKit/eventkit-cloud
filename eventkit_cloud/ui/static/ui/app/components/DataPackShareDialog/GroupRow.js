@@ -187,7 +187,7 @@ export class GroupRow extends Component {
                     {groupMembers.length ?
                         <div style={{ lineHeight: '20px', paddingTop: '10px' }} className="qa-GroupRow-viewMore">
                             <Eye style={{ height: '20px', verticalAlign: 'text-top' }} />
-                            <a href="/groups">View all on Members and Groups Page</a>
+                            <a href={`/groups?groups=${this.props.group.id}`}>View all on Members and Groups Page</a>
                         </div>
                         :
                         null

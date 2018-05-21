@@ -12,6 +12,7 @@ import {
     clearReRunInfo, cancelProviderTask, updateExpiration, updateDataCartPermissions,
 } from '../../actions/statusDownloadActions';
 import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
+import { viewedJob } from '../../actions/userActivityActions';
 import { getUsers } from '../../actions/userActions';
 import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
@@ -22,16 +23,22 @@ const topoPattern = require('../../../images/ek_topo_pattern.png');
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props);
+        this.initialState = this.initialState.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
-        this.state = {
+        this.state = this.initialState();
+    }
+
+    initialState() {
+        return {
             isLoading: true,
             error: null,
         };
     }
 
     componentDidMount() {
-        this.props.getDatacartDetails(this.props.params.jobuid);
+        this.props.getDatacartDetails(this.props.router.params.jobuid);
+        this.props.viewedJob(this.props.router.params.jobuid);
         this.props.getProviders();
         this.props.getUsers();
         this.props.getGroups();
@@ -46,14 +53,14 @@ export class StatusDownload extends React.Component {
             this.setState({ error: nextProps.exportReRun.error });
         }
         if (nextProps.exportReRun.fetched && !this.props.exportReRun.fetched) {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
             this.startTimer();
         }
         if (nextProps.expirationState.updated && !this.props.expirationState.updated) {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
         if (nextProps.permissionState.updated && !this.props.permissionState.updated) {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
         if (nextProps.datacartDetails.fetched && !this.props.datacartDetails.fetched) {
             if (this.state.isLoading) {
@@ -92,10 +99,16 @@ export class StatusDownload extends React.Component {
                     this.timer = null;
                     window.clearTimeout(this.timeout);
                     this.timeout = window.setTimeout(() => {
-                        this.props.getDatacartDetails(this.props.params.jobuid);
+                        this.props.getDatacartDetails(this.props.router.params.jobuid);
                     }, 270000);
                 }
             }
+        }
+        if (nextProps.location !== this.props.location) {
+            // Refresh the entire component.
+            this.componentWillUnmount();
+            this.setState(this.initialState());
+            this.componentDidMount();
         }
     }
 
@@ -143,7 +156,7 @@ export class StatusDownload extends React.Component {
     startTimer() {
         window.clearInterval(this.timer);
         this.timer = window.setInterval(() => {
-            this.props.getDatacartDetails(this.props.params.jobuid);
+            this.props.getDatacartDetails(this.props.router.params.jobuid);
         }, 5000);
     }
 
@@ -217,7 +230,7 @@ export class StatusDownload extends React.Component {
                 providers={this.props.providers}
                 maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                 user={this.props.user}
-                members={this.props.users.users}
+                members={this.props.users}
                 groups={this.props.groups}
             />
         ));
@@ -285,7 +298,6 @@ StatusDownload.contextTypes = {
 };
 
 StatusDownload.propTypes = {
-    params: PropTypes.shape({ jobuid: PropTypes.string }).isRequired,
     datacartDetails: PropTypes.object.isRequired,
     getDatacartDetails: PropTypes.func.isRequired,
     clearDataCartDetails: PropTypes.func.isRequired,
@@ -310,12 +322,7 @@ StatusDownload.propTypes = {
     getProviders: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
-    users: PropTypes.shape({
-        error: PropTypes.string,
-        fetched: PropTypes.bool,
-        fetching: PropTypes.bool,
-        users: PropTypes.arrayOf(PropTypes.object),
-    }).isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
@@ -324,6 +331,8 @@ StatusDownload.propTypes = {
     })).isRequired,
     getUsers: PropTypes.func.isRequired,
     getGroups: PropTypes.func.isRequired,
+    router: PropTypes.object.isRequired,
+    location: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -337,7 +346,7 @@ function mapStateToProps(state) {
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
-        users: state.users,
+        users: state.users.users.filter(user => user.user.username !== state.user.data.user.username),
         groups: state.groups.groups,
     };
 }
@@ -394,6 +403,9 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => {
             dispatch(getProviders());
         },
+        viewedJob: (jobuid) => {
+            dispatch(viewedJob(jobuid));
+        },
         getUsers: () => {
             dispatch(getUsers());
         },
@@ -402,6 +414,7 @@ function mapDispatchToProps(dispatch) {
         },
     };
 }
+
 
 export default connect(
     mapStateToProps,
