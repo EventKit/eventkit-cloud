@@ -51,7 +51,7 @@ def add_license_file(provider_task, include_files):
         return
 
     include_files.append(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
-                                      provider_task.provider.slug, 'license.lic'))
+                                      provider_task.slug, 'license.lic'))
     return
 
 
