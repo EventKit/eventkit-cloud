@@ -259,6 +259,7 @@ def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=Non
                     task=zip_export_provider, job_name=job_name)
     )
 
+
 def get_invalid_licenses(job, user=None):
     """
     :param user: A user to verify licenses against.

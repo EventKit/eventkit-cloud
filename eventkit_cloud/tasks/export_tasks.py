@@ -562,19 +562,10 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     """
     result = result or {}
 
-    geojson_file = os.path.join(stage_dir,
-                                "{0}_selection.geojson".format(provider_slug))
+    geojson_file = os.path.join(stage_dir, "{0}_selection.geojson".format(provider_slug))
     if selection:
         # Test if json.
         json.loads(selection)
-
-        # Test against max AOI size
-        from ..jobs.models import DataProvider
-        max_selection = DataProvider.objects.get(slug=provider_slug).max_selection
-        aoi_area = gdalutils.get_area(selection)
-        logger.debug("Selected area is %s km^2; max for provider %s is %s", aoi_area, provider_slug, max_selection)
-        if 0 < max_selection < aoi_area:
-            raise Exception("AOI is too large for this provider")
 
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
@@ -625,9 +616,9 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff)
-
-    gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+    else:
+        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
     result['result'] = gtiff
     result['geotiff'] = gtiff
@@ -689,12 +680,16 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining export for WCS services
     """
+    from ..tasks.models import ExportTaskRecord
+
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+
+    task = ExportTaskRecord.objects.get(uid=task_uid)
     try:
-        wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                    config=config, service_type=service_type, task_uid=task_uid, debug=True,
-                                    fmt="gtiff")
+        wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
+                                    name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
+                                    user_details=user_details)
         wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out
@@ -1253,7 +1248,8 @@ class FinalizeRunBase(LockingTask):
         stage_dir = None if retval is None else retval.get('stage_dir')
         try:
             if stage_dir and os.path.isdir(stage_dir):
-                shutil.rmtree(stage_dir)
+                if not os.getenv('KEEP_STAGE', False):
+                    shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1337,8 +1333,8 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     run = ExportRun.objects.get(uid=run_uid)
     try:
         if os.path.isdir(stage_dir):
-            # DON'T leave the stage_dir in place for debugging
-            shutil.rmtree(stage_dir)
+            if not os.getenv('KEEP_STAGE', False):
+                shutil.rmtree(stage_dir)
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 

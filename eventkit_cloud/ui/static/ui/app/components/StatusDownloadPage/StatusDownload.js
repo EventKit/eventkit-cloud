@@ -230,7 +230,7 @@ export class StatusDownload extends React.Component {
                 providers={this.props.providers}
                 maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
                 user={this.props.user}
-                members={this.props.users.users}
+                members={this.props.users}
                 groups={this.props.groups}
             />
         ));
@@ -322,12 +322,7 @@ StatusDownload.propTypes = {
     getProviders: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
-    users: PropTypes.shape({
-        error: PropTypes.string,
-        fetched: PropTypes.bool,
-        fetching: PropTypes.bool,
-        users: PropTypes.arrayOf(PropTypes.object),
-    }).isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
@@ -351,7 +346,7 @@ function mapStateToProps(state) {
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
-        users: state.users,
+        users: state.users.users.filter(user => user.user.username !== state.user.data.user.username),
         groups: state.groups.groups,
     };
 }

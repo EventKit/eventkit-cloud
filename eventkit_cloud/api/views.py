@@ -27,7 +27,7 @@ from eventkit_cloud.jobs.models import (
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
-from ..utils.provider_check import get_provider_checker
+from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
 from rest_framework import filters, permissions, status, views, viewsets, mixins
@@ -327,6 +327,20 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       }]}
                             return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
+
+                        # Check max area (skip for superusers)
+                        if not self.request.user.is_superuser:
+                            for provider_task in job.provider_tasks.all():
+                                provider = provider_task.provider
+                                max_selection = provider.max_selection
+                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                    status_code = status.HTTP_400_BAD_REQUEST
+                                    error_data = {"errors": [{"status": status_code,
+                                                              "title": _('Selection area too large'),
+                                                              "detail": _('The selected area is too large '
+                                                                          'for provider \'%s\'') % provider.name}]}
+                                    return Response(error_data, status=status_code)
+
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: {0}'.format(preset))
@@ -1214,8 +1228,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         Get a list of users.
         * return: A list of all users.
         """
-        full_queryset = self.get_queryset()
-        queryset = full_queryset.exclude(id=request.user.id)
+        queryset = self.get_queryset()
         total = len(queryset)
         delta = date.today() - timedelta(days=14)
         new = len(queryset.filter(date_joined__gte=delta))
@@ -1224,7 +1237,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
             if not len(GroupPermission.objects.filter(user=user)):
                 not_grouped += 1
         headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
-        filtered_queryset = self.filter_queryset(full_queryset)
+        filtered_queryset = self.filter_queryset(queryset)
         serializer = UserDataSerializer(filtered_queryset, many=True)
         return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 
@@ -1514,7 +1527,12 @@ class GroupViewSet(viewsets.ModelViewSet):
         if "administrators" in request.data:
             request_admins = request.data["administrators"]
             if len(request_admins) < 1:
-                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
+                error_data = {"errors": [{"status": status.HTTP_403_FORBIDDEN,
+                                          "title": _('Not Permitted'),
+                                          "detail": _(
+                                              'You must assign another group administator before you can perform this action')
+                                          }]}
+                return Response(error_data, status=status.HTTP_403_FORBIDDEN)
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
         # if name in request we need to change the group name
         if "name" in request.data:

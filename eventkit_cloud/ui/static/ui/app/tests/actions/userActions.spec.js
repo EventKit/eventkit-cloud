@@ -213,6 +213,7 @@ describe('userActions actions', () => {
         mock.onGet('/api/users').reply(200, users, headers);
 
         const expectedUsers = [
+            users[0],
             users[1],
             users[2],
         ];

@@ -157,6 +157,12 @@ class JobPermission(TimeStampedModelMixin):
                 perms.append(jp)
                 job_ids.append(jp.job.id)
 
+
+        # super users can do anything to any job
+
+        if user.is_superuser:
+            job_ids = [job.id for job in Job.objects.all()]
+
         return (perms, job_ids)
 
     @staticmethod
