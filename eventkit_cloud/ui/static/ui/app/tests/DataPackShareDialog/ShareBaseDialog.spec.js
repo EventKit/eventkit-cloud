@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Dialog from 'material-ui/Dialog';
+import * as viewport from '../../utils/viewport';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 
 
@@ -58,7 +59,7 @@ describe('MembersHeaderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const { mobile } = wrapper.state();
-        const mobileStub = sinon.stub(wrapper.instance(), 'isMobile').returns(!mobile);
+        const mobileStub = sinon.stub(viewport, 'isViewportS').returns(!mobile);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleResize();
         expect(mobileStub.calledOnce).toBe(true);
@@ -68,14 +69,7 @@ describe('MembersHeaderRow component', () => {
         stateStub.restore();
     });
 
-    it('isMobile should return a bool indicating if the screen width is less than 768px', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const width = global.window.innerWidth;
-        expect(wrapper.instance().isMobile()).toBe(width < 768);
-    });
-
-    it('should set styles based on isMobile', () => {
+    it('should set styles based on viewport size', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         window.resizeTo(500, 500);

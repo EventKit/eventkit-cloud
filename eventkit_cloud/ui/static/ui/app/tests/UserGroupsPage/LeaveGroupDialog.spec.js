@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
-import { LeaveGroupDialog } from '../../components/UserGroupsPage/LeaveGroupDialog';
+import { LeaveGroupDialog } from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
     const muiTheme = getMuiTheme();

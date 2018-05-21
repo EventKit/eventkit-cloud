@@ -4,7 +4,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import CustomTextField from '../../components/CustomTextField';
-import RenameGroupDialog from '../../components/UserGroupsPage/RenameGroupDialog';
+import RenameGroupDialog from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
     const muiTheme = getMuiTheme();

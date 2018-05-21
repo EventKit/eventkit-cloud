@@ -1219,8 +1219,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         Get a list of users.
         * return: A list of all users.
         """
-        full_queryset = self.get_queryset()
-        queryset = full_queryset.exclude(id=request.user.id)
+        queryset = self.get_queryset()
         total = len(queryset)
         delta = date.today() - timedelta(days=14)
         new = len(queryset.filter(date_joined__gte=delta))
@@ -1229,7 +1228,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
             if not len(GroupPermission.objects.filter(user=user)):
                 not_grouped += 1
         headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
-        filtered_queryset = self.filter_queryset(full_queryset)
+        filtered_queryset = self.filter_queryset(queryset)
         serializer = UserDataSerializer(filtered_queryset, many=True)
         return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 
@@ -1452,7 +1451,12 @@ class GroupViewSet(viewsets.ModelViewSet):
         if "administrators" in request.data:
             request_admins = request.data["administrators"]
             if len(request_admins) < 1:
-                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
+                error_data = {"errors": [{"status": status.HTTP_403_FORBIDDEN,
+                                          "title": _('Not Permitted'),
+                                          "detail": _(
+                                              'You must assign another group administator before you can perform this action')
+                                          }]}
+                return Response(error_data, status=status.HTTP_403_FORBIDDEN)
 
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
 

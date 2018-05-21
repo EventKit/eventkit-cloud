@@ -526,7 +526,7 @@ function mapStateToProps(state) {
         importGeom: state.importGeom,
         geocode: state.geocode,
         groups: state.groups.groups,
-        users: state.users.users,
+        users: state.users.users.filter(user => user.user.username !== state.user.data.user.username),
         updatePermissions: state.updatePermission,
     };
 }
