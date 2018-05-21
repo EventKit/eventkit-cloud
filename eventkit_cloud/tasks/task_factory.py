@@ -136,13 +136,6 @@ class TaskFactory:
                         # The finalize_export_provider_task will check all of the export tasks
                         # for this provider and save the export provider's status.
 
-                        # add license task to provider subtask chain
-                        provider_subtask_chain = chain(
-                            provider_subtask_chain, create_task(export_provider_task_uid=provider_task_uid,
-                                                                stage_dir=stage_dir, worker=worker,
-                                                                task=add_license_file, job_name=job.name)
-                        )
-
                         selection_task = create_task(
                             export_provider_task_uid=provider_task_uid,
                             stage_dir=stage_dir,
