@@ -26,8 +26,7 @@ class TestSupport(TestCase):
         from ..support.create_mxd import create_mxd
 
         with patch('__builtin__.open') as mock_open, patch(
-                'eventkit_cloud.ui.support.create_mxd.shutil') as mock_shutil, patch(
-            'eventkit_cloud.ui.support.create_mxd.get_temp_mxd') as mock_get_temp_mxd:
+                'eventkit_cloud.ui.support.create_mxd.shutil') as mock_shutil:
             test_mxd = "test.mxd"
             mxd_contents = "Test data."
             mock_open().__enter__().read.return_value = mxd_contents

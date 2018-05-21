@@ -7,9 +7,7 @@ print("Creating an MXD file for your osm data...")
 
 import os
 import logging
-import tempfile
 import shutil
-from contextlib import contextmanager
 from multiprocessing import Pool
 import json
 
@@ -27,7 +25,8 @@ try:
 except Exception:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-SUPPORTED_VERSIONS = ["10.5.1", "10.5", "10.4"]
+SUPPORTED_VERSIONS = ["10.5.1"]
+VERSIONS = ["10.5.1", "10.5", "10.4"]
 
 try:
     import arcpy
@@ -36,6 +35,12 @@ except Exception:
         "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script.  Please ensure that it is installed.  If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS.")
     raise
 
+version = arcpy.GetInstallInfo().get('Version')
+if arcpy.GetInstallInfo().get('Version') not in SUPPORTED_VERSIONS:
+    print(
+        "This script only supports versions {0}.  "
+        "It might work for {1} but it will likely not support all of the datasets.".format(
+            SUPPORTED_VERSIONS, VERSIONS))
 
 def update_mxd_from_metadata(file_name, metadata, verify=False):
     """
@@ -120,7 +125,7 @@ def get_version():
 
     try:
         version = arcpy.GetInstallInfo().get('Version')
-        if version in SUPPORTED_VERSIONS:
+        if version in VERSIONS:
             return version
         raise Exception("UNSUPPORTED VERSION")
     except:
