@@ -11,7 +11,7 @@ import {
     getFormatsReducer,
 } from './exportsReducer';
 import { getGeocodeReducer } from './searchToolbarReducer';
-import { dataPackReducer, DeleteRunsReducer } from './dataPackReducer';
+import { dataPackReducer, featuredRunsReducer, DeleteRunsReducer } from './dataPackReducer';
 import { importGeomReducer } from './mapToolReducer';
 import { licenseReducer } from './licenseReducer';
 import authReducer from './authReducer';
@@ -23,6 +23,8 @@ import {
     updatePermissionReducer,
 } from './statusDownloadReducer';
 import { userGroupsReducer } from './userGroupsReducer';
+import { notificationsReducer } from './notificationsReducer';
+import { userActivityReducer } from './userActivityReducer';
 
 
 const rootReducer = combineReducers({
@@ -36,6 +38,7 @@ const rootReducer = combineReducers({
     routing: routerReducer,
     drawer: drawerMenuReducer,
     runsList: dataPackReducer,
+    featuredRunsList: featuredRunsReducer,
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,
     submitJob: submitJobReducer,
@@ -49,6 +52,8 @@ const rootReducer = combineReducers({
     formats: getFormatsReducer,
     groups: userGroupsReducer,
     users: usersReducer,
+    userActivity: userActivityReducer,
+    notifications: notificationsReducer,
 });
 
 export default rootReducer;

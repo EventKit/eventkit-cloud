@@ -35,6 +35,7 @@ from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
+from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
@@ -215,7 +216,7 @@ class ExportTask(LockingTask):
                 5. copy the export file to the download directory
                 6. create the export task result
                 7. update the export task status and save it
-            """
+                """
             # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks
             # should just return.
             if not retval:
@@ -561,19 +562,10 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     """
     result = result or {}
 
-    geojson_file = os.path.join(stage_dir,
-                                "{0}_selection.geojson".format(provider_slug))
+    geojson_file = os.path.join(stage_dir, "{0}_selection.geojson".format(provider_slug))
     if selection:
         # Test if json.
         json.loads(selection)
-
-        # Test against max AOI size
-        from ..jobs.models import DataProvider
-        max_selection = DataProvider.objects.get(slug=provider_slug).max_selection
-        aoi_area = gdalutils.get_area(selection)
-        logger.debug("Selected area is %s km^2; max for provider %s is %s", aoi_area, provider_slug, max_selection)
-        if 0 < max_selection < aoi_area:
-            raise Exception("AOI is too large for this provider")
 
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
@@ -623,9 +615,9 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff)
-
-    gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+    else:
+        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
     result['result'] = gtiff
     result['geotiff'] = gtiff
@@ -687,12 +679,16 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining export for WCS services
     """
+    from ..tasks.models import ExportTaskRecord
+
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+
+    task = ExportTaskRecord.objects.get(uid=task_uid)
     try:
-        wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                    config=config, service_type=service_type, task_uid=task_uid, debug=True,
-                                    fmt="gtiff")
+        wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
+                                    name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
+                                    user_details=user_details)
         wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out
@@ -1235,6 +1231,8 @@ class FinalizeRunBase(LockingTask):
         if run.job.include_zipfile and not run.zipfile_url:
             logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
+        notification_level = NotificationLevel.SUCCESS.value
+        verb = NotificationVerb.RUN_COMPLETED.value
         provider_tasks = run.provider_tasks.all()
 
         # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
@@ -1247,11 +1245,19 @@ class FinalizeRunBase(LockingTask):
         # mark run as incomplete if any tasks fail
         if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_FAILED.value
         if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
         run.save()
+
+        # sendnotification to user via django notifications
+
+        sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
 
         # send notification email to user
         site_url = settings.SITE_URL.rstrip('/')
@@ -1286,7 +1292,8 @@ class FinalizeRunBase(LockingTask):
         stage_dir = None if retval is None else retval.get('stage_dir')
         try:
             if stage_dir and os.path.isdir(stage_dir):
-                shutil.rmtree(stage_dir)
+                if not os.getenv('KEEP_STAGE', False):
+                    shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1309,16 +1316,26 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     if run.job.include_zipfile and not run.zipfile_url:
         logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
+    verb = NotificationVerb.RUN_COMPLETED.value
+    notification_level = NotificationLevel.SUCCESS.value
     provider_tasks = run.provider_tasks.all()
 
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
+        notification_level = NotificationLevel.WARNING.value
+        verb = NotificationVerb.RUN_FAILED.value
     if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
         run.status = TaskStates.CANCELED.value
+        verb = NotificationVerb.RUN_CANCELED.value
+        notification_level = NotificationLevel.WARNING.value
     finished = timezone.now()
     run.finished_at = finished
     run.save()
+
+    #sendnotification to user via django notifications
+
+    sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
 
     # send notification email to user
     site_url = settings.SITE_URL.rstrip('/')
@@ -1360,8 +1377,8 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     run = ExportRun.objects.get(uid=run_uid)
     try:
         if os.path.isdir(stage_dir):
-            # DON'T leave the stage_dir in place for debugging
-            shutil.rmtree(stage_dir)
+            if not os.getenv('KEEP_STAGE', False):
+                shutil.rmtree(stage_dir)
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 

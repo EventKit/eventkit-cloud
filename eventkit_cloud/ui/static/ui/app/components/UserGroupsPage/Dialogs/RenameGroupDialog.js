@@ -1,26 +1,26 @@
 import React, { Component, PropTypes } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
-import BaseDialog from '../Dialog/BaseDialog';
-import CustomTextField from '../CustomTextField';
+import BaseDialog from '../../Dialog/BaseDialog';
+import CustomTextField from '../../CustomTextField';
 
-export class CreateGroupDialog extends Component {
+export class RenameGroupDialog extends Component {
     render() {
         const createActions = [
             <RaisedButton
-                className="qa-CreateGroupDialog-save"
+                className="qa-RenameGroupDialog-save"
                 style={{ margin: '0px' }}
                 labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
                 buttonStyle={{ borderRadius: '0px' }}
                 backgroundColor="#4598bf"
                 disableTouchRipple
-                label="SAVE"
+                label="RENAME"
                 primary={false}
                 onClick={this.props.onSave}
-                disabled={!this.props.value}
+                disabled={!this.props.value || !this.props.valid}
             />,
             <FlatButton
-                className="qa-CreateGroupDialog-cancel"
+                className="qa-RenameGroupDialog-cancel"
                 style={{ margin: '0px', float: 'left' }}
                 labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
                 backgroundColor="#fff"
@@ -30,16 +30,23 @@ export class CreateGroupDialog extends Component {
             />,
         ];
 
+        const underlineColor = this.props.valid ? '#4498c0' : '#ce4427';
+
         return (
             <BaseDialog
                 show={this.props.show}
                 onClose={this.props.onClose}
-                title="CREATE GROUP"
+                title="RENAME GROUP"
                 actions={createActions}
                 dialogStyle={{ maxWidth: '500px' }}
             >
+                {!this.props.valid ?
+                    <div style={{ color: '#ce4427' }}>Name unavailable</div>
+                    :
+                    null
+                }
                 <CustomTextField
-                    hintText="Name Group"
+                    hintText="Rename Group"
                     maxLength={50}
                     onChange={this.props.onInputChange}
                     value={this.props.value}
@@ -47,26 +54,27 @@ export class CreateGroupDialog extends Component {
                         width: '100%',
                     }}
                     underlineStyle={{
-                        borderBottom: '1px solid #4498c0',
+                        borderBottom: `1px solid ${underlineColor}`,
                         bottom: '0px',
                     }}
                     underlineFocusStyle={{
-                        borderBottom: '2px solid #4498c0',
+                        borderBottom: `2px solid ${underlineColor}`,
                         bottom: '0px',
                     }}
-                    className="qa-CreateGroupDialog-textField"
+                    className="qa-RenameGroupDialog-textField"
                 />
             </BaseDialog>
         );
     }
 }
 
-CreateGroupDialog.propTypes = {
+RenameGroupDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onInputChange: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     onSave: PropTypes.func.isRequired,
     value: PropTypes.string.isRequired,
+    valid: PropTypes.bool.isRequired,
 };
 
-export default CreateGroupDialog;
+export default RenameGroupDialog;
