@@ -50,8 +50,13 @@ def add_license_file(provider_task, include_files):
     if data_provider_license is None:
         return
 
-    include_files.append(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
-                                      provider_task.slug, 'license.lic'))
+    license_file_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
+                                     provider_task.slug, 'license.lic')
+
+    with open(license_file_path, 'w') as license_file:
+        license_file.write(data_provider_license.text)
+
+    include_files.append(license_file_path)
     return
 
 
