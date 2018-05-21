@@ -127,6 +127,11 @@ describe('DataPackPage component', () => {
                 updated: false,
                 error: null,
             },
+            location: {
+                query: {
+                    collection: '',
+                },
+            },
         };
     };
 
@@ -395,33 +400,37 @@ describe('DataPackPage component', () => {
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
-        const owner = 'test_user';
-        const permissions = { value: 'SHARED', groups: {}, members: {} };
+        const ownerFilter = 'test_user';
         const search = 'search_text';
-        const expectedParams = {
-            page_size: 12,
-            ordering: '-job__featured,-started_at',
-            user: 'test_user',
-            visibility: 'SHARED',
-            status: 'COMPLETED,INCOMPLETE',
-            min_date: '2017-07-30',
-            max_date: '2017-08-02',
-            search_term: 'search_text',
-        };
-        const expectedOptions = {
+        const providers = ['test_provider'];
+        const geojson = {data: {}};
+        const permissions = { value: 'SHARED', groups: {}, members: {} };
+        const expectedParams = [{
+            pageSize: 12,
+            ordering: '-job__featured',
+            ownerFilter,
+            status,
+            minDate,
+            maxDate,
+            search,
+            providers,
+            geojson,
             permissions,
-        };
+            isAuto: false,
+        }];
         wrapper.setState({
             status,
             minDate,
             maxDate,
-            ownerFilter: owner,
+            ownerFilter,
             permissions,
             search,
+            providers,
+            geojson_geometry: geojson,
         });
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
-        expect(props.getRuns.calledWith(expectedParams, expectedOptions)).toBe(true);
+        expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
@@ -594,6 +603,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.instance().getView('grid')).toEqual((
             <DataPackGrid
                 {...commonProps}
+                name="DataPackLibrary"
             />
         ));
 
@@ -645,6 +655,19 @@ describe('DataPackPage component', () => {
         expect(props.updateDataCartPermissions.calledOnce).toBe(true);
         expect(props.updateDataCartPermissions.calledWith(target.job.uid, permissions)).toBe(true);
         closeStub.restore();
+    });
+
+    it('should set ownerFilter to the current user if passed "myDataPacks" as the collection in the querystring', () => {
+        const props = {
+            ...getProps(),
+            location: {
+                query: {
+                    collection: 'myDataPacks',
+                },
+            },
+        };
+        const wrapper = getWrapper(props);
+        expect(wrapper.state().ownerFilter).toEqual(props.user.data.user.username);
     });
 });
 

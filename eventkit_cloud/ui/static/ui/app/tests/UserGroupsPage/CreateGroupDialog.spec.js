@@ -3,7 +3,7 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import { CustomTextField } from '../../components/CustomTextField';
-import { CreateGroupDialog } from '../../components/UserGroupsPage/CreateGroupDialog';
+import { CreateGroupDialog } from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
 
 describe('CreateGroupDialog component', () => {
     const muiTheme = getMuiTheme();

@@ -22,6 +22,7 @@ INSTALLED_APPS += (
     'eventkit_cloud.ui',
     'eventkit_cloud.utils',
     'eventkit_cloud',
+    'notifications',
 )
 
 LOGIN_URL = '/login'
@@ -361,4 +362,6 @@ AUTO_LOGOUT_SECONDS = int(os.getenv('AUTO_LOGOUT_SECONDS', 0))
 AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']
-    
+
+NOTIFICATIONS_SOFT_DELETE=True
+
