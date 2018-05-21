@@ -13,7 +13,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.template.loader import get_template, render_to_string
 from celery.utils.log import get_task_logger
-from ..utils.gdalutils import driver_for
+from ..utils.gdalutils import get_meta
 from uuid import uuid4
 from string import Template
 from datetime import datetime
@@ -143,9 +143,9 @@ def file_to_geojson(in_memory_file):
                 if not has_shp:
                     raise Exception('Zip file does not contain a shp')
 
-        driver, raster = driver_for(in_path)
+        meta = get_meta(in_path)
 
-        if not driver:
+        if not meta['driver'] or meta['is_raster']:
             raise Exception("Could not find the proper driver to handle this file")
 
         cmd_template = Template("ogr2ogr -f $fmt $out_ds $in_ds")
@@ -167,7 +167,7 @@ def file_to_geojson(in_memory_file):
             geojson = read_json_file(out_path)
             return geojson
 
-        raise Exception('An unknown error occured while processing the file')
+        raise Exception('An unknown error occurred while processing the file')
 
     except Exception as e:
         logger.error(e)

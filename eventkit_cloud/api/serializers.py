@@ -18,8 +18,9 @@ from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from notifications.models import Notification
 
-from ..core.models import GroupPermission, JobPermission
+from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission
 
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -30,8 +31,8 @@ from eventkit_cloud.jobs.models import (
     DataProvider,
     DataProviderTask,
     License,
-    UserLicense
-)
+    UserLicense,
+    UserJobActivity)
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -333,13 +334,13 @@ class GroupSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_members(instance):
         user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermission.Permissions.MEMBER.value)]
+            permission=GroupPermissionLevel.MEMBER.value)]
         return [user.username for user in User.objects.filter(id__in=user_ids).all()]
 
     @staticmethod
     def get_administrators(instance):
         user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermission.Permissions.ADMIN.value)]
+            permission=GroupPermissionLevel.ADMIN.value)]
         return [user.username for user in User.objects.filter(id__in=user_ids).all()]
         return []
 
@@ -738,3 +739,46 @@ class JobSerializer(serializers.Serializer):
     @staticmethod
     def get_permissions(obj):
         return JobPermission.jobpermissions(obj)
+
+
+class UserJobActivitySerializer(serializers.ModelSerializer):
+    job = ListJobSerializer()
+    last_export_run = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserJobActivity
+        fields = ('job', 'last_export_run', 'type', 'created_at')
+
+    def get_last_export_run(self, obj):
+        if obj.job.last_export_run:
+            serializer = ExportRunSerializer(obj.job.last_export_run, context={'request': self.context['request']})
+            return serializer.data
+        else:
+            return None
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notification
+        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
+
+    def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
+
+        response = {}
+        if referenced_object_id > 0:
+            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+            response['id'] = referenced_object_id
+
+        if isinstance(referenced_object, User):
+            response['details'] =   UserSerializer(referenced_object).data
+        if isinstance(referenced_object, Job):
+            job = Job.objects.get(pk=obj.actor_object_id)
+            response['details'] = ListJobSerializer(job,context={'request': request}).data
+        if isinstance(referenced_object, ExportRun):
+            run = ExportRun.objects.get(pk=obj.actor_object_id)
+            response['details'] = ExportRunSerializer(run,context={'request': request}).data
+        if isinstance(referenced_object, Group):
+            response['details'] = GroupSerializer(referenced_object).data
+
+        return response

@@ -14,6 +14,7 @@ from rest_framework.test import APITestCase
 
 from django.conf import settings
 from django.utils.translation import ugettext as _
+from django.utils import timezone
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
 from django.core import serializers
@@ -22,9 +23,9 @@ from ..views import get_models, get_provider_task, ExportRunViewSet
 from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
-    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState
+    DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission
+from ...core.models import GroupPermission,GroupPermissionLevel
 from mock import patch, Mock
 
 
@@ -110,7 +111,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'test', 'formats': formats}],
             'export_providers': [{'name': 'test', 'level_from': 0, 'level_to': 1,
                                   'url': 'http://coolproviderurl.to',
@@ -211,7 +212,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
@@ -238,7 +239,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'published': True,
@@ -303,7 +304,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
@@ -342,7 +343,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}],
             'preset': self.job.preset.id,
             'transform': '',
@@ -393,7 +394,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': '',  # empty
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'formats': formats
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -410,7 +411,7 @@ class TestJobViewSet(APITestCase):
             'name': name,
             'description': 'Test description',
             'event': 'Test event',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -420,14 +421,13 @@ class TestJobViewSet(APITestCase):
         self.assertEquals('ValidationError', response.data['errors'][0]['title'])
         self.assertEquals('name: Ensure this field has no more than 100 characters.', response.data['errors'][0]['detail'])
 
-
     def test_missing_format_param(self,):
         url = reverse('api:jobs-list')
         request_data = {
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection': bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection': bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
@@ -441,7 +441,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
@@ -456,7 +456,7 @@ class TestJobViewSet(APITestCase):
             'name': 'TestJob',
             'description': 'Test description',
             'event': 'Test Activation',
-            'selection':  bbox_to_geojson([-3.9, 16.1, 7.0, 27.6]),
+            'selection':  bbox_to_geojson([5, 16, 5.1, 16.1]),
             'provider_tasks': [
                 {'provider': 'OpenStreetMap Data (Generic)', 'formats': ['broken-format-one', 'broken-format-two']}]
         }
@@ -529,7 +529,8 @@ class TestBBoxSearch(APITestCase):
         url = reverse('api:jobs-list')
         # create dummy user
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo',
+                                             is_superuser=True)
 
         # setup token authentication
         token = Token.objects.create(user=self.user)
@@ -1124,7 +1125,7 @@ class TestGroupDataViewSet(APITestCase):
         self.testName = "Omaha 319"
         group, created = Group.objects.get_or_create(name=self.testName)
         self.groupid = group.id
-        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermission.Permissions.ADMIN.value)
+        gp = GroupPermission.objects.create(group=group,user=self.user1, permission =GroupPermissionLevel.ADMIN.value)
 
     def test_insert_group(self):
         expected = '/api/groups'
@@ -1220,6 +1221,131 @@ class TestGroupDataViewSet(APITestCase):
         group_data = json.loads(response.content)
         self.assertEquals(len(group_data['members']), 1)
         self.assertEquals(group_data['members'][0], 'user_2')
+
+
+class TestUserJobActivityViewSet(APITestCase):
+    fixtures = ('insert_provider_types.json', 'osm_provider.json')
+
+    def __init__(self, *args, **kwargs):
+        super(TestUserJobActivityViewSet, self).__init__(*args, **kwargs)
+        self.group = None
+        self.user = None
+        self.viewed_jobs = []
+
+    def setUp(self):
+        self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
+        with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
+            mock_group.objects.get.return_value = self.group
+            self.user = User.objects.create_user(
+                username='demo', email='demo@demo.com', password='demo'
+            )
+        token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
+                                HTTP_ACCEPT='application/json; version=1.0',
+                                HTTP_ACCEPT_LANGUAGE='en',
+                                HTTP_HOST='testserver')
+
+        for i in range(3):
+            job = self.create_job('ViewedJob%s' % str(i))
+            self.viewed_jobs.append(job)
+            UserJobActivity.objects.create(user=self.user, job=job, type=UserJobActivity.VIEWED)
+
+    def test_get_viewed(self):
+        expected = '/api/user/activity/jobs'
+        url = reverse('api:user_job_activity-list')
+        self.assertEqual(expected, url)
+        response = self.client.get(url + '?activity=viewed&page_size=10')
+        self.assertIsNotNone(response)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        data = json.loads(response.content)
+        self.assertEqual(len(data), len(self.viewed_jobs))
+
+    def test_create_viewed(self):
+        # Get our current number of viewed jobs to compare against.
+        url = reverse('api:user_job_activity-list')
+        response = self.client.get(url + '?activity=viewed&page_size=10')
+        prev_viewed_jobs_count = len(json.loads(response.content))
+
+        # Post a new job view.
+        job = self.create_job('UnviewedJob')
+        response = self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job.uid)}),
+                                    content_type='application/json; version=1.0')
+        self.assertIsNotNone(response)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        # Get our new number of viewed jobs and compare.
+        response = self.client.get(url + '?activity=viewed&page_size=10')
+        viewed_jobs = json.loads(response.content)
+        self.assertEqual(len(viewed_jobs), prev_viewed_jobs_count + 1)
+
+        # Make sure the first returned viewed job matches what we just viewed.
+        self.assertEqual(viewed_jobs[0]['job']['uid'], str(job.uid))
+        self.assertEqual(viewed_jobs[0]['type'], UserJobActivity.VIEWED)
+
+    def test_create_viewed_consecutive(self):
+        # Add one viewed job first.
+        url = reverse('api:user_job_activity-list')
+        job_a = self.create_job('UnviewedJobA')
+        self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_a.uid)}),
+                         content_type='application/json; version=1.0')
+
+        # Post a new job view twice. It should be ignored the second time.
+        job_b = self.create_job('UnviewedJobB')
+        response = self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_b.uid)}),
+                                    content_type='application/json; version=1.0')
+        self.assertEqual(json.loads(response.content).get('ignored'), None)
+        response = self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_b.uid)}),
+                                    content_type='application/json; version=1.0')
+        self.assertEqual(json.loads(response.content).get('ignored'), True)
+
+        # Make sure we don't see the same job twice in our viewed jobs.
+        response = self.client.get(url + '?activity=viewed')
+        viewed_jobs = json.loads(response.content)
+        self.assertNotEqual(viewed_jobs[0], viewed_jobs[1])
+
+    def test_create_viewed_existing(self):
+        # View job A.
+        url = reverse('api:user_job_activity-list')
+        job_a = self.create_job('UnviewedJobA')
+        self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_a.uid)}),
+                         content_type='application/json; version=1.0')
+
+        # View job B.
+        job_b = self.create_job('UnviewedJobB')
+        self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_b.uid)}),
+                         content_type='application/json; version=1.0')
+
+        # View Job A.
+        self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_a.uid)}),
+                         content_type='application/json; version=1.0')
+
+        # Make sure that job A only shows up once in our viewed jobs.
+        response = self.client.get(url + '?activity=viewed')
+        viewed_jobs = json.loads(response.content)
+        job_a_count = 0
+        for viewed_job in viewed_jobs:
+            if viewed_job['job']['uid'] == str(job_a.uid):
+                job_a_count += 1
+
+        self.assertEqual(job_a_count, 1)
+        self.assertEqual(viewed_jobs[0]['job']['uid'], str(job_a.uid))
+
+    def create_job(self, name):
+        extents = (-3.9, 16.1, 7.0, 27.6)
+        bbox = Polygon.from_bbox(extents)
+        the_geom = GEOSGeometry(bbox, srid=4326)
+        job = Job.objects.create(name=name, description='Test description', user=self.user, the_geom=the_geom)
+        formats = ExportFormat.objects.all()
+        provider = DataProvider.objects.first()
+        provider_task = DataProviderTask.objects.create(provider=provider)
+        provider_task.formats.add(*formats)
+        job.provider_tasks.add(provider_task)
+        run = ExportRun.objects.create(job=job, user=self.user, status='COMPLETED',
+                                       expiration=(timezone.now() + timezone.timedelta(days=14)))
+        job.last_export_run = run
+        job.save()
+        return job
+
 
 def date_handler(obj):
     if hasattr(obj, 'isoformat'):
