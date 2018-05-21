@@ -5,7 +5,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Drawer from 'material-ui/Drawer';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
-import IndeterminateIcon from 'material-ui/svg-icons/toggle/indeterminate-check-box';
+import Vert from 'material-ui/svg-icons/navigation/more-vert';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 
 
@@ -27,6 +27,12 @@ describe('GroupsDrawer component', () => {
                 name: 'group2',
                 members: ['user1', 'user2'],
                 administrators: ['user2'],
+            }],
+            otherGroups: [{
+                id: 3,
+                name: 'group3',
+                members: ['user2', 'user3'],
+                administrators: ['user3'],
             }],
             usersCount: 2,
             onNewGroupClick: () => {},
@@ -80,7 +86,7 @@ describe('GroupsDrawer component', () => {
         item.find(IconButton).simulate('click');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onDeleteGroupClick.calledOnce).toBe(false);
-        item.find(IconMenu).props().children[1].props.onClick();
+        item.find(IconMenu).props().children[2].props.onClick();
         expect(props.onDeleteGroupClick.calledOnce).toBe(true);
     });
 
@@ -88,9 +94,12 @@ describe('GroupsDrawer component', () => {
         const props = getProps();
         props.onLeaveGroupClick = sinon.spy();
         const wrapper = getWrapper(props);
+        const item = wrapper.find('.qa-GroupsDrawer-sharedGroupItem');
+        expect(item.find(IconButton)).toHaveLength(1);
+        item.find(IconButton).simulate('click');
+        expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onLeaveGroupClick.called).toBe(false);
-        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem')).toHaveLength(1);
-        wrapper.find('.qa-GroupsDrawer-sharedGroupItem').find(IndeterminateIcon).simulate('click');
+        item.find(IconMenu).props().children.props.onClick();
         expect(props.onLeaveGroupClick.calledOnce).toBe(true);
         expect(props.onLeaveGroupClick.calledWith(props.sharedGroups[0])).toBe(true);
     });
