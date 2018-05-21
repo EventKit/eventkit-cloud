@@ -26,7 +26,7 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files, generate_qgs_style
+from ..ui.helpers import get_style_files, generate_qgs_style, generate_license_file
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -452,26 +452,6 @@ def osm_data_collection_task(
     return result
 
 
-@app.task(name="Add License File", bind=True, base=ExportTask, abort_on_error=True)
-def add_license_file(self, result=None, *args, **kwargs):
-    from ..jobs.models import DataProvider
-    from ..tasks.models import DataProviderTaskRecord
-    data_provider_license = DataProvider.objects.get(
-        slug=DataProviderTaskRecord.objects.get(uid=kwargs['export_provider_task_uid']).slug).license
-
-    # DataProviders are not required to have a license
-    if data_provider_license is None:
-        return
-
-    license_file_path = os.path.join(kwargs['stage_dir'], 'license.lic')
-
-    with open(license_file_path, 'w') as license_file:
-        license_file.write(data_provider_license.text)
-
-    result['result'] = license_file_path
-    return result
-
-
 @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
@@ -776,8 +756,8 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # sorted while adding time allows comparisons in tests.
     include_files = sorted(list(set(include_files)))
     if include_files:
-        qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
-        include_files += [qgs_style_file]
+        generate_license_file(export_provider_task, include_files)
+        include_files.append(generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task))
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
                                      file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
@@ -1039,12 +1019,14 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                                  provider_task.slug, filename)
                 if not os.path.isfile(full_file_path):
-                    logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                     export_task.name))
+                    logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
                 if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
+
+        # add the license for this provider
+        generate_license_file(provider_task, include_files)
 
     if include_files:
         # No need to add QGIS file if there aren't any files to be zipped.

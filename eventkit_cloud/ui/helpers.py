@@ -41,6 +41,20 @@ def get_style_files():
     return get_file_paths(style_dir)
 
 
+def add_license_file(provider_task, include_files):
+    # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
+    from eventkit_cloud.jobs.models import DataProvider
+    data_provider_license = DataProvider.ojects.get(slug=provider_task.slug).license
+
+    # DataProviders are not required to have a license
+    if data_provider_license is None:
+        return
+
+    include_files.append(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
+                                      provider_task.provider.slug, 'license.lic'))
+    return
+
+
 def generate_qgs_style(run_uid=None, export_provider_task=None):
     """
     Task to create QGIS project file with styles for osm.
