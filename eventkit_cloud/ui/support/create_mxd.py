@@ -25,9 +25,9 @@ try:
 
     BASE_DIR = settings.BASE_DIR
 except Exception:
-    BASE_DIR = os.path.dirname(__file__)
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-SUPPORTED_VERSIONS = ["10.5.1", "10.5"]
+SUPPORTED_VERSIONS = ["10.5.1", "10.5", "10.4"]
 
 try:
     import arcpy
@@ -35,27 +35,6 @@ except Exception:
     print(
         "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script.  Please ensure that it is installed.  If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS.")
     raise
-
-
-@contextmanager
-def get_temp_mxd(metadata, verify=False):
-    temp_file = tempfile.NamedTemporaryFile(mode='rb', delete=False)
-    temp_file.close()
-    temp_file.name = "{0}.mxd".format(temp_file.name)
-
-    try:
-        template_file = get_mxd_template(get_version())
-
-        # Create a copy of the mxd to avoid single use locking issues.
-        shutil.copyfile(template_file, temp_file.name)
-        update_mxd_from_metadata(temp_file.name, metadata, verify=verify)
-        yield temp_file.name
-    finally:
-        temp_file.close()
-        try:
-            os.unlink(temp_file.name)
-        except Exception:
-            logger.warn("Could not delete the tempfile, possibly already removed.")
 
 
 def update_mxd_from_metadata(file_name, metadata, verify=False):
@@ -72,7 +51,8 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
         # Figure out geotiff later.
         if layer_info['type'] == 'tif':
             continue
-        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), layer_info['file_path']))
+        file_path = os.path.abspath(os.path.join(os.path.curdir, layer_info['file_path']))
+
         layer_file = get_layer_file(layer_info['type'], version)
         if not layer_file:
             print(
@@ -85,9 +65,10 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
         print('Adding layer: {0}...'.format(layer_from_file.name))
         arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
         # Get instance of layer from MXD, not the template file.
+        del layer_from_file
         layer = arcpy.mapping.ListLayers(mxd)[0]
-        update_layers(layer, file_path, verify=verify)
-        del layer
+        update_layer(layer, file_path, verify=verify)
+
     logger.debug('Getting dataframes...')
     df = mxd.activeDataFrame
 
@@ -148,10 +129,13 @@ def get_version():
         raise
 
 
-def update_layers(layer, file_path, verify=False):
+def update_layer(layer, file_path, verify=False):
     """
     :param layer: An Arc Layer object to be updated.
     :param file_path: A new datasource.
+    :param verify:  If true will validate the datasource after the layer is updated.
+    :param mxd: Pass a reference to an MXD document if the layer is in an mxd, needed
+    due to a bug with saving layers in a windows USERPROFILE directory.
     :return: The updated ext.
     """
     for lyr in arcpy.mapping.ListLayers(layer):
@@ -164,10 +148,10 @@ def update_layers(layer, file_path, verify=False):
                 continue
             try:
                 # Try to update the extents based on the layers
+                print("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
                 lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
                 if lyr.isFeatureLayer:
-                    # print arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages()
                     logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
             except AttributeError as ae:
                 raise
@@ -181,15 +165,16 @@ def create_mxd(mxd=None, metadata=None, verify=False):
     :param verify: Raise an exception if there is an error in the MXD after adding the new gpkg.
     :return: The contents (binary) of the mxd file.
     """
-    with get_temp_mxd(metadata, verify=verify) as temp_mxd_file:
+    template_file = get_mxd_template(get_version())
+    # with get_temp_mxd(metadata, verify=verify) as temp_mxd_file:
         # copy temp file to permanent file if specified.
-        if mxd:
-            print("writing file to {0}".format(mxd))
-            shutil.copy(temp_mxd_file, mxd)
-            # return mxd
-        with open(temp_mxd_file, 'rb') as open_mxd_file:
-            print("reading file {0}".format(mxd))
-            return open_mxd_file.read()
+    if mxd:
+        print("writing file to {0}".format(mxd))
+        shutil.copy(template_file, mxd)
+        # return mxd
+    update_mxd_from_metadata(mxd, metadata, verify=verify)
+    with open(mxd, 'rb') as open_mxd_file:
+        return open_mxd_file.read()
 
 
 def create_mxd_process(mxd=None, metadata=None, verify=False):
@@ -221,10 +206,9 @@ if __name__ == "__main__":
         with open(metadata_file, 'r') as open_metadata_file:
             metadata = json.load(open_metadata_file)
 
-        # mxd_output = os.path.abspath('{0}.mxd'.format(metadata['name']))
         mxd_output = os.path.join(os.path.dirname(__file__), '{0}.mxd'.format(metadata['name']))
-        # gpkg_path = os.path.join(os.path.dirname(__file__), metadata['data_sources']['osm']['file_path'])
         create_mxd(mxd=mxd_output, metadata=metadata, verify=True)
+
         raw_input("Press enter to exit.")
     except Exception as e:
         print e
