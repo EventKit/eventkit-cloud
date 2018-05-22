@@ -26,11 +26,19 @@ class TestSupport(TestCase):
         from ..support.create_mxd import create_mxd
 
         with patch('__builtin__.open') as mock_open, patch(
-                'eventkit_cloud.ui.support.create_mxd.shutil') as mock_shutil:
+                'eventkit_cloud.ui.support.create_mxd.shutil') as mock_shutil, patch(
+            'eventkit_cloud.ui.support.create_mxd.get_mxd_template') as mock_get_mxd_template, patch(
+            'eventkit_cloud.ui.support.create_mxd.get_version') as mock_get_version, patch(
+            'eventkit_cloud.ui.support.create_mxd.update_mxd_from_metadata') as mock_update_from_metadata:
             test_mxd = "test.mxd"
             mxd_contents = "Test data."
+            test_metadata = {'metadata_keys': 'metadata_values'}
+            verify = True
+            mock_get_mxd_template.return_value = test_mxd
+            mock_get_version.return_value = '10.5.1'
             mock_open().__enter__().read.return_value = mxd_contents
-            returned_mxd_contents = create_mxd(mxd=test_mxd)
+            returned_mxd_contents = create_mxd(mxd=test_mxd, metadata=test_metadata, verify=verify)
+            mock_update_from_metadata.assert_called_once_with(test_mxd, test_metadata, verify=verify)
             self.assertEqual(mxd_contents, returned_mxd_contents)
             mock_shutil.copy.assert_called_once_with(ANY, test_mxd)
 
