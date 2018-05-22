@@ -26,7 +26,7 @@ except Exception:
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 SUPPORTED_VERSIONS = ["10.5.1"]
-VERSIONS = ["10.5.1", "10.5", "10.4"]
+VERSIONS = ["10.5.1", "10.5", "10.4.1", "10.4"]
 
 try:
     import arcpy
@@ -112,7 +112,7 @@ def get_layer_file(type, version):
     """
     layer_basename = "{0}-{1}.lyr".format(type, version.replace('.', '-'))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "support", layer_basename))
-    print("fetching layer template: {0}".format(layer_file))
+    print("Fetching layer template: {0}".format(layer_file))
     if os.path.isfile(layer_file):
         return layer_file
     return None
@@ -153,7 +153,6 @@ def update_layer(layer, file_path, verify=False):
                 continue
             try:
                 # Try to update the extents based on the layers
-                print("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
                 lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
                 if lyr.isFeatureLayer:
