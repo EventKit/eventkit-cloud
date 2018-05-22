@@ -56,7 +56,7 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
         # Figure out geotiff later.
         if layer_info['type'] == 'tif':
             continue
-        file_path = os.path.abspath(os.path.join(os.path.curdir, layer_info['file_path']))
+        file_path = os.path.abspath(os.path.join(BASE_DIR, layer_info['file_path']))
 
         layer_file = get_layer_file(layer_info['type'], version)
         if not layer_file:
