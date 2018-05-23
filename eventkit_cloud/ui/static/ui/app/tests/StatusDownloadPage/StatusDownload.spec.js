@@ -93,7 +93,7 @@ describe('StatusDownload component', () => {
         header: {
             textAlign: 'left',
             fontSize: '20px',
-            borderColor: '#4598bf'
+            borderColor: '#4598bf',
         },
         main: {
             paddingTop: '20px',
@@ -102,24 +102,23 @@ describe('StatusDownload component', () => {
 
         button: {
             color: 'white',
-            backgroundColor: '#4598bf'
+            backgroundColor: '#4598bf',
         },
         skip: {
-            color: '#8b9396'
+            color: '#8b9396',
         },
         back: {
-            color: '#8b9396'
+            color: '#8b9396',
         },
         hole: {
             backgroundColor: 'rgba(226,226,226, 0.2)',
-        }
+        },
     };
+
+    const location = {};
 
     const getProps = () => (
         {
-            params: {
-                jobuid: '123456789',
-            },
             datacartDetails: {
                 fetching: false,
                 fetched: false,
@@ -161,6 +160,12 @@ describe('StatusDownload component', () => {
                 users: [],
                 error: null,
             },
+            router: {
+                params: {
+                    jobuid: '123456789',
+                },
+            },
+            location,
             getDatacartDetails: () => {},
             clearDataCartDetails: () => {},
             deleteRun: () => {},
@@ -171,6 +176,7 @@ describe('StatusDownload component', () => {
             cloneExport: () => {},
             cancelProviderTask: () => {},
             getProviders: () => {},
+            viewedJob: () => {},
             getUsers: () => {},
             getGroups: () => {},
         }
@@ -197,6 +203,11 @@ describe('StatusDownload component', () => {
         StatusDownload.prototype.componentDidMount = didMount;
         DataPackAoiInfo.prototype.render.restore();
         DataPackAoiInfo.prototype.initializeOpenLayers.restore();
+    });
+
+    it('should have the correct initial state', () => {
+        const wrapper = getWrapper(getProps());
+        expect(wrapper.state()).toEqual(wrapper.instance().initialState());
     });
 
     it('should render all the basic components', () => {
@@ -310,7 +321,7 @@ describe('StatusDownload component', () => {
         nextProps.expirationState.updated = true;
         wrapper.setProps(nextProps);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
-        expect(props.getDatacartDetails.calledWith(props.params.jobuid)).toBe(true);
+        expect(props.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
     });
 
     it('componentWillReceiveProps should handle permission update', () => {
@@ -321,7 +332,7 @@ describe('StatusDownload component', () => {
         nextProps.permissionState.updated = true;
         wrapper.setProps(nextProps);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
-        expect(props.getDatacartDetails.calledWith(props.params.jobuid)).toBe(true);
+        expect(props.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
     });
 
     it('componentWillReceiveProps should handle fetched datacartDetails and set isLoading false', () => {
@@ -361,7 +372,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(10);
+        expect(setTimeout.mock.calls.length).toBe(9);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
@@ -429,7 +440,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(10);
+        expect(setTimeout.mock.calls.length).toBe(9);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
@@ -511,5 +522,23 @@ describe('StatusDownload component', () => {
         wrapper.instance().clearError();
         expect(stateStub.calledWith({ error: null })).toBe(true);
         stateStub.restore();
+    });
+
+    it('should refresh the entire component when location changes', () => {
+        StatusDownload.prototype.componentDidMount = didMount;
+        const componentDidMountSpy = sinon.spy(StatusDownload.prototype, 'componentDidMount');
+        const componentWillUnmountSpy = sinon.spy(StatusDownload.prototype, 'componentWillUnmount');
+        const setStateSpy = sinon.spy(StatusDownload.prototype, 'setState');
+        const wrapper = getWrapper(getProps());
+        expect(componentDidMountSpy.callCount).toBe(1);
+        expect(componentWillUnmountSpy.callCount).toBe(0);
+        expect(setStateSpy.callCount).toBe(0);
+        wrapper.setProps({
+            location: {},
+        });
+        expect(componentDidMountSpy.callCount).toBe(2);
+        expect(componentWillUnmountSpy.callCount).toBe(1);
+        expect(setStateSpy.callCount).toBe(1);
+        expect(setStateSpy.calledWith(wrapper.instance().initialState())).toBe(true);
     });
 });

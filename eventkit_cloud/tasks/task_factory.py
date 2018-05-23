@@ -9,11 +9,10 @@ import itertools
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-from ..core.models import JobPermission
-
+from ..core.models import JobPermission,JobPermissionLevel
+from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from celery import chain
-
 from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
                                                prepare_for_export_zip_task,
                                                zip_file_task,
@@ -33,7 +32,6 @@ from .task_runners import (
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
-
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -202,7 +200,7 @@ def create_run(job_uid, user=None):
             if not user:
                 user = job.user
 
-            perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.ADMIN.value)
+            perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
             if  not job.id in job_ids:
                 raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                     job.user.username, job.name
@@ -218,6 +216,9 @@ def create_run(job_uid, user=None):
             # add the export run to the database
             run = ExportRun.objects.create(job=job, user=user, status='SUBMITTED',
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
+            job.last_export_run = run
+            job.save()
+            sendnotification(run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, '')
             run_uid = run.uid
             logger.debug('Saved run with id: {0}'.format(str(run_uid)))
             return run_uid
@@ -257,6 +258,7 @@ def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=Non
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=zip_export_provider, job_name=job_name)
     )
+
 
 def get_invalid_licenses(job, user=None):
     """

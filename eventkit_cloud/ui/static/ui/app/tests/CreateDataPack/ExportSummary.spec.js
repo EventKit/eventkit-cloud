@@ -112,7 +112,7 @@ describe('Export Summary Component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(CustomTableRow)).toHaveLength(6);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(5);
         expect(wrapper.find('#form')).toHaveLength(1);
         expect(wrapper.find('#mainHeading').text()).toEqual('Preview and Run Export');
         expect(wrapper.find('#subHeading').text()).toEqual('Please make sure all the information below is correct.');

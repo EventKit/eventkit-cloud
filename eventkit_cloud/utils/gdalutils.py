@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-from osgeo import gdal, ogr
+from osgeo import gdal, ogr, osr
 import json
 import logging
+import math
+import time
 import os
 import subprocess
 from string import Template
@@ -9,6 +11,8 @@ from tempfile import NamedTemporaryFile
 from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
+
+MAX_DB_CONNECTION_RETRIES = 3
 
 
 def open_ds(ds_path):
@@ -20,7 +24,7 @@ def open_ds(ds_path):
     """
 
     # TODO: Can be a DB Connection
-    #if not os.path.isfile(ds_path):
+    # if not os.path.isfile(ds_path):
     #    raise Exception("Could not find file {}".format(ds_path))
 
     # Attempt to open as gdal dataset (raster)
@@ -62,26 +66,37 @@ def cleanup_ds(ds):
         del ds
 
 
-def driver_for(ds_path):
+def get_meta(ds_path):
     """
     Given a path to a raster or vector dataset, return the appropriate driver type.
     :param ds_path: String: Path to dataset
-    :return: Tuple: (Short name of GDAL driver for dataset, True if dataset is a raster type)
+    :return: Metadata dict
+        driver: Short name of GDAL driver for dataset
+        is_raster: True if dataset is a raster type
+        nodata: NODATA value for all bands if all bands have the same one, otherwise None (raster sets only)
     """
 
     ds = None
+    ret = {'driver': None,
+           'is_raster': None,
+           'nodata': None}
     try:
         ds = open_ds(ds_path)
 
         if isinstance(ds, gdal.Dataset):
-            ret = (ds.GetDriver().ShortName, True)
-        elif isinstance(ds, ogr.DataSource):
-            ret = (ds.GetDriver().GetName(), False)
-        else:
-            ret = (None, None)
+            ret['driver'] = ds.GetDriver().ShortName
+            ret['is_raster'] = True
+            if ds.RasterCount:
+                bands = list(set([ds.GetRasterBand(i+1).GetNoDataValue() for i in range(ds.RasterCount)]))
+                if len(bands) == 1:
+                    ret['nodata'] = bands[0]
 
-        if ret[0]:
-            logger.debug("Identified dataset {0} as {1}".format(ds_path, ret[0]))
+        elif isinstance(ds, ogr.DataSource):
+            ret['driver'] = ds.GetDriver().GetName()
+            ret['is_raster'] = False
+
+        if ret['driver']:
+            logger.debug("Identified dataset {0} as {1}".format(ds_path, ret['driver']))
         else:
             logger.debug("Could not identify dataset {0}".format(ds_path))
 
@@ -91,15 +106,45 @@ def driver_for(ds_path):
         cleanup_ds(ds)
 
 
-def is_raster(ds_path):
+def get_area(geojson):
     """
-    Given a path to a dataset, indicates whether that dataset is a raster format.
-    Throws exception if the path is invalid or the dataset cannot be identified.
-    :param ds_path: Path to a dataset
-    :return: True if dataset is a raster type, False if vector
+    Given a GeoJSON string or object, return an approximation of its geodesic area in km².
+
+    The geometry must contain a single polygon with a single ring, no holes.
+    Based on Chamberlain and Duquette's algorithm: https://trs.jpl.nasa.gov/bitstream/handle/2014/41271/07-0286.pdf
+    :param geojson: GeoJSON selection area
+    :return: area of geojson ring in square kilometers
     """
-    _, raster = driver_for(ds_path)
-    return raster
+    earth_r = 6371  # km
+
+    def rad(d):
+        return math.pi*d/180
+
+    if isinstance(geojson, str):
+        geojson = json.loads(geojson)
+
+    if hasattr(geojson, 'geometry'):
+        geojson = geojson['geometry']
+
+    geom_type = geojson['type'].lower()
+    if geom_type == 'polygon':
+        polys = [geojson['coordinates']]
+    elif geom_type == 'multipolygon':
+        polys = geojson['coordinates']
+    else:
+        return RuntimeError("Invalid geometry type: %s" % geom_type)
+
+    a = 0
+    for poly in polys:
+        ring = poly[0]
+        if len(ring) < 4:
+            continue
+        ring.append(ring[-2])  # convenient for circular indexing
+        for i in range(len(ring) - 2):
+            a += (rad(ring[i+1][0]) - rad(ring[i-1][0])) * math.sin(rad(ring[i][1]))
+
+    area = abs(a * (earth_r**2) / 2)
+    return area
 
 
 def is_envelope(geojson_path):
@@ -107,19 +152,40 @@ def is_envelope(geojson_path):
     Given a path to a GeoJSON file, reads it and determines whether its coordinates correspond to a WGS84 bounding box,
     i.e. lat1=lat2, lon2=lon3, lat3=lat4, lon4=lon1, to tell whether there's need for an alpha layer in the output
     :param geojson_path: Path to GeoJSON selection file
-    :return: True if
+    :return: True if the given geojson is an envelope/bounding box, with one polygon and one ring.
     """
     try:
-        with open(geojson_path, "r") as gf:
-            geojson = json.load(gf)
-            p = geojson['coordinates'][0][0]
-            if len(p) != 5 or p[4] != p[0]:
-                return False
-            ret = len(set([c[0] for c in p])) == len(set([c[1] for c in p])) == 2
-            logger.debug("Checking if boundary is envelope: %s for %s", ret, p)
-            return ret
+        geojson = ""
+        if not os.path.isfile(geojson_path) and isinstance(geojson_path, str):
+            geojson = json.loads(geojson_path)
+        else:
+            with open(geojson_path, "r") as gf:
+                geojson = json.load(gf)
 
-    except (IndexError, IOError):
+        geom_type = geojson['type'].lower()
+        if geom_type == 'polygon':
+            polys = [geojson['coordinates']]
+        elif geom_type == 'multipolygon':
+            polys = geojson['coordinates']
+        else:
+            return False  # Points/lines aren't envelopes
+
+        if len(polys) != 1:
+            return False  # Multipolygons aren't envelopes
+
+        poly = polys[0]
+        if len(poly) != 1:
+            return False  # Polygons with multiple rings aren't envelopes
+
+        ring = poly[0]
+        if len(ring) != 5 or ring[4] != ring[0]:
+            return False  # Envelopes need exactly four valid coordinates
+
+        # Envelopes will have exactly two unique coordinates, for both x and y, out of those four
+        ret = len(set([coord[0] for coord in ring])) == len(set([coord[1] for coord in ring])) == 2
+        return ret
+
+    except (IndexError, IOError, ValueError):
         # Unparseable JSON or unreadable file: play it safe
         return False
 
@@ -150,15 +216,15 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
         os.rename(out_dataset, in_dataset)
 
-    (driver, raster) = driver_for(in_dataset)
+    meta = get_meta(in_dataset)
 
     if not fmt:
-        fmt = driver or 'gpkg'
+        fmt = meta['driver'] or 'gpkg'
 
     band_type = ""
     if table:
         cmd_template = Template("ogr2ogr -update -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
-    elif raster:
+    elif meta['is_raster']:
         cmd_template = Template("gdalwarp -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
@@ -183,8 +249,12 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             boundary = temp_boundfile.name
 
     try:
-        # dstalpha = "" if is_envelope(boundary) else "-dstalpha"  # TODO: use this for ES-397 if it works
-        dstalpha = "-dstalpha"
+
+        if meta.get('nodata') is None and not is_envelope(in_dataset):
+            dstalpha = "-dstalpha"
+        else:
+            dstalpha = ""
+
         if table:
             cmd = cmd_template.safe_substitute({'boundary': boundary,
                                                 'fmt': fmt,
@@ -203,8 +273,25 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.debug("GDAL clip cmd: %s", cmd)
 
         task_process = TaskProcess(task_uid=task_uid)
-        task_process.start_process(cmd, shell=True, executable="/bin/bash",
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
+        # retries as retrying forever would cause the job to never finish in the event that the database is down. An
+        # improved method would perhaps be to see if there are connection options to create a more reliable connection.
+        # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
+        # documentation.
+        attempts = 0
+        while True:
+            try:
+                task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                break
+            except Exception as e:
+                logger.error(e)
+                attempts += 1
+                if attempts > MAX_DB_CONNECTION_RETRIES:
+                    raise e
+                time.sleep(2)
+
     finally:
         if temp_boundfile:
             temp_boundfile.close()
@@ -229,7 +316,8 @@ def convert(dataset=None, fmt=None, task_uid=None):
     if not dataset:
         raise Exception("Could not open input file: {0}".format(dataset))
 
-    (driver, raster) = driver_for(dataset)
+    meta = get_meta(dataset)
+    driver, is_raster = meta['driver'], meta['is_raster']
 
     if not fmt or not driver or driver.lower() == fmt.lower():
         return dataset
@@ -238,7 +326,7 @@ def convert(dataset=None, fmt=None, task_uid=None):
     os.rename(dataset, in_ds)
 
     band_type = ""
-    if raster:
+    if is_raster:
         cmd_template = Template("gdalwarp -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
@@ -262,3 +350,92 @@ def convert(dataset=None, fmt=None, task_uid=None):
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
 
     return dataset
+
+
+def get_dimensions(bbox, scale):
+    """
+
+    :param bbox: A list [w, s, e, n].
+    :param scale: A scale in meters per pixel.
+    :return: A list [width, height] representing pixels
+    """
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+    return [int(width/scale), int(height/scale)]
+
+
+def get_line(coordinates):
+    """
+
+    :param coordinates: A list representing a single coordinate in decimal degrees.
+        Example: [[W/E, N/S], [W/E, N/S]]
+    :return: AN OGR geometry point.
+    """
+    # This line will implicitly be in EPSG:4326 because that is what the geojson standard specifies.
+    geojson = json.dumps({"type": "LineString", "coordinates": coordinates})
+    return ogr.CreateGeometryFromJson(geojson)
+
+
+def get_distance(point_a, point_b):
+    """
+    Takes two points, and converts them to a line, converts the geometry to mercator and returns length in meters.
+    The geometry is converted to mercator because length is based on the SRS unit of measure (meters for mercator).
+    :param point_a: A list representing a single point [W/E, N/S].
+    :param point_b: A list representing a single point [W/E, N/S].
+    :return: Distance in meters.
+    """
+    line = get_line([point_a, point_b])
+    reproject_geometry(line, 4326, 3857)
+    return line.Length()
+
+
+def reproject_geometry(geometry, from_srs, to_srs):
+    """
+
+    :param geometry: Converts an ogr geometry from one spatial reference system to another
+    :param from_srs:
+    :param to_srs:
+    :return:
+    """
+    return geometry.Transform(get_transform(from_srs, to_srs))
+
+
+def get_transform(from_srs, to_srs):
+    """
+
+    :param from_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
+    :param to_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
+    :return: An osr coordinate transformation object.
+    """
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(from_srs)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(to_srs)
+
+    return osr.CoordinateTransformation(source, target)
+
+
+def merge_geotiffs(in_files, out_file, task_uid=None):
+    """
+
+    :param in_files: A list of geotiffs.
+    :param out_file:  A location for the result of the merge.
+    :param task_uid: A task uid to manage the subprocess.
+    :return: The out_file path.
+    """
+    cmd_template = Template("gdalwarp $in_ds $out_ds")
+    cmd = cmd_template.safe_substitute({'in_ds': ' '.join(in_files),
+                                        'out_ds': out_file})
+
+    logger.debug("GDAL merge cmd: {0}".format(cmd))
+
+    task_process = TaskProcess(task_uid=task_uid)
+    task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stderr))
+        raise Exception("GeoTIFF merge process failed with return code {0}".format(task_process.exitcode))
+
+    return out_file

@@ -38,11 +38,12 @@ import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
 import {
     generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteraction,
-    serialize, isGeoJSONValid, createGeoJSON, clearDraw,
+    isGeoJSONValid, createGeoJSON, clearDraw,
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
-    isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, hasArea,
+    isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
     getDominantGeometry } from '../../utils/mapUtils';
 import Joyride from 'react-joyride';
+import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import { Config } from '../../config';
 
@@ -73,7 +74,7 @@ export class ExportAOI extends Component {
         this.moveEvent = this.moveEvent.bind(this);
         this.dragEvent = this.dragEvent.bind(this);
         this.upEvent = this.upEvent.bind(this);
-        this.onBufferClick = this.onBufferClick.bind(this);
+        this.handleBufferClick = this.handleBufferClick.bind(this);
         this.openBufferDialog = this.openBufferDialog.bind(this);
         this.closeBufferDialog = this.closeBufferDialog.bind(this);
         this.handleBufferChange = this.handleBufferChange.bind(this);
@@ -81,6 +82,8 @@ export class ExportAOI extends Component {
         this.openResetDialog = this.openResetDialog.bind(this);
         this.resetAoi = this.resetAoi.bind(this);
         this.updateZoomLevel = this.updateZoomLevel.bind(this);
+        this.shouldEnableNext = this.shouldEnableNext.bind(this);
+        this.bufferFunction = () => {};
         this.state = {
             toolbarIcons: {
                 box: 'DEFAULT',
@@ -120,7 +123,8 @@ export class ExportAOI extends Component {
             });
             this.drawLayer.getSource().addFeatures(features);
             this.map.getView().fit(this.drawLayer.getSource().getExtent());
-            if (hasArea(this.props.aoiInfo.geojson)) {
+            const enable = this.shouldEnableNext(this.props.aoiInfo.geojson);
+            if (enable) {
                 this.props.setNextEnabled();
             }
             this.setButtonSelected(this.props.aoiInfo.selectionType);
@@ -163,6 +167,35 @@ export class ExportAOI extends Component {
             icons[key] = 'DEFAULT';
         });
         this.setState({ toolbarIcons: icons });
+    }
+
+    setMapView() {
+        clearDraw(this.drawLayer);
+        const ext = this.map.getView().calculateExtent(this.map.getSize());
+        const geom = new Polygon.fromExtent(ext);
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
+        const geojson = createGeoJSON(geom);
+        const bboxFeature = new Feature({
+            geometry: geom,
+        });
+        this.drawLayer.getSource().addFeature(bboxFeature);
+        this.props.updateAoiInfo({
+            ...this.props.aoiInfo,
+            geojson,
+            originalGeojson: geojson,
+            geomType: 'Polygon',
+            title: 'Custom Polygon',
+            description: 'Map View',
+            selectionType: 'mapView',
+        });
+        const enable = this.shouldEnableNext(geojson);
+        if (enable) {
+            this.props.setNextEnabled();
+        } else {
+            this.props.setNextDisabled();
+        }
     }
 
     toggleImportModal(show) {
@@ -238,8 +271,11 @@ export class ExportAOI extends Component {
             selectionType: 'search',
         });
         zoomToFeature(searchFeature, this.map);
-        if (searchFeature.getGeometry().getType() === 'Polygon' || searchFeature.getGeometry().getType() === 'MultiPolygon') {
+        const enable = this.shouldEnableNext(geojson);
+        if (enable) {
             this.props.setNextEnabled();
+        } else {
+            this.props.setNextDisabled();
         }
         return true;
     }
@@ -264,34 +300,12 @@ export class ExportAOI extends Component {
             description: geomType,
             selectionType: 'import',
         });
-        if (hasArea(featureCollection)) {
+        const enable = this.shouldEnableNext(featureCollection);
+        if (enable) {
             this.props.setNextEnabled();
+        } else {
+            this.props.setNextDisabled();
         }
-    }
-
-    setMapView() {
-        clearDraw(this.drawLayer);
-        const extent = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = new Polygon.fromExtent(extent);
-        const coords = geom.getCoordinates();
-        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
-        geom.setCoordinates(unwrappedCoords);
-        const geojson = createGeoJSON(geom);
-        const bboxFeature = new Feature({
-            geometry: geom,
-        });
-        const bbox = serialize(extent);
-        this.drawLayer.getSource().addFeature(bboxFeature);
-        this.props.updateAoiInfo({
-            ...this.props.aoiInfo,
-            geojson,
-            originalGeojson: geojson,
-            geomType: 'Polygon',
-            title: 'Custom Polygon',
-            description: 'Map View',
-            selectionType: 'mapView',
-        });
-        this.props.setNextEnabled();
     }
 
     updateMode(mode) {
@@ -339,7 +353,12 @@ export class ExportAOI extends Component {
                         description: 'Draw',
                         selectionType: 'free',
                     });
-                    this.props.setNextEnabled();
+                    const enable = this.shouldEnableNext(geojson);
+                    if (enable) {
+                        this.props.setNextEnabled();
+                    } else {
+                        this.props.setNextDisabled();
+                    }
                 } else {
                     this.showInvalidDrawWarning(true);
                 }
@@ -353,7 +372,12 @@ export class ExportAOI extends Component {
                     description: 'Box',
                     selectionType: 'box',
                 });
-                this.props.setNextEnabled();
+                const enable = this.shouldEnableNext(geojson);
+                if (enable) {
+                    this.props.setNextEnabled();
+                } else {
+                    this.props.setNextDisabled();
+                }
             }
             // exit drawing mode
             this.updateMode(MODE_NORMAL);
@@ -365,10 +389,6 @@ export class ExportAOI extends Component {
     }
 
     initializeOpenLayers() {
-        const scaleStyle = {
-            background: 'white',
-        };
-
         this.drawLayer = generateDrawLayer();
         this.markerLayer = generateDrawLayer();
         this.bufferLayer = generateDrawLayer();
@@ -487,7 +507,12 @@ export class ExportAOI extends Component {
                     geojson,
                 });
                 this.showInvalidDrawWarning(false);
-                this.props.setNextEnabled();
+                const enable = this.shouldEnableNext(geojson);
+                if (enable) {
+                    this.props.setNextEnabled();
+                } else {
+                    this.props.setNextDisabled();
+                }
             } else {
                 this.props.setNextDisabled();
                 this.showInvalidDrawWarning(true);
@@ -617,13 +642,19 @@ export class ExportAOI extends Component {
             ...this.props.aoiInfo,
             geojson: bufferFeatures,
         });
-        this.props.setNextEnabled();
+        const enable = this.shouldEnableNext(bufferFeatures);
+        if (enable) {
+            this.props.setNextEnabled();
+        } else {
+            this.props.setNextDisabled();
+        }
         return true;
     }
 
-    onBufferClick() {
+    handleBufferClick() {
         this.bufferMapFeature();
         this.setState({ showBuffer: false, validBuffer: true });
+        this.bufferFeatures = null;
     }
 
     openBufferDialog() {
@@ -632,6 +663,7 @@ export class ExportAOI extends Component {
 
     closeBufferDialog() {
         this.setState({ showBuffer: false, validBuffer: true });
+        this.bufferFeatures = null;
         this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer: 0 });
         clearDraw(this.bufferLayer);
     }
@@ -686,14 +718,18 @@ export class ExportAOI extends Component {
             buffer: 0,
         });
         this.setState({ showReset: false });
-        if (!hasArea(originalGeojson)) {
+        if (this.shouldEnableNext(originalGeojson)) {
+            this.props.setNextEnabled();
+        } else {
             this.props.setNextDisabled();
         }
     }
 
-
-    doesMapHaveFeatures() {
-        return Object.keys(this.props.aoiInfo.geojson).length !== 0;
+    shouldEnableNext(geojson) {
+        const area = allHaveArea(geojson);
+        const max = this.context.config.MAX_DATAPACK_AOI_SQ_KM;
+        if (!max || !area) return area;
+        return getSqKm(geojson) <= max;
     }
 
     joyrideAddSteps(steps) {
@@ -801,7 +837,10 @@ export class ExportAOI extends Component {
             mapStyle.left = '0px';
         }
 
-        const showAlert = this.doesMapHaveFeatures() && !hasArea(this.props.aoiInfo.geojson);
+        let aoi = this.props.aoiInfo.geojson;
+        if (this.state.showBuffer && this.bufferFeatures) {
+            aoi = this.bufferFeatures;
+        }
 
         return (
             <div>
@@ -827,11 +866,11 @@ export class ExportAOI extends Component {
                 <div id="map" className={css.map} style={mapStyle} ref="olmap">
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
-                        showAlert={showAlert}
                         showRevert={!!this.props.aoiInfo.buffer}
                         onRevertClick={this.openResetDialog}
                         clickZoomToSelection={this.handleZoomToSelection}
-                        onBufferClick={this.openBufferDialog}
+                        handleBufferClick={this.openBufferDialog}
+                        maxAoiSqKm={this.context.config.MAX_DATAPACK_AOI_SQ_KM}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
@@ -859,9 +898,11 @@ export class ExportAOI extends Component {
                     />
                     <BufferDialog
                         show={this.state.showBuffer}
+                        aoi={aoi}
+                        maxAoiSqKm={this.context.config.MAX_DATAPACK_AOI_SQ_KM}
                         value={this.props.aoiInfo.buffer}
                         valid={this.state.validBuffer}
-                        onBufferClick={this.onBufferClick}
+                        handleBufferClick={this.handleBufferClick}
                         handleBufferChange={this.bufferFunction}
                         closeBufferDialog={this.closeBufferDialog}
                     />
@@ -889,24 +930,31 @@ export class ExportAOI extends Component {
 }
 
 ExportAOI.contextTypes = {
-    config: React.PropTypes.object,
+    config: PropTypes.object,
 };
 
 ExportAOI.propTypes = {
-    aoiInfo: PropTypes.object,
-    importGeom: PropTypes.object,
-    drawer: PropTypes.string,
-    geocode: PropTypes.object,
-    updateAoiInfo: PropTypes.func,
-    clearAoiInfo: PropTypes.func,
-    clearExportInfo: PropTypes.func,
-    setNextDisabled: PropTypes.func,
-    setNextEnabled: PropTypes.func,
-    getGeocode: PropTypes.func,
-    processGeoJSONFile: PropTypes.func,
-    resetGeoJSONFile: PropTypes.func,
-    walkthroughClicked: React.PropTypes.bool,
-    onWalkthroughReset: React.PropTypes.func,
+    aoiInfo: PropTypes.shape({
+        geojson: PropTypes.object,
+        originalGeojson: PropTypes.object,
+        geomType: PropTypes.string,
+        title: PropTypes.string,
+        description: PropTypes.string,
+        selectionType: PropTypes.string,
+        buffer: PropTypes.number,
+    }).isRequired,
+    importGeom: PropTypes.object.isRequired,
+    drawer: PropTypes.string.isRequired,
+    geocode: PropTypes.object.isRequired,
+    updateAoiInfo: PropTypes.func.isRequired,
+    clearAoiInfo: PropTypes.func.isRequired,
+    setNextDisabled: PropTypes.func.isRequired,
+    setNextEnabled: PropTypes.func.isRequired,
+    getGeocode: PropTypes.func.isRequired,
+    processGeoJSONFile: PropTypes.func.isRequired,
+    resetGeoJSONFile: PropTypes.func.isRequired,
+    walkthroughClicked: PropTypes.bool,
+    onWalkthroughReset: PropTypes.func,
 };
 
 function mapStateToProps(state) {

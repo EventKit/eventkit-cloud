@@ -16,7 +16,7 @@ from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License
 from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ...tasks.export_tasks import TaskStates
-from ...core.models import GroupPermission
+from ...core.models import GroupPermission,GroupPermissionLevel
 
 
 class TestJobPermissions(APITestCase):
@@ -65,15 +65,15 @@ class TestJobPermissions(APITestCase):
         group1, created = Group.objects.get_or_create(name="group_one")
         self.group1id = group1.id
         gp = GroupPermission.objects.create(group=group1, user=self.user1,
-                                            permission=GroupPermission.Permissions.ADMIN.value)
+                                            permission=GroupPermissionLevel.ADMIN.value)
         gp = GroupPermission.objects.create(group=group1, user=self.user2,
-                                            permission=GroupPermission.Permissions.MEMBER.value)
+                                            permission=GroupPermissionLevel.MEMBER.value)
         group2, created = Group.objects.get_or_create(name="group_two")
         self.group2id = group2.id
         gp = GroupPermission.objects.create(group=group2, user=self.user1,
-                                            permission=GroupPermission.Permissions.ADMIN.value)
+                                            permission=GroupPermissionLevel.ADMIN.value)
         gp = GroupPermission.objects.create(group=group2, user=self.user2,
-                                            permission=GroupPermission.Permissions.MEMBER.value)
+                                            permission=GroupPermissionLevel.MEMBER.value)
 
     def test_list(self, ):
         expected = '/api/jobs'
@@ -325,13 +325,13 @@ class TestExportRunViewSet(APITestCase):
         group1, created = Group.objects.get_or_create(name="group_one")
         self.group1id = group1.id
         gp = GroupPermission.objects.create(group=group1, user=self.user1,
-                                            permission=GroupPermission.Permissions.ADMIN.value)
+                                            permission=GroupPermissionLevel.ADMIN.value)
         gp = GroupPermission.objects.create(group=group1, user=self.user2,
-                                            permission=GroupPermission.Permissions.MEMBER.value)
+                                            permission=GroupPermissionLevel.MEMBER.value)
         group2, created = Group.objects.get_or_create(name="group_two")
         self.group2id = group2.id
         gp = GroupPermission.objects.create(group=group2, user=self.user1,
-                                            permission=GroupPermission.Permissions.ADMIN.value)
+                                            permission=GroupPermissionLevel.ADMIN.value)
 
 
     def test_retrieve_run(self,):

@@ -37,6 +37,15 @@ export default {
         view: '',
         cancelSource: null,
     },
+    featuredRunsList: {
+        fetching: false,
+        fetched: false,
+        runs: [],
+        error: null,
+        nextPage: false,
+        range: '',
+        cancelSource: null,
+    },
     runsDeletion: {
         deleting: false,
         deleted: false,
@@ -54,7 +63,7 @@ export default {
         projectName: '',
         providers: [],
         areaStr: '',
-        formats: [],
+        formats: ['gpkg'],
     },
     providers: [],
     stepperNextEnabled: false,
@@ -111,4 +120,26 @@ export default {
         error: null,
     },
     users: usersState,
+    userActivity: {
+        viewedJobs: {
+            fetching: false,
+            fetched: false,
+            viewedJobs: [],
+            error: null,
+        },
+    },
+    notifications: {
+        fetching: false,
+        fetched: false,
+        notifications: {},
+        notificationsSorted: [],
+        error: null,
+        cancelSource: null,
+        unreadCount: {
+            fetching: false,
+            fetched: false,
+            unreadCount: 0,
+            cancelSource: null,
+        },
+    },
 };

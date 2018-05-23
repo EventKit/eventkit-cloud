@@ -35,7 +35,6 @@ import BaseTooltip from '../BaseTooltip';
 import Joyride from 'react-joyride';
 import { Config } from '../../config';
 import { getSqKmString } from '../../utils/generic';
-import ol3mapCss from '../../styles/ol3map.css';
 import background from '../../../images/topoBackground.jpg';
 
 export class ExportInfo extends React.Component {
@@ -43,7 +42,6 @@ export class ExportInfo extends React.Component {
         super(props);
         this.state = {
             expanded: false,
-            formatsDialogOpen: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
             steps: [],
@@ -56,12 +54,11 @@ export class ExportInfo extends React.Component {
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
+        this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.callback = this.callback.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
-        this.handleFormatsClose = this.handleFormatsClose.bind(this);
-        this.handleFormatsOpen = this.handleFormatsOpen.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.handleRefreshTooltipOpen = this.handleRefreshTooltipOpen.bind(this);
@@ -73,21 +70,18 @@ export class ExportInfo extends React.Component {
 
     componentDidMount() {
         // if the state does not have required data disable next
-        if (!this.hasRequiredFields(this.props.exportInfo)) {
+        if (!this.hasRequiredFields(this.props.exportInfo) ||
+            this.hasDisallowedSelection(this.props.exportInfo)) {
+
             this.props.setNextDisabled();
         }
 
         // calculate the area of the AOI
         const areaStr = getSqKmString(this.props.geojson);
 
-        // Will need to change this once we are allowing other formats
-        // since formats is checked and disabled we can't track user selection
-        const formats = [];
-        formats.push(this.formatsCheckbox.props.name);
         this.props.updateExportInfo({
             ...this.props.exportInfo,
             areaStr,
-            formats,
         });
 
         // set up debounce functions for user text input
@@ -125,13 +119,15 @@ export class ExportInfo extends React.Component {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
         if (nextProps.walkthroughClicked != true) {
         // if required fields are fulfilled enable next
-            if (this.hasRequiredFields(nextProps.exportInfo)) {
+            if (this.hasRequiredFields(nextProps.exportInfo) &&
+                !this.hasDisallowedSelection(nextProps.exportInfo)) {
+
                 if (!nextProps.nextEnabled) {
                     this.props.setNextEnabled();
                 }
             } else if (nextProps.nextEnabled) {
-            // if not and next is enabled it should be disabled
-                this.props.setNextDisabled();
+                // if not and next is enabled it should be disabled
+                    this.props.setNextDisabled();
             }
         }
         if (nextProps.walkthroughClicked == true && this.state.isRunning == false) {
@@ -246,14 +242,6 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    handleFormatsClose() {
-        this.setState({ formatsDialogOpen: false });
-    }
-
-    handleFormatsOpen() {
-        this.setState({ formatsDialogOpen: true });
-    }
-
     handleProjectionsClose() {
         this.setState({ projectionsDialogOpen: false });
     }
@@ -290,6 +278,15 @@ export class ExportInfo extends React.Component {
             && exportInfo.datapackDescription
             && exportInfo.projectName
             && exportInfo.providers.length > 0;
+    }
+
+    hasDisallowedSelection(exportInfo) {
+        // if any unacceptable providers are selected return true, else return false
+        return exportInfo.providers.some((provider) => {
+            // short-circuiting means that this shouldn't be called until provider.availability
+            // is populated, but if it's not, return false
+            return provider.availability && provider.availability.status.toUpperCase() === 'FATAL';
+        });
     }
 
     initializeOpenLayers() {
@@ -504,9 +501,6 @@ export class ExportInfo extends React.Component {
 
         const providers = this.state.providers.filter(provider => (provider.display !== false));
 
-        // We only display geopackage as a format option for right now.
-        const formats = this.props.formats.filter(format => (format.slug === 'gpkg'));
-
         return (
             <div id="root" className="qa-ExportInfo-root" style={style.root}>
                 <Joyride
@@ -657,6 +651,13 @@ export class ExportInfo extends React.Component {
                                             disabled
                                             style={style.serviceDescription}
                                         />);
+                                        nestedItems.push(<ListItem
+                                            className="qa-ExportInfo-ListItem-provMaxAoi"
+                                            key={nestedItems.length}
+                                            primaryText={<div style={{ whiteSpace: 'pre-wrap' }}><span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>{((provider.max_selection == null || provider.max_selection == "" || parseFloat(provider.max_selection) <= 0) ? "unlimited" : (provider.max_selection + " km²"))}</div>}
+                                            disabled
+                                            style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
+                                        />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
 
@@ -731,37 +732,6 @@ export class ExportInfo extends React.Component {
                                     </BaseDialog>
                                 </div>
                             </div>
-
-                            <div id="formatsHeader" className="qa-ExportInfo-formatsHeader" style={style.heading}>Select Export File Formats</div>
-                            <div id="formatsCheckbox" style={style.sectionBottom}>
-                                {formats.map(format => (
-                                    <div key={format.slug} style={style.checkboxLabel}>
-                                        <Checkbox
-                                            className="qa-ExportInfo-CheckBox-formats"
-                                            key={format.slug}
-                                            ref={(instance) => { this.formatsCheckbox = instance; }}
-                                            label={format.name}
-                                            labelStyle={{ fontWeight: 'normal', fontSize: '16px', width: '90%' }}
-                                            name={format.slug}
-                                            style={{ display: 'inlineBlock' }}
-                                            defaultChecked
-                                            disabled
-                                            checkedIcon={<ActionCheckCircle />}
-                                        />
-                                        <Info onTouchTap={this.handleFormatsOpen} style={style.infoIcon} />
-                                        <BaseDialog
-                                            show={this.state.formatsDialogOpen}
-                                            title="Format Information"
-                                            onClose={this.handleFormatsClose}
-                                        >
-                                            <div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
-                                                EventKit provides all geospatial data in the GeoPackage (.gpkg) format.
-                                                 Additional format support will be added in subsequent versions.
-                                            </div>
-                                        </BaseDialog>
-                                    </div>
-                                ))}
-                            </div>
                             <div id="aoiHeader" className="qa-ExportInfo-AoiHeader" style={style.heading}>
                                 Area of Interest (AOI)
                             </div>
@@ -817,7 +787,6 @@ function mapStateToProps(state) {
         exportInfo: state.exportInfo,
         providers: state.providers,
         nextEnabled: state.stepperNextEnabled,
-        formats: state.formats,
     };
 }
 
@@ -848,9 +817,8 @@ ExportInfo.propTypes = {
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
-    formats: PropTypes.arrayOf(PropTypes.object).isRequired,
-    walkthrough: React.PropTypes.bool,
-    onWalkthroughReset: React.PropTypes.func,
+    walkthrough: PropTypes.bool,
+    onWalkthroughReset: PropTypes.func,
 };
 
 export default connect(

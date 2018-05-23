@@ -12,6 +12,7 @@ import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
+import isUndefined from 'lodash/isUndefined';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -64,7 +65,7 @@ export class DataPackGridItem extends Component {
 
     initMap() {
         const map = new Map({
-            target: `${this.props.run.uid}_map`,
+            target: this.getMapId(),
             layers: [
                 new Tile({
                     source: new XYZ({
@@ -146,6 +147,31 @@ export class DataPackGridItem extends Component {
     handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
+    }
+
+    getMapId() {
+        let mapId = '';
+        if (!isUndefined(this.props.gridName)) {
+            mapId += `${this.props.gridName}_`;
+        }
+        mapId += `${this.props.run.uid}_`;
+        if (!isUndefined(this.props.index)) {
+            mapId += `${this.props.index}_`;
+        }
+        mapId += 'map';
+
+        return mapId;
+    }
+
+    mapContainerRef(element) {
+        if (!element) {
+            return;
+        }
+
+        // Absorb touch move events.
+        element.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        });
     }
 
     render() {
@@ -289,7 +315,7 @@ export class DataPackGridItem extends Component {
                 expanded={this.state.expanded}
                 onExpandChange={this.handleExpandChange}
             >
-                <FeaturedFlag show={this.props.run.job.featured} />
+                <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                 <CardTitle
                     className="qa-DataPackGridItem-CardTitle"
                     titleColor="#4598bf"
@@ -401,7 +427,11 @@ export class DataPackGridItem extends Component {
                     </span>
                 </CardText>
                 <CardMedia className="qa-DataPackGridItem-CardMedia" expandable>
-                    <div id={`${this.props.run.uid}_map`} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
+                    <div
+                        id={this.getMapId()}
+                        style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }}
+                        ref={this.mapContainerRef}
+                    />
                 </CardMedia>
                 <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px' }}>
                     <span>
@@ -440,8 +470,15 @@ DataPackGridItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    gridName: PropTypes.string.isRequired,
+    index: PropTypes.number.isRequired,
+    showFeaturedFlag: PropTypes.bool,
     openShare: PropTypes.func.isRequired,
     adminPermission: PropTypes.bool.isRequired,
+};
+
+DataPackGridItem.defaultProps = {
+    showFeaturedFlag: true,
 };
 
 export default DataPackGridItem;

@@ -10,20 +10,27 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from ..core.models import GroupPermission, JobPermission
+from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
+from notifications.models import Notification
+from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
+
 
 from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
+    UserJobActivity
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
 from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
-from ..utils.provider_check import get_provider_checker
+from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
-from rest_framework import filters, permissions, status, views, viewsets
+from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
@@ -32,12 +39,12 @@ from rest_framework.serializers import ValidationError
 from serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
-    RegionSerializer, ListJobSerializer, ProviderTaskSerializer,
-    DataProviderSerializer, LicenseSerializer, UserDataSerializer, GroupSerializer
+    RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
+    UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
 )
 
 from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter
+from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
 from .renderers import HOTExportApiRenderer
@@ -100,7 +107,7 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """Return all objects user can view."""
 
-        perms, job_ids = JobPermission.userjobs(self.request.user, JobPermission.Permissions.READ.value )
+        perms, job_ids = JobPermission.userjobs(self.request.user, JobPermissionLevel.READ.value )
 
         return Job.objects.filter(
              Q(visibility=VisibilityState.PUBLIC.value) | Q(pk__in=job_ids))
@@ -320,6 +327,20 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       }]}
                             return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
+
+                        # Check max area (skip for superusers)
+                        if not self.request.user.is_superuser:
+                            for provider_task in job.provider_tasks.all():
+                                provider = provider_task.provider
+                                max_selection = provider.max_selection
+                                if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
+                                    status_code = status.HTTP_400_BAD_REQUEST
+                                    error_data = {"errors": [{"status": status_code,
+                                                              "title": _('Selection area too large'),
+                                                              "detail": _('The selected area is too large '
+                                                                          'for provider \'%s\'') % provider.name}]}
+                                    return Response(error_data, status=status_code)
+
                         if preset:
                             """Get the tags from the uploaded preset."""
                             logger.debug('Found preset with uid: {0}'.format(preset))
@@ -425,7 +446,9 @@ class JobViewSet(viewsets.ModelViewSet):
             logger.debug("Getting Run Data.".format(run.uid))
             running = ExportRunSerializer(run, context={'request': request})
             logger.debug("Returning Run Data.".format(run.uid))
+
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
+
         else:
             return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
@@ -459,7 +482,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
         # Does the user have admin permission to make changes to this job?
 
-        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
             return Response([{'detail': 'ADMIN permission is required to update this job.'}],
                             status.HTTP_400_BAD_REQUEST)
@@ -508,11 +531,11 @@ class JobViewSet(viewsets.ModelViewSet):
                         return Response([{'detail': "unidentified user or group : %s" % key}],
                                         status.HTTP_400_BAD_REQUEST)
                     perm = set[key]
-                    if not perm in JobPermission.Permissions.__members__:
+                    if not perm in JobPermissionLevel.__members__:
                         return Response([{'detail': "invalid permission value : %s" % perm}],
                                         status.HTTP_400_BAD_REQUEST)
 
-                    if perm == GroupPermission.Permissions.ADMIN.value: admins += 1
+                    if perm == GroupPermissionLevel.ADMIN.value: admins += 1
 
             if admins == 0:
                 return Response([{'detail': "This job has no administrators."}],
@@ -540,6 +563,22 @@ class JobViewSet(viewsets.ModelViewSet):
         job.save()
         response['success'] = True
         return Response(response, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        Look up a single job by uid value.
+        * uid: optional job uid lookup field
+        * return: The selected job.
+        """
+        return super(JobViewSet, self).retrieve(self, request, uid, *args, **kwargs)
+
+    def update(self, request, uid=None, *args, **kwargs):
+        """
+        Update a job object, looked up by uid.
+        * uid: optional job uid lookup field
+        * return: The status of the update.
+        """
+        return super(JobViewSet, self).update(self, request, uid, *args, **kwargs)
 
     @list_route(methods=['post', ])
     def filter(self, request, *args, **kwargs):
@@ -574,7 +613,7 @@ class JobViewSet(viewsets.ModelViewSet):
         # Does the user have admin permission to make changes to this job?
 
         logger.info("DELETE REQUEST")
-        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         logger.info("JOB IDS %s %s" % (job.id, job_ids))
 
         if not job.id in job_ids:
@@ -583,6 +622,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
         super(JobViewSet, self).destroy(request, *args, **kwargs)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -595,6 +635,20 @@ class ExportFormatViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ExportFormat.objects.all()
     lookup_field = 'slug'
     ordering = ['description']
+
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of export format
+        * return: A list of format types.
+        """
+        return super(ExportFormatViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of export format
+        * return: A single format object matching the provided slug value.
+        """
+        return super(ExportFormatViewSet, self).retrieve(self, request, slug, *args, **kwargs)
 
 
 class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -626,6 +680,21 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
         except Exception:
             return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
 
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of license
+        * return: A list of license objects.
+        """
+        return super(LicenseViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        * slug: optional slug value of license
+        * return: A single license object matching the provided slug value.
+        """
+        return super(LicenseViewSet, self).retrieve(self, request, slug, *args, **kwargs)
+
+
 class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Endpoint exposing the supported data providers.
@@ -646,7 +715,10 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
     @detail_route(methods=['get', 'post'])
     def status(self, request, slug=None, *args, **kwargs):
         """
-        :return:
+        Checks the status of a data provider to confirm that it is available.
+
+        * slug: The DataProvider object slug.
+        * return: The HTTP response of the data provider health check, in cases where there is no error. If the data provider does not exist, returns status 400 bad request.
         """
         try:
             geojson = self.request.data.get('geojson', None)
@@ -661,6 +733,22 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             logger.error(e.message)
             return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def list(self, request, slug=None, *args, **kwargs):
+        """
+        List all data providers.
+        * slug: optional lookup field
+        * return: A list of data providers.
+        """
+        return super(DataProviderViewSet, self).list(self, request, slug, *args, **kwargs)
+
+    def retrieve(self, request, slug=None, *args, **kwargs):
+        """
+        Look up a single data provider by slug value.
+        * slug: optional lookup field
+        * return: The data provider with the given slug.
+        """
+        return super(DataProviderViewSet, self).retrieve(self, request, slug, *args, **kwargs)
+
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -670,6 +758,22 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (permissions.IsAuthenticated,)
     queryset = Region.objects.all()
     lookup_field = 'uid'
+
+    def list(self, request, uid=None, *args, **kwargs):
+        """
+        List all regions.
+        * uid: optional lookup field
+        * return: A list of regions.
+        """
+        return super(RegionViewSet, self).list(self, request, uid, *args, **kwargs)
+
+    def retrieve(self, request, uid=None, *args, **kwargs):
+        """
+        Look up a single region by slug value.
+        * uid: optional lookup field
+        * return: The region with the given slug.
+        """
+        return super(RegionViewSet, self).retrieve(self, request, uid, *args, **kwargs)
 
 
 class RegionMaskViewSet(viewsets.ReadOnlyModelViewSet):
@@ -779,14 +883,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def destroy(self, request, *args, **kwargs):
         """
-            Destroy a model instance.
+        Destroy a model instance.
         """
 
         instance = self.get_object()
         job = instance.job
 
 
-        perms, job_ids = JobPermission.userjobs(request.user, "ADMIN")
+        perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
                             status.HTTP_400_BAD_REQUEST)
@@ -941,6 +1045,21 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                                                                                   invalid_licenses))
         return True
 
+    def create(self, request, *args, **kwargs):
+        """
+        Create a run.
+        * return: The status of the creation.
+        """
+        return super(ExportRunViewSet, self).create(self, request, *args, **kwargs)
+
+    def update(self, request, uid=None, *args, **kwargs):
+        """
+        Update a run.
+        * uid: optional lookup field
+        * return: The status of the update.
+        """
+        return super(ExportRunViewSet, self).update(self, request, uid, *args, **kwargs)
+
 
 class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -971,6 +1090,14 @@ class ExportTaskViewSet(viewsets.ReadOnlyModelViewSet):
             context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def list(self, request, uid=None, *args, **kwargs):
+        """
+        List all tasks.
+        * uid: optional lookup field
+        * return: A list of all tasks.
+        """
+        return super(ExportTaskViewSet, self).list(self, request, uid, *args, **kwargs)
 
 
 class DataProviderTaskViewSet(viewsets.ModelViewSet):
@@ -1003,6 +1130,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, uid=None, *args, **kwargs):
+        """
+        Cancels an export provider task.
+        * param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
+        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
+        """
+
         export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
 
         if export_provider_task.run.user != request.user and not request.user.is_superuser:
@@ -1010,6 +1143,36 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
 
         cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
+
+    def list(self, request, *args, **kwargs):
+        """
+        * return: A list of data provider task objects.
+        """
+        return super(DataProviderTaskViewSet, self).list(self, request, *args, **kwargs)
+
+    def create(self, request, uid=None, *args, **kwargs):
+        """
+        Create a data provider task object.
+        * uid: optional lookup field
+        * return: The status of the object creation.
+        """
+        return super(DataProviderTaskViewSet, self).create(self, request, uid, *args, **kwargs)
+
+    def destroy(self, request, uid=None, *args, **kwargs):
+        """
+        Delete a data provider task object.
+        * uid: optional lookup field
+        * return: The status of the deletion.
+        """
+        return super(DataProviderTaskViewSet, self).destroy(self, request, uid, *args, **kwargs)
+
+    def update(self, request, uid=None, *args, **kwargs):
+        """
+        Update a data provider task object.
+        * uid: optional lookup field
+        * return: The status of the update.
+        """
+        return super(DataProviderTaskViewSet, self).update(self, request, uid, *args, **kwargs)
 
 
 class UserDataViewSet(viewsets.GenericViewSet):
@@ -1032,22 +1195,22 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def partial_update(self, request, username=None, *args, **kwargs):
         """
-            Update user data.
+        Update user data.
 
-            User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
-            with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to
-            download data.
+        User data cannot currently be updated via this API menu however UserLicense data can, by sending a patch message,
+        with the licenses data that the user agrees to.  Users will need to agree to all of the licenses prior to being allowed to
+        download data.
 
-            Request data can be posted as `application/json`.
+        Request data can be posted as `application/json`.
 
-            * request: the HTTP request in JSON.
+        * request: the HTTP request in JSON.
 
-            Example:
+        Example:
 
-                    {"accepted_licenses": {
-                        "odbl": true
-                        }
-                  }
+                {"accepted_licenses": {
+                    "odbl": true
+                    }
+              }
         """
 
         queryset = self.get_queryset().get(username=username)
@@ -1061,8 +1224,11 @@ class UserDataViewSet(viewsets.GenericViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request,  *args, **kwargs):
-        full_queryset = self.get_queryset()
-        queryset = full_queryset.exclude(id=request.user.id)
+        """
+        Get a list of users.
+        * return: A list of all users.
+        """
+        queryset = self.get_queryset()
         total = len(queryset)
         delta = date.today() - timedelta(days=14)
         new = len(queryset.filter(date_joined__gte=delta))
@@ -1071,17 +1237,16 @@ class UserDataViewSet(viewsets.GenericViewSet):
             if not len(GroupPermission.objects.filter(user=user)):
                 not_grouped += 1
         headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
-        filtered_queryset = self.filter_queryset(full_queryset)
+        filtered_queryset = self.filter_queryset(queryset)
         serializer = UserDataSerializer(filtered_queryset, many=True)
         return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 
     @list_route(methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
         """
-             Member list from list of group ids
+        Member list from list of group ids
 
-             Example :  [ 32, 35, 36 ]
-
+        Example :  [ 32, 35, 36 ]
         """
 
         targets = request.data
@@ -1104,11 +1269,74 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, username=None):
         """
-             GET a user by username
+        GET a user by username
         """
         queryset = self.get_queryset().get(username=username)
         serializer = UserDataSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UserJobActivityViewSet(mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    """
+    Endpoint to create and retrieve user activity related to jobs.
+    """
+    serializer_class = UserJobActivitySerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = LinkHeaderPagination
+    filter_class = UserJobActivityFilter
+
+    def get_queryset(self):
+        activity_type = self.request.query_params.get('activity', '').lower()
+        if activity_type == 'viewed':
+            activity_ids = UserJobActivity.objects.filter(
+                user=self.request.user,
+                type=UserJobActivity.VIEWED,
+                job__last_export_run__isnull=False,
+                job__last_export_run__deleted=False,
+            ).order_by('job', '-created_at').distinct('job').values_list('id', flat=True)
+
+            return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
+        else:
+            activity_ids = UserJobActivity.objects.filter(user=self.request.user)
+            return UserJobActivity.objects.filter(id__in=activity_ids).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        """
+        Gets the most recent UserJobActivity objects.
+        """
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        """
+        Creates a new UserJobActivity object.
+        """
+        activity_type = request.query_params.get('activity', '').lower()
+        job_uid = request.data.get('job_uid')
+
+        # Save the
+        job = Job.objects.get(uid=job_uid)
+        if activity_type == 'viewed':
+            # Don't save consecutive views of the same job.
+            queryset = self.get_queryset()
+            if queryset.count() > 0:
+                last_job_viewed = queryset.latest('created_at')
+                if str(last_job_viewed.job.uid) == job_uid:
+                    return Response({'ignored': True}, content_type='application/json', status=status.HTTP_200_OK)
+
+            UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
+        else:
+            raise exceptions.ValidationError("Activity type '%s' is invalid." % activity_type)
+
+        return Response({}, content_type='application/json', status=status.HTTP_200_OK)
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -1136,28 +1364,31 @@ class GroupViewSet(viewsets.ModelViewSet):
         return queryset
 
     def update(self, request, *args, **kwargs):
-        # we don't support calls to PUT for this viewset.
+        """
+        We don't support calls to PUT for this viewset.
+        * returns: 400 bad request
+        """
         return Response("BAD REQUEST", status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         """
-            GET all groups
+        GET all groups
 
-            Sample result:
+        Sample result:
 
-                 [
-                    {
-                        "id": 54,
-                        "name": "Omaha 319",
-                        "members": [
-                          "user2",
-                          "admin"
-                        ],
-                        "administrators": [
-                          "admin"
-                        ]
-                      }
-                ]
+             [
+                {
+                    "id": 54,
+                    "name": "Omaha 319",
+                    "members": [
+                      "user2",
+                      "admin"
+                    ],
+                    "administrators": [
+                      "admin"
+                    ]
+                  }
+            ]
 
         """
         queryset = self.filter_queryset(self.get_queryset())
@@ -1167,15 +1398,15 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
-            create a new group and place  the current logged in user in the group and its administrators.
-            optionally, provide additional group members
+        create a new group and place  the current logged in user in the group and its administrators.
+        optionally, provide additional group members
 
 
-            Sample input:
+        Sample input:
 
-                {
-                    "name": "Omaha 319"
-                }
+            {
+                "name": "Omaha 319"
+            }
 
         """
 
@@ -1195,10 +1426,10 @@ class GroupViewSet(viewsets.ModelViewSet):
         group = Group.objects.get(pk=group_id)
         group.user_set.add(user)
         groupadmin = GroupPermission.objects.create(user=user, group=group,
-                                                    permission=GroupPermission.Permissions.ADMIN.value)
+                                                    permission=GroupPermissionLevel.ADMIN.value)
         groupadmin.save()
         groupmember = GroupPermission.objects.create(user=user, group=group,
-                                                     permission=GroupPermission.Permissions.MEMBER.value)
+                                                     permission=GroupPermissionLevel.MEMBER.value)
 
         if "members" in request.data:
             for member in request.data["members"]:
@@ -1206,7 +1437,9 @@ class GroupViewSet(viewsets.ModelViewSet):
                     user = User.objects.all().filter(username=member)[0]
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
-                                                       permission=GroupPermission.Permissions.MEMBER.value)
+                                                       permission=GroupPermissionLevel.MEMBER.value)
+                        sendnotification(request.user, user, NotificationVerb.ADDED_TO_GROUP.value,
+                                         group, None, NotificationLevel.INFO.value, GroupPermissionLevel.MEMBER.value)
 
         if "administrators" in request.data:
             for admin in request.data["administrators"]:
@@ -1214,7 +1447,9 @@ class GroupViewSet(viewsets.ModelViewSet):
                     user = User.objects.all().filter(username=admin)[0]
                     if user:
                         GroupPermission.objects.create(user=user, group=group,
-                                                       permission=GroupPermission.Permissions.ADMIN.value)
+                                                       permission=GroupPermissionLevel.ADMIN.value)
+                        sendnotification(request.user, user, NotificationVerb.SET_AS_GROUP_ADMIN.value,
+                                         group, None, NotificationLevel.INFO.value, GroupPermissionLevel.ADMIN.value)
 
         group = Group.objects.filter(id=group_id)[0]
         serializer = GroupSerializer(group)
@@ -1223,7 +1458,7 @@ class GroupViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, id=None):
         """
-            * get a group with a specific ID.  Return its data, including users in the group
+        * get a group with a specific ID.  Return its data, including users in the group
         """
         group = Group.objects.filter(id=id)[0]
         serializer = GroupSerializer(group)
@@ -1234,7 +1469,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     def destroy(self, request, id=None, *args, **kwargs):
 
         """
-            Destroy a group
+        Destroy a group
         """
 
         # Not permitted if the requesting user is not an administrator
@@ -1254,21 +1489,21 @@ class GroupViewSet(viewsets.ModelViewSet):
     @transaction.atomic
     def partial_update(self, request, id=None, *args, **kwargs):
         """
-             Change the group's name, members, and administrators
+        Change the group's name, members, and administrators
 
 
-             Sample input:
+        Sample input:
 
-                 {
-                    "name": "Omaha 319"
-                    "members": [ "user2", "user3", "admin"],
-                    "administrators": [ "admin" ]
-                 }
+            {
+               "name": "Omaha 319"
+               "members": [ "user2", "user3", "admin"],
+               "administrators": [ "admin" ]
+            }
 
-            If a member wishes to remove themselves from a group they can make an patch request with no body.
-            However, this will not work if they are a admin of the group.
+        If a member wishes to remove themselves from a group they can make an patch request with no body.
+        However, this will not work if they are a admin of the group.
 
-         """
+        """
 
         group = Group.objects.filter(id=id)[0]
 
@@ -1280,7 +1515,7 @@ class GroupViewSet(viewsets.ModelViewSet):
             perms = GroupPermission.objects.filter(
                 user=user,
                 group=group,
-                permission=GroupPermission.Permissions.MEMBER.value
+                permission=GroupPermissionLevel.MEMBER.value
             )
             # if the user is not an admin but is a member we remove them from the group
             if perms:
@@ -1292,10 +1527,13 @@ class GroupViewSet(viewsets.ModelViewSet):
         if "administrators" in request.data:
             request_admins = request.data["administrators"]
             if len(request_admins) < 1:
-                return Response("At least one administrator is required.", status=status.HTTP_403_FORBIDDEN)
-
+                error_data = {"errors": [{"status": status.HTTP_403_FORBIDDEN,
+                                          "title": _('Not Permitted'),
+                                          "detail": _(
+                                              'You must assign another group administator before you can perform this action')
+                                          }]}
+                return Response(error_data, status=status.HTTP_403_FORBIDDEN)
         super(GroupViewSet, self).partial_update(request, *args, **kwargs)
-
         # if name in request we need to change the group name
         if "name" in request.data:
             name = request.data["name"]
@@ -1304,8 +1542,8 @@ class GroupViewSet(viewsets.ModelViewSet):
                 group.save()
 
         # examine provided lists of administrators and members. Adjust as needed.
-        for item in [("members", GroupPermission.Permissions.MEMBER.value),
-                     ("administrators", GroupPermission.Permissions.ADMIN.value)]:
+        for item in [("members", GroupPermissionLevel.MEMBER.value),
+                     ("administrators", GroupPermissionLevel.ADMIN.value)]:
             permissionlabel = item[0]
             permission = item[1]
 
@@ -1321,18 +1559,122 @@ class GroupViewSet(viewsets.ModelViewSet):
 
             newusers = list(set(targetusers) - set(currentusers))
             users = User.objects.filter(username__in=newusers).all()
+            verb = NotificationVerb.ADDED_TO_GROUP.value
+            if permissionlabel == 'administrators': verb = NotificationVerb.SET_AS_GROUP_ADMIN.value
+
+
             for user in users:
                 GroupPermission.objects.create(user=user, group=group, permission=permission)
+                sendnotification(request.user, user, verb, group, None, NotificationLevel.INFO.value, permission)
 
             ## Remove existing users for this permission level
 
             removedusers = list(set(currentusers) - set(targetusers))
             users = User.objects.filter(username__in=removedusers).all()
+            verb = NotificationVerb.REMOVED_FROM_GROUP.value
+            if permissionlabel == 'administrators': verb = NotificationVerb.REMOVED_AS_GROUP_ADMIN.value
             for user in users:
+                sendnotification(request.user, user, verb, group, None, NotificationLevel.INFO.value, permission)
                 perms = GroupPermission.objects.filter(user=user, group=group, permission=permission).all()
                 for perm in perms: perm.delete()
 
         return Response("OK", status=status.HTTP_200_OK)
+
+
+class NotificationViewSet(viewsets.GenericViewSet):
+    """
+     Api components for viewing and working with notifications
+    """
+
+    serializer_class = NotificationSerializer
+    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    pagination_class = LinkHeaderPagination
+
+    def serialize_records(self, notifications, request):
+        payload = []
+        for n in notifications:
+            serializer = NotificationSerializer(n)
+            item = serializer.data
+            item['actor'] = serializer.serialize_referenced_object(
+                n, n.actor_content_type_id,n.actor_object_id, n.actor, request)
+            item['target'] = serializer.serialize_referenced_object(
+                n, n.target_content_type_id,n.target_object_id, n.target, request)
+            item['action_object'] = serializer.serialize_referenced_object(
+                n, n.action_object_content_type_id,n.action_object_object_id, n.action_object, request)
+            payload.append(item)
+        return payload
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient_id=self.request.user.id)
+
+    @list_route(methods=['get'])
+    def all(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.active()
+        page = self.paginate_queryset(notifications)
+        if page is not None:
+            payload = self.serialize_records(page, request)
+        else:
+            payload = self.serialize_records(notifications,request)
+        return self.get_paginated_response(payload)
+
+    @list_route(methods=['get'])
+    def read(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.read()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def unread(self, request, *args, **kwargs):
+        notifications =  request.user.notifications.unread()
+        payload = self.serialize_records(notifications,request)
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['get'])
+    def counts(self, request, *args, **kwargs):
+        payload = {
+            "read" : len(request.user.notifications.read()),
+            "unread": len(request.user.notifications.unread())
+        }
+
+        return Response(payload, status=status.HTTP_200_OK)
+
+    @list_route(methods=['post'])
+    def mark_all_as_read(self, request, *args, **kwargs):
+        qs = Notification.objects.filter(recipient_id=self.request.user.id)
+        qs.mark_all_as_read()
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
+
+    @list_route(methods=['post'])
+    def mark(self, request, *args, **kwargs):
+        """
+         Change the status of one or more notifications.
+
+
+         Args:
+             A list containing one or more records like this:
+            [
+             {"id": 3, "action": "DELETE" },
+             {"id": 17, "action": "READ" },
+             {"id" : 19, "action" "UNREAD" },
+             ...
+            ]
+
+         Returns:
+            { "success" : True} or error
+        """
+
+        logger.info(request.data)
+        for row in request.data:
+            qs = Notification.objects.filter(recipient_id=self.request.user.id,id=row['id'])
+            logger.info(qs)
+            if row['action'] == 'READ':
+                qs.mark_all_as_read()
+            if row['action'] == 'DELETE':
+                qs.mark_all_as_deleted()
+            if row['action'] == 'UNREAD':
+                qs.mark_all_as_unread()
+
+        return Response( { "success" : True},  status=status.HTTP_200_OK)
 
 
 def get_models(model_list, model_object, model_index):
@@ -1427,7 +1769,7 @@ def get_job_ids_via_permissions(permissions):
     master_job_list = []
     initialized = False
     for group in groups:
-        perms, job_ids = JobPermission.groupjobs(group, JobPermission.Permissions.READ.value)
+        perms, job_ids = JobPermission.groupjobs(group, JobPermissionLevel.READ.value)
         temp_list = master_job_list
         if not initialized:
             master_job_list = job_ids
@@ -1437,7 +1779,7 @@ def get_job_ids_via_permissions(permissions):
 
     users = User.objects.filter(username__in=usernames)
     for user in users:
-        perms, job_ids = JobPermission.userjobs(user, JobPermission.Permissions.READ.value,include_groups=False)
+        perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.READ.value,include_groups=False)
         temp_list = master_job_list
         if not initialized:
             master_job_list = job_ids

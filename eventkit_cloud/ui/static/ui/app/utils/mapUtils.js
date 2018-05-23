@@ -473,7 +473,11 @@ export function isVertex(pixel, feature, tolarance, map) {
  * @param {featureCollection} A geojson feature collection
  * @return true if all geometries have area, otherwise false
  */
-export function hasArea(featureCollection) {
+export function allHaveArea(featureCollection) {
+    if (!featureCollection.features) {
+        return false;
+    }
+    
     const reader = new GeoJSON();
     const features = reader.readFeatures(featureCollection, {
         dataProjection: WGS84,

@@ -143,18 +143,15 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#projectionHeader')).toHaveLength(1);
         expect(wrapper.find('#projectionHeader').text()).toEqual('Select Projection');
         expect(wrapper.find('#projectionCheckbox').find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find('#formatsHeader')).toHaveLength(1);
-        expect(wrapper.find('#formatsCheckbox').find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(wrapper.find(CardText)).toHaveLength(0);
-        expect(wrapper.find(BaseDialog)).toHaveLength(2);
+        expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('componentDidMount should setNextDisabled, setArea, setJoyRideSteps, and create deboucers', () => {
         const expectedString = '12,393 sq km';
-        const expectedFormat = ['gpkg'];
         const props = getProps();
         props.updateExportInfo = sinon.spy();
         props.setNextDisabled = sinon.spy();
@@ -168,11 +165,9 @@ describe('ExportInfo component', () => {
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
-        // expect(areaSpy.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
             areaStr: expectedString,
-            formats: expectedFormat,
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
         expect(wrapper.instance().nameHandler).not.toBe(undefined);
@@ -322,26 +317,6 @@ describe('ExportInfo component', () => {
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
         stateSpy.restore();
         stateSpy.restore();
-    });
-
-    it('handleFormatsClose should setState to false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleFormatsClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ formatsDialogOpen: false })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleFormatsOpen should setState to true', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleFormatsOpen();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ formatsDialogOpen: true })).toBe(true);
-        stateStub.restore();
     });
 
     it('handleProjectionsOpen should setState to true', () => {

@@ -44,7 +44,7 @@ export class DataPackGrid extends Component {
                         padding={window.innerWidth >= 768 ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runs.map((run) => {
+                        {this.props.runs.map((run, index) => {
                             const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
                             return (
                                 <DataPackGridItem
@@ -56,6 +56,8 @@ export class DataPackGrid extends Component {
                                     providers={this.props.providers}
                                     openShare={this.props.openShare}
                                     adminPermission={admin}
+                                    gridName={this.props.name}
+                                    index={index}
                                 />
                             );
                         })}
@@ -90,6 +92,7 @@ DataPackGrid.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
+    name: PropTypes.string.isRequired,
 };
 
 export default DataPackGrid;
