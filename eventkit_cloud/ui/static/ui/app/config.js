@@ -161,58 +161,6 @@ export const Config = {
         ]
     },
     JOYRIDE: {
-        exportInfo:
-            [
-                {
-                    title: 'Enter General Information',
-                    text: 'Enter the general details and identifying information about the DataPack.',
-                    selector: '.qa-ExportInfo-input-name',
-                    position: 'bottom',
-                    style:  JoyRideStyles.tooltipStyle,
-                },
-                {
-                    title: 'Choose your sources',
-                        text: 'Choose the data sources desired for the DataPack.',
-                    selector: '.qa-ExportInfo-List',
-                    position: 'left',
-                    style: JoyRideStyles.tooltipStyle,
-                },
-                {
-                    title: 'Check the source availability',
-                        text: 'This indicates the data source availability.  If the source is available, a green check mark will be displayed.  If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.',
-                    selector: '.qa-ProviderStatusIcon',
-                    position: 'left',
-                    style: JoyRideStyles.tooltipStyle,
-                },
-                {
-                    title: 'Projection',
-                        text: 'At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.  This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions of EventKit.',
-                    selector: '#projectionCheckbox',
-                    position: 'left',
-                    style: JoyRideStyles.tooltipStyle,
-                },
-                {
-                    title: 'File Formats',
-                        text: 'At this time, EventKit has the ability to export one file format.  EventKit provides all geospatial data in the GeoPackage (.gpkg) format. Additional format support will be added in subsequent versions.',
-                    selector: '#formatsCheckbox',
-                    position: 'left',
-                    style: JoyRideStyles.tooltipStyle,
-                },
-                {
-                    title: 'Review Selected AOI',
-                        text: 'Expand the map to review the AOI that was selected on the previous screen.',
-                    selector: '.qa-ExportInfo-CardHeader-map',
-                    position: 'left',
-                    style: JoyRideStyles.tooltipStyle,
-                },
-                {
-                    title: 'Go to next step',
-                        text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
-                    selector: '.qa-BreadcrumbStepper-FloatingActionButton-case1',
-                    position: 'left',
-                    style: JoyRideStyles.tooltipStyle,
-                },
-            ],
         Account: [
             {
                 title: 'Welcome to the Account Settings Page',
@@ -308,6 +256,50 @@ export const Config = {
                 style: JoyRideStyles.tooltipStyle,
             },
         ],
+        ExportInfo: [
+            {
+                title: 'Enter General Information',
+                text: 'Enter the general details and identifying information about the DataPack.',
+                selector: '.qa-ExportInfo-input-name',
+                position: 'bottom',
+                style: JoyRideStyles.tooltipStyle,
+            },
+            {
+                title: 'Choose your sources',
+                text: 'Choose the data sources desired for the DataPack.',
+                selector: '.qa-ExportInfo-List',
+                position: 'left',
+                style: JoyRideStyles.tooltipStyle,
+            },
+            {
+                title: 'Check the source availability',
+                text: 'This indicates the data source availability.  If the source is available, a green check mark will be displayed.  If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.',
+                selector: '.qa-ProviderStatusIcon',
+                position: 'left',
+                style: JoyRideStyles.tooltipStyle,
+            },
+            {
+                title: 'Projection',
+                text: 'At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.  This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions of EventKit.',
+                selector: '#projectionCheckbox',
+                position: 'left',
+                style: JoyRideStyles.tooltipStyle,
+            },
+            {
+                title: 'Review Selected AOI',
+                text: 'Expand the map to review the AOI that was selected on the previous screen.',
+                selector: '.qa-ExportInfo-CardHeader-map',
+                position: 'left',
+                style: JoyRideStyles.tooltipStyle,
+            },
+            {
+                title: 'Go to next step',
+                text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
+                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case1',
+                position: 'left',
+                style: JoyRideStyles.tooltipStyle,
+            },
+        ],
         ExportSummary: [
             {
                 title: 'Verify Information',
@@ -382,7 +374,7 @@ export const Config = {
             {
                 title: 'AOI',
                 text: 'This is the selected area of interest for the DataPack.',
-                selector: '.qa-DataCartDetails-div-map',
+                selector: '.qa-DataPackAoiInfo-div-map',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
                 isFixed: true,
@@ -500,7 +492,7 @@ export const Config = {
                     style: JoyRideStyles.tooltipStyle,
                 },
             ],
-            map:[
+            map: [
                 {
                     title: 'Welcome to the DataPack Library.',
                     text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
@@ -552,9 +544,6 @@ export const Config = {
                     style: JoyRideStyles.tooltipStyle,
                 },
             ],
-        }
         },
-
-    };
-
-
+    },
+};

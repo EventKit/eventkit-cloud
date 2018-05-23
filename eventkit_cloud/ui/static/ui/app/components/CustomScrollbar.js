@@ -6,6 +6,15 @@ export class CustomScrollbar extends Component {
         this.scrollbar.scrollToTop();
     }
 
+    scrollToBottom() {
+        this.scrollbar.scrollToBottom();
+    }
+
+    scrollToMiddle() {
+        const scrollHeight = this.scrollbar.getScrollHeight();
+        this.scrollbar.scrollTop(scrollHeight / 4);
+    }
+
     renderThumb({ style, ...props }) {
         const thumbStyle = {
             backgroundColor: '#8A898B',
@@ -17,15 +26,10 @@ export class CustomScrollbar extends Component {
             <div style={{ ...style, ...thumbStyle }} {...props} />
         );
     }
-    scrollToBottom() {
-        this.scrollbar.scrollToBottom();
-    }
-
 
     render() {
         return (
             <Scrollbars
-                ref="scrollBar"
                 ref={(instance) => { this.scrollbar = instance; }}
                 renderThumbVertical={this.renderThumb}
                 {...this.props}

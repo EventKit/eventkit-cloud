@@ -113,24 +113,26 @@ export class ExportInfo extends React.Component {
                 this.checkAvailability(provider);
             }), 30000);
         }
+        const steps = Config.JOYRIDE.ExportInfo;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
+        console.log(nextProps.walkthroughClicked, this.props.walkthroughClicked);
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-        if (nextProps.walkthroughClicked != true) {
+        if (!nextProps.walkthroughClicked) {
         // if required fields are fulfilled enable next
             if (this.hasRequiredFields(nextProps.exportInfo) &&
                 !this.hasDisallowedSelection(nextProps.exportInfo)) {
-
                 if (!nextProps.nextEnabled) {
                     this.props.setNextEnabled();
                 }
             } else if (nextProps.nextEnabled) {
                 // if not and next is enabled it should be disabled
-                    this.props.setNextDisabled();
+                this.props.setNextDisabled();
             }
         }
-        if (nextProps.walkthroughClicked == true && this.state.isRunning == false) {
+        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
             this.refs.joyride.reset(true);
             this.setState({ isRunning: true });
         }
@@ -353,8 +355,9 @@ export class ExportInfo extends React.Component {
         if (!newSteps.length) return;
 
         this.setState((currentState) => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
         });
     }
 
@@ -365,22 +368,12 @@ export class ExportInfo extends React.Component {
             this.props.onWalkthroughReset();
             this.refs.joyride.reset(true);
         }
-        if (data.index === 0 && data.type === 'tooltip:before') {
 
-        }
-
-        if (data.index === 6 && data.type === 'tooltip:before') {
+        if (data.index === 5 && data.type === 'tooltip:before') {
             this.props.setNextEnabled();
         }
     }
 
-    handleJoyride() {
-        if (this.state.isRunning === true) {
-            this.refs.joyride.reset(true);
-        } else {
-            this.setState({ isRunning: true });
-        }
-    }
 
     render() {
         const formWidth = window.innerWidth < 800 ? '90%' : '60%';
@@ -817,7 +810,7 @@ ExportInfo.propTypes = {
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
-    walkthrough: PropTypes.bool,
+    walkthroughClicked: PropTypes.bool,
     onWalkthroughReset: PropTypes.func,
 };
 

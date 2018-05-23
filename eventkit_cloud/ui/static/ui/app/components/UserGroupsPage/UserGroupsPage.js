@@ -27,6 +27,7 @@ import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
+import { DrawerTimeout } from '../../actions/exportsActions';
 import { isViewportXS, isViewportS } from '../../utils/viewport';
 
 export class UserGroupsPage extends Component {
@@ -70,10 +71,6 @@ export class UserGroupsPage extends Component {
         this.hideAddUsersDialog = this.hideAddUsersDialog.bind(this);
         this.showErrorDialog = this.showErrorDialog.bind(this);
         this.hideErrorDialog = this.hideErrorDialog.bind(this);
-        this.showPageInfoDialog = this.showPageInfoDialog.bind(this);
-        this.hidePageInfoDialog = this.hidePageInfoDialog.bind(this);
-        this.showSharedInfoDialog = this.showSharedInfoDialog.bind(this);
-        this.hideSharedInfoDialog = this.hideSharedInfoDialog.bind(this);
         this.callback = this.callback.bind(this);
         this.showAdministratorInfoDialog = this.showAdministratorInfoDialog.bind(this);
         this.hideAdministratorInfoDialog = this.hideAdministratorInfoDialog.bind(this);
@@ -81,6 +78,7 @@ export class UserGroupsPage extends Component {
         this.hideMemberInfoDialog = this.hideMemberInfoDialog.bind(this);
         this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
+        this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
             drawerOpen: !(isViewportS()),
             selectedUsers: [],
@@ -98,7 +96,8 @@ export class UserGroupsPage extends Component {
             showAdministratorInfo: false,
             showMemberInfo: false,
             showOtherInfo: false,
-            showPageInfo: false,
+            steps: [],
+            isRunning: false,
         };
     }
 
@@ -198,14 +197,14 @@ export class UserGroupsPage extends Component {
                 title: 'Search',
                 text: 'You can search for users of EventKit by using this text search.  Search by name, username, or email.',
                 selector: '.qa-UserGroupsPage-search',
-                position: 'bottom',
+                position: 'top',
                 style: tooltipStyle,
                 isFixed: true,
             },
             {
                 title: 'Filter Members View',
                 text: 'You can filter the members list by selecting one of these options: all members, new members, members that are not grouped, and by the groups you have created.',
-                selector: '.qa-GroupsDrawer-Menu',
+                selector: '.qa-UserHeader-DropDownMenu-sort',
                 position: 'top',
                 style: tooltipStyle,
                 isFixed: true,
@@ -221,7 +220,7 @@ export class UserGroupsPage extends Component {
             {
                 title: 'Create Group',
                 text: 'Or by clicking on this plus sign icon.',
-                selector: '.qa-GroupsDrawer-addGroupIcon',
+                selector: '.qa-GroupsDrawer-addGroup',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
@@ -237,7 +236,7 @@ export class UserGroupsPage extends Component {
             {
                 title: 'Select users',
                 text: 'Select the users you would like to add to the group.',
-                selector: '.qa-UserGroupsPage-bodyTable > tbody > tr:nth-child(1) > td:nth-child(1) > div > input[type="checkbox"]',
+                selector: '.qa-UserRow-checkbox',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
@@ -245,7 +244,7 @@ export class UserGroupsPage extends Component {
             {
                 title: 'Select All Users',
                 text: 'Selecting this checkbox selects all the users to add them to a group.',
-                selector: '.qa-UserGroupsPage-fixedHeader > div:nth-child(3) > div:nth-child(1) > table > thead > tr > th:nth-child(1) > div > input[type="checkbox"]',
+                selector: '.qa-UserHeader-checkbox',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
@@ -253,7 +252,7 @@ export class UserGroupsPage extends Component {
             {
                 title: 'Add Users to Groups',
                 text: 'This menu will allow you to add users to the groups.',
-                selector: '.qa-UserTableRowColumn-IconButton-options',
+                selector: '.qa-UserHeader-IconButton-options',
                 position: 'bottom',
                 style: tooltipStyle,
                 isFixed: true,
@@ -666,18 +665,6 @@ export class UserGroupsPage extends Component {
         this.setState({ showOtherInfo: false });
     }
 
-    showPageInfoDialog() {
-        this.setState({ showPageInfo: true });
-    }
-
-    hidePageInfoDialog() {
-        this.setState({ showPageInfo: false });
-    }
-
-    handleWalkthroughClick() {
-        this.setState({ isRunning: true });
-    }
-
     joyrideAddSteps(steps) {
         let newSteps = steps;
 
@@ -688,25 +675,34 @@ export class UserGroupsPage extends Component {
         if (!newSteps.length) return;
 
         this.setState((currentState) => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
         });
     }
 
     callback(data) {
+        console.log(data);
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
             this.refs.joyride.reset(true);
         }
 
-        if (data.index === 4 && data.type === 'step:after') {
-            if (this.props.drawer === 'closed') {
-                this.props.openDrawer();
+        if (data.index === 3 && data.type === 'tooltip:before' && isViewportS()) {
+            if (!this.state.drawerOpen) {
+                this.toggleDrawer();
             }
+        }
+
+        if (data.index === 7 && data.type === 'tooltip:before') {
+            this.handleSelectAll(true);
         }
     }
 
     handleJoyride() {
+        if (this.state.drawerOpen && isViewportS()) {
+            this.toggleDrawer();
+        }
         if (this.state.isRunning === true) {
             this.refs.joyride.reset(true);
         } else {
@@ -716,20 +712,11 @@ export class UserGroupsPage extends Component {
 
     render() {
         const { steps, isRunning } = this.state;
-        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginRight: '30px', fontSize: '16px' }}><Help onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
         const smallViewport = isViewportS();
         const xsmallViewport = isViewportXS();
         const bodyWidth = !smallViewport ? 'calc(100% - 250px)' : '100%';
         const bodyHeight = window.innerHeight - 130;
         const styles = {
-            pageInfoIcon: {
-                fill: '#4598bf',
-                height: '35px',
-                width: '18px',
-                marginLeft: '10px',
-                verticalAlign: 'bottom',
-                cursor: 'pointer',
-            },
             header: {
                 backgroundColor: '#161e2e',
                 color: 'white',
@@ -744,7 +731,7 @@ export class UserGroupsPage extends Component {
                 overflow: 'visible',
             },
             button: {
-                margin: '0px',
+                margin: '0px 0px 0px 10px',
                 minWidth: '50px',
                 height: '35px',
                 borderRadius: '0px',
@@ -861,6 +848,18 @@ export class UserGroupsPage extends Component {
             },
         };
 
+        const tourButton = (
+            <EnhancedButton
+                onClick={this.handleJoyride}
+                style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block' }}
+            >
+                <Help
+                    style={{ color: '#4598bf', cursor: 'pointer', height: '35px', width: '18px', verticalAlign: 'middle' }}
+                />
+                {smallViewport ? '' : <span style={{ marginLeft: '5px' }}>Page Tour</span>}
+            </EnhancedButton>
+        );
+
         const ownedGroups = [];
         const sharedGroups = [];
         const otherGroups = [];
@@ -961,18 +960,14 @@ export class UserGroupsPage extends Component {
                         title={
                             <div style={{ lineHeight: '35px' }}>
                                 Members and Groups
-                                <InfoIcon
-                                    style={styles.pageInfoIcon}
-                                    onClick={this.showPageInfoDialog}
-                                />
                             </div>
                         }
                         style={styles.header}
                         titleStyle={styles.headerTitle}
                         showMenuIconButton={false}
-                        iconElementRight={iconElementRight}
                         className="qa-UserGroupsPage-AppBar"
                     >
+                        {tourButton}
                         {!xsmallViewport ?
                             <RaisedButton
                                 label={
@@ -1168,25 +1163,6 @@ export class UserGroupsPage extends Component {
                         </div>
                     ))}
                 </BaseDialog>
-
-                <BaseDialog
-                    show={!!this.state.showPageInfo}
-                    onClose={this.hidePageInfoDialog}
-                    title="MEMBERS & GROUPS"
-                    className="qa-UserGroupsPage-pageInfo"
-                >
-                    <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
-                        <div>
-                            <span>On this page you can:</span>
-                            <ul style={{ paddingLeft: '20px' }}>
-                                <li>View all EventKit members</li>
-                                <li>Create and manage user groups for data sharing</li>
-                                <li>View groups that have been shared with you</li>
-                            </ul>
-                        </div>
-                    </div>
-                </BaseDialog>
-
                 <AdministratorInfoDialog
                     onClose={this.hideAdministratorInfoDialog}
                     show={this.state.showAdministratorInfo}
@@ -1266,6 +1242,7 @@ UserGroupsPage.propTypes = {
     updateGroup: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired,
+    openDrawer: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -1277,6 +1254,7 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
+    const timeout = new DrawerTimeout();
     return {
         getGroups: () => (
             dispatch(getGroups())
@@ -1292,6 +1270,9 @@ function mapDispatchToProps(dispatch) {
         ),
         getUsers: params => (
             dispatch(getUsers(params))
+        ),
+        openDrawer: () => (
+            dispatch(timeout.openDrawer())
         ),
     };
 }

@@ -1,12 +1,15 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import ErrorOutline from 'material-ui/svg-icons/alert/error-outline';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataCartDetails from './DataCartDetails';
 import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
@@ -17,10 +20,10 @@ import { viewedJob } from '../../actions/userActivityActions';
 import { getUsers } from '../../actions/userActions';
 import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { Config } from '../../config';
+
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 
@@ -28,14 +31,14 @@ export class StatusDownload extends React.Component {
     constructor(props) {
         super(props);
         this.callback = this.callback.bind(this);
-        this.initialState = this.initialState.bind(this);
+        this.getInitialState = this.getInitialState.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
-        this.state = this.initialState();
+        this.state = this.getInitialState();
     }
 
-    initialState() {
+    getInitialState() {
         return {
             isLoading: true,
             error: null,
@@ -118,7 +121,7 @@ export class StatusDownload extends React.Component {
         if (nextProps.location !== this.props.location) {
             // Refresh the entire component.
             this.componentWillUnmount();
-            this.setState(this.initialState());
+            this.setState(this.getInitialState());
             this.componentDidMount();
         }
     }
@@ -189,8 +192,9 @@ export class StatusDownload extends React.Component {
         if (!newSteps.length) return;
 
         this.setState((currentState) => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
         });
     }
 
@@ -202,6 +206,10 @@ export class StatusDownload extends React.Component {
         }
 
         if (data.index === 5 && data.type === 'tooltip:before') {
+            scrollBar.scrollToMiddle();
+        }
+
+        if (data.index === 6 && data.type === 'tooltip:before') {
             scrollBar.scrollToBottom();
         }
         if (data.type === 'finished') {
@@ -209,23 +217,9 @@ export class StatusDownload extends React.Component {
         }
     }
 
-    handleJoyride() {
-        if (this.state.isRunning === true) {
-            this.refs.joyride.reset(true);
-        } else {
-            this.setState({ isRunning: true });
-        }
-    }
-
     render() {
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>;
-        const iconElementRight = (<div
-            onTouchTap={this.handleWalkthroughClick}
-            style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginLeft: '10px', fontSize: '16px'}} >
-            <Help onTouchTap={this.handleWalkthroughClick} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />
-            Page Tour
-        </div>)
 
         const marginPadding = this.getMarginPadding();
         const styles = {
@@ -284,7 +278,33 @@ export class StatusDownload extends React.Component {
                 fontWeight: 800,
                 marginLeft: '5px',
             },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginLeft: '10px',
+                fontSize: '16px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleWalkthroughClick}
+                style={styles.tourButton}
+            >
+                <Help style={styles.tourIcon} />
+                Page Tour
+            </EnhancedButton>
+        );
 
         const errorMessage = this.getErrorMessage();
 
@@ -344,7 +364,7 @@ export class StatusDownload extends React.Component {
                     :
                     null
                 }
-                <CustomScrollbar ref="scrollBar" style={{ height: window.innerHeight - 95, width: '100%' }}>
+                <CustomScrollbar ref="scrollBar" style={{ height: window.innerHeight - 130, width: '100%' }}>
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <Joyride
                             callback={this.callback}

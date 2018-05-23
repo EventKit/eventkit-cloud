@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -18,7 +19,6 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
-import Joyride from 'react-joyride';
 import { Config } from '../../config';
 
 export class ExportSummary extends Component {
@@ -33,20 +33,16 @@ export class ExportSummary extends Component {
         this.callback = this.callback.bind(this);
     }
 
-    componentDidMount(){
-
+    componentDidMount() {
         const steps = Config.JOYRIDE.ExportSummary;
         this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
-
-        if(nextProps.walkthroughClicked == true && this.state.isRunning == false)
-        {
+        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
             this.refs.joyride.reset(true);
-            this.setState({isRunning: true});
+            this.setState({ isRunning: true });
         }
-
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -124,31 +120,23 @@ export class ExportSummary extends Component {
 
         if (!newSteps.length) return;
 
-        this.setState(currentState => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
         });
     }
 
     callback(data) {
-        if(data.action === 'close' || data.action === 'skip' || data.type === 'finished'){
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
             this.refs.joyride.reset(true);
         }
     }
 
-    handleJoyride() {
-        if(this.state.isRunning === true){
-            this.refs.joyride.reset(true);
-        }
-        else {
-            this.setState({isRunning: true})
-        }
-    }
-
     render() {
-        const {steps, isRunning} = this.state;
+        const { steps, isRunning } = this.state;
 
         const style = {
             root: {
@@ -208,14 +196,14 @@ export class ExportSummary extends Component {
             <div id="root" style={style.root}>
                 <Joyride
                     callback={this.callback}
-                    ref={'joyride'}
+                    ref="joyride"
                     debug={false}
                     steps={steps}
-                    autoStart={true}
-                    type={'continuous'}
+                    autoStart
+                    type="continuous"
                     disableOverlay
-                    showSkipButton={true}
-                    showStepsProgress={true}
+                    showSkipButton
+                    showStepsProgress
                     locale={{
                         back: (<span>Back</span>),
                         close: (<span>Close</span>),
@@ -223,7 +211,8 @@ export class ExportSummary extends Component {
                         next: (<span>Next</span>),
                         skip: (<span>Skip</span>),
                     }}
-                    run={isRunning}/>
+                    run={isRunning}
+                />
                 <CustomScrollbar>
                     <form id="form" style={style.form} className="qa-ExportSummary-form">
                         <Paper className="qa-ExportSummary-Paper" style={style.paper} zDepth={2} rounded>
@@ -317,8 +306,8 @@ ExportSummary.propTypes = {
     projectName: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     areaStr: PropTypes.string.isRequired,
-    walkthrough: PropTypes.bool,
-    onWalkthroughReset: PropTypes.func,
+    walkthroughClicked: PropTypes.bool.isRequired,
+    onWalkthroughReset: PropTypes.func.isRequired,
 };
 
 export default connect(

@@ -157,24 +157,37 @@ export class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
         switch (stepIndex) {
         case 0:
-            return (<ExportAOI walkthroughClicked={this.props.walkthroughClicked}
-                onWalkthroughReset={this.props.onWalkthroughReset}
-            />);
+            return (
+                <ExportAOI
+                    walkthroughClicked={this.props.walkthroughClicked}
+                    onWalkthroughReset={this.props.onWalkthroughReset}
+                />
+            );
         case 1:
-            return (<ExportInfo providers={this.props.providers}
-                                   formats={this.props.formats}
-                                   handlePrev={this.handlePrev}
-                                   walkthroughClicked={this.props.walkthroughClicked}
-                                   onWalkthroughReset={this.props.onWalkthroughReset}
-            />)
-            case 2:
-                return <ExportSummary
-                                   allFormats={this.props.formats}
-                                   walkthroughClicked={this.props.walkthroughClicked}
-                                   onWalkthroughReset={this.props.onWalkthroughReset}/>
-            default:
-                return <ExportAOI walkthroughClicked={this.props.walkthroughClicked}
-                                  onWalkthroughReset={this.props.onWalkthroughReset}/>;
+            return (
+                <ExportInfo
+                    providers={this.props.providers}
+                    formats={this.props.formats}
+                    handlePrev={this.handlePrev}
+                    walkthroughClicked={this.props.walkthroughClicked}
+                    onWalkthroughReset={this.props.onWalkthroughReset}
+                />
+            );
+        case 2:
+            return (
+                <ExportSummary
+                    allFormats={this.props.formats}
+                    walkthroughClicked={this.props.walkthroughClicked}
+                    onWalkthroughReset={this.props.onWalkthroughReset}
+                />
+            );
+        default:
+            return (
+                <ExportAOI
+                    walkthroughClicked={this.props.walkthroughClicked}
+                    onWalkthroughReset={this.props.onWalkthroughReset}
+                />
+            );
         }
     }
 

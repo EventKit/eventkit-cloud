@@ -110,9 +110,9 @@ export class UserHeader extends Component {
         };
 
         const checkbox = this.props.selected ?
-            <Checked onClick={this.deselect} />
+            <Checked onClick={this.deselect} className="qa-UserHeader-checkbox" />
             :
-            <Unchecked onClick={this.select} />;
+            <Unchecked onClick={this.select} className="qa-UserHeader-checkbox" />;
 
         let removeButton = null;
         if (this.props.showRemoveButton) {

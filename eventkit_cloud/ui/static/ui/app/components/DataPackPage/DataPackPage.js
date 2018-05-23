@@ -1,8 +1,11 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
+import Help from 'material-ui/svg-icons/action/help';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
@@ -22,8 +25,7 @@ import { getGroups } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import Help from 'material-ui/svg-icons/action/help';
-import Joyride from 'react-joyride';
+import { isViewportL } from '../../utils/viewport';
 import { Config } from '../../config';
 
 export class DataPackPage extends React.Component {
@@ -47,6 +49,7 @@ export class DataPackPage extends React.Component {
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
+        this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
@@ -123,8 +126,7 @@ export class DataPackPage extends React.Component {
         this.setState({ search: searchText, loading: true }, this.makeRunRequest);
     }
 
-    setJoyRideSteps() {
-
+    getJoyRideSteps() {
         switch (this.state.view) {
         case 'map':
             return Config.JOYRIDE.DataPackPage.map;
@@ -163,7 +165,7 @@ export class DataPackPage extends React.Component {
             return (
                 <DataPackGrid
                     {...commonProps}
-                    name={'DataPackLibrary'}
+                    name="DataPackLibrary"
                 />
             );
         case 'map':
@@ -256,7 +258,8 @@ export class DataPackPage extends React.Component {
     }
 
     changeView(view) {
-        if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
+        const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
+        if (sharedViewOrders.indexOf(this.state.order) < 0) {
             this.setState({ order: '-started_at', loading: true }, () => {
                 const promise = this.makeRunRequest();
                 promise.then(() => this.setState({ view }));
@@ -264,8 +267,8 @@ export class DataPackPage extends React.Component {
         } else {
             this.setState(
                 { view },
-                function () {
-                    const steps = this.setJoyRideSteps();
+                () => {
+                    const steps = this.getJoyRideSteps();
                     this.joyrideAddSteps(steps);
                 },
             );
@@ -318,6 +321,13 @@ export class DataPackPage extends React.Component {
                     this.setState({ open: true });
                 }
             }
+            if (data.step.title === 'Menu Options'
+                && data.type === 'step:before'
+                && this.state.view === 'list'
+                && isViewportL()
+            ) {
+                this.setState({ open: false });
+            }
         }
     }
 
@@ -327,7 +337,7 @@ export class DataPackPage extends React.Component {
             this.refs.joyride.reset(true);
         } else {
             this.setState({ isRunning: true });
-            const steps = this.setJoyRideSteps();
+            const steps = this.getJoyRideSteps();
 
             for (let index = 0; index < this.props.runsList.runs.length; index += 1) {
                 const run = this.props.runsList.runs[index];
@@ -335,7 +345,7 @@ export class DataPackPage extends React.Component {
                     const newStep = {
                         title: 'Featured DataPacks',
                         text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
-                        selector: this.state.view ==='list' ?
+                        selector: this.state.view === 'list' ?
                             '.qa-DataPackTableItem-TableRowColumn-featured'
                             :
                             '.qa-FeaturedFlag-div',
@@ -393,7 +403,7 @@ export class DataPackPage extends React.Component {
     render() {
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>
-        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginRight: '30px', fontSize: '16px' }}><Help onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
+
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ?
@@ -446,7 +456,32 @@ export class DataPackPage extends React.Component {
                     right: '10px',
                     fontSize: '12px',
                 },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginRight: '30px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleJoyride}
+                style={styles.tourButton}
+            >
+                <Help style={styles.tourIcon} />
+                Page Tour
+            </EnhancedButton>
+        );
 
         return (
             <div style={styles.backgroundStyle}>

@@ -1,16 +1,19 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import AppBar from 'material-ui/AppBar';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import UserInfo from './UserInfo';
 import LicenseInfo from './LicenseInfo';
 import SaveButton from './SaveButton';
 import getLicenses from '../../actions/licenseActions';
 import { patchUser } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
-import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+
 import { DrawerTimeout } from '../../actions/exportsActions';
 import { Config } from '../../config';
+
 
 export class Account extends Component {
     constructor(props) {
@@ -19,6 +22,7 @@ export class Account extends Component {
         this.handleAll = this.handleAll.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.callback = this.callback.bind(this);
+        this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
             acceptedLicenses: {},
             showSavedMessage: false,
@@ -70,10 +74,6 @@ export class Account extends Component {
         this.props.patchUser(this.state.acceptedLicenses, this.props.user.data.user.username);
     }
 
-    handleWalkthroughClick() {
-        this.setState({ isRunning: true });
-    }
-
     joyrideAddSteps(steps) {
         let newSteps = steps;
 
@@ -84,8 +84,9 @@ export class Account extends Component {
         if (!newSteps.length) return;
 
         this.setState((currentState) => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
         });
     }
 
@@ -112,8 +113,6 @@ export class Account extends Component {
 
     render() {
         const { steps, isRunning } = this.state;
-        const iconElementRight = <div onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginRight: '30px', fontSize: '16px' }}><Help onTouchTap={this.handleJoyride.bind(this)} style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }} />Page Tour</div>
-
         const styles = {
             header: {
                 backgroundColor: '#161e2e',
@@ -138,7 +137,34 @@ export class Account extends Component {
                 maxWidth: '1000px',
                 margin: 'auto',
             },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginRight: '30px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleJoyride}
+                style={styles.tourButton}
+            >
+                <Help
+                    style={styles.tourIcon}
+                />
+                Page Tour
+            </EnhancedButton>
+        );
 
         const equal = Object.keys(this.state.acceptedLicenses).every((key) => {
             if (this.state.acceptedLicenses[key] === this.props.user.data.accepted_licenses[key]) {
@@ -218,8 +244,8 @@ Account.propTypes = {
     licenses: PropTypes.object.isRequired,
     getLicenses: PropTypes.func.isRequired,
     patchUser: PropTypes.func.isRequired,
+    drawer: PropTypes.string.isRequired,
     openDrawer: PropTypes.func.isRequired,
-    closeDrawer: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -238,9 +264,6 @@ function mapDispatchToProps(dispatch) {
         },
         patchUser: (acceptedLicenses, username) => {
             dispatch(patchUser(acceptedLicenses, username));
-        },
-        closeDrawer: () => {
-            dispatch(timeout.closeDrawer());
         },
         openDrawer: () => {
             dispatch(timeout.openDrawer());

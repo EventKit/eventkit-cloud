@@ -68,7 +68,6 @@ export class ExportAOI extends Component {
         this.updateMode = this.updateMode.bind(this);
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
         this.callback = this.callback.bind(this);
-        this.doesMapHaveFeatures = this.doesMapHaveFeatures.bind(this);
         this.bufferMapFeature = this.bufferMapFeature.bind(this);
         this.downEvent = this.downEvent.bind(this);
         this.moveEvent = this.moveEvent.bind(this);
@@ -139,7 +138,7 @@ export class ExportAOI extends Component {
             this.handleGeoJSONUpload(nextProps.importGeom);
         }
 
-        if (nextProps.walkthroughClicked === true && this.state.isRunning === false) {
+        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && this.state.isRunning === false) {
             this.refs.joyride.reset(true);
             this.setState({ isRunning: true });
         }
@@ -742,8 +741,9 @@ export class ExportAOI extends Component {
         if (!newSteps.length) return;
 
         this.setState((currentState) => {
-            currentState.steps = currentState.steps.concat(newSteps);
-            return currentState;
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
         });
     }
 
@@ -781,14 +781,6 @@ export class ExportAOI extends Component {
         if (data.index === 4 && data.type === 'tooltip:before') {
             //  make the map have a selection, make toolbar have the X
             this.props.setNextEnabled();
-        }
-    }
-
-    handleJoyride() {
-        if (this.state.isRunning === true) {
-            this.refs.joyride.reset(true);
-        } else {
-            this.setState({ isRunning: true });
         }
     }
 

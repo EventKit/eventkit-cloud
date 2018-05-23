@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import AppBar from 'material-ui/AppBar';
 import Help from 'material-ui/svg-icons/action/help';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import BreadcrumbStepper from './BreadcrumbStepper';
 
 export class CreateExport extends React.Component {
@@ -14,25 +15,17 @@ export class CreateExport extends React.Component {
     }
 
     handleWalkthroughReset() {
+        console.log('reset walkthrough');
         this.setState({ walkthroughClicked: false });
+    }
+
+    handleWalkthroughClick() {
+        this.setState({ walkthroughClicked: true });
     }
 
 
     render() {
-        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Create DataPack </div>
-        const iconElementRight = (
-            <div
-                onTouchTap={this.handleWalkthroughClick}
-                style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block', marginLeft: '10px', fontSize: '16px' }}
-            >
-                <Help
-                    onTouchTap={ this.handleWalkthroughClick.bind(this)}
-                    style={{ color: '#4598bf', cursor: 'pointer', height: '18px', width: '18px', verticalAlign: 'middle', marginRight: '5px', marginBottom: '5px' }}
-                />
-                Page Tour
-            </div>
-        );
-
+        const pageTitle = (<div style={{ display: 'inline-block', paddingRight: '10px' }}>Create DataPack </div>);
         const styles = {
             appBar: {
                 backgroundColor: '#161e2e',
@@ -46,7 +39,34 @@ export class CreateExport extends React.Component {
                 paddingLeft: '10px',
                 height: '35px',
             },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginLeft: '10px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleWalkthroughClick}
+                style={styles.tourButton}
+            >
+                <Help
+                    style={styles.tourIcon}
+                />
+                Page Tour
+            </EnhancedButton>
+        );
 
         return (
             <div>
