@@ -1,19 +1,7 @@
-import create_img from '../images/AboutPage/three_step_1.png';
-import manage_img from '../images/AboutPage/three_step_2.png';
-import use_img from '../images/AboutPage/three_step_3.png';
-import manage_1 from '../images/AboutPage/manage_1.png';
-import manage_2 from '../images/AboutPage/manage_2.png';
-import manage_3 from '../images/AboutPage/manage_3.png';
-import create_1_1 from '../images/AboutPage/create_step_one_1.png';
-import create_1_2 from '../images/AboutPage/create_step_one_2.png';
-import create_1_3 from '../images/AboutPage/create_step_one_3.png';
-import create_2_1 from '../images/AboutPage/create_step_two_1.png';
-import create_2_2 from '../images/AboutPage/create_step_two_2.png';
-import create_2_3 from '../images/AboutPage/create_step_two_3.png';
-import create_3_1 from '../images/AboutPage/create_step_three_1.png';
-import create_3_2 from '../images/AboutPage/create_step_three_2.png';
-import download_1 from '../images/AboutPage/download_1.png';
-import download_2 from '../images/AboutPage/download_2.png';
+import React from 'react';
+import create from '../images/AboutPage/three_step_1.png';
+import manage from '../images/AboutPage/three_step_2.png';
+import use from '../images/AboutPage/three_step_3.png';
 
 export const Config = {
     REGIONS_URL: '/api/regions.json',
