@@ -290,6 +290,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 UI_CONFIG = {
     'VERSION': os.environ.get('VERSION', ''),
+    'CONTACT_URL': os.environ.get('CONTACT_URL', 'mailto:eventkit.team@gmail.com'),
     'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),

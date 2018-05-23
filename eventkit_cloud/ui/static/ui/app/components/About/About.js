@@ -3,15 +3,22 @@ import AppBar from 'material-ui/AppBar';
 import CustomScrollbar from '../CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
 import ThreeStepInfo from './ThreeStepInfo';
-import QuickTour from './QuickTour';
+import InfoGrid from './InfoGrid';
 import { Config } from '../../config';
 
+const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
 export class About extends Component {
     constructor(props) {
         super(props);
         this.state = {
             pageInfo: Config.ABOUT_PAGE,
         };
+    }
+
+    getComponent(obj) {
+        if (!obj.type) return null;
+        const InfoComponent = COMPONENT_MAPPING[obj.type];
+        return <InfoComponent {...obj} key={`${obj.type}_${obj.title}`} />;
     }
 
     render() {
@@ -34,22 +41,28 @@ export class About extends Component {
                 margin: 'auto',
                 overflowY: 'hidden',
             },
-            bodyContent: {
-                padding: '30px 34px 60px',
+            contact: {
+                padding: '10px 34px',
                 maxWidth: '1000px',
                 margin: 'auto',
+                textAlign: 'right',
             },
-            threeStepCaption: {
-                backgroundColor: '#4598bf',
-                padding: '5px',
-                color: '#fff',
-                minHeight: '50px',
-                width: '95%',
+            bodyContent: {
+                padding: '10px 34px 30px',
+                maxWidth: '1000px',
+                margin: 'auto',
             },
         };
 
         if (!this.state.pageInfo) {
             return null;
+        }
+
+        let version = '';
+        let contactUrl = '';
+        if (this.context.config) {
+            version = this.context.config.VERSION;
+            contactUrl = this.context.config.CONTACT_URL;
         }
 
         return (
@@ -61,12 +74,12 @@ export class About extends Component {
                     titleStyle={styles.headerTitle}
                     showMenuIconButton={false}
                 >
-                    {this.context.config && this.context.config.VERSION ?
+                    {version ?
                         <span
                             style={{ height: '35px', lineHeight: '35px' }}
                             className="qa-About-version"
                         >
-                            Version {this.context.config.VERSION}
+                            Version {version}
                         </span>
                         :
                         null
@@ -74,23 +87,19 @@ export class About extends Component {
                 </AppBar>
                 <div style={styles.body}>
                     <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
+                        {contactUrl ?
+                            <div style={styles.contact} className="qa-About-contact">
+                                <i>Have an issue or suggestion?</i>
+                                <br />
+                                <a href={contactUrl}>Contact Us</a>
+                            </div>
+                            :
+                            null
+                        }
                         <div style={styles.bodyContent} className="qa-About-bodyContent">
-                            {this.state.pageInfo.textParagraphs.map((paragraph, ix) => {
-                                return (
-                                    <InfoParagraph key={ix} header={paragraph.header} body={paragraph.body} bodyStyle={{ marginBottom: '30px' }} />
-                                );
-                            })}
-                            <ThreeStepInfo steps={this.state.pageInfo.threeStep} />
-                            {this.state.pageInfo.quickTour.length > 0 ?
-                                <h3 style={{ marginTop: '60px' }}><strong>Quick Tour</strong></h3>
-                                :
-                                null
-                            }
-                            {this.state.pageInfo.quickTour.map((tour, ix) => {
-                                return (
-                                    <QuickTour key={ix} header={tour.header} tourSections={tour.tourSections} containerStyle={{ marginTop: '30px' }} />
-                                );
-                            })}
+                            {this.state.pageInfo.map(obj => (
+                                this.getComponent(obj)
+                            ))}
                         </div>
                     </CustomScrollbar>
                 </div>
