@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import debounce from 'lodash/debounce';
 import axios from 'axios';
 import cookie from 'react-cookie';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -32,7 +33,6 @@ import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
 import BaseTooltip from '../BaseTooltip';
-import Joyride from 'react-joyride';
 import { Config } from '../../config';
 import { getSqKmString } from '../../utils/generic';
 import background from '../../../images/topoBackground.jpg';

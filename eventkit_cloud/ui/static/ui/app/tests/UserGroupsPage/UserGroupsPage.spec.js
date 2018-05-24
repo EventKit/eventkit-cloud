@@ -2,6 +2,8 @@ import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
@@ -12,9 +14,6 @@ import UserRow from '../../components/UserGroupsPage/UserRow';
 import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
-import { Account } from '../../components/AccountPage/Account';
-import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
 
 describe('UserGroupsPage component', () => {
     const muiTheme = getMuiTheme();
@@ -169,7 +168,7 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(CreateGroupDialog)).toHaveLength(1);
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(7);
+        expect(wrapper.find(BaseDialog)).toHaveLength(6);
         expect(wrapper.find(Joyride)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
     });
@@ -178,7 +177,7 @@ describe('UserGroupsPage component', () => {
         const props = getProps();
         props.getGroups = sinon.spy();
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
-        const joyrideStub = new sinon.stub(UserGroupsPage.prototype, 'joyrideAddSteps');
+        const joyrideStub = sinon.stub(UserGroupsPage.prototype, 'joyrideAddSteps');
         // we stub componentDidMount before all tests, so temporarily undo it
         UserGroupsPage.prototype.componentDidMount.restore();
         const wrapper = getWrapper(props);
@@ -207,7 +206,6 @@ describe('UserGroupsPage component', () => {
         expect(requestStub.calledTwice).toBe(true);
         expect(requestStub.calledWith(lastProps.location.query)).toBe(true);
         requestStub.restore();
-
     });
 
     it('componentWillReceiveProps should handle users fetched', () => {
@@ -953,51 +951,66 @@ describe('UserGroupsPage component', () => {
         stateStub.restore();
     });
 
-    it('showPageInfoDialog should set show to true', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().showPageInfoDialog();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showPageInfo: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('hidePageInfoDialog should set show to false', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().hidePageInfoDialog();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showPageInfo: false })).toBe(true);
-        stateStub.restore();
-    });
-
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
-            title: 'Welcome to the Account Settings Page', text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.', selector: '.qa-Account-AppBar', position: 'top', style: tooltipStyle, isFixed: true,
+            title: 'Welcome to the Account Settings Page',
+            text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.',
+            selector: '.qa-Account-AppBar',
+            position: 'top',
+            style: tooltipStyle,
+            isFixed: true,
         },
         {
-            title: 'License Agreement Info', text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.', selector: '.qa-UserLicense-ArrowDown', position: 'bottom', style: tooltipStyle, isFixed: true,
+            title: 'License Agreement Info',
+            text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.',
+            selector: '.qa-UserLicense-ArrowDown',
+            position: 'bottom',
+            style: tooltipStyle,
+            isFixed: true,
         },
         {
-            title: 'Agree to Licenses', text: 'Once you’ve reviewed the licenses, you can agree to them individually.', selector: '.qa-UserLicense-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
+            title: 'Agree to Licenses',
+            text: 'Once you’ve reviewed the licenses, you can agree to them individually.',
+            selector: '.qa-UserLicense-Checkbox',
+            position: 'bottom',
+            style: tooltipStyle,
+            isFixed: true,
         },
         {
-            title: 'Agree to Licenses', text: 'Or you can choose to agree to them collectively.', selector: '.qa-LicenseInfo-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
+            title: 'Agree to Licenses',
+            text: 'Or you can choose to agree to them collectively.',
+            selector: '.qa-LicenseInfo-Checkbox',
+            position: 'bottom',
+            style: tooltipStyle,
+            isFixed: true,
         },
         {
-            title: 'Save Agreements', text: 'Once you have selected the licenses to agree to, click Save Changes.', selector: '.qa-SaveButton-RaisedButton-SaveChanges', position: 'top', style: tooltipStyle, isFixed: true,
+            title: 'Save Agreements',
+            text: 'Once you have selected the licenses to agree to, click Save Changes.',
+            selector: '.qa-SaveButton-RaisedButton-SaveChanges',
+            position: 'top',
+            style: tooltipStyle,
+            isFixed: true,
         },
         {
-            title: 'Navigate Application', text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.', selector: '.qa-Application-MenuItem-exports', position: 'top', style: tooltipStyle, isFixed: true,
+            title: 'Navigate Application',
+            text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.',
+            selector: '.qa-Application-MenuItem-exports',
+            position: 'top',
+            style: tooltipStyle,
+            isFixed: true,
         },
         {
-            title: 'Navigate Application', text: 'Or to create your own DataPack.', selector: '.qa-Application-MenuItem-create', position: 'top', style: tooltipStyle, isFixed: true,
+            title: 'Navigate Application',
+            text: 'Or to create your own DataPack.',
+            selector: '.qa-Application-MenuItem-create',
+            position: 'top',
+            style: tooltipStyle,
+            isFixed: true,
         }];
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.stub(UserGroupsPage.prototype, 'setState');
+        const stateSpy = sinon.stub(UserGroupsPage.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
@@ -1007,7 +1020,7 @@ describe('UserGroupsPage component', () => {
     it('handleJoyride should set state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.stub(UserGroupsPage.prototype, 'setState');
+        const stateSpy = sinon.stub(UserGroupsPage.prototype, 'setState');
         wrapper.instance().handleJoyride();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));
@@ -1029,7 +1042,7 @@ describe('UserGroupsPage component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.stub(UserGroupsPage.prototype, 'setState');
+        const stateSpy = sinon.stub(UserGroupsPage.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));

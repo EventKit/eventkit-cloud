@@ -3,6 +3,8 @@ import sinon from 'sinon';
 import raf from 'raf';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import AppBar from 'material-ui/AppBar';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -19,8 +21,6 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
 import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
-import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -58,17 +58,17 @@ describe('DataPackPage component', () => {
         mainColor: '#ff4456',
         textAlign: 'left',
         header: {
-        textAlign: 'left',
+            textAlign: 'left',
             fontSize: '20px',
             borderColor: '#4598bf',
-    },
+        },
         main: {
             paddingTop: '20px',
-                paddingBottom: '20px',
+            paddingBottom: '20px',
         },
         button: {
             color: 'white',
-                backgroundColor: '#4598bf',
+            backgroundColor: '#4598bf',
         },
         skip: {
             display: 'none',
@@ -381,7 +381,7 @@ describe('DataPackPage component', () => {
     it('should remove the fetch interval on unmount', () => {
         jest.useFakeTimers();
         let props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         expect(clearInterval.mock.calls.length).toEqual(0);
         const fetch = wrapper.instance().fetch;
         wrapper.unmount();
@@ -391,38 +391,47 @@ describe('DataPackPage component', () => {
 
     it('should handle fetched runs', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         let nextProps = getProps();
         nextProps.runsList.fetched = true;
-        nextProps.runsList.runs = [{user: 'admin2', uid: '2'}, {user: 'admin', uid: '1'}, {user: 'admin3', uid: '3'}];
+        nextProps.runsList.runs = [{
+            user: 'admin2',
+            uid: '2',
+        }, {
+            user: 'admin',
+            uid: '1',
+        }, {
+            user: 'admin3',
+            uid: '3',
+        }];
         const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showLoading: false}));
+        expect(stateSpy.calledWith({ showLoading: false }));
         DataPackPage.prototype.setState.restore();
         DataPackPage.prototype.componentWillReceiveProps.restore();
     });
 
     it('onSearch should update the state and call makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().onSearch('test_search', 0);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({search: 'test_search', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ search: 'test_search', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
     it('checkForEmptySearch should update state and call makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({search: 'some search term'});
+        const wrapper = shallow(<DataPackPage {...props} />);
+        wrapper.setState({ search: 'some search term' });
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().checkForEmptySearch('');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({search: '', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ search: '', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
@@ -432,22 +441,22 @@ describe('DataPackPage component', () => {
         const makeRequestSpy = sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const wrapper = getWrapper(props);
         expect(makeRequestSpy.calledOnce).toBe(true);
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
         wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(makeRequestSpy.calledTwice).toBe(true);
         makeRequestSpy.restore();
         stateSpy.restore();
     });
 
     it('handleSortChange should set state and call makeRunRequest', () => {
-        let props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleSortChange('job__name');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest))
+        expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest));
         stateSpy.restore();
     });
 
@@ -471,7 +480,7 @@ describe('DataPackPage component', () => {
         const ownerFilter = 'test_user';
         const search = 'search_text';
         const providers = ['test_provider'];
-        const geojson = {data: {}};
+        const geojson = { data: {} };
         const permissions = { value: 'SHARED', groups: {}, members: {} };
         const expectedParams = [{
             pageSize: 12,
@@ -503,35 +512,35 @@ describe('DataPackPage component', () => {
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
         const props = getProps();
-        const event = {persist: () => {}};
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const event = { persist: () => {} };
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ownerFilter: 'test_value', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ ownerFilter: 'test_value', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
     
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const currentState = {...wrapper.state()};
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const currentState = { ...wrapper.state() };
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const newState = {
-            minDate: new Date(), 
-            maxDate: new Date(), 
+            minDate: new Date(),
+            maxDate: new Date(),
             status: {
                 completed: true,
                 submitted: false,
-                incomplete: false
-            }
-        }
+                incomplete: false,
+            },
+        };
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({...currentState, ...newState, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        expect(stateSpy.calledWith({open: false})).toBe(true);
+        expect(stateSpy.calledWith({ ...currentState, ...newState, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ open: false })).toBe(true);
         stateSpy.restore();
     });
 
@@ -594,55 +603,55 @@ describe('DataPackPage component', () => {
     });
 
     it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
-        let props = getProps();
-        const promise = {then: (func) => {func()}};
-        props.getRuns = (params) => {return promise};
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const joyrideSpy = sinon.spy(DataPackPage.prototype, 'setJoyRideSteps');
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const props = getProps();
+        const promise = { then: (func) => { func(); } };
+        props.getRuns = () => (promise);
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const joyrideSpy = sinon.spy(DataPackPage.prototype, 'getJoyRideSteps');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().changeView('list');
         expect(wrapper.update().state().view).toBe('list');
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({view: 'list'})).toBe(true);
+        expect(stateSpy.calledWith({ view: 'list' })).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
-        wrapper.setState({order: 'some_other_order'});
+        wrapper.setState({ order: 'some_other_order' });
         wrapper.instance().changeView('map');
         expect(stateSpy.callCount).toEqual(5);
-        expect(stateSpy.calledWith({order: 'some_other_order', loading: true}, Function));
-        expect(stateSpy.calledWith({view: 'map'})).toBe(true);
+        expect(stateSpy.calledWith({ order: 'some_other_order', loading: true }, Function));
+        expect(stateSpy.calledWith({ view: 'map' })).toBe(true);
         stateSpy.restore();
         joyrideSpy.restore();
     });
 
     it('handleToggle should set state', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleToggle();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({open: false}));
+        expect(stateSpy.calledWith({ open: false }));
         stateSpy.restore();
     });
 
     it('if nextPage is true, loadMore should increase page size and makeRunRequest', () => {
-        let props = getProps();
+        const props = getProps();
         props.runsList.nextPage = true;
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().loadMore();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({pageSize: 24, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ pageSize: 24, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
     it('if pageSize is greater than 12  is should decrease pageSize and makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({pageSize: 24});
+        const wrapper = shallow(<DataPackPage {...props} />);
+        wrapper.setState({ pageSize: 24 });
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().loadLess();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({pageSize: 12, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ pageSize: 12, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
@@ -729,64 +738,193 @@ describe('DataPackPage component', () => {
         closeStub.restore();
     });
 
-    it('setJoyRideSteps should return correct steps based on view', () => {
+    it('getJoyRideSteps should return correct steps based on view', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
         wrapper.setState({ view: 'map' });
-        expect(wrapper.instance().setJoyRideSteps()).toEqual([
-            {title: 'Welcome to the DataPack Library.', text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.', selector: '.qa-DataPackPage-Toolbar-sort', style: welcomeTooltipStyle, position: 'top',},
-            {title: 'Create DataPack', text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
-            {title: 'Search DataPacks', text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.', selector: '.qa-DataPackSearchBar-TextField', position: 'bottom', style: tooltipStyle,},
-            {title: 'Filter DataPacks', text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
-            {title: 'DataPack Status', text: 'Check the status (complete, running, error) of previously created DataPacks.', selector: '.qa-DataPackListItem-subtitle-date', position: 'bottom', style: tooltipStyle,},
-            {title: 'Menu Options', text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.', selector: '.qa-DataPackListItem-IconMenu', position: 'bottom', style: tooltipStyle,},
-            {title: 'Change Views', text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.', selector: '.qa-DataPackViewButtons-Icons', position: 'bottom', style: tooltipStyle,},
+        expect(wrapper.instance().getJoyRideSteps()).toEqual([
+            {
+                title: 'Welcome to the DataPack Library.',
+                text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                selector: '.qa-DataPackPage-Toolbar-sort',
+                style: welcomeTooltipStyle,
+                position: 'top',
+            }, {
+                title: 'Create DataPack',
+                text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Search DataPacks',
+                text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.',
+                selector: '.qa-DataPackSearchBar-TextField',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Filter DataPacks',
+                text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.',
+                selector: '.qa-FilterDrawer-Drawer > div',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'DataPack Status',
+                text: 'Check the status (complete, running, error) of previously created DataPacks.',
+                selector: '.qa-DataPackListItem-subtitle-date',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Menu Options',
+                text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
+                selector: '.qa-DataPackListItem-IconMenu',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Change Views',
+                text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                selector: '.qa-DataPackViewButtons-Icons',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
         ]);
         wrapper.setState({ view: 'grid' });
-        expect(wrapper.instance().setJoyRideSteps()).toEqual([
-            {title: 'Welcome to the DataPack Library.', text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.', selector: '.qa-DataPackPage-Toolbar-sort', style: welcomeTooltipStyle, position: 'top',},
-            {title: 'Create DataPack', text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
-            {title: 'Search DataPacks', text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.', selector: '.qa-DataPackSearchBar-TextField', position: 'bottom', style: tooltipStyle,},
-            {title: 'Filter DataPacks', text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
-            {title: 'DataPack Status', text: 'Check the status (complete, running, error) of previously created DataPacks.', selector: '.qa-DataPackGridItem-CardActions', position: 'bottom', style: tooltipStyle,},
-            {title: 'Menu Options', text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.', selector: '.qa-DataPackGridItem-IconMenu', position: 'bottom', style: tooltipStyle,},
-            {title: 'Change Views', text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.', selector: '.qa-DataPackViewButtons-Icons', position: 'bottom', style: tooltipStyle,},
+        expect(wrapper.instance().getJoyRideSteps()).toEqual([
+            {
+                title: 'Welcome to the DataPack Library.',
+                text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                selector: '.qa-DataPackPage-Toolbar-sort',
+                style: welcomeTooltipStyle,
+                position: 'top',
+            }, {
+                title: 'Create DataPack',
+                text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Search DataPacks',
+                text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.',
+                selector: '.qa-DataPackSearchBar-TextField',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Filter DataPacks',
+                text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.',
+                selector: '.qa-FilterDrawer-Drawer > div',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'DataPack Status',
+                text: 'Check the status (complete, running, error) of previously created DataPacks.',
+                selector: '.qa-DataPackGridItem-CardActions',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Menu Options',
+                text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
+                selector: '.qa-DataPackGridItem-IconMenu',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Change Views',
+                text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                selector: '.qa-DataPackViewButtons-Icons',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
         ]);
         wrapper.setState({ view: 'list' });
-        expect(wrapper.instance().setJoyRideSteps()).toEqual([
-            {title: 'Welcome to the DataPack Library.', text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.', selector: '.qa-DataPackPage-Toolbar-sort', style: welcomeTooltipStyle, position: 'top',},
-            {title: 'Create DataPack', text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
-            {title: 'Search DataPacks', text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.', selector: '.qa-DataPackSearchBar-TextField', position: 'bottom', style: tooltipStyle,},
-            {title: 'Filter DataPacks', text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
-            {title: 'DataPack Status', text: 'Check the status (complete, running, error) of previously created DataPacks.', selector: '.qa-DataPackTableItem-TableRowColumn-status', position: 'bottom', style: tooltipStyle,},
-            {title: 'Menu Options', text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.', selector: '.qa-DataPackTableItem-IconMenu', position: 'bottom', style: tooltipStyle,},
-            {title: 'Change Views', text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.', selector: '.qa-DataPackViewButtons-Icons', position: 'bottom', style: tooltipStyle,},
+        expect(wrapper.instance().getJoyRideSteps()).toEqual([
+            {
+                title: 'Welcome to the DataPack Library.',
+                text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                selector: '.qa-DataPackPage-Toolbar-sort',
+                style: welcomeTooltipStyle,
+                position: 'top',
+            }, {
+                title: 'Create DataPack',
+                text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Search DataPacks',
+                text: 'Text search of existing DataPacks. The name, description, and project fields of every DataPack are indexed and searchable.',
+                selector: '.qa-DataPackSearchBar-TextField',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Filter DataPacks',
+                text: 'Filter DataPacks based on sharing permissions, job status, date range, and data sources.',
+                selector: '.qa-FilterDrawer-Drawer > div',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'DataPack Status',
+                text: 'Check the status (complete, running, error) of previously created DataPacks.',
+                selector: '.qa-DataPackTableItem-TableRowColumn-status',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Menu Options',
+                text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
+                selector: '.qa-DataPackTableItem-IconMenu',
+                position: 'bottom',
+                style: tooltipStyle,
+            }, {
+                title: 'Change Views',
+                text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                selector: '.qa-DataPackViewButtons-Icons',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
         ]);
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [   {title: 'Create DataPack', text: 'Click here to Navigate to Create a DataPack.', selector: '.qa-DataPackLinkButton-RaisedButton', position: 'bottom', style: tooltipStyle,},
-            {title: 'Search DataPacks', text: 'Search and Sort the existing DataPack Library.', selector: '.qa-DataPackSearchBar-TextField',  position: 'bottom', style: tooltipStyle,},
-            {title: 'Filter DataPacks', text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.', selector: '.qa-FilterDrawer-Drawer > div', position: 'bottom', style: tooltipStyle,},
-            {title: 'DataPack Status', text: 'Check the status of previously created DataPacks', selector: '.qa-DataPackListItem-subtitle-date', position: 'bottom', style: tooltipStyle,},
-            {title: 'Status and Download', text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.', selector: '.qa-DataPackListItem-IconMenu', position: 'bottom', style: tooltipStyle,},
-        ]
+        const steps = [
+            {
+                title: 'Create DataPack',
+                text: 'Click here to Navigate to Create a DataPack.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Search DataPacks',
+                text: 'Search and Sort the existing DataPack Library.',
+                selector: '.qa-DataPackSearchBar-TextField',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Filter DataPacks',
+                text: 'Filter the DataPack Library by Permission, Status, Dates and Data Sources.',
+                selector: '.qa-FilterDrawer-Drawer > div',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+            {
+                title: 'DataPack Status',
+                text: 'Check the status of previously created DataPacks',
+                selector: '.qa-DataPackListItem-subtitle-date',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Status and Download',
+                text: 'Navigate to the “Status & Download” page of an existing DataPack, where you can download the data.',
+                selector: '.qa-DataPackListItem-IconMenu',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+        ];
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({steps: steps}));
-        stateSpy.restore();
-    });
-
-    it('handleJoyride should set state', () => {
-        const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        wrapper.instance().handleJoyride();
-        expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({isRunning: false, steps: []}));
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
 
@@ -802,14 +940,14 @@ describe('DataPackPage component', () => {
                 title: "Filter DataPacks",
             },
             type: "step:before",
-        }
+        };
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
-        wrapper.setState({open: false});
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.setState({ open: false });
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({open: true}));
+        expect(stateSpy.calledWith({ open: true }));
         stateSpy.restore();
     });
 
@@ -825,12 +963,12 @@ describe('DataPackPage component', () => {
                 title: "Create DataPack",
             },
             type: "step:before",
-        }
+        };
         const props = getProps();
-        const stateSpy = new sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const wrapper = getWrapper(props);
         wrapper.instance().callback(callbackData);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });
 

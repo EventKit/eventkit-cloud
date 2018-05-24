@@ -421,25 +421,42 @@ describe('ExportInfo component', () => {
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [{title: 'Search for location', text: 'Type in location name to set area of interest.', selector: '.bootstrap-typeahead-input', position: 'bottom', style: tooltipStyle,},
-            {title: 'Select location', text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.', selector: '.qa-DrawAOIToolbar-div', position: 'left', style: tooltipStyle,},
-            {title: 'Cancel Selection', text: 'Cancel or clear selection by clicking the "X".', selector: '.qa-DrawBoxButton-button', position: 'left', style: tooltipStyle,},
-            {title: 'Go to next step', text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0', position: 'left', style: tooltipStyle,}];
+        const steps = [
+            {
+                title: 'Search for location',
+                text: 'Type in location name to set area of interest.',
+                selector: '.bootstrap-typeahead-input',
+                position: 'bottom',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Select location',
+                text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.',
+                selector: '.qa-DrawAOIToolbar-div',
+                position: 'left',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Cancel Selection',
+                text: 'Cancel or clear selection by clicking the "X".',
+                selector: '.qa-DrawBoxButton-button',
+                position: 'left',
+                style: tooltipStyle,
+            },
+            {
+                title: 'Go to next step',
+                text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.',
+                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
+                position: 'left',
+                style: tooltipStyle,
+            },
+        ];
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
+        const stateSpy = sinon.stub(ExportInfo.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({steps: steps}));
-        stateSpy.restore();
-    });
-
-    it('handleJoyride should set state', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
-        wrapper.instance().handleJoyride();
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
 
@@ -455,13 +472,12 @@ describe('ExportInfo component', () => {
                 title: "Create DataPack",
             },
             type: "step:before",
-        }
+        };
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
+        const stateSpy = sinon.stub(ExportInfo.prototype, 'setState');
         wrapper.instance().callback(callbackData);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });
-
 });

@@ -3,13 +3,13 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import Joyride from 'react-joyride';
 
 describe('StatusDownload component', () => {
     const muiTheme = getMuiTheme();
@@ -207,7 +207,7 @@ describe('StatusDownload component', () => {
 
     it('should have the correct initial state', () => {
         const wrapper = getWrapper(getProps());
-        expect(wrapper.state()).toEqual(wrapper.instance().initialState());
+        expect(wrapper.state()).toEqual(wrapper.instance().getInitialState());
     });
 
     it('should render all the basic components', () => {
@@ -378,30 +378,64 @@ describe('StatusDownload component', () => {
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [{title: 'DataPack Info', text: 'This is the name of the datapack.', selector: '.qa-DataCartDetails-table-name', position: 'bottom', style: tooltipStyle, isFixed:true,},
-            {title: 'DataPack Status', text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.', selector: '.qa-DataCartDetails-table-export', position: 'bottom', style: tooltipStyle, isFixed:true,},
-            {title: 'DataPack Download Options', text: 'Here you will find download options for the datapack. <br> Each data source has its own table where you can view status of the current downloadable files.', selector: '.qa-DatapackDetails-div-downloadOptions', position: 'bottom', style: tooltipStyle, isFixed:true,},
-            {title: 'Other Options', text: 'There are options availble to run datapack export again, clone the dataoack or delete the datapack', selector: '.qa-DataCartDetails-div-otherOptions', position: 'bottom', style: tooltipStyle, isFixed:true,},
-            {title: 'General Information', text: 'Here you will find general information related to the datapack.  ', selector: '.qa-DataCartDetails-table-generalInfo', position: 'bottom', style: tooltipStyle, isFixed:true,},
-            {title: 'AIO', text: 'This is the selected area of interest for the datapack.', selector: '.qa-DataCartDetails-div-map', position: 'bottom', style: tooltipStyle, isFixed:true,},
-            {title: 'Export Information', text: 'This contains information specific to the export.', selector: '.qa-DataCartDetails-table-exportInfo', position: 'bottom', style: tooltipStyle, isFixed:true,},
+        const steps = [
+            {
+                title: 'DataPack Info',
+                text: 'This is the name of the datapack.',
+                selector: '.qa-DataCartDetails-table-name',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            }, {
+                title: 'DataPack Status',
+                text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.',
+                selector: '.qa-DataCartDetails-table-export',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            }, {
+                title: 'DataPack Download Options',
+                text: 'Here you will find download options for the datapack. <br> Each data source has its own table where you can view status of the current downloadable files.',
+                selector: '.qa-DatapackDetails-div-downloadOptions',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            }, {
+                title: 'Other Options',
+                text: 'There are options availble to run datapack export again, clone the dataoack or delete the datapack',
+                selector: '.qa-DataCartDetails-div-otherOptions',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            }, {
+                title: 'General Information',
+                text: 'Here you will find general information related to the datapack.  ',
+                selector: '.qa-DataCartDetails-table-generalInfo',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            }, {
+                title: 'AIO',
+                text: 'This is the selected area of interest for the datapack.',
+                selector: '.qa-DataCartDetails-div-map',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            }, {
+                title: 'Export Information',
+                text: 'This contains information specific to the export.',
+                selector: '.qa-DataCartDetails-table-exportInfo',
+                position: 'bottom',
+                style: tooltipStyle,
+                isFixed: true,
+            },
         ];
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
+        const stateSpy = sinon.stub(StatusDownload.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({steps: steps}));
-        stateSpy.restore();
-    });
-
-    it('handleJoyride should set state', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
-        wrapper.instance().handleJoyride();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
 
@@ -420,10 +454,10 @@ describe('StatusDownload component', () => {
         }
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(StatusDownload.prototype, 'setState');
+        const stateSpy = sinon.stub(StatusDownload.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });
 
@@ -532,13 +566,11 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(getProps());
         expect(componentDidMountSpy.callCount).toBe(1);
         expect(componentWillUnmountSpy.callCount).toBe(0);
-        expect(setStateSpy.callCount).toBe(0);
         wrapper.setProps({
             location: {},
         });
         expect(componentDidMountSpy.callCount).toBe(2);
         expect(componentWillUnmountSpy.callCount).toBe(1);
-        expect(setStateSpy.callCount).toBe(1);
-        expect(setStateSpy.calledWith(wrapper.instance().initialState())).toBe(true);
+        expect(setStateSpy.calledWith(wrapper.instance().getInitialState())).toBe(true);
     });
 });

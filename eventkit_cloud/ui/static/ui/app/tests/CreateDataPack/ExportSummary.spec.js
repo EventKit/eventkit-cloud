@@ -129,8 +129,8 @@ describe('Export Summary Component', () => {
 
     it('componentDidMount should setJoyRideSteps', () => {
         const props = getProps();
-        const mountSpy = new sinon.spy(ExportSummary.prototype, 'componentDidMount');
-        const joyrideSpy = new sinon.spy(ExportSummary.prototype, 'joyrideAddSteps');
+        const mountSpy = sinon.spy(ExportSummary.prototype, 'componentDidMount');
+        const joyrideSpy = sinon.stub(ExportSummary.prototype, 'joyrideAddSteps');
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
@@ -151,8 +151,8 @@ describe('Export Summary Component', () => {
 
     it('expandedChange should call setState', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().expandedChange(true);
         expect(stateSpy.calledOnce).toBe(true);
@@ -185,21 +185,11 @@ describe('Export Summary Component', () => {
             {title: 'Submit DataPack', text: 'Once ready, click the large green button to kick off the DataPack submission process.<br>You will be redirected to the Status and Download page.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case2', position: 'bottom', style: tooltipStyle,},];
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
+        const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
         wrapper.update();
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({steps: steps}));
-        stateSpy.restore();
-    });
-
-    it('handleJoyride should set state', () => {
-        const props = getProps();
-        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
-        const wrapper = getWrapper(props);
-
-        wrapper.instance().handleJoyride();
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
 
@@ -215,12 +205,12 @@ describe('Export Summary Component', () => {
                 title: "Create DataPack",
             },
             type: "step:before",
-        }
+        };
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = new sinon.spy(ExportSummary.prototype, 'setState');
+        const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
         wrapper.instance().callback(callbackData);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
     });
 });
