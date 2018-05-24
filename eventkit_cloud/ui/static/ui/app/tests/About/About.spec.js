@@ -3,7 +3,7 @@ import { mount } from 'enzyme';
 import AppBar from 'material-ui/AppBar';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import About from '../../components/About/About';
-import { Config } from '../../config';
+import { about } from '../../about.config';
 import InfoParagraph from '../../components/About/InfoParagraph';
 import ThreeStepInfo from '../../components/About/ThreeStepInfo';
 import InfoGrid from '../../components/About/InfoGrid';
@@ -21,7 +21,7 @@ describe('About component', () => {
 
     it('should render all the basic elements', () => {
         const mapping = { InfoParagraph: 0, ThreeStepInfo: 0, InfoGrid: 0 };
-        Config.ABOUT_PAGE.forEach((item) => { mapping[item.type] += 1; });
+        about.forEach((item) => { mapping[item.type] += 1; });
         const wrapper = getWrapper();
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find(AppBar).text()).toEqual('About EventKit');

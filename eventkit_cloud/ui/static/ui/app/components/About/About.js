@@ -4,14 +4,14 @@ import CustomScrollbar from '../CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
 import ThreeStepInfo from './ThreeStepInfo';
 import InfoGrid from './InfoGrid';
-import { Config } from '../../config';
+import { about } from '../../about.config';
 
 const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
 export class About extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            pageInfo: Config.ABOUT_PAGE,
+            pageInfo: about,
         };
     }
 
