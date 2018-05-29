@@ -4,13 +4,14 @@ import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
 import Clear from 'material-ui/svg-icons/content/clear';
 import CustomScrollbar from '../CustomScrollbar';
+import { isViewportS } from '../../utils/viewport';
 
 export class ShareBaseDialog extends Component {
     constructor(props) {
         super(props);
         this.handleResize = this.handleResize.bind(this);
         this.state = {
-            mobile: this.isMobile(),
+            mobile: isViewportS(),
         };
     }
 
@@ -23,13 +24,9 @@ export class ShareBaseDialog extends Component {
     }
 
     handleResize() {
-        if (this.state.mobile !== this.isMobile()) {
+        if (this.state.mobile !== isViewportS()) {
             this.setState({ mobile: !this.state.mobile });
         }
-    }
-
-    isMobile() {
-        return window.innerWidth < 768;
     }
 
     render() {

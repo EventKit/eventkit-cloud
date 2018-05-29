@@ -6,13 +6,12 @@ import django_filters
 
 from django.db.models import Q
 
-from eventkit_cloud.jobs.models import Job, VisibilityState
+from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
 
 from django.contrib.auth.models import User, Group
 from ..core.models import GroupPermission, JobPermission
 
-from rest_framework.filters import BaseFilterBackend
 
 logger = logging.getLogger(__name__)
 
@@ -123,3 +122,11 @@ class GroupFilter(django_filters.FilterSet):
     class Meta:
         model = Group
         fields = ('id', 'name')
+
+
+class UserJobActivityFilter(django_filters.FilterSet):
+    activity = django_filters.CharFilter(name="activity")
+
+    class Meta:
+            model = UserJobActivity
+            fields = ('activity',)

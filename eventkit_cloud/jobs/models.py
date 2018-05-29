@@ -12,6 +12,8 @@ from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, M
 from django.core.serializers import serialize
 from django.db.models.fields import CharField
 from django.contrib.postgres.fields.jsonb import JSONField
+from django.utils import timezone
+
 from ..core.models import TimeStampedModelMixin, UIDMixin
 
 
@@ -90,6 +92,7 @@ class UserLicense(TimeStampedModelMixin):
 
     def __unicode__(self):
         return '{0}: {1}'.format(self.user.username, self.license.slug)
+
 
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
@@ -283,6 +286,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
+    last_export_run = models.ForeignKey('tasks.ExportRun', null=True, related_name='last_export_run')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -384,6 +388,18 @@ class ExportProfile(models.Model):
 
     def __str__(self):
         return '{0}'.format(self.name)
+
+
+class UserJobActivity(models.Model):
+    CREATED = 'created'
+    VIEWED = 'viewed'
+    UPDATED = 'updated'
+    DELETED = 'deleted'
+
+    user = models.ForeignKey(User)
+    job = models.ForeignKey(Job)
+    type = models.CharField(max_length=100, blank=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):

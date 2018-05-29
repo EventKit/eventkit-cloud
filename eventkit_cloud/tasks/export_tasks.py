@@ -35,6 +35,7 @@ from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
+from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
 BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
 
@@ -43,7 +44,6 @@ logger = get_task_logger(__name__)
 
 
 class TaskStates(Enum):
-
     COMPLETED = "COMPLETED"  # Used for runs when all tasks were successful
     INCOMPLETE = "INCOMPLETE"  # Used for runs when one or more tasks were unsuccessful
     SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
@@ -216,7 +216,7 @@ class ExportTask(LockingTask):
                 5. copy the export file to the download directory
                 6. create the export task result
                 7. update the export task status and save it
-            """
+                """
             # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks
             # should just return.
             if not retval:
@@ -397,16 +397,18 @@ def osm_data_collection_pipeline(
 
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
-    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(host=database['HOST'],
-                                        user=database['USER'],
-                                        password=database['PASSWORD'].replace('$', '\$'),
-                                        port=database['PORT'],
-                                        name=database['NAME'])
+    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(
+        host=database['HOST'],
+        user=database['USER'],
+        password=database['PASSWORD'].replace('$', '\$'),
+        port=database['PORT'],
+        name=database['NAME'])
 
-    gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
+    gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons",
+                           fmt='gpkg')
 
     ret_geopackage_filepath = g.results[0].parts[0]
-    assert(ret_geopackage_filepath == geopackage_filepath)
+    assert (ret_geopackage_filepath == geopackage_filepath)
     update_progress(export_task_record_uid, progress=100)
 
     return geopackage_filepath
@@ -424,7 +426,6 @@ def osm_data_collection_task(
     from .models import ExportRun
 
     logger.debug("enter run for {0}".format(self.name))
-
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -578,8 +579,7 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
 def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
-        user_details=None, *args, **kwargs):
-
+                           user_details=None, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
@@ -679,12 +679,16 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining export for WCS services
     """
+    from ..tasks.models import ExportTaskRecord
+
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+
+    task = ExportTaskRecord.objects.get(uid=task_uid)
     try:
-        wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                    config=config, service_type=service_type, task_uid=task_uid, debug=True,
-                                    fmt="gtiff")
+        wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
+                                    name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
+                                    user_details=user_details)
         wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out
@@ -729,9 +733,12 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
+    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
+
     logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
     include_files = []
-    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
+    metadata = {"name": normalize_name(job_name), "bbox": export_provider_task.run.job.extents,
+                "data_sources": {export_provider_task.slug: {"name": export_provider_task.name}}}
     if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
         for export_task in export_provider_task.tasks.all():
             try:
@@ -741,6 +748,16 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
+            if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
+                filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+                    export_provider_task.slug,
+                    os.path.splitext(os.path.basename(filename))[0],
+                    timezone.now().strftime('%Y%m%d'),
+                )
+                metadata['data_sources'][export_provider_task.slug]['file_path'] = os.path.join('data',
+                                                                                                export_provider_task.slug,
+                                                                                                filepath)
+                metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path,
                                                                               export_task.name))
@@ -752,6 +769,10 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # sorted while adding time allows comparisons in tests.
     include_files = sorted(list(set(include_files)))
     if include_files:
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
+        with open(metadata_file, 'w') as open_md_file:
+            json.dump(metadata, open_md_file)
+        include_files += [metadata_file]
         qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
         include_files += [qgs_style_file]
         logger.debug("Zipping files: {0}".format(include_files))
@@ -852,7 +873,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.save()
 
 
-#This could be improved by using Redis or Memcached to help manage state.
+# This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', base=LockingTask)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from .models import ExportRun
@@ -862,7 +883,8 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 
     run = ExportRun.objects.filter(uid=run_uid).first()
     if run:
-        if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in run.provider_tasks.all()):
+        if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
+               run.provider_tasks.all()):
             callback_task.apply_async(**apply_args)
         else:
             logger.error("Waiting for other tasks to finish.")
@@ -997,6 +1019,7 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
+    from eventkit_cloud.tasks.task_runners import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
@@ -1004,8 +1027,10 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
     include_files = list([])
 
     provider_tasks = run.provider_tasks.all()
+    metadata = {"name": normalize_name(run.job.name), "bbox": run.job.extents, "data_sources": {}}
 
     for provider_task in provider_tasks:
+        metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
             for export_task in provider_task.tasks.all():
                 try:
@@ -1013,16 +1038,29 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 except Exception:
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                 provider_task.slug, filename)
+                                              provider_task.slug, filename)
+                if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
+                    gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+                        provider_task.slug,
+                        os.path.splitext(os.path.basename(filename))[0],
+                        timezone.now().strftime('%Y%m%d'),
+                    )
+                    metadata['data_sources'][provider_task.slug]['file_path'] = gpkg_filepath
+                    metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
+                        provider_task.slug)
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                     export_task.name))
+                                                                                  export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
                 if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
 
     if include_files:
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
+        with open(metadata_file, 'w') as open_md_file:
+            json.dump(metadata, open_md_file)
+        include_files += [metadata_file]
         # No need to add QGIS file if there aren't any files to be zipped.
         qgs_style_file = generate_qgs_style(run_uid=run_uid)
         include_files += [qgs_style_file]
@@ -1106,21 +1144,33 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.iteritems():
+                filename = relative_file_path
+                # Support files should go in the correct directory.  It might make sense to break these files up
+                # by directory and then just put each directory in the correct location so that we don't have to
+                # list all support files in the future.
+                basename = os.path.basename(absolute_file_path)
+                if basename == "create_mxd.py":
+                    # put the style file in the root of the zip
+                    filename = basename
+                elif os.path.dirname(absolute_file_path) == 'support':
+                    # Put the support files in the correct directory.
+                    filename = 'support/{0}'.format(basename)
+                elif basename == "__init__.py" or ".pyc" in basename:
+                    continue
                 zipfile.write(
                     absolute_file_path,
-                    arcname=relative_file_path
+                    arcname=filename
                 )
         for filepath in files:
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
-
-            if filepath.endswith(".qgs"):
+            if filepath.endswith(".qgs") or filepath.endswith("metadata.json"):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
                     ext
-                    )
+                )
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
@@ -1129,7 +1179,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                     name,
                     date,
                     ext
-                    )
+                )
 
             zipfile.write(
                 filepath,
@@ -1148,7 +1198,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 shutil.copy(zip_st_filepath, zip_dl_filepath)
             zipfile_url = os.path.join(run_uid, zip_filename)
 
-        #Update Connection
+        # Update Connection
         db.close_old_connections()
         run.refresh_from_db()
 
@@ -1164,7 +1214,6 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
 
 class FinalizeRunBase(LockingTask):
-
     name = 'Finalize Export Run'
 
     def run(self, result=None, run_uid=None, stage_dir=None):
@@ -1182,6 +1231,8 @@ class FinalizeRunBase(LockingTask):
         if run.job.include_zipfile and not run.zipfile_url:
             logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
+        notification_level = NotificationLevel.SUCCESS.value
+        verb = NotificationVerb.RUN_COMPLETED.value
         provider_tasks = run.provider_tasks.all()
 
         # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
@@ -1194,15 +1245,23 @@ class FinalizeRunBase(LockingTask):
         # mark run as incomplete if any tasks fail
         if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_FAILED.value
         if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
         run.save()
 
+        # sendnotification to user via django notifications
+
+        sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
+
         # send notification email to user
-        hostname = settings.HOSTNAME
-        url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+        site_url = settings.SITE_URL.rstrip('/')
+        url = '{0}/exports/{1}'.format(site_url, run.job.uid)
         addr = run.user.email
         if run.status == TaskStates.CANCELED.value:
             subject = "Your Eventkit Data Pack was CANCELED."
@@ -1233,7 +1292,8 @@ class FinalizeRunBase(LockingTask):
         stage_dir = None if retval is None else retval.get('stage_dir')
         try:
             if stage_dir and os.path.isdir(stage_dir):
-                shutil.rmtree(stage_dir)
+                if not os.getenv('KEEP_STAGE', False):
+                    shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1256,20 +1316,30 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     if run.job.include_zipfile and not run.zipfile_url:
         logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
+    verb = NotificationVerb.RUN_COMPLETED.value
+    notification_level = NotificationLevel.SUCCESS.value
     provider_tasks = run.provider_tasks.all()
 
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
+        notification_level = NotificationLevel.WARNING.value
+        verb = NotificationVerb.RUN_FAILED.value
     if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
         run.status = TaskStates.CANCELED.value
+        verb = NotificationVerb.RUN_CANCELED.value
+        notification_level = NotificationLevel.WARNING.value
     finished = timezone.now()
     run.finished_at = finished
     run.save()
 
+    #sendnotification to user via django notifications
+
+    sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
+
     # send notification email to user
-    hostname = settings.HOSTNAME
-    url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+    site_url = settings.SITE_URL.rstrip('/')
+    url = '{0}/exports/{1}'.format(site_url, run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
@@ -1307,8 +1377,8 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     run = ExportRun.objects.get(uid=run_uid)
     try:
         if os.path.isdir(stage_dir):
-            # DON'T leave the stage_dir in place for debugging
-            shutil.rmtree(stage_dir)
+            if not os.getenv('KEEP_STAGE', False):
+                shutil.rmtree(stage_dir)
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1354,8 +1424,8 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     Checks if all DataProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
 
-    #There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
-    #the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
+    # There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
+    # the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
     # manage the task state (i.e. the task should be FAILED or CANCELED).
     from ..tasks.models import DataProviderTaskRecord, ExportTaskException
     from ..tasks.exceptions import CancelException
@@ -1412,12 +1482,12 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
             export_provider_task.status = TaskStates.CANCELED.value
     export_provider_task.save()
 
-    #if error:
+    # if error:
     #    finalize_export_provider_task(
     #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
     #        status=TaskStates.INCOMPLETE.value
     #    )
-    #else:
+    # else:
     #    finalize_export_provider_task(
     #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
     #        status=TaskStates.CANCELED.value
@@ -1528,3 +1598,23 @@ def get_function(function):
     function_object = getattr(module_object, function_name)
 
     return function_object
+
+
+def get_data_type_from_provider(provider_slug):
+    from ..jobs.models import DataProvider
+    # NOTE TIF here is a place holder until we figure out how to support other formats.
+    data_types = {'wms': 'raster',
+                  'tms': 'raster',
+                  'wmts': 'raster',
+                  'wcs': 'tif',
+                  'wfs': 'vector',
+                  'osm': 'osm',
+                  'arcgis-feature': 'vector',
+                  'arcgis-raster': 'raster'}
+    data_provider = DataProvider.objects.get(slug=provider_slug)
+    type_name = data_provider.export_provider_type.type_name
+    type_mapped = data_types.get(type_name)
+    logger.error("ADDING THE TYPE: {0} {1}".format(type_name, type_mapped))
+    return type_mapped
+
+

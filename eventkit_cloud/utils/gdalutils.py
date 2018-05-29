@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from osgeo import gdal, ogr
+from osgeo import gdal, ogr, osr
 import json
 import logging
 import math
+import time
 import os
 import subprocess
 from string import Template
@@ -10,6 +11,8 @@ from tempfile import NamedTemporaryFile
 from ..tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
+
+MAX_DB_CONNECTION_RETRIES = 3
 
 
 def open_ds(ds_path):
@@ -270,8 +273,25 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         logger.debug("GDAL clip cmd: %s", cmd)
 
         task_process = TaskProcess(task_uid=task_uid)
-        task_process.start_process(cmd, shell=True, executable="/bin/bash",
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
+        # retries as retrying forever would cause the job to never finish in the event that the database is down. An
+        # improved method would perhaps be to see if there are connection options to create a more reliable connection.
+        # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
+        # documentation.
+        attempts = 0
+        while True:
+            try:
+                task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                break
+            except Exception as e:
+                logger.error(e)
+                attempts += 1
+                if attempts > MAX_DB_CONNECTION_RETRIES:
+                    raise e
+                time.sleep(2)
+
     finally:
         if temp_boundfile:
             temp_boundfile.close()
@@ -330,3 +350,92 @@ def convert(dataset=None, fmt=None, task_uid=None):
         raise Exception("Conversion process failed with return code {0}".format(task_process.exitcode))
 
     return dataset
+
+
+def get_dimensions(bbox, scale):
+    """
+
+    :param bbox: A list [w, s, e, n].
+    :param scale: A scale in meters per pixel.
+    :return: A list [width, height] representing pixels
+    """
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+    return [int(width/scale), int(height/scale)]
+
+
+def get_line(coordinates):
+    """
+
+    :param coordinates: A list representing a single coordinate in decimal degrees.
+        Example: [[W/E, N/S], [W/E, N/S]]
+    :return: AN OGR geometry point.
+    """
+    # This line will implicitly be in EPSG:4326 because that is what the geojson standard specifies.
+    geojson = json.dumps({"type": "LineString", "coordinates": coordinates})
+    return ogr.CreateGeometryFromJson(geojson)
+
+
+def get_distance(point_a, point_b):
+    """
+    Takes two points, and converts them to a line, converts the geometry to mercator and returns length in meters.
+    The geometry is converted to mercator because length is based on the SRS unit of measure (meters for mercator).
+    :param point_a: A list representing a single point [W/E, N/S].
+    :param point_b: A list representing a single point [W/E, N/S].
+    :return: Distance in meters.
+    """
+    line = get_line([point_a, point_b])
+    reproject_geometry(line, 4326, 3857)
+    return line.Length()
+
+
+def reproject_geometry(geometry, from_srs, to_srs):
+    """
+
+    :param geometry: Converts an ogr geometry from one spatial reference system to another
+    :param from_srs:
+    :param to_srs:
+    :return:
+    """
+    return geometry.Transform(get_transform(from_srs, to_srs))
+
+
+def get_transform(from_srs, to_srs):
+    """
+
+    :param from_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
+    :param to_srs: A spatial reference (EPSG) represented as an int (i.e. EPSG:4326 = 4326)
+    :return: An osr coordinate transformation object.
+    """
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(from_srs)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(to_srs)
+
+    return osr.CoordinateTransformation(source, target)
+
+
+def merge_geotiffs(in_files, out_file, task_uid=None):
+    """
+
+    :param in_files: A list of geotiffs.
+    :param out_file:  A location for the result of the merge.
+    :param task_uid: A task uid to manage the subprocess.
+    :return: The out_file path.
+    """
+    cmd_template = Template("gdalwarp $in_ds $out_ds")
+    cmd = cmd_template.safe_substitute({'in_ds': ' '.join(in_files),
+                                        'out_ds': out_file})
+
+    logger.debug("GDAL merge cmd: {0}".format(cmd))
+
+    task_process = TaskProcess(task_uid=task_uid)
+    task_process.start_process(cmd, shell=True, executable="/bin/bash",
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    if task_process.exitcode != 0:
+        logger.error('{0}'.format(task_process.stderr))
+        raise Exception("GeoTIFF merge process failed with return code {0}".format(task_process.exitcode))
+
+    return out_file

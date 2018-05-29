@@ -304,7 +304,8 @@ class ExportWCSTaskRunner(TaskRunner):
                                                     export_provider_task=export_provider_task, worker=worker,
                                                     display=getattr(service_task, "display", False))
 
-            task_chain = (service_task.s(stage_dir=stage_dir,
+            task_chain = (service_task.s(config=provider_task.provider.config,
+                                         stage_dir=stage_dir,
                                          job_name=job_name,
                                          task_uid=export_task.uid,
                                          name=provider_task.provider.slug,

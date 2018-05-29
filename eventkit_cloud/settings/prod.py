@@ -22,6 +22,7 @@ INSTALLED_APPS += (
     'eventkit_cloud.ui',
     'eventkit_cloud.utils',
     'eventkit_cloud',
+    'notifications',
 )
 
 LOGIN_URL = '/login'
@@ -348,7 +349,7 @@ LOGGING = {
     },
 }
 
-DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
+DISABLE_SSL_VERIFICATION = True if 't' in os.environ.get('DISABLE_SSL_VERIFICATION').lower() else False
 
 LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
 
@@ -358,3 +359,7 @@ AUTO_LOGOUT_SECONDS = int(os.getenv('AUTO_LOGOUT_SECONDS', 0))
 AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']
+
+EVENTKIT_ARCGIS_SERVICE = os.getenv('EVENTKIT_ARCGIS_SERVICE')
+
+NOTIFICATIONS_SOFT_DELETE=True

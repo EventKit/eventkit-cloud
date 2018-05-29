@@ -69,6 +69,10 @@ export class DataPackPage extends React.Component {
             shareOpen: false,
             targetRun: null,
         };
+
+        if (props.location.query.collection === 'myDataPacks') {
+            this.state.ownerFilter = props.user.data.user.username;
+        }
     }
 
     componentDidMount() {
@@ -140,6 +144,7 @@ export class DataPackPage extends React.Component {
             return (
                 <DataPackGrid
                     {...commonProps}
+                    name={'DataPackLibrary'}
                 />
             );
         case 'map':
@@ -175,44 +180,19 @@ export class DataPackPage extends React.Component {
     }
 
     makeRunRequest(isAuto = false) {
-        const status = [];
-        Object.keys(this.state.status).forEach((key) => {
-            if (this.state.status[key]) {
-                status.push(key.toUpperCase());
-            }
+        return this.props.getRuns({
+            pageSize: this.state.pageSize,
+            ordering: this.state.order,
+            ownerFilter: this.state.ownerFilter,
+            status: this.state.status,
+            minDate: this.state.minDate,
+            maxDate: this.state.maxDate,
+            search: this.state.search,
+            providers: this.state.providers,
+            geojson: this.state.geojson_geometry,
+            permissions: this.state.permissions,
+            isAuto,
         });
-
-        const providers = Object.keys(this.state.providers);
-
-        const params = {};
-        params.page_size = this.state.pageSize;
-        params.ordering = this.state.order.includes('featured') ?
-            `${this.state.order},-started_at`
-            :
-            this.state.order;
-        if (this.state.ownerFilter) params.user = this.state.ownerFilter;
-        if (this.state.permissions.value) params.visibility = this.state.permissions.value;
-        if (status.length) params.status = status.join(',');
-        if (this.state.minDate) {
-            params.min_date = this.state.minDate.toISOString().substring(0, 10);
-        }
-        if (this.state.maxDate) {
-            const maxDate = new Date(this.state.maxDate.getTime());
-            maxDate.setDate(maxDate.getDate() + 1);
-            params.max_date = maxDate.toISOString().substring(0, 10);
-        }
-        if (this.state.search) params.search_term = this.state.search.slice(0, 1000);
-        if (providers.length) params.providers = providers.join(',');
-
-        const options = {};
-        if (this.state.geojson_geometry) {
-            options.geojson = this.state.geojson_geometry;
-        }
-        if (params.visibility === 'SHARED') {
-            options.permissions = this.state.permissions;
-        }
-
-        return this.props.getRuns(params, options, isAuto);
     }
 
     handleOwnerFilter(event, index, value) {
@@ -526,16 +506,16 @@ function mapStateToProps(state) {
         importGeom: state.importGeom,
         geocode: state.geocode,
         groups: state.groups.groups,
-        users: state.users.users,
+        users: state.users.users.filter(user => user.user.username !== state.user.data.user.username),
         updatePermissions: state.updatePermission,
     };
 }
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (params, options, isAuto) => (
-            dispatch(getRuns(params, options, isAuto))
-        ),
+        getRuns: (args) => {
+            dispatch(getRuns(args));
+        },
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
         },
