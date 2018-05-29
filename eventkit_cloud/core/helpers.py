@@ -125,6 +125,4 @@ def sendnotification(actor, recipient, verb, action_object, target, level, descr
         result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object, target=target,
                              level=level, description=description)
     except Exception as err:
-        logger.error("notify send error ignored: %s" % err)
-        import traceback
-        traceback.print_exc()
+        logger.debug("notify send error ignored: %s" % err)
