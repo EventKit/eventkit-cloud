@@ -88,10 +88,9 @@ def get_cred(slug=None, url=None, params=None):
         env_slug = slug.replace('-', '_')
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED")
 
-    userpw = cred.split(':')
-    if cred is not None and ":" in cred and all(userpw) and len(userpw) == 2:
+    if cred is not None and ":" in cred and all(cred.split(':')) and len(cred.split(':')) == 2:
+        cred = cred.split(':')
         logger.debug("Found credentials for %s in env var", slug)
-        cred = userpw
 
     # Check url and params for http credentials
     elif url:
