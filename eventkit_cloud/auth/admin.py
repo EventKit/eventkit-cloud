@@ -30,6 +30,7 @@ class UserLicenseInline(admin.TabularInline):
 
 
 UserAdmin.inlines = [UserLicenseInline]
+UserAdmin.readonly_fields += 'last_login', 'date_joined'
 
 
 admin.site.unregister(Token)
