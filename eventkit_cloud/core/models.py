@@ -6,6 +6,18 @@ from enum import Enum
 from django.contrib.gis.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User, Group
+from notifications.models import Notification
+import unicodedata
+
+
+Notification.old_str_func = Notification.__str__
+
+
+def normalize_unicode_str(self):
+    return unicodedata.normalize('NFKD', self.old_str_func()).encode('ascii', 'ignore')
+
+
+Notification.__str__ = normalize_unicode_str
 
 
 class TimeStampedModelMixin(models.Model):
