@@ -5,6 +5,7 @@ import httplib
 from tempfile import NamedTemporaryFile
 import logging
 from functools import wraps
+from urllib import quote
 import urllib2
 import requests
 
@@ -86,30 +87,33 @@ def get_cred(slug=None, url=None, params=None):
     if slug:
         env_slug = slug.replace('-', '_')
         cred = os.getenv(env_slug + "_CRED") or os.getenv(env_slug.upper() + "_CRED")
-    if cred is not None and ":" in cred and all(cred.split(":")):
-        cred = cred.replace('@', '%40')
-        cred = cred.replace('?', '%3F')
+
+    userpw = cred.split(':')
+    if cred is not None and ":" in cred and all(userpw) and len(userpw) == 2:
         logger.debug("Found credentials for %s in env var", slug)
-        return cred.split(":")
+        cred = userpw
 
     # Check url and params for http credentials
-    if url:
+    elif url:
         cred_str = re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url)
         if cred_str:
             logger.debug("Found credentials for %s in query string", slug)
-            return cred_str.group().split(":")
+            cred = cred_str.group().split(":")
 
-        # Check in query string
-        username = re.search(r"(?<=[?&]username=)[a-zA-Z0-9\-._~]+", url)
-        password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
-        cred = (username.group(), password.group()) if username and password else None
-        if cred:
-            logger.debug("Found credentials for %s in query string", slug)
-            return cred
+        else:
+            # Check in query string
+            username = re.search(r"(?<=[?&]username=)[a-zA-Z0-9\-._~]+", url)
+            password = re.search(r"(?<=[?&]password=)[a-zA-Z0-9\-._~]+", url)
+            cred = (username.group(), password.group()) if username and password else None
+            if cred:
+                logger.debug("Found credentials for %s in query string", slug)
 
-    if params and params.get("username") and params.get("password"):
+    elif params and params.get("username") and params.get("password"):
         cred = (params.get("username"), params.get("password"))
 
+    if cred:
+        quote_no_safe = lambda s: quote(s, safe='')
+        cred = map(quote_no_safe, cred)
     return cred
 
 
