@@ -113,3 +113,6 @@ STATICFILES_FINDERS = (
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
+
+#Turn on Soft Deletes for Notifications
+NOTIFICATIONS_SOFT_DELETE=True

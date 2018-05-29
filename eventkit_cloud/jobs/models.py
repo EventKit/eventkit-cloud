@@ -13,6 +13,7 @@ from django.core.serializers import serialize
 from django.db.models.fields import CharField
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.utils import timezone
+
 from ..core.models import TimeStampedModelMixin, UIDMixin
 
 
@@ -91,6 +92,7 @@ class UserLicense(TimeStampedModelMixin):
 
     def __unicode__(self):
         return '{0}: {1}'.format(self.user.username, self.license.slug)
+
 
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
     """
@@ -253,7 +255,6 @@ class VisibilityState(Enum):
     PUBLIC  = "PUBLIC"
     SHARED  = "SHARED"
 
-
 class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
@@ -265,6 +266,8 @@ class Job(UIDMixin, TimeStampedModelMixin):
         kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
+
+
 
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
@@ -283,6 +286,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
+    last_export_run = models.ForeignKey('tasks.ExportRun', null=True, related_name='last_export_run')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -384,6 +388,18 @@ class ExportProfile(models.Model):
 
     def __str__(self):
         return '{0}'.format(self.name)
+
+
+class UserJobActivity(models.Model):
+    CREATED = 'created'
+    VIEWED = 'viewed'
+    UPDATED = 'updated'
+    DELETED = 'deleted'
+
+    user = models.ForeignKey(User)
+    job = models.ForeignKey(Job)
+    type = models.CharField(max_length=100, blank=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
 
 
 class UserDownload(UIDMixin, TimeStampedModelMixin):

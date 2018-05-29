@@ -15,7 +15,10 @@ import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
 import { getDatacartDetails } from '../../actions/statusDownloadActions';
+import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
+import ConfirmDialog from '../Dialog/ConfirmDialog';
+import isEqual from 'lodash/isEqual';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -29,12 +32,18 @@ export class BreadcrumbStepper extends React.Component {
         this.showLoading = this.showLoading.bind(this);
         this.hideLoading = this.hideLoading.bind(this);
         this.submitDatapack = this.submitDatapack.bind(this);
+        this.routeLeaveHook = this.routeLeaveHook.bind(this);
+        this.handleLeaveWarningDialogCancel = this.handleLeaveWarningDialogCancel.bind(this);
+        this.handleLeaveWarningDialogConfirm = this.handleLeaveWarningDialogConfirm.bind(this);
         this.state = {
             stepIndex: 0,
             showError: false,
             error: null,
             loading: false,
+            showLeaveWarningDialog: false,
+            modified: false,
         };
+        this.leaveRoute = null;
     }
 
     componentDidMount() {
@@ -45,6 +54,9 @@ export class BreadcrumbStepper extends React.Component {
         }
         this.props.getProviders();
         this.props.getFormats();
+
+        const route = this.props.routes[this.props.routes.length - 1];
+        this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -53,11 +65,18 @@ export class BreadcrumbStepper extends React.Component {
                 this.hideLoading();
                 browserHistory.push(`/status/${nextProps.jobuid}`);
                 this.props.clearJobInfo();
+                this.props.getNotifications();
+                this.props.getNotificationsUnreadCount();
             }
         }
         if (nextProps.jobError) {
             this.hideLoading();
             this.showError(nextProps.jobError);
+        }
+
+        if (!isEqual(nextProps.aoiInfo, this.props.aoiInfo) ||
+            !isEqual(nextProps.exportInfo, this.props.exportInfo)) {
+            this.setState({ modified: true });
         }
     }
 
@@ -65,6 +84,19 @@ export class BreadcrumbStepper extends React.Component {
         this.props.clearAoiInfo();
         this.props.clearExportInfo();
         this.props.clearJobInfo();
+    }
+
+    routeLeaveHook(info) {
+        // Show warning dialog if we try to navigate away with changes.
+        if (!this.state.modified || this.leaveRoute) {
+            // No changes to lose, or we confirmed we want to leave.
+            return true;
+        }
+
+        // We must have started making changes. Save the route we're trying to navigate to and show a warning.
+        this.leaveRoute = info.pathname;
+        this.setState({ showLeaveWarningDialog: true });
+        return false;
     }
 
     getErrorMessage(title, detail, ix) {
@@ -250,6 +282,7 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     submitDatapack() {
+        this.setState({ modified: false });
         this.showLoading();
         // wait a moment before calling handleSubmit because
         // flattenFeatureCollection may lock up the browser
@@ -312,6 +345,15 @@ export class BreadcrumbStepper extends React.Component {
         this.setState({ loading: false });
     }
 
+    handleLeaveWarningDialogCancel() {
+        this.setState({ showLeaveWarningDialog: false });
+        this.leaveRoute = null;
+    };
+
+    handleLeaveWarningDialogConfirm() {
+        this.props.router.push(this.leaveRoute);
+    };
+
     render() {
         let message = [];
         if (this.state.error) {
@@ -342,6 +384,16 @@ export class BreadcrumbStepper extends React.Component {
                 >
                     <div>{message}</div>
                 </BaseDialog>
+                <ConfirmDialog
+                    show={this.state.showLeaveWarningDialog}
+                    title="ARE YOU SURE?"
+                    onCancel={this.handleLeaveWarningDialogCancel}
+                    onConfirm={this.handleLeaveWarningDialogConfirm}
+                    confirmLabel="Yes, I'm Sure"
+                    isDestructive={true}
+                >
+                    <strong>{"You haven't finished creating this DataPack yet. Any settings will be lost."}</strong>
+                </ConfirmDialog>
                 { this.state.loading ?
                     <div style={{ zIndex: 10, position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -377,6 +429,10 @@ BreadcrumbStepper.propTypes = {
     jobuid: PropTypes.string.isRequired,
     formats: PropTypes.arrayOf(PropTypes.object).isRequired,
     getFormats: PropTypes.func.isRequired,
+    router: PropTypes.object.isRequired,
+    routes: PropTypes.array.isRequired,
+    getNotifications: PropTypes.func.isRequired,
+    getNotificationsUnreadCount: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -416,6 +472,12 @@ function mapDispatchToProps(dispatch) {
         },
         getFormats: () => {
             dispatch(getFormats());
+        },
+        getNotifications: (args) => {
+            dispatch(getNotifications(args));
+        },
+        getNotificationsUnreadCount: (args) => {
+            dispatch(getNotificationsUnreadCount(args))
         },
     };
 }

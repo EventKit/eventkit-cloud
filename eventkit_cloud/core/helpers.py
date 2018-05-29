@@ -7,6 +7,9 @@ import dj_database_url
 import zipfile
 import shutil
 import logging
+from notifications.signals import notify
+from enum import Enum
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,5 +100,27 @@ def load_land_vectors(db_conn=None, url=None):
     finally:
         logger.info("Finished loading land data.")
 
+class NotificationLevel(Enum):
+    SUCCESS = "success"
+    INFO = "info"
+    WARNING = "warning"
+    ERROR  = "ERROR"
+
+class NotificationVerb(Enum):
+    RUN_STARTED = "run_started"
+    RUN_COMPLETED = "run_completed"
+    RUN_FAILED = "run_failed"
+    RUN_DELETED = "run_deleted"
+    RUN_CANCELED = "run_canceled"
+    REMOVED_FROM_GROUP = "removed_from_group"
+    ADDED_TO_GROUP = "added_to_group"
+    SET_AS_GROUP_ADMIN = "set_as_group_admin"
+    REMOVED_AS_GROUP_ADMIN = "removed_as_group_admin"
 
 
+def sendnotification(actor, recipient, verb, action_object, target, level, description):
+    try:
+        result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
+                             level=level,description=description)
+    except Exception as err:
+        logger.debug( "notify send error ignored: %s" % err)

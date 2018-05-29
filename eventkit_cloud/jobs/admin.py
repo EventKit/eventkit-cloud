@@ -131,10 +131,10 @@ class DataProviderForm(forms.ModelForm):
             if not config:
                 raise forms.ValidationError("Configuration is required for OSM data providers")
             from ..feature_selection.feature_selection import FeatureSelection
-            try:
-                FeatureSelection.example(config)
-            except AssertionError:
-                raise forms.ValidationError("Invalid configuration")
+            feature_selection = FeatureSelection(config)
+            feature_selection.valid
+            if feature_selection.errors:
+                raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
 
         return config
 

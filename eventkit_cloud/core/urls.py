@@ -13,7 +13,7 @@ from ..api.urls import router
 from .views import download
 
 from django.conf.urls import url, include
-
+import notifications.urls
 
 admin.autodiscover()
 
@@ -26,6 +26,7 @@ urlpatterns += [
     url(r'^api/docs$', schema_view),
     url(r'^api/', include(router.urls, namespace='api')),
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^download', download)
+#    url('^inbox/notifications/', include(notifications.urls, namespace='notifications')),
+    url('^api/', include(notifications.urls, namespace='api')),
 ]
 
