@@ -59,11 +59,13 @@ class TestAuthResult(TransactionTestCase):
         self.assertEqual("test response content", result.content)
 
         # Test: with credentials
-        getenv.return_value = 'user.name@example.com:pass.1!_-?&.%$word'
+        getenv.return_value = 'user.name@example.com:pass/.1!_-? &.%$word'
         with patch('eventkit_cloud.utils.auth_requests.find_cert_var', return_value=None):
             result = req(self.url, slug="test_slug", data=42)
         getenv.assert_any_call("test_slug_CRED")
-        req_patch.assert_called_with(self.url, data=42, auth=('user.name%40example.com', 'pass.1!_-%3F&.%$word'))
+        req_patch.assert_called_with(self.url, data=42, auth=('user.name%40example.com', 'user.name%40example.com:pass'
+                                                                                         '%2F.1%21_-%3F%20%26.%25%24'
+                                                                                         'word'))
         self.assertEqual("test response content", result.content)
 
 
