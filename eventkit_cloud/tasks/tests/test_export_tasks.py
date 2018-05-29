@@ -238,6 +238,8 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.export_tasks.json')
+    @patch('__builtin__.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('eventkit_cloud.tasks.export_tasks.logger')
     @patch('os.path.isfile')
@@ -245,7 +247,7 @@ class TestExportTasks(ExportTaskBase):
     @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
     @patch('celery.app.task.Task.request')
     def test_run_zip_export_provider(self, mock_request, mock_zip_file, mock_export_provider_task, mock_isfile,
-                                     mock_logger, mock_qgs_file):
+                                     mock_logger, mock_qgs_file, mock_open, mock_json):
         file_names = ('file1', 'file2', 'file3')
         tasks = (Mock(result=Mock(filename=file_names[0])),
                  Mock(result=Mock(filename=file_names[1])),
@@ -282,6 +284,8 @@ class TestExportTasks(ExportTaskBase):
         mock_zip_file.run.assert_called_once_with(adhoc=True, run_uid=self.run.uid, include_files=ANY,
                                                   file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)),
                                                   static_files=get_style_files())
+        mock_open.assert_called_once()
+        mock_json.dump.assert_called_once()
 
         # Check that an exception is raised if no zip file is returned.
         mock_zip_file.run.return_value = None
@@ -694,20 +698,23 @@ class TestExportTasks(ExportTaskBase):
             mock_export_run.objects.filter().first().__nonzero__.return_value = False
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
+    @patch('eventkit_cloud.tasks.export_tasks.json')
+    @patch('__builtin__.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('os.path.join', side_effect=lambda *args: args[-1])
     @patch('os.path.isfile')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_prepare_for_export_zip_task(self, ExportRun, isfile, join, mock_generate_qgs_style):
+    def test_prepare_for_export_zip_task(self, mock_ExportRun, isfile, join, mock_generate_qgs_style, mock_open, mock_json):
 
         from eventkit_cloud.tasks.export_tasks import prepare_for_export_zip_task
 
         # This doesn't need to be valid with ExportRun mocked
         mock_run_uid = str(uuid.uuid4())
+        mock_job_name = 'test'
 
         style_file = "style.qgs"
         mock_generate_qgs_style.return_value = style_file
-        expected_file_list = ['e1', 'e2', 'e3', style_file]
+        expected_file_list = ['e1', 'e2', 'e3', style_file, 'metadata.json']
         missing_file_list = ['e4']
         all_file_list = expected_file_list + missing_file_list
 
@@ -732,13 +739,15 @@ class TestExportTasks(ExportTaskBase):
 
         mocked_run = MagicMock()
         mocked_run.job.include_zipfile = True
+        mocked_run.job.name = mock_job_name
         mocked_run.provider_tasks.all.return_value = [mocked_provider_task]
 
-        ExportRun.objects.get.return_value = mocked_run
+        mock_ExportRun.objects.get.return_value = mocked_run
 
         include_files = prepare_for_export_zip_task.run(run_uid=mock_run_uid)
         mock_generate_qgs_style.assert_called_once_with(run_uid=mock_run_uid)
-
+        mock_open.assert_called_once()
+        mock_json.dump.assert_called_once()
         self.assertEqual(include_files, set(expected_file_list))
 
     def test_zip_file_task_no_files_to_zip(self):
