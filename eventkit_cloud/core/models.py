@@ -17,6 +17,8 @@ def normalize_unicode_str(self):
     return unicodedata.normalize('NFKD', self.old_str_func()).encode('ascii', 'ignore')
 
 
+# Modify the Notification model's __str__ method to not return a unicode string, since this seems to cause problems
+# with the logger.
 Notification.__str__ = normalize_unicode_str
 
 
