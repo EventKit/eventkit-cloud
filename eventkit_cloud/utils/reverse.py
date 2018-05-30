@@ -1,9 +1,9 @@
 from django.conf import settings
 import logging
 from geocode_auth import get_auth_headers, authenticate
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 import requests
-import json
+from .geocode import AuthenticationError
 
 
 logger = logging.getLogger(__name__)
@@ -99,10 +99,9 @@ class ReverseGeocodeAdapter:
         if not self.url:
             return
         response = self.get_response(payload)
-        if('error' in response and response['error'] == 'Expired token'):
+        if response.status_code in [401, 403]:
             authenticate()
             response = self.get_response(payload)
-        assert (isinstance(response, dict))
         return self.create_geojson(response)
 
     def get_feature(self, feature=None, bbox=None, properties=None):
@@ -179,7 +178,7 @@ class Pelias(ReverseGeocodeAdapter):
 
     def create_geojson(self, response):
         features = []
-        for feature in response.get('features'):
+        for feature in response.json().get('features'):
             feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
             features += [feature]
         return self.get_feature_collection(features=features)
@@ -241,7 +240,8 @@ class ReverseGeocode(object):
         logger.info(query);
         return self.geocoder.get_data(query)
 
-
+# TODO: This is redundant code to what is in geocode.py additionally these functions
+# can probably be handled by existing dependencies.
 def is_valid_bbox(bbox):
     if not isinstance(bbox, list) or len(bbox) != 4:
         return False
