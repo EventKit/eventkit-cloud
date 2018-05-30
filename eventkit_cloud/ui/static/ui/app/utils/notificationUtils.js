@@ -68,7 +68,7 @@ export function getNotificationMessage({
                 style={{ ...styles.text, color: '#CE4427', whiteSpace: 'normal' }}
                 className="qa-NotificationMessage-error"
             >
-                Uh oh! Sorry, this notification&apos;s details are no longer available
+                Uh oh! Sorry, this notification&apos;s details are no longer available.
             </span>,
         ];
     }
