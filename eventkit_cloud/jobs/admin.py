@@ -10,7 +10,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus, VisibilityState
 
 
 logger = logging.getLogger(__name__)
@@ -27,12 +27,17 @@ class JobAdmin(OSMGeoAdmin):
     """
     search_fields = ['uid', 'name', 'user__username', 'region__name']
     list_display = ['uid', 'name', 'user', 'region']
-    readonly_fields = ['user', 'name', 'description', 'event']
     exclude = ['the_geom', 'the_geom_webmercator', 'original_selection', 'the_geog', 'provider_tasks', 'json_tags', 'preset']
     actions = ['select_exports']
 
     update_template = 'admin/update_regions.html'
     update_complete_template = 'admin/update_complete.html'
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = ['name', 'description', 'event']
+        if obj.visibility in [VisibilityState.PRIVATE.value]:
+            readonly_fields.append('user')
+        return readonly_fields
 
     def select_exports(self, request):
         """
