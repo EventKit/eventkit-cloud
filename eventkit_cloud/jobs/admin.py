@@ -35,7 +35,7 @@ class JobAdmin(OSMGeoAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = ['name', 'description', 'event']
-        if obj.visibility in [VisibilityState.PRIVATE.value]:
+        if obj.visibility in [VisibilityState.PRIVATE.value, VisibilityState.PUBLIC.value]:
             readonly_fields.append('user')
         return readonly_fields
 
