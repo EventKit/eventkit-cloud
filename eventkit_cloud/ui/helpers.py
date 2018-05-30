@@ -62,7 +62,7 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     provider_details = []
     if export_provider_task:
         provider_slug = export_provider_task.slug
-        provider_detail = {'provider_slug': provider_slug, 'file_path': ''}
+        provider_detail = {'provider_slug': provider_slug, 'file_path': '', 'provider_name': export_provider_task.name}
         provider_details += [provider_detail]
     else:
         for provider_task in provider_tasks:
