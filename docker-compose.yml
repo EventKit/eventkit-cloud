@@ -60,8 +60,8 @@ services:
       links:
         - postgis
         - rabbitmq
-#      ports:
-#        - "6080:6080"
+      # ports:
+      #   - "6080:6080"
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh

@@ -140,9 +140,9 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#layersSubheader').text()).toEqual('You must choose at least one');
         expect(wrapper.find(List)).toHaveLength(1);
         expect(wrapper.find(ListItem)).toHaveLength(0);
-        expect(wrapper.find('#projectionHeader')).toHaveLength(1);
-        expect(wrapper.find('#projectionHeader').text()).toEqual('Select Projection');
-        expect(wrapper.find('#projectionCheckbox').find(Checkbox)).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
+        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(wrapper.find(CardText)).toHaveLength(0);

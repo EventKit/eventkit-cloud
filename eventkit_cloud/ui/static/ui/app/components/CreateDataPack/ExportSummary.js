@@ -19,7 +19,7 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
-import { Config } from '../../config';
+import { joyride } from '../../joyride.config';
 
 export class ExportSummary extends Component {
     constructor(props) {
@@ -34,13 +34,13 @@ export class ExportSummary extends Component {
     }
 
     componentDidMount() {
-        const steps = Config.JOYRIDE.ExportSummary;
+        const steps = joyride.ExportSummary;
         this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
             this.setState({ isRunning: true });
         }
     }
@@ -128,10 +128,16 @@ export class ExportSummary extends Component {
     }
 
     callback(data) {
-        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+        const { action, step, type } = data;
+        if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
         }
     }
 
@@ -196,12 +202,10 @@ export class ExportSummary extends Component {
             <div id="root" style={style.root}>
                 <Joyride
                     callback={this.callback}
-                    ref="joyride"
-                    debug={false}
+                    ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     autoStart
                     type="continuous"
-                    disableOverlay
                     showSkipButton
                     showStepsProgress
                     locale={{
@@ -220,7 +224,7 @@ export class ExportSummary extends Component {
                             <div id="subHeading" style={style.subHeading} className="qa-ExportSummary-subHeading">
                                 Please make sure all the information below is correct.
                             </div>
-                            <div className="qa-ExportSummary-div">
+                            <div className="qa-ExportSummary-div" id="Summary">
                                 <div id="export-information-heading" className="qa-ExportSummary-exportHeading" style={style.exportHeading}>
                                     Export Information
                                 </div>

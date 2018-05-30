@@ -12,7 +12,7 @@ import { patchUser } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
 
 import { DrawerTimeout } from '../../actions/exportsActions';
-import { Config } from '../../config';
+import { joyride } from '../../joyride.config';
 
 
 export class Account extends Component {
@@ -37,7 +37,7 @@ export class Account extends Component {
     }
 
     componentDidMount() {
-        const steps = Config.JOYRIDE.Account;
+        const steps = joyride.Account;
         this.joyrideAddSteps(steps);
     }
 
@@ -178,11 +178,9 @@ export class Account extends Component {
                 <Joyride
                     callback={this.callback}
                     ref="joyride"
-                    debug={false}
                     steps={steps}
                     autoStart
                     type="continuous"
-                    disableOverlay
                     showSkipButton
                     showStepsProgress
                     locale={{

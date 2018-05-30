@@ -14,6 +14,7 @@ import UserRow from '../../components/UserGroupsPage/UserRow';
 import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
+import * as viewport from '../../utils/viewport';
 
 describe('UserGroupsPage component', () => {
     const muiTheme = getMuiTheme();
@@ -103,37 +104,6 @@ describe('UserGroupsPage component', () => {
             getUsers: () => {},
         }
     );
-
-    const tooltipStyle = {
-        backgroundColor: 'white',
-        borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
-        textAlign: 'left',
-        header: {
-            textAlign: 'left',
-            fontSize: '20px',
-            borderColor: '#4598bf',
-        },
-        main: {
-            paddingTop: '20px',
-            paddingBottom: '20px',
-        },
-
-        button: {
-            color: 'white',
-            backgroundColor: '#4598bf',
-        },
-        skip: {
-            color: '#8b9396',
-        },
-        back: {
-            color: '#8b9396',
-        },
-        hole: {
-            backgroundColor: 'rgba(226,226,226, 0.2)',
-        },
-    };
 
     const getWrapper = props => (
         mount(<UserGroupsPage {...props} />, {
@@ -954,58 +924,10 @@ describe('UserGroupsPage component', () => {
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
-            text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.',
+            text: 'Example text',
             selector: '.qa-Account-AppBar',
             position: 'top',
-            style: tooltipStyle,
-            isFixed: true,
-        },
-        {
-            title: 'License Agreement Info',
-            text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.',
-            selector: '.qa-UserLicense-ArrowDown',
-            position: 'bottom',
-            style: tooltipStyle,
-            isFixed: true,
-        },
-        {
-            title: 'Agree to Licenses',
-            text: 'Once you’ve reviewed the licenses, you can agree to them individually.',
-            selector: '.qa-UserLicense-Checkbox',
-            position: 'bottom',
-            style: tooltipStyle,
-            isFixed: true,
-        },
-        {
-            title: 'Agree to Licenses',
-            text: 'Or you can choose to agree to them collectively.',
-            selector: '.qa-LicenseInfo-Checkbox',
-            position: 'bottom',
-            style: tooltipStyle,
-            isFixed: true,
-        },
-        {
-            title: 'Save Agreements',
-            text: 'Once you have selected the licenses to agree to, click Save Changes.',
-            selector: '.qa-SaveButton-RaisedButton-SaveChanges',
-            position: 'top',
-            style: tooltipStyle,
-            isFixed: true,
-        },
-        {
-            title: 'Navigate Application',
-            text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.',
-            selector: '.qa-Application-MenuItem-exports',
-            position: 'top',
-            style: tooltipStyle,
-            isFixed: true,
-        },
-        {
-            title: 'Navigate Application',
-            text: 'Or to create your own DataPack.',
-            selector: '.qa-Application-MenuItem-create',
-            position: 'top',
-            style: tooltipStyle,
+            style: {},
             isFixed: true,
         }];
         const props = getProps();
@@ -1034,7 +956,7 @@ describe('UserGroupsPage component', () => {
             step: {
                 position: 'bottom',
                 selector: '.qa-Application-MenuItem-create',
-                style: tooltipStyle,
+                style: {},
                 text: 'Or to create your own DataPack.',
                 title: 'Navigate Application',
             },
@@ -1047,5 +969,98 @@ describe('UserGroupsPage component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
+    });
+
+    it('callback function should toggle drawer', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-GroupsDrawer-addGroup',
+            },
+            type: 'step:fake',
+        };
+        const viewStub = sinon.stub(viewport, 'isViewportS').returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({ drawerOpen: false });
+        const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer').returns(Promise.resolve(true));
+        wrapper.instance().callback(data);
+        expect(viewStub.called).toBe(true);
+        expect(toggleStub.calledOnce).toBe(true);
+        viewStub.restore();
+        toggleStub.restore();
+    });
+
+    it('callback should scroll to top', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-GroupsDrawer-groupsHeading',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const scrollStub = sinon.stub(wrapper.instance().scrollbar, 'scrollToTop');
+        wrapper.instance().callback(data);
+        expect(scrollStub.calledOnce).toBe(true);
+    });
+
+    it('callback should toggleDrawer and setState', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-GroupsDrawer-groupsHeading',
+            },
+            type: 'step:after',
+        };
+        const viewStub = sinon.stub(viewport, 'isViewportS').returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().callback(data);
+        expect(viewStub.called).toBe(true);
+        expect(toggleStub.calledOnce).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ stepIndex: 3 }));
+        viewStub.restore();
+    });
+
+    it('callback should selectAll', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-UserHeader-checkbox',
+            },
+            type: 'tooltip:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const selectStub = sinon.stub(wrapper.instance(), 'handleSelectAll');
+        wrapper.instance().callback(data);
+        expect(selectStub.calledOnce).toBe(true);
+        expect(selectStub.calledWith(true)).toBe(true);
+    });
+
+    it('callback should toggle drawer again', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-UserHeader-IconButton-options',
+            },
+            type: 'step:after',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer').returns(Promise.resolve(true));
+        wrapper.instance().callback(data);
+        expect(toggleStub.calledOnce).toBe(true);
+        toggleStub.restore();
     });
 });

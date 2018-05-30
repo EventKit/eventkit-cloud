@@ -22,7 +22,7 @@ import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 
 import BaseDialog from '../../components/Dialog/BaseDialog';
-import { Config } from '../../config';
+import { joyride } from '../../joyride.config';
 
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
@@ -55,7 +55,7 @@ export class StatusDownload extends React.Component {
         this.props.getGroups();
         this.startTimer();
 
-        const steps = Config.JOYRIDE.StatusAndDownload;
+        const steps = joyride.StatusAndDownload;
         this.joyrideAddSteps(steps);
     }
 
@@ -118,7 +118,8 @@ export class StatusDownload extends React.Component {
                 }
             }
         }
-        if (nextProps.location !== this.props.location) {
+
+        if (nextProps.location.pathname !== this.props.location.pathname) {
             // Refresh the entire component.
             this.componentWillUnmount();
             this.setState(this.getInitialState());
@@ -199,21 +200,14 @@ export class StatusDownload extends React.Component {
     }
 
     callback(data) {
-        const { scrollBar } = this.refs;
-        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+        const { action, type, step } = data;
+        if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
+            window.location.hash = '';
         }
-
-        if (data.index === 5 && data.type === 'tooltip:before') {
-            scrollBar.scrollToMiddle();
-        }
-
-        if (data.index === 6 && data.type === 'tooltip:before') {
-            scrollBar.scrollToBottom();
-        }
-        if (data.type === 'finished') {
-            scrollBar.scrollToTop();
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
         }
     }
 
@@ -364,17 +358,15 @@ export class StatusDownload extends React.Component {
                     :
                     null
                 }
-                <CustomScrollbar ref="scrollBar" style={{ height: window.innerHeight - 130, width: '100%' }}>
+                <CustomScrollbar ref={(instance) => { this.scrollbar = instance; }} style={{ height: window.innerHeight - 130, width: '100%' }}>
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <Joyride
                             callback={this.callback}
-                            ref="joyride"
-                            debug={false}
+                            ref={(instance) => { this.joyride = instance; }}
                             steps={steps}
                             scrollToSteps
                             autoStart
                             type="continuous"
-                            disableOverlay
                             showSkipButton
                             showStepsProgress
                             locale={{

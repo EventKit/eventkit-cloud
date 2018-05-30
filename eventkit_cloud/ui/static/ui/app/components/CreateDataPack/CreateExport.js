@@ -15,7 +15,6 @@ export class CreateExport extends React.Component {
     }
 
     handleWalkthroughReset() {
-        console.log('reset walkthrough');
         this.setState({ walkthroughClicked: false });
     }
 

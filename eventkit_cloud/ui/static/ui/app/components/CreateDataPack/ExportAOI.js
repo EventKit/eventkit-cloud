@@ -45,7 +45,7 @@ import {
 import Joyride from 'react-joyride';
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import { Config } from '../../config';
+import { joyride } from '../../joyride.config';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -129,7 +129,7 @@ export class ExportAOI extends Component {
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
 
-        const steps = Config.JOYRIDE.ExportAOI;
+        const steps = joyride.ExportAOI;
         this.joyrideAddSteps(steps);
     }
 
@@ -139,7 +139,7 @@ export class ExportAOI extends Component {
         }
 
         if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && this.state.isRunning === false) {
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
             this.setState({ isRunning: true });
         }
     }
@@ -764,7 +764,7 @@ export class ExportAOI extends Component {
 
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
         }
 
         if (data.index === 3 && data.type === 'tooltip:before') {
@@ -838,12 +838,10 @@ export class ExportAOI extends Component {
             <div>
                 <Joyride
                     callback={this.callback}
-                    ref="joyride"
-                    debug={false}
+                    ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     autoStart
                     type="continuous"
-                    disableOverlay
                     showSkipButton
                     showStepsProgress
                     locale={{

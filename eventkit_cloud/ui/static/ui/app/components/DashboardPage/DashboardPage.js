@@ -1,7 +1,10 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Link, browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import { AppBar, CircularProgress, Paper } from 'material-ui';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
@@ -16,6 +19,7 @@ import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { getGroups } from '../../actions/userGroupsActions';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getUsers } from '../../actions/userActions';
+import { joyride } from '../../joyride.config';
 
 const backgroundUrl = require('../../../images/ek_topo_pattern.png');
 
@@ -39,10 +43,14 @@ export class DashboardPage extends React.Component {
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
         this.isLoading = this.isLoading.bind(this);
+        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
+        this.callback = this.callback.bind(this);
         this.state = {
             loadingPage: true,
             shareOpen: false,
             targetRun: null,
+            steps: [],
+            isRunning: false,
         };
         this.autoRefreshIntervalId = null;
         this.autoRefreshInterval = 10000;
@@ -57,16 +65,13 @@ export class DashboardPage extends React.Component {
         });
         this.refresh();
         this.autoRefreshIntervalId = setInterval(this.autoRefresh, this.autoRefreshInterval);
-    }
-
-    componentWillUnmount() {
-        clearInterval(this.autoRefreshIntervalId);
-        this.autoRefreshIntervalId = null;
+        const steps = joyride.DashboardPage;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
         // Only show page loading once, before all sections have initially loaded.
-        let loadingPage = this.state.loadingPage;
+        const { loadingPage } = this.state;
         if (loadingPage) {
             this.setState({
                 loadingPage: (
@@ -76,7 +81,7 @@ export class DashboardPage extends React.Component {
                     !nextProps.userActivity.viewedJobs.fetched ||
                     !nextProps.users.fetched ||
                     !nextProps.groups.fetched
-                )
+                ),
             });
         }
 
@@ -89,6 +94,11 @@ export class DashboardPage extends React.Component {
         if (nextProps.updatePermission.updated && !this.props.updatePermission.updated) {
             this.refresh();
         }
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.autoRefreshIntervalId);
+        this.autoRefreshIntervalId = null;
     }
 
     getGridPadding() {
@@ -198,10 +208,47 @@ export class DashboardPage extends React.Component {
         );
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        if (this.props.featuredRunsList.runs.length === 0) {
+            newSteps.splice(newSteps.findIndex(s => s.selector === '.qa-DashboardSection-Featured'), 1);
+        }
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
+    }
+
+    callback(data) {
+        const { action, step, type } = data;
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
+        }
+    }
+
+    handleWalkthroughClick() {
+        this.setState({ isRunning: true });
+    }
+
     render() {
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        let styles = {
+        const styles = {
             root: {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
@@ -251,17 +298,45 @@ export class DashboardPage extends React.Component {
             },
             link: {
                 color: '#337ab7',
-            }
+            },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginLeft: '10px',
+                fontSize: '16px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleWalkthroughClick}
+                style={styles.tourButton}
+            >
+                <Help style={styles.tourIcon} />
+                Page Tour
+            </EnhancedButton>
+        );
 
         return (
             <div style={styles.root}>
                 <AppBar
+                    id="Dashboard"
                     className="qa-Dashboard-AppBar"
                     style={styles.appBar}
                     title="Dashboard"
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
+                    iconElementRight={iconElementRight}
                 />
                 {this.isLoading() ?
                     <div
@@ -283,7 +358,34 @@ export class DashboardPage extends React.Component {
                     </div>
                     : null
                 }
-                <CustomScrollbar style={styles.customScrollbar}>
+                <CustomScrollbar
+                    style={styles.customScrollbar}
+                    ref={(instance) => { this.scrollbar = instance; }}
+                >
+                    <Joyride
+                        callback={this.callback}
+                        ref={(instance) => { this.joyride = instance; }}
+                        steps={this.state.steps}
+                        autoStart
+                        type="continuous"
+                        showSkipButton
+                        showStepsProgress
+                        locale={{
+                            back: (<span>Back</span>),
+                            close: (<span>Close</span>),
+                            last: (<span>Done</span>),
+                            next: (<span>Next</span>),
+                            skip: (<span>Skip</span>),
+                        }}
+                        run={this.state.isRunning}
+                        styles={{
+                            options: {
+                                overlayColor: '#4598bf',
+                                backgroundColor: '#4598bf',
+                                primaryColor: '#fff',
+                            },
+                        }}
+                    />
                     {this.state.loadingPage ?
                         null
                         :
@@ -305,7 +407,7 @@ export class DashboardPage extends React.Component {
                                 }
                                 rowMajor={false}
                             >
-                                {this.props.notifications.notificationsSorted.map((notification) => (
+                                {this.props.notifications.notificationsSorted.map(notification => (
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
@@ -351,7 +453,7 @@ export class DashboardPage extends React.Component {
                                             index={index}
                                             showFeaturedFlag={false}
                                         />
-                                    )
+                                    );
                                 })}
                             </DashboardSection>
 

@@ -26,7 +26,7 @@ import { getUsers } from '../../actions/userActions';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { isViewportL } from '../../utils/viewport';
-import { Config } from '../../config';
+import { joyride } from '../../joyride.config';
 
 export class DataPackPage extends React.Component {
     constructor(props) {
@@ -129,11 +129,11 @@ export class DataPackPage extends React.Component {
     getJoyRideSteps() {
         switch (this.state.view) {
         case 'map':
-            return Config.JOYRIDE.DataPackPage.map;
+            return joyride.DataPackPage.map;
         case 'grid':
-            return Config.JOYRIDE.DataPackPage.grid;
+            return joyride.DataPackPage.grid;
         case 'list':
-            return Config.JOYRIDE.DataPackPage.list;
+            return joyride.DataPackPage.list;
         default: return null;
         }
     }
@@ -312,8 +312,8 @@ export class DataPackPage extends React.Component {
     callback(data) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
-            this.setState({ isRunning: false });
-            this.refs.joyride.reset(true);
+            this.setState({ isRunning: false, steps: [] });
+            this.joyride.reset(true);
         }
         if (data.step) {
             if (data.step.title === 'Filter DataPacks' && data.type === 'step:before') {
@@ -333,57 +333,58 @@ export class DataPackPage extends React.Component {
 
     handleJoyride() {
         if (this.state.isRunning === true) {
-            this.setState({ isRunning: false, steps: [] });
-            this.refs.joyride.reset(true);
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
         } else {
-            this.setState({ isRunning: true });
+            this.setState({ isRunning: true, steps: [] });
             const steps = this.getJoyRideSteps();
 
-            for (let index = 0; index < this.props.runsList.runs.length; index += 1) {
-                const run = this.props.runsList.runs[index];
-                if (run.job.featured === true) {
-                    const newStep = {
-                        title: 'Featured DataPacks',
-                        text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
-                        selector: this.state.view === 'list' ?
-                            '.qa-DataPackTableItem-TableRowColumn-featured'
-                            :
-                            '.qa-FeaturedFlag-div',
-                        style: {
-                            backgroundColor: 'white',
-                            borderRadius: '0',
-                            color: 'black',
-                            mainColor: '#ff4456',
-                            textAlign: 'left',
-                            header: {
-                                textAlign: 'left',
-                                fontSize: '20px',
-                                borderColor: '#4598bf',
-                            },
-                            main: {
-                                paddingTop: '20px',
-                                paddingBottom: '20px',
-                            },
-                            button: {
-                                color: 'white',
-                                backgroundColor: '#4598bf',
-                            },
-                            skip: {
-                                display: 'none',
-                            },
-                            back: {
-                                color: '#8b9396',
-                            },
-                            hole: {
-                                backgroundColor: 'rgba(226,226,226, 0.2)',
-                            },
-                        },
-                        position: 'top',
-                    };
-                    steps.push(newStep);
-                    break;
-                }
+            const hasFeatured = this.props.runsList.runs.some(run => run.job.featured);
+            const stepsIncludeFeatured = steps.find(step => step.title === 'Featured DataPacks');
+
+            const newStep = {
+                title: 'Featured DataPacks',
+                text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
+                selector: this.state.view === 'list' ?
+                    '.qa-DataPackTableItem-TableRowColumn-featured'
+                    :
+                    '.qa-FeaturedFlag-div',
+                style: {
+                    backgroundColor: 'white',
+                    borderRadius: '0',
+                    color: 'black',
+                    mainColor: '#ff4456',
+                    textAlign: 'left',
+                    header: {
+                        textAlign: 'left',
+                        fontSize: '20px',
+                        borderColor: '#4598bf',
+                    },
+                    main: {
+                        paddingTop: '20px',
+                        paddingBottom: '20px',
+                    },
+                    button: {
+                        color: 'white',
+                        backgroundColor: '#4598bf',
+                    },
+                    skip: {
+                        display: 'none',
+                    },
+                    back: {
+                        color: '#8b9396',
+                    },
+                    hole: {
+                        backgroundColor: 'rgba(226,226,226, 0.2)',
+                    },
+                },
+                position: 'top',
+            };
+
+            if (hasFeatured && !stepsIncludeFeatured) {
+                steps.push(newStep);
             }
+
             this.joyrideAddSteps(steps);
         }
     }
@@ -487,12 +488,10 @@ export class DataPackPage extends React.Component {
             <div style={styles.backgroundStyle}>
                 <Joyride
                     callback={this.callback}
-                    ref="joyride"
-                    debug={false}
+                    ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     autoStart
                     type="continuous"
-                    disableOverlay
                     showSkipButton
                     showStepsProgress
                     locale={{

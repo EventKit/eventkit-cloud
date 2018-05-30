@@ -33,7 +33,7 @@ import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
 import BaseTooltip from '../BaseTooltip';
-import { Config } from '../../config';
+import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
 import background from '../../../images/topoBackground.jpg';
 
@@ -113,12 +113,11 @@ export class ExportInfo extends React.Component {
                 this.checkAvailability(provider);
             }), 30000);
         }
-        const steps = Config.JOYRIDE.ExportInfo;
+        const steps = joyride.ExportInfo;
         this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
-        console.log(nextProps.walkthroughClicked, this.props.walkthroughClicked);
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
         if (!nextProps.walkthroughClicked) {
         // if required fields are fulfilled enable next
@@ -133,7 +132,7 @@ export class ExportInfo extends React.Component {
             }
         }
         if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
             this.setState({ isRunning: true });
         }
     }
@@ -362,11 +361,17 @@ export class ExportInfo extends React.Component {
     }
 
     callback(data) {
+        const { action, step, type } = data;
         this.props.setNextDisabled();
-        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+        if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
         }
 
         if (data.index === 5 && data.type === 'tooltip:before') {
@@ -498,12 +503,10 @@ export class ExportInfo extends React.Component {
             <div id="root" className="qa-ExportInfo-root" style={style.root}>
                 <Joyride
                     callback={this.callback}
-                    ref="joyride"
-                    debug={false}
+                    ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     autoStart
                     type="continuous"
-                    disableOverlay
                     showSkipButton
                     showStepsProgress
                     locale={{
@@ -528,7 +531,7 @@ export class ExportInfo extends React.Component {
                             <div style={{ marginBottom: '30px' }}>
                                 <CustomTextField
                                     className="qa-ExportInfo-input-name"
-                                    id="nameField"
+                                    id="Name"
                                     name="exportName"
                                     underlineStyle={style.underlineStyle}
                                     underlineFocusStyle={style.underlineStyle}
@@ -542,7 +545,7 @@ export class ExportInfo extends React.Component {
                                 />
                                 <CustomTextField
                                     className="qa-ExportInfo-input-description"
-                                    id="descriptionField"
+                                    id="Description"
                                     underlineStyle={style.underlineStyle}
                                     underlineFocusStyle={style.underlineStyle}
                                     name="datapackDescription"
@@ -557,7 +560,7 @@ export class ExportInfo extends React.Component {
                                 />
                                 <CustomTextField
                                     className="qa-ExportInfo-input-project"
-                                    id="projectField"
+                                    id="Project"
                                     underlineStyle={style.underlineStyle}
                                     underlineFocusStyle={style.underlineStyle}
                                     name="projectName"
@@ -609,7 +612,11 @@ export class ExportInfo extends React.Component {
                                         </BaseTooltip>
                                     </span>
                                 </div>
-                                <List className="qa-ExportInfo-List" style={{ width: '100%', fontSize: '16px' }}>
+                                <List
+                                    id="ProviderList"
+                                    className="qa-ExportInfo-List"
+                                    style={{ width: '100%', fontSize: '16px' }}
+                                >
                                     {providers.map((provider, ix) => {
                                         // Show license if one exists.
                                         const nestedItems = [];
@@ -665,6 +672,7 @@ export class ExportInfo extends React.Component {
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon
+                                                        id="ProviderStatus"
                                                         baseStyle={{ left: '80%' }}
                                                         tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
@@ -698,9 +706,15 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
-                            <div id="projectionHeader" className="qa-ExportInfo-projectionHeader" style={style.heading}>Select Projection</div>
+                            <div
+                                id="projectionHeader"
+                                className="qa-ExportInfo-projectionHeader"
+                                style={style.heading}
+                            >
+                                Select Projection
+                            </div>
                             <div style={style.sectionBottom}>
-                                <div id="projectionCheckbox" style={style.checkboxLabel}>
+                                <div id="Projections" className="qa-ExportInfo-projections" style={style.checkboxLabel}>
                                     <Checkbox
                                         className="qa-ExportInfo-CheckBox-projection"
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
@@ -738,6 +752,7 @@ export class ExportInfo extends React.Component {
                                 <div style={style.mapCard}>
                                     <Card
                                         expandable
+                                        id="Map"
                                         className="qa-ExportInfo-Card-map"
                                         onExpandChange={this.expandedChange}
                                     >

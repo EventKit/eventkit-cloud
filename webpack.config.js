@@ -1,3 +1,4 @@
+/* eslint-disable */
 var webpack = require('webpack');
 var path = require('path');
 var WriteFilePlugin = require('write-file-webpack-plugin');
@@ -10,14 +11,6 @@ var APP_DIR = path.resolve(BASE_DIR, 'app');
 var PROD = JSON.parse(process.env.PROD || false);
 var devtool = 'source-map';
 var plugins = [
-    new webpack.optimize.CommonsChunkPlugin({
-        name:'node-modules', 
-        filename: 'node-modules.js', 
-        minChunks(module, count) {
-            var context = module.context;
-            return context && context.indexOf('node_modules') >= 0;
-        }
-    }),
     new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         reportFilename: 'report.html'
@@ -26,6 +19,7 @@ var plugins = [
 var app = [APP_DIR + '/index.js'];
 
 var config = {
+    mode: PROD ? 'production' : 'development',
     devtool: devtool,
     entry: {
         app: app,
@@ -33,34 +27,74 @@ var config = {
     output: {
         path: BUILD_DIR,
         filename: 'bundle.js',
+        chunkFilename: '[name].js',
         publicPath: '/static/ui/build/'
     },
     resolve: {
         extensions: ['.js', '.jsx']
     },
     module: {
-        loaders: [
+        rules: [
             {
                 test: /\.js?$/,
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
-                loader: ['babel-loader?presets[]=es2015,presets[]=react,presets[]=stage-0'],
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: [
+                            "react",
+                            "env",
+                            "stage-0"
+                        ],
+                    },
+                },
             },
             {
                 test: /\.css$/,
                 use: [
                     { loader: 'style-loader' },
-                    { loader: 'css-loader?modules=true,localIdentName=[name]__[local]___[hash:base64:5]' }
-                ]
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            modules: true,
+                            localIdentName: '[name]__[local]___[hash:base64:5]',
+                        },
+                    },
+                ],
             },
             {
                 test: /\.(woff2?|ttf|eot)$/,
-                loader: 'url-loader?limit=100000,name=fonts/[hash].[ext]',
+                use: {
+                    loader: 'url-loader',
+                    options: {
+                        limit: 100000,
+                        name: 'fonts/[hash].[ext]',
+                    },
+                },
             },
             {
                 test: /\.(svg|png|jpg|gif)$/,
-                loader: 'url-loader?limit=100000,name=images/[hash].[ext]',
+                use: {
+                    loader: 'url-loader',
+                    options: {
+                        limit: 100000,
+                        name: 'images/[hash].[ext]',
+                    },
+                },
             }
         ],
+    },
+    optimization: {
+        splitChunks: {
+            chunks: 'all',
+            cacheGroups: {
+                vendor: {
+                    test: /[\\/]node_modules[\\/]/,
+                    name: 'node-modules',
+                    chunks: 'all',
+                },
+            },
+        },
     },
     plugins: plugins,
     devServer: {
@@ -79,18 +113,11 @@ var config = {
     },
 };
 
-if (PROD) {
-    config.plugins.push(new webpack.DefinePlugin({'process.env.NODE_ENV': "'production'"}));
-    config.plugins.push(new webpack.optimize.UglifyJsPlugin({
-        compress: { warnings: false },
-        sourceMap: false,
-    }));
-} else {
+if (!PROD) {
     config.plugins.push(new WriteFilePlugin());
     config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'inline-source-map';
 }
-
 
 module.exports = config;

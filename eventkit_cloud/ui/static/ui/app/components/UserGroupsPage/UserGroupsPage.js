@@ -8,7 +8,6 @@ import RaisedButton from 'material-ui/RaisedButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import TextField from 'material-ui/TextField';
 import Warning from 'material-ui/svg-icons/alert/warning';
-import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import AddCircle from 'material-ui/svg-icons/content/add-circle';
 import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
@@ -29,6 +28,7 @@ import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/
 import { getUsers } from '../../actions/userActions';
 import { DrawerTimeout } from '../../actions/exportsActions';
 import { isViewportXS, isViewportS } from '../../utils/viewport';
+import { joyride } from '../../joyride.config';
 
 export class UserGroupsPage extends Component {
     constructor(props) {
@@ -97,6 +97,7 @@ export class UserGroupsPage extends Component {
             showMemberInfo: false,
             showOtherInfo: false,
             steps: [],
+            stepIndex: 0,
             isRunning: false,
         };
     }
@@ -119,155 +120,7 @@ export class UserGroupsPage extends Component {
         // make api request for users/groups
         this.makeUserRequest();
         this.props.getGroups();
-
-        const tooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                color: '#8b9396',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                backgroundColor: 'rgba(226,226,226, 0.2)',
-            },
-        };
-
-        const welcomeTooltipStyle = {
-            backgroundColor: 'white',
-            borderRadius: '0',
-            color: 'black',
-            mainColor: '#ff4456',
-            textAlign: 'left',
-            header: {
-                textAlign: 'left',
-                fontSize: '20px',
-                borderColor: '#4598bf',
-            },
-            arrow: {
-                display: 'none',
-            },
-            main: {
-                paddingTop: '20px',
-                paddingBottom: '20px',
-            },
-
-            button: {
-                color: 'white',
-                backgroundColor: '#4598bf',
-            },
-            skip: {
-                display: 'none',
-            },
-            back: {
-                color: '#8b9396',
-            },
-            hole: {
-                display: 'none',
-            },
-        };
-
-        const steps = [
-            {
-                title: 'Welcome to the Members and Groups Page',
-                text: 'EventKit allows you to easily share your data with other EventKit users.  Here, you can create and administer groups, allowing you to share DataPacks with your team, customers, community of interest, etc.',
-                selector: '.qa-UserGroupsPage-AppBar',
-                position: 'top',
-                style: welcomeTooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Search',
-                text: 'You can search for users of EventKit by using this text search.  Search by name, username, or email.',
-                selector: '.qa-UserGroupsPage-search',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Filter Members View',
-                text: 'You can filter the members list by selecting one of these options: all members, new members, members that are not grouped, and by the groups you have created.',
-                selector: '.qa-UserHeader-DropDownMenu-sort',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Create Group',
-                text: 'You can click on this button to create a group of your choice.',
-                selector: '.qa-UserGroupsPage-RaisedButton-create',
-                position: 'top',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Create Group',
-                text: 'Or by clicking on this plus sign icon.',
-                selector: '.qa-GroupsDrawer-addGroup',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Created Groups',
-                text: 'Your created groups will appear here.',
-                selector: '.qa-GroupsDrawer-groupsHeading',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Select users',
-                text: 'Select the users you would like to add to the group.',
-                selector: '.qa-UserRow-checkbox',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Select All Users',
-                text: 'Selecting this checkbox selects all the users to add them to a group.',
-                selector: '.qa-UserHeader-checkbox',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Add Users to Groups',
-                text: 'This menu will allow you to add users to the groups.',
-                selector: '.qa-UserHeader-IconButton-options',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-            {
-                title: 'Groups Shared with Me',
-                text: 'Here you can view the groups that have been shared with you. <br />For groups that have been shared with you: <br />' +
-                'You\'ll receive all notifications, you have limited administrative rights for all data shared with each group, and you may leave any group, but by doing so, you opt out of notifications and your admin rights.',
-                selector: '.qa-GroupsDrawer-sharedGroupsHeading',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
-        ];
-
+        const steps = joyride.UserGroupsPage;
         this.joyrideAddSteps(steps);
     }
 
@@ -384,7 +237,17 @@ export class UserGroupsPage extends Component {
     }
 
     toggleDrawer() {
-        this.setState({ drawerOpen: !this.state.drawerOpen });
+        // this still executes the call to setState immediately
+        // but it gives you the option to await the state change and the 450ms
+        // that it takes for the drawer transition to complete
+        return new Promise(async (resolve) => {
+            // wait for the state change to be complete
+            await new Promise((r2) => {
+                this.setState({ drawerOpen: !this.state.drawerOpen }, r2);
+            });
+            // wait for drawer to be fully open (transition of 450ms)
+            setTimeout(resolve, 450);
+        });
     }
 
     handleSelectAll(selected) {
@@ -674,6 +537,16 @@ export class UserGroupsPage extends Component {
 
         if (!newSteps.length) return;
 
+        if (isViewportXS()) {
+            const ix = newSteps.findIndex(step => (
+                step.selector === '.qa-UserGroupsPage-RaisedButton-create'
+            ));
+            if (ix > -1) {
+                newSteps[ix + 1].text = newSteps[ix].text;
+                newSteps.splice(ix, 1);
+            }
+        }
+
         this.setState((currentState) => {
             const nextState = { ...currentState };
             nextState.steps = nextState.steps.concat(newSteps);
@@ -681,21 +554,58 @@ export class UserGroupsPage extends Component {
         });
     }
 
-    callback(data) {
-        console.log(data);
-        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
-            this.setState({ isRunning: false });
-            this.refs.joyride.reset(true);
-        }
+    async callback(data) {
+        const {
+            action,
+            index,
+            type,
+            step,
+        } = data;
 
-        if (data.index === 3 && data.type === 'tooltip:before' && isViewportS()) {
-            if (!this.state.drawerOpen) {
-                this.toggleDrawer();
+        if (!action) return;
+
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            const fakeIx = this.props.users.users.findIndex(u => u.user.fake);
+            if (fakeIx > -1) {
+                this.props.users.users.splice(fakeIx, 1);
             }
-        }
+            this.setState({ isRunning: false, stepIndex: 0 });
+            this.joyride.reset(true);
+        } else {
+            if (step.selector === '.qa-GroupsDrawer-addGroup' && isViewportS() && !this.state.drawerOpen) {
+                // because the next step will render immidiately after (before the drawer is fully open)
+                // we need to wait till the drawer is open and then update the placement of the step items
+                await this.toggleDrawer();
+                this.joyride.calcPlacement();
+            } else if (step.selector === '.qa-GroupsDrawer-groupsHeading') {
+                if (type === 'step:before') {
+                    this.scrollbar.scrollToTop();
+                    const users = this.props.users.users.filter(u => u.user.username !== this.props.user.username);
+                    if (users.length === 0) {
+                        const fakeUser = {
+                            user: {
+                                fake: true,
+                                username: 'Example User',
+                                email: 'example_user@example.com',
+                            },
+                        };
+                        this.props.users.users.push(fakeUser);
+                    }
+                } else if (type === 'step:after' && isViewportS()) {
+                    this.toggleDrawer();
+                }
+            } else if (step.selector === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
+                this.handleSelectAll(true);
+            } else if (step.selector === '.qa-UserHeader-IconButton-options' && type === 'step:after') {
+                // because the next step will render immidiately after (before the drawer is fully open)
+                // we need to wait till the drawer is open and then update the placement of the step items
+                await this.toggleDrawer();
+                this.joyride.calcPlacement();
+            }
 
-        if (data.index === 7 && data.type === 'tooltip:before') {
-            this.handleSelectAll(true);
+            if (type === 'step:after' || type === 'error:target_not_found') {
+                this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+            }
         }
     }
 
@@ -704,7 +614,8 @@ export class UserGroupsPage extends Component {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
+            this.setState({ isRunning: true });
         } else {
             this.setState({ isRunning: true });
         }
@@ -846,15 +757,27 @@ export class UserGroupsPage extends Component {
                 fill: '#CE4427',
                 verticalAlign: 'bottom',
             },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '35px',
+                width: '18px',
+                verticalAlign: 'middle',
+            },
         };
 
         const tourButton = (
             <EnhancedButton
                 onClick={this.handleJoyride}
-                style={{ color: '#4598bf', cursor: 'pointer', display: 'inline-block' }}
+                style={styles.tourButton}
             >
                 <Help
-                    style={{ color: '#4598bf', cursor: 'pointer', height: '35px', width: '18px', verticalAlign: 'middle' }}
+                    style={styles.tourIcon}
                 />
                 {smallViewport ? '' : <span style={{ marginLeft: '5px' }}>Page Tour</span>}
             </EnhancedButton>
@@ -938,12 +861,11 @@ export class UserGroupsPage extends Component {
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
                 <Joyride
                     callback={this.callback}
-                    ref="joyride"
-                    debug={false}
+                    ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
+                    stepIndex={this.state.stepIndex}
                     autoStart
                     type="continuous"
-                    disableOverlay
                     showSkipButton
                     showStepsProgress
                     locale={{
@@ -1043,6 +965,7 @@ export class UserGroupsPage extends Component {
                         <CustomScrollbar
                             style={{ height: bodyHeight - 155, width: '100%' }}
                             className="qa-UserGroupsPage-CustomScrollbar"
+                            ref={(instance) => { this.scrollbar = instance; }}
                         >
                             <div style={styles.ownUser}>
                                 {ownUser}

@@ -567,7 +567,7 @@ describe('StatusDownload component', () => {
         expect(componentDidMountSpy.callCount).toBe(1);
         expect(componentWillUnmountSpy.callCount).toBe(0);
         wrapper.setProps({
-            location: {},
+            location: { pathname: '/new/path' },
         });
         expect(componentDidMountSpy.callCount).toBe(2);
         expect(componentWillUnmountSpy.callCount).toBe(1);
