@@ -44,6 +44,7 @@ import {
     getDominantGeometry } from '../../utils/mapUtils';
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
+import background from '../../../images/topoBackground.jpg';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -720,7 +721,7 @@ export class ExportAOI extends Component {
     render() {
         const mapStyle = {
             right: '0px',
-            backgroundColor: '#253447',
+            backgroundImage: `url(${background})`,
         };
 
         if (this.props.drawer === 'open' && window.innerWidth >= 1200) {
