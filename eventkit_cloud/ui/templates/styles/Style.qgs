@@ -155,10 +155,10 @@
   <mapcanvas>
     <units>degrees</units>
     <extent>
-      <xmin>-117.1988718220339365</xmin>
-      <ymin>32.79777791497306794</ymin>
-      <xmax>-117.10347470203424791</xmax>
-      <ymax>32.83627007497287309</ymax>
+      <xmin>{{ bbox.0 }}</xmin>
+      <ymin>{{ bbox.1 }}</ymin>
+      <xmax>{{ bbox.2 }}</xmax>
+      <ymax>{{ bbox.3 }}</ymax>
     </extent>
     <rotation>0</rotation>
     <projections>0</projections>
@@ -179,6 +179,8 @@
   </mapcanvas>
   <layer-tree-canvas>
     <custom-order enabled="0">
+      {% for provider in provider_details %}
+      {% if provider.provider_slug == "nome" %}
       <item>{{ job_name.split|join:"_" }}_places_points_any_nome{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_aviation_points_any_nome{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_points_any_nome{{ job_date_time }}</item>
@@ -195,8 +197,11 @@
       <item>{{ job_name.split|join:"_" }}natural_polygons_water_nome{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}</item>
       <item>osm_bounds_osm_nome{{ job_date_time }}</item>
+      {%  endif %}
+      {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
       <item>{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}</item>
-      <item>{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}</item>
+      {%  endif %}
+      {% if provider.provider_slug == "osm" %}
       <item>{{ job_name.split|join:"_" }}_places_points_any_osm{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</item>
@@ -215,10 +220,15 @@
       <item>{{ job_name.split|join:"_" }}_natural_polygons_water_osm{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygons_osm{{ job_date_time }}</item>
       <item>osm_bounds_osm__osm{{ job_date_time }}</item>
+      {%  endif %}
+    {%  endfor %}
     </custom-order>
+
   </layer-tree-canvas>
   <legend updateDrawingOrder="true">
     <legendgroup open="true" checked="Qt::Checked" name="EventKit - {{ job_name }}">
+      {% for provider in provider_details %}
+      {% if provider.provider_slug == "nome" %}
       <legendgroup open="false" checked="Qt::Checked" name="NOMELAYER">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
@@ -305,6 +315,8 @@
           </legendlayer>
         </legendgroup>
       </legendgroup>
+      {%  endif %}
+      {% if provider.provider_slug == "nome" %}
       <legendgroup open="false" checked="Qt::Checked" name="OSMLAYER">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
@@ -401,20 +413,26 @@
           </legendlayer>
         </legendgroup>
       </legendgroup>
+      {%  endif %}
       <legendgroup open="true" checked="Qt::Checked" name="Rasters">
+        {% if provider.provider_slug != "osm" or provider.provider_slug != "nome" %}
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.provider_name }}-{{ job_date_time|slice:":8" }}" showFeatureCount="0">
           <filegroup open="true" hidden="false">
             <legendlayerfile isInOverview="0" layerid="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
+        {%  endif %}
       </legendgroup>
       <legendgroup open="true" checked="Qt::Checked" name="Elevation">
+        {% if provider.provider_slug != "osm" or provider.provider_slug != "nome" %}
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="{{ job_name.split|join:"_" }}-{{ provider.provider_name }}-{{ job_date_time|slice:":8" }}" showFeatureCount="0">
           <filegroup open="true" hidden="false">
             <legendlayerfile isInOverview="0" layerid="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
+        {%  endif %}
       </legendgroup>
+    {% endfor %}
     </legendgroup>
   </legend>
   <projectlayers>
