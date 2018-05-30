@@ -48,36 +48,6 @@ describe('Account Component', () => {
         patchUser: () => {},
     });
 
-    const tooltipStyle = {
-        backgroundColor: 'white',
-        borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
-        textAlign: 'left',
-        header: {
-            textAlign: 'left',
-            fontSize: '20px',
-            borderColor: '#4598bf',
-        },
-        main: {
-            paddingTop: '20px',
-            paddingBottom: '20px',
-        },
-
-        button: {
-            color: 'white',
-            backgroundColor: '#4598bf',
-        },
-        skip: {
-            color: '#8b9396',
-        },
-        back: {
-            color: '#8b9396',
-        },
-        hole: {
-            backgroundColor: 'rgba(226,226,226, 0.2)',
-        },
-    };
     const getMountedWrapper = props => mount(<Account {...props} />, {
         context: { muiTheme },
         childContextTypes: { muiTheme: React.PropTypes.object },
@@ -85,8 +55,8 @@ describe('Account Component', () => {
 
     it('should call joyrideAddSteps when mounted', () => {
         const props = getProps();
-        const joyrideSpy = new sinon.spy(Account.prototype, 'joyrideAddSteps');
-        const mountSpy = new sinon.spy(Account.prototype, 'componentDidMount');
+        const joyrideSpy = sinon.spy(Account.prototype, 'joyrideAddSteps');
+        const mountSpy = sinon.spy(Account.prototype, 'componentDidMount');
         const wrapper = getMountedWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
@@ -95,29 +65,16 @@ describe('Account Component', () => {
 
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [{
-            title: 'Welcome to the Account Settings Page', text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.', selector: '.qa-Account-AppBar', position: 'top', style: tooltipStyle, isFixed: true,
-        },
-        {
-            title: 'License Agreement Info', text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.', selector: '.qa-UserLicense-ArrowDown', position: 'bottom', style: tooltipStyle, isFixed: true,
-        },
-        {
-            title: 'Agree to Licenses', text: 'Once you’ve reviewed the licenses, you can agree to them individually.', selector: '.qa-UserLicense-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
-        },
-        {
-            title: 'Agree to Licenses', text: 'Or you can choose to agree to them collectively.', selector: '.qa-LicenseInfo-Checkbox', position: 'bottom', style: tooltipStyle, isFixed: true,
-        },
-        {
-            title: 'Save Agreements', text: 'Once you have selected the licenses to agree to, click Save Changes.', selector: '.qa-SaveButton-RaisedButton-SaveChanges', position: 'top', style: tooltipStyle, isFixed: true,
-        },
-        {
-            title: 'Navigate Application', text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.', selector: '.qa-Application-MenuItem-exports', position: 'top', style: tooltipStyle, isFixed: true,
-        },
-        {
-            title: 'Navigate Application', text: 'Or to create your own DataPack.', selector: '.qa-Application-MenuItem-create', position: 'top', style: tooltipStyle, isFixed: true,
+            title: 'Welcome to the Account Settings Page',
+            text: ' example text',
+            selector: '.qa-Account-AppBar',
+            position: 'top',
+            style: {},
+            isFixed: true,
         }];
         const props = getProps();
         const wrapper = getMountedWrapper(props);
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.stub(Account.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
@@ -127,7 +84,7 @@ describe('Account Component', () => {
     it('handleJoyride should set state', () => {
         const props = getProps();
         const wrapper = getMountedWrapper(props);
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.stub(Account.prototype, 'setState');
         wrapper.instance().handleJoyride();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));
@@ -141,7 +98,7 @@ describe('Account Component', () => {
             step: {
                 position: 'bottom',
                 selector: '.qa-Application-MenuItem-create',
-                style: tooltipStyle,
+                style: {},
                 text: 'Or to create your own DataPack.',
                 title: 'Navigate Application',
             },
@@ -149,7 +106,7 @@ describe('Account Component', () => {
         };
         const props = getProps();
         const wrapper = getMountedWrapper(props);
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));
@@ -180,9 +137,9 @@ describe('Account Component', () => {
 
     it('should setState and call getLicenses when mounting', () => {
         const props = getProps();
-        props.getLicenses = new sinon.spy();
-        const mountSpy = new sinon.spy(Account.prototype, 'componentWillMount');
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        props.getLicenses = sinon.spy();
+        const mountSpy = sinon.spy(Account.prototype, 'componentWillMount');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ acceptedLicenses: props.user.data.accepted_licenses })).toBe(true);
@@ -194,7 +151,7 @@ describe('Account Component', () => {
     it('should update state and setTimeout when user has been patched', () => {
         jest.useFakeTimers();
         const props = getProps();
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
         const nextProps = getProps();
@@ -211,7 +168,7 @@ describe('Account Component', () => {
 
     it('handleCheck should marked the license as checked/unchecked and update state', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
         expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
         wrapper.instance().handleCheck('test1', true);
@@ -221,7 +178,7 @@ describe('Account Component', () => {
 
     it('handleAll should check all as checked/unchecked and update the state', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
         expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
         wrapper.instance().handleAll({}, true);
@@ -232,7 +189,7 @@ describe('Account Component', () => {
     it('handleAll should not uncheck already agreed licenses', () => {
         const props = getProps();
         props.user.data.accepted_licenses.test1 = true;
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
         expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: false });
         wrapper.setState({ acceptedLicenses: { test1: true, test2: true } });
@@ -244,7 +201,7 @@ describe('Account Component', () => {
 
     it('handleSubmit should call patchUser', () => {
         const props = getProps();
-        props.patchUser = new sinon.spy();
+        props.patchUser = sinon.spy();
         const wrapper = getMountedWrapper(props);
         expect(props.patchUser.notCalled).toBe(true);
         wrapper.instance().handleSubmit();

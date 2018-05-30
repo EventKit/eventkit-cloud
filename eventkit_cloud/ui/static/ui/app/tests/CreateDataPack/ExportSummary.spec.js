@@ -21,37 +21,6 @@ raf.polyfill();
 describe('Export Summary Component', () => {
     const muiTheme = getMuiTheme();
 
-    const tooltipStyle = {
-        backgroundColor: 'white',
-        borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
-        textAlign: 'left',
-        header: {
-            textAlign: 'left',
-            fontSize: '20px',
-            borderColor: '#4598bf'
-        },
-        main: {
-            paddingTop: '20px',
-            paddingBottom: '20px',
-        },
-
-        button: {
-            color: 'white',
-            backgroundColor: '#4598bf'
-        },
-        skip: {
-            color: '#8b9396'
-        },
-        back: {
-            color: '#8b9396'
-        },
-        hole: {
-            backgroundColor: 'rgba(226,226,226, 0.2)',
-        }
-    };
-
     const getProps = () => {
         return {
             geojson: {
@@ -179,10 +148,13 @@ describe('Export Summary Component', () => {
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [
-            {title: 'Verify Information', text: 'Verify the information entered is correct before proceeding.', selector: '.qa-ExportSummary-div', position: 'bottom', style: tooltipStyle,},
-            {title: 'Go Back to Edit', text: 'If you need to make changes before submitting, use the small blue arrow to navigate back.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-previous', position: 'bottom', style: tooltipStyle,},
-            {title: 'Submit DataPack', text: 'Once ready, click the large green button to kick off the DataPack submission process.<br>You will be redirected to the Status and Download page.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case2', position: 'bottom', style: tooltipStyle,},];
+        const steps = [{
+            title: 'Verify Information',
+            text: 'Verify the information entered is correct before proceeding.',
+            selector: '.qa-ExportSummary-div',
+            position: 'bottom',
+            style: {},
+        }];
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
@@ -200,7 +172,7 @@ describe('Export Summary Component', () => {
             step: {
                 position: "bottom",
                 selector: ".qa-DataPackLinkButton-RaisedButton",
-                style: tooltipStyle,
+                style: {},
                 text: "Click here to Navigate to Create a DataPack.",
                 title: "Create DataPack",
             },

@@ -56,37 +56,6 @@ describe('ExportAOI component', () => {
         }],
     };
 
-    const tooltipStyle = {
-        backgroundColor: 'white',
-        borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
-        textAlign: 'left',
-        header: {
-            textAlign: 'left',
-            fontSize: '20px',
-            borderColor: '#4598bf'
-        },
-        main: {
-            paddingTop: '20px',
-            paddingBottom: '20px',
-        },
-
-        button: {
-            color: 'white',
-            backgroundColor: '#4598bf'
-        },
-        skip: {
-            color: '#8b9396'
-        },
-        back: {
-            color: '#8b9396'
-        },
-        hole: {
-            backgroundColor: 'rgba(226,226,226, 0.2)',
-        }
-    };
-
     const getProps = () => (
         {
             aoiInfo: {
@@ -1433,28 +1402,21 @@ describe('ExportAOI component', () => {
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {
-        const steps = [{title: 'Search for location', text: 'Type in location name to set area of interest.', selector: '.bootstrap-typeahead-input', position: 'bottom', style: tooltipStyle,},
-            {title: 'Select location', text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.', selector: '.qa-DrawAOIToolbar-div', position: 'left', style: tooltipStyle,},
-            {title: 'Cancel Selection', text: 'Cancel or clear selection by clicking the "X".', selector: '.qa-DrawBoxButton-button', position: 'left', style: tooltipStyle,},
-            {title: 'Go to next step', text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.', selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0', position: 'left', style: tooltipStyle,}];
+        const steps = [{
+            title: 'Search for location',
+            text: 'Type in location name to set area of interest.',
+            selector: '.bootstrap-typeahead-input',
+            position: 'bottom',
+            style: {},
+        }];
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({steps: steps}));
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
-
-    //Not sure why but this causes a Maximum call stack size exceeded error?????
-    // it('handleJoyride should set state', () => {
-    //     const props = getProps();
-    //     const wrapper = getWrapper(props);
-    //     const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
-    //     wrapper.instance().handleJoyride();
-    //     expect(stateSpy.calledWith({isRunning: false}));
-    //     stateSpy.restore();
-    // });
 
     it('callback function should stop tour if close is clicked', () => {
         const callbackData = {
@@ -1463,7 +1425,7 @@ describe('ExportAOI component', () => {
             step: {
                 position: "bottom",
                 selector: ".qa-DataPackLinkButton-RaisedButton",
-                style: tooltipStyle,
+                style: {},
                 text: "Click here to Navigate to Create a DataPack.",
                 title: "Create DataPack",
             },
@@ -1473,7 +1435,7 @@ describe('ExportAOI component', () => {
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
         wrapper.instance().callback(callbackData);
-        expect(stateSpy.calledWith({isRunning: false}));
+        expect(stateSpy.calledWith( {isRunning: false }));
         stateSpy.restore();
     });
 
@@ -1484,12 +1446,12 @@ describe('ExportAOI component', () => {
             step: {
                 position: "bottom",
                 selector: ".qa-DataPackLinkButton-RaisedButton",
-                style: tooltipStyle,
+                style: {},
                 text: "Click here to Navigate to Create a DataPack.",
                 title: "Create DataPack",
             },
             type: "tooltip:before",
-        }
+        };
         const props = getProps();
         const wrapper = getWrapper(props);
         props.aoiInfo.description = null;
@@ -1497,7 +1459,7 @@ describe('ExportAOI component', () => {
         const drawFakeBboxSpy = sinon.spy(wrapper.instance(), 'drawFakeBbox');
         wrapper.instance().callback(callbackData);
         expect(drawFakeBboxSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({fakeData: true}));
+        expect(stateSpy.calledWith({ fakeData: true }));
         stateSpy.restore();
         drawFakeBboxSpy.restore();
     });

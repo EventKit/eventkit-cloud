@@ -7,6 +7,7 @@ import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
 import Checkbox from 'material-ui/Checkbox';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -17,12 +18,7 @@ import GeoJSON from 'ol/format/geojson';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import Joyride from 'react-joyride';
-
-import axios from 'axios'
-import MockAdapter from 'axios-mock-adapter';
 import * as utils from '../../utils/generic';
-import check from 'material-ui/svg-icons/navigation/check';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -30,37 +26,6 @@ raf.polyfill();
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
-
-    const tooltipStyle = {
-        backgroundColor: 'white',
-        borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
-        textAlign: 'left',
-        header: {
-            textAlign: 'left',
-            fontSize: '20px',
-            borderColor: '#4598bf'
-        },
-        main: {
-            paddingTop: '20px',
-            paddingBottom: '20px',
-        },
-
-        button: {
-            color: 'white',
-            backgroundColor: '#4598bf'
-        },
-        skip: {
-            color: '#8b9396'
-        },
-        back: {
-            color: '#8b9396'
-        },
-        hole: {
-            backgroundColor: 'rgba(226,226,226, 0.2)',
-        }
-    };
 
     const getProps = () => (
         {
@@ -427,28 +392,7 @@ describe('ExportInfo component', () => {
                 text: 'Type in location name to set area of interest.',
                 selector: '.bootstrap-typeahead-input',
                 position: 'bottom',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Select location',
-                text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>To upload a GeoJson file, use the file import option.',
-                selector: '.qa-DrawAOIToolbar-div',
-                position: 'left',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Cancel Selection',
-                text: 'Cancel or clear selection by clicking the "X".',
-                selector: '.qa-DrawBoxButton-button',
-                position: 'left',
-                style: tooltipStyle,
-            },
-            {
-                title: 'Go to next step',
-                text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.',
-                selector: '.qa-BreadcrumbStepper-FloatingActionButton-case0',
-                position: 'left',
-                style: tooltipStyle,
+                style: {},
             },
         ];
         const props = getProps();
@@ -467,7 +411,7 @@ describe('ExportInfo component', () => {
             step: {
                 position: "bottom",
                 selector: ".qa-DataPackLinkButton-RaisedButton",
-                style: tooltipStyle,
+                style: {},
                 text: "Click here to Navigate to Create a DataPack.",
                 title: "Create DataPack",
             },
