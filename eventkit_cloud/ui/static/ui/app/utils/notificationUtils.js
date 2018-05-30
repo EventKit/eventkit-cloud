@@ -22,7 +22,12 @@ const verbs = {
 // NOTE: This should ideally be a NotificationMessage component, but we need to return the bare elements without
 // a wrapper to solve the middle text truncation problem. With React 16 we'll be able to do this from a component
 // by using fragments (https://reactjs.org/docs/fragments.html).
-export function getNotificationMessage({ notification, textStyle = {}, linkStyle = {}, onLinkClick = () => { return true; } }) {
+export function getNotificationMessage({
+    notification,
+    textStyle = {},
+    linkStyle = {},
+    onLinkClick = () => (true),
+}) {
     let styles = {
         text: {
             ...textStyle,
@@ -46,7 +51,7 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
             fontWeight: 'bold',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-        }
+        },
     };
 
     const handleLinkClick = (e) => {
@@ -56,12 +61,24 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
     };
 
     const verb = notification.verb.toLowerCase();
+    if (!notification.actor.details && !notification.action_object.details) {
+        return [
+            <span
+                key={`${notification.id}-error`}
+                style={{ ...styles.text, color: '#CE4427', whiteSpace: 'normal' }}
+                className="qa-NotificationMessage-error"
+            >
+                Uh oh! Sorry, this notification&apos;s details are no longer available
+            </span>,
+        ];
+    }
+
     switch (verb) {
         case verbs.runStarted:
             return [
                 <Link
                     key={`${notification.id}-Link`}
-                    className={'qa-NotificationMessage-Link'}
+                    className="qa-NotificationMessage-Link"
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -72,17 +89,17 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     &nbsp;has started processing.
-                </span>
+                </span>,
             ];
         case verbs.runCanceled:
             return [
                 <Link
                     key={`${notification.id}-Link`}
-                    className={'qa-NotificationMessage-Link'}
+                    className="qa-NotificationMessage-Link"
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -93,17 +110,17 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     &nbsp;has been canceled.
-                </span>
+                </span>,
             ];
         case verbs.runCompleted:
             return [
                 <Link
                     key={`${notification.id}-Link`}
-                    className={'qa-NotificationMessage-Link'}
+                    className="qa-NotificationMessage-Link"
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -114,17 +131,17 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     &nbsp;is complete.
-                </span>
+                </span>,
             ];
         case verbs.runFailed:
             return [
                 <Link
                     key={`${notification.id}-Link`}
-                    className={'qa-NotificationMessage-Link'}
+                    className="qa-NotificationMessage-Link"
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -135,17 +152,17 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     &nbsp;failed to complete.
-                </span>
+                </span>,
             ];
         case verbs.runDeleted:
             return [
                 <Link
                     key={`${notification.id}-Link`}
-                    className={'qa-NotificationMessage-Link'}
+                    className="qa-NotificationMessage-Link"
                     to={`/status/${notification.actor.details.job.uid}`}
                     href={`/status/${notification.actor.details.job.uid}`}
                     style={styles.link}
@@ -156,24 +173,24 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     &nbsp;has been deleted.
-                </span>
+                </span>,
             ];
         case verbs.addedToGroup:
             return [
                 <span
                     key={`${notification.id}-span0`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     {"You've been added to"}&nbsp;
                 </span>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.name}
                     title={notification.action_object.details.name}
                 >
@@ -184,14 +201,14 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
             return [
                 <span
                     key={`${notification.id}-span0`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     {"You've been removed from"}&nbsp;
                 </span>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.name}
                     title={notification.action_object.details.name}
                 >
@@ -202,14 +219,14 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
             return [
                 <span
                     key={`${notification.id}-span0`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     {"You've been set as an admin of"}&nbsp;
                 </span>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.name}
                     title={notification.action_object.details.name}
                 >
@@ -220,14 +237,14 @@ export function getNotificationMessage({ notification, textStyle = {}, linkStyle
             return [
                 <span
                     key={`${notification.id}-span0`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.text}
                 >
                     {"You've been removed as an admin of"}&nbsp;
                 </span>,
                 <span
                     key={`${notification.id}-span1`}
-                    className={'qa-NotificationMessage-Text'}
+                    className="qa-NotificationMessage-Text"
                     style={styles.name}
                     title={notification.action_object.details.name}
                 >
@@ -254,20 +271,20 @@ export function getNotificationIcon({ notification, iconStyle }) {
         case verbs.runStarted:
             return (
                 <InfoIcon
-                    className={'qa-NotificationIcon'}
+                    className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#1F2738'
+                        fill: '#1F2738',
                     }}
                 />
             );
         case verbs.runCompleted:
             return (
                 <CheckCircleIcon
-                    className={'qa-NotificationIcon'}
+                    className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#55BA63'
+                        fill: '#55BA63',
                     }}
                 />
             );
@@ -275,10 +292,10 @@ export function getNotificationIcon({ notification, iconStyle }) {
         case verbs.setAsGroupAdmin:
             return (
                 <AddCircleIcon
-                    className={'qa-NotificationIcon'}
+                    className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#55BA63'
+                        fill: '#55BA63',
                     }}
                 />
             );
@@ -287,30 +304,30 @@ export function getNotificationIcon({ notification, iconStyle }) {
         case verbs.removedAsGroupAdmin:
             return (
                 <RemoveCircleIcon
-                    className={'qa-NotificationIcon'}
+                    className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#CE4427'
+                        fill: '#CE4427',
                     }}
                 />
             );
         case verbs.runCanceled:
             return (
                 <WarningIcon
-                    className={'qa-NotificationIcon'}
+                    className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#F4D225'
+                        fill: '#F4D225',
                     }}
                 />
             );
         case verbs.runFailed:
             return (
                 <ErrorIcon
-                    className={'qa-NotificationIcon'}
+                    className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#CE4427'
+                        fill: '#CE4427',
                     }}
                 />
             );
@@ -327,6 +344,7 @@ export function getNotificationViewPath(notification) {
         case verbs.runCompleted:
         case verbs.runDeleted:
         case verbs.runFailed:
+            if (!notification.actor.details) return '';
             return `/status/${notification.actor.details.job.uid}`;
         case verbs.addedToGroup:
         case verbs.removedFromGroup:
