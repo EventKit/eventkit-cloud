@@ -720,6 +720,7 @@ export class ExportAOI extends Component {
     render() {
         const mapStyle = {
             right: '0px',
+            backgroundColor: '#253447',
         };
 
         if (this.props.drawer === 'open' && window.innerWidth >= 1200) {
