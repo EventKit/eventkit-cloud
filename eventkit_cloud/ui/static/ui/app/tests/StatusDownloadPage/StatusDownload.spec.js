@@ -84,37 +84,6 @@ describe('StatusDownload component', () => {
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 
-    const tooltipStyle = {
-        backgroundColor: 'white',
-        borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
-        textAlign: 'left',
-        header: {
-            textAlign: 'left',
-            fontSize: '20px',
-            borderColor: '#4598bf',
-        },
-        main: {
-            paddingTop: '20px',
-            paddingBottom: '20px',
-        },
-
-        button: {
-            color: 'white',
-            backgroundColor: '#4598bf',
-        },
-        skip: {
-            color: '#8b9396',
-        },
-        back: {
-            color: '#8b9396',
-        },
-        hole: {
-            backgroundColor: 'rgba(226,226,226, 0.2)',
-        },
-    };
-
     const location = {};
 
     const getProps = () => (
@@ -384,51 +353,9 @@ describe('StatusDownload component', () => {
                 text: 'This is the name of the datapack.',
                 selector: '.qa-DataCartDetails-table-name',
                 position: 'bottom',
-                style: tooltipStyle,
+                style: {},
                 isFixed: true,
-            }, {
-                title: 'DataPack Status',
-                text: 'This is the status of the datapack.  Here you can change the expiration date and permission of the datapack.',
-                selector: '.qa-DataCartDetails-table-export',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            }, {
-                title: 'DataPack Download Options',
-                text: 'Here you will find download options for the datapack. <br> Each data source has its own table where you can view status of the current downloadable files.',
-                selector: '.qa-DatapackDetails-div-downloadOptions',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            }, {
-                title: 'Other Options',
-                text: 'There are options availble to run datapack export again, clone the dataoack or delete the datapack',
-                selector: '.qa-DataCartDetails-div-otherOptions',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            }, {
-                title: 'General Information',
-                text: 'Here you will find general information related to the datapack.  ',
-                selector: '.qa-DataCartDetails-table-generalInfo',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            }, {
-                title: 'AIO',
-                text: 'This is the selected area of interest for the datapack.',
-                selector: '.qa-DataCartDetails-div-map',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            }, {
-                title: 'Export Information',
-                text: 'This contains information specific to the export.',
-                selector: '.qa-DataCartDetails-table-exportInfo',
-                position: 'bottom',
-                style: tooltipStyle,
-                isFixed: true,
-            },
+            }
         ];
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -446,7 +373,7 @@ describe('StatusDownload component', () => {
             step: {
                 position: "bottom",
                 selector: ".qa-DataPackLinkButton-RaisedButton",
-                style: tooltipStyle,
+                style: {},
                 text: "Click here to Navigate to Create a DataPack.",
                 title: "Create DataPack",
             },
