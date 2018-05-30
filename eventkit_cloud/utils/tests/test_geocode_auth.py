@@ -11,6 +11,7 @@ from ..geocode_auth import get_auth_headers
 
 logger = logging.getLogger(__name__)
 
+
 class TestGeoCodeAuth(TestCase):
 
     def setUp(self):
@@ -21,7 +22,7 @@ class TestGeoCodeAuth(TestCase):
     def testGetHeadersWithNoURL(self):        
         self.assertEquals(get_auth_headers(), {})
 
-    @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE-----", GEOCODING_AUTH_KEY="-----BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----")
+    @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE----------BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----")
     def testGetHeaders(self):
         testJwt = {'token': 'hello_world'}
         self.mock_requests.get(settings.GEOCODING_AUTH_URL, text=json.dumps(testJwt), status_code=200)

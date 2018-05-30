@@ -66,7 +66,6 @@ GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
 GEOCODING_AUTH_URL = os.getenv('GEOCODING_AUTH_URL', None)
 GEOCODING_AUTH_CERT = os.getenv('GEOCODING_AUTH_CERT', None)
-GEOCODING_AUTH_KEY = os.getenv('GEOCODING_AUTH_KEY', None)
 CONVERT_API_URL = os.getenv('CONVERT_API_URL', 'http://172.17.0.1:4000/v1/convert')
 
 # zoom extents of reverse geocode point result (in degrees)
