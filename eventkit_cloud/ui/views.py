@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render_to_response
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
+
 from .data_estimator import get_size_estimate
 from django.contrib.auth import authenticate, login
 from ..api.serializers import UserDataSerializer
@@ -148,7 +149,7 @@ def search(request):
             )
 
         # if no feature geom return nothing
-        if not mgrs_data.get('geometry'):
+        if not mgrs_data or not mgrs_data.get('geometry'):
             return HttpResponse(status=204, content_type="application/json")
 
         features = []
@@ -238,7 +239,8 @@ def search(request):
         geocode = Geocode()
         try:
             result = geocode.search(q)
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             return HttpResponse(
                 content=error_string,
                 status=500

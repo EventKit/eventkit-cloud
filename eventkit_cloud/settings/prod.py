@@ -22,6 +22,7 @@ INSTALLED_APPS += (
     'eventkit_cloud.ui',
     'eventkit_cloud.utils',
     'eventkit_cloud',
+    'notifications',
 )
 
 LOGIN_URL = '/login'
@@ -63,10 +64,12 @@ REVERSE_GEOCODING_API_URL = os.getenv('REVERSE_GEOCODING_API_URL', None)
 REVERSE_GEOCODING_API_TYPE = os.getenv('REVERSE_GEOCODING_API_TYPE', 'PELIAS')
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
-CONVERT_API_URL = os.getenv('CONVERT_API_URL', None)
+GEOCODING_AUTH_URL = os.getenv('GEOCODING_AUTH_URL', None)
+GEOCODING_AUTH_CERT = os.getenv('GEOCODING_AUTH_CERT', None)
+CONVERT_API_URL = os.getenv('CONVERT_API_URL', 'http://172.17.0.1:4000/v1/convert')
 
 # zoom extents of reverse geocode point result (in degrees)
-REVERSE_GEOCODE_ZOOM = 0.1;
+REVERSE_GEOCODE_ZOOM = 0.1
 
 """
 Maximum extent of a Job
@@ -358,3 +361,7 @@ AUTO_LOGOUT_SECONDS = int(os.getenv('AUTO_LOGOUT_SECONDS', 0))
 AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']
+
+EVENTKIT_ARCGIS_SERVICE = os.getenv('EVENTKIT_ARCGIS_SERVICE')
+
+NOTIFICATIONS_SOFT_DELETE=True

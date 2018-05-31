@@ -1,6 +1,7 @@
 from django.conf import settings
 import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
+from geocode_auth import get_auth_headers, authenticate
 import requests
 
 
@@ -73,6 +74,17 @@ class GeocodeAdapter:
         """
         pass
 
+    def get_response(self, payload):
+        response = requests.get(self.url, params=payload, headers=get_auth_headers())
+        if response.status_code in [401, 403]:
+            authenticate()
+            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            if not response.ok:
+                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                logger.error(error_message)
+                raise AuthenticationError(error_message)
+        return response
+
     def get_data(self, query):
         """
         Handles querying the endpoint and returning a geojson (as a python dict).
@@ -83,9 +95,10 @@ class GeocodeAdapter:
         payload = self.get_payload(query)
         if not self.url:
             return
-        response = requests.get(self.url, params=payload).json()
-        assert (isinstance(response, dict))
-        return self.create_geojson(response)
+        response_data = self.get_response(payload).json()
+        assert (isinstance(response_data, dict))
+        return self.create_geojson(response_data)
+
 
     def get_feature(self, feature=None, bbox=None, properties=None):
         """
@@ -163,7 +176,7 @@ class GeoNames(GeocodeAdapter):
         return {'maxRows': 20, 'username': 'eventkit', 'style': 'full', 'q': query}
 
     def create_geojson(self, response):
-        if not response.get('geonames'):
+        if 'geonames' not in response:
             raise Exception("Geocoder did not return 'geonames' in the response")
         features = []
         for result in response.get('geonames', []):
@@ -192,7 +205,7 @@ class Pelias(GeocodeAdapter):
         return {'text': query, 'geometries': 'point,polygon'}
 
     def create_geojson(self, response):
-        if not response.get('features'):
+        if 'features' not in response:
             raise Exception("Geocoder did not return 'features' in the response")
         features = []
         for feature in response.get('features', []):
@@ -265,6 +278,9 @@ def is_valid_bbox(bbox):
         return False
 
 
+
+
+
 def expand_bbox(original_bbox, new_bbox):
     """
     Takes two bboxes and returns a new bbox containing the original two.
@@ -280,3 +296,9 @@ def expand_bbox(original_bbox, new_bbox):
     original_bbox[2] = max(new_bbox[2], original_bbox[2])
     original_bbox[3] = max(new_bbox[3], original_bbox[3])
     return original_bbox
+
+
+class AuthenticationError(Exception):
+
+    def __init__(self, message):
+        self.message = message

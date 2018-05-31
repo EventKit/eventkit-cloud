@@ -51,7 +51,7 @@ describe('DataPackList actions', () => {
 
         const store = mockStore({ runsList: {} });
 
-        return store.dispatch(actions.getRuns({}, { fake: 'data' }))
+        return store.dispatch(actions.getRuns({ fake: 'data' }))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
                 axios.CancelToken.source = original;
@@ -88,7 +88,7 @@ describe('DataPackList actions', () => {
         const cancel = sinon.spy();
         const cancelSource = { cancel };
         const store = mockStore({ runsList: { fetching: true, cancelSource } });
-        return store.dispatch(actions.getRuns({}, {}, false))
+        return store.dispatch(actions.getRuns({ isAuto: false }))
             .then(() => {
                 expect(cancel.calledOnce).toBe(true);
                 expect(cancel.calledWith('Request is no longer valid, cancelling')).toBe(true);
@@ -103,7 +103,7 @@ describe('DataPackList actions', () => {
         const cancel = sinon.spy();
         const cancelSource = { cancel };
         const store = mockStore({ runsList: { fetching: true, cancelSource } });
-        const ret = store.dispatch(actions.getRuns({}, {}, true));
+        const ret = store.dispatch(actions.getRuns({ isAuto: true }));
         expect(cancel.called).toBe(false);
         expect(ret).toBe(null);
     });

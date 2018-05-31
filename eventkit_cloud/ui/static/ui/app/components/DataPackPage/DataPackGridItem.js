@@ -12,6 +12,7 @@ import Lock from 'material-ui/svg-icons/action/lock-outline';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
+import isUndefined from 'lodash/isUndefined';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -42,8 +43,9 @@ export class DataPackGridItem extends Component {
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.state = {
-            expanded: false,
-            overflow: false,
+            expanded: true,
+            overflowTitle: false,
+            overflowText: false,
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
@@ -51,7 +53,7 @@ export class DataPackGridItem extends Component {
     }
 
     componentDidMount() {
-        this.setState({ expanded: true });
+        this.initMap();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -64,7 +66,7 @@ export class DataPackGridItem extends Component {
 
     initMap() {
         const map = new Map({
-            target: `${this.props.run.uid}_map`,
+            target: this.getMapId(),
             layers: [
                 new Tile({
                     source: new XYZ({
@@ -148,6 +150,31 @@ export class DataPackGridItem extends Component {
         this.props.onRunDelete(this.props.run.uid);
     }
 
+    getMapId() {
+        let mapId = '';
+        if (!isUndefined(this.props.gridName)) {
+            mapId += `${this.props.gridName}_`;
+        }
+        mapId += `${this.props.run.uid}_`;
+        if (!isUndefined(this.props.index)) {
+            mapId += `${this.props.index}_`;
+        }
+        mapId += 'map';
+
+        return mapId;
+    }
+
+    mapContainerRef(element) {
+        if (!element) {
+            return;
+        }
+
+        // Absorb touch move events.
+        element.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+        });
+    }
+
     render() {
         const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
             <ListItem
@@ -186,14 +213,47 @@ export class DataPackGridItem extends Component {
             },
             cardTitle: {
                 wordWrap: 'break-word',
-                padding: '15px 10px 10px',
+                padding: '15px 0px 10px',
+                zIndex: 2000,
             },
-            cardTitle2: {
+            title: {
                 fontSize: titleFontSize,
                 height: '36px',
+                lineHeight: '28px',
+            },
+            titleInnerDiv: {
+                backgroundColor: '#f7f8f8',
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                padding: '0px 10px 2px',
+            },
+            name: {
+                display: 'inline-block',
+                width: 'calc(100% - 24px)',
+            },
+            titleLink: {
+                color: 'inherit',
+                display: 'block',
+                width: '100%',
+                height: '28px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                margin: '0px 0px 8px',
+            },
+            titleLinkExpanded: {
+                color: 'inherit',
+                display: 'block',
+                width: '100%',
+                overflow: 'visible',
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
+                margin: '0px 0px 8px',
             },
             cardSubtitle: {
                 fontSize: cardTextFontSize,
+                padding: '0px 10px',
             },
             completeIcon: {
                 float: 'left',
@@ -250,14 +310,13 @@ export class DataPackGridItem extends Component {
                 backgroundColor: '#f7f8f8',
                 zIndex: 2,
                 padding: '0px 10px 5px',
-
             },
             cardTextContainer: {
                 fontSize: cardTextFontSize,
                 padding: '0px',
                 marginBottom: '10px',
                 height: window.innerWidth < 768 ? '42px' : '51px',
-                overflow: this.state.overflow ? 'visible' : 'hidden',
+                overflow: this.state.overflowText ? 'visible' : 'hidden',
                 position: 'relative',
                 zIndex: 1000,
             },
@@ -286,25 +345,30 @@ export class DataPackGridItem extends Component {
                 expanded={this.state.expanded}
                 onExpandChange={this.handleExpandChange}
             >
-                <FeaturedFlag show={this.props.run.job.featured} />
+                <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                 <CardTitle
                     titleColor="#4598bf"
                     style={styles.cardTitle}
-                    titleStyle={styles.cardTitle2}
+                    titleStyle={styles.title}
                     subtitleStyle={styles.cardSubtitle}
                     title={
-                        <div>
-                            <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
+                        <div style={styles.titleInnerDiv}>
+                            <div
+                                className="qa-DataPackGridItem-name"
+                                style={styles.name}
+                                onMouseEnter={() => { this.setState({ overflowTitle: true }); }}
+                                onMouseLeave={() => { this.setState({ overflowTitle: false }); }}
+                            >
                                 <Link
                                     to={`/status/${this.props.run.job.uid}`}
                                     href={`/status/${this.props.run.job.uid}`}
-                                    style={styles.titleLink}
+                                    style={this.state.overflowTitle ? styles.titleLinkExpanded : styles.titleLink}
                                 >
                                     {this.props.run.job.name}
                                 </Link>
                             </div>
                             <IconMenu
-                                style={{ float: 'right', width: '24px', height: '100%' }}
+                                style={{ float: 'right', width: '24px', height: '36px' }}
                                 iconButtonElement={
                                     <IconButton
                                         style={styles.iconMenu}
@@ -379,16 +443,20 @@ export class DataPackGridItem extends Component {
                 />
                 <CardText
                     style={styles.cardTextContainer}
-                    onMouseEnter={() => { this.setState({ overflow: true }); }}
-                    onMouseLeave={() => { this.setState({ overflow: false }); }}
-                    onTouchTap={() => { this.setState({ overflow: !this.state.overflow }); }}
+                    onMouseEnter={() => { this.setState({ overflowText: true }); }}
+                    onMouseLeave={() => { this.setState({ overflowText: false }); }}
+                    onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
-                    <span style={this.state.overflow ? styles.cardText : styles.cardTextMinimized}>
+                    <span style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}>
                         {this.props.run.job.description}
                     </span>
                 </CardText>
                 <CardMedia expandable>
-                    <div id={`${this.props.run.uid}_map`} style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }} />
+                    <div
+                        id={this.getMapId()}
+                        style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }}
+                        ref={this.mapContainerRef}
+                    />
                 </CardMedia>
                 <CardActions style={{ height: '45px' }}>
                     <span>
@@ -427,8 +495,15 @@ DataPackGridItem.propTypes = {
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     providers: PropTypes.array.isRequired,
+    gridName: PropTypes.string.isRequired,
+    index: PropTypes.number.isRequired,
+    showFeaturedFlag: PropTypes.bool,
     openShare: PropTypes.func.isRequired,
     adminPermission: PropTypes.bool.isRequired,
+};
+
+DataPackGridItem.defaultProps = {
+    showFeaturedFlag: true,
 };
 
 export default DataPackGridItem;
