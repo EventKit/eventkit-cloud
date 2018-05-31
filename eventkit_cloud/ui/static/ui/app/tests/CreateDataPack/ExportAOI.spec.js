@@ -91,7 +91,7 @@ describe('ExportAOI component', () => {
     const getWrapper = (props) => {
         const config = {
             BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
-            MAX_DATAPACK_AOI_SQ_KM: 20000,
+            MAX_VECTOR_AOI_SQ_KM: 20000,
         };
         return mount(<ExportAOI {...props} />, {
             context: { muiTheme, config },

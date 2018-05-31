@@ -113,11 +113,13 @@ export class AoiInfobar extends Component {
             },
             titleBar: {
                 flex: '1 0 auto',
+                flexWrap: 'wrap',
                 width: '100%',
                 paddingBottom: '5px',
             },
             title: {
                 fontSize: '14px',
+                width: '100%',
             },
             content: {
                 display: 'flex',
@@ -236,8 +238,8 @@ export class AoiInfobar extends Component {
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
         const totalArea = getSqKmString(this.props.aoiInfo.geojson);
-        const maxArea = this.props.maxAoiSqKm;
-        const over = maxArea && maxArea < getSqKm(this.props.aoiInfo.geojson);
+        const maxVectorArea = this.props.maxVectorAoiSqKm;
+        const over = maxVectorArea && maxVectorArea < getSqKm(this.props.aoiInfo.geojson);
 
         const bufferAlert = (
             <AlertCallout
@@ -258,7 +260,7 @@ export class AoiInfobar extends Component {
                 title="Your AOI is too large!"
                 body={
                     <p>
-                        The max size allowed for the AOI is {maxArea} sq km and yours is {totalArea}.
+                        The max size allowed for the AOI is {maxVectorArea} sq km and yours is {totalArea}.
                          Please reduce the size of your buffer and/or polygon
                     </p>
                 }
@@ -306,12 +308,12 @@ export class AoiInfobar extends Component {
                     <div style={styles.infobar}>
                         <div style={styles.body}>
                             <div style={styles.titleBar}>
-                                <span className="qa-AoiInfobar-title" style={styles.title}>
+                                <div className="qa-AoiInfobar-title" style={styles.title}>
                                     <strong>AREA OF INTEREST</strong>
-                                </span>
-                                <span className="qa-AoiInfobar-maxSize" style={{ padding: '0px 10px', fontSize: '12px', color: 'grey' }}>
-                                    {this.props.maxAoiSqKm ? `${maxArea} sq km max` : null}
-                                </span>
+                                </div>
+                                <div className="qa-AoiInfobar-maxSize" style={{ fontSize: '12px', color: 'grey' }}>
+                                    {this.props.maxVectorAoiSqKm ? `Vector: ${maxVectorArea} sq km max` : null}
+                                </div>
                             </div>
                             <div style={styles.content} className="qa-AoiInfobar-content">
                                 <div style={styles.geomColumn} className="qa-AoiInfobar-geomColumn">
@@ -357,7 +359,7 @@ export class AoiInfobar extends Component {
 }
 
 AoiInfobar.defaultProps = {
-    maxAoiSqKm: null,
+    maxVectorAoiSqKm: null,
 };
 
 AoiInfobar.propTypes = {
@@ -371,7 +373,7 @@ AoiInfobar.propTypes = {
         buffer: PropTypes.number,
     }).isRequired,
     showRevert: PropTypes.bool.isRequired,
-    maxAoiSqKm: PropTypes.number,
+    maxVectorAoiSqKm: PropTypes.number,
     onRevertClick: PropTypes.func.isRequired,
     clickZoomToSelection: PropTypes.func.isRequired,
     handleBufferClick: PropTypes.func.isRequired,

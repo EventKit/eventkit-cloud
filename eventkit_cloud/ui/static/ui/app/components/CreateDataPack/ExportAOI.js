@@ -713,7 +713,7 @@ export class ExportAOI extends Component {
 
     shouldEnableNext(geojson) {
         const area = allHaveArea(geojson);
-        const max = this.context.config.MAX_DATAPACK_AOI_SQ_KM;
+        const max = this.context.config.MAX_VECTOR_AOI_SQ_KM;
         if (!max || !area) return area;
         return getSqKm(geojson) <= max;
     }
@@ -744,7 +744,7 @@ export class ExportAOI extends Component {
                         onRevertClick={this.openResetDialog}
                         clickZoomToSelection={this.handleZoomToSelection}
                         handleBufferClick={this.openBufferDialog}
-                        maxAoiSqKm={this.context.config.MAX_DATAPACK_AOI_SQ_KM}
+                        maxVectorAoiSqKm={this.context.config.MAX_VECTOR_AOI_SQ_KM}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
@@ -773,7 +773,7 @@ export class ExportAOI extends Component {
                     <BufferDialog
                         show={this.state.showBuffer}
                         aoi={aoi}
-                        maxAoiSqKm={this.context.config.MAX_DATAPACK_AOI_SQ_KM}
+                        maxVectorAoiSqKm={this.context.config.MAX_VECTOR_AOI_SQ_KM}
                         value={this.props.aoiInfo.buffer}
                         valid={this.state.validBuffer}
                         handleBufferClick={this.handleBufferClick}

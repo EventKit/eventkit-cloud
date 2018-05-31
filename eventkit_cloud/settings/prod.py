@@ -76,6 +76,7 @@ Maximum extent of a Job
 max of (latmax-latmin) * (lonmax-lonmin)
 """
 JOB_MAX_EXTENT = int(os.getenv('JOB_MAX_EXTENT', '10000'))  # default export max extent in sq km
+JOB_MAX_RASTER_EXTENT = int(os.getenv('JOB_MAX_RASTER_EXTENT', '250'))  # default raster max extent in sq km
 
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
@@ -299,7 +300,8 @@ UI_CONFIG = {
     'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
     'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', '© OpenStreetMap'),
     'MAX_DATAPACK_EXPIRATION_DAYS': os.environ.get('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
-    'MAX_DATAPACK_AOI_SQ_KM': JOB_MAX_EXTENT,
+    'MAX_VECTOR_AOI_SQ_KM': JOB_MAX_EXTENT,
+    'MAX_RASTER_AOI_SQ_KM': JOB_MAX_RASTER_EXTENT,
 }
 
 if os.environ.get('USE_S3'):

@@ -153,7 +153,7 @@ export class BufferDialog extends Component {
         this.context.muiTheme.slider.selectionColor = sliderColor;
 
         let over = false;
-        const maxAoi = this.props.maxAoiSqKm;
+        const maxAoi = this.props.maxVectorAoiSqKm;
         const totalArea = getSqKmString(this.props.aoi);
         const size = getSqKm(this.props.aoi);
         if (maxAoi && maxAoi < size) {
@@ -271,7 +271,7 @@ export class BufferDialog extends Component {
 }
 
 BufferDialog.defaultProps = {
-    maxAoiSqKm: null,
+    maxVectorAoiSqKm: null,
 };
 
 BufferDialog.contextTypes = {
@@ -286,7 +286,7 @@ BufferDialog.propTypes = {
     handleBufferChange: PropTypes.func.isRequired,
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
-    maxAoiSqKm: PropTypes.number,
+    maxVectorAoiSqKm: PropTypes.number,
 };
 
 export default BufferDialog;
