@@ -61,13 +61,11 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
 
     provider_details = []
     if export_provider_task:
-        provider_slug = export_provider_task.slug
-        provider_detail = {'provider_slug': provider_slug, 'file_path': '', 'provider_name': export_provider_task.name}
+        provider_detail = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
         provider_details += [provider_detail]
     else:
         for provider_task in provider_tasks:
             if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-                provider_slug = provider_task.slug
                 for export_task in provider_task.tasks.all():
                     try:
                         filename = export_task.result.filename
@@ -80,8 +78,12 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                                       export_task.name))
                         continue
                     # Exclude zip files created by zip_export_provider and the selection geojson
+                    # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
+                    # GeoTIFF are elevation.  This will need to be updated in the future.
                     if not (full_file_path.endswith(".zip") or full_file_path.endswith(".geojson")):
-                        provider_detail = {'provider_slug': provider_slug, 'file_path': full_file_path}
+                        provider_detail = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
+                                           'provider_name': provider_task.name,
+                                           'file_type': os.path.splitext(full_file_path)[1]}
                         provider_details += [provider_detail]
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
