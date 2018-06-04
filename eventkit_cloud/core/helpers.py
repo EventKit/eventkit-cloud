@@ -104,7 +104,8 @@ class NotificationLevel(Enum):
     SUCCESS = "success"
     INFO = "info"
     WARNING = "warning"
-    ERROR  = "ERROR"
+    ERROR = "ERROR"
+
 
 class NotificationVerb(Enum):
     RUN_STARTED = "run_started"

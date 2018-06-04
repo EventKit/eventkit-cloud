@@ -267,8 +267,6 @@ class Job(UIDMixin, TimeStampedModelMixin):
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
 
-
-
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)

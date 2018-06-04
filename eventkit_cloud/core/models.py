@@ -73,6 +73,7 @@ class GroupPermissionLevel(Enum):
     MEMBER = "MEMBER"
     ADMIN = "ADMIN"
 
+
 class GroupPermission(TimeStampedModelMixin):
     """
     Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
@@ -156,7 +157,6 @@ class JobPermission(TimeStampedModelMixin):
             if level == JobPermissionLevel.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)
-
 
         # super users can do anything to any job
 
