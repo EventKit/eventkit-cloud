@@ -750,7 +750,7 @@ export class ExportAOI extends Component {
     callback(data) {
         this.setAllButtonsDefault();
         this.props.setNextDisabled();
-
+        
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             if (this.state.fakeData === true) {
                 this.props.clearAoiInfo();
@@ -767,9 +767,8 @@ export class ExportAOI extends Component {
             this.joyride.reset(true);
         }
 
-        if (data.index === 3 && data.type === 'tooltip:before') {
+        if (data.index === 2 && data.type === 'step:before') {
             //  make the map have a selection, make toolbar have the X
-            this.setButtonSelected('box');
             if (this.props.aoiInfo.description === null) {
                 this.drawFakeBbox();
                 this.setState({ fakeData: true });
@@ -778,8 +777,9 @@ export class ExportAOI extends Component {
             }
         }
 
-        if (data.index === 4 && data.type === 'tooltip:before') {
+        if ((data.index === 3 || data.index === 4 || data.index === 5) && data.type === 'tooltip:before') {
             //  make the map have a selection, make toolbar have the X
+            this.setButtonSelected('box');
             this.props.setNextEnabled();
         }
     }

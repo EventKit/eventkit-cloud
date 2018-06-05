@@ -32,6 +32,10 @@ export class DataPackList extends Component {
         return isActive ? { color: '#000', fontWeight: 'bold' } : { color: 'inherit' };
     }
 
+    getScrollbar() {
+        return this.scrollbar;
+    }
+
     isSameOrderType(unknown, known) {
         return unknown.replace(/-/, '') === known.replace(/-/, '');
     }
@@ -120,8 +124,11 @@ export class DataPackList extends Component {
 
         if (window.innerWidth < 768) {
             return (
-                <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
-                    <div style={styles.root}>
+                <CustomScrollbar
+                    ref={(instance) => { this.scrollbar = instance; }}
+                    style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}
+                >
+                    <div style={styles.root} className="qa-DataPackList-root">
                         <GridList
                             className="qa-DataPackList-GridList"
                             cellHeight="auto"
@@ -152,7 +159,7 @@ export class DataPackList extends Component {
         
         return (
             <div>
-                <div style={styles.root}>
+                <div style={styles.root} className="qa-DataPackList-root">
                     <Table className="qa-DataPackList-Table-list">
                         <TableHeader
                             className="qa-DataPackList-TableHeader"
@@ -210,7 +217,10 @@ export class DataPackList extends Component {
                             </TableRow>
                         </TableHeader>
                     </Table>
-                    <CustomScrollbar style={{ height: window.innerHeight - 343 }}>
+                    <CustomScrollbar
+                        ref={(instance) => { this.scrollbar = instance; }}
+                        style={{ height: window.innerHeight - 343 }}
+                    >
                         <Table className="qa-DataPackList-Table-item">
                             <TableBody displayRowCheckbox={false}>
                                 {this.props.runs.map((run) => {

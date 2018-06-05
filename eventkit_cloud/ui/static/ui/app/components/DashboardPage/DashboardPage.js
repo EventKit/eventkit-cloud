@@ -217,10 +217,6 @@ export class DashboardPage extends React.Component {
 
         if (!newSteps.length) return;
 
-        if (this.props.featuredRunsList.runs.length === 0) {
-            newSteps.splice(newSteps.findIndex(s => s.selector === '.qa-DashboardSection-Featured'), 1);
-        }
-
         this.setState((currentState) => {
             const nextState = { ...currentState };
             nextState.steps = nextState.steps.concat(newSteps);
@@ -242,7 +238,20 @@ export class DashboardPage extends React.Component {
     }
 
     handleWalkthroughClick() {
-        this.setState({ isRunning: true });
+        if (this.state.isRunning) {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+        } else {
+            const [...steps] = joyride.DashboardPage;
+            this.setState({ isRunning: true, steps: [] });
+            if (this.props.featuredRunsList.runs.length === 0) {
+                const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
+                if (ix > -1) {
+                    steps.splice(ix, 1);
+                }
+            }
+            this.joyrideAddSteps(steps);
+        }
     }
 
     render() {

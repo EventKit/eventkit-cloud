@@ -31,6 +31,7 @@ import { joyride } from '../../joyride.config';
 export class DataPackPage extends React.Component {
     constructor(props) {
         super(props);
+        this.getViewRef = this.getViewRef.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
@@ -126,6 +127,10 @@ export class DataPackPage extends React.Component {
         this.setState({ search: searchText, loading: true }, this.makeRunRequest);
     }
 
+    getViewRef(instance) {
+        this.view = instance;
+    }
+
     getJoyRideSteps() {
         switch (this.state.view) {
         case 'map':
@@ -151,6 +156,7 @@ export class DataPackPage extends React.Component {
             providers: this.props.providers,
             openShare: this.handleShareOpen,
             groups: this.props.groups,
+            ref: this.getViewRef,
         };
         switch (view) {
         case 'list':
@@ -336,6 +342,7 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
         } else {
+            this.view.getScrollbar().scrollToTop();
             this.setState({ isRunning: true, steps: [] });
             const steps = this.getJoyRideSteps();
 
@@ -382,7 +389,7 @@ export class DataPackPage extends React.Component {
             };
 
             if (hasFeatured && !stepsIncludeFeatured) {
-                steps.push(newStep);
+                steps.splice(2, 0, newStep);
             }
 
             this.joyrideAddSteps(steps);
@@ -582,7 +589,7 @@ export class DataPackPage extends React.Component {
                                 >
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                                         <CircularProgress
-                                            style={{ margin: 'auto', display: 'block' }} 
+                                            style={{ margin: 'auto', display: 'block' }}
                                             color="#4598bf"
                                             size={50}
                                         />

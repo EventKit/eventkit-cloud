@@ -31,24 +31,24 @@ describe('DataPackPage component', () => {
     const muiTheme = getMuiTheme();
     const providers = [
         {
-            "id": 2,
-            "model_url": "http://cloud.eventkit.test/api/providers/osm",
-            "type": "osm",
-            "license": null,
-            "created_at": "2017-08-15T19:25:10.844911Z",
-            "updated_at": "2017-08-15T19:25:10.844919Z",
-            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
-            "name": "OpenStreetMap Data (Themes)",
-            "slug": "osm",
-            "preview_url": "",
-            "service_copyright": "",
-            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
-            "layer": null,
-            "level_from": 0,
-            "level_to": 10,
-            "zip": false,
-            "display": true,
-            "export_provider_type": 2
+            id: 2,
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            type: 'osm',
+            license: null,
+            created_at: '2017-08-15T19:25:10.844911Z',
+            updated_at: '2017-08-15T19:25:10.844919Z',
+            uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+            name: 'OpenStreetMap Data (Themes)',
+            slug: 'osm',
+            preview_url: '',
+            service_copyright: '',
+            service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            zip: false,
+            display: true,
+            export_provider_type: 2,
         },
     ];
 
@@ -303,7 +303,7 @@ describe('DataPackPage component', () => {
 
     it('should run getRuns at intervals', () => {
         jest.useFakeTimers();
-        let props = getProps();
+        const props = getProps();
         props.getRuns = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.getRuns.calledOnce).toBe(true);
@@ -317,10 +317,10 @@ describe('DataPackPage component', () => {
 
     it('should remove the fetch interval on unmount', () => {
         jest.useFakeTimers();
-        let props = getProps();
+        const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
         expect(clearInterval.mock.calls.length).toEqual(0);
-        const fetch = wrapper.instance().fetch;
+        const { fetch } = wrapper.instance();
         wrapper.unmount();
         expect(clearInterval.mock.calls.length).toEqual(1);
         expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
@@ -329,7 +329,7 @@ describe('DataPackPage component', () => {
     it('should handle fetched runs', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.runsList.fetched = true;
         nextProps.runsList.runs = [{
             user: 'admin2',
@@ -357,7 +357,10 @@ describe('DataPackPage component', () => {
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().onSearch('test_search', 0);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ search: 'test_search', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith(
+            { search: 'test_search', loading: true },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
         stateSpy.restore();
     });
 
@@ -454,10 +457,13 @@ describe('DataPackPage component', () => {
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ ownerFilter: 'test_value', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith(
+            { ownerFilter: 'test_value', loading: true },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
         stateSpy.restore();
     });
-    
+
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
@@ -476,7 +482,14 @@ describe('DataPackPage component', () => {
         expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({ ...currentState, ...newState, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith(
+            {
+                ...currentState,
+                ...newState,
+                loading: true,
+            },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
         expect(stateSpy.calledWith({ open: false })).toBe(true);
         stateSpy.restore();
     });
@@ -608,15 +621,17 @@ describe('DataPackPage component', () => {
             providers,
             openShare: wrapper.instance().handleShareOpen,
             groups: props.groups,
+            ref: wrapper.instance().getViewRef,
         };
 
-        expect(wrapper.instance().getView('list')).toEqual((
-            <DataPackList
+        expect(wrapper.instance().getView('list')).toEqual(
+            (<DataPackList
                 {...commonProps}
                 onSort={wrapper.instance().handleSortChange}
                 order={wrapper.state().order}
-            />
-        ));
+            />),
+            sinon.match({ ref: commonProps.ref }),
+        );
 
         expect(wrapper.instance().getView('grid')).toEqual((
             <DataPackGrid
@@ -707,16 +722,16 @@ describe('DataPackPage component', () => {
 
     it('callback function should open drawer if it is closed', () => {
         const callbackData = {
-            action: "next",
+            action: 'next',
             index: 2,
             step: {
-                position: "bottom",
-                selector: ".qa-DataPackLinkButton-RaisedButton",
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
                 style: {},
-                text: "Click here to Navigate to Create a DataPack.",
-                title: "Filter DataPacks",
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Filter DataPacks',
             },
-            type: "step:before",
+            type: 'step:before',
         };
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
@@ -730,16 +745,16 @@ describe('DataPackPage component', () => {
 
     it('callback should stop tour if close is clicked', () => {
         const callbackData = {
-            action: "close",
+            action: 'close',
             index: 2,
             step: {
-                position: "bottom",
-                selector: ".qa-DataPackLinkButton-RaisedButton",
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
                 style: {},
-                text: "Click here to Navigate to Create a DataPack.",
-                title: "Create DataPack",
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
             },
-            type: "step:before",
+            type: 'step:before',
         };
         const props = getProps();
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
