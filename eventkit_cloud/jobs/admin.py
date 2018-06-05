@@ -193,9 +193,9 @@ class UserDownloadAdmin(admin.ModelAdmin):
     User download records
     """
     model = UserDownload
-    readonly_fields = ('user', 'provider', 'job')
-    list_display = ('user', 'provider', 'job')
-    list_filter = ('user', 'provider', 'job')
+    readonly_fields = ('downloadable', 'user', 'provider', 'job', 'downloaded_at')
+    list_display = ('user', 'provider', 'job', 'downloaded_at')
+    list_filter = ('user', 'downloaded_at')  # TODO: use a custom SimpleListFilter to allow filtering by properties
 
     def has_add_permission(self, request, obj=None):
         return False

@@ -133,7 +133,7 @@ class FileProducingTaskResult(models.Model):
     download_url = models.URLField(
         verbose_name='URL to export task result output.',
         max_length=254
-    )
+    )  # TODO: replace with jobs.Downloadable ref
     deleted = models.BooleanField(default=False)
 
     @property

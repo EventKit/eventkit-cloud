@@ -28,5 +28,6 @@ urlpatterns += [
     url(r'^api/', include('rest_framework.urls', namespace='rest_framework')),
 #    url('^inbox/notifications/', include(notifications.urls, namespace='notifications')),
     url('^api/', include(notifications.urls, namespace='api')),
+    url(r'^download', download)
 ]
 

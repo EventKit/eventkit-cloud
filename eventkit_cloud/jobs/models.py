@@ -402,19 +402,37 @@ class UserJobActivity(models.Model):
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
 
-class UserDownload(UIDMixin, TimeStampedModelMixin):
+class Downloadable(UIDMixin, TimeStampedModelMixin):
+    """
+    Model that stores each DataPack or DataPack component that can be downloaded.
+    """
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='+', null=True)
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='+', null=True)
+    job = models.ForeignKey(Job, related_name='downloads')
+    url = models.URLField(verbose_name='URL to download result', max_length=254)
+    size = models.DecimalField(verbose_name="Download size (MB)", default=0, max_digits=12, decimal_places=3,
+                               editable=False, null=True)
+
+
+class UserDownload(UIDMixin):
     """
     Model that stores each DataPack download event.
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='downloads')
-    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='+')
-    job = models.ForeignKey(Job, related_name='downloads')
-    time = models.DateTimeField(verbose_name="Time of download", default=timezone.now, editable=False)
-    size = models.DecimalField(verbose_name="Download size (MB)", default=0, max_digits=12, decimal_places=3,
-                               editable=False, null=True)
+    downloaded_at = models.DateTimeField(verbose_name="time of download", default=timezone.now, editable=False)
+    downloadable = models.ForeignKey(Downloadable, on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ['-time']
+        ordering = ['-downloaded_at']
+
+    @property
+    def job(self):
+        return self.downloadable.job
+
+    @property
+    def provider(self):
+        return self.downloadable.provider
+
 
 
 def convert_polygon(geom=None):

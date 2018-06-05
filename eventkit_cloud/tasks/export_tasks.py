@@ -25,6 +25,7 @@ from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
+
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
 from ..ui.helpers import get_style_files, generate_qgs_style
@@ -147,19 +148,19 @@ class LockingTask(UserDetailsBase):
 
 
 def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None,
-                           size=None, redirect=False):
+                           size=None, direct=False):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
         @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
         @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
             generally can be ignored
+        @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
     from ..tasks.models import ExportRun
+    from ..jobs.models import Downloadable, DataProvider
 
     run = ExportRun.objects.get(uid=run_uid)
-    job = run.job
-    user = job.user.username
 
     download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     download_url_root = settings.EXPORT_MEDIA_ROOT
@@ -172,7 +173,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         direct_download_url = s3.upload_to_s3(
             run_uid,
             os.path.join(provider_slug, filename),
-            download_filename
+            download_filename,
         )
     else:
         try:
@@ -187,14 +188,21 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
 
-    params = {'url': direct_download_url, 'user': user, 'provider': provider_slug, 'job': job.uid, 'size': size}
-    download_url = '/download?' + urlencode(params)
-    if redirect:
-        ret_url = download_url
+    if direct:
+        download_url = direct_download_url
     else:
-        ret_url = direct_download_url
+        try:
+            provider = DataProvider.objects.get(slug=provider_slug)
+        except DataProvider.DoesNotExist:
+            provider = None
 
-    return ret_url
+        downloadable = Downloadable.objects.create(creator=run.job.user, provider=provider, job=run.job,
+                                                   url=direct_download_url, size=size)
+        downloadable.save()
+        download_url = '/download?id={}'.format(downloadable.uid)
+        logger.info("Made file downloadable: %s -> %s", direct_download_url, download_url)
+
+    return download_url
 
 
 # ExportTaskRecord abstract base class and subclasses.
@@ -269,7 +277,7 @@ class ExportTask(LockingTask):
             skip_copy = (task.name == 'OverpassQuery')
             download_url = make_file_downloadable(
                 output_url, run_uid, provider_slug=provider_slug, skip_copy=skip_copy,
-                download_filename=download_filename, redirect=True
+                download_filename=download_filename,
             )
 
             # save the task and task result
@@ -971,10 +979,10 @@ class FinalizeRunHookTask(LockingTask):
 
                 export_run = ExportRun.objects.get(uid=run_uid)
                 size = os.path.getsize(file_path)
-                url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
-                                             redirect=True)
+                download_url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
+                                                      size=size)
 
-                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
+                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=download_url)
                 task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
                 task_record.result = result
                 task_record.save()
