@@ -1217,21 +1217,31 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
     # be handled as an ExportTaskRecord.
+    # Also it makes download tracking a little more complicated, so here's another TODO:
+    #  fix this hacky solution and integrate with the code in make_file_downloadable.
 
     if not adhoc:
+        from ..jobs.models import Downloadable
         run_uid = str(run_uid)
         if getattr(settings, "USE_S3", False):
             zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
         else:
+            download_url_root = settings.EXPORT_MEDIA_ROOT
             if zip_st_filepath != zip_dl_filepath:
                 shutil.copy(zip_st_filepath, zip_dl_filepath)
-            zipfile_url = os.path.join(run_uid, zip_filename)
+            zipfile_url = os.path.join(download_url_root, run_uid, zip_filename)
 
         # Update Connection
         db.close_old_connections()
         run.refresh_from_db()
 
-        run.zipfile_url = zipfile_url
+        size = os.path.getsize(zip_dl_filepath) / 1024.0 / 1024.0  # MB
+        downloadable = Downloadable.objects.create(creator=run.job.user, provider=None, job=run.job,
+                                                   url=zipfile_url, size=size)
+        downloadable.save()
+        download_url = '/download?id={}'.format(downloadable.uid)
+
+        run.zipfile_url = download_url
 
         try:
             run.save()

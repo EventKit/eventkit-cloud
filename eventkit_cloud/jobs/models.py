@@ -425,7 +425,7 @@ class UserDownload(UIDMixin):
     class Meta:
         ordering = ['-downloaded_at']
 
-    @property
+    @property  # TODO: necessary to make these properties instead of just methods?
     def job(self):
         return self.downloadable.job
 
@@ -433,6 +433,9 @@ class UserDownload(UIDMixin):
     def provider(self):
         return self.downloadable.provider
 
+    def direct_url(self):
+        return self.downloadable.url
+    direct_url.short_description = 'Direct download URL'
 
 
 def convert_polygon(geom=None):

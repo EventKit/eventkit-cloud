@@ -17,12 +17,13 @@ def download(request):
     :return: A redirect to the direct download URL provided in the URL query string
     """
     download_id = request.GET.get('id')
-    downloadable = Downloadable.objects.get(uid=download_id)
-    if downloadable is None:
-        return HttpResponse(status=400)
+    try:
+        downloadable = Downloadable.objects.get(uid=download_id)
+    except Downloadable.DoesNotExist:
+        return HttpResponse(status=400, content="Downloadable not found")  # TODO: prettier failure
 
     current_user = request.user
-    if current_user is None:
+    if current_user is None:  # TODO: better way to handle user auth?
         return HttpResponse(status=401)
     user = User.objects.get(username=current_user)
 
