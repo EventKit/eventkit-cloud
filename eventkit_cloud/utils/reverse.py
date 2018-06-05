@@ -1,8 +1,9 @@
 from django.conf import settings
 import logging
-from abc import ABCMeta, abstractmethod, abstractproperty
+from geocode_auth import get_auth_headers, authenticate
+from abc import ABCMeta, abstractmethod
 import requests
-import json
+from .geocode import AuthenticationError
 
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,17 @@ class ReverseGeocodeAdapter:
         """
         pass
 
+    def get_response(self, payload):
+        response = requests.get(self.url, params=payload, headers=get_auth_headers())
+        if response.status_code in [401, 403]:
+            authenticate()
+            response = requests.get(self.url, params=payload, headers=get_auth_headers())
+            if not response.ok:
+                error_message = "EventKit was not able to authenticate to the Geocoding service."
+                logger.error(error_message)
+                raise AuthenticationError(error_message)
+        return response
+
     def get_data(self, query):
         """
         Handles querying the endpoint and returning a geojson (as a python dict).
@@ -86,9 +98,10 @@ class ReverseGeocodeAdapter:
 
         if not self.url:
             return
-        response = requests.get(self.url, params=payload).json()
-        logger.info(response)
-        assert (isinstance(response, dict))
+        response = self.get_response(payload)
+        if response.status_code in [401, 403]:
+            authenticate()
+            response = self.get_response(payload)
         return self.create_geojson(response)
 
     def get_feature(self, feature=None, bbox=None, properties=None):
@@ -165,7 +178,7 @@ class Pelias(ReverseGeocodeAdapter):
 
     def create_geojson(self, response):
         features = []
-        for feature in response.get('features'):
+        for feature in response.json().get('features'):
             feature = self.get_feature(feature=feature, bbox=feature.get('bbox'))
             features += [feature]
         return self.get_feature_collection(features=features)
@@ -227,7 +240,8 @@ class ReverseGeocode(object):
         logger.info(query);
         return self.geocoder.get_data(query)
 
-
+# TODO: This is redundant code to what is in geocode.py additionally these functions
+# can probably be handled by existing dependencies.
 def is_valid_bbox(bbox):
     if not isinstance(bbox, list) or len(bbox) != 4:
         return False
