@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import numeral from 'numeral';
 import RaisedButton from 'material-ui/RaisedButton';
 import Divider from 'material-ui/Divider';
 import IconMenu from 'material-ui/IconMenu';
@@ -43,8 +44,8 @@ export class AoiInfobar extends Component {
     getIcon(geomType, source) {
         const type = geomType.toUpperCase();
         const iconStyle = {
-            width: '35px',
-            height: '35px',
+            width: '30px',
+            height: '30px',
         };
         if (source === 'Box') {
             return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" />;
@@ -115,7 +116,7 @@ export class AoiInfobar extends Component {
                 flex: '1 0 auto',
                 flexWrap: 'wrap',
                 width: '100%',
-                paddingBottom: '5px',
+                paddingBottom: '10px',
             },
             title: {
                 fontSize: '14px',
@@ -125,12 +126,26 @@ export class AoiInfobar extends Component {
                 display: 'flex',
                 flex: '1 0 auto',
             },
-            geomColumn: {
-                flex: '0 0 auto',
+            maxSize: {
+                fontSize: '12px',
+                color: 'grey',
+                display: 'flex',
+                flexWrap: 'wrap',
             },
-            dataColumn: {
+            areaColumn: {
+                display: 'flex',
+                flex: '0 0 auto',
+                flexWrap: 'wrap',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+            },
+            geomColumn: {
+                display: 'flex',
                 flex: '1 1 auto',
-                paddingLeft: '10px',
+                flexWrap: 'wrap',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                paddingLeft: '15px',
             },
             alert: {
                 height: '20px',
@@ -161,7 +176,7 @@ export class AoiInfobar extends Component {
                 verticalAlign: 'middle',
             },
             bufferLabel: {
-                color: 'whitesmoke',
+                fontWeight: 600,
                 fontSize: '14px',
                 textTransform: 'none',
                 padding: '0px 10px',
@@ -238,8 +253,12 @@ export class AoiInfobar extends Component {
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
         const totalArea = getSqKmString(this.props.aoiInfo.geojson);
-        const maxVectorArea = this.props.maxVectorAoiSqKm;
-        const over = maxVectorArea && maxVectorArea < getSqKm(this.props.aoiInfo.geojson);
+        const { maxVectorAoiSqKm, maxRasterAoiSqKm } = this.props;
+        const max = Math.max(maxVectorAoiSqKm, maxRasterAoiSqKm);
+        const area = getSqKm(this.props.aoiInfo.geojson);
+        const over = max && max < area;
+        const vectorOver = area > maxVectorAoiSqKm;
+        const rasterOver = area > maxRasterAoiSqKm;
 
         const bufferAlert = (
             <AlertCallout
@@ -260,11 +279,45 @@ export class AoiInfobar extends Component {
                 title="Your AOI is too large!"
                 body={
                     <p>
-                        The max size allowed for the AOI is {maxVectorArea} sq km and yours is {totalArea}.
-                         Please reduce the size of your buffer and/or polygon
+                        The max size allowed for the AOI is {numeral(maxVectorAoiSqKm).format('0,0')} sq km and yours is {totalArea}.
+                        Please reduce the size of your polygon and/or buffer.
                     </p>
                 }
                 style={styles.alertCalloutTop}
+            />
+        );
+
+        const rasterAlert = (
+            <AlertCallout
+                className="qa-AoiInfobar-alert-raster"
+                onClose={this.closeAlert}
+                orientation="top"
+                title="Your AOI is too large for raster data."
+                body={
+                    <p>
+                        The maximum AOI size for raster sources is {numeral(maxRasterAoiSqKm).format('0,0')} sq km
+                         and your current AOI is {totalArea}.
+                         If you plan to include raster data in your DataPack you need to reduce the size of your polygon and/or buffer.
+                    </p>
+                }
+                style={{ ...styles.alertCalloutTop, color: '#000' }}
+            />
+        );
+
+        const vectorAlert = (
+            <AlertCallout
+                className="qa-AoiInfobar-alert-vector"
+                onClose={this.closeAlert}
+                orientation="top"
+                title="Your AOI is too large for vector data."
+                body={
+                    <p>
+                        The maximum AOI size for vector sources is {numeral(maxVectorAoiSqKm).format('0,0')} sq km
+                         and your current AOI is {totalArea}.
+                         If you plan to include vector data in your DataPack you need to reduce the size of your polygon and/or buffer.
+                    </p>
+                }
+                style={{ ...styles.alertCalloutTop, color: '#000' }}
             />
         );
 
@@ -300,6 +353,36 @@ export class AoiInfobar extends Component {
                     }
                 </div>
             );
+        } else if (vectorOver) {
+            sizeWarning = (
+                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
+                    <AlertWarning
+                        className="qa-AoiInfobar-alert-icon"
+                        style={{ ...styles.alert, fill: '#FAA619' }}
+                        onClick={this.showAlert}
+                    />
+                    {this.state.showAlert ?
+                        vectorAlert
+                        :
+                        null
+                    }
+                </div>
+            );
+        } else if (rasterOver) {
+            sizeWarning = (
+                <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
+                    <AlertWarning
+                        className="qa-AoiInfobar-alert-icon"
+                        style={{ ...styles.alert, fill: '#FAA619' }}
+                        onClick={this.showAlert}
+                    />
+                    {this.state.showAlert ?
+                        rasterAlert
+                        :
+                        null
+                    }
+                </div>
+            );
         }
 
         return (
@@ -309,42 +392,70 @@ export class AoiInfobar extends Component {
                         <div style={styles.body}>
                             <div style={styles.titleBar}>
                                 <div className="qa-AoiInfobar-title" style={styles.title}>
-                                    <strong>AREA OF INTEREST</strong>
+                                    <strong>AREA OF INTEREST (AOI)</strong>
                                 </div>
-                                <div className="qa-AoiInfobar-maxSize" style={{ fontSize: '12px', color: 'grey' }}>
-                                    {this.props.maxVectorAoiSqKm ? `Vector: ${maxVectorArea} sq km max` : null}
+                                <div className="qa-AoiInfobar-maxSize" style={styles.maxSize}>
+                                    <div style={{ paddingRight: '5px' }}>
+                                        {maxVectorAoiSqKm ? `Vector: ${numeral(maxVectorAoiSqKm).format('0,0')} sq km max;` : null}
+                                    </div>
+                                    <div style={{ paddingRight: '5px' }}>
+                                        {maxRasterAoiSqKm ? `Raster: ${numeral(maxRasterAoiSqKm).format('0,0')} sq km max;` : null}
+                                    </div>
                                 </div>
                             </div>
                             <div style={styles.content} className="qa-AoiInfobar-content">
-                                <div style={styles.geomColumn} className="qa-AoiInfobar-geomColumn">
-                                    {geometryIcon}
-                                </div>
-                                <div style={styles.dataColumn} className="qa-AoiInfobar-dataColumn">
-                                    <div className="qa-AoiInfobar-name" style={{ wordBreak: 'break-word' }}>
-                                        <strong>{originalArea} {this.props.aoiInfo.title || ''}</strong>
+                                <div style={styles.areaColumn} className="qa-AoiInfobar-areaColumn">
+                                    <div style={{ flex: '1 1 auto' }}><strong>{originalArea}</strong></div>
+                                    <div style={{ lineHeight: '30px', marginTop: '5px' }}>
+                                        <strong>
+                                            {numeral(getSqKm(this.props.aoiInfo.geojson)
+                                                - getSqKm(this.props.aoiInfo.originalGeojson)).format('0,0')} sq km
+                                        </strong>
                                     </div>
-                                    <div className="qa-AoiInfobar-description" style={{ color: 'grey', wordBreak: 'break-word' }}>
-                                        {this.props.aoiInfo.description || 'No AOI Set'}
+                                    <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
+                                    <div>
+                                        <strong style={{ color: over ? '#CE4427' : 'initial' }}>
+                                            {totalArea}
+                                        </strong>
+                                    </div>
+                                </div>
+                                <div style={styles.geomColumn} className="qa-AoiInfobar-geomColumn">
+                                    <div className="qa-AoiInfobar-info" style={{ display: 'flex' }}>
+                                        <div style={{ paddingRight: '5px' }}>
+                                            {geometryIcon}
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoTitle">
+                                                <strong>{this.props.aoiInfo.title || ''}</strong>
+                                            </div>
+                                            <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoDescription">
+                                                <span className="qa-AoiInfobar-description" style={{ color: 'grey' }}>
+                                                    {this.props.aoiInfo.description}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
-                                        {this.props.aoiInfo.buffer ?
-                                            <strong>{this.props.aoiInfo.buffer}m Buffer</strong>
-                                            :
-                                            <RaisedButton
-                                                className="qa-AoiInfobar-buffer-button"
-                                                onClick={this.props.handleBufferClick}
-                                                labelStyle={styles.bufferLabel}
-                                                overlayStyle={{ height: '30px' }}
-                                                buttonStyle={{ backgroundColor: noArea ? '#ce4427' : '#4598bf', height: '30px', lineHeight: '30px' }}
-                                                style={{ width: '83px' }}
-                                                label="0m Buffer"
-                                            />
-                                        }
+                                        <RaisedButton
+                                            className="qa-AoiInfobar-buffer-button"
+                                            onClick={this.props.handleBufferClick}
+                                            labelStyle={styles.bufferLabel}
+                                            overlayStyle={{ height: '30px' }}
+                                            buttonStyle={{ height: '30px', lineHeight: '30px' }}
+                                            label={`Buffer (${numeral(this.props.aoiInfo.buffer).format('0,0')}m)`}
+                                            backgroundColor="#4598bf"
+                                            labelColor="#f5f5f5"
+                                            disabled={!!this.props.aoiInfo.buffer}
+                                            disabledBackgroundColor="#e6e6e6"
+                                            disabledLabelColor="#333"
+                                        />
                                         {bufferWarning}
                                     </div>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
                                     <div style={{ position: 'relative' }}>
-                                        <strong style={{ textTransform: 'uppercase', color: over ? '#CE4427' : 'initial' }}>{totalArea} TOTAL</strong>
+                                        <strong style={{ color: over ? '#CE4427' : 'initial' }}>
+                                             TOTAL AOI
+                                        </strong>
                                         {sizeWarning}
                                     </div>
                                 </div>
@@ -360,6 +471,7 @@ export class AoiInfobar extends Component {
 
 AoiInfobar.defaultProps = {
     maxVectorAoiSqKm: null,
+    maxRasterAoiSqKm: null,
 };
 
 AoiInfobar.propTypes = {
@@ -374,6 +486,7 @@ AoiInfobar.propTypes = {
     }).isRequired,
     showRevert: PropTypes.bool.isRequired,
     maxVectorAoiSqKm: PropTypes.number,
+    maxRasterAoiSqKm: PropTypes.number,
     onRevertClick: PropTypes.func.isRequired,
     clickZoomToSelection: PropTypes.func.isRequired,
     handleBufferClick: PropTypes.func.isRequired,

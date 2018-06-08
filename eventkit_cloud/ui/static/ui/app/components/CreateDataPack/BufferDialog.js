@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import numeral from 'numeral';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
@@ -178,7 +179,7 @@ export class BufferDialog extends Component {
                             title="Your AOI is too large!"
                             body={
                                 <p>
-                                    The max size allowed for the AOI is {maxAoi} sq km and yours is {totalArea}.
+                                    The max size allowed for the AOI is {numeral(maxAoi).format('0,0')} sq km and yours is {totalArea}.
                                     Please reduce the size of your buffer and/or polygon
                                 </p>
                             }
@@ -272,6 +273,7 @@ export class BufferDialog extends Component {
 
 BufferDialog.defaultProps = {
     maxVectorAoiSqKm: null,
+    maxRasterAoiSqKm: null,
 };
 
 BufferDialog.contextTypes = {
@@ -287,6 +289,7 @@ BufferDialog.propTypes = {
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
     maxVectorAoiSqKm: PropTypes.number,
+    maxRasterAoiSqKm: PropTypes.number,
 };
 
 export default BufferDialog;

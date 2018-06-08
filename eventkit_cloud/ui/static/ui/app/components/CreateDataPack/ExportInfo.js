@@ -67,7 +67,6 @@ export class ExportInfo extends React.Component {
         // if the state does not have required data disable next
         if (!this.hasRequiredFields(this.props.exportInfo) ||
             this.hasDisallowedSelection(this.props.exportInfo)) {
-
             this.props.setNextDisabled();
         }
 
@@ -114,7 +113,6 @@ export class ExportInfo extends React.Component {
         // if required fields are fulfilled enable next
         if (this.hasRequiredFields(nextProps.exportInfo) &&
             !this.hasDisallowedSelection(nextProps.exportInfo)) {
-
             if (!nextProps.nextEnabled) {
                 this.props.setNextEnabled();
             }
@@ -273,7 +271,9 @@ export class ExportInfo extends React.Component {
         return exportInfo.providers.some((provider) => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
-            return provider.availability && provider.availability.status.toUpperCase() === 'FATAL';
+            const providerState = this.state.providers.find(p => p.slug === provider.slug);
+            if (!providerState) return false;
+            return providerState.availability && providerState.availability.status.toUpperCase() === 'FATAL';
         });
     }
 
@@ -518,7 +518,7 @@ export class ExportInfo extends React.Component {
                                     </span>
                                     <span
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ marginLeft: '75%' }}
+                                        style={{ marginLeft: '75%', position: 'relative' }}
                                     >
                                         AVAILABILITY
                                         <NavigationRefresh
@@ -533,8 +533,8 @@ export class ExportInfo extends React.Component {
                                             show={this.state.refreshTooltipOpen}
                                             title="RUN AVAILABILITY CHECK AGAIN"
                                             tooltipStyle={{
-                                                left: '-69px',
-                                                bottom: '33px',
+                                                right: '-150px',
+                                                bottom: '35px',
                                             }}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
@@ -610,7 +610,7 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
-                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) === -1 ? false : true}
+                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) !== -1}
                                                 onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle

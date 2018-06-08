@@ -538,11 +538,11 @@ export class Application extends Component {
                             title={img}
                             titleStyle={styles.title}
                             showMenuIconButton={isLoggedIn}
-                            iconStyleLeft={{margin: '0'}}
+                            iconStyleLeft={{ margin: '0' }}
                             iconElementLeft={
                                 <div>
                                     <IconButton
-                                        className={'qa-Application-AppBar-MenuButton'}
+                                        className="qa-Application-AppBar-MenuButton"
                                         style={styles.menuButton}
                                         iconStyle={styles.menuButtonIcon}
                                         touchRippleColor="white"
@@ -552,7 +552,7 @@ export class Application extends Component {
                                     </IconButton>
                                     <div style={{ display: 'inline-block', position: 'relative' }}>
                                         <IconButton
-                                            className={'qa-Application-AppBar-NotificationsButton'}
+                                            className="qa-Application-AppBar-NotificationsButton"
                                             style={{
                                                 ...styles.notificationsButton,
                                                 backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ? '#4598BF' : '',
@@ -598,16 +598,16 @@ export class Application extends Component {
                         docked
                         open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
-                        <MenuItem className={"qa-Application-MenuItem-dashboard"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem className="qa-Application-MenuItem-dashboard" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <IndexLink
-                                className={"qa-Application-Link-dashboard"}
-                                style={{...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard')}}
+                                className="qa-Application-Link-dashboard"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
                                 activeStyle={styles.activeLink}
                                 to="/dashboard"
                                 onMouseEnter={() => this.handleMouseOver('/dashboard')}
                                 onMouseLeave={this.handleMouseOut}
                             >
-                                <Dashboard style={styles.icon}/>
+                                <Dashboard style={styles.icon} />
                                 Dashboard
                             </IndexLink>
                         </MenuItem>
@@ -736,7 +736,7 @@ export class Application extends Component {
                         show={this.state.showLogoutDialog}
                         title="LOG OUT"
                         confirmLabel="Log Out"
-                        isDestructive={true}
+                        isDestructive
                         onCancel={this.handleLogoutDialogCancel}
                         onConfirm={this.handleLogoutDialogConfirm}
                     >
@@ -793,6 +793,7 @@ Application.childContextTypes = {
         BASEMAP_URL: PropTypes.string,
         LOGIN_DISCLAIMER: PropTypes.string,
         MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
+        MAX_RASTER_AOI_SQ_KM: PropTypes.number,
         MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
         VERSION: PropTypes.string,
     }),

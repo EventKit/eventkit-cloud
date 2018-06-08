@@ -92,6 +92,7 @@ describe('ExportAOI component', () => {
         const config = {
             BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
             MAX_VECTOR_AOI_SQ_KM: 20000,
+            MAX_RASTER_AOI_SQ_KM: 10000,
         };
         return mount(<ExportAOI {...props} />, {
             context: { muiTheme, config },
