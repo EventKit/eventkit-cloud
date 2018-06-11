@@ -729,7 +729,7 @@ describe('DataPackPage component', () => {
                 selector: '.qa-DataPackLinkButton-RaisedButton',
                 style: {},
                 text: 'Click here to Navigate to Create a DataPack.',
-                title: 'Filter DataPacks',
+                title: 'Filters',
             },
             type: 'step:before',
         };
