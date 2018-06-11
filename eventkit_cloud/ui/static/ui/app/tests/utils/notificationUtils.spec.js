@@ -165,6 +165,7 @@ describe('notificationUtils', () => {
         const notification = {
             id: '1',
             verb: 'added_to_group',
+            actor: {},
             action_object: {
                 details: group,
             },
@@ -187,6 +188,7 @@ describe('notificationUtils', () => {
         const notification = {
             id: '1',
             verb: 'removed_from_group',
+            actor: {},
             action_object: {
                 details: group,
             },
@@ -209,6 +211,7 @@ describe('notificationUtils', () => {
         const notification = {
             id: '1',
             verb: 'set_as_group_admin',
+            actor: {},
             action_object: {
                 details: group,
             },
@@ -231,6 +234,7 @@ describe('notificationUtils', () => {
         const notification = {
             id: '1',
             verb: 'removed_as_group_admin',
+            actor: {},
             action_object: {
                 details: group,
             },
@@ -249,9 +253,23 @@ describe('notificationUtils', () => {
         expect(viewPath).toBe('/groups');
     });
 
+    it('should handle notifications with no details', () => {
+        const notification = {
+            id: '1',
+            actor: {},
+            action_object: {},
+            verb: 'removed_as_group_admin',
+        };
+
+        const ret = utils.getNotificationMessage({ notification });
+        expect(ret[0].key).toEqual('1-error');
+    });
+
     it('should correctly handle unsupported notification verbs', () => {
         const notification = {
             id: '1',
+            actor: {},
+            action_object: { details: 'something' },
             verb: 'some_unsupported_verb',
         };
 

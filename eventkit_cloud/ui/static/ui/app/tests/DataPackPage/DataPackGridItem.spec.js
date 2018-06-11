@@ -64,7 +64,7 @@ const providers = [{
 }];
 
 beforeAll(() => {
-    DataPackGridItem.prototype.initMap = sinon.spy();
+    DataPackGridItem.prototype.initMap = sinon.stub();
 });
 
 afterAll(() => {
@@ -111,16 +111,14 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(CardActions)).toHaveLength(1);
     });
 
-    it('should set the card to expanded when component has mounted', () => {
+    it('should call initMap when component has mounted', () => {
         const props = getProps();
         const mountSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidMount');
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
+        DataPackGridItem.prototype.initMap.reset();
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ expanded: true })).toBe(true);
+        expect(DataPackGridItem.prototype.initMap.calledOnce).toBe(true);
         mountSpy.restore();
-        stateSpy.restore();
     });
 
     it('should display information specific to a unpublished & owned run', () => {
@@ -162,27 +160,27 @@ describe('DataPackGridItem component', () => {
         updateSpy.restore();
     });
 
-    it('should set overflow true when mouse enters card text div', () => {
+    it('should set overflowText true when mouse enters card text div', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.find(CardText).simulate('mouseEnter');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ overflow: true })).toBe(true);
+        expect(stateSpy.calledWith({ overflowText: true })).toBe(true);
         stateSpy.restore();
     });
 
-    it('should set overflow false when mouse leaves card text div', () => {
+    it('should set overflowText false when mouse leaves card text div', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.find(CardText).simulate('mouseLeave');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ overflow: false })).toBe(true);
+        expect(stateSpy.calledWith({ overflowText: false })).toBe(true);
         stateSpy.restore();
     });
 
-    it('should negate overflow state on touchTap of card text div', () => {
+    it('should negate overflowText state on touchTap of card text div', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const expectedBool = !wrapper.state().overflow;
@@ -191,8 +189,28 @@ describe('DataPackGridItem component', () => {
         const node = ReactDOM.findDOMNode(div);
         TestUtils.Simulate.touchTap(node);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ overflow: expectedBool })).toBe(true);
+        expect(stateSpy.calledWith({ overflowText: expectedBool })).toBe(true);
         stateSpy.restore();
+    });
+
+    it('should set overflowTitle to true when mouse enters name div', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.find('.qa-DataPackGridItem-name').simulate('mouseEnter');
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ overflowTitle: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('should set overflowTitle to false when mouse leaves the name div', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.find('.qa-DataPackGridItem-name').simulate('mouseLeave');
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ overflowTitle: false })).toBe(true);
+        stateStub.restore();
     });
 
     it('handleExpandChange should set expanded to the passed in state', () => {
@@ -208,11 +226,11 @@ describe('DataPackGridItem component', () => {
     it('toggleExpanded should set expanded state to its negatation', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackGridItem {...props} />);
-        expect(wrapper.state().expanded).toBe(false);
+        expect(wrapper.state().expanded).toBe(true);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.instance().toggleExpanded();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ expanded: true })).toBe(true);
+        expect(stateSpy.calledWith({ expanded: false })).toBe(true);
         stateSpy.restore();
     });
 
