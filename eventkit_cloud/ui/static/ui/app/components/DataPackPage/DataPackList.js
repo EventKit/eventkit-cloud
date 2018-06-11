@@ -220,7 +220,7 @@ export class DataPackList extends Component {
                     </Table>
                     <CustomScrollbar
                         ref={(instance) => { this.scrollbar = instance; }}
-                        style={{ height: window.innerHeight - 343 }}
+                        style={{ height: window.innerHeight - 287 }}
                     >
                         <Table className="qa-DataPackList-Table-item">
                             <TableBody displayRowCheckbox={false}>

@@ -67,7 +67,10 @@ export const joyride = {
     Account: [
         {
             title: 'Welcome to the Account Settings Page',
-            text: 'This page contains Licenses and Terms of Use along with some personal information.  On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.  You will only be required to re-visit this page in the future if new Licenses and Terms of Use are introduced with a new data provider.',
+            text: `This page contains Licenses and Terms of Use along with some personal information.
+                On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.
+                You will only be required to re-visit this page in the future if new Licenses and
+                Terms of Use are introduced with a new data provider.`,
             selector: '.qa-Account-AppBar',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
@@ -120,28 +123,39 @@ export const joyride = {
     ExportAOI: [
         {
             title: 'Welcome to the Create DataPack Page',
-            text: 'Creating DataPacks is the core function of EventKit. The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.',
+            text: `Creating DataPacks is the core function of EventKit.
+                The process begins with defining an Area of Interest (AOI), then selecting Data Sources and output formats.`,
             selector: '.qa-BreadcrumbStepper-div-content',
             position: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
             title: 'Search for Location',
-            text: 'EventKit has several gazetteers that are searchable from the location search box, just start typing a location name and options appear. The gazetteer name appears in each search result, as does the geometry type of result. If the result is a polygon, it will display in the map and automatically become the AOI. If the result is a point, the map will zoom to that location and an AOI will have to be drawn.</br>MGRS coordinates can also be used.',
+            text: `EventKit has several gazetteers that are searchable from the location search box,
+                just start typing a location name and options appear.
+                The gazetteer name appears in each search result, as does the geometry type of result.
+                If the result is a polygon, it will display in the map and automatically become the AOI.
+                If the result is a point, the map will zoom to that location and an AOI will have to be drawn.
+                </br>MGRS coordinates can also be used.`,
             selector: '.bootstrap-typeahead-input',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Define Area of Interest (AOI)',
-            text: 'In addition to location search, an AOI can be defined using several other tools, including Bounding Box, Freehand Draw, Current View, and Import. The Import function supports a range of file uploads, including GeoJSON, KML, GeoPackage, and zipped shapefile. After drawing or importing an AOI, it can be edited by moving any individual node, or  deleted by clicking the “X” button.',
+            text: `In addition to location search, an AOI can be defined using several other tools,
+                including Bounding Box, Freehand Draw, Current View, and Import.
+                The Import function supports a range of file uploads, including GeoJSON, KML, GeoPackage, and zipped shapefile.
+                After drawing or importing an AOI, it can be edited by moving any individual node, or  deleted by clicking the “X” button.`,
             selector: '.qa-DrawAOIToolbar-div',
             position: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'AOI Info and Buffer',
-            text: 'Any AOI can be buffered using the Buffer tool, and is a requirement if the placename or import AOI is only a point. The buffer can be created dynamically using the slider bar in the user interface, or a specific distance can be entered. The maximum buffer is currently 10,000 meters.',
+            text: `Any AOI can be buffered using the Buffer tool, and is a requirement if the placename or import AOI is only a point.
+                The buffer can be created dynamically using the slider bar in the user interface, or a specific distance can be entered.
+                The maximum buffer is currently 10,000 meters.`,
             selector: '.qa-AoiInfobar-body',
             positition: 'top',
             style: JoyRideStyles.tooltipStyle,
@@ -180,7 +194,8 @@ export const joyride = {
         },
         {
             title: 'Check the source availability',
-            text: 'This indicates the data source availability.  If the source is available, a green check mark will be displayed.  If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.',
+            text: `This indicates the data source availability.  If the source is available, a green check mark will be displayed.
+                If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.`,
             selector: '.qa-ProviderStatusIcon',
             position: 'left',
             scrollToId: 'ProviderStatus',
@@ -188,7 +203,9 @@ export const joyride = {
         },
         {
             title: 'Projection',
-            text: 'At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.  This projection is also commonly known by its EPSG code: 4326. Additional projection support will be added in subsequent versions of EventKit.',
+            text: `At this time, EventKit shows one projection, World Geodetic System 1984 (WGS 84) projection.
+                This projection is also commonly known by its EPSG code: 4326.
+                Additional projection support will be added in subsequent versions of EventKit.`,
             selector: '.qa-ExportInfo-projections',
             position: 'left',
             scrollToId: 'Projections',
@@ -229,7 +246,8 @@ export const joyride = {
         },
         {
             title: 'Submit DataPack',
-            text: 'Once ready, click the large green button to kick off the DataPack submission process.  You will be redirected to the Status and Download page.',
+            text: `Once ready, click the large green button to kick off the DataPack submission process.
+                You will be redirected to the Status and Download page.`,
             selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
             position: 'bottom',
             scrollToId: 'Next',
@@ -239,7 +257,9 @@ export const joyride = {
     StatusAndDownload: [
         {
             title: 'Welcome to the Status & Download Page',
-            text: 'You can review relevant information about the DataPack here such as its creation date, Area of Interest, and which data is included.  Most importantly, you can download the data.',
+            text: `You can review relevant information about the DataPack here such as its creation date,
+                Area of Interest, and which data is included.
+                Most importantly, you can download the data.`,
             selector: '.qa-StatusDownload-AppBar',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
@@ -254,7 +274,8 @@ export const joyride = {
         },
         {
             title: 'DataPack Status',
-            text: 'This is the status of the DataPack.  Status reports include: submitted, completed, and failed.  Here you can change the expiration date of the DataPack and also set the permission: Private or Shared.',
+            text: `This is the status of the DataPack.  Status reports include: submitted, completed, and failed.
+                Here you can change the expiration date of the DataPack and also set the permission: Private or Shared.`,
             selector: '.qa-DataCartDetails-div-StatusContainer',
             position: 'bottom',
             scrollToId: 'Status',
@@ -262,7 +283,9 @@ export const joyride = {
         },
         {
             title: 'Data Source Download Options',
-            text: 'Each data source processes independently, and can finish at different times. Therefore, each data source has a drop down that provides information on its progress, and links to directly download its data.',
+            text: `Each data source processes independently, and can finish at different times
+                Therefore, each data source has a drop down that provides information on its progress,
+                and links to directly download its data.`,
             selector: '.qa-DataPackDetails-providers',
             position: 'bottom',
             scrollToId: 'DownloadOptions',
@@ -270,7 +293,9 @@ export const joyride = {
         },
         {
             title: 'Download Complete DataPack',
-            text: 'For convenience, EventKit bundles all the individual data sources into a single download (formatted as a .zip file). Additionally, this file contains GIS application files (QGIS and ArcMap), cartographic styles, metadata, and associated documents.',
+            text: `For convenience, EventKit bundles all the individual data sources into a single download (formatted as a .zip file).
+                Additionally, this file contains GIS application files (QGIS and ArcMap),
+                cartographic styles, metadata, and associated documents.`,
             selector: '.qa-DataPackDetails-RaisedButton-zipButton',
             position: 'bottom',
             scrollToId: 'DownloadOptions',
@@ -278,7 +303,11 @@ export const joyride = {
         },
         {
             title: 'Other Options',
-            text: 'EventKit provides three additional DataPack management functions. “Run Export Again” over-writes the existing data with a new copy of the data sources. “Clone” creates a new export that maintains the existing Area of Interest and Data Source selections of the current job, which can then be customized as needed. “Delete” will delete the entire DataPack. If you created the DataPack or have Admin rights, you can “Run Export Again” or “Delete”, otherwise you can only “Clone”.',
+            text: `EventKit provides three additional DataPack management functions.
+                “Run Export Again” over-writes the existing data with a new copy of the data sources.
+                “Clone” creates a new export that maintains the existing Area of Interest and Data Source selections of the current job,
+                which can then be customized as needed. “Delete” will delete the entire DataPack.
+                If you created the DataPack or have Admin rights, you can “Run Export Again” or “Delete”, otherwise you can only “Clone”.`,
             selector: '.qa-DataCartDetails-div-otherOptionsContainer',
             position: 'bottom',
             scrollToId: 'OtherOptions',
@@ -294,7 +323,8 @@ export const joyride = {
         },
         {
             title: 'AOI',
-            text: 'This is the selected Area of Interest for the DataPack. The map window is interactive, allowing you to pan and zoom around the AOI.',
+            text: `This is the selected Area of Interest for the DataPack.
+                The map window is interactive, allowing you to pan and zoom around the AOI.`,
             selector: '.qa-DataPackAoiInfo-div-map',
             position: 'bottom',
             scrollToId: 'Map',
@@ -303,7 +333,8 @@ export const joyride = {
         },
         {
             title: 'Export Information',
-            text: 'Here you will find specific information related to the processing of the DataPack. This information may be useful in reporting errors or problems with the DataPack.',
+            text: `Here you will find specific information related to the processing of the DataPack.
+                This information may be useful in reporting errors or problems with the DataPack.`,
             selector: '.qa-DataCartDetails-div-exportInfoContainer',
             position: 'top',
             scrollToId: 'ExportInfo',
@@ -314,28 +345,35 @@ export const joyride = {
         list: [
             {
                 title: 'Welcome to the DataPack Library.',
-                text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                text: `DataPacks are the core elements of EventKit.
+                    Use the DataPack Library to review existing DataPacks, visualize them on a map,
+                    search based on name, date, and data source, and find “Featured DataPacks”.`,
                 selector: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
                 position: 'top',
             },
             {
                 title: 'DataPacks',
-                text: 'By default, EventKit will show the most recent subset of DataPacks in the list view.</br>To display more DataPacks, click on the Show More button at the bottom, or use the other search functions (explained in the following steps).',
+                text: `By default, EventKit will show the most recent subset of DataPacks in the list view.
+                    </br>To display more DataPacks, click on the Show More button at the bottom,
+                    or use the other search functions (explained in the following steps).`,
                 selector: '.qa-DataPackList-root',
                 style: JoyRideStyles.tooltipStyle,
                 position: 'bottom',
             },
             {
                 title: 'Text Search',
-                text: 'The text search function filters across all DataPacks based on the name, description, and project fields provided for each DataPack.',
+                text: `The text search function filters across all DataPacks based on the name,
+                    description, and project fields provided for each DataPack.`,
                 selector: '.qa-DataPackSearchBar-TextField',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Filters',
-                text: 'Filter DataPacks based on sharing permissions, date range, job status, and data sources. To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link. This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.',
+                text: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
+                    To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
+                    This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 selector: '.qa-FilterDrawer-Drawer > div',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
@@ -349,21 +387,24 @@ export const joyride = {
             },
             {
                 title: 'Menu Options',
-                text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
+                text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
+                    share the DataPack with other EventKit users, or delete the datapack.`,
                 selector: '.qa-DataPackTableItem-IconMenu',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Change Views',
-                text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                text: `Change the view of the DataPack Library, options include the default map view,
+                    a “baseball card” view, and traditional table view.`,
                 selector: '.qa-DataPackViewButtons-Icons',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Create DataPack',
-                text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
+                text: `Click here to begin creating a DataPack.
+                    This will leave the DataPack Library and take you to the Create DataPack page.`,
                 selector: '.qa-DataPackLinkButton-RaisedButton',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
@@ -372,28 +413,35 @@ export const joyride = {
         grid: [
             {
                 title: 'Welcome to the DataPack Library.',
-                text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                text: `DataPacks are the core elements of EventKit.
+                    Use the DataPack Library to review existing DataPacks, visualize them on a map,
+                    search based on name, date, and data source, and find “Featured DataPacks”.`,
                 selector: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
                 position: 'top',
             },
             {
                 title: 'DataPacks',
-                text: 'By default, EventKit will show the most recent subset of DataPacks in the grid view.</br>To display more DataPacks, click on the Show More button at the bottom, or use the other search functions (explained in the following steps).',
+                text: `By default, EventKit will show the most recent subset of DataPacks in the grid view.
+                    </br>To display more DataPacks, click on the Show More button at the bottom,
+                    or use the other search functions (explained in the following steps).`,
                 selector: '.qa-DataPackPage-view',
                 style: JoyRideStyles.tooltipStyle,
                 position: 'bottom',
             },
             {
                 title: 'Text Search',
-                text: 'The text search function filters across all DataPacks based on the name, description, and project fields provided for each DataPack.',
+                text: `The text search function filters across all DataPacks based on the name,
+                    description, and project fields provided for each DataPack.`,
                 selector: '.qa-DataPackSearchBar-TextField',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Filters',
-                text: 'Filter DataPacks based on sharing permissions, date range, job status, and data sources. To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link. This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.',
+                text: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
+                    To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
+                    This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 selector: '.qa-FilterDrawer-Drawer > div',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
@@ -407,21 +455,24 @@ export const joyride = {
             },
             {
                 title: 'Menu Options',
-                text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
+                text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
+                    share the DataPack with other EventKit users, or delete the datapack.`,
                 selector: '.qa-DataPackGridItem-IconMenu',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Change Views',
-                text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                text: `Change the view of the DataPack Library,
+                    options include the default map view, a “baseball card” view, and traditional table view.`,
                 selector: '.qa-DataPackViewButtons-Icons',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Create DataPack',
-                text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
+                text: `Click here to begin creating a DataPack.
+                    This will leave the DataPack Library and take you to the Create DataPack page.`,
                 selector: '.qa-DataPackLinkButton-RaisedButton',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
@@ -430,49 +481,63 @@ export const joyride = {
         map: [
             {
                 title: 'Welcome to the DataPack Library',
-                text: 'DataPacks are the core elements of EventKit. Use the DataPack Library to review existing DataPacks, visualize them on a map, search based on name, date, and data source, and find “Featured DataPacks”.',
+                text: `DataPacks are the core elements of EventKit.
+                    Use the DataPack Library to review existing DataPacks, visualize them on a map,
+                    search based on name, date, and data source, and find “Featured DataPacks”.`,
                 selector: '.qa-DataPackPage-Toolbar-sort',
                 style: JoyRideStyles.welcomeTooltipStyle,
                 position: 'top',
             },
             {
                 title: 'DataPacks',
-                text: 'By default, EventKit will show the most recent subset of DataPacks in the map view. Clicking on a DataPack in the list will highlight its location on the map, and vice versa.</br>To display more DataPacks, click on the Show More button at the bottom, or use the other search functions (explained in the following steps).',
+                text: `By default, EventKit will show the most recent subset of DataPacks in the map view.
+                    Clicking on a DataPack in the list will highlight its location on the map, and vice versa.
+                    </br>To display more DataPacks, click on the Show More button at the bottom,
+                    or use the other search functions (explained in the following steps).`,
                 selector: '.qa-MapView-GridList',
                 style: JoyRideStyles.tooltipStyle,
                 position: 'right',
             },
             {
                 title: 'Text Search',
-                text: 'The text search function filters across all DataPacks based on the name, description, and project fields provided for each DataPack.',
+                text: `The text search function filters across all DataPacks based on the name,
+                    description, and project fields provided for each DataPack.`,
                 selector: '.qa-DataPackSearchBar-TextField',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Filters',
-                text: 'Filter DataPacks based on sharing permissions, date range, job status, and data sources. To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link. This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.',
+                text: `Filter DataPacks based on sharing permissions, date range, job status, and data sources.
+                    To filter Shared DataPacks, select Shared and click on the “All Members / All Groups” link.
+                    This will open the “Filter Shared DataPacks” dialog box to select specific users or groups.`,
                 selector: '.qa-FilterDrawer-Drawer > div',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Placename Search',
-                text: 'Use the placename search as a spatial filter for DataPacks. If a placename has an associated polygon, EventKit will return all DataPacks that intersect the polygon. If the placename is a point or an MGRS coordinate, then EventKit will return all DataPacks that contain that point.',
+                text: `Use the placename search as a spatial filter for DataPacks.
+                    If a placename has an associated polygon, EventKit will return all DataPacks that intersect the polygon.
+                    If the placename is a point or an MGRS coordinate, then EventKit will return all DataPacks that contain that point.`,
                 selector: '.bootstrap-typeahead-input',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Spatial Filters',
-                text: 'In addition to the placename filter, other spatial filters can be created using the bounding box, draw, current view, or import functions in the spatial toolbar. EventKit will return all DataPacks that intersect with a spatial filter.  A spatial filter can be removed by clicking the “X” button.',
+                text: `In addition to the placename filter, other spatial filters can be created using the bounding box,
+                    draw, current view, or import functions in the spatial toolbar.
+                    EventKit will return all DataPacks that intersect with a spatial filter.
+                    A spatial filter can be removed by clicking the “X” button.`,
                 selector: '.qa-DrawAOIToolbar-div',
                 position: 'left',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Menu Options',
-                text: 'Use this menu to navigate to the “Status & Download” page where you can download the DataPack files, share the DataPack with other EventKit users, or delete the datapack.',
+                text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
+                    share the DataPack with other EventKit users, or delete the datapack.`,
                 selector: '.qa-DataPackListItem-IconMenu',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
@@ -486,14 +551,16 @@ export const joyride = {
             },
             {
                 title: 'Change Views',
-                text: 'Change the view of the DataPack Library, options include the default map view, a “baseball card” view, and traditional table view.',
+                text: `Change the view of the DataPack Library, options include the default map view,
+                    a “baseball card” view, and traditional table view.`,
                 selector: '.qa-DataPackViewButtons-Icons',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
             {
                 title: 'Create DataPack',
-                text: 'Click here to begin creating a DataPack. This will leave the DataPack Library and take you to the Create DataPack page.',
+                text: `Click here to begin creating a DataPack.
+                    This will leave the DataPack Library and take you to the Create DataPack page.`,
                 selector: '.qa-DataPackLinkButton-RaisedButton',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
@@ -504,7 +571,9 @@ export const joyride = {
     UserGroupsPage: [
         {
             title: 'Welcome to the Members and Groups Page',
-            text: 'EventKit allows you to easily share your data with other EventKit users.  Here, you can create and administer groups, allowing you to share DataPacks with your team, customers, community of interest, etc.',
+            text: `EventKit allows you to easily share your data with other EventKit users.
+                Here, you can create and administer groups, allowing you to share DataPacks with your team,
+                customers, community of interest, etc.`,
             selector: '.qa-UserGroupsPage-AppBar',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
@@ -539,14 +608,16 @@ export const joyride = {
         },
         {
             title: 'Groups: Administrator',
-            text: 'Any group that you have Administrator rights to will appear in this section. For a further explanation of Administrator rights, click on the info icon next to the “ADMINSTRATOR” label.',
+            text: `Any group that you have Administrator rights to will appear in this section.
+                For a further explanation of Administrator rights, click on the info icon next to the “ADMINSTRATOR” label.`,
             selector: '.qa-GroupsDrawer-groupsHeading',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Add Individual User to Group',
-            text: 'From dropdown menu you can add a user to an existing group or a new group. Additionally, within a group, you can grant or remove Administrator rights to a user.',
+            text: `From dropdown menu you can add a user to an existing group or a new group.
+                Additionally, within a group, you can grant or remove Administrator rights to a user.`,
             selector: '.qa-UserRow-IconButton-options',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
@@ -574,7 +645,8 @@ export const joyride = {
         },
         {
             title: 'Groups: Member Only',
-            text: 'Any group that has been shared with you, and that you do not have administrator rights, will appear in this section. For a further explanation of Member rights, click on the info button next to the “MEMBER ONLY” label.',
+            text: `Any group that has been shared with you, and that you do not have administrator rights, will appear in this section.
+                For a further explanation of Member rights, click on the info button next to the “MEMBER ONLY” label.`,
             selector: '.qa-GroupsDrawer-sharedGroupsHeading',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
@@ -583,7 +655,10 @@ export const joyride = {
     DashboardPage: [
         {
             title: 'Welcome to the Dashboard Page',
-            text: 'The Dashboard provides a curated view into EventKit content.  Here, you’ll get notifications on relevant EventKit activity, get a personalized view into your content, and have easy access to the Featured DataPacks.  You’ll land on this page each time you login to EventKit.',
+            text: `The Dashboard provides a curated view into EventKit content.
+                Here, you’ll get notifications on relevant EventKit activity, get a personalized view into your content,
+                and have easy access to the Featured DataPacks.
+                You’ll land on this page each time you login to EventKit.`,
             selector: '.qa-Dashboard-AppBar',
             position: 'top',
             scrollToId: 'Dashboard',
@@ -591,7 +666,10 @@ export const joyride = {
         },
         {
             title: 'Notifications',
-            text: 'You’ll receive notifications here updating you on your DataPack’s progress, along with information on how and when DataPacks are shared.  To view all of your notifcations and manage them, click view all, or select the notification bell icon in the upper left of the screen.',
+            text: `You’ll receive notifications here updating you on your DataPack’s progress,
+                along with information on how and when DataPacks are shared.
+                To view all of your notifcations and manage them, click view all,
+                or select the notification bell icon in the upper left of the screen.`,
             selector: '.qa-DashboardSection-Notifications',
             position: 'top',
             scrollToId: 'DashboardSectionNotifications',
@@ -599,7 +677,9 @@ export const joyride = {
         },
         {
             title: 'Recently Viewed',
-            text: 'As the name implies, this section shows you which DataPacks you have recently viewed.  The DataPacks are organized chronologically – meaning the first DataPack you see on the left will be the most recent one you viewed',
+            text: `As the name implies, this section shows you which DataPacks you have recently viewed.
+                The DataPacks are organized chronologically – meaning the first DataPack you see on the left
+                will be the most recent one you viewed`,
             selector: '.qa-DashboardSection-Recently.Viewed',
             position: 'bottom',
             scrollToId: 'DashboardSectionRecently Viewed',
@@ -607,7 +687,9 @@ export const joyride = {
         },
         {
             title: 'Featured',
-            text: 'EventKit has a concept of Featured DataPacks, where administrators will highlight certain DataPacks that may be relevant to a large section of the community e.g., a recent hurricane.  If you want to suggest promoting one of your DataPacks, reach out to the EventKit team from the About page.',
+            text: `EventKit has a concept of Featured DataPacks, where administrators will highlight certain DataPacks that
+                may be relevant to a large section of the community e.g., a recent hurricane. 
+                If you want to suggest promoting one of your DataPacks, reach out to the EventKit team from the About page.`,
             selector: '.qa-DashboardSection-Featured',
             position: 'bottom',
             scrollToId: 'DashboardSectionFeatured',
@@ -615,7 +697,9 @@ export const joyride = {
         },
         {
             title: 'My DataPacks',
-            text: 'Finally, you can view the DataPacks that you’ve created.  Keep in mind that by default DataPacks expire after two weeks, though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expiration field.',
+            text: `Finally, you can view the DataPacks that you’ve created.
+                Keep in mind that by default DataPacks expire after two weeks,
+                though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expiration field.`,
             selector: '.qa-DashboardSection-My.DataPacks',
             position: 'top',
             scrollToId: 'DashboardSectionMy DataPacks',

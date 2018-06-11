@@ -322,10 +322,16 @@ export class DataPackPage extends React.Component {
             this.joyride.reset(true);
         }
         if (data.step) {
-            if (data.step.title === 'Filter DataPacks' && data.type === 'step:before') {
+            if (data.step.title === 'Filters' && data.type === 'step:before') {
                 if (this.state.open === false) {
                     this.setState({ open: true });
                 }
+            }
+            if (data.step.title === 'Filters' && data.type === 'step:after' && isViewportL()) {
+                this.setState({ open: false });
+            }
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isViewportL()) {
+                this.setState({ open: false });
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
