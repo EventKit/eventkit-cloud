@@ -134,14 +134,14 @@ export const joyride = {
         },
         {
             title: 'Define Area of Interest (AOI)',
-            text: 'Use tools to draw box or freehand boundaries.  <br> Set the viewport by clicking current view.  <br>You can also upload a GeoJSON, KML, GeoPackage, or zipped shapefile using the file import option.',
+            text: 'In addition to location search, an AOI can be defined using several other tools, including Bounding Box, Freehand Draw, Current View, and Import. The Import function supports a range of file uploads, including GeoJSON, KML, GeoPackage, and zipped shapefile. After drawing or importing an AOI, it can be edited by moving any individual node, or  deleted by clicking the “X” button.',
             selector: '.qa-DrawAOIToolbar-div',
             position: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'AOI Info and Buffer',
-            text: 'Something about the info and buffer',
+            text: 'Any AOI can be buffered using the Buffer tool, and is a requirement if the placename or import AOI is only a point. The buffer can be created dynamically using the slider bar in the user interface, or a specific distance can be entered. The maximum buffer is currently 10,000 meters.',
             selector: '.qa-AoiInfobar-body',
             positition: 'top',
             style: JoyRideStyles.tooltipStyle,

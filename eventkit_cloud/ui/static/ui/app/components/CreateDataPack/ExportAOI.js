@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -42,10 +43,11 @@ import {
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
     getDominantGeometry } from '../../utils/mapUtils';
-import Joyride from 'react-joyride';
+
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import background from '../../../images/topoBackground.jpg';
+import { joyride } from '../../joyride.config';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
