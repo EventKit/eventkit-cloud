@@ -116,14 +116,14 @@ export class NotificationsTableItem extends React.Component {
                     <Checkbox
                         checked={this.props.isSelected}
                         onCheck={(e, isChecked) => this.props.setSelected(this.props.notification, isChecked)}
-                        disableTouchRipple={true}
+                        disableTouchRipple
                     />
                 </TableRowColumn>
                 <TableRowColumn
                     className="qa-NotificationsTableItem-Content"
                     style={styles.contentRowColumn}
                 >
-                    <div style={{display: 'flex', alignItems: 'center', width: '100%'}}>
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         {icon}
                         {message}
                     </div>
@@ -153,7 +153,7 @@ export class NotificationsTableItem extends React.Component {
                                             labelStyle={styles.optionButtonLabel}
                                             icon={<OpenInNewIcon style={styles.optionButtonLabel} />}
                                             hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple={true}
+                                            disableTouchRipple
                                             onClick={this.handleView}
                                         />
                                         :
@@ -167,7 +167,7 @@ export class NotificationsTableItem extends React.Component {
                                             labelStyle={styles.optionButtonLabel}
                                             icon={<FlagIcon style={styles.optionButtonLabel} />}
                                             hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple={true}
+                                            disableTouchRipple
                                             onClick={this.handleMarkAsRead}
                                         />
                                         :
@@ -176,7 +176,7 @@ export class NotificationsTableItem extends React.Component {
                                             labelStyle={styles.optionButtonLabel}
                                             icon={<FlagIcon style={styles.optionButtonLabel} />}
                                             hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple={true}
+                                            disableTouchRipple
                                             onClick={this.handleMarkAsUnread}
                                         />
                                     }
@@ -187,14 +187,14 @@ export class NotificationsTableItem extends React.Component {
                                         labelStyle={styles.optionButtonLabel}
                                         icon={<CloseIcon style={styles.optionButtonLabel} />}
                                         hoverColor="rgba(0, 0, 0, 0)"
-                                        disableTouchRipple={true}
+                                        disableTouchRipple
                                         onClick={this.handleRemove}
                                     />
                                 </div>
                             </div>
                             :
                             <NotificationMenu
-                                className={'qa-NotificationsTableItem-NotificationMenu'}
+                                className="qa-NotificationsTableItem-NotificationMenu"
                                 notification={this.props.notification}
                                 router={this.props.router}
                                 onMarkAsRead={this.props.onMarkAsRead}
@@ -222,17 +222,17 @@ NotificationsTableItem.propTypes = {
 };
 
 NotificationsTableItem.defaultProps = {
-    onMarkAsRead: () => { return true; },
-    onMarkAsUnread: () => { return true; },
-    onRemove: () => { return true; },
-    onView: () => { return true; },
+    onMarkAsRead: () => true,
+    onMarkAsUnread: () => true,
+    onRemove: () => true,
+    onView: () => true,
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
-        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
-        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
+        markNotificationsAsRead: notifications => dispatch(markNotificationsAsRead(notifications)),
+        markNotificationsAsUnread: notifications => dispatch(markNotificationsAsUnread(notifications)),
+        removeNotifications: notifications => dispatch(removeNotifications(notifications)),
     };
 }
 

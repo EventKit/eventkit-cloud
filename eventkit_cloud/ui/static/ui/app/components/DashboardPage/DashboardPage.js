@@ -59,14 +59,9 @@ export class DashboardPage extends React.Component {
         this.autoRefreshIntervalId = setInterval(this.autoRefresh, this.autoRefreshInterval);
     }
 
-    componentWillUnmount() {
-        clearInterval(this.autoRefreshIntervalId);
-        this.autoRefreshIntervalId = null;
-    }
-
     componentWillReceiveProps(nextProps) {
         // Only show page loading once, before all sections have initially loaded.
-        let loadingPage = this.state.loadingPage;
+        const { loadingPage } = this.state;
         if (loadingPage) {
             this.setState({
                 loadingPage: (
@@ -89,6 +84,11 @@ export class DashboardPage extends React.Component {
         if (nextProps.updatePermission.updated && !this.props.updatePermission.updated) {
             this.refresh();
         }
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.autoRefreshIntervalId);
+        this.autoRefreshIntervalId = null;
     }
 
     getGridPadding() {
@@ -201,7 +201,7 @@ export class DashboardPage extends React.Component {
     render() {
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        let styles = {
+        const styles = {
             root: {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
@@ -305,7 +305,7 @@ export class DashboardPage extends React.Component {
                                 }
                                 rowMajor={false}
                             >
-                                {this.props.notifications.notificationsSorted.map((notification) => (
+                                {this.props.notifications.notificationsSorted.map(notification => (
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
@@ -351,7 +351,7 @@ export class DashboardPage extends React.Component {
                                             index={index}
                                             showFeaturedFlag={false}
                                         />
-                                    )
+                                    );
                                 })}
                             </DashboardSection>
 
@@ -484,6 +484,8 @@ DashboardPage.propTypes = {
     }).isRequired,
     users: PropTypes.object.isRequired,
     groups: PropTypes.object.isRequired,
+    getGroups: PropTypes.func.isRequired,
+    getUsers: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -503,12 +505,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (args) => dispatch(getRuns(args)),
-        getFeaturedRuns: (args) => dispatch(getFeaturedRuns(args)),
-        getViewedJobs: (args) => dispatch(getViewedJobs(args)),
+        getRuns: args => dispatch(getRuns(args)),
+        getFeaturedRuns: args => dispatch(getFeaturedRuns(args)),
+        getViewedJobs: args => dispatch(getViewedJobs(args)),
         getProviders: () => dispatch(getProviders()),
-        deleteRuns: (uid) => dispatch(deleteRuns(uid)),
-        getNotifications: (args) => dispatch(getNotifications(args)),
+        deleteRuns: uid => dispatch(deleteRuns(uid)),
+        getNotifications: args => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
         getUsers: () => dispatch(getUsers()),
         getGroups: () => dispatch(getGroups()),
