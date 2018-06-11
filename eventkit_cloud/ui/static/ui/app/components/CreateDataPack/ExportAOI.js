@@ -45,7 +45,7 @@ import {
 import Joyride from 'react-joyride';
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import { joyride } from '../../joyride.config';
+import background from '../../../images/topoBackground.jpg';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -821,6 +821,7 @@ export class ExportAOI extends Component {
 
         const mapStyle = {
             right: '0px',
+            backgroundImage: `url(${background})`,
         };
 
         if (this.props.drawer === 'open' && window.innerWidth >= 1200) {

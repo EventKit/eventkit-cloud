@@ -114,6 +114,7 @@ export class DataPackList extends Component {
 
         const load = (
             <LoadButtons
+                style={{ paddingTop: '10px' }}
                 range={this.props.range}
                 handleLoadLess={this.props.handleLoadLess}
                 handleLoadMore={this.props.handleLoadMore}
@@ -150,13 +151,13 @@ export class DataPackList extends Component {
                                     />
                                 );
                             })}
+                            {load}
                         </GridList>
                     </div>
-                    {load}
                 </CustomScrollbar>
             );
         }
-        
+
         return (
             <div>
                 <div style={styles.root} className="qa-DataPackList-root">
@@ -239,10 +240,9 @@ export class DataPackList extends Component {
                                 })}
                             </TableBody>
                         </Table>
+                        {load}
                     </CustomScrollbar>
-
                 </div>
-                {load}
             </div>
         );
     }
