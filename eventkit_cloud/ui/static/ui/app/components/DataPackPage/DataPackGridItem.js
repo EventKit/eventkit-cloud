@@ -43,8 +43,9 @@ export class DataPackGridItem extends Component {
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.state = {
-            expanded: false,
-            overflow: false,
+            expanded: true,
+            overflowTitle: false,
+            overflowText: false,
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
@@ -52,7 +53,7 @@ export class DataPackGridItem extends Component {
     }
 
     componentDidMount() {
-        this.setState({ expanded: true });
+        this.initMap();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -215,14 +216,47 @@ export class DataPackGridItem extends Component {
             },
             cardTitle: {
                 wordWrap: 'break-word',
-                padding: '15px 10px 10px',
+                padding: '15px 0px 10px',
+                zIndex: 2000,
             },
-            cardTitle2: {
+            title: {
                 fontSize: titleFontSize,
                 height: '36px',
+                lineHeight: '28px',
+            },
+            titleInnerDiv: {
+                backgroundColor: '#f7f8f8',
+                display: 'flex',
+                position: 'absolute',
+                width: '100%',
+                padding: '0px 10px 2px',
+            },
+            name: {
+                display: 'inline-block',
+                width: 'calc(100% - 24px)',
+            },
+            titleLink: {
+                color: 'inherit',
+                display: 'block',
+                width: '100%',
+                height: '28px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                margin: '0px 0px 8px',
+            },
+            titleLinkExpanded: {
+                color: 'inherit',
+                display: 'block',
+                width: '100%',
+                overflow: 'visible',
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
+                margin: '0px 0px 8px',
             },
             cardSubtitle: {
                 fontSize: cardTextFontSize,
+                padding: '0px 10px',
             },
             completeIcon: {
                 float: 'left',
@@ -279,25 +313,15 @@ export class DataPackGridItem extends Component {
                 backgroundColor: '#f7f8f8',
                 zIndex: 2,
                 padding: '0px 10px 5px',
-
             },
             cardTextContainer: {
                 fontSize: cardTextFontSize,
                 padding: '0px',
                 marginBottom: '10px',
                 height: window.innerWidth < 768 ? '42px' : '51px',
-                overflow: this.state.overflow ? 'visible' : 'hidden',
+                overflow: this.state.overflowText ? 'visible' : 'hidden',
                 position: 'relative',
-            },
-            titleLink: {
-                color: 'inherit',
-                display: 'block',
-                width: '100%',
-                height: '36px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                margin: '0px',
+                zIndex: 1000,
             },
             iconMenu: {
                 padding: '0px',
@@ -318,21 +342,26 @@ export class DataPackGridItem extends Component {
                 <CardTitle
                     titleColor="#4598bf"
                     style={styles.cardTitle}
-                    titleStyle={styles.cardTitle2}
+                    titleStyle={styles.title}
                     subtitleStyle={styles.cardSubtitle}
                     title={
-                        <div>
-                            <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
+                        <div style={styles.titleInnerDiv}>
+                            <div
+                                className="qa-DataPackGridItem-name"
+                                style={styles.name}
+                                onMouseEnter={() => { this.setState({ overflowTitle: true }); }}
+                                onMouseLeave={() => { this.setState({ overflowTitle: false }); }}
+                            >
                                 <Link
                                     to={`/status/${this.props.run.job.uid}`}
                                     href={`/status/${this.props.run.job.uid}`}
-                                    style={styles.titleLink}
+                                    style={this.state.overflowTitle ? styles.titleLinkExpanded : styles.titleLink}
                                 >
                                     {this.props.run.job.name}
                                 </Link>
                             </div>
                             <IconMenu
-                                style={{ float: 'right', width: '24px', height: '100%' }}
+                                style={{ float: 'right', width: '24px', height: '36px' }}
                                 iconButtonElement={
                                     <IconButton
                                         style={styles.iconMenu}
@@ -407,11 +436,11 @@ export class DataPackGridItem extends Component {
                 />
                 <CardText
                     style={styles.cardTextContainer}
-                    onMouseEnter={() => { this.setState({ overflow: true }); }}
-                    onMouseLeave={() => { this.setState({ overflow: false }); }}
-                    onTouchTap={() => { this.setState({ overflow: !this.state.overflow }); }}
+                    onMouseEnter={() => { this.setState({ overflowText: true }); }}
+                    onMouseLeave={() => { this.setState({ overflowText: false }); }}
+                    onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
-                    <span style={this.state.overflow ? styles.cardText : styles.cardTextMinimized}>
+                    <span style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}>
                         {this.props.run.job.description}
                     </span>
                 </CardText>
