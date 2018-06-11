@@ -59,10 +59,11 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
 
     provider_tasks = run.provider_tasks.all()
 
-    provider_details = []
+    # A dict is used here to ensure that just one file per provider is added,
+    # this should be updated when multiple formats are supported.
+    provider_details = {}
     if export_provider_task:
-        provider_detail = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
-        provider_details += [provider_detail]
+        provider_details[export_provider_task.slug] = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
     else:
         for provider_task in provider_tasks:
             if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
@@ -81,13 +82,14 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                     # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
                     # GeoTIFF are elevation.  This will need to be updated in the future.
                     if not (full_file_path.endswith(".zip") or full_file_path.endswith(".geojson")):
-                        provider_detail = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
+                        provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
                                            'provider_name': provider_task.name,
                                            'file_type': os.path.splitext(full_file_path)[1]}
-                        provider_details += [provider_detail]
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))
+
+    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
 
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),

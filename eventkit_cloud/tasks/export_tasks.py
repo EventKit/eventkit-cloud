@@ -748,11 +748,13 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
-            if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
-                filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+            ext = os.path.splitext(filename)[1]
+            if ext in ['.gpkg', '.tif']:
+                filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                     export_provider_task.slug,
                     os.path.splitext(os.path.basename(filename))[0],
                     timezone.now().strftime('%Y%m%d'),
+                    ext
                 )
                 metadata['data_sources'][export_provider_task.slug]['file_path'] = os.path.join('data',
                                                                                                 export_provider_task.slug,
@@ -1039,13 +1041,15 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                               provider_task.slug, filename)
-                if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
-                    gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+                ext = os.path.splitext(filename)[1]
+                if ext in ['.gpkg', '.tif']:
+                    filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now().strftime('%Y%m%d'),
+                        ext
                     )
-                    metadata['data_sources'][provider_task.slug]['file_path'] = gpkg_filepath
+                    metadata['data_sources'][provider_task.slug]['file_path'] = filepath
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
                         provider_task.slug)
                 if not os.path.isfile(full_file_path):
@@ -1614,5 +1618,4 @@ def get_data_type_from_provider(provider_slug):
     data_provider = DataProvider.objects.get(slug=provider_slug)
     type_name = data_provider.export_provider_type.type_name
     type_mapped = data_types.get(type_name)
-    logger.error("ADDING THE TYPE: {0} {1}".format(type_name, type_mapped))
     return type_mapped

@@ -150,13 +150,13 @@
     <layer-tree-group expanded="1" checked="Qt::Checked" name="Elevation">
       <customproperties/>
       {% for provider in provider_details %}
-      {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
-      {% if provider.file_type == ".tif" %}
-      <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.tif" name="{{ provider.provider_name }}">
-        <customproperties/>
-      </layer-tree-layer>
-      {% endif %}
-      {% endif %}
+        {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
+          {% if provider.file_type == ".tif" %}
+          <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.tif" name="{{ provider.provider_name }}">
+            <customproperties/>
+          </layer-tree-layer>
+          {% endif %}
+        {% endif %}
       {% endfor %}
     </layer-tree-group>
     </layer-tree-group>
@@ -22210,7 +22210,11 @@ def my_form_open(dialog, layer, feature):
         </rasterrenderer>
         <brightnesscontrast brightness="0" contrast="0"/>
         <huesaturation colorizeGreen="128" colorizeOn="0" colorizeRed="255" colorizeBlue="128" grayscaleMode="0" saturation="0" colorizeStrength="100"/>
-        <rasterresampler maxOversampling="2"/>
+        {% if provider.provider_slug == "osm_tiles" %}
+          <rasterresampler maxOversampling="2" zoomedInResampler="bilinear"/>
+        {%  else %}
+          <rasterresampler maxOversampling="2" zoomedInResampler="cubic"/>
+        {% endif %}
       </pipe>
       <blendMode>0</blendMode>
     </maplayer>
