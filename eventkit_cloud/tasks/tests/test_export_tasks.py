@@ -18,7 +18,7 @@ from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
 from billiard.einfo import ExceptionInfo
 from celery import chain
 import celery
-from eventkit_cloud.jobs.models import DatamodelPreset
+from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -113,6 +113,7 @@ class ExportTaskBase(TransactionTestCase):
         self.job.feature_pub = True
         self.job.save()
         self.run = ExportRun.objects.create(job=self.job, user=self.user)
+
 
 class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
@@ -270,6 +271,8 @@ class TestExportTasks(ExportTaskBase):
 
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
                                                                      status=TaskStates.PENDING.value)
+        DataProvider.objects.create(slug='slug')
+
         saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
                                                             status=TaskStates.PENDING.value,
                                                             name=zip_export_provider.name)
@@ -736,6 +739,9 @@ class TestExportTasks(ExportTaskBase):
         mocked_provider_task = MagicMock()
         mocked_provider_task.status = TaskStates.COMPLETED.value
         mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
+        mocked_provider_task.slug = 'dummy_slug'
+
+        DataProvider.objects.create(slug='dummy_slug')
 
         mocked_run = MagicMock()
         mocked_run.job.include_zipfile = True
