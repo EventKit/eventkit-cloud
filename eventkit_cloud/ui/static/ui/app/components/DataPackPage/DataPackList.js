@@ -110,6 +110,7 @@ export class DataPackList extends Component {
 
         const load = (
             <LoadButtons
+                style={{ paddingTop: '10px' }}
                 range={this.props.range}
                 handleLoadLess={this.props.handleLoadLess}
                 handleLoadMore={this.props.handleLoadMore}
@@ -120,7 +121,14 @@ export class DataPackList extends Component {
 
         if (window.innerWidth < 768) {
             return (
-                <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
+                <CustomScrollbar
+                    style={{
+                        height: window.innerWidth > 525 ?
+                            window.innerHeight - 236
+                            : window.innerHeight - 225,
+                        width: '100%',
+                    }}
+                >
                     <div style={styles.root}>
                         <GridList
                             className="qa-DataPackList-GridList"
@@ -143,13 +151,13 @@ export class DataPackList extends Component {
                                     />
                                 );
                             })}
+                            {load}
                         </GridList>
                     </div>
-                    {load}
                 </CustomScrollbar>
             );
         }
-        
+
         return (
             <div>
                 <div style={styles.root}>
@@ -210,7 +218,7 @@ export class DataPackList extends Component {
                             </TableRow>
                         </TableHeader>
                     </Table>
-                    <CustomScrollbar style={{ height: window.innerHeight - 343 }}>
+                    <CustomScrollbar style={{ height: window.innerHeight - 287 }}>
                         <Table className="qa-DataPackList-Table-item">
                             <TableBody displayRowCheckbox={false}>
                                 {this.props.runs.map((run) => {
@@ -229,10 +237,9 @@ export class DataPackList extends Component {
                                 })}
                             </TableBody>
                         </Table>
+                        {load}
                     </CustomScrollbar>
-
                 </div>
-                {load}
             </div>
         );
     }

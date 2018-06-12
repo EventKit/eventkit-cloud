@@ -108,10 +108,9 @@ class TaskFactory:
                 if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
                     type_name = provider_task_record.provider.export_provider_type.type_name
                     task_runner = self.type_task_map.get(type_name)()
-                    os.makedirs(os.path.join(run_dir, provider_task_record.provider.slug), 6600)
-                    stage_dir = os.path.join(
-                                run_dir,
-                                provider_task_record.provider.slug)
+
+                    stage_dir = os.path.join(run_dir, provider_task_record.provider.slug)
+                    os.makedirs(stage_dir, 6600)
 
                     args = {
                         'user': job.user,
@@ -155,7 +154,7 @@ class TaskFactory:
                         if provider_task_record.provider.zip:
                             zip_export_provider_sig = get_zip_task_chain(export_provider_task_uid=provider_task_uid,
                                                                          stage_dir=stage_dir, worker=worker,
-                                                                         job_name=run.job.name)
+                                                                         job_name=job.name)
                             provider_subtask_chain = chain(
                                 provider_subtask_chain, zip_export_provider_sig
                             )

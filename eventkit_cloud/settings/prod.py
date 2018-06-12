@@ -64,10 +64,12 @@ REVERSE_GEOCODING_API_URL = os.getenv('REVERSE_GEOCODING_API_URL', None)
 REVERSE_GEOCODING_API_TYPE = os.getenv('REVERSE_GEOCODING_API_TYPE', 'PELIAS')
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
-CONVERT_API_URL = os.getenv('CONVERT_API_URL', None)
+GEOCODING_AUTH_URL = os.getenv('GEOCODING_AUTH_URL', None)
+GEOCODING_AUTH_CERT = os.getenv('GEOCODING_AUTH_CERT', None)
+CONVERT_API_URL = os.getenv('CONVERT_API_URL', 'http://172.17.0.1:4000/v1/convert')
 
 # zoom extents of reverse geocode point result (in degrees)
-REVERSE_GEOCODE_ZOOM = 0.1;
+REVERSE_GEOCODE_ZOOM = 0.1
 
 """
 Maximum extent of a Job
@@ -290,6 +292,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 UI_CONFIG = {
     'VERSION': os.environ.get('VERSION', ''),
+    'CONTACT_URL': os.environ.get('CONTACT_URL', 'mailto:eventkit.team@gmail.com'),
     'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),

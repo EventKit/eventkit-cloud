@@ -10,6 +10,7 @@ from ..geocode import Geocode, GeocodeAdapter, expand_bbox, is_valid_bbox
 
 logger = logging.getLogger(__name__)
 
+@override_settings(GEOCODING_AUTH_URL=None)
 class TestGeoCode(TestCase):
 
     def setUp(self):
