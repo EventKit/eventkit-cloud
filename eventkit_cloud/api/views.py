@@ -911,12 +911,13 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        add_placeholders = True if request.query_params.keys() == ['job_uid'] else False
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'request': request})
+            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'add_placeholders': add_placeholders})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = self.get_serializer(queryset, many=True, context={'request': request})
+            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'add_placeholders': add_placeholders})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @list_route(methods=['post', 'get'])
