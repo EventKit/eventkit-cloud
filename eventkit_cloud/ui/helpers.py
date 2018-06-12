@@ -41,9 +41,10 @@ def get_style_files():
     return get_file_paths(style_dir)
 
 
-def add_license_file(provider_task, include_files):
+def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
     from eventkit_cloud.jobs.models import DataProvider
+    from eventkit_cloud.tasks.task_runners import normalize_name
     data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
 
     # DataProviders are not required to have a license
@@ -51,13 +52,12 @@ def add_license_file(provider_task, include_files):
         return
 
     license_file_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
-                                     provider_task.slug, 'license.lic')
+                                     provider_task.slug, '{0}.txt'.format(normalize_name(data_provider_license.name)))
 
     with open(license_file_path, 'w') as license_file:
         license_file.write(data_provider_license.text)
 
-    include_files.append(license_file_path)
-    return
+    return license_file_path
 
 
 def generate_qgs_style(run_uid=None, export_provider_task=None):

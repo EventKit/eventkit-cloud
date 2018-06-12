@@ -21,7 +21,7 @@ from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run
 from ..jobs.models import Job
 from ..ui.helpers import get_style_files
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
-                                  wait_for_providers_task, TaskStates, add_license_file)
+                                  wait_for_providers_task, TaskStates)
 
 from ..tasks.models import ExportRun, DataProviderTaskRecord
 from ..tasks.task_runners import create_export_task_record

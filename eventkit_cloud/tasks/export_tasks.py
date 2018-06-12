@@ -26,7 +26,7 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files, generate_qgs_style, add_license_file
+from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -37,7 +37,7 @@ from ..utils.geopackage import add_file_metadata
 from .exceptions import CancelException, DeleteException
 from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
+BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -757,7 +757,9 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
     # sorted while adding time allows comparisons in tests.
     include_files = sorted(list(set(include_files)))
     if include_files:
-        add_license_file(export_provider_task, include_files)
+        license_file = create_license_file(export_provider_task)
+        if license_file:
+            include_files.append(license_file)
         include_files.append(generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task))
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
@@ -1002,6 +1004,7 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
+
     run = ExportRun.objects.get(uid=run_uid)
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
@@ -1026,8 +1029,11 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
 
-        # add the license for this provider
-        add_license_file(provider_task, include_files)
+        # add the license for this provider if there are other files already
+        license_file = create_license_file(provider_task)
+        logger.error("LICENSE FILE: {0}".format(license_file))
+        if license_file:
+            include_files += [license_file]
 
     if include_files:
         # No need to add QGIS file if there aren't any files to be zipped.
@@ -1118,6 +1124,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                     arcname=relative_file_path
                 )
         for filepath in files:
+            # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
+            # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
