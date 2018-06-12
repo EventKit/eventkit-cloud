@@ -300,7 +300,7 @@ export class DashboardPage extends React.Component {
                 margin: 'auto',
             },
             noData: {
-                margin: `0 ${10 + this.getGridPadding()/2}px`,
+                margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
                 fontSize: '18px',
                 color: 'rgba(0, 0, 0, 0.54)',
@@ -456,7 +456,10 @@ export class DashboardPage extends React.Component {
                                             key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
                                             onRunDelete={this.props.deleteRuns}
                                             providers={this.props.providers}
-                                            adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups.groups)}
+                                            adminPermission={userIsDataPackAdmin(
+                                                this.props.user.data.user,
+                                                run.job.permissions, this.props.groups.groups,
+                                            )}
                                             openShare={this.handleShareOpen}
                                             gridName="RecentlyViewed"
                                             index={index}
@@ -523,7 +526,10 @@ export class DashboardPage extends React.Component {
                                         key={`MyDataPacksDataPack-${run.created_at}`}
                                         onRunDelete={this.props.deleteRuns}
                                         providers={this.props.providers}
-                                        adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups.groups)}
+                                        adminPermission={userIsDataPackAdmin(
+                                            this.props.user.data.user,
+                                            run.job.permissions, this.props.groups.groups,
+                                        )}
                                         openShare={this.handleShareOpen}
                                         gridName="MyDataPacks"
                                         index={index}
@@ -543,8 +549,10 @@ export class DashboardPage extends React.Component {
                         groups={this.props.groups.groups}
                         members={this.props.users.users}
                         permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
+                        groupsText="You may share view and edit rights with groups exclusively.
+                            Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively.
+                            Member sharing is managed separately from group sharing."
                         canUpdateAdmin
                         warnPublic
                     />
@@ -559,6 +567,12 @@ export class DashboardPage extends React.Component {
 DashboardPage.propTypes = {
     router: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
+    userActivity: PropTypes.shape({
+        viewedJobs: PropTypes.shape({
+            fetched: PropTypes.bool,
+            viewedJobs: PropTypes.arrayOf(PropTypes.object),
+        }),
+    }).isRequired,
     notifications: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     runsDeletion: PropTypes.object.isRequired,
@@ -595,6 +609,7 @@ DashboardPage.propTypes = {
     }).isRequired,
     users: PropTypes.object.isRequired,
     groups: PropTypes.object.isRequired,
+    updateDataCartPermissions: PropTypes.func.isRequired,
     getGroups: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
 };

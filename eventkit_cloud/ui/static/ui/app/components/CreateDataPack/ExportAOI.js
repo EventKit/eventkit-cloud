@@ -173,7 +173,7 @@ export class ExportAOI extends Component {
     setMapView() {
         clearDraw(this.drawLayer);
         const ext = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = new Polygon.fromExtent(ext);
+        const geom = Polygon.fromExtent(ext);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
@@ -532,10 +532,10 @@ export class ExportAOI extends Component {
             coords = coords.map((coord) => {
                 const newCoord = [...coord];
                 if (coord[0] === this.coordinate[0]) {
-                    newCoord[0] = evt.coordinate[0];
+                    [newCoord[0]] = evt.coordinate;
                 }
                 if (coord[1] === this.coordinate[1]) {
-                    newCoord[1] = evt.coordinate[1];
+                    [, newCoord[1]] = evt.coordinate;
                 }
                 return newCoord;
             });
@@ -752,7 +752,7 @@ export class ExportAOI extends Component {
     callback(data) {
         this.setAllButtonsDefault();
         this.props.setNextDisabled();
-        
+
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             if (this.state.fakeData === true) {
                 this.props.clearAoiInfo();
@@ -856,7 +856,7 @@ export class ExportAOI extends Component {
                     }}
                     run={isRunning}
                 />
-                <div id="map" className={css.map} style={mapStyle} ref="olmap">
+                <div id="map" className={css.map} style={mapStyle}>
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
                         showRevert={!!this.props.aoiInfo.buffer}
@@ -946,8 +946,9 @@ ExportAOI.propTypes = {
     getGeocode: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
-    walkthroughClicked: PropTypes.bool,
-    onWalkthroughReset: PropTypes.func,
+    clearExportInfo: PropTypes.func.isRequired,
+    walkthroughClicked: PropTypes.bool.isRequired,
+    onWalkthroughReset: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
