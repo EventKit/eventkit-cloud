@@ -10,7 +10,7 @@ setup(
     author="",
     author_email="",
     description="Eventkit Cloud",
-    long_description=(read('README.md')),
+    long_description=(read('readme.md')),
     # Full list of classifiers can be found at:
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
