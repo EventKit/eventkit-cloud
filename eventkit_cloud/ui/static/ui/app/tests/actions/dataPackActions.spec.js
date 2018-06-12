@@ -153,6 +153,57 @@ describe('DataPackList actions', () => {
             });
     });
 
+    it('getFeaturedRuns should return runs from "api/runs/filter"', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, expectedRuns, {
+            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-6/24',
+        });
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+
+        const expectedActions = [
+            { type: types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
+            {
+                type: types.RECEIVED_FEATURED_RUNS,
+                runs: expectedRuns,
+                nextPage: true,
+                range: '6/24',
+            },
+        ];
+
+        const store = mockStore({ featuredRunsList: {} });
+
+        return store.dispatch(actions.getFeaturedRuns({ pageSize: 6 }))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                axios.CancelToken.source = original;
+            });
+    });
+
+    it('getFeaturedRuns should handle a generic request error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(400, 'oh no an error');
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+
+        const expectedActions = [
+            { type: types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
+            { type: types.FETCH_FEATURED_RUNS_ERROR, error: 'oh no an error' },
+        ];
+
+        const store = mockStore({ featuredRunsList: {} });
+
+        return store.dispatch(actions.getFeaturedRuns({ pageSize: 2 }))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+                axios.CancelToken.source = original;
+            });
+    });
+
     it('deleteRuns should dispatch deleting and deleted actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
 

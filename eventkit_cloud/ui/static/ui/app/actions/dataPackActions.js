@@ -146,7 +146,7 @@ export function getFeaturedRuns(args) {
 
         const params = {};
         params.page_size = args.pageSize;
-        params.ordering = 'featured,-started_at';
+        params.featured = true;
 
         const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
@@ -165,26 +165,26 @@ export function getFeaturedRuns(args) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+            
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-            }
+            });
+
             let range = '';
             if (response.headers['content-range']) {
                 range = response.headers['content-range'].split('-')[1];
             }
 
-            const runs = [];
-            for (const run of Object.values(response.data)) {
-                if (run.job.featured) {
-                    runs.push(run);
-                } else {
-                    nextPage = false;
-                }
-            }
+            const runs = [...response.data];
 
-            dispatch({ type: types.RECEIVED_FEATURED_RUNS, runs: runs, nextPage, range });
+            dispatch({
+                type: types.RECEIVED_FEATURED_RUNS,
+                runs,
+                nextPage,
+                range,
+            });
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
