@@ -45,6 +45,25 @@ def get_style_files():
     return files
 
 
+def create_license_file(provider_task):
+    # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
+    from eventkit_cloud.jobs.models import DataProvider
+    from eventkit_cloud.tasks.task_runners import normalize_name
+    data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
+
+    # DataProviders are not required to have a license
+    if data_provider_license is None:
+        return
+
+    license_file_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
+                                     provider_task.slug, '{0}.txt'.format(normalize_name(data_provider_license.name)))
+
+    with open(license_file_path, 'w') as license_file:
+        license_file.write(data_provider_license.text)
+
+    return license_file_path
+
+
 def generate_qgs_style(run_uid=None, export_provider_task=None):
     """
     Task to create QGIS project file with styles for osm.
@@ -59,15 +78,14 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
 
     provider_tasks = run.provider_tasks.all()
 
-    provider_details = []
+    # A dict is used here to ensure that just one file per provider is added,
+    # this should be updated when multiple formats are supported.
+    provider_details = {}
     if export_provider_task:
-        provider_slug = export_provider_task.slug
-        provider_detail = {'provider_slug': provider_slug, 'file_path': ''}
-        provider_details += [provider_detail]
+        provider_details[export_provider_task.slug] = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
     else:
         for provider_task in provider_tasks:
             if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-                provider_slug = provider_task.slug
                 for export_task in provider_task.tasks.all():
                     try:
                         filename = export_task.result.filename
@@ -80,12 +98,17 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                                       export_task.name))
                         continue
                     # Exclude zip files created by zip_export_provider and the selection geojson
+                    # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
+                    # GeoTIFF are elevation.  This will need to be updated in the future.
                     if not (full_file_path.endswith(".zip") or full_file_path.endswith(".geojson")):
-                        provider_detail = {'provider_slug': provider_slug, 'file_path': full_file_path}
-                        provider_details += [provider_detail]
+                        provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
+                                           'provider_name': provider_task.name,
+                                           'file_type': os.path.splitext(full_file_path)[1]}
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))
+
+    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
 
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),

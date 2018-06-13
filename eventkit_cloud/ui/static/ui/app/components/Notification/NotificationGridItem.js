@@ -74,9 +74,9 @@ export class NotificationGridItem extends Component {
             >
                 {icon}
                 {message}
-                <div style={{flex: '1'}}></div>
+                <div style={{ flex: '1' }} />
                 <div
-                    className={'qa-NotificationGridItem-Date'}
+                    className="qa-NotificationGridItem-Date"
                     style={styles.date}
                 >
                     {moment(this.props.notification.timestamp).fromNow()}

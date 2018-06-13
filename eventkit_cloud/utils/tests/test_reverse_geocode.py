@@ -11,6 +11,7 @@ from ..reverse import ReverseGeocode, ReverseGeocodeAdapter, expand_bbox, is_val
 logger = logging.getLogger(__name__)
 mockURL = "http://192.168.20.1"
 
+
 class TestReverseGeoCode(TestCase):
 
     def setUp(self):
@@ -18,12 +19,11 @@ class TestReverseGeoCode(TestCase):
         self.mock_requests.start()
         self.addCleanup(self.mock_requests.stop)
         settings.REVERSE_GEOCODING_API_URL = mockURL;
-        
 
     def reverse_geocode_test(self, api_response):
         self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
         reverseGeocode = ReverseGeocode()
-        result = reverseGeocode.search({ "lat": 38.960327927982796, "lon": -77.422182})
+        result = reverseGeocode.search({"lat": 38.960327927982796, "lon": -77.422182})
         self.assertIsNotNone(result.get("features"))
         self.assertEquals(result.get("type"), "FeatureCollection")
         self.assertIsInstance(result.get("bbox"), list)
@@ -35,8 +35,6 @@ class TestReverseGeoCode(TestCase):
             self.assertIsNotNone(feature.get('geometry'))
             for property in ReverseGeocodeAdapter._properties:
                 self.assertTrue(property in properties)
-
-
 
     def test_pelias_success(self):
         
@@ -92,29 +90,32 @@ class TestReverseGeoCode(TestCase):
                 "attribution": "/v1/attribution",
                 "query": {
                     "ids": [{"source": "whosonfirst", "layer": "county", "id": "1108731585"}],
-			        "private": False,
-			        "lang": {"name": "English", "iso6391": "en", "iso6393": "eng", "defaulted": False}
+                    "private": False,
+                    "lang": {"name": "English", "iso6391": "en", "iso6393": "eng", "defaulted": False}
 
                 },
-		        "engine": { "name": "Pelias", "author": "Mapzen", "version": "1.0" },
+                "engine": {"name": "Pelias", "author": "Mapzen", "version": "1.0"},
                 "timestamp": 1510925466405
-	        },
-	        "type": "FeatureCollection",
-	        "features": [
-                { "type": "Feature", "geometry": {
-				    "type": "Point",
-				    "coordinates": [102.227634, 17.743244]
-			    },
-			    "properties": { "id": "1108731585", "gid": "whosonfirst:county:1108731585", "layer": "county",
-                    "source": "whosonfirst", "source_id": "1108731585", "name": "Nam Som", "accuracy": "centroid",
-                    "country": "Thailand", "country_gid": "whosonfirst:country:85632293", "country_a": "THA",
-                    "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869", "county": "Nam Som",
-                    "county_gid": "whosonfirst:county:1108731585", "label": "Nam Som, Thailand"
-			    },
-			    "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
-		        }
-	        ],
-	        "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
+            },
+            "type": "FeatureCollection",
+            "features": [
+                {"type": "Feature", "geometry": {
+                    "type": "Point",
+                    "coordinates": [102.227634, 17.743244]
+                },
+                 "properties": {"id": "1108731585", "gid": "whosonfirst:county:1108731585", "layer": "county",
+                                "source": "whosonfirst", "source_id": "1108731585", "name": "Nam Som",
+                                "accuracy": "centroid",
+                                "country": "Thailand", "country_gid": "whosonfirst:country:85632293",
+                                "country_a": "THA",
+                                "region": "Udon Thani", "region_gid": "whosonfirst:region:85678869",
+                                "county": "Nam Som",
+                                "county_gid": "whosonfirst:county:1108731585", "label": "Nam Som, Thailand"
+                                },
+                 "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
+                 }
+            ],
+            "bbox": [102.020749821, 17.6291659858, 102.33623593, 17.8795015544]
         }
         self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
         expected_bbox = api_response.get('bbox')
