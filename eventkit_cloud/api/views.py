@@ -598,7 +598,7 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST)
 
         job_list = get_job_ids_via_permissions(request.data["permissions"])
-        jobs =  Job.objects.filter(id__in=job_list)
+        jobs = Job.objects.filter(id__in=job_list)
         serializer = ListJobSerializer(jobs, many=True, context={'request': request})
         return Response(serializer.data)
 
