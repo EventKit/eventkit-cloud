@@ -1,6 +1,5 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import debounce from 'lodash/debounce';
 import axios from 'axios';
 import cookie from 'react-cookie';
 
@@ -78,28 +77,6 @@ export class ExportInfo extends React.Component {
             areaStr,
         });
 
-        // set up debounce functions for user text input
-        this.nameHandler = debounce((event) => {
-            this.props.updateExportInfo({
-                ...this.props.exportInfo,
-                exportName: event.target.value,
-            });
-        }, 250);
-
-        this.descriptionHandler = debounce((event) => {
-            this.props.updateExportInfo({
-                ...this.props.exportInfo,
-                datapackDescription: event.target.value,
-            });
-        }, 250);
-
-        this.projectHandler = debounce((event) => {
-            this.props.updateExportInfo({
-                ...this.props.exportInfo,
-                projectName: event.target.value,
-            });
-        }, 250);
-
         // make requests to check provider availability
         if (this.state.providers) {
             this.fetch = setInterval(this.state.providers.forEach((provider) => {
@@ -132,18 +109,33 @@ export class ExportInfo extends React.Component {
     }
 
     onNameChange(e) {
-        e.persist();
-        this.nameHandler(e);
+        // It feels a little weird to write every single change to redux
+        // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
+        // If we use value we cannot debounce the input because the user should see it as they type.
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            exportName: e.target.value,
+        });
     }
 
     onDescriptionChange(e) {
-        e.persist();
-        this.descriptionHandler(e);
+        // It feels a little weird to write every single change to redux
+        // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
+        // If we use value we cannot debounce the input because the user should see it as they type.
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            datapackDescription: e.target.value,
+        });
     }
 
     onProjectChange(e) {
-        e.persist();
-        this.projectHandler(e);
+        // It feels a little weird to write every single change to redux
+        // but the TextField (v0.18.7) does not size vertically to the defaultValue prop, only the value prop.
+        // If we use value we cannot debounce the input because the user should see it as they type.
+        this.props.updateExportInfo({
+            ...this.props.exportInfo,
+            projectName: e.target.value,
+        });
     }
 
     onChangeCheck(e) {
@@ -468,7 +460,7 @@ export class ExportInfo extends React.Component {
                                     underlineStyle={style.underlineStyle}
                                     underlineFocusStyle={style.underlineStyle}
                                     onChange={this.onNameChange}
-                                    defaultValue={this.props.exportInfo.exportName}
+                                    value={this.props.exportInfo.exportName}
                                     hintText="Datapack Name"
                                     style={style.textField}
                                     inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
@@ -482,7 +474,7 @@ export class ExportInfo extends React.Component {
                                     underlineFocusStyle={style.underlineStyle}
                                     name="datapackDescription"
                                     onChange={this.onDescriptionChange}
-                                    defaultValue={this.props.exportInfo.datapackDescription}
+                                    value={this.props.exportInfo.datapackDescription}
                                     hintText="Description"
                                     multiLine
                                     style={style.textField}
@@ -497,7 +489,7 @@ export class ExportInfo extends React.Component {
                                     underlineFocusStyle={style.underlineStyle}
                                     name="projectName"
                                     onChange={this.onProjectChange}
-                                    defaultValue={this.props.exportInfo.projectName}
+                                    value={this.props.exportInfo.projectName}
                                     hintText="Project Name"
                                     style={style.textField}
                                     inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
