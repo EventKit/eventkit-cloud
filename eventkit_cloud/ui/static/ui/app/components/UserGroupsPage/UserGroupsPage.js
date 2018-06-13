@@ -573,7 +573,7 @@ export class UserGroupsPage extends Component {
             this.joyride.reset(true);
         } else {
             if (step.selector === '.qa-GroupsDrawer-addGroup' && isViewportS() && !this.state.drawerOpen) {
-                // because the next step will render immidiately after (before the drawer is fully open)
+                // because the next step will render immediately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
                 this.joyride.calcPlacement();

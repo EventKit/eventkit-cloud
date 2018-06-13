@@ -146,30 +146,44 @@ export const joyride = {
             text: `In addition to location search, an AOI can be defined using several other tools,
                 including Bounding Box, Freehand Draw, Current View, and Import.
                 The Import function supports a range of file uploads, including GeoJSON, KML, GeoPackage, and zipped shapefile.
-                After drawing or importing an AOI, it can be edited by moving any individual node, or  deleted by clicking the “X” button.`,
+                After drawing or importing an AOI, it can be edited by moving any individual node.`,
             selector: '.qa-DrawAOIToolbar-div',
             position: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'AOI Info and Buffer',
-            text: `Any AOI can be buffered using the Buffer tool, and is a requirement if the placename or import AOI is only a point.
-                The buffer can be created dynamically using the slider bar in the user interface, or a specific distance can be entered.
-                The maximum buffer is currently 10,000 meters.`,
+            title: 'Area of Interest (AOI) Info',
+            text: `This dialog box displays information about your current Area of Interest (AOI),
+                including the size (in square kilometers), and the maximum allowable AOI size.
+                Note, there may be multiple maximum AOI sizes, as they can vary between individual data sources.
+                Finally, this dialog contains the Buffer button, which is described in the next step.`,
             selector: '.qa-AoiInfobar-body',
+            position: 'top',
+            style: JoyRideStyles.tooltipStyle,
+        },
+        {
+            title: 'Buffer',
+            text: `Any Area of Interest ( AOI) can be buffered using the Buffer tool.
+                The buffer can be created dynamically using the slide  bar in the user interface,
+                or a specific distance (in meters) can be entered. The maximum buffer is currently 10,000 meters.
+                </br>
+                Note, a buffer is required if the AOI is only a point (which can happen with the placename search and Import functions).`,
+            selector: '.qa-BufferDialog-main',
             positition: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Cancel Selection',
-            text: 'Cancel or clear selection by clicking the "X".',
-            selector: '.qa-DrawBoxButton-button',
+            text: 'Delete the AOI by clicking the "X".',
+            selector: '#selected_icon',
             position: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Go to Next Step',
-            text: 'Once the area of interest is set, move to the next step in the create process by clicking the green arrow button.',
+            title: 'Go to Select Data & Formats',
+            text: `Once the area of interest is set,
+                move to the next step in the Create DataPack process by clicking the green arrow button.
+                This will take you to the Select Data and Formats page`,
             selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
             position: 'left',
             style: JoyRideStyles.tooltipStyle,
@@ -177,25 +191,46 @@ export const joyride = {
     ],
     ExportInfo: [
         {
-            title: 'Enter General Information',
-            text: 'Enter the general details and identifying information about the DataPack.',
-            selector: '.qa-ExportInfo-input-name',
+            title: '',
+            text: `On the Select Data & Formats page, two basic steps must be accomplished.
+                First, text information about the DataPack will be entered by the user,
+                and second, selecting the data sources to be included in the DataPack.`,
+            selector: '.qa-BreadcrumbStepper-div-stepLabel',
             position: 'bottom',
-            scrollToId: 'Name',
+            style: JoyRideStyles.welcomeTooltipStyle,
+        },
+        {
+            title: 'Enter General Information',
+            text: `Enter the general details and identifying information about the DataPack,
+                including a Title and Description.
+                Additionally, a Project Name field provides a way to tag a DataPack as belonging to a larger collection. 
+                </br>
+                Note, all the text entered here is indexed and can be search across in the DataPack Library.`,
+            selector: '.qa-ExportInfo-general-info',
+            position: 'bottom',
+            scrollToId: 'GeneralInfo',
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Choose your sources',
-            text: 'Choose the data sources desired for the DataPack.',
+            title: 'Select Data Sources',
+            text: `Select the individual data sources to be included in the DataPack.
+                For each data source, additional information can be found by clicking the dropdown arrow on the right.`,
             selector: '.qa-ExportInfo-List',
             position: 'left',
             scrollToId: 'ProviderList',
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Check the source availability',
-            text: `This indicates the data source availability.  If the source is available, a green check mark will be displayed.
-                If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.`,
+            title: 'Data Source Availability',
+            text: `EventKit runs a series of checks on each data source to determine if its underlying web service is available,
+                and the results are displayed in the Availability column.
+                If a data source is available, a green check mark will be displayed.
+                If the source is unavailable for any reason, an error icon will be shown here to indicate that something has gone wrong.
+                Additional information about the error can be accessed by clicking on the error icon. 
+                </br>
+                In most cases, EventKit will allow you to keep an unavailable data source in a DataPack.
+                This way if you “Run Export Again” at a later time, the data source may have become available.
+                Exceptions to this include if the selected AOI exceeds the size limit for that data source.`,
             selector: '.qa-ProviderStatusIcon',
             position: 'left',
             scrollToId: 'ProviderStatus',
@@ -220,8 +255,10 @@ export const joyride = {
             style: JoyRideStyles.tooltipStyle,
         },
         {
-            title: 'Go to next step',
-            text: 'Once the information is entered, move to the next step in the create process by clicking the green arrow button.',
+            title: 'Go to Review & Submit',
+            text: `Once all the text is entered and data sources selected,
+                move to the next step in the Create DataPack process by clicking the green arrow button.
+                This will take you to the Review & Submit page.`,
             selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
             position: 'left',
             scrollToId: 'Next',
@@ -230,6 +267,13 @@ export const joyride = {
     ],
     ExportSummary: [
         {
+            title: '',
+            text: 'The Review & Submit page provides you the opportunity to review the details of the DataPack before submitting it for processing.',
+            selector: '.qa-BreadcrumbStepper-div-stepLabel',
+            position: 'bottom',
+            style: JoyRideStyles.welcomeTooltipStyle,
+        },
+        {
             title: 'Verify Information',
             text: 'Verify the information entered is correct before proceeding.',
             selector: '.qa-ExportSummary-div',
@@ -237,8 +281,9 @@ export const joyride = {
             scrollToId: 'Summary',
             style: JoyRideStyles.tooltipStyle,
         }, {
-            title: 'Go Back to Edit',
-            text: 'If you need to make changes before submitting, use the small blue arrow to navigate back.',
+            title: 'Edit Previous Steps',
+            text: `Once ready, click the large green button to complete the Create DataPack process.
+                You will automatically be taken to the Status & Download page, where you can monitor the progress of the DataPack export.`,
             selector: '.qa-BreadcrumbStepper-FloatingActionButton-previous',
             position: 'bottom',
             scrollToId: 'Previous',

@@ -99,6 +99,7 @@ export class ExportAOI extends Component {
             validBuffer: true,
             mode: MODE_NORMAL,
             steps: [],
+            stepIndex: 0,
             isRunning: false,
             fakeData: false,
             showReset: false,
@@ -659,7 +660,12 @@ export class ExportAOI extends Component {
     }
 
     openBufferDialog() {
-        this.setState({ showBuffer: true });
+        // this still executes the call to setState immediately
+        // but it gives you the option to await the state change to be complete
+        return new Promise(async (resolve) => {
+            // resolve only when setState is completed
+            this.setState({ showBuffer: true }, resolve);
+        });
     }
 
     closeBufferDialog() {
@@ -749,40 +755,85 @@ export class ExportAOI extends Component {
         });
     }
 
-    callback(data) {
-        this.setAllButtonsDefault();
-        this.props.setNextDisabled();
+    async callback(data) {
+        const {
+            action,
+            index,
+            type,
+            step,
+        } = data;
 
-        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+        if (this.bounceBack) {
+            // if "bounceBack" that means this callback is being fired as
+            // part of an attempt to re-render a step and we want to immediately go forward again.
+            // ** See the very long comment at end of function for more details **
+            this.bounceBack = false;
+            this.setState({ stepIndex: index + 1 });
+            return;
+        }
+
+        if (!action) return;
+
+        if (action === 'close' || action === 'skip' || type === 'finished') {
             if (this.state.fakeData === true) {
-                this.props.clearAoiInfo();
+                // if we loaded fake data we need to clean it all up
+                this.handleCancel();
                 this.props.clearExportInfo();
+                this.setAllButtonsDefault();
+                if (this.state.showBuffer) {
+                    this.setState({ showBuffer: false });
+                }
                 this.handleResetMap();
                 this.setState({ fakeData: false });
-            } else {
-                this.setButtonSelected('box');
-                this.props.setNextEnabled();
             }
 
-            this.setState({ isRunning: false });
+            this.setState({ isRunning: false, stepIndex: 0 });
             this.props.onWalkthroughReset();
             this.joyride.reset(true);
-        }
-
-        if (data.index === 2 && data.type === 'step:before') {
-            //  make the map have a selection, make toolbar have the X
-            if (this.props.aoiInfo.description === null) {
-                this.drawFakeBbox();
-                this.setState({ fakeData: true });
-            } else {
-                this.handleZoomToSelection();
+        } else {
+            if (index === 2 && type === 'step:before') {
+                //  if there is no aoi we load some fake data
+                if (this.props.aoiInfo.description === null) {
+                    this.drawFakeBbox();
+                    this.setState({ fakeData: true });
+                } else { // otherwise just zoom to whats already there
+                    this.handleZoomToSelection();
+                }
             }
-        }
+            // if the buffer dialog is open we need to close it so its not hiding the AOI info
+            if (step.selector === '.qa-AoiInfobar-body' && type === 'tooltip:before' && this.state.showBuffer) {
+                this.closeBufferDialog();
+            }
+            // if we are done highlighting the buffer dialog we need to close it again
+            if (step.selector === '.qa-BufferDialog-main' && type === 'step:after') {
+                this.closeBufferDialog();
+            }
+            // if step:after or error we will want to advance to the next step
+            if (type === 'step:after' || type === 'error:target_not_found') {
+                if (type === 'error:target_not_found' && step.selector === '.qa-BufferDialog-main') {
+                    // Okay, we can probably all agree that this is a very janky solution, but it
+                    // was the best fix I could come up with of given the serious limitations of react-joyride at this time (v1.11.4).
+                    // We cannot open the buffer dialog prior to the buffer step because it will be too soon
+                    // and cover the AOI Infobar while that is being highlighted.
+                    // We also cannot open the buffer dialog in the buffer step because the "before:step" type happens
+                    // at the same time that react-joyride checks if an element exists.
+                    // The solution here is to accept that the buffer will not be open before react-joyride checks for its existance.
+                    // With that in mind we can check for the not_found error related to the buffer dialog.
+                    // When that error happens we open and wait for the dialog
+                    // then do a weird back and forth to get the tour to re-render the buffer step.
 
-        if ((data.index === 3 || data.index === 4 || data.index === 5) && data.type === 'tooltip:before') {
-            //  make the map have a selection, make toolbar have the X
-            this.setButtonSelected('box');
-            this.props.setNextEnabled();
+                    // this lets the callback know that the nextime it is call it needs to simple go forward to the next step and exit
+                    this.bounceBack = true;
+                    // open the buffer dialog and wait for it to complete
+                    await this.openBufferDialog();
+                    // once the dialog is open we go back to the previous step which will then forward to this step again,
+                    // causing the tour step to render correctly this time
+                    this.setState({ stepIndex: index - 1 });
+                } else {
+                    // If we are not accounting for the stupid buffer issue, just go the the proper step index
+                    this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+                }
+            }
         }
     }
 
@@ -815,6 +866,7 @@ export class ExportAOI extends Component {
             selectionType: 'box',
         });
         this.props.setNextEnabled();
+        this.setButtonSelected('box');
         zoomToFeature(feature, this.map);
     }
 
@@ -843,6 +895,7 @@ export class ExportAOI extends Component {
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
+                    stepIndex={this.state.stepIndex}
                     autoStart
                     type="continuous"
                     showSkipButton

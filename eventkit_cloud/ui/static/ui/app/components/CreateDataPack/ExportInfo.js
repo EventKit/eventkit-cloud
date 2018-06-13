@@ -533,59 +533,60 @@ export class ExportInfo extends React.Component {
                             zDepth={2}
                             rounded
                         >
-                            <div
-                                id="mainHeading"
-                                className="qa-ExportInfo-mainHeading"
-                                style={style.heading}
-                            >
-                                Enter General Information
+                            <div className="qa-ExportInfo-general-info" id="GeneralInfo">
+                                <div
+                                    id="mainHeading"
+                                    className="qa-ExportInfo-mainHeading"
+                                    style={style.heading}
+                                >
+                                    Enter General Information
+                                </div>
+                                <div style={{ marginBottom: '30px' }}>
+                                    <CustomTextField
+                                        className="qa-ExportInfo-input-name"
+                                        id="Name"
+                                        name="exportName"
+                                        underlineStyle={style.underlineStyle}
+                                        underlineFocusStyle={style.underlineStyle}
+                                        onChange={this.onNameChange}
+                                        defaultValue={this.props.exportInfo.exportName}
+                                        hintText="Datapack Name"
+                                        style={style.textField}
+                                        inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        maxLength={100}
+                                    />
+                                    <CustomTextField
+                                        className="qa-ExportInfo-input-description"
+                                        id="Description"
+                                        underlineStyle={style.underlineStyle}
+                                        underlineFocusStyle={style.underlineStyle}
+                                        name="datapackDescription"
+                                        onChange={this.onDescriptionChange}
+                                        defaultValue={this.props.exportInfo.datapackDescription}
+                                        hintText="Description"
+                                        multiLine
+                                        style={style.textField}
+                                        textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        maxLength={250}
+                                    />
+                                    <CustomTextField
+                                        className="qa-ExportInfo-input-project"
+                                        id="Project"
+                                        underlineStyle={style.underlineStyle}
+                                        underlineFocusStyle={style.underlineStyle}
+                                        name="projectName"
+                                        onChange={this.onProjectChange}
+                                        defaultValue={this.props.exportInfo.projectName}
+                                        hintText="Project Name"
+                                        style={style.textField}
+                                        inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        maxLength={100}
+                                    />
+                                </div>
                             </div>
-                            <div style={{ marginBottom: '30px' }}>
-                                <CustomTextField
-                                    className="qa-ExportInfo-input-name"
-                                    id="Name"
-                                    name="exportName"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    onChange={this.onNameChange}
-                                    defaultValue={this.props.exportInfo.exportName}
-                                    hintText="Datapack Name"
-                                    style={style.textField}
-                                    inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={100}
-                                />
-                                <CustomTextField
-                                    className="qa-ExportInfo-input-description"
-                                    id="Description"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    name="datapackDescription"
-                                    onChange={this.onDescriptionChange}
-                                    defaultValue={this.props.exportInfo.datapackDescription}
-                                    hintText="Description"
-                                    multiLine
-                                    style={style.textField}
-                                    textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={250}
-                                />
-                                <CustomTextField
-                                    className="qa-ExportInfo-input-project"
-                                    id="Project"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    name="projectName"
-                                    onChange={this.onProjectChange}
-                                    defaultValue={this.props.exportInfo.projectName}
-                                    hintText="Project Name"
-                                    style={style.textField}
-                                    inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={100}
-                                />
-                            </div>
-
                             <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
