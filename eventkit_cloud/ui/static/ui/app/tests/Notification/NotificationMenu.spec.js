@@ -1,10 +1,11 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { IconMenu, MenuItem } from 'material-ui';
+import { IconButton, IconMenu, MenuItem } from 'material-ui';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
 import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 
@@ -37,6 +38,10 @@ describe('NotificationMenu component', () => {
         return shallow(<NotificationMenu {...props} />);
     }
 
+    function wrapShallow(element) {
+        return shallow(<div>{element}</div>).childAt(0);
+    }
+
     it('should have the correct initial state', () => {
         const wrapper = getShallowWrapper();
         expect(wrapper.state().forceClose).toBe(false);
@@ -46,6 +51,10 @@ describe('NotificationMenu component', () => {
         const wrapper = getShallowWrapper();
         const instance = wrapper.instance();
         expect(wrapper.find(IconMenu)).toHaveLength(1);
+        const iconMenu = wrapper.find(IconMenu).get(0);
+        expect(wrapShallow(iconMenu.props.iconButtonElement).type()).toBe(IconButton);
+        expect(wrapShallow(iconMenu.props.iconButtonElement).find(MoreVertIcon)).toHaveLength(1);
+        expect(iconMenu.props.open).toBe(null);
         expect(wrapper.find(MenuItem)).toHaveLength(3);
         expect(wrapper.find(MenuItem).get(0).props.primaryText).toBe('View');
         expect(wrapper.find(MenuItem).get(0).props.leftIcon).toEqual(<OpenInNewIcon />);
@@ -56,6 +65,43 @@ describe('NotificationMenu component', () => {
         expect(wrapper.find(MenuItem).get(2).props.primaryText).toBe('Remove');
         expect(wrapper.find(MenuItem).get(2).props.leftIcon).toEqual(<CloseIcon />);
         expect(wrapper.find(MenuItem).get(2).props.onClick).toBe(instance.handleRemove);
+    });
+
+    it('should only render View menu item when a view path exists', () => {
+        const wrapper = getShallowWrapper();
+        expect(wrapper.find('.qa-NotificationMenu-MenuItem-View')).toHaveLength(1);
+        const props = wrapper.props();
+        wrapper.setProps({
+            ...props,
+            notification: {
+                ...props.notification,
+                verb: 'some_unhandled_verb',
+            },
+        });
+        expect(wrapper.find('.qa-NotificationMenu-MenuItem-View')).toHaveLength(0);
+    });
+
+    it('should change "open" state to false when forceClose is true', () => {
+        const wrapper = getShallowWrapper();
+        const instance = wrapper.instance();
+        expect(wrapper.state().forceClose).toBe(false);
+        expect(wrapper.find(IconMenu).get(0).props.open).toBe(null);
+        const componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
+        instance.handleMenuItemClick({ stopPropagation: () => {} });
+        componentDidUpdateStub.restore();
+        expect(instance.state.forceClose).toBe(true);
+        expect(wrapper.find(IconMenu).get(0).props.open).toBe(false);
+    });
+
+    it('should reset forceClose to false in componentDidUpdate()', () => {
+        const wrapper = getShallowWrapper();
+        const instance = wrapper.instance();
+        const componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
+        wrapper.setState({ forceClose: true });
+        componentDidUpdateStub.restore();
+        expect(wrapper.state().forceClose).toBe(true);
+        instance.componentDidUpdate();
+        expect(wrapper.state().forceClose).toBe(false);
     });
 
     it('should change second item to "Mark As Unread" when notification is read', () => {

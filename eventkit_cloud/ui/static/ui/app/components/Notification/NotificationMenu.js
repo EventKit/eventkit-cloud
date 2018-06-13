@@ -101,6 +101,7 @@ export class NotificationMenu extends React.Component {
             >
                 {viewPath ?
                     <MenuItem
+                        className="qa-NotificationMenu-MenuItem-View"
                         style={styles.menuItem}
                         primaryText="View"
                         leftIcon={<OpenInNewIcon />}
