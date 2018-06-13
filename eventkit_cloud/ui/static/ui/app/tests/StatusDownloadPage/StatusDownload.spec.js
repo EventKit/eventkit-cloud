@@ -80,7 +80,7 @@ describe('StatusDownload component', () => {
             },
         },
         provider_tasks: providerTasks,
-        zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 
@@ -232,7 +232,7 @@ describe('StatusDownload component', () => {
         props.getDatacartDetails = sinon.spy();
         props.getProviders = sinon.spy();
         const timerStub = sinon.stub(StatusDownload.prototype, 'startTimer');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
@@ -412,10 +412,10 @@ describe('StatusDownload component', () => {
         props.cloneExport = sinon.spy();
         const wrapper = getWrapper(props);
         const cart = { uid: '123' };
-        const providers = ['1', '2'];
-        wrapper.instance().handleClone(cart, providers);
+        const p = ['1', '2'];
+        wrapper.instance().handleClone(cart, p);
         expect(props.cloneExport.calledOnce).toBe(true);
-        expect(props.cloneExport.calledWith(cart, providers));
+        expect(props.cloneExport.calledWith(cart, p));
     });
 
     it('startTimer should create a timer interval', () => {

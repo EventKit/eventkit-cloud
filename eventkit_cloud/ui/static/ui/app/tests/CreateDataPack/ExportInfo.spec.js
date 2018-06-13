@@ -18,11 +18,25 @@ import BaseDialog from '../../components/Dialog/BaseDialog';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import * as utils from '../../utils/generic';
-import check from 'material-ui/svg-icons/navigation/check';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
 
+const formats = [
+    {
+        uid: 'ed48a7c1-1fc3-463e-93b3-e93eb3861a5a',
+        url: 'http://cloud.eventkit.test/api/formats/shp',
+        slug: 'shp',
+        name: 'ESRI Shapefile Format',
+        description: 'Esri Shapefile (OSM Schema)',
+    },
+    {
+        uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+    }];
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
@@ -60,22 +74,6 @@ describe('ExportInfo component', () => {
             setNextEnabled: () => {},
         }
     );
-
-    const formats = [
-        {
-            "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
-            "url": "http://cloud.eventkit.test/api/formats/shp",
-            "slug": "shp",
-            "name": "ESRI Shapefile Format",
-            "description": "Esri Shapefile (OSM Schema)"
-        },
-        {
-            "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
-            "url": "http://cloud.eventkit.test/api/formats/gpkg",
-            "slug": "gpkg",
-            "name": "Geopackage",
-            "description": "GeoPackage"
-        },]
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
@@ -119,7 +117,7 @@ describe('ExportInfo component', () => {
         const mountSpy = sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = sinon.spy(utils, 'getSqKmString');
         const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);

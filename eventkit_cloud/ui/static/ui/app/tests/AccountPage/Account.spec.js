@@ -1,61 +1,56 @@
 import React from 'react';
-import {mount} from 'enzyme';
+import { mount } from 'enzyme';
 import sinon from 'sinon';
 import AppBar from 'material-ui/AppBar';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import UserInfo from '../../components/AccountPage/UserInfo';
-import Warning from '../../components/AccountPage/Warning';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import {Account} from '../../components/AccountPage/Account';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { Account } from '../../components/AccountPage/Account';
 
 describe('Account Component', () => {
     const muiTheme = getMuiTheme();
 
-    const getProps = () => {
-        return {
-            user: {
-                data: {
-                    user: {
-                        username: 'admin', 
-                        email: 'admin@admin.com', 
-                        date_joined: '2016-06-15T14:25:19Z', 
-                        last_login: '2016-06-15T14:25:19Z'
-                    },
-                    accepted_licenses: {
-                        test1: false, 
-                        test2: false
-                    }
+    const getProps = () => ({
+        user: {
+            data: {
+                user: {
+                    username: 'admin',
+                    email: 'admin@admin.com',
+                    date_joined: '2016-06-15T14:25:19Z',
+                    last_login: '2016-06-15T14:25:19Z',
                 },
-                isLoading: false,
-                patched: false,
-                patching: false,
-                error: null
+                accepted_licenses: {
+                    test1: false,
+                    test2: false,
+                },
             },
-            licenses: {
-                error: null,
-                fetched: false,
-                fetching: false,
-                licenses: [
-                    {slug: 'test1', name: 'testname1', text: 'testtext1'},
-                    {slug: 'test2', name: 'testname2', text: 'textext2'}
-                ]
-            },
-            getLicenses: () => {},
-            patchUser: () => {},
-        }
-    };
+            isLoading: false,
+            patched: false,
+            patching: false,
+            error: null,
+        },
+        licenses: {
+            error: null,
+            fetched: false,
+            fetching: false,
+            licenses: [
+                { slug: 'test1', name: 'testname1', text: 'testtext1' },
+                { slug: 'test2', name: 'testname2', text: 'textext2' },
+            ],
+        },
+        getLicenses: () => {},
+        patchUser: () => {},
+    });
 
-    const getMountedWrapper = (props) => {
-        return mount(<Account {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-    };
+    const getMountedWrapper = props => mount(<Account {...props} />, {
+        context: { muiTheme },
+        childContextTypes: { muiTheme: React.PropTypes.object },
+    });
 
     it('should render an appbar with save button, and body with license info and user info', () => {
-        let props = getProps();
+        const props = getProps();
         const wrapper = getMountedWrapper(props);
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find(AppBar).text()).toEqual('AccountSave Changes');
@@ -66,7 +61,7 @@ describe('Account Component', () => {
     });
 
     it('should not render license info or or user info', () => {
-        let props = getProps();
+        const props = getProps();
         props.user.data.user = {};
         props.licenses.licenses = [];
         const wrapper = getMountedWrapper(props);
@@ -75,13 +70,13 @@ describe('Account Component', () => {
     });
 
     it('should setState and call getLicenses when mounting', () => {
-        let props = getProps();
-        props.getLicenses = new sinon.spy();
-        const mountSpy = new sinon.spy(Account.prototype, 'componentWillMount');
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
-        const wrapper = getMountedWrapper(props);
+        const props = getProps();
+        props.getLicenses = sinon.spy();
+        const mountSpy = sinon.spy(Account.prototype, 'componentWillMount');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
+        getMountedWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({acceptedLicenses: props.user.data.accepted_licenses})).toBe(true);
+        expect(stateSpy.calledWith({ acceptedLicenses: props.user.data.accepted_licenses })).toBe(true);
         expect(props.getLicenses.calledOnce).toBe(true);
         mountSpy.restore();
         stateSpy.restore();
@@ -89,17 +84,17 @@ describe('Account Component', () => {
 
     it('should update state and setTimeout when user has been patched', () => {
         jest.useFakeTimers();
-        let props = getProps();
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const props = getProps();
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
-        expect(stateSpy.calledWith({showSavedMessage: true})).toBe(false);
-        let nextProps = getProps();
+        expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
+        const nextProps = getProps();
         nextProps.user.patched = true;
         wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({showSavedMessage: true})).toBe(true);
-        expect(stateSpy.calledWith({showSavedMessage: false})).toBe(false);
+        expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(true);
+        expect(stateSpy.calledWith({ showSavedMessage: false })).toBe(false);
         jest.runAllTimers();
-        expect(stateSpy.calledWith({showSavedMessage: false})).toBe(true);
+        expect(stateSpy.calledWith({ showSavedMessage: false })).toBe(true);
         expect(setTimeout.mock.calls.length).toBe(1);
         expect(setTimeout.mock.calls[0][1]).toBe(3000);
         stateSpy.restore();
@@ -107,40 +102,40 @@ describe('Account Component', () => {
 
     it('handleCheck should marked the license as checked/unchecked and update state', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
-        expect(wrapper.state().acceptedLicenses).toEqual({...props.user.data.accepted_licenses});
+        expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
         wrapper.instance().handleCheck('test1', true);
-        expect(stateSpy.calledWith({acceptedLicenses: {...props.user.data.accepted_licenses, test1: true}}));
+        expect(stateSpy.calledWith({ acceptedLicenses: { ...props.user.data.accepted_licenses, test1: true } }));
         stateSpy.restore();
     });
 
     it('handleAll should check all as checked/unchecked and update the state', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
-        expect(wrapper.state().acceptedLicenses).toEqual({...props.user.data.accepted_licenses});
+        expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
         wrapper.instance().handleAll({}, true);
-        expect(stateSpy.calledWith({acceptedLicenses: {test1: true, test2: true}}));
+        expect(stateSpy.calledWith({ acceptedLicenses: { test1: true, test2: true } }));
         stateSpy.restore();
     });
 
     it('handleAll should not uncheck already agreed licenses', () => {
-        let props = getProps();
+        const props = getProps();
         props.user.data.accepted_licenses.test1 = true;
-        const stateSpy = new sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
         const wrapper = getMountedWrapper(props);
-        expect(wrapper.state().acceptedLicenses).toEqual({test1: true, test2: false});
-        wrapper.setState({acceptedLicenses: {test1: true, test2: true}});
-        expect(wrapper.state().acceptedLicenses).toEqual({test1: true, test2: true});
+        expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: false });
+        wrapper.setState({ acceptedLicenses: { test1: true, test2: true } });
+        expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: true });
         wrapper.instance().handleAll({}, false);
-        expect(stateSpy.calledWith({test1: true, test2: false}));
+        expect(stateSpy.calledWith({ test1: true, test2: false }));
         stateSpy.restore();
     });
 
     it('handleSubmit should call patchUser', () => {
-        let props = getProps();
-        props.patchUser = new sinon.spy();
+        const props = getProps();
+        props.patchUser = sinon.spy();
         const wrapper = getMountedWrapper(props);
         expect(props.patchUser.notCalled).toBe(true);
         wrapper.instance().handleSubmit();

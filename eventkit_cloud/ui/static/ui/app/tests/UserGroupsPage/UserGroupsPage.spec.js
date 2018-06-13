@@ -144,7 +144,7 @@ describe('UserGroupsPage component', () => {
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
         // we stub componentDidMount before all tests, so temporarily undo it
         UserGroupsPage.prototype.componentDidMount.restore();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getGroups.calledOnce).toBe(true);
         expect(makeRequestStub.calledOnce).toBe(true);
         makeRequestStub.restore();
@@ -168,7 +168,6 @@ describe('UserGroupsPage component', () => {
         expect(requestStub.calledTwice).toBe(true);
         expect(requestStub.calledWith(lastProps.location.query)).toBe(true);
         requestStub.restore();
-
     });
 
     it('componentWillReceiveProps should handle users fetched', () => {
@@ -365,7 +364,7 @@ describe('UserGroupsPage component', () => {
         wrapper.setState({ selectedUsers: selection });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleUserSelect(props.users.users[0]);
-        const [removedUser, ...expectedUsers] = props.users.users;
+        const [, ...expectedUsers] = props.users.users;
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ selectedUsers: expectedUsers })).toBe(true);
         stateStub.restore();

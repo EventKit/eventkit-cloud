@@ -14,6 +14,65 @@ import ExportInfo from '../../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../../components/CreateDataPack/ExportSummary';
 import * as utils from '../../utils/mapUtils';
 
+const providers = [
+    {
+        display: true,
+        id: 1,
+        model_url: 'http://cloud.eventkit.test/api/providers/1',
+        type: 'osm-generic',
+        created_at: '2017-03-24T17:44:22.940611Z',
+        updated_at: '2017-03-24T17:44:22.940629Z',
+        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+        name: 'OpenStreetMap Data (Themes)',
+        slug: 'osm-generic',
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    },
+];
+
+const formats = [
+    {
+        uid: 'fa94240a-14d1-469f-8b31-335cab6b682a',
+        url: 'http://cloud.eventkit.test/api/formats/shp',
+        slug: 'shp',
+        name: 'ESRI Shapefile Format',
+        description: 'Esri Shapefile (OSM Schema)',
+    },
+    {
+        uid: '381e8529-b6d8-46f4-b6d1-854549ae652c',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+    },
+    {
+        uid: 'db36b559-bbca-4322-b059-048dabeceb67',
+        url: 'http://cloud.eventkit.test/api/formats/gtiff',
+        slug: 'gtiff',
+        name: 'GeoTIFF Format',
+        description: 'GeoTIFF Raster',
+    },
+    {
+        uid: '79f1d574-ca37-4011-a99c-0484dd331dc3',
+        url: 'http://cloud.eventkit.test/api/formats/kml',
+        slug: 'kml',
+        name: 'KML Format',
+        description: 'Google Earth KMZ',
+    },
+    {
+        uid: '20a6ba89-e03d-4610-b61f-158a74f963c4',
+        url: 'http://cloud.eventkit.test/api/formats/sqlite',
+        slug: 'sqlite',
+        name: 'SQLITE Format',
+        description: 'SQlite SQL',
+    },
+];
+
 describe('BreadcrumbStepper component', () => {
     const muiTheme = getMuiTheme();
     const getProps = () => ({
@@ -223,7 +282,7 @@ describe('BreadcrumbStepper component', () => {
         expect(content.find(FloatingActionButton)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getButtonContent(1),{
+        content = mount(wrapper.instance().getButtonContent(1), {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
@@ -232,7 +291,7 @@ describe('BreadcrumbStepper component', () => {
         expect(content.find(FloatingActionButton)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getButtonContent(2),{
+        content = mount(wrapper.instance().getButtonContent(2), {
             context: { muiTheme },
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
@@ -436,63 +495,3 @@ describe('BreadcrumbStepper component', () => {
         expect(instance.props.router.push.getCall(0).args[0]).toBe('/someRoute');
     });
 });
-
-const providers = [
-    {
-        "display":true,
-        "id": 1,
-        "model_url": "http://cloud.eventkit.test/api/providers/1",
-        "type": "osm-generic",
-        "created_at": "2017-03-24T17:44:22.940611Z",
-        "updated_at": "2017-03-24T17:44:22.940629Z",
-        "uid": "be401b02-63d3-4080-943a-0093c1b5a914",
-        "name": "OpenStreetMap Data (Themes)",
-        "slug": "osm-generic",
-        "preview_url": "",
-        "service_copyright": "",
-        "service_description": "",
-        "layer": null,
-        "level_from": 0,
-        "level_to": 10,
-        "export_provider_type": 1
-    }
-]
-
-const formats = [
-    {
-        "uid": "fa94240a-14d1-469f-8b31-335cab6b682a",
-        "url": "http://cloud.eventkit.test/api/formats/shp",
-        "slug": "shp",
-        "name": "ESRI Shapefile Format",
-        "description": "Esri Shapefile (OSM Schema)"
-    },
-    {
-        "uid": "381e8529-b6d8-46f4-b6d1-854549ae652c",
-        "url": "http://cloud.eventkit.test/api/formats/gpkg",
-        "slug": "gpkg",
-        "name": "Geopackage",
-        "description": "GeoPackage"
-    },
-    {
-        "uid": "db36b559-bbca-4322-b059-048dabeceb67",
-        "url": "http://cloud.eventkit.test/api/formats/gtiff",
-        "slug": "gtiff",
-        "name": "GeoTIFF Format",
-        "description": "GeoTIFF Raster"
-    },
-    {
-        "uid": "79f1d574-ca37-4011-a99c-0484dd331dc3",
-        "url": "http://cloud.eventkit.test/api/formats/kml",
-        "slug": "kml",
-        "name": "KML Format",
-        "description": "Google Earth KMZ"
-    },
-    {
-        "uid": "20a6ba89-e03d-4610-b61f-158a74f963c4",
-        "url": "http://cloud.eventkit.test/api/formats/sqlite",
-        "slug": "sqlite",
-        "name": "SQLITE Format",
-        "description": "SQlite SQL"
-    }
-]
-

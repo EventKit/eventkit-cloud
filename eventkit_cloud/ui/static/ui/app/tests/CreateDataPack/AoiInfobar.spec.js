@@ -2,13 +2,10 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
 import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
 import ActionZoomIn from 'material-ui/svg-icons/action/zoom-in';
-import ActionRestore from 'material-ui/svg-icons/action/restore';
-import Triangle from 'material-ui/svg-icons/image/details';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
@@ -17,8 +14,8 @@ import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
 
 describe('AoiInfobar component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
+    const getProps = () => (
+        {
             aoiInfo: {
                 geojson: {},
                 originalGeojson: {},
@@ -33,7 +30,7 @@ describe('AoiInfobar component', () => {
             clickZoomToSelection: () => {},
             handleBufferClick: () => {},
         }
-    };
+    );
 
     const getWrapper = props => (
         mount(<AoiInfobar {...props} />, {

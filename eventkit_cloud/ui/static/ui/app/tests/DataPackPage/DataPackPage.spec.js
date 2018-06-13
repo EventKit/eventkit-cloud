@@ -26,114 +26,112 @@ jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
     const muiTheme = getMuiTheme();
-    const providers = [
+    const testProviders = [
         {
-            "id": 2,
-            "model_url": "http://cloud.eventkit.test/api/providers/osm",
-            "type": "osm",
-            "license": null,
-            "created_at": "2017-08-15T19:25:10.844911Z",
-            "updated_at": "2017-08-15T19:25:10.844919Z",
-            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
-            "name": "OpenStreetMap Data (Themes)",
-            "slug": "osm",
-            "preview_url": "",
-            "service_copyright": "",
-            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
-            "layer": null,
-            "level_from": 0,
-            "level_to": 10,
-            "zip": false,
-            "display": true,
-            "export_provider_type": 2
+            id: 2,
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            type: 'osm',
+            license: null,
+            created_at: '2017-08-15T19:25:10.844911Z',
+            updated_at: '2017-08-15T19:25:10.844919Z',
+            uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+            name: 'OpenStreetMap Data (Themes)',
+            slug: 'osm',
+            preview_url: '',
+            service_copyright: '',
+            service_description: 'OpenStreetMap vector data.',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            zip: false,
+            display: true,
+            export_provider_type: 2,
         },
     ];
 
-    const getProps = () => {
-        return {
-            runsList: {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '12/24',
-                order: '',
-                view: '',
+    const getProps = () => ({
+        runsList: {
+            fetching: false,
+            fetched: false,
+            runs: [],
+            error: null,
+            nextPage: false,
+            range: '12/24',
+            order: '',
+            view: '',
+        },
+        user: { data: { user: { username: 'admin' } } },
+        getRuns: () => {},
+        deleteRuns: () => {},
+        getProviders: () => {},
+        runsDeletion: {
+            deleting: false,
+            deleted: false,
+            error: null,
+        },
+        drawer: 'open',
+        providers: testProviders,
+        importGeom: {},
+        geocode: {},
+        getGeocode: () => {},
+        processGeoJSONFile: () => {},
+        resetGeoJSONFile: () => {},
+        setOrder: () => {},
+        setView: () => {},
+        groups: [
+            {
+                id: 1,
+                name: 'group_one',
+                members: ['user_one'],
+                administrators: ['user_three'],
             },
-            user: { data: { user: { username: 'admin' } } },
-            getRuns: () => {},
-            deleteRuns: () => {},
-            getProviders: () => {},
-            runsDeletion: {
-                deleting: false,
-                deleted: false,
-                error: null,
+            {
+                id: 2,
+                name: 'group_two',
+                members: ['user_two'],
+                administrators: ['user_three'],
             },
-            drawer: 'open',
-            providers,
-            importGeom: {},
-            geocode: {},
-            getGeocode: () => {},
-            processGeoJSONFile: () => {},
-            resetGeoJSONFile: () => {},
-            setOrder: () => {},
-            setView: () => {},
-            groups: [
-                {
-                    id: 1,
-                    name: 'group_one',
-                    members: ['user_one'],
-                    administrators: ['user_three'],
-                },
-                {
-                    id: 2,
-                    name: 'group_two',
-                    members: ['user_two'],
-                    administrators: ['user_three'],
-                },
-                {
-                    id: 3,
-                    name: 'group_three',
-                    members: ['user_one', 'user_two'],
-                    administrators: ['user_one'],
-                },
-            ],
-            users: [
-                {
-                    user: {
-                        first_name: 'user',
-                        last_name: 'one',
-                        username: 'user_one',
-                        email: 'user.one@email.com',
-                    },
-                    groups: [1, 3],
-                },
-                {
-                    user: {
-                        first_name: 'user',
-                        last_name: 'two',
-                        username: 'user_two',
-                        email: 'user.two@email.com',
-                    },
-                    groups: [2, 3],
-                },
-            ],
-            getGroups: () => {},
-            getUsers: () => {},
-            updateDataCartPermissions: () => {},
-            updatePermissions: {
-                updating: false,
-                updated: false,
-                error: null,
+            {
+                id: 3,
+                name: 'group_three',
+                members: ['user_one', 'user_two'],
+                administrators: ['user_one'],
             },
-            location: {
-                query: {
-                    collection: '',
+        ],
+        users: [
+            {
+                user: {
+                    first_name: 'user',
+                    last_name: 'one',
+                    username: 'user_one',
+                    email: 'user.one@email.com',
                 },
+                groups: [1, 3],
             },
-        };
-    };
+            {
+                user: {
+                    first_name: 'user',
+                    last_name: 'two',
+                    username: 'user_two',
+                    email: 'user.two@email.com',
+                },
+                groups: [2, 3],
+            },
+        ],
+        getGroups: () => {},
+        getUsers: () => {},
+        updateDataCartPermissions: () => {},
+        updatePermissions: {
+            updating: false,
+            updated: false,
+            error: null,
+        },
+        location: {
+            query: {
+                collection: '',
+            },
+        },
+    });
 
     const getWrapper = props => (
         mount(<DataPackPage {...props} />, {
@@ -298,9 +296,9 @@ describe('DataPackPage component', () => {
 
     it('should run getRuns at intervals', () => {
         jest.useFakeTimers();
-        let props = getProps();
+        const props = getProps();
         props.getRuns = sinon.spy();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
         expect(setInterval.mock.calls[0][1]).toEqual(10000);
@@ -312,10 +310,10 @@ describe('DataPackPage component', () => {
 
     it('should remove the fetch interval on unmount', () => {
         jest.useFakeTimers();
-        let props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
         expect(clearInterval.mock.calls.length).toEqual(0);
-        const fetch = wrapper.instance().fetch;
+        const { fetch } = wrapper.instance();
         wrapper.unmount();
         expect(clearInterval.mock.calls.length).toEqual(1);
         expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
@@ -323,38 +321,38 @@ describe('DataPackPage component', () => {
 
     it('should handle fetched runs', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        let nextProps = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const nextProps = getProps();
         nextProps.runsList.fetched = true;
-        nextProps.runsList.runs = [{user: 'admin2', uid: '2'}, {user: 'admin', uid: '1'}, {user: 'admin3', uid: '3'}];
+        nextProps.runsList.runs = [{ user: 'admin2', uid: '2' }, { user: 'admin', uid: '1' }, { user: 'admin3', uid: '3' }];
         const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showLoading: false}));
+        expect(stateSpy.calledWith({ showLoading: false }));
         DataPackPage.prototype.setState.restore();
         DataPackPage.prototype.componentWillReceiveProps.restore();
     });
 
     it('onSearch should update the state and call makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().onSearch('test_search', 0);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({search: 'test_search', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ search: 'test_search', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
     it('checkForEmptySearch should update state and call makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({search: 'some search term'});
+        const wrapper = shallow(<DataPackPage {...props} />);
+        wrapper.setState({ search: 'some search term' });
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().checkForEmptySearch('');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({search: '', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ search: '', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
@@ -364,22 +362,22 @@ describe('DataPackPage component', () => {
         const makeRequestSpy = sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const wrapper = getWrapper(props);
         expect(makeRequestSpy.calledOnce).toBe(true);
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
         wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(makeRequestSpy.calledTwice).toBe(true);
         makeRequestSpy.restore();
         stateSpy.restore();
     });
 
     it('handleSortChange should set state and call makeRunRequest', () => {
-        let props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleSortChange('job__name');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest))
+        expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest));
         stateSpy.restore();
     });
 
@@ -403,7 +401,7 @@ describe('DataPackPage component', () => {
         const ownerFilter = 'test_user';
         const search = 'search_text';
         const providers = ['test_provider'];
-        const geojson = {data: {}};
+        const geojson = { data: {} };
         const permissions = { value: 'SHARED', groups: {}, members: {} };
         const expectedParams = [{
             pageSize: 12,
@@ -435,35 +433,35 @@ describe('DataPackPage component', () => {
 
     it('handleOwnerFilter should set state and call makeRunRequest', () => {
         const props = getProps();
-        const event = {persist: () => {}};
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const event = { persist: () => {} };
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ownerFilter: 'test_value', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ ownerFilter: 'test_value', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
-    
+
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const currentState = {...wrapper.state()};
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const currentState = { ...wrapper.state() };
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const newState = {
-            minDate: new Date(), 
-            maxDate: new Date(), 
+            minDate: new Date(),
+            maxDate: new Date(),
             status: {
                 completed: true,
                 submitted: false,
-                incomplete: false
-            }
-        }
+                incomplete: false,
+            },
+        };
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({...currentState, ...newState, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        expect(stateSpy.calledWith({open: false})).toBe(true);
+        expect(stateSpy.calledWith({ ...currentState, ...newState, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ open: false })).toBe(true);
         stateSpy.restore();
     });
 
@@ -526,51 +524,51 @@ describe('DataPackPage component', () => {
     });
 
     it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
-        let props = getProps();
-        const promise = {then: (func) => {func()}};
-        props.getRuns = (params) => {return promise};
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const props = getProps();
+        const promise = { then: (func) => { func(); } };
+        props.getRuns = () => promise;
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().changeView('list');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({view: 'list'})).toBe(true);
-        wrapper.setState({order: 'some_other_order'});
+        expect(stateSpy.calledWith({ view: 'list' })).toBe(true);
+        wrapper.setState({ order: 'some_other_order' });
         wrapper.instance().changeView('map');
         expect(stateSpy.callCount).toEqual(4);
-        expect(stateSpy.calledWith({order: 'some_other_order', loading: true}, Function));
-        expect(stateSpy.calledWith({view: 'map'})).toBe(true);
+        expect(stateSpy.calledWith({ order: 'some_other_order', loading: true }, Function));
+        expect(stateSpy.calledWith({ view: 'map' })).toBe(true);
         stateSpy.restore();
     });
 
     it('handleToggle should set state', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleToggle();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({open: false}));
+        expect(stateSpy.calledWith({ open: false }));
         stateSpy.restore();
     });
 
     it('if nextPage is true, loadMore should increase page size and makeRunRequest', () => {
-        let props = getProps();
+        const props = getProps();
         props.runsList.nextPage = true;
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().loadMore();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({pageSize: 24, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ pageSize: 24, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
     it('if pageSize is greater than 12  is should decrease pageSize and makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({pageSize: 24});
+        const wrapper = shallow(<DataPackPage {...props} />);
+        wrapper.setState({ pageSize: 24 });
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().loadLess();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({pageSize: 12, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ pageSize: 12, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         stateSpy.restore();
     });
 
@@ -587,7 +585,7 @@ describe('DataPackPage component', () => {
             handleLoadMore: wrapper.instance().loadMore,
             loadLessDisabled: props.runsList.runs.length <= 12,
             loadMoreDisabled: !props.runsList.nextPage,
-            providers,
+            providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
             groups: props.groups,
         };
