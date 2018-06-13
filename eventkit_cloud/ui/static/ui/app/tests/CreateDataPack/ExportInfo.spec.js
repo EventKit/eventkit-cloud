@@ -115,7 +115,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
-    it('componentDidMount should setNextDisabled, setArea, setJoyRideSteps, and create deboucers', () => {
+    it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
         const expectedString = '12,393 sq km';
         const props = getProps();
         props.updateExportInfo = sinon.spy();
@@ -135,9 +135,6 @@ describe('ExportInfo component', () => {
             areaStr: expectedString,
         })).toBe(true);
         expect(props.updateExportInfo.called).toBe(true);
-        expect(wrapper.instance().nameHandler).not.toBe(undefined);
-        expect(wrapper.instance().descriptionHandler).not.toBe(undefined);
-        expect(wrapper.instance().projectHandler).not.toBe(undefined);
         mountSpy.restore();
         areaSpy.restore();
         hasFieldsSpy.restore();
@@ -184,37 +181,46 @@ describe('ExportInfo component', () => {
         expect(props.setNextDisabled.calledTwice).toBe(true);
     });
 
-    it('onNameChange should call persist and nameHandler', () => {
+    it('onNameChange should call updateExportInfo', () => {
         const props = getProps();
-        const event = { persist: sinon.spy() };
+        props.updateExportInfo = sinon.spy();
+        const event = { target: { value: 'test' } };
         const wrapper = getWrapper(props);
-        wrapper.instance().nameHandler = sinon.spy();
+        props.updateExportInfo.reset();
         wrapper.instance().onNameChange(event);
-        expect(event.persist.calledOnce).toBe(true);
-        expect(wrapper.instance().nameHandler.calledOnce).toBe(true);
-        expect(wrapper.instance().nameHandler.calledWith(event)).toBe(true);
+        expect(props.updateExportInfo.calledOnce).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            exportName: 'test',
+        })).toBe(true);
     });
 
     it('onDescriptionChange should call persist and nameHandler', () => {
         const props = getProps();
-        const event = { persist: sinon.spy() };
+        props.updateExportInfo = sinon.spy();
+        const event = { target: { value: 'test' } };
         const wrapper = getWrapper(props);
-        wrapper.instance().descriptionHandler = sinon.spy();
+        props.updateExportInfo.reset();
         wrapper.instance().onDescriptionChange(event);
-        expect(event.persist.calledOnce).toBe(true);
-        expect(wrapper.instance().descriptionHandler.calledOnce).toBe(true);
-        expect(wrapper.instance().descriptionHandler.calledWith(event)).toBe(true);
+        expect(props.updateExportInfo.calledOnce).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            datapackDescription: 'test',
+        })).toBe(true);
     });
 
     it('onProjectChange should call persist and nameHandler', () => {
         const props = getProps();
-        const event = { persist: sinon.spy() };
+        props.updateExportInfo = sinon.spy();
+        const event = { target: { value: 'test' } };
         const wrapper = getWrapper(props);
-        wrapper.instance().projectHandler = sinon.spy();
+        props.updateExportInfo.reset();
         wrapper.instance().onProjectChange(event);
-        expect(event.persist.calledOnce).toBe(true);
-        expect(wrapper.instance().projectHandler.calledOnce).toBe(true);
-        expect(wrapper.instance().projectHandler.calledWith(event)).toBe(true);
+        expect(props.updateExportInfo.calledOnce).toBe(true);
+        expect(props.updateExportInfo.calledWith({
+            ...props.exportInfo,
+            projectName: 'test',
+        })).toBe(true);
     });
 
     it('onChangeCheck should add a provider', () => {
