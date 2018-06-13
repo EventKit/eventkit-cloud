@@ -88,21 +88,46 @@ describe('NotificationsDropdown component', () => {
 
     it('should render the basic elements', () => {
         const wrapper = getShallowWrapper();
+        const instance = wrapper.instance();
+        loadNotifications(wrapper);
         expect(wrapper.find('.qa-NotificationsDropdown-Pointer')).toHaveLength(1);
         expect(wrapper.find(Paper)).toHaveLength(1);
+        // Header
         expect(wrapper.find('.qa-NotificationsDropdown-Header')).toHaveLength(1);
         expect(wrapper.find('.qa-NotificationsDropdown-Header-Title')).toHaveLength(1);
         expect(wrapper.find('.qa-NotificationsDropdown-Header-Title').text()).toBe('Notifications');
         expect(wrapper.find('.qa-NotificationsDropdown-Header-MarkAllAsRead')).toHaveLength(1);
         expect(wrapper.find('.qa-NotificationsDropdown-Header-MarkAllAsRead').text()).toBe('Mark All As Read');
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        const markAllAsRead = wrapper.find('.qa-NotificationsDropdown-Header-MarkAllAsRead').get(0);
+        expect(markAllAsRead.props.onClick).toBe(instance.props.markAllNotificationsAsRead);
+        // Content
         expect(wrapper.find('.qa-NotificationsDropdown-ViewAll')).toHaveLength(1);
+        const viewAll = wrapper.find('.qa-NotificationsDropdown-ViewAll').get(0);
+        expect(viewAll.props.onClick).toBe(instance.handleViewAll);
         expect(wrapper.find('.qa-NotificationsDropdown-NoData')).toHaveLength(0);
-        expect(wrapper.find('.qa-NotificationsDropdown-Grid')).toHaveLength(0);
+        expect(wrapper.find('.qa-NotificationsDropdown-Grid')).toHaveLength(1);
+        const grid = wrapper.find('.qa-NotificationsDropdown-Grid');
+        expect(grid.get(0).props.cellHeight).toBe('auto');
+        expect(grid.get(0).props.padding).toBe(0);
+        expect(grid.get(0).props.cols).toBe(1);
+        expect(grid.children()).toHaveLength(instance.props.notifications.notificationsSorted.length);
+        for (let i = 0; i < instance.props.notifications.notificationsSorted.length; i++) {
+            const notification = instance.props.notifications.notificationsSorted[i];
+            const gridItem = grid.children().get(i);
+            expect(gridItem.props.notification).toBe(notification);
+            expect(gridItem.props.onView).toBe(instance.props.onNavigate);
+            expect(gridItem.props.router).toBe(instance.props.router);
+        }
     });
 
-    it('should hide loading indicator after fetching notifications', () => {
+    it('should show loading indicator on page load and hide after fetching notifications', () => {
         const wrapper = getShallowWrapper();
+        expect(wrapper.find('.qa-NotificationsDropdown-NoData')).toHaveLength(0);
+        expect(wrapper.find('.qa-NotificationsDropdown-Grid')).toHaveLength(0);
+        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        const circularProgress = wrapper.find(CircularProgress).get(0);
+        expect(circularProgress.props.color).toBe('#4598bf');
+        expect(circularProgress.props.size).toBe(35);
         loadNotifications(wrapper);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
     });
@@ -114,43 +139,6 @@ describe('NotificationsDropdown component', () => {
         expect(wrapper.find('.qa-NotificationsDropdown-NoData').text()).toBe("You don't have any notifications.");
     });
 
-    it('should show notifications after fetching them', () => {
-        const wrapper = getShallowWrapper();
-        loadNotifications(wrapper);
-        expect(wrapper.find('.qa-NotificationsDropdown-Grid')).toHaveLength(1);
-    });
-
-    it('should show a NotificationGridItem for each notification', () => {
-        const wrapper = getShallowWrapper();
-        loadNotifications(wrapper);
-        const notificationsCount = wrapper.instance().props.notifications.notificationsSorted.length;
-        expect(wrapper.find('.qa-NotificationsDropdown-Grid').children()).toHaveLength(notificationsCount);
-    });
-
-    it('should mark all as read when button is clicked', () => {
-        const props = {
-            ...getProps(),
-            markAllNotificationsAsRead: () => {},
-        };
-        const wrapper = getShallowWrapper(props);
-        loadNotifications(wrapper);
-        expect(wrapper.find('.qa-NotificationsDropdown-Header-MarkAllAsRead').get(0).props.onClick).toBe(props.markAllNotificationsAsRead);
-    });
-
-    it('should pass the correct props to NotificationGridItem', () => {
-        const props = {
-            ...getProps(),
-            onNavigate: () => {},
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        loadNotifications(wrapper);
-        const grid = wrapper.find('.qa-NotificationsDropdown-Grid');
-        expect(grid.children().get(0).props.notification).toBe(instance.props.notifications.notificationsSorted[0]);
-        expect(grid.children().get(0).props.onView).toBe(props.onNavigate);
-        expect(grid.children().get(0).props.router).toBe(props.router);
-    });
-
     it('should correctly handle "View All" button click', () => {
         const props = {
             ...getProps(),
@@ -160,7 +148,6 @@ describe('NotificationsDropdown component', () => {
         };
         const wrapper = getShallowWrapper(props);
         const instance = wrapper.instance();
-        expect(wrapper.find('.qa-NotificationsDropdown-ViewAll').get(0).props.onClick).toBe(instance.handleViewAll);
         instance.handleViewAll();
         expect(instance.props.router.push.callCount).toBe(1);
         expect(instance.props.router.push.calledWith('/notifications')).toBe(true);
