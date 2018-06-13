@@ -10,7 +10,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus, VisibilityState
 
 
 logger = logging.getLogger(__name__)
