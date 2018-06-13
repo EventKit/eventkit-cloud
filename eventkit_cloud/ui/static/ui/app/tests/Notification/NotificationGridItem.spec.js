@@ -29,6 +29,9 @@ describe('NotificationGridItem component', () => {
             markNotificationsAsRead: () => {},
             markNotificationsAsUnread: () => {},
             removeNotifications: () => {},
+            onMarkAsRead: () => {},
+            onMarkAsUnread: () => {},
+            onRemove: () => {},
         };
     }
 
@@ -113,23 +116,6 @@ describe('NotificationGridItem component', () => {
         const instance = wrapper.instance();
         instance.handleView();
         expect(instance.props.router.push.callCount).toBe(1);
-    });
-
-    it('should pass correct props to NotificationMenu', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsRead: () => {},
-            onMarkAsUnread: () => {},
-            onRemove: () => {},
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        const notificationMenu = wrapper.find(NotificationMenu).get(0);
-        expect(notificationMenu.props.notification).toBe(instance.props.notification);
-        expect(notificationMenu.props.router).toBe(instance.props.router);
-        expect(notificationMenu.props.onMarkAsRead).toBe(instance.props.onMarkAsRead);
-        expect(notificationMenu.props.onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
-        expect(notificationMenu.props.onRemove).toBe(instance.props.onRemove);
     });
 
     it('should show a non-white background color for unread notifications', () => {
