@@ -13,9 +13,10 @@ def update_permissions(apps, schema_editor):
     JobPermission = apps.get_model('core', 'JobPermission')
     for job in Job.objects.all():
         # Give current "creator" admin permissions
+        user = job.user
         JobPermission.objects.create(job=job,
-                                     content_type=ContentType.objects.get_for_model(job),
-                                     object_id=job.id,
+                                     content_type=ContentType.objects.get_for_model(user),
+                                     object_id=user.id,
                                      permission=JobPermissionLevel.ADMIN.value)
         # Update published to new settings
         if job.published:
