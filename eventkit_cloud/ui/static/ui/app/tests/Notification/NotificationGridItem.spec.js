@@ -39,6 +39,7 @@ describe('NotificationGridItem component', () => {
     it('should render the basic elements', () => {
         const props = getProps();
         const wrapper = getShallowWrapper(props);
+        const instance = wrapper.instance();
         expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find(Paper).find('.qa-NotificationIcon')).toHaveLength(1);
         expect(wrapper.find(Paper).find('.qa-NotificationMessage-Text')).toHaveLength(1);
@@ -46,6 +47,13 @@ describe('NotificationGridItem component', () => {
         expect(wrapper.find('.qa-NotificationGridItem-Date')).toHaveLength(1);
         expect(wrapper.find('.qa-NotificationGridItem-Date').text()).toBe(moment(props.notification.timestamp).fromNow());
         expect(wrapper.find(NotificationMenu)).toHaveLength(1);
+        const notificationMenu = wrapper.find(NotificationMenu).get(0);
+        expect(notificationMenu.props.notification).toBe(instance.props.notification);
+        expect(notificationMenu.props.router).toBe(instance.props.router);
+        expect(notificationMenu.props.onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(notificationMenu.props.onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(notificationMenu.props.onRemove).toBe(instance.props.onRemove);
+        expect(notificationMenu.props.onView).toBe(instance.handleView);
     });
 
     it('should push view path and mark notification as read in handleView()', () => {
