@@ -245,7 +245,8 @@ class Geopackage(object):
     def results(self):
         return [self.output_gpkg]
 
-    def __init__(self, input_pbf, output_gpkg, stage_dir, feature_selection, aoi_geom, tempdir=None, per_theme=False):
+    def __init__(self, input_pbf, output_gpkg, stage_dir, feature_selection, aoi_geom, tempdir=None, per_theme=False,
+                 progress=None):
         """
         Initialize the OSMParser.
 
