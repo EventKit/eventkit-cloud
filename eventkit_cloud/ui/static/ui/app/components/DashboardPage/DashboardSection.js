@@ -6,15 +6,32 @@ export class DashboardSection extends React.Component {
     constructor(props) {
         super(props);
         this.handlePageChange = this.handlePageChange.bind(this);
+        this.getPages = this.getPages.bind(this);
         this.state = {
             pageIndex: 0,
-        }
+        };
+        this.maxPages = 3;
+        this.itemsPerPage = this.props.columns * this.props.rows;
     }
 
     handlePageChange(pageIndex) {
         this.setState({
             pageIndex: pageIndex,
         });
+    }
+
+    getPages() {
+        // Group children into pages, each of length maxPages.
+        const children = React.Children.toArray(this.props.children);
+        const pages = [];
+        for (let i = 0; i < children.length; i += this.itemsPerPage) {
+            pages.push(children.slice(i, i + this.itemsPerPage));
+            if (pages.length === this.maxPages) {
+                break;
+            }
+        }
+
+        return pages;
     }
 
     render() {
@@ -99,16 +116,7 @@ export class DashboardSection extends React.Component {
             return selected ? '8px solid rgb(69, 152, 191)' : '3px solid rgb(69, 152, 191)';
         };
 
-        const maxPages = 3;
-        const itemsPerPage = this.props.columns * this.props.rows;
-        const childrenPages = [];
-        const children = React.Children.toArray(this.props.children);
-        for (let i = 0; i < children.length; i += itemsPerPage) {
-            childrenPages.push(children.slice(i, i + itemsPerPage));
-            if (childrenPages.length === maxPages) {
-                break;
-            }
-        }
+        const pages = this.getPages();
 
         return (
             <div style={styles.root}>
@@ -122,7 +130,7 @@ export class DashboardSection extends React.Component {
                     >
                         {this.props.title}
                     </div>
-                    {(childrenPages.length > 0) ?
+                    {(pages.length > 0) ?
                         <div style={styles.sectionHeaderRight}>
                             <Tabs
                                 tabItemContainerStyle={styles.tabButtonsContainer}
@@ -130,14 +138,14 @@ export class DashboardSection extends React.Component {
                                 onChange={this.handlePageChange}
                                 value={this.state.pageIndex}
                             >
-                                {[...Array(maxPages)].map((nothing, pageIndex) => (
+                                {[...Array(this.maxPages)].map((nothing, pageIndex) => (
                                     <Tab
                                         key={`DashboardSection-${this.props.name}-Tab${pageIndex}`}
                                         className={'qa-DashboardSection-Tab'}
                                         value={pageIndex}
-                                        style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
+                                        style={(pageIndex < pages.length) ? styles.tab : styles.tabDisabled}
                                         disableTouchRipple={true}
-                                        buttonStyle={(pageIndex < childrenPages.length) ?
+                                        buttonStyle={(pageIndex < pages.length) ?
                                             {
                                                 ...styles.tabButton,
                                                 border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
@@ -165,7 +173,7 @@ export class DashboardSection extends React.Component {
                         null
                     }
                 </div>
-                {(childrenPages.length === 0) ?
+                {(pages.length === 0) ?
                     this.props.noDataElement ?
                         this.props.noDataElement
                         :
@@ -176,10 +184,10 @@ export class DashboardSection extends React.Component {
                         index={this.state.pageIndex}
                         onChangeIndex={this.handlePageChange}
                     >
-                        {childrenPages.map((childrenPage, pageIndex) => {
+                        {pages.map((page, pageIndex) => {
                             let content;
                             if (this.props.rowMajor) {
-                                content = childrenPage.map((child, index) => (
+                                content = page.map((child, index) => (
                                     <div
                                         key={`DashboardSection-${this.props.name}-Page${pageIndex}-Item${index}`}
                                         className={'qa-DashboardSection-Page-Item'}
@@ -192,7 +200,7 @@ export class DashboardSection extends React.Component {
                                 // that items each column gets filled completely before adding to the next one.
                                 const childrenColumns = [];
                                 let column = [];
-                                for (let child of childrenPage) {
+                                for (let child of page) {
                                     column.push(child);
                                     if (column.length >= this.props.rows) {
                                         // Filled the column. Onto the next one.
