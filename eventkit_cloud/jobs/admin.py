@@ -10,7 +10,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus, VisibilityState
 
 
 logger = logging.getLogger(__name__)
@@ -145,7 +145,6 @@ class DataProviderAdmin(admin.ModelAdmin):
     """
     form = DataProviderForm
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
-
 
 
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest

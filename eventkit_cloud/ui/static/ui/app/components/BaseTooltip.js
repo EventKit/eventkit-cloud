@@ -46,7 +46,6 @@ export class BaseTooltip extends Component {
                 top: '100%',
                 left: '50%',
                 border: '10px solid',
-                content: ' ',
                 height: '0',
                 width: '0',
                 position: 'absolute',
@@ -57,7 +56,6 @@ export class BaseTooltip extends Component {
                 top: '100%',
                 left: '50%',
                 border: '14px solid',
-                content: ' ',
                 height: '0',
                 width: '0',
                 position: 'absolute',
@@ -72,7 +70,7 @@ export class BaseTooltip extends Component {
                 textTransform: 'uppercase',
                 marginBottom: '10px',
                 ...this.props.titleStyle,
-            }
+            },
         };
 
         if (this.props.show) {
@@ -95,8 +93,8 @@ export class BaseTooltip extends Component {
                 <div>
                     {this.props.children}
                 </div>
-                <div className="qa-BaseTooltip-arrow" style={styles.arrow} ></div>
-                <div className="qa-BaseTooltip-arrow-block" style={styles.arrowBlock} ></div>
+                <div className="qa-BaseTooltip-arrow" style={styles.arrow} />
+                <div className="qa-BaseTooltip-arrow-block" style={styles.arrowBlock} />
             </div>
         );
     }
