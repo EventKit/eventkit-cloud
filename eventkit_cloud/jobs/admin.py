@@ -147,7 +147,6 @@ class DataProviderAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
 
 
-
 # The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
 # way to do this is to unregister them using admin.site.unregister, but that also means that you can't use the plus
 # button to add new ones on lists displayed on admin pages of other models (in this case, PeriodicTask). Having the
