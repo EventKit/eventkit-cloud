@@ -50,21 +50,23 @@ describe('NotificationMenu component', () => {
     it('should render the basic elements', () => {
         const wrapper = getShallowWrapper();
         const instance = wrapper.instance();
-        expect(wrapper.find(IconMenu)).toHaveLength(1);
-        const iconMenu = wrapper.find(IconMenu).get(0);
-        expect(wrapShallow(iconMenu.props.iconButtonElement).type()).toBe(IconButton);
-        expect(wrapShallow(iconMenu.props.iconButtonElement).find(MoreVertIcon)).toHaveLength(1);
-        expect(iconMenu.props.open).toBe(null);
-        expect(wrapper.find(MenuItem)).toHaveLength(3);
-        expect(wrapper.find(MenuItem).get(0).props.primaryText).toBe('View');
-        expect(wrapper.find(MenuItem).get(0).props.leftIcon).toEqual(<OpenInNewIcon />);
-        expect(wrapper.find(MenuItem).get(0).props.onClick).toBe(instance.handleView);
-        expect(wrapper.find(MenuItem).get(1).props.primaryText).toBe('Mark As Read');
-        expect(wrapper.find(MenuItem).get(1).props.leftIcon).toEqual(<FlagIcon />);
-        expect(wrapper.find(MenuItem).get(1).props.onClick).toBe(instance.handleMarkAsRead);
-        expect(wrapper.find(MenuItem).get(2).props.primaryText).toBe('Remove');
-        expect(wrapper.find(MenuItem).get(2).props.leftIcon).toEqual(<CloseIcon />);
-        expect(wrapper.find(MenuItem).get(2).props.onClick).toBe(instance.handleRemove);
+        const iconMenu = wrapper.find(IconMenu);
+        expect(iconMenu).toHaveLength(1);
+        const iconButtonElement = wrapShallow(iconMenu.props().iconButtonElement);
+        expect(iconButtonElement.type()).toBe(IconButton);
+        expect(iconButtonElement.find(MoreVertIcon)).toHaveLength(1);
+        expect(iconMenu.props().open).toBe(null);
+        const menuItems = wrapper.find(MenuItem);
+        expect(menuItems).toHaveLength(3);
+        expect(menuItems.at(0).props().primaryText).toBe('View');
+        expect(menuItems.at(0).props().leftIcon).toEqual(<OpenInNewIcon />);
+        expect(menuItems.at(0).props().onClick).toBe(instance.handleView);
+        expect(menuItems.at(1).props().primaryText).toBe('Mark As Read');
+        expect(menuItems.at(1).props().leftIcon).toEqual(<FlagIcon />);
+        expect(menuItems.at(1).props().onClick).toBe(instance.handleMarkAsRead);
+        expect(menuItems.at(2).props().primaryText).toBe('Remove');
+        expect(menuItems.at(2).props().leftIcon).toEqual(<CloseIcon />);
+        expect(menuItems.at(2).props().onClick).toBe(instance.handleRemove);
     });
 
     it('should only render View menu item when a view path exists', () => {
@@ -85,12 +87,12 @@ describe('NotificationMenu component', () => {
         const wrapper = getShallowWrapper();
         const instance = wrapper.instance();
         expect(wrapper.state().forceClose).toBe(false);
-        expect(wrapper.find(IconMenu).get(0).props.open).toBe(null);
+        expect(wrapper.find(IconMenu).props().open).toBe(null);
         const componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
         instance.handleMenuItemClick({ stopPropagation: () => {} });
         componentDidUpdateStub.restore();
         expect(instance.state.forceClose).toBe(true);
-        expect(wrapper.find(IconMenu).get(0).props.open).toBe(false);
+        expect(wrapper.find(IconMenu).props().open).toBe(false);
     });
 
     it('should reset forceClose to false in componentDidUpdate()', () => {
@@ -112,9 +114,10 @@ describe('NotificationMenu component', () => {
         };
         const wrapper = getShallowWrapper(props);
         const instance = wrapper.instance();
-        expect(wrapper.find(MenuItem).get(1).props.primaryText).toBe('Mark As Unread');
-        expect(wrapper.find(MenuItem).get(1).props.leftIcon).toEqual(<FlagIcon />);
-        expect(wrapper.find(MenuItem).get(1).props.onClick).toBe(instance.handleMarkAsUnread);
+        const menuItems = wrapper.find(MenuItem);
+        expect(menuItems.at(1).props().primaryText).toBe('Mark As Unread');
+        expect(menuItems.at(1).props().leftIcon).toEqual(<FlagIcon />);
+        expect(menuItems.at(1).props().onClick).toBe(instance.handleMarkAsUnread);
     });
 
     it('should call onView() with notification', () => {
