@@ -360,10 +360,7 @@ export class DataPackPage extends React.Component {
             const newStep = {
                 title: 'Featured DataPacks',
                 text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
-                selector: this.state.view === 'list' ?
-                    '.qa-DataPackTableItem-TableRowColumn-featured'
-                    :
-                    '.qa-FeaturedFlag-div',
+                selector: '.tour-datapack-featured',
                 style: {
                     backgroundColor: 'white',
                     borderRadius: '0',

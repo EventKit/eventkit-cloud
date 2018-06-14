@@ -426,7 +426,7 @@ export const joyride = {
             {
                 title: 'DataPack Status',
                 text: 'Check the status (complete, running, error) of previously created DataPacks.',
-                selector: '.qa-DataPackTableItem-TableRowColumn-status',
+                selector: '.tour-datapack-status',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -434,7 +434,7 @@ export const joyride = {
                 title: 'Menu Options',
                 text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
-                selector: '.qa-DataPackTableItem-IconMenu',
+                selector: '.tour-datapack-options',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
