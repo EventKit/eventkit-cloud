@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ImageCropDin from 'material-ui/svg-icons/image/crop-din';
 import ActionRoom from 'material-ui/svg-icons/action/room';
+import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 
 
@@ -27,11 +27,11 @@ describe('TypeaheadMenuItem component', () => {
         const wrapper = mount(<TypeaheadMenuItem {...props} />, {
             context,
             childContextTypes: {
-                activeIndex: React.PropTypes.number.isRequired,
-                onActiveItemChange: React.PropTypes.func.isRequired,
-                onInitialItemChange: React.PropTypes.func.isRequired,
-                onMenuItemClick: React.PropTypes.func.isRequired,
-                muiTheme: React.PropTypes.object,
+                activeIndex: PropTypes.number.isRequired,
+                onActiveItemChange: PropTypes.func.isRequired,
+                onInitialItemChange: PropTypes.func.isRequired,
+                onMenuItemClick: PropTypes.func.isRequired,
+                muiTheme: PropTypes.object,
             },
         });
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(1);
@@ -46,18 +46,21 @@ describe('TypeaheadMenuItem component', () => {
 
     it('createDescription should return the proper description', () => {
         const result = {
-            name: 'test name', province: 'province', region: 'region', country: 'country name',
+            name: 'test name',
+            province: 'province',
+            region: 'region',
+            country: 'country name',
         };
         const props = getProps();
         const context = getContext();
         const wrapper = mount(<TypeaheadMenuItem {...props} />, {
             context,
             childContextTypes: {
-                activeIndex: React.PropTypes.number.isRequired,
-                onActiveItemChange: React.PropTypes.func.isRequired,
-                onInitialItemChange: React.PropTypes.func.isRequired,
-                onMenuItemClick: React.PropTypes.func.isRequired,
-                muiTheme: React.PropTypes.object,
+                activeIndex: PropTypes.number.isRequired,
+                onActiveItemChange: PropTypes.func.isRequired,
+                onInitialItemChange: PropTypes.func.isRequired,
+                onMenuItemClick: PropTypes.func.isRequired,
+                muiTheme: PropTypes.object,
             },
         });
         const description = wrapper.instance().createDescription(result);
@@ -75,14 +78,14 @@ describe('TypeaheadMenuItem component', () => {
         const wrapper = mount(<TypeaheadMenuItem {...props} />, {
             context,
             childContextTypes: {
-                activeIndex: React.PropTypes.number.isRequired,
-                onActiveItemChange: React.PropTypes.func.isRequired,
-                onInitialItemChange: React.PropTypes.func.isRequired,
-                onMenuItemClick: React.PropTypes.func.isRequired,
-                muiTheme: React.PropTypes.object,
+                activeIndex: PropTypes.number.isRequired,
+                onActiveItemChange: PropTypes.func.isRequired,
+                onInitialItemChange: PropTypes.func.isRequired,
+                onMenuItemClick: PropTypes.func.isRequired,
+                muiTheme: PropTypes.object,
             },
         });
-        expect(wrapper.find(ImageCropDin)).toHaveLength(1);
+        expect(wrapper.find(IrregularPolygon)).toHaveLength(1);
         expect(wrapper.find('.qa-TypeaheadMenuItem-name').text()).toEqual('test name');
         expect(wrapper.find('.qa-TypeaheadMenuItem-description').text()).toEqual('province, region, country name');
     });
