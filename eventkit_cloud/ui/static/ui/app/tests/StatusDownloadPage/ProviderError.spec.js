@@ -35,7 +35,7 @@ describe('ProviderError component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
+        expect(wrapper.find('.qa-ProviderError-error-text').text()).toEqual('ERROR');
         expect(wrapper.find(Warning)).toHaveLength(1);
     });
 
@@ -71,7 +71,7 @@ describe('ProviderError component', () => {
         const errorSpy = sinon.spy(ProviderError.prototype, 'handleProviderErrorOpen');
         const wrapper = getWrapper(props);
         expect(errorSpy.notCalled).toBe(true);
-        wrapper.find('a').simulate('click');
+        wrapper.find('.qa-ProviderError-error-text').simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ providerErrorDialogOpen: true })).toBe(true);
         stateSpy.restore();

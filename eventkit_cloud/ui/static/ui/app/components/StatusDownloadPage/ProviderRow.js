@@ -73,72 +73,28 @@ export class ProviderRow extends Component {
 
     getTaskStatus(task) {
         switch (task.status) {
-        case 'SUCCESS':
-            return (
-                <Check
-                    className="qa-ProviderRow-Check-taskStatus"
-                    style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
-                />
-            );
-        case 'FAILED':
-            return <TaskError task={task} />;
-        case 'PENDING':
-            return 'WAITING';
-        case 'RUNNING':
-            return (
-                <span className="qa-ProviderRow-span-taskStatus">
-                    <LinearProgress mode="determinate" value={task.progress} />
-                    {task.progress === 100 ? '' : `${task.progress} %`}
-                </span>
-            );
-        case 'CANCELED':
-            return (
-                <Warning
-                    className="qa-ProviderRow-Warning-taskStatus"
-                    style={{
-                        marginLeft: '10px',
-                        display: 'inlineBlock',
-                        fill: '#f4d225',
-                        verticalAlign: 'bottom',
-                    }}
-                />
-            );
-        default:
-            return '';
-        }
-    }
-
-    getProviderStatus(provider) {
-        switch (provider.status) {
-        case 'COMPLETED':
-            return (
-                <Check
-                    className="qa-ProviderRow-Check-providerStatus"
-                    style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
-                />
-            );
-        case 'INCOMPLETE':
-            return <ProviderError provider={provider} key={provider.uid} />;
-        case 'PENDING':
-            return 'WAITING';
-        case 'RUNNING':
-            return 'IN PROGRESS';
-        case 'CANCELED':
-            return (
-                <span
-                    className="qa-ProviderRow-span-providerStatus"
-                    style={{
-                        fontWeight: 'bold',
-                        display: 'inlineBlock',
-                        borderTopWidth: '10px',
-                        borderBottomWidth: '10px',
-                        borderLeftWidth: '10px',
-                        color: '#f4d225',
-                    }}
-                >
-                    CANCELED
+            case 'SUCCESS':
+                return (
+                    <Check
+                        className="qa-ProviderRow-Check-taskStatus"
+                        style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
+                    />
+                );
+            case 'FAILED':
+                return <TaskError task={task} />;
+            case 'PENDING':
+                return 'WAITING';
+            case 'RUNNING':
+                return (
+                    <span className="qa-ProviderRow-span-taskStatus">
+                        <LinearProgress mode="determinate" value={task.progress} />
+                        {task.progress === 100 ? '' : `${task.progress} %`}
+                    </span>
+                );
+            case 'CANCELED':
+                return (
                     <Warning
-                        className="qa-ProviderRow-Warning-providerStatus"
+                        className="qa-ProviderRow-Warning-taskStatus"
                         style={{
                             marginLeft: '10px',
                             display: 'inlineBlock',
@@ -146,15 +102,59 @@ export class ProviderRow extends Component {
                             verticalAlign: 'bottom',
                         }}
                     />
-                </span>
-            );
-        default:
-            return '';
+                );
+            default:
+                return '';
+        }
+    }
+
+    getProviderStatus(provider) {
+        switch (provider.status) {
+            case 'COMPLETED':
+                return (
+                    <Check
+                        className="qa-ProviderRow-Check-providerStatus"
+                        style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
+                    />
+                );
+            case 'INCOMPLETE':
+                return <ProviderError provider={provider} key={provider.uid} />;
+            case 'PENDING':
+                return 'WAITING';
+            case 'RUNNING':
+                return 'IN PROGRESS';
+            case 'CANCELED':
+                return (
+                    <span
+                        className="qa-ProviderRow-span-providerStatus"
+                        style={{
+                            fontWeight: 'bold',
+                            display: 'inlineBlock',
+                            borderTopWidth: '10px',
+                            borderBottomWidth: '10px',
+                            borderLeftWidth: '10px',
+                            color: '#f4d225',
+                        }}
+                    >
+                    CANCELED
+                        <Warning
+                            className="qa-ProviderRow-Warning-providerStatus"
+                            style={{
+                                marginLeft: '10px',
+                                display: 'inlineBlock',
+                                fill: '#f4d225',
+                                verticalAlign: 'bottom',
+                            }}
+                        />
+                    </span>
+                );
+            default:
+                return '';
         }
     }
 
     getTaskLink(task) {
-        if (!task.result.hasOwnProperty('url')) {
+        if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
                 <span
                     className="qa-ProviderRow-span-taskLinkDisabled"
@@ -165,18 +165,21 @@ export class ProviderRow extends Component {
             );
         }
         return (
-            <a
+            <span
                 className="qa-ProviderRow-a-taskLinkenabled"
+                role="button"
+                tabIndex={0}
                 onClick={() => { this.handleSingleDownload(task.result.url); }}
+                onKeyPress={() => { this.handleSingleDownload(task.result.url); }}
                 style={{ display: 'inlineBlock', color: '#4598bf', cursor: 'pointer' }}
             >
                 {task.name}
-            </a>
+            </span>
         );
     }
 
     getTaskDownloadIcon(task) {
-        if (!task.result.hasOwnProperty('url')) {
+        if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
                 <CloudDownload
                     className="qa-ProviderRow-CloudDownload-taskLinkDisabled"
@@ -302,7 +305,7 @@ export class ProviderRow extends Component {
 
         const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
         const licenseData = propsProvider && propsProvider.license ?
-            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text}/>
+            <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text} />
             :
             null;
         const menuItems = [];
@@ -469,12 +472,15 @@ export class ProviderRow extends Component {
     }
 }
 
+ProviderRow.defaultProps = {
+    selectedProviders: {},
+};
+
 ProviderRow.propTypes = {
     provider: PropTypes.object.isRequired,
-    onSelectionToggle: PropTypes.func,
     selectedProviders: PropTypes.object,
     onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     backgroundColor: PropTypes.string.isRequired,
 };
 

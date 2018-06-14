@@ -14,6 +14,10 @@ export class DataPackDetails extends Component {
     }
 
     componentDidMount() {
+        this.onMount();
+    }
+
+    onMount() {
         const selectedProviders = {};
         this.props.providerTasks.forEach((provider) => {
             if (provider.display === true) {
@@ -76,9 +80,7 @@ export class DataPackDetails extends Component {
         const toggleCellWidth = this.getToggleCellWidth();
         const textFontSize = this.getTextFontSize();
 
-        const providers = this.props.providerTasks.filter((provider) => {
-            return provider.display !== false;
-        });
+        const providers = this.props.providerTasks.filter(provider => (provider.display));
 
         const styles = {
             subHeading: {
@@ -173,10 +175,14 @@ export class DataPackDetails extends Component {
     }
 }
 
+DataPackDetails.defaultProps = {
+    zipFileProp: null,
+};
+
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
     onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     zipFileProp: PropTypes.string,
 };
 
