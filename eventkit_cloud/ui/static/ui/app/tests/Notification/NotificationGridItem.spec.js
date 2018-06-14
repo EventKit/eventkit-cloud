@@ -43,20 +43,22 @@ describe('NotificationGridItem component', () => {
         const props = getProps();
         const wrapper = getShallowWrapper(props);
         const instance = wrapper.instance();
-        expect(wrapper.find(Paper)).toHaveLength(1);
-        expect(wrapper.find(Paper).find('.qa-NotificationIcon')).toHaveLength(1);
-        expect(wrapper.find(Paper).find('.qa-NotificationMessage-Text')).toHaveLength(1);
-        expect(wrapper.find(Paper).find('.qa-NotificationMessage-Link')).toHaveLength(1);
-        expect(wrapper.find('.qa-NotificationGridItem-Date')).toHaveLength(1);
-        expect(wrapper.find('.qa-NotificationGridItem-Date').text()).toBe(moment(props.notification.timestamp).fromNow());
-        expect(wrapper.find(NotificationMenu)).toHaveLength(1);
-        const notificationMenu = wrapper.find(NotificationMenu).get(0);
-        expect(notificationMenu.props.notification).toBe(instance.props.notification);
-        expect(notificationMenu.props.router).toBe(instance.props.router);
-        expect(notificationMenu.props.onMarkAsRead).toBe(instance.props.onMarkAsRead);
-        expect(notificationMenu.props.onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
-        expect(notificationMenu.props.onRemove).toBe(instance.props.onRemove);
-        expect(notificationMenu.props.onView).toBe(instance.handleView);
+        const paper = wrapper.find(Paper);
+        expect(paper).toHaveLength(1);
+        expect(paper.find('.qa-NotificationIcon')).toHaveLength(1);
+        expect(paper.find('.qa-NotificationMessage-Text')).toHaveLength(1);
+        expect(paper.find('.qa-NotificationMessage-Link')).toHaveLength(1);
+        const date = wrapper.find('.qa-NotificationGridItem-Date');
+        expect(date).toHaveLength(1);
+        expect(date.text()).toBe(moment(props.notification.timestamp).fromNow());
+        const notificationMenu = wrapper.find(NotificationMenu);
+        expect(notificationMenu).toHaveLength(1);
+        expect(notificationMenu.props().notification).toBe(instance.props.notification);
+        expect(notificationMenu.props().router).toBe(instance.props.router);
+        expect(notificationMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(notificationMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(notificationMenu.props().onRemove).toBe(instance.props.onRemove);
+        expect(notificationMenu.props().onView).toBe(instance.handleView);
     });
 
     it('should push view path and mark notification as read in handleView()', () => {
@@ -120,7 +122,7 @@ describe('NotificationGridItem component', () => {
 
     it('should show a non-white background color for unread notifications', () => {
         const wrapper = getShallowWrapper();
-        expect(wrapper.find(Paper).get(0).props.style.backgroundColor).not.toBe('white');
+        expect(wrapper.find(Paper).props().style.backgroundColor).not.toBe('white');
     });
 
     it('should show a white background color for read notifications', () => {
@@ -130,6 +132,6 @@ describe('NotificationGridItem component', () => {
             unread: false,
         };
         const wrapper = getShallowWrapper(props);
-        expect(wrapper.find(Paper).get(0).props.style.backgroundColor).toBe('white');
+        expect(wrapper.find(Paper).props().style.backgroundColor).toBe('white');
     });
 });
