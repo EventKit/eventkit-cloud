@@ -81,7 +81,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
 
 class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
-     An ExportTaskRecord holds the information about the process doing the actual work for a task.
+    An ExportTaskRecord holds the information about the process doing the actual work for a task.
     """
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
@@ -125,7 +125,7 @@ class FinalizeRunHookTaskRecord(UIDMixin, TimeStampedModelMixin):
 
 class FileProducingTaskResult(models.Model):
     """
-         A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
+    A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
     id = models.AutoField(primary_key=True)
     filename = models.CharField(max_length=100, blank=True, editable=False)

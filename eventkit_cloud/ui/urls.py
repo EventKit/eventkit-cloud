@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 urlpatterns = [
     url(r'^login', never_cache(ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html'))), name='login'),
     url(r'^$', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="home"),
+    url(r'^dashboard', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="dashboard"),
     url(r'^exports/?$', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="exports"),
     url(r'^status', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="status"),
     url(r'^create/?$', never_cache(login_required(TemplateView.as_view(template_name='ui/index.html'))), name="create"),
