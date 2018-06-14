@@ -274,11 +274,13 @@ export class ExportInfo extends React.Component {
 
     hasDisallowedSelection(exportInfo) {
         // if any unacceptable providers are selected return true, else return false
-        return exportInfo.providers.some(provider => (
+        return exportInfo.providers.some(provider => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
-            provider.availability && provider.availability.status.toUpperCase() === 'FATAL'
-        ));
+            const providerState = this.state.providers.find(p => p.slug === provider.slug);
+            if (!providerState) return false;
+            return providerState.availability && providerState.availability.status.toUpperCase() === 'FATAL';
+        });
     }
 
     initializeOpenLayers() {
@@ -591,7 +593,7 @@ export class ExportInfo extends React.Component {
                                     </span>
                                     <span
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ marginLeft: '75%' }}
+                                        style={{ marginLeft: '75%', position: 'relative' }}
                                     >
                                         AVAILABILITY
                                         <NavigationRefresh
@@ -608,8 +610,8 @@ export class ExportInfo extends React.Component {
                                             show={this.state.refreshTooltipOpen}
                                             title="RUN AVAILABILITY CHECK AGAIN"
                                             tooltipStyle={{
-                                                left: '-69px',
-                                                bottom: '33px',
+                                                right: '-150px',
+                                                bottom: '35px',
                                             }}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
@@ -706,10 +708,14 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
+<<<<<<< HEAD
                                                 defaultChecked={
                                                     this.props.exportInfo.providers.map(x => x.name)
                                                         .indexOf(provider.name) !== -1
                                                 }
+=======
+                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) !== -1}
+>>>>>>> master
                                                 onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle
