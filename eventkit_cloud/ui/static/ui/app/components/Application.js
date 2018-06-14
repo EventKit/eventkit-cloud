@@ -147,9 +147,17 @@ export class Application extends Component {
             });
     }
 
-    handleStayLoggedIn() {
+    getButtonBackgroundColor(route, activeColor = '#161e2e') {
+        return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
+    }
+
+    setNotificationsDropdownContainerRef(ref) {
+        this.notificationsDropdownContainerRef = ref;
+    }
+
+    async handleStayLoggedIn() {
+        await this.startSendingUserActivePings();
         this.hideAutoLogoutWarning();
-        this.startSendingUserActivePings();
     }
 
     handleCloseAutoLoggedOutDialog() {
@@ -177,7 +185,10 @@ export class Application extends Component {
 
         // Unread notifications count.
         this.props.getNotificationsUnreadCount();
-        this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
+        this.notificationsUnreadCountIntervalId = setInterval(
+            this.autoGetNotificationsUnreadCount,
+            this.notificationsUnreadCountRefreshInterval,
+        );
 
         // Notifications.
         this.props.getNotifications({
@@ -252,7 +263,7 @@ export class Application extends Component {
         this.checkAutoLogoutIntervalId = null;
     }
 
-    startSendingUserActivePings() {
+    async startSendingUserActivePings() {
         if (this.isSendingUserActivePings) {
             console.warn('Already sending user active pings.');
             return;
@@ -268,7 +279,6 @@ export class Application extends Component {
                 setTimeout(() => {
                     sendPing = true;
                 }, 60 * 1000);
-
                 // Notify server.
                 this.props.userActive();
             }
@@ -280,7 +290,7 @@ export class Application extends Component {
         });
 
         // Send an initial user active ping to kick the whole cycle off.
-        this.props.userActive();
+        await this.props.userActive();
     }
 
     stopSendingUserActivePings() {
@@ -355,9 +365,7 @@ export class Application extends Component {
         // Close the notifications dropdown if it's open and we click outside of it.
         if (this.notificationsDropdownContainerRef && this.state.showNotificationsDropdown) {
             if (!this.notificationsDropdownContainerRef.contains(e.target)) {
-                this.setState({
-                    showNotificationsDropdown: false
-                });
+                this.setState({ showNotificationsDropdown: false });
             }
         }
     }
@@ -398,19 +406,8 @@ export class Application extends Component {
         });
     }
 
-    getButtonBackgroundColor(route, activeColor = '#161e2e') {
-        return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
-    }
-
-    setNotificationsDropdownContainerRef(ref) {
-        this.notificationsDropdownContainerRef = ref;
-    }
-
     handleNotificationsDropdownNavigate() {
-        this.setState({
-            showNotificationsDropdown: false
-        });
-
+        this.setState({ showNotificationsDropdown: false });
         // Allow navigation to proceed.
         return true;
     }
@@ -818,9 +815,9 @@ function mapDispatchToProps(dispatch) {
         openDrawer: () => {
             dispatch(timeout.openDrawer());
         },
-        userActive: () => {
-            dispatch(userActive());
-        },
+        userActive: () => (
+            dispatch(userActive())
+        ),
         getNotificationsUnreadCount: () => {
             dispatch(getNotificationsUnreadCount());
         },
