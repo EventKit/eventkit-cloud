@@ -1051,7 +1051,6 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                                               provider_task.slug, filename)
                 ext = os.path.splitext(filename)[1]
                 if ext in ['.gpkg', '.tif']:
-                    gpkg_filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                     filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
