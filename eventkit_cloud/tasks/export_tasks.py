@@ -37,7 +37,7 @@ from ..utils.geopackage import add_file_metadata
 from .exceptions import CancelException, DeleteException
 from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
-BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck']
+BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -748,11 +748,13 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
                 logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
                 continue
             full_file_path = os.path.join(stage_dir, filename)
-            if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
-                filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+            ext = os.path.splitext(filename)[1]
+            if ext in ['.gpkg', '.tif']:
+                filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                     export_provider_task.slug,
                     os.path.splitext(os.path.basename(filename))[0],
                     timezone.now().strftime('%Y%m%d'),
+                    ext
                 )
                 metadata['data_sources'][export_provider_task.slug]['file_path'] = os.path.join('data',
                                                                                                 export_provider_task.slug,
@@ -1047,11 +1049,13 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     continue
                 full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
                                               provider_task.slug, filename)
-                if os.path.splitext(filename)[1] in ['.gpkg', '.tif']:
-                    gpkg_filepath = 'data/{0}/{1}-{0}-{2}.gpkg'.format(
+                ext = os.path.splitext(filename)[1]
+                if ext in ['.gpkg', '.tif']:
+                    gpkg_filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now().strftime('%Y%m%d'),
+                        ext
                     )
                     metadata['data_sources'][provider_task.slug]['file_path'] = gpkg_filepath
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
@@ -1162,14 +1166,14 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 # by directory and then just put each directory in the correct location so that we don't have to
                 # list all support files in the future.
                 basename = os.path.basename(absolute_file_path)
-                if basename == "create_mxd.py":
-                    # put the style file in the root of the zip
-                    filename = basename
-                elif os.path.dirname(absolute_file_path) == 'support':
-                    # Put the support files in the correct directory.
-                    filename = 'support/{0}'.format(basename)
-                elif basename == "__init__.py" or ".pyc" in basename:
+                if basename == "__init__.py":
                     continue
+                elif os.path.basename(os.path.dirname(absolute_file_path)) == 'arcgis':
+                    if basename == "create_mxd.py":
+                        filename = os.path.join('arcgis', '{0}'.format(basename))
+                    else:
+                        # Put the support files in the correct directory.
+                        filename = os.path.join('arcgis', 'templates', '{0}'.format(basename))
                 zipfile.write(
                     absolute_file_path,
                     arcname=filename
@@ -1180,12 +1184,18 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
-            if filepath.endswith(".qgs") or filepath.endswith("metadata.json"):
+            if filepath.endswith(".qgs"):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
                     ext
                 )
+            elif filepath.endswith("metadata.json"):
+                # put the metadata file in arcgis folder unless it becomes more useful.
+                filename = os.path.join('arcgis', '{0}{1}'.format(
+                    name,
+                    ext
+                ))
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
@@ -1629,7 +1639,8 @@ def get_data_type_from_provider(provider_slug):
     data_provider = DataProvider.objects.get(slug=provider_slug)
     type_name = data_provider.export_provider_type.type_name
     type_mapped = data_types.get(type_name)
-    logger.error("ADDING THE TYPE: {0} {1}".format(type_name, type_mapped))
+    if data_provider.slug.lower() == 'nome':
+        type_mapped = 'nome'
     return type_mapped
 
 

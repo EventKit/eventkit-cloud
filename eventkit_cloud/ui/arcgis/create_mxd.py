@@ -23,16 +23,20 @@ try:
 
     BASE_DIR = settings.BASE_DIR
 except Exception:
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SUPPORTED_VERSIONS = ["10.5.1"]
 VERSIONS = ["10.5.1", "10.5", "10.4.1", "10.4"]
 
 try:
     import arcpy
-except Exception:
-    print(
-        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script.  Please ensure that it is installed.  If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS.")
+except Exception as e:
+    print(e)
+    raw_input(
+        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script."
+        "Please ensure that it is installed and activated."
+        "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS."
+        "Press any key to exit.")
     raise
 
 version = arcpy.GetInstallInfo().get('Version')
@@ -44,20 +48,16 @@ if arcpy.GetInstallInfo().get('Version') not in SUPPORTED_VERSIONS:
 
 def update_mxd_from_metadata(file_name, metadata, verify=False):
     """
-
     :param file_name: A path to the mxd file.
     :param metadata: The metadata providing the names, filepaths, and types to add to the mxd.
     :return: The original file.
     """
-    mxd = arcpy.mapping.MapDocument(file_name)
+    mxd = arcpy.mapping.MapDocument(os.path.abspath(file_name))
     df = mxd.activeDataFrame
     version = get_version()
     for layer_name, layer_info in metadata['data_sources'].iteritems():
         # Figure out geotiff later.
-        if layer_info['type'] == 'tif':
-            continue
         file_path = os.path.abspath(os.path.join(BASE_DIR, layer_info['file_path']))
-
         layer_file = get_layer_file(layer_info['type'], version)
         if not layer_file:
             print(
@@ -96,7 +96,7 @@ def get_mxd_template(version):
         template_file_name = "template-10-5.mxd"
     elif '10.4' in version:
         template_file_name = "template-10-4.mxd"
-    template_file = os.path.abspath(os.path.join(BASE_DIR, "support", template_file_name))
+    template_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", template_file_name))
     if not os.path.isfile(template_file):
         print('This script requires an mxd template file which was not found.')
         raise Exception("File Not Found: {0}".format(template_file))
@@ -111,7 +111,7 @@ def get_layer_file(type, version):
     :return: The file path to the correct layer.
     """
     layer_basename = "{0}-{1}.lyr".format(type, version.replace('.', '-'))
-    layer_file = os.path.abspath(os.path.join(BASE_DIR, "support", layer_basename))
+    layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
     print("Fetching layer template: {0}".format(layer_file))
     if os.path.isfile(layer_file):
         return layer_file
@@ -154,7 +154,11 @@ def update_layer(layer, file_path, verify=False):
             try:
                 # Try to update the extents based on the layers
                 logger.debug("Updating layers from {0} to {1}".format(lyr.workspacePath, file_path))
-                lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
+                # For the tif file we want the workspace path to be the directory not the DB name.
+                if os.path.splitext(file_path)[1] == '.tif':
+                    lyr.replaceDataSource(os.path.dirname(file_path), "NONE", os.path.basename(file_path))
+                else:
+                    lyr.findAndReplaceWorkspacePath(lyr.workspacePath, file_path, verify)
                 if lyr.isFeatureLayer:
                     logger.debug(arcpy.RecalculateFeatureClassExtent_management(lyr).getMessages())
             except AttributeError as ae:
