@@ -23,6 +23,8 @@ import { getUsers } from '../../actions/userActions';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 
+const background = require('../../../images/ek_topo_pattern.png');
+
 export class DataPackPage extends React.Component {
     constructor(props) {
         super(props);
@@ -132,34 +134,34 @@ export class DataPackPage extends React.Component {
             groups: this.props.groups,
         };
         switch (view) {
-        case 'list':
-            return (
-                <DataPackList
-                    {...commonProps}
-                    onSort={this.handleSortChange}
-                    order={this.state.order}
-                />
-            );
-        case 'grid':
-            return (
-                <DataPackGrid
-                    {...commonProps}
-                    name={'DataPackLibrary'}
-                />
-            );
-        case 'map':
-            return (
-                <MapView
-                    {...commonProps}
-                    geocode={this.props.geocode}
-                    getGeocode={this.props.getGeocode}
-                    importGeom={this.props.importGeom}
-                    processGeoJSONFile={this.props.processGeoJSONFile}
-                    resetGeoJSONFile={this.props.resetGeoJSONFile}
-                    onMapFilter={this.handleSpatialFilter}
-                />
-            );
-        default: return null;
+            case 'list':
+                return (
+                    <DataPackList
+                        {...commonProps}
+                        onSort={this.handleSortChange}
+                        order={this.state.order}
+                    />
+                );
+            case 'grid':
+                return (
+                    <DataPackGrid
+                        {...commonProps}
+                        name="DataPackLibrary"
+                    />
+                );
+            case 'map':
+                return (
+                    <MapView
+                        {...commonProps}
+                        geocode={this.props.geocode}
+                        getGeocode={this.props.getGeocode}
+                        importGeom={this.props.importGeom}
+                        processGeoJSONFile={this.props.processGeoJSONFile}
+                        resetGeoJSONFile={this.props.resetGeoJSONFile}
+                        onMapFilter={this.handleSpatialFilter}
+                    />
+                );
+            default: return null;
         }
     }
 
@@ -324,7 +326,7 @@ export class DataPackPage extends React.Component {
                 overflowX: 'hidden',
             },
             backgroundStyle: {
-                backgroundImage: `url(${require('../../../images/ek_topo_pattern.png')})`,
+                backgroundImage: `url(${background})`,
             },
             range: window.innerWidth < 768 ?
                 { color: '#a59c9c', lineHeight: '36px', fontSize: '12px' }
@@ -440,8 +442,10 @@ export class DataPackPage extends React.Component {
                         groups={this.props.groups}
                         members={this.props.users}
                         permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
+                        groupsText="You may share view and edit rights with groups exclusively.
+                            Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively.
+                            Member sharing is managed separately from group sharing."
                         canUpdateAdmin
                         warnPublic
                     />
@@ -493,6 +497,11 @@ DataPackPage.propTypes = {
         updating: PropTypes.bool,
         updated: PropTypes.bool,
         error: PropTypes.array,
+    }).isRequired,
+    location: PropTypes.shape({
+        query: PropTypes.shape({
+            collection: PropTypes.string,
+        }),
     }).isRequired,
 };
 

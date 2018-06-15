@@ -19,6 +19,8 @@ import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 export class DataPackTableItem extends Component {
     constructor(props) {
         super(props);
+        this.handleProviderOpen = this.handleProviderOpen.bind(this);
+        this.handleProviderClose = this.handleProviderClose.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
@@ -82,31 +84,30 @@ export class DataPackTableItem extends Component {
     }
 
     render() {
-        const runProviders = this.props.run.provider_tasks.filter((provider) => {
-            return provider.display !== false;
-        });
+        const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
 
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
-            return (
-                <ListItem
-                    className="qa-DataPackTableItem-ListItem-providerDescs"
-                    key={key}
-                    style={{ backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontWeight: 'bold', width: '100%', zIndex: 0 }}
-                    nestedListStyle={{ padding: '0px' }}
-                    primaryText={key}
-                    initiallyOpen={false}
-                    primaryTogglesNestedList={false}
-                    nestedItems={[
-                        <ListItem
-                            key={1}
-                            primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{ backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontSize: '14px', width: '100%', zIndex: 0 }}
-                        />,
-                    ]}
-                />
-
-            );
-        });
+        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
+            <ListItem
+                className="qa-DataPackTableItem-ListItem-providerDescs"
+                key={key}
+                style={{
+                    backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontWeight: 'bold', width: '100%', zIndex: 0,
+                }}
+                nestedListStyle={{ padding: '0px' }}
+                primaryText={key}
+                initiallyOpen={false}
+                primaryTogglesNestedList={false}
+                nestedItems={[
+                    <ListItem
+                        key={1}
+                        primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
+                        style={{
+                            backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontSize: '14px', width: '100%', zIndex: 0,
+                        }}
+                    />,
+                ]}
+            />
+        ));
 
         const styles = {
             nameColumn: {
@@ -232,7 +233,7 @@ export class DataPackTableItem extends Component {
                             className="qa-DataPackTableItem-MenuItem-viewDataSources"
                             style={{ fontSize: '12px' }}
                             primaryText="View Data Sources"
-                            onClick={this.handleProviderOpen.bind(this, runProviders)}
+                            onClick={() => this.handleProviderOpen(runProviders)}
                         />
                         { this.props.adminPermissions ?
                             [
@@ -259,7 +260,7 @@ export class DataPackTableItem extends Component {
                         className="qa-DataPackTableItem-BaseDialog"
                         show={this.state.providerDialogOpen}
                         title="DATA SOURCES"
-                        onClose={this.handleProviderClose.bind(this)}
+                        onClose={this.handleProviderClose}
                     >
                         <List className="qa-DataPackTableItem-List-dataSources">{providersList}</List>
                     </BaseDialog>
@@ -279,7 +280,7 @@ DataPackTableItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     openShare: PropTypes.func.isRequired,
     adminPermissions: PropTypes.bool.isRequired,
 };

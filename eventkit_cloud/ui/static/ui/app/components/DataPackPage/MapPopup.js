@@ -1,6 +1,6 @@
-import React, {PropTypes, Component} from 'react';
+import React, { PropTypes, Component } from 'react';
 import Clear from 'material-ui/svg-icons/content/clear';
-import {Card} from 'material-ui/Card';
+import { Card } from 'material-ui/Card';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
@@ -133,18 +133,42 @@ export class MapPopup extends Component {
                 </div>
                 <div id="popup-actions" style={styles.actions}>
                     <div style={{ display: 'inline-block', margin: 'auto', width: '100%' }}>
-                        <div className="qa-MapPopup-div-detailsUrl" style={{ display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right' }}>
+                        <div
+                            className="qa-MapPopup-div-detailsUrl"
+                            style={{
+                                display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right',
+                            }}
+                        >
                             <a id="details-url" href={this.props.detailUrl} style={{ color: '#4598bf' }}>
                                 Go To Status and Download
                             </a>
                         </div>
-                        <div className="qa-MapPopup-div-zoomTo" style={{display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right'}}>
-                            <a id="zoom-to" onClick={this.props.handleZoom} style={{ textDecoration: 'none', cursor: 'pointer', color: '#4598bf' }}>
+                        <div
+                            className="qa-MapPopup-div-zoomTo"
+                            style={{
+                                display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right',
+                            }}
+                        >
+                            <span
+                                id="zoom-to"
+                                role="button"
+                                tabIndex={0}
+                                onKeyPress={this.props.handleZoom}
+                                onClick={this.props.handleZoom}
+                                style={{ textDecoration: 'none', cursor: 'pointer', color: '#4598bf' }}
+                            >
                                 Zoom To Selection
-                            </a>
+                            </span>
                         </div>
                         <div className="qa-MapPopup-div-showMore" style={{ display: 'inline-block', height: '22px', float: 'left' }}>
-                            <div id="show-more" onClick={this.showMore} style={{ textDecoration: 'none', cursor: 'pointer', color: '#4598bf' }}>
+                            <div
+                                id="show-more"
+                                role="button"
+                                tabIndex={0}
+                                onKeyPress={this.showMore}
+                                onClick={this.showMore}
+                                style={{ textDecoration: 'none', cursor: 'pointer', color: '#4598bf' }}
+                            >
                                 {this.state.showMore ? 'Show Less' : 'Show More' }
                                 {this.state.showMore ? <ArrowUp style={styles.showMoreIcon} /> : <ArrowDown style={styles.showMoreIcon} />}
                             </div>
@@ -154,10 +178,23 @@ export class MapPopup extends Component {
 
                 {this.state.showMore ?
                     <div className="qa-MapPopup-div-moreInfo" id="moreInfo" style={styles.moreInfo}>
-                        {this.props.featureInfo.job.description ? <div style={{ margin: '5px 0px' }}>Description: {this.props.featureInfo.job.description}</div> : null}
-                        {this.props.featureInfo.created_at ? <div style={{ margin: '5px 0px' }}>Created at: {moment(this.props.featureInfo.created_at).format('YYYY-MM-DD')}</div> : null}
-                        {this.props.featureInfo.expiration ? <div style={{ margin: '5px 0px' }}>Expiration: {moment(this.props.featureInfo.expiration).format('YYYY-MM-DD')}</div> : null}
-                        {this.props.featureInfo.user ? <div style={{ margin: '5px 0px' }}>Owner: {this.props.featureInfo.user}</div> : null}
+                        {this.props.featureInfo.job.description ?
+                            <div style={{ margin: '5px 0px' }}>Description: {this.props.featureInfo.job.description}</div>
+                            : null
+                        }
+                        {this.props.featureInfo.created_at ?
+                            <div style={{ margin: '5px 0px' }}>
+                                Created at: {moment(this.props.featureInfo.created_at).format('YYYY-MM-DD')}
+                            </div>
+                            : null}
+                        {this.props.featureInfo.expiration ?
+                            <div style={{ margin: '5px 0px' }}>
+                                Expiration: {moment(this.props.featureInfo.expiration).format('YYYY-MM-DD')}
+                            </div>
+                            : null}
+                        {this.props.featureInfo.user ?
+                            <div style={{ margin: '5px 0px' }}>Owner: {this.props.featureInfo.user}</div>
+                            : null}
                     </div>
                     : null}
             </Card>
@@ -166,10 +203,10 @@ export class MapPopup extends Component {
 }
 
 MapPopup.propTypes = {
-    featureInfo: PropTypes.object,
-    detailUrl: PropTypes.string,
-    handleZoom: PropTypes.func,
-    handlePopupClose: PropTypes.func,
+    featureInfo: PropTypes.object.isRequired,
+    detailUrl: PropTypes.string.isRequired,
+    handleZoom: PropTypes.func.isRequired,
+    handlePopupClose: PropTypes.func.isRequired,
 };
 
 export default MapPopup;
