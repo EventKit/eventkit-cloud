@@ -451,7 +451,9 @@ export class ExportInfo extends React.Component {
                             zDepth={2}
                             rounded
                         >
-                            <div id="mainHeading" className="qa-ExportInfo-mainHeading" style={style.heading}>Enter General Information</div>
+                            <div id="mainHeading" className="qa-ExportInfo-mainHeading" style={style.heading}>
+                                Enter General Information
+                            </div>
                             <div style={{ marginBottom: '30px' }}>
                                 <CustomTextField
                                     className="qa-ExportInfo-input-name"
@@ -517,6 +519,8 @@ export class ExportInfo extends React.Component {
                                             style={style.refreshIcon}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
+                                            onBlur={this.handleRefreshTooltipClose}
+                                            onFocus={this.handleRefreshTooltipOpen}
                                             onTouchStart={this.handleRefreshTooltipOpen}
                                             onTouchEnd={this.handleRefreshTooltipClose}
                                             onTouchTap={this.onRefresh}
@@ -530,6 +534,8 @@ export class ExportInfo extends React.Component {
                                             }}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
+                                            onBlur={this.handleRefreshTooltipClose}
+                                            onFocus={this.handleRefreshTooltipOpen}
                                             onTouchTap={this.onRefresh}
                                         >
                                             <div>You may try to resolve errors by running the availability check again.</div>
@@ -548,9 +554,15 @@ export class ExportInfo extends React.Component {
                                                     <div style={{ whiteSpace: 'pre-wrap' }}>
                                                         <i>
                                                             Use of this data is governed by&nbsp;
-                                                            <a onClick={this.handleLicenseOpen} style={{ cursor: 'pointer', color: '#4598bf' }}>
+                                                            <span
+                                                                role="button"
+                                                                tabIndex={0}
+                                                                onKeyPress={this.handleLicenseOpen}
+                                                                onClick={this.handleLicenseOpen}
+                                                                style={{ cursor: 'pointer', color: '#4598bf' }}
+                                                            >
                                                                 {provider.license.name}
-                                                            </a>
+                                                            </span>
                                                         </i>
                                                         <BaseDialog
                                                             show={this.state.licenseDialogOpen}
@@ -574,9 +586,23 @@ export class ExportInfo extends React.Component {
                                         nestedItems.push(<ListItem
                                             className="qa-ExportInfo-ListItem-provMaxAoi"
                                             key={nestedItems.length}
-                                            primaryText={<div style={{ whiteSpace: 'pre-wrap' }}><span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>{((provider.max_selection == null || provider.max_selection == "" || parseFloat(provider.max_selection) <= 0) ? "unlimited" : (provider.max_selection + " km²"))}</div>}
+                                            primaryText={
+                                                <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                    <span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>
+                                                    {((provider.max_selection == null ||
+                                                        provider.max_selection === '' ||
+                                                        parseFloat(provider.max_selection) <= 0) ?
+                                                        'unlimited' : `${provider.max_selection} km²`
+                                                    )}
+                                                </div>
+                                            }
                                             disabled
-                                            style={{ fontSize: '13px', borderTop: '1px solid rgb(224, 224, 224)', paddingLeft: '44px', marginLeft: '0' }}
+                                            style={{
+                                                fontSize: '13px',
+                                                borderTop: '1px solid rgb(224, 224, 224)',
+                                                paddingLeft: '44px',
+                                                marginLeft: '0',
+                                            }}
                                         />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
@@ -602,7 +628,8 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
-                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name).indexOf(provider.name) !== -1}
+                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name)
+                                                    .indexOf(provider.name) !== -1}
                                                 onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle
@@ -625,7 +652,9 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
-                            <div id="projectionHeader" className="qa-ExportInfo-projectionHeader" style={style.heading}>Select Projection</div>
+                            <div id="projectionHeader" className="qa-ExportInfo-projectionHeader" style={style.heading}>
+                                Select Projection
+                            </div>
                             <div style={style.sectionBottom}>
                                 <div id="projectionCheckbox" style={style.checkboxLabel}>
                                     <Checkbox
@@ -638,14 +667,22 @@ export class ExportInfo extends React.Component {
                                         disabled
                                         checkedIcon={<ActionCheckCircle className="qa-ExportInfo-ActionCheckCircle-projection" />}
                                     />
-                                    <Info className="qa-ExportInfo-Info-projection" onTouchTap={this.handleProjectionsOpen} style={style.infoIcon} />
+                                    <Info
+                                        className="qa-ExportInfo-Info-projection"
+                                        onTouchTap={this.handleProjectionsOpen}
+                                        style={style.infoIcon}
+                                    />
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
                                         title="Projection Information"
                                         onClose={this.handleProjectionsClose}
                                     >
-                                        <div style={{ paddingBottom: '10px', wordWrap: 'break-word' }} className="qa-ExportInfo-dialog-projection">
-                                            All geospatial data provided by EventKit are in the World Geodetic System 1984 (WGS 84) projection.
+                                        <div
+                                            style={{ paddingBottom: '10px', wordWrap: 'break-word' }}
+                                            className="qa-ExportInfo-dialog-projection"
+                                        >
+                                            All geospatial data provided by EventKit are in the
+                                             World Geodetic System 1984 (WGS 84) projection.
                                              This projection is also commonly known by its EPSG code: 4326.
                                              Additional projection support will be added in subsequent versions.
                                         </div>
@@ -676,12 +713,15 @@ export class ExportInfo extends React.Component {
                                             style={{ padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)' }}
                                             textStyle={{ paddingRight: '6px', fontWeight: 'bold', fontSize: '18px' }}
                                         >
-                                            <a
+                                            <span
+                                                role="button"
+                                                tabIndex={0}
+                                                onKeyPress={this.props.handlePrev}
                                                 onClick={this.props.handlePrev}
                                                 style={style.editAoi}
                                             >
                                                 Edit
-                                            </a>
+                                            </span>
                                         </CardHeader>
                                         <CardText
                                             className="qa-ExportInfo-CardText-map"

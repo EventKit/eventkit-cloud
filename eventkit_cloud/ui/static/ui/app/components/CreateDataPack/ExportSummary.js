@@ -19,6 +19,8 @@ import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
 
+const background = require('../../../images/topoBackground.jpg');
+
 export class ExportSummary extends Component {
     constructor(props) {
         super(props);
@@ -75,7 +77,7 @@ export class ExportSummary extends Component {
                     collapsed: false,
                 }),
                 new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ')
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
                 }),
             ],
         });
@@ -98,7 +100,7 @@ export class ExportSummary extends Component {
         const style = {
             root: {
                 width: '100%',
-                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
+                backgroundImage: `url(${background})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -154,7 +156,9 @@ export class ExportSummary extends Component {
                 <CustomScrollbar>
                     <form id="form" style={style.form} className="qa-ExportSummary-form">
                         <Paper className="qa-ExportSummary-Paper" style={style.paper} zDepth={2} rounded>
-                            <div id="mainHeading" className="qa-ExportSummary-mainHeading" style={style.heading}>Preview and Run Export</div>
+                            <div id="mainHeading" className="qa-ExportSummary-mainHeading" style={style.heading}>
+                                Preview and Run Export
+                            </div>
                             <div id="subHeading" style={style.subHeading} className="qa-ExportSummary-subHeading">
                                 Please make sure all the information below is correct.
                             </div>
