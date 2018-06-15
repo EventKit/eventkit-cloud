@@ -21,6 +21,8 @@ export class DataPackFeaturedItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
+        this.getMapId = this.getMapId.bind(this);
+        this.mapContainerRef = this.mapContainerRef.bind(this);
     }
 
     componentDidMount() {
@@ -222,12 +224,19 @@ export class DataPackFeaturedItem extends Component {
                             subtitle={
                                 <div style={styles.cardSubtitle}>
                                     <div
+                                        className={'qa-DataPackFeaturedItem-Subtitle-Event'}
                                         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                     >
                                         {`Event: ${this.props.run.job.event}`}
                                     </div>
-                                    <span>{`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}</span><br />
-                                    <span>{`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}</span><br />
+                                    <span className={'qa-DataPackFeaturedItem-Subtitle-Added'}>
+                                        {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
+                                    </span>
+                                    <br />
+                                    <span className={'qa-DataPackFeaturedItem-Subtitle-Expires'}>
+                                        {`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}
+                                    </span>
+                                    <br />
                                 </div>
                             }
                         />
