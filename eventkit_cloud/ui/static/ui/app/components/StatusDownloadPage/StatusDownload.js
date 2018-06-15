@@ -23,13 +23,13 @@ const topoPattern = require('../../../images/ek_topo_pattern.png');
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props);
-        this.initialState = this.initialState.bind(this);
+        this.getInitialState = this.getInitialState.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
-        this.state = this.initialState();
+        this.state = this.getInitialState();
     }
 
-    initialState() {
+    getInitialState() {
         return {
             isLoading: true,
             error: null,
@@ -107,7 +107,7 @@ export class StatusDownload extends React.Component {
         if (nextProps.location !== this.props.location) {
             // Refresh the entire component.
             this.componentWillUnmount();
-            this.setState(this.initialState());
+            this.setState(this.getInitialState());
             this.componentDidMount();
         }
     }
@@ -333,6 +333,7 @@ StatusDownload.propTypes = {
     getGroups: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
+    viewedJob: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {

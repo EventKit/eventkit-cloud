@@ -331,14 +331,14 @@ describe('ProviderRow component', () => {
         expect(elem.text()).toEqual('test name');
     });
 
-    it('getTaskLink should return a "a" element with click handler', () => {
+    it('getTaskLink should return a "span" element with click handler', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const task = { result: { url: 'test-url.io' }, name: 'test name' };
         const link = wrapper.instance().getTaskLink(task);
         wrapper.instance().handleSingleDownload = sinon.spy();
         const elem = shallow(link);
-        expect(elem.is('a')).toBe(true);
+        expect(elem.is('span')).toBe(true);
         expect(elem.text()).toEqual('test name');
         elem.simulate('click');
         expect(wrapper.instance().handleSingleDownload.calledOnce).toBe(true);
