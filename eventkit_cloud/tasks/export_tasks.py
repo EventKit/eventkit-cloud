@@ -375,7 +375,7 @@ def osm_data_collection_pipeline(
         raw_data_filename='{}_query.osm'.format(job_name)
     )
 
-    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=60)  # run the query
+    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=20)  # run the query
 
     # --- Convert Overpass result to PBF
     osm_filename = os.path.join(stage_dir, osm_data_filename)
@@ -390,11 +390,11 @@ def osm_data_collection_pipeline(
         raise RuntimeError("The configuration field is required for OSM data providers")
 
     feature_selection = FeatureSelection.example(config)
-    update_progress(export_task_record_uid, progress=75)
+    update_progress(export_task_record_uid, progress=25)
     geom = Polygon.from_bbox(bbox)
     g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
     g.run()
-
+    update_progress(export_task_record_uid, progress=75)
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
     in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(
@@ -403,7 +403,7 @@ def osm_data_collection_pipeline(
         password=database['PASSWORD'].replace('$', '\$'),
         port=database['PORT'],
         name=database['NAME'])
-
+    update_progress(export_task_record_uid, progress=95)
     gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons",
                            fmt='gpkg')
 
@@ -1052,12 +1052,13 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 ext = os.path.splitext(filename)[1]
                 if ext in ['.gpkg', '.tif']:
                     gpkg_filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
+                    filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
                         provider_task.slug,
                         os.path.splitext(os.path.basename(filename))[0],
                         timezone.now().strftime('%Y%m%d'),
                         ext
                     )
-                    metadata['data_sources'][provider_task.slug]['file_path'] = gpkg_filepath
+                    metadata['data_sources'][provider_task.slug]['file_path'] = filepath
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
                         provider_task.slug)
                 if not os.path.isfile(full_file_path):
@@ -1642,5 +1643,3 @@ def get_data_type_from_provider(provider_slug):
     if data_provider.slug.lower() == 'nome':
         type_mapped = 'nome'
     return type_mapped
-
-
