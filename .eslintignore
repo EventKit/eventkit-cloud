@@ -1,0 +1,4 @@
+# Dont run linter on the follow directories in ui/app
+test/*
+styles*
+fonts/*
