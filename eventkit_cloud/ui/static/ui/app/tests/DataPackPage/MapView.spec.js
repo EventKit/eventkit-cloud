@@ -138,10 +138,10 @@ describe('MapView component', () => {
         wrapper.instance().closer = { onclick: sinon.spy() };
         expect(wrapper.find('#popup')).toHaveLength(1);
         expect(wrapper.find('#popup-content')).toHaveLength(1);
-        expect(wrapper.find('#popup-content').find('a')).toHaveLength(2);
-        expect(wrapper.find('#popup-content').find('a').first().text()).toEqual(' 1');
-        expect(wrapper.find('#popup-content').find('a').last().text()).toEqual(' 2');
-        wrapper.find('#popup-content').find('a').first().simulate('click');
+        expect(wrapper.find('#popup-content').find('span')).toHaveLength(2);
+        expect(wrapper.find('#popup-content').find('span').first().text()).toEqual(' 1');
+        expect(wrapper.find('#popup-content').find('span').last().text()).toEqual(' 2');
+        wrapper.find('#popup-content').find('span').first().simulate('click');
         expect(wrapper.instance().handleClick.calledOnce).toBe(true);
         expect(wrapper.instance().handleClick.calledWith('1')).toBe(true);
         expect(wrapper.instance().closer.onclick.calledOnce).toBe(true);
@@ -524,15 +524,13 @@ describe('MapView component', () => {
         stub.restore();
     });
 
-    it('handleOlPopupClose should call setPosition on overlay, add scroll zoom, blur on closer, and setTimeout to update state', () => {
+    it('handleOlPopupClose should call setPosition on overlay, add scroll zoom, and setTimeout to update state', () => {
         jest.useFakeTimers();
         const props = getProps();
         const stateSpy = sinon.spy(MapView.prototype, 'setState');
         const wrapper = getWrapper(props);
         const setSpy = sinon.spy();
-        const blurSpy = sinon.spy();
         wrapper.instance().overlay = { setPosition: setSpy };
-        wrapper.instance().closer = { blur: blurSpy };
         const addCount = Map.prototype.addInteraction.callCount;
         wrapper.instance().handleOlPopupClose();
         expect(stateSpy.calledWith({ disableMapClick: false })).toBe(false);
@@ -541,7 +539,6 @@ describe('MapView component', () => {
         expect(Map.prototype.addInteraction.callCount).toEqual(addCount + 1);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith(undefined)).toBe(true);
-        expect(blurSpy.calledOnce).toBe(true);
         stateSpy.restore();
     });
 
@@ -1377,7 +1374,7 @@ describe('MapView component', () => {
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const validSpy = sinon.stub(utils, 'isGeoJSONValid')
             .callsFake(() => (false));
-        wrapper.setState({ mode: 'MODE_DRAW_BOX' });
+        wrapper.setState({ mode: 'MODE_DRAW_BBOX' });
         wrapper.instance().onDrawEnd(event);
         expect(geomSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);

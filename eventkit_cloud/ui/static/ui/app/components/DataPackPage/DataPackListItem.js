@@ -19,6 +19,8 @@ import FeaturedFlag from './FeaturedFlag';
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
+        this.handleProviderOpen = this.handleProviderOpen.bind(this);
+        this.handleProviderClose = this.handleProviderClose.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
@@ -30,7 +32,6 @@ export class DataPackListItem extends Component {
     }
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
-
     }
 
     handleProviderOpen(runProviders) {
@@ -60,31 +61,31 @@ export class DataPackListItem extends Component {
     }
 
     render() {
-        const runProviders = this.props.run.provider_tasks.filter((provider) => {
-            return provider.display !== false;
-        });
+        const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
 
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
-            return (
-                <ListItem
-                    className="qa-DataPackListItem-ListItem"
-                    key={key}
-                    style={{ backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontWeight: 'bold', width: '100%', zIndex: 0 }}
-                    nestedListStyle={{ padding: '0px' }}
-                    primaryText={key}
-                    initiallyOpen={false}
-                    primaryTogglesNestedList={false}
-                    nestedItems={[
-                        <ListItem
-                            className="qa-DataPackListItem-NestedListItem"
-                            key={1}
-                            primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{ backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontSize: '14px', width: '100%', zIndex: 0 }}
-                        />,
-                    ]}
-                />
-            );
-        });
+        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
+            <ListItem
+                className="qa-DataPackListItem-ListItem"
+                key={key}
+                style={{
+                    backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontWeight: 'bold', width: '100%', zIndex: 0,
+                }}
+                nestedListStyle={{ padding: '0px' }}
+                primaryText={key}
+                initiallyOpen={false}
+                primaryTogglesNestedList={false}
+                nestedItems={[
+                    <ListItem
+                        className="qa-DataPackListItem-NestedListItem"
+                        key={1}
+                        primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
+                        style={{
+                            backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontSize: '14px', width: '100%', zIndex: 0,
+                        }}
+                    />,
+                ]}
+            />
+        ));
 
         const width = window.innerWidth;
         const subtitleFontSize = width < 576 ? '10px' : '14px';
@@ -158,6 +159,13 @@ export class DataPackListItem extends Component {
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
         const onClick = this.props.onClick ? () => { this.props.onClick(this.props.run.uid); } : null;
 
+        let status = <NavigationCheck className="qa-DataPackListItem-NavigationCheck" style={styles.completeIcon} />;
+        if (this.props.run.status === 'SUBMITTED') {
+            status = <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />;
+        } else if (this.props.run.status === 'INCOMPLETE') {
+            status = <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />;
+        }
+
         return (
             <Card
                 className="qa-DataPackListItem-Card"
@@ -194,7 +202,9 @@ export class DataPackListItem extends Component {
                                 iconButtonElement={
                                     <IconButton
                                         className="qa-DataPackListItem-IconButton"
-                                        style={{ padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle' }}
+                                        style={{
+                                            padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle',
+                                        }}
                                         iconStyle={{ color: '#4598bf' }}
                                         onClick={this.handleMenuButtonClick}
                                     >
@@ -213,7 +223,7 @@ export class DataPackListItem extends Component {
                                     className="qa-DataPackListItem-MenuItem-viewDataSources"
                                     style={{ fontSize: subtitleFontSize }}
                                     primaryText="View Data Sources"
-                                    onClick={this.handleProviderOpen.bind(this, runProviders)}
+                                    onClick={() => this.handleProviderOpen(runProviders)}
                                 />
 
                                 {this.props.adminPermission ?
@@ -241,7 +251,7 @@ export class DataPackListItem extends Component {
                                 className="qa-DataPackListItem-BaseDialog"
                                 show={this.state.providerDialogOpen}
                                 title="DATA SOURCES"
-                                onClose={this.handleProviderClose.bind(this)}
+                                onClose={this.handleProviderClose}
                             >
                                 <List>{providersList}</List>
                             </BaseDialog>
@@ -258,7 +268,10 @@ export class DataPackListItem extends Component {
                             <div className="qa-DataPackListItem-subtitle-event" style={styles.eventText}>
                                 {`Event: ${this.props.run.job.event}`}
                             </div>
-                            <div className="qa-DataPackListItem-subtitle-date" style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}>
+                            <div
+                                className="qa-DataPackListItem-subtitle-date"
+                                style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}
+                            >
                                 {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
                                 {this.props.run.user === this.props.user.data.user.username ?
                                     <div style={styles.ownerLabel}>My DataPack</div>
@@ -269,17 +282,10 @@ export class DataPackListItem extends Component {
                                     {this.props.run.job.permissions.value !== 'PRIVATE' ?
                                         <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
                                         :
-                                        
+
                                         <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
                                     }
-                                    {this.props.run.status === 'SUBMITTED' ?
-                                        <NotificationSync className="qa-DataPackListItem-NotificationSync" style={styles.runningIcon} />
-                                        :
-                                        this.props.run.status === 'INCOMPLETE' ?
-                                            <AlertError className="qa-DataPackListItem-AlertError" style={styles.errorIcon} />
-                                            :
-                                            <NavigationCheck className="qa-DataPackListItem-NavigationCheck" style={styles.completeIcon} />
-                                    }
+                                    {status}
                                 </div>
                             </div>
                         </div>
@@ -290,11 +296,18 @@ export class DataPackListItem extends Component {
     }
 }
 
+DataPackListItem.defaultProps = {
+    onHoverStart: undefined,
+    onHoverEnd: undefined,
+    onClick: undefined,
+    backgroundColor: undefined,
+};
+
 DataPackListItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     onHoverStart: PropTypes.func,
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,

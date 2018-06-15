@@ -35,7 +35,9 @@ export class DataPackGrid extends Component {
         };
 
         return (
-            <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
+            <CustomScrollbar
+                style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}
+            >
                 <div style={styles.root}>
                     <GridList
                         className="qa-DataPackGrid-GridList"
@@ -76,10 +78,10 @@ export class DataPackGrid extends Component {
 }
 
 DataPackGrid.propTypes = {
-    runs: PropTypes.array.isRequired,
+    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     range: PropTypes.string.isRequired,
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,
