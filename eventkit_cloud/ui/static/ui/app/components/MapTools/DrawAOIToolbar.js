@@ -66,8 +66,6 @@ export class DrawAOIToolbar extends Component {
 
 DrawAOIToolbar.defaultProps = {
     containerStyle: {},
-    showBufferButton: false,
-    handleBufferClick: null,
     title: 'TOOLS',
 };
 
@@ -89,8 +87,6 @@ DrawAOIToolbar.propTypes = {
     setImportButtonSelected: PropTypes.func.isRequired,
     setImportModalState: PropTypes.func.isRequired,
     containerStyle: PropTypes.object,
-    showBufferButton: PropTypes.bool,
-    handleBufferClick: PropTypes.func,
     title: PropTypes.string,
 };
 
