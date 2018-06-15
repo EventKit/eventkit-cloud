@@ -918,7 +918,8 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_example_finalize_run_hook_task(self, ExportRun, record_task_state, frhtr_get):
+    @patch('eventkit_cloud.jobs.models.Downloadable')
+    def test_example_finalize_run_hook_task(self, Downloadable, ExportRun, record_task_state, frhtr_get):
         mock_run_uid = str(uuid.uuid4())
         example_finalize_run_hook_task(run_uid=mock_run_uid)
         frhtr_get.assert_called_once_with(celery_uid=None)
