@@ -72,14 +72,19 @@
           CSS.supports('transform', 'translateY(-50%)');
           var node_modules = document.createElement("script");
           var bundle = document.createElement("script");
+          var metrics = document.createElement("script");
           node_modules.type = "text/javascript";
           bundle.type = "text/javascript";
+          metrics.type = "text/javascript";
           node_modules.async = '';
           bundle.async = '';
+          metrics.async = '';
           node_modules.src = "{% static 'ui/build/node-modules.js' %}";
           bundle.src = "{% static 'ui/build/bundle.js' %}";
+          metrics.src = "{% static 'ui/build/metrics.js' %}";
           body.appendChild(node_modules);
           body.appendChild(bundle);
+          body.appendChild(metrics);
       } catch (error) {
           console.error('Browser is not supported by EventKit');
           body.innerHTML = "<div class='no-ie'>\
