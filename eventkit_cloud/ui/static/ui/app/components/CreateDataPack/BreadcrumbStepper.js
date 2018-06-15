@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import { browserHistory } from 'react-router';
 import { connect } from 'react-redux';
+import isEqual from 'lodash/isEqual';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -18,7 +19,6 @@ import { getDatacartDetails } from '../../actions/statusDownloadActions';
 import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
-import isEqual from 'lodash/isEqual';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -86,19 +86,6 @@ export class BreadcrumbStepper extends React.Component {
         this.props.clearJobInfo();
     }
 
-    routeLeaveHook(info) {
-        // Show warning dialog if we try to navigate away with changes.
-        if (!this.state.modified || this.leaveRoute) {
-            // No changes to lose, or we confirmed we want to leave.
-            return true;
-        }
-
-        // We must have started making changes. Save the route we're trying to navigate to and show a warning.
-        this.leaveRoute = info.pathname;
-        this.setState({ showLeaveWarningDialog: true });
-        return false;
-    }
-
     getErrorMessage(title, detail, ix) {
         return (
             <div className="BreadcrumbStepper-error-container" key={`${title}-${detail}`}>
@@ -127,48 +114,48 @@ export class BreadcrumbStepper extends React.Component {
         };
 
         switch (stepIndex) {
-        case 0:
-            return (
-                <div className="qa-BreadcrumbStepper-step1Label" style={labelStyle}>
+            case 0:
+                return (
+                    <div className="qa-BreadcrumbStepper-step1Label" style={labelStyle}>
                     STEP 1 OF 3:  Define Area of Interest
-                </div>
-            );
-        case 1:
-            return (
-                <div className="qa-BreadcrumbStepper-step2Label" style={labelStyle}>
+                    </div>
+                );
+            case 1:
+                return (
+                    <div className="qa-BreadcrumbStepper-step2Label" style={labelStyle}>
                     STEP 2 OF 3:  Select Data & Formats
-                </div>
-            );
-        case 2:
-            return (
-                <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
+                    </div>
+                );
+            case 2:
+                return (
+                    <div className="qa-BreadcrumbStepper-step3Label" style={labelStyle}>
                     STEP 3 OF 3:  Review & Submit
-                </div>
-            );
-        default:
-            return (
-                <div className="qa-BreadcrumbStepper-stepErrorLabel" style={labelStyle}>
+                    </div>
+                );
+            default:
+                return (
+                    <div className="qa-BreadcrumbStepper-stepErrorLabel" style={labelStyle}>
                     STEPPER ERROR
-                </div>
-            );
+                    </div>
+                );
         }
     }
 
     getStepContent(stepIndex) {
         switch (stepIndex) {
-        case 0:
-            return (<ExportAOI />);
-        case 1:
-            return (
-                <ExportInfo
-                    providers={this.props.providers}
-                    formats={this.props.formats}
-                    handlePrev={this.handlePrev}
-                />);
-        case 2:
-            return <ExportSummary allFormats={this.props.formats} />;
-        default:
-            return <ExportAOI />;
+            case 0:
+                return (<ExportAOI />);
+            case 1:
+                return (
+                    <ExportInfo
+                        providers={this.props.providers}
+                        formats={this.props.formats}
+                        handlePrev={this.handlePrev}
+                    />);
+            case 2:
+                return <ExportSummary allFormats={this.props.formats} />;
+            default:
+                return <ExportAOI />;
         }
     }
 
@@ -184,38 +171,38 @@ export class BreadcrumbStepper extends React.Component {
         };
 
         switch (stepIndex) {
-        case 0:
-            return (
-                <NavigationArrowBack
-                    className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case0"
-                    style={styles.arrowBack}
-                    onClick={this.handlePrev}
-                />
-            );
-        case 1:
-            return (
-                <NavigationArrowBack
-                    className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case1"
-                    style={styles.arrowBack}
-                    onClick={this.handlePrev}
-                />
-            );
-        case 2:
-            return (
-                <FloatingActionButton
-                    mini
-                    className="qa-BreadcrumbStepper-FloatingActionButton-previous"
-                    onClick={this.handlePrev}
-                    style={styles.arrowBack}
-                    backgroundColor="#4598bf"
-                >
+            case 0:
+                return (
                     <NavigationArrowBack
-                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case2"
+                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case0"
+                        style={styles.arrowBack}
+                        onClick={this.handlePrev}
                     />
-                </FloatingActionButton>
-            );
-        default:
-            return <div />;
+                );
+            case 1:
+                return (
+                    <NavigationArrowBack
+                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case1"
+                        style={styles.arrowBack}
+                        onClick={this.handlePrev}
+                    />
+                );
+            case 2:
+                return (
+                    <FloatingActionButton
+                        mini
+                        className="qa-BreadcrumbStepper-FloatingActionButton-previous"
+                        onClick={this.handlePrev}
+                        style={styles.arrowBack}
+                        backgroundColor="#4598bf"
+                    >
+                        <NavigationArrowBack
+                            className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case2"
+                        />
+                    </FloatingActionButton>
+                );
+            default:
+                return <div />;
         }
     }
 
@@ -237,48 +224,61 @@ export class BreadcrumbStepper extends React.Component {
         };
 
         switch (stepIndex) {
-        case 0:
-            return (
-                <FloatingActionButton
-                    mini
-                    className="qa-BreadcrumbStepper-FloatingActionButton-case0"
-                    disabled={!this.props.stepperNextEnabled}
-                    backgroundColor="#55ba63"
-                    onClick={this.handleNext}
-                    style={btnStyles.forward}
-                >
-                    <NavigationArrowForward />
-                </FloatingActionButton>
-            );
-        case 1:
-            return (
-                <FloatingActionButton
-                    mini
-                    className="qa-BreadcrumbStepper-FloatingActionButton-case1"
-                    disabled={!this.props.stepperNextEnabled}
-                    backgroundColor="#55ba63"
-                    onClick={this.handleNext}
-                    style={btnStyles.forward}
-                >
-                    <NavigationArrowForward />
-                </FloatingActionButton>
-            );
-        case 2:
-            return (
-                <FloatingActionButton
-                    className="qa-BreadcrumbStepper-FloatingActionButton-case2"
-                    mini={false}
-                    disabled={!this.props.stepperNextEnabled}
-                    backgroundColor="#55ba63"
-                    onClick={this.submitDatapack}
-                    style={btnStyles.submit}
-                >
-                    <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck" />
-                </FloatingActionButton>
-            );
-        default:
-            return <div />;
+            case 0:
+                return (
+                    <FloatingActionButton
+                        mini
+                        className="qa-BreadcrumbStepper-FloatingActionButton-case0"
+                        disabled={!this.props.stepperNextEnabled}
+                        backgroundColor="#55ba63"
+                        onClick={this.handleNext}
+                        style={btnStyles.forward}
+                    >
+                        <NavigationArrowForward />
+                    </FloatingActionButton>
+                );
+            case 1:
+                return (
+                    <FloatingActionButton
+                        mini
+                        className="qa-BreadcrumbStepper-FloatingActionButton-case1"
+                        disabled={!this.props.stepperNextEnabled}
+                        backgroundColor="#55ba63"
+                        onClick={this.handleNext}
+                        style={btnStyles.forward}
+                    >
+                        <NavigationArrowForward />
+                    </FloatingActionButton>
+                );
+            case 2:
+                return (
+                    <FloatingActionButton
+                        className="qa-BreadcrumbStepper-FloatingActionButton-case2"
+                        mini={false}
+                        disabled={!this.props.stepperNextEnabled}
+                        backgroundColor="#55ba63"
+                        onClick={this.submitDatapack}
+                        style={btnStyles.submit}
+                    >
+                        <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck" />
+                    </FloatingActionButton>
+                );
+            default:
+                return <div />;
         }
+    }
+
+    routeLeaveHook(info) {
+        // Show warning dialog if we try to navigate away with changes.
+        if (!this.state.modified || this.leaveRoute) {
+            // No changes to lose, or we confirmed we want to leave.
+            return true;
+        }
+
+        // We must have started making changes. Save the route we're trying to navigate to and show a warning.
+        this.leaveRoute = info.pathname;
+        this.setState({ showLeaveWarningDialog: true });
+        return false;
     }
 
     submitDatapack() {
@@ -291,14 +291,14 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     handleSubmit() {
-        const provider_tasks = [];
+        const providerTasks = [];
         const providers = [...this.props.exportInfo.providers];
 
         // formats only consists of geopackage right now
         const { formats } = this.props.exportInfo;
 
         providers.forEach((provider) => {
-            provider_tasks.push({ provider: provider.name, formats: [formats[0]] });
+            providerTasks.push({ provider: provider.name, formats: [formats[0]] });
         });
 
         const selection = flattenFeatureCollection(this.props.aoiInfo.geojson);
@@ -308,7 +308,7 @@ export class BreadcrumbStepper extends React.Component {
             description: this.props.exportInfo.datapackDescription,
             event: this.props.exportInfo.projectName,
             include_zipfile: false,
-            provider_tasks: provider_tasks,
+            provider_tasks: providerTasks,
             selection,
             original_selection: this.props.aoiInfo.originalGeojson,
             tags: [],
@@ -348,11 +348,11 @@ export class BreadcrumbStepper extends React.Component {
     handleLeaveWarningDialogCancel() {
         this.setState({ showLeaveWarningDialog: false });
         this.leaveRoute = null;
-    };
+    }
 
     handleLeaveWarningDialogConfirm() {
         this.props.router.push(this.leaveRoute);
-    };
+    }
 
     render() {
         let message = [];
@@ -390,17 +390,27 @@ export class BreadcrumbStepper extends React.Component {
                     onCancel={this.handleLeaveWarningDialogCancel}
                     onConfirm={this.handleLeaveWarningDialogConfirm}
                     confirmLabel="Yes, I'm Sure"
-                    isDestructive={true}
+                    isDestructive
                 >
-                    <strong>{"You haven't finished creating this DataPack yet. Any settings will be lost."}</strong>
+                    <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
                 </ConfirmDialog>
                 { this.state.loading ?
-                    <div style={{ zIndex: 10, position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                    <div
+                        style={{
+                            zIndex: 10,
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0,0,0,0.2)',
+                        }}
+                    >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 className="qa-BreadcrumbStepper-CircularProgress"
                                 style={{ margin: 'auto', display: 'block' }}
-                                color={'#4598bf'}
+                                color="#4598bf"
                                 size={50}
                             />
                         </div>
@@ -412,6 +422,10 @@ export class BreadcrumbStepper extends React.Component {
         );
     }
 }
+
+BreadcrumbStepper.defaultProps = {
+    jobError: undefined,
+};
 
 BreadcrumbStepper.propTypes = {
     aoiInfo: PropTypes.object.isRequired,
@@ -430,7 +444,7 @@ BreadcrumbStepper.propTypes = {
     formats: PropTypes.arrayOf(PropTypes.object).isRequired,
     getFormats: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
-    routes: PropTypes.array.isRequired,
+    routes: PropTypes.arrayOf(PropTypes.object).isRequired,
     getNotifications: PropTypes.func.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
 };
@@ -477,7 +491,7 @@ function mapDispatchToProps(dispatch) {
             dispatch(getNotifications(args));
         },
         getNotificationsUnreadCount: (args) => {
-            dispatch(getNotificationsUnreadCount(args))
+            dispatch(getNotificationsUnreadCount(args));
         },
     };
 }

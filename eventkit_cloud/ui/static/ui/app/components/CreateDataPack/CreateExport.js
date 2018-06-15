@@ -3,12 +3,8 @@ import AppBar from 'material-ui/AppBar';
 import BreadcrumbStepper from './BreadcrumbStepper';
 
 export class CreateExport extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-
     render() {
-        const pageTitle = "Create DataPack";
+        const pageTitle = 'Create DataPack';
         const styles = {
             appBar: {
                 backgroundColor: '#161e2e',
@@ -30,8 +26,8 @@ export class CreateExport extends React.Component {
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
-                    iconStyleRight={{marginTop: '2px'}}
-                    iconElementLeft={<p style={{display: 'none'}}/>}
+                    iconStyleRight={{ marginTop: '2px' }}
+                    iconElementLeft={<p style={{ display: 'none' }} />}
                 />
                 <BreadcrumbStepper
                     router={this.props.router}
@@ -45,9 +41,18 @@ export class CreateExport extends React.Component {
     }
 }
 
+CreateExport.defaultProps = {
+    children: null,
+};
+
 CreateExport.propTypes = {
+    children: PropTypes.oneOf([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+        PropTypes.string,
+    ]),
     router: PropTypes.object.isRequired,
-    routes: PropTypes.array.isRequired,
+    routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default CreateExport;
