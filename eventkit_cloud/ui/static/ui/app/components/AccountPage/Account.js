@@ -93,7 +93,12 @@ export class Account extends Component {
     callback(data) {
         if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
             this.setState({ isRunning: false });
-            this.refs.joyride.reset(true);
+            this.joyride.reset(true);
+            if (this.state.acceptedLicenses['fake-license-for-tour'] !== undefined) {
+                this.setState({ acceptedLicenses: {} });
+                this.props.licenses.licenses = [];
+                this.props.user.data.accepted_licenses = {};
+            }
         }
 
         if (data.index === 4 && data.type === 'step:after') {
@@ -105,9 +110,20 @@ export class Account extends Component {
 
     handleJoyride() {
         if (this.state.isRunning === true) {
-            this.refs.joyride.reset(true);
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
         } else {
             this.setState({ isRunning: true });
+            if (!Object.keys(this.state.acceptedLicenses).length) {
+                const fake = {
+                    slug: 'fake-license-for-tour',
+                    name: 'Page Tour Example License (Demonstration Purposes Only)',
+                    text: 'This license is for the page tour and does not actually need to be accepted',
+                };
+                this.setState({ acceptedLicenses: { 'fake-license-for-tour': false } });
+                this.props.licenses.licenses.push(fake);
+                this.props.user.data.accepted_licenses[fake.slug] = false;
+            }
         }
     }
 
@@ -177,7 +193,7 @@ export class Account extends Component {
             <div style={{ backgroundColor: 'white' }}>
                 <Joyride
                     callback={this.callback}
-                    ref="joyride"
+                    ref={(instance) => { this.joyride = instance; }}
                     steps={steps}
                     autoStart
                     type="continuous"

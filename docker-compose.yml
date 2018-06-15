@@ -17,7 +17,7 @@ services:
         - DJANGO_LOG_LEVEL=ERROR
         - LOG_LEVEL=INFO
         - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
-        - SITE_NAME=cloud.eventkit.test
+        - SITE_NAME
         - PYTHONWARNINGS=ignore
         - DISABLE_SSL_VERIFICATION=True
         - USE_S3
@@ -62,8 +62,6 @@ services:
       links:
         - postgis
         - rabbitmq
-      # ports:
-      #   - "6080:6080"
       expose:
         - "6080"
       command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
