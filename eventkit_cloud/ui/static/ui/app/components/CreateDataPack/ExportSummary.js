@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -18,6 +19,9 @@ import { Card, CardHeader, CardText } from 'material-ui/Card';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
+import { joyride } from '../../joyride.config';
+
+const background = require('../../../images/topoBackground.jpg');
 
 export class ExportSummary extends Component {
     constructor(props) {
@@ -25,7 +29,22 @@ export class ExportSummary extends Component {
         this.expandedChange = this.expandedChange.bind(this);
         this.state = {
             expanded: false,
+            steps: [],
+            isRunning: false,
         };
+        this.callback = this.callback.bind(this);
+    }
+
+    componentDidMount() {
+        const steps = joyride.ExportSummary;
+        this.joyrideAddSteps(steps);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
+            this.joyride.reset(true);
+            this.setState({ isRunning: true });
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -75,7 +94,7 @@ export class ExportSummary extends Component {
                     collapsed: false,
                 }),
                 new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' ')
+                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
                 }),
             ],
         });
@@ -94,11 +113,43 @@ export class ExportSummary extends Component {
         this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
+    }
+
+    callback(data) {
+        const { action, step, type } = data;
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            this.setState({ isRunning: false });
+            this.props.onWalkthroughReset();
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
+        }
+    }
+
     render() {
+        const { steps, isRunning } = this.state;
+
         const style = {
             root: {
                 width: '100%',
-                backgroundImage: 'url('+require('../../../images/topoBackground.jpg')+')',
+                backgroundImage: `url(${background})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -151,14 +202,33 @@ export class ExportSummary extends Component {
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         return (
             <div id="root" style={style.root}>
+                <Joyride
+                    callback={this.callback}
+                    ref={(instance) => { this.joyride = instance; }}
+                    steps={steps}
+                    autoStart
+                    type="continuous"
+                    showSkipButton
+                    showStepsProgress
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}
+                />
                 <CustomScrollbar>
                     <form id="form" style={style.form} className="qa-ExportSummary-form">
                         <Paper className="qa-ExportSummary-Paper" style={style.paper} zDepth={2} rounded>
-                            <div id="mainHeading" className="qa-ExportSummary-mainHeading" style={style.heading}>Preview and Run Export</div>
+                            <div id="mainHeading" className="qa-ExportSummary-mainHeading" style={style.heading}>
+                                Preview and Run Export
+                            </div>
                             <div id="subHeading" style={style.subHeading} className="qa-ExportSummary-subHeading">
                                 Please make sure all the information below is correct.
                             </div>
-                            <div>
+                            <div className="qa-ExportSummary-div" id="Summary">
                                 <div id="export-information-heading" className="qa-ExportSummary-exportHeading" style={style.exportHeading}>
                                     Export Information
                                 </div>
@@ -244,6 +314,8 @@ ExportSummary.propTypes = {
     projectName: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     areaStr: PropTypes.string.isRequired,
+    walkthroughClicked: PropTypes.bool.isRequired,
+    onWalkthroughReset: PropTypes.func.isRequired,
 };
 
 export default connect(

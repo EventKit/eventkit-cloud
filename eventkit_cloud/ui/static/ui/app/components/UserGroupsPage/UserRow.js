@@ -186,9 +186,9 @@ export class UserRow extends Component {
         }
 
         const checkbox = this.props.selected ?
-            <Checked onClick={this.onSelect} />
+            <Checked onClick={this.onSelect} className="qa-UserRow-checkbox" />
             :
-            <Unchecked onClick={this.onSelect} />;
+            <Unchecked onClick={this.onSelect} className="qa-UserRow-checkbox" />;
 
         return (
             <div
