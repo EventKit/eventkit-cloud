@@ -56,8 +56,13 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     df = mxd.activeDataFrame
     version = get_version()
     for layer_name, layer_info in metadata['data_sources'].iteritems():
-        # Figure out geotiff later.
         file_path = os.path.abspath(os.path.join(BASE_DIR, layer_info['file_path']))
+        # If possible calculate the statistics now so that they are correct when opening arcmap.
+        try:
+            print("Calculating statistics for the file {0}...".format(file_path))
+            arcpy.CalculateStatistics_management(file_path)
+        except Exception as e:
+            print e
         layer_file = get_layer_file(layer_info['type'], version)
         if not layer_file:
             print(
