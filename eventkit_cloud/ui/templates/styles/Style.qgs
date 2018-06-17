@@ -22148,11 +22148,13 @@ def my_form_open(dialog, layer, feature):
       <pipe>
         <rasterrenderer gradient="BlackToWhite" opacity="1" alphaBand="-1" type="singlebandgray" grayBand="1">
           <rasterTransparency/>
+          {% if provider.band_stats %}
           <contrastEnhancement>
-            <minValue>718</minValue>
-            <maxValue>794</maxValue>
+            <minValue>{{ provider.band_stats.0 }}</minValue>
+            <maxValue>{{ provider.band_stats.1 }}</maxValue>
             <algorithm>StretchToMinimumMaximum</algorithm>
           </contrastEnhancement>
+          {% endif %}
         </rasterrenderer>
         <brightnesscontrast brightness="0" contrast="0"/>
         <huesaturation colorizeGreen="128" colorizeOn="0" colorizeRed="255" colorizeBlue="128" grayscaleMode="0" saturation="0" colorizeStrength="100"/>
