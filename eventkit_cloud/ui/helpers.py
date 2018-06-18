@@ -42,8 +42,8 @@ def get_style_files():
     """
     style_dir = os.path.join(os.path.dirname(__file__), 'static', 'ui', 'styles')
     files = get_file_paths(style_dir)
-    support_dir = os.path.join(os.path.dirname(__file__), 'support')
-    files = get_file_paths(support_dir, files)
+    arcgis_dir = os.path.join(os.path.dirname(__file__), 'arcgis')
+    files = get_file_paths(arcgis_dir, files)
     return files
 
 
