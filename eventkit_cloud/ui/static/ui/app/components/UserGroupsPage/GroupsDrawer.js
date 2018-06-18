@@ -119,6 +119,7 @@ export class GroupsDrawer extends Component {
                     <EnhancedButton
                         style={styles.newGroupBtn}
                         onClick={this.props.onNewGroupClick}
+                        className="qa-GroupsDrawer-addGroup"
                     >
                         <AddCircleIcon
                             style={styles.newGroupIcon}

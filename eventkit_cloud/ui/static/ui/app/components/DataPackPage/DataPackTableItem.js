@@ -183,7 +183,7 @@ export class DataPackTableItem extends Component {
                     {moment(this.props.run.started_at).format('YYYY-MM-DD')}
                 </TableRowColumn>
                 <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-status"
+                    className="qa-DataPackTableItem-TableRowColumn-status tour-datapack-status"
                     style={styles.statusColumn}
                 >
                     {this.getStatusIcon(this.props.run.status)}
@@ -201,16 +201,17 @@ export class DataPackTableItem extends Component {
                     {this.getOwnerText(this.props.run, this.props.user.data.user.username)}
                 </TableRowColumn>
                 <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-featured"
+                    className="qa-DataPackTableItem-TableRowColumn-featured tour-datapack-featured"
                     style={styles.featuredColumn}
                 >
                     {this.props.run.job.featured ? <Star style={{ fill: 'grey' }} /> : null}
                 </TableRowColumn>
                 <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-iconMenu"
+                    className="qa-DataPackTableItem-TableRowColumn-iconMenu tour-datapack-options"
                     style={styles.optionsColumn}
                 >
                     <IconMenu
+                        className="qa-DataPackTableItem-IconMenu"
                         iconButtonElement={
                             <IconButton
                                 className="qa-DataPackTableItem-IconMenu"
