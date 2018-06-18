@@ -18,7 +18,7 @@ from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
 from billiard.einfo import ExceptionInfo
 from celery import chain
 import celery
-from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider
+from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider, Downloadable
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -394,12 +394,17 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals('some unexpected error', str(msg))
         # traceback.print_exception(error_type, msg, tb)
 
+    @patch('eventkit_cloud.tasks.tests.test_export_tasks.Downloadable.objects.create')
     @patch('shutil.copy')
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
+    @patch('os.path.getsize')
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove, copy):
+    def test_zipfile_task(self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, downloadable_create):
+        os_path_getsize.return_value = 20
+        downloadable_create.return_value = Mock(uid=123456)
+
         class MockZipFile:
             def __init__(self):
                 self.files = {}
@@ -431,7 +436,7 @@ class TestExportTasks(ExportTaskBase):
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
-        zipfile_name = os.path.join('{0}'.format(run_uid),'testjob-test-eventkit-{0}.zip'.format(date))
+        zipfile_name = '/download?id={}'.format(downloadable_create().uid)
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_file_task.run(run_uid=run_uid, include_files=[
             os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')])
@@ -790,15 +795,19 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         self.finalize_hook_file3 = finalize_hook_file3
 
     @patch('eventkit_cloud.tasks.models.ExportRun')
+    @patch('eventkit_cloud.tasks.tests.test_export_tasks.Downloadable.objects.create')
+    @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
     @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
     @patch('eventkit_cloud.tasks.models.FileProducingTaskResult.objects.create')
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, ExportRunMock):
+    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, shutil_copy, downloadable_create, ExportRunMock):
         """ Check that expected new files appear in the result & the new files are recorded in
             FileProducingTaskResult.
         """
         os_getsize.return_value = 0
+
+        downloadable_create.return_value = Mock(uid=123456)
 
         # With record_task_state mocked there doesn't need to be an ExportRun instance with this id.
         run_uid = str(uuid.uuid4())
@@ -819,12 +828,12 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         self.assertEqual(record_task_state.call_count, 6)
         self.assertEqual(res, ['file1', 'file2', 'file3'])
 
-        expected_url_path = lambda x: os.path.join(settings.EXPORT_MEDIA_ROOT, run_uid, x)
+        expected_url_path = '/download?id={}'.format(downloadable_create().uid)
 
         expected_create_calls = [
-            call(download_url=expected_url_path('file1'), filename='file1', size=0),
-            call(download_url=expected_url_path('file2'), filename='file2', size=0),
-            call(download_url=expected_url_path('file3'), filename='file3', size=0),
+            call(download_url=expected_url_path, filename='file1', size=0),
+            call(download_url=expected_url_path, filename='file2', size=0),
+            call(download_url=expected_url_path, filename='file3', size=0),
         ]
         fptr_create.assert_has_calls(expected_create_calls, any_order=True)
 
@@ -832,10 +841,12 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         frhtr_get.assert_has_calls(expected_get_calls, any_order=True)
 
     @patch('eventkit_cloud.tasks.models.ExportRun')
+    @patch('eventkit_cloud.tasks.tests.test_export_tasks.Downloadable.objects.create')
+    @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
     @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_manually_passed_files_in_chain_result(self, record_task_state, frhtr_get, os_getsize, ExportRunMock):
+    def test_manually_passed_files_in_chain_result(self, record_task_state, frhtr_get, os_getsize, shutil_copy, downloadable_create, ExportRunMock):
         os_getsize.return_value = 0
 
         manual_filepath_list = ['my_file_a', 'my_file_b']
@@ -918,8 +929,8 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    @patch('eventkit_cloud.jobs.models.Downloadable')
-    def test_example_finalize_run_hook_task(self, Downloadable, ExportRun, record_task_state, frhtr_get):
+    @patch('eventkit_cloud.tasks.tests.test_export_tasks.Downloadable.objects.create')
+    def test_example_finalize_run_hook_task(self, downloadable_create, ExportRun, record_task_state, frhtr_get):
         mock_run_uid = str(uuid.uuid4())
         example_finalize_run_hook_task(run_uid=mock_run_uid)
         frhtr_get.assert_called_once_with(celery_uid=None)
