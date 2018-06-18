@@ -3,6 +3,8 @@ import sinon from 'sinon';
 import raf from 'raf';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import AppBar from 'material-ui/AppBar';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -18,6 +20,7 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
+import { joyride } from '../../joyride.config';
 import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -146,7 +149,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).find('h1').text()).toEqual('DataPack Library');
+        expect(wrapper.find(AppBar).find('div').at(2).text()).toEqual('DataPack Library');
         expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
         expect(wrapper.find(Toolbar)).toHaveLength(2);
         expect(wrapper.find(ToolbarGroup)).toHaveLength(1);
@@ -156,6 +159,8 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackSortDropDown)).toHaveLength(1);
         expect(wrapper.find(DataPackViewButtons)).toHaveLength(1);
         expect(wrapper.find(FilterDrawer)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
         // Should show loading before datapacks have been fetched
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
@@ -324,7 +329,16 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props} />);
         const nextProps = getProps();
         nextProps.runsList.fetched = true;
-        nextProps.runsList.runs = [{ user: 'admin2', uid: '2' }, { user: 'admin', uid: '1' }, { user: 'admin3', uid: '3' }];
+        nextProps.runsList.runs = [{
+            user: 'admin2',
+            uid: '2',
+        }, {
+            user: 'admin',
+            uid: '1',
+        }, {
+            user: 'admin3',
+            uid: '3',
+        }];
         const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
@@ -341,7 +355,10 @@ describe('DataPackPage component', () => {
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().onSearch('test_search', 0);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ search: 'test_search', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith(
+            { search: 'test_search', loading: true },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
         stateSpy.restore();
     });
 
@@ -438,7 +455,10 @@ describe('DataPackPage component', () => {
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ ownerFilter: 'test_value', loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith(
+            { ownerFilter: 'test_value', loading: true },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
         stateSpy.restore();
     });
 
@@ -460,7 +480,14 @@ describe('DataPackPage component', () => {
         expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({ ...currentState, ...newState, loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith(
+            {
+                ...currentState,
+                ...newState,
+                loading: true,
+            },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
         expect(stateSpy.calledWith({ open: false })).toBe(true);
         stateSpy.restore();
     });
@@ -526,18 +553,22 @@ describe('DataPackPage component', () => {
     it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
         const props = getProps();
         const promise = { then: (func) => { func(); } };
-        props.getRuns = () => promise;
+        props.getRuns = () => (promise);
         const wrapper = shallow(<DataPackPage {...props} />);
+        const joyrideSpy = sinon.spy(DataPackPage.prototype, 'getJoyRideSteps');
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().changeView('list');
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(wrapper.update().state().view).toBe('list');
+        expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({ view: 'list' })).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         wrapper.setState({ order: 'some_other_order' });
         wrapper.instance().changeView('map');
-        expect(stateSpy.callCount).toEqual(4);
+        expect(stateSpy.callCount).toEqual(5);
         expect(stateSpy.calledWith({ order: 'some_other_order', loading: true }, Function));
         expect(stateSpy.calledWith({ view: 'map' })).toBe(true);
         stateSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('handleToggle should set state', () => {
@@ -588,15 +619,17 @@ describe('DataPackPage component', () => {
             providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
             groups: props.groups,
+            ref: wrapper.instance().getViewRef,
         };
 
-        expect(wrapper.instance().getView('list')).toEqual((
-            <DataPackList
+        expect(wrapper.instance().getView('list')).toEqual(
+            (<DataPackList
                 {...commonProps}
                 onSort={wrapper.instance().handleSortChange}
                 order={wrapper.state().order}
-            />
-        ));
+            />),
+            sinon.match({ ref: commonProps.ref }),
+        );
 
         expect(wrapper.instance().getView('grid')).toEqual((
             <DataPackGrid
@@ -653,6 +686,80 @@ describe('DataPackPage component', () => {
         expect(props.updateDataCartPermissions.calledOnce).toBe(true);
         expect(props.updateDataCartPermissions.calledWith(target.job.uid, permissions)).toBe(true);
         closeStub.restore();
+    });
+
+    it('getJoyRideSteps should return correct steps based on view', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        wrapper.setState({ view: 'map' });
+        expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.map);
+        wrapper.setState({ view: 'grid' });
+        expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.grid);
+        wrapper.setState({ view: 'list' });
+        expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.list);
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [
+            {
+                title: 'Create DataPack',
+                text: 'Click here to Navigate to Create a DataPack.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                style: {},
+            },
+        ];
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('callback function should open drawer if it is closed', () => {
+        const callbackData = {
+            action: 'next',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Filters',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.setState({ open: false });
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({ open: true }));
+        stateSpy.restore();
+    });
+
+    it('callback should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
     });
 
     it('should set ownerFilter to the current user if passed "myDataPacks" as the collection in the querystring', () => {

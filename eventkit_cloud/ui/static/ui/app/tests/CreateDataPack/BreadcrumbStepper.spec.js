@@ -94,6 +94,8 @@ describe('BreadcrumbStepper component', () => {
         },
         routes: [],
         formats,
+        walkthroughClicked: false,
+        createExportRequest: () => {},
         submitJob: () => {},
         getProviders: () => {},
         setNextDisabled: () => {},
@@ -101,6 +103,7 @@ describe('BreadcrumbStepper component', () => {
         setExportInfoDone: () => {},
         clearAoiInfo: () => {},
         clearExportInfo: () => {},
+        onWalkthroughReset: () => {},
         clearJobInfo: () => {},
         getNotifications: () => {},
         getNotificationsUnreadCount: () => {},
@@ -251,11 +254,15 @@ describe('BreadcrumbStepper component', () => {
         const wrapper = getWrapper(props);
 
         let content = wrapper.instance().getStepContent(0);
-        expect(content).toEqual(<ExportAOI />);
+        expect(content).toEqual(<ExportAOI
+                                    onWalkthroughReset={props.onWalkthroughReset}
+                                    walkthroughClicked={props.walkthroughClicked}/>);
 
         content = wrapper.instance().getStepContent(1);
         expect(content).toEqual((
             <ExportInfo
+                onWalkthroughReset={props.onWalkthroughReset}
+                walkthroughClicked={props.walkthroughClicked}
                 providers={props.providers}
                 formats={props.formats}
                 handlePrev={wrapper.instance().handlePrev}
@@ -263,10 +270,15 @@ describe('BreadcrumbStepper component', () => {
         ));
 
         content = wrapper.instance().getStepContent(2);
-        expect(content).toEqual(<ExportSummary allFormats={props.formats} />);
+        expect(content).toEqual(<ExportSummary onWalkthroughReset={props.onWalkthroughReset}
+                                               walkthroughClicked={props.walkthroughClicked}
+                                                   allFormats={props.formats} />);
 
         content = wrapper.instance().getStepContent(3);
-        expect(content).toEqual(<ExportAOI />);
+        expect(content).toEqual(<ExportAOI
+            onWalkthroughReset={props.onWalkthroughReset}
+            walkthroughClicked={props.walkthroughClicked}/>);
+
     });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {

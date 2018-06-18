@@ -3,6 +3,8 @@ import { mount } from 'enzyme';
 import sinon from 'sinon';
 import AppBar from 'material-ui/AppBar';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import UserInfo from '../../components/AccountPage/UserInfo';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';
@@ -49,15 +51,77 @@ describe('Account Component', () => {
         childContextTypes: { muiTheme: React.PropTypes.object },
     });
 
+    it('should call joyrideAddSteps when mounted', () => {
+        const props = getProps();
+        const joyrideSpy = sinon.spy(Account.prototype, 'joyrideAddSteps');
+        const mountSpy = sinon.spy(Account.prototype, 'componentDidMount');
+        getMountedWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
+        joyrideSpy.restore();
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{
+            title: 'Welcome to the Account Settings Page',
+            text: ' example text',
+            selector: '.qa-Account-AppBar',
+            position: 'top',
+            style: {},
+            isFixed: true,
+        }];
+        const props = getProps();
+        const wrapper = getMountedWrapper(props);
+        const stateSpy = sinon.stub(Account.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('handleJoyride should set state', () => {
+        const props = getProps();
+        const wrapper = getMountedWrapper(props);
+        const stateSpy = sinon.stub(Account.prototype, 'setState');
+        wrapper.instance().handleJoyride();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-Application-MenuItem-create',
+                style: {},
+                text: 'Or to create your own DataPack.',
+                title: 'Navigate Application',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getMountedWrapper(props);
+        const stateSpy = sinon.spy(Account.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
     it('should render an appbar with save button, and body with license info and user info', () => {
         const props = getProps();
         const wrapper = getMountedWrapper(props);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).text()).toEqual('AccountSave Changes');
+        expect(wrapper.find(AppBar).text()).toEqual('AccountPage TourSave Changes');
         expect(wrapper.find(SaveButton)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(LicenseInfo)).toHaveLength(1);
         expect(wrapper.find(UserInfo)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
     });
 
     it('should not render license info or or user info', () => {

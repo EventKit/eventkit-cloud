@@ -7,6 +7,7 @@ import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
 import TextField from 'material-ui/TextField';
 import Checkbox from 'material-ui/Checkbox';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -40,6 +41,7 @@ const formats = [
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
+
     const getProps = () => (
         {
             geojson: {
@@ -68,6 +70,8 @@ describe('ExportInfo component', () => {
             providers: [],
             formats,
             nextEnabled: true,
+            walkthroughClicked: false,
+            onWalkthroughReset: () => {},
             handlePrev: () => {},
             updateExportInfo: () => {},
             setNextDisabled: () => {},
@@ -100,16 +104,17 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#layersSubheader').text()).toEqual('You must choose at least one');
         expect(wrapper.find(List)).toHaveLength(1);
         expect(wrapper.find(ListItem)).toHaveLength(0);
-        expect(wrapper.find('#projectionHeader')).toHaveLength(1);
-        expect(wrapper.find('#projectionHeader').text()).toEqual('Select Projection');
-        expect(wrapper.find('#projectionCheckbox').find(Checkbox)).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
+        expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
+        expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(1);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
         expect(wrapper.find(CardText)).toHaveLength(0);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
-    it('componentDidMount should setNextDisabled and setArea', () => {
+    it('componentDidMount should setNextDisabled, setArea, and add joyride steps', () => {
         const expectedString = '12,393 sq km';
         const props = getProps();
         props.updateExportInfo = sinon.spy();
@@ -117,10 +122,12 @@ describe('ExportInfo component', () => {
         const mountSpy = sinon.spy(ExportInfo.prototype, 'componentDidMount');
         const areaSpy = sinon.spy(utils, 'getSqKmString');
         const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
+        const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
         getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
@@ -130,6 +137,7 @@ describe('ExportInfo component', () => {
         mountSpy.restore();
         areaSpy.restore();
         hasFieldsSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('componentDidUpdate should initializeOpenLayers if expanded', () => {
@@ -140,7 +148,7 @@ describe('ExportInfo component', () => {
         wrapper.instance().initializeOpenLayers = initSpy;
         expect(wrapper.state().expanded).toBe(false);
         wrapper.setState({ expanded: true });
-        expect(updateSpy.calledOnce).toBe(true);
+        expect(updateSpy.called).toBe(true);
         expect(wrapper.state().expanded).toBe(true);
         expect(initSpy.calledOnce).toBe(true);
         updateSpy.restore();
@@ -271,12 +279,12 @@ describe('ExportInfo component', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
         // dont actually create a map when expanded
         wrapper.instance().initializeOpenLayers = sinon.spy();
         wrapper.instance().expandedChange(true);
-        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ expanded: true })).toBe(true);
+        stateSpy.restore();
         stateSpy.restore();
     });
 
@@ -379,5 +387,45 @@ describe('ExportInfo component', () => {
         expect(getViewSpy.calledTwice).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(getSizeSpy.calledOnce).toBe(true);
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [
+            {
+                title: 'Search for location',
+                text: 'Type in location name to set area of interest.',
+                selector: '.bootstrap-typeahead-input',
+                position: 'bottom',
+                style: {},
+            },
+        ];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(ExportInfo.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(ExportInfo.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
     });
 });

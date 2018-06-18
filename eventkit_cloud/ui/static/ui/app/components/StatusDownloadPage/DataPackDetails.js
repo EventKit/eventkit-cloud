@@ -126,6 +126,7 @@ export class DataPackDetails extends Component {
                             >
                                 <a href={this.props.zipFileProp}>
                                     <RaisedButton
+                                        id="CompleteDownload"
                                         className="qa-DataPackDetails-RaisedButton-zipButton"
                                         backgroundColor="rgba(179,205,224,0.5)"
                                         disabled={this.isZipFileCompleted()}
@@ -156,18 +157,20 @@ export class DataPackDetails extends Component {
                         </TableRow>
                     </TableHeader>
                 </Table>
-                {providers.map((provider, ix) => (
-                    <ProviderRow
-                        backgroundColor={ix % 2 === 0 ? 'whitesmoke' : 'white'}
-                        key={provider.uid}
-                        onSelectionToggle={this.onSelectionToggle}
-                        onProviderCancel={this.props.onProviderCancel}
-                        updateSelectionNumber={this.updateSelectionNumber}
-                        provider={provider}
-                        selectedProviders={this.state.selectedProviders}
-                        providers={this.props.providers}
-                    />
-                ))}
+                <div className="qa-DataPackDetails-providers" id="Providers">
+                    {providers.map((provider, ix) => (
+                        <ProviderRow
+                            backgroundColor={ix % 2 === 0 ? 'whitesmoke' : 'white'}
+                            key={provider.uid}
+                            onSelectionToggle={this.onSelectionToggle}
+                            onProviderCancel={this.props.onProviderCancel}
+                            updateSelectionNumber={this.updateSelectionNumber}
+                            provider={provider}
+                            selectedProviders={this.state.selectedProviders}
+                            providers={this.props.providers}
+                        />
+                    ))}
+                </div>
             </div>
         );
     }
