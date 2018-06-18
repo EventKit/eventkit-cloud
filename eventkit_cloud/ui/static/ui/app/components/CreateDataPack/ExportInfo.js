@@ -274,7 +274,7 @@ export class ExportInfo extends React.Component {
 
     hasDisallowedSelection(exportInfo) {
         // if any unacceptable providers are selected return true, else return false
-        return exportInfo.providers.some(provider => {
+        return exportInfo.providers.some((provider) => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
             const providerState = this.state.providers.find(p => p.slug === provider.slug);

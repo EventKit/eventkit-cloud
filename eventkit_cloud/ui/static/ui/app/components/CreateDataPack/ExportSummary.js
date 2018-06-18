@@ -23,8 +23,6 @@ import { joyride } from '../../joyride.config';
 
 const background = require('../../../images/topoBackground.jpg');
 
-const background = require('../../../images/topoBackground.jpg');
-
 export class ExportSummary extends Component {
     constructor(props) {
         super(props);
