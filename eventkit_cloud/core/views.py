@@ -20,10 +20,10 @@ def download(request):
     try:
         downloadable = Downloadable.objects.get(uid=download_id)
     except Downloadable.DoesNotExist:
-        return HttpResponse(status=400, content="Downloadable not found")  # TODO: prettier failure
+        return HttpResponse(status=400, content="Downloadable object not found for requested id value.")
 
     current_user = request.user
-    if current_user is None:  # TODO: better way to handle user auth?
+    if current_user is None:
         return HttpResponse(status=401)
     user = User.objects.get(username=current_user)
 

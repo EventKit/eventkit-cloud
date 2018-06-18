@@ -1237,7 +1237,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
     # be handled as an ExportTaskRecord.
     # Also it makes download tracking a little more complicated, so here's another TODO:
-    #  fix this hacky solution and integrate with the code in make_file_downloadable.
+    # fix this hacky solution and integrate with the code in make_file_downloadable.
 
     if not adhoc:
         from ..jobs.models import Downloadable

@@ -187,18 +187,15 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
         return False
 
 
-# TODO: add Downloadable admin?
-
-
 class UserDownloadAdmin(admin.ModelAdmin):
     """
     User download records
     """
     def list_display_provider(self):
         if self.provider is None:
-            return '(DataPack zip)'  # TODO: maybe find clearer way to say "downloaded pack zip, not just one provider"
+            return '(Complete DataPack zip)'
         else:
-            return self.provider.slug  # TODO: or provider.name?
+            return self.provider.slug
     list_display_provider.short_description = 'Provider'
 
     def direct_download_url(self):
@@ -206,11 +203,8 @@ class UserDownloadAdmin(admin.ModelAdmin):
 
     model = UserDownload
     readonly_fields = ('user', 'provider', 'job', 'downloaded_at', 'direct_url')
-    # TODO: re-add 'downloadable' to fields if a Downloadable admin is added, and link it
-    # TODO: also make 'user', 'provider', and 'job' link to their respective models
-    # TODO: add other fields? There's a number of possibilities
     list_display = ('user', list_display_provider, 'job', 'downloaded_at', direct_download_url)
-    list_filter = ('user', 'downloaded_at')  # TODO: use a custom SimpleListFilter to allow filtering by properties
+    list_filter = ('user', 'downloaded_at')
 
     def has_add_permission(self, request, obj=None):
         return False

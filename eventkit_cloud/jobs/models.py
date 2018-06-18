@@ -428,7 +428,7 @@ class UserDownload(UIDMixin):
     class Meta:
         ordering = ['-downloaded_at']
 
-    @property  # TODO: necessary to make these properties instead of just methods?
+    @property
     def job(self):
         return self.downloadable.job
 
