@@ -71,8 +71,7 @@ describe('DashboardPage component', () => {
     let instance;
 
     beforeEach(() => {
-        wrapper = setup();
-        instance = wrapper.instance();
+        ({ wrapper, instance } = setup());
     });
 
     function setup({ propsOverride = {}, mounted = false } = {}) {
@@ -140,14 +139,20 @@ describe('DashboardPage component', () => {
             ...propsOverride,
         };
 
+        let wrapper;
         if (mounted) {
-            return mount(<DashboardPage { ...props } />, {
+            wrapper = mount(<DashboardPage { ...props } />, {
                 context: { muiTheme },
                 childContextTypes: { muiTheme: React.PropTypes.object },
             });
         } else {
-            return shallow(<DashboardPage { ...props } />);
+            wrapper = shallow(<DashboardPage { ...props } />);
         }
+
+        return {
+            wrapper,
+            instance: wrapper.instance(),
+        };
     }
 
     function loadEmptyData(wrapper) {
@@ -537,8 +542,7 @@ describe('DashboardPage component', () => {
         beforeEach(() => {
             refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
             jest.useFakeTimers();
-            wrapper = setup();
-            instance = wrapper.instance();
+            ({ wrapper, instance } = setup());
             instance.componentDidMount();
         });
 
