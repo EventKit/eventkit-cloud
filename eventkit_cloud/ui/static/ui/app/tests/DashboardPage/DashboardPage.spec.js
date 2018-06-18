@@ -9,6 +9,7 @@ import DashboardSection from '../../components/DashboardPage/DashboardSection';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
 import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from '../../components/DashboardPage/DataPackFeaturedItem';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 const mockNotifications = {
     '1': {
@@ -67,6 +68,8 @@ const mockRuns = [
 ];
 
 describe('DashboardPage component', () => {
+    const muiTheme = getMuiTheme();
+
     let wrapper;
     let instance;
 
