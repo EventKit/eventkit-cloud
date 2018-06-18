@@ -14,13 +14,12 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from celery.utils.log import get_task_logger
 from ..utils.gdalutils import get_meta, get_band_statistics
+from ..utils import auth_requests
 from uuid import uuid4
 from string import Template
 from datetime import datetime
 import pytz
 from numpy import linspace
-from ..utils import auth_requests
-import requests
 
 logger = get_task_logger(__name__)
 

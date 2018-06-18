@@ -211,15 +211,15 @@ class TestHelpers(TestCase):
         mock_get_osm_last_update.assert_called_once_with(test_url, slug=test_slug)
 
     @patch('eventkit_cloud.ui.helpers.auth_requests')
-    def test_get_last_update(self, mock_auth_requests):
+    def test_get_osm_last_update(self, mock_auth_requests):
         test_url = "https://test/interpreter"
         test_slug = "slug"
         expected_url = "https://test/timestamp"
         expected_time = "2017-12-29T13:09:59Z"
 
-        mock_auth_requests.get.return_value = expected_time
-        get_osm_last_update(test_url, slug=test_slug)
-        returned_time = mock_auth_requests.get.assert_called_once_with(expected_url, slug=test_slug)
+        mock_auth_requests.get.return_value.content = expected_time
+        returned_time = get_osm_last_update(test_url, slug=test_slug)
+        mock_auth_requests.get.assert_called_once_with(expected_url, slug=test_slug)
         self.assertEqual(expected_time, returned_time)
 
         mock_auth_requests.get.side_effect = Exception("FAIL")
