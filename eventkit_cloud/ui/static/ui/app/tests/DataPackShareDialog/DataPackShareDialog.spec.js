@@ -298,7 +298,7 @@ describe('DataPackPage component', () => {
             user_two: 'READ',
             user_three: 'READ',
         };
-        wrapper.setState({ permissions: { ...wrapper.state().permissions, members }});
+        wrapper.setState({ permissions: { ...wrapper.state().permissions, members } });
         wrapper.instance().handleMemberUpdate(members);
         expect(showStub.called).toBe(false);
         showStub.restore();

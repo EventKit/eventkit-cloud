@@ -255,8 +255,9 @@ describe('BreadcrumbStepper component', () => {
 
         let content = wrapper.instance().getStepContent(0);
         expect(content).toEqual(<ExportAOI
-                                    onWalkthroughReset={props.onWalkthroughReset}
-                                    walkthroughClicked={props.walkthroughClicked}/>);
+            onWalkthroughReset={props.onWalkthroughReset}
+            walkthroughClicked={props.walkthroughClicked}
+        />);
 
         content = wrapper.instance().getStepContent(1);
         expect(content).toEqual((
@@ -270,15 +271,17 @@ describe('BreadcrumbStepper component', () => {
         ));
 
         content = wrapper.instance().getStepContent(2);
-        expect(content).toEqual(<ExportSummary onWalkthroughReset={props.onWalkthroughReset}
-                                               walkthroughClicked={props.walkthroughClicked}
-                                                   allFormats={props.formats} />);
+        expect(content).toEqual(<ExportSummary
+            onWalkthroughReset={props.onWalkthroughReset}
+            walkthroughClicked={props.walkthroughClicked}
+            allFormats={props.formats}
+        />);
 
         content = wrapper.instance().getStepContent(3);
         expect(content).toEqual(<ExportAOI
             onWalkthroughReset={props.onWalkthroughReset}
-            walkthroughClicked={props.walkthroughClicked}/>);
-
+            walkthroughClicked={props.walkthroughClicked}
+        />);
     });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
