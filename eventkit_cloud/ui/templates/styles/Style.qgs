@@ -22146,16 +22146,32 @@ def my_form_open(dialog, layer, feature):
         <map-layer-style name=""/>
       </map-layer-style-manager>
       <pipe>
-        <rasterrenderer gradient="BlackToWhite" opacity="1" alphaBand="-1" type="singlebandgray" grayBand="1">
+       {% if provider.band_stats %}
+        <rasterrenderer opacity="1" alphaBand="0" classificationMax="{{ provider.band_stats.1 }}" classificationMinMaxOrigin="CumulativeCutFullExtentEstimated" band="1" classificationMin="{{ provider.band_stats.0 }}" type="singlebandpseudocolor">
           <rasterTransparency/>
-          {% if provider.band_stats %}
-          <contrastEnhancement>
-            <minValue>{{ provider.band_stats.0 }}</minValue>
-            <maxValue>{{ provider.band_stats.1 }}</maxValue>
-            <algorithm>StretchToMinimumMaximum</algorithm>
-          </contrastEnhancement>
-          {% endif %}
+
+           <rastershader>
+            <colorrampshader colorRampType="INTERPOLATED" clip="0">
+              <item alpha="255" value="{{ provider.ramp_shader_steps.0 }}" label="{{ provider.ramp_shader_steps.0 }}" color="#b0f3be"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.1 }}" label="{{ provider.ramp_shader_steps.1 }}" color="#e0fbb2"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.2 }}" label="{{ provider.ramp_shader_steps.2 }}" color="#b8de76"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.3 }}" label="{{ provider.ramp_shader_steps.3 }}" color="#27a52a"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.4 }}" label="{{ provider.ramp_shader_steps.4 }}" color="#34883c"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.5 }}" label="{{ provider.ramp_shader_steps.5 }}" color="#9ca429"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.6 }}" label="{{ provider.ramp_shader_steps.6 }}" color="#f8b004"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.7 }}" label="{{ provider.ramp_shader_steps.7 }}" color="#c04a02"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.8 }}" label="{{ provider.ramp_shader_steps.8 }}" color="#870800"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.9 }}" label="{{ provider.ramp_shader_steps.9 }}" color="#741805"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.10 }}" label="{{ provider.ramp_shader_steps.10 }}" color="#6c2a0a"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.11 }}" label="{{ provider.ramp_shader_steps.11 }}" color="#7d4a2b"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.12}}" label="{{ provider.ramp_shader_steps.12 }}" color="#9c8170"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.13 }}" label="{{ provider.ramp_shader_steps.13 }}" color="#b5b5b5"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.14 }}" label="{{ provider.ramp_shader_steps.14 }}" color="#dad8da"/>
+              <item alpha="255" value="{{ provider.ramp_shader_steps.15 }}" label="{{ provider.ramp_shader_steps.15 }}" color="#dad8da"/>
+            </colorrampshader>
+          </rastershader>
         </rasterrenderer>
+       {% endif %}
         <brightnesscontrast brightness="0" contrast="0"/>
         <huesaturation colorizeGreen="128" colorizeOn="0" colorizeRed="255" colorizeBlue="128" grayscaleMode="0" saturation="0" colorizeStrength="100"/>
         <rasterresampler maxOversampling="2"/>
