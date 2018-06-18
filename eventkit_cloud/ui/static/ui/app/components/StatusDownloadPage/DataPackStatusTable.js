@@ -241,6 +241,7 @@ export class DataPackStatusTable extends Component {
         return (
             <div>
                 <CustomTableRow
+                    className="qa-DataPackTableRow-Export"
                     title="Export"
                     data={this.props.status}
                     titleStyle={{ backgroundColor: this.props.statusColor }}
