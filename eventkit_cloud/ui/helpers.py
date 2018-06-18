@@ -19,7 +19,8 @@ from string import Template
 from datetime import datetime
 import pytz
 from numpy import linspace
-
+from ..utils import auth_requests
+import requests
 
 logger = get_task_logger(__name__)
 
@@ -128,6 +129,47 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                       'bbox': run.job.extents}))
     return style_file
 
+def get_human_readable_metadata_document(run_uid):
+    """
+
+    :param run_uid: A UID for the export run.
+    :return: A filepath to a txt document.
+    """
+    from eventkit_cloud.tasks.models import ExportRun
+    from eventkit_cloud.jobs.models import DataProvider
+    from ..tasks.task_runners import normalize_name
+    run = ExportRun.objects.get(uid=run_uid)
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
+
+    data_providers = []
+    for provider_task in run.provider_tasks.all():
+        data_provider = DataProvider.objects.get(slug=provider_task.slug)
+        provider_type = data_provider.export_provider_type.type_name
+        data_provider_metadata = {'name': data_provider.name,
+                                  'description': data_provider.service_description.replace('\r\n', '\n').replace('\n', '\r\n\t'),
+                                  'last_update': get_last_update(data_provider.url,
+                                                                 provider_type,
+                                                                 slug=data_provider.slug),
+                                  'metadata': get_metadata_url(data_provider.url, provider_type),
+                                  'copyright': data_provider.service_copyright}
+        data_providers += [data_provider_metadata]
+
+    metadata = {'name': run.job.name,
+                'url': "{0}/status/{1}".format(getattr(settings, "SITE_URL"), run.job.uid),
+                'description': run.job.description,
+                'project': run.job.event,
+                'date': timezone.now().strftime("%Y%m%d"),
+                'run_uid': run.uid,
+                'data_providers': data_providers,
+                'aoi': run.job.bounds_geojson}
+
+    metadata_file = os.path.join(stage_dir, '{0}_ReadMe.txt'.format(normalize_name(run.job.name)))
+
+    with open(metadata_file, 'w') as open_file:
+        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).replace('\r\n', '\n').replace('\n', '\r\n'))
+
+    return metadata_file
+
 
 def get_file_paths(directory, paths=None):
     paths = paths or dict()
@@ -136,6 +178,52 @@ def get_file_paths(directory, paths=None):
             for f in filenames:
                 paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
     return paths
+
+
+def get_last_update(url, type, slug=None):
+    """
+    A wrapper to get different timestamps.
+    :param url: The url to get the timestamp
+    :param type: The type of services (e.g. osm)
+    :param slug: Optionally a slug if the service requires credentials.
+    :return: The timestamp as a string.
+    """
+    if type == 'osm':
+        return get_osm_last_update(url, slug=slug)
+
+
+def get_metadata_url(url, type):
+    """
+    A wrapper to get different timestamps.
+    :param url: The url to get the timestamp
+    :param type: The type of services (e.g. osm)
+    :param slug: Optionally a slug if the service requires credentials.
+    :return: The timestamp as a string.
+    """
+    if type in ['wcs', 'wms', 'wmts']:
+        return "{0}?request=GetCapabilities".format(url.split('?')[0])
+    else:
+        return url
+
+
+def get_osm_last_update(url, slug=None):
+    """
+
+    :param url: A path to the overpass api.
+    :param slug: Optionally a slug if credentials are needed
+    :return: The default timestamp as a string (2018-06-18T13:09:59Z)
+    """
+
+    timestamp_url = "{0}timestamp".format(url.rstrip('/').rstrip('interpreter'))
+    try:
+        response = auth_requests.get(timestamp_url, slug=slug)
+        if response:
+            return response.content
+        raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
+    except Exception as e:
+        logger.warning(e)
+        logger.warning("Could not get the timestamp from the overpass url.")
+        return None
 
 
 def file_to_geojson(in_memory_file):

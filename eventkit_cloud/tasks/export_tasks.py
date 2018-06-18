@@ -26,7 +26,7 @@ from celery.utils.log import get_task_logger
 from enum import Enum
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file
+from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file, get_human_readable_metadata_document
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -776,14 +776,14 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
         if license_file:
             include_files += [license_file]
         include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
+        include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
 
         metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
 
-        qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
-        include_files += [qgs_style_file]
+
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
                                      file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
@@ -1079,8 +1079,8 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
         # No need to add QGIS file if there aren't any files to be zipped.
-        qgs_style_file = generate_qgs_style(run_uid=run_uid)
-        include_files += [qgs_style_file]
+        include_files += [generate_qgs_style(run_uid=run_uid)]
+        include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
@@ -1184,7 +1184,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
-            if filepath.endswith(".qgs") or filepath.endswith("metadata.json"):
+            if filepath.endswith((".qgs", "metadata.json", "ReadMe.txt")):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
