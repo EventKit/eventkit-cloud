@@ -11,14 +11,15 @@ import math
 
 from django.conf import settings
 from django.utils import timezone
-from django.template.loader import get_template, render_to_string
+from django.template.loader import render_to_string
 from celery.utils.log import get_task_logger
-from ..utils.gdalutils import get_meta
+from ..utils.gdalutils import get_meta, get_band_statistics
 from uuid import uuid4
 from string import Template
 from datetime import datetime
 import pytz
-import requests
+from numpy import linspace
+
 
 logger = get_task_logger(__name__)
 
@@ -40,8 +41,8 @@ def get_style_files():
     """
     style_dir = os.path.join(os.path.dirname(__file__), 'static', 'ui', 'styles')
     files = get_file_paths(style_dir)
-    support_dir = os.path.join(os.path.dirname(__file__), 'support')
-    files = get_file_paths(support_dir, files)
+    arcgis_dir = os.path.join(os.path.dirname(__file__), 'arcgis')
+    files = get_file_paths(arcgis_dir, files)
     return files
 
 
@@ -104,6 +105,14 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                         provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
                                            'provider_name': provider_task.name,
                                            'file_type': os.path.splitext(full_file_path)[1]}
+                        if os.path.splitext(full_file_path)[1] == '.tif':
+                            # Get statistics to update ranges in template.
+                            band_stats = get_band_statistics(full_file_path)
+                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                            provider_details[provider_task.slug]["band_stats"] = band_stats
+                            # Calculate the value for each elevation step (of 16)
+                            steps = linspace(band_stats[0], band_stats[1], num=16)
+                            provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))
