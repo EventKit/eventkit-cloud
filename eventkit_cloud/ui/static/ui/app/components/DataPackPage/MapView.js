@@ -204,6 +204,10 @@ export class MapView extends Component {
     componentDidUpdate() {
         this.map.updateSize();
     }
+
+    getScrollbar() {
+        return this.scrollbar;
+    }
     
     updateZoomLevel() {
         this.setState({ zoomLevel: this.map.getView().getZoom() });
@@ -883,7 +887,7 @@ export class MapView extends Component {
             this.source.getFeatureById(this.state.selectedFeature) : null;
         return (
             <div style={{ height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223 }}>
-                <CustomScrollbar style={styles.list}>
+                <CustomScrollbar style={styles.list} ref={(instance) => { this.scrollbar = instance; }}>
                     <div style={styles.root}>
                         <GridList
                             className="qa-MapView-GridList"

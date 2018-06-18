@@ -144,18 +144,37 @@ export class BreadcrumbStepper extends React.Component {
     getStepContent(stepIndex) {
         switch (stepIndex) {
             case 0:
-                return (<ExportAOI />);
+                return (
+                    <ExportAOI
+                        walkthroughClicked={this.props.walkthroughClicked}
+                        onWalkthroughReset={this.props.onWalkthroughReset}
+                    />
+                );
             case 1:
                 return (
                     <ExportInfo
                         providers={this.props.providers}
                         formats={this.props.formats}
                         handlePrev={this.handlePrev}
-                    />);
+                        walkthroughClicked={this.props.walkthroughClicked}
+                        onWalkthroughReset={this.props.onWalkthroughReset}
+                    />
+                );
             case 2:
-                return <ExportSummary allFormats={this.props.formats} />;
+                return (
+                    <ExportSummary
+                        allFormats={this.props.formats}
+                        walkthroughClicked={this.props.walkthroughClicked}
+                        onWalkthroughReset={this.props.onWalkthroughReset}
+                    />
+                );
             default:
-                return <ExportAOI />;
+                return (
+                    <ExportAOI
+                        walkthroughClicked={this.props.walkthroughClicked}
+                        onWalkthroughReset={this.props.onWalkthroughReset}
+                    />
+                );
         }
     }
 
@@ -172,17 +191,11 @@ export class BreadcrumbStepper extends React.Component {
 
         switch (stepIndex) {
             case 0:
-                return (
-                    <NavigationArrowBack
-                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case0"
-                        style={styles.arrowBack}
-                        onClick={this.handlePrev}
-                    />
-                );
             case 1:
                 return (
                     <NavigationArrowBack
-                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case1"
+                        id="Previous"
+                        className="qa-BreadcrumbStepper-NavigationArrowBack-previous"
                         style={styles.arrowBack}
                         onClick={this.handlePrev}
                     />
@@ -191,6 +204,7 @@ export class BreadcrumbStepper extends React.Component {
                 return (
                     <FloatingActionButton
                         mini
+                        id="Previous"
                         className="qa-BreadcrumbStepper-FloatingActionButton-previous"
                         onClick={this.handlePrev}
                         style={styles.arrowBack}
@@ -225,23 +239,12 @@ export class BreadcrumbStepper extends React.Component {
 
         switch (stepIndex) {
             case 0:
-                return (
-                    <FloatingActionButton
-                        mini
-                        className="qa-BreadcrumbStepper-FloatingActionButton-case0"
-                        disabled={!this.props.stepperNextEnabled}
-                        backgroundColor="#55ba63"
-                        onClick={this.handleNext}
-                        style={btnStyles.forward}
-                    >
-                        <NavigationArrowForward />
-                    </FloatingActionButton>
-                );
             case 1:
                 return (
                     <FloatingActionButton
                         mini
-                        className="qa-BreadcrumbStepper-FloatingActionButton-case1"
+                        id="Next"
+                        className="qa-BreadcrumbStepper-FloatingActionButton-next"
                         disabled={!this.props.stepperNextEnabled}
                         backgroundColor="#55ba63"
                         onClick={this.handleNext}
@@ -253,7 +256,8 @@ export class BreadcrumbStepper extends React.Component {
             case 2:
                 return (
                     <FloatingActionButton
-                        className="qa-BreadcrumbStepper-FloatingActionButton-case2"
+                        id="Next"
+                        className="qa-BreadcrumbStepper-FloatingActionButton-next"
                         mini={false}
                         disabled={!this.props.stepperNextEnabled}
                         backgroundColor="#55ba63"
@@ -443,6 +447,8 @@ BreadcrumbStepper.propTypes = {
     jobuid: PropTypes.string.isRequired,
     formats: PropTypes.arrayOf(PropTypes.object).isRequired,
     getFormats: PropTypes.func.isRequired,
+    walkthroughClicked: PropTypes.bool.isRequired,
+    onWalkthroughReset: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
     routes: PropTypes.arrayOf(PropTypes.object).isRequired,
     getNotifications: PropTypes.func.isRequired,

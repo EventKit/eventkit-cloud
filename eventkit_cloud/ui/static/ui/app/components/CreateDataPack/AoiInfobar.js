@@ -388,7 +388,7 @@ export class AoiInfobar extends Component {
         return (
             <div className="qa-AoiInfobar">
                 <div style={styles.wrapper}>
-                    <div style={styles.infobar}>
+                    <div style={styles.infobar} className="qa-AoiInfobar-body">
                         <div style={styles.body}>
                             <div style={styles.titleBar}>
                                 <div className="qa-AoiInfobar-title" style={styles.title}>

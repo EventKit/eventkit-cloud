@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -29,9 +30,10 @@ import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../..
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
-import BaseTooltip from '../BaseTooltip';
-import { getSqKmString } from '../../utils/generic';
 import ol3mapCss from '../../styles/ol3map.css';
+import BaseTooltip from '../BaseTooltip';
+import { joyride } from '../../joyride.config';
+import { getSqKmString } from '../../utils/generic';
 import background from '../../../images/topoBackground.jpg';
 
 export class ExportInfo extends React.Component {
@@ -41,6 +43,8 @@ export class ExportInfo extends React.Component {
             expanded: false,
             projectionsDialogOpen: false,
             licenseDialogOpen: false,
+            steps: [],
+            isRunning: false,
             // we make a local copy of providers for editing
             providers: props.providers,
             refreshTooltipOpen: false,
@@ -52,6 +56,7 @@ export class ExportInfo extends React.Component {
         this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
         this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
+        this.callback = this.callback.bind(this);
         this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
@@ -84,18 +89,27 @@ export class ExportInfo extends React.Component {
                 this.checkAvailability(provider);
             }), 30000);
         }
+        const steps = joyride.ExportInfo;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
+        // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
+        if (!nextProps.walkthroughClicked) {
         // if required fields are fulfilled enable next
-        if (this.hasRequiredFields(nextProps.exportInfo) &&
-            !this.hasDisallowedSelection(nextProps.exportInfo)) {
-            if (!nextProps.nextEnabled) {
-                this.props.setNextEnabled();
+            if (this.hasRequiredFields(nextProps.exportInfo) &&
+                !this.hasDisallowedSelection(nextProps.exportInfo)) {
+                if (!nextProps.nextEnabled) {
+                    this.props.setNextEnabled();
+                }
+            } else if (nextProps.nextEnabled) {
+                // if not and next is enabled it should be disabled
+                this.props.setNextDisabled();
             }
-        } else if (nextProps.nextEnabled) {
-            // if not and next is enabled it should be disabled
-            this.props.setNextDisabled();
+        }
+        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
+            this.joyride.reset(true);
+            this.setState({ isRunning: true });
         }
     }
 
@@ -260,7 +274,7 @@ export class ExportInfo extends React.Component {
 
     hasDisallowedSelection(exportInfo) {
         // if any unacceptable providers are selected return true, else return false
-        return exportInfo.providers.some((provider) => {
+        return exportInfo.providers.some(provider => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
             const providerState = this.state.providers.find(p => p.slug === provider.slug);
@@ -323,8 +337,46 @@ export class ExportInfo extends React.Component {
         this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
+    }
+
+    callback(data) {
+        const { action, step, type } = data;
+        this.props.setNextDisabled();
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            this.setState({ isRunning: false });
+            this.props.onWalkthroughReset();
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
+        }
+
+        if (data.index === 5 && data.type === 'tooltip:before') {
+            this.props.setNextEnabled();
+        }
+    }
+
+
     render() {
         const formWidth = window.innerWidth < 800 ? '90%' : '60%';
+        const { steps, isRunning } = this.state;
+
         const style = {
             underlineStyle: {
                 width: 'calc(100% - 10px)',
@@ -435,6 +487,13 @@ export class ExportInfo extends React.Component {
                 fontWeight: 'normal',
                 verticalAlign: 'top',
                 cursor: 'pointer',
+                color: '#4598bf',
+            },
+            maxArea: {
+                fontSize: '13px',
+                borderTop: '1px solid rgb(224, 224, 224)',
+                paddingLeft: '44px',
+                marginLeft: '0',
             },
         };
 
@@ -442,6 +501,23 @@ export class ExportInfo extends React.Component {
 
         return (
             <div id="root" className="qa-ExportInfo-root" style={style.root}>
+                <Joyride
+                    callback={this.callback}
+                    ref={(instance) => { this.joyride = instance; }}
+                    steps={steps}
+                    autoStart
+                    type="continuous"
+                    showSkipButton
+                    showStepsProgress
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}
+                />
                 <CustomScrollbar>
                     <form id="form" onSubmit={this.onSubmit} style={style.form} className="qa-ExportInfo-form">
                         <Paper
@@ -451,55 +527,60 @@ export class ExportInfo extends React.Component {
                             zDepth={2}
                             rounded
                         >
-                            <div id="mainHeading" className="qa-ExportInfo-mainHeading" style={style.heading}>
-                                Enter General Information
+                            <div className="qa-ExportInfo-general-info" id="GeneralInfo">
+                                <div
+                                    id="mainHeading"
+                                    className="qa-ExportInfo-mainHeading"
+                                    style={style.heading}
+                                >
+                                    Enter General Information
+                                </div>
+                                <div style={{ marginBottom: '30px' }}>
+                                    <CustomTextField
+                                        className="qa-ExportInfo-input-name"
+                                        id="Name"
+                                        name="exportName"
+                                        underlineStyle={style.underlineStyle}
+                                        underlineFocusStyle={style.underlineStyle}
+                                        onChange={this.onNameChange}
+                                        defaultValue={this.props.exportInfo.exportName}
+                                        hintText="Datapack Name"
+                                        style={style.textField}
+                                        inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        maxLength={100}
+                                    />
+                                    <CustomTextField
+                                        className="qa-ExportInfo-input-description"
+                                        id="Description"
+                                        underlineStyle={style.underlineStyle}
+                                        underlineFocusStyle={style.underlineStyle}
+                                        name="datapackDescription"
+                                        onChange={this.onDescriptionChange}
+                                        defaultValue={this.props.exportInfo.datapackDescription}
+                                        hintText="Description"
+                                        multiLine
+                                        style={style.textField}
+                                        textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        maxLength={250}
+                                    />
+                                    <CustomTextField
+                                        className="qa-ExportInfo-input-project"
+                                        id="Project"
+                                        underlineStyle={style.underlineStyle}
+                                        underlineFocusStyle={style.underlineStyle}
+                                        name="projectName"
+                                        onChange={this.onProjectChange}
+                                        defaultValue={this.props.exportInfo.projectName}
+                                        hintText="Project Name"
+                                        style={style.textField}
+                                        inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        maxLength={100}
+                                    />
+                                </div>
                             </div>
-                            <div style={{ marginBottom: '30px' }}>
-                                <CustomTextField
-                                    className="qa-ExportInfo-input-name"
-                                    id="nameField"
-                                    name="exportName"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    onChange={this.onNameChange}
-                                    value={this.props.exportInfo.exportName}
-                                    hintText="Datapack Name"
-                                    style={style.textField}
-                                    inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={100}
-                                />
-                                <CustomTextField
-                                    className="qa-ExportInfo-input-description"
-                                    id="descriptionField"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    name="datapackDescription"
-                                    onChange={this.onDescriptionChange}
-                                    value={this.props.exportInfo.datapackDescription}
-                                    hintText="Description"
-                                    multiLine
-                                    style={style.textField}
-                                    textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={250}
-                                />
-                                <CustomTextField
-                                    className="qa-ExportInfo-input-project"
-                                    id="projectField"
-                                    underlineStyle={style.underlineStyle}
-                                    underlineFocusStyle={style.underlineStyle}
-                                    name="projectName"
-                                    onChange={this.onProjectChange}
-                                    value={this.props.exportInfo.projectName}
-                                    hintText="Project Name"
-                                    style={style.textField}
-                                    inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                    maxLength={100}
-                                />
-                            </div>
-
                             <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
                             <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
                             <div style={style.sectionBottom}>
@@ -519,8 +600,8 @@ export class ExportInfo extends React.Component {
                                             style={style.refreshIcon}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
-                                            onBlur={this.handleRefreshTooltipClose}
                                             onFocus={this.handleRefreshTooltipOpen}
+                                            onBlur={this.handleRefreshTooltipClose}
                                             onTouchStart={this.handleRefreshTooltipOpen}
                                             onTouchEnd={this.handleRefreshTooltipClose}
                                             onTouchTap={this.onRefresh}
@@ -534,15 +615,19 @@ export class ExportInfo extends React.Component {
                                             }}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
-                                            onBlur={this.handleRefreshTooltipClose}
                                             onFocus={this.handleRefreshTooltipOpen}
+                                            onBlur={this.handleRefreshTooltipClose}
                                             onTouchTap={this.onRefresh}
                                         >
                                             <div>You may try to resolve errors by running the availability check again.</div>
                                         </BaseTooltip>
                                     </span>
                                 </div>
-                                <List className="qa-ExportInfo-List" style={{ width: '100%', fontSize: '16px' }}>
+                                <List
+                                    id="ProviderList"
+                                    className="qa-ExportInfo-List"
+                                    style={{ width: '100%', fontSize: '16px' }}
+                                >
                                     {providers.map((provider, ix) => {
                                         // Show license if one exists.
                                         const nestedItems = [];
@@ -557,8 +642,8 @@ export class ExportInfo extends React.Component {
                                                             <span
                                                                 role="button"
                                                                 tabIndex={0}
-                                                                onKeyPress={this.handleLicenseOpen}
                                                                 onClick={this.handleLicenseOpen}
+                                                                onKeyPress={this.handleLicenseOpen}
                                                                 style={{ cursor: 'pointer', color: '#4598bf' }}
                                                             >
                                                                 {provider.license.name}
@@ -597,12 +682,7 @@ export class ExportInfo extends React.Component {
                                                 </div>
                                             }
                                             disabled
-                                            style={{
-                                                fontSize: '13px',
-                                                borderTop: '1px solid rgb(224, 224, 224)',
-                                                paddingLeft: '44px',
-                                                marginLeft: '0',
-                                            }}
+                                            style={style.maxArea}
                                         />);
 
                                         const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
@@ -618,6 +698,7 @@ export class ExportInfo extends React.Component {
                                                         {provider.name}
                                                     </span>
                                                     <ProviderStatusIcon
+                                                        id="ProviderStatus"
                                                         baseStyle={{ left: '80%' }}
                                                         tooltipStyle={{ zIndex: '1' }}
                                                         availability={provider.availability}
@@ -628,8 +709,10 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '5px' }}
-                                                defaultChecked={this.props.exportInfo.providers.map(x => x.name)
-                                                    .indexOf(provider.name) !== -1}
+                                                defaultChecked={
+                                                    this.props.exportInfo.providers.map(x => x.name)
+                                                        .indexOf(provider.name) !== -1
+                                                }
                                                 onCheck={this.onChangeCheck}
                                                 checkedIcon={
                                                     <ActionCheckCircle
@@ -652,11 +735,15 @@ export class ExportInfo extends React.Component {
                                 </List>
                             </div>
 
-                            <div id="projectionHeader" className="qa-ExportInfo-projectionHeader" style={style.heading}>
+                            <div
+                                id="projectionHeader"
+                                className="qa-ExportInfo-projectionHeader"
+                                style={style.heading}
+                            >
                                 Select Projection
                             </div>
                             <div style={style.sectionBottom}>
-                                <div id="projectionCheckbox" style={style.checkboxLabel}>
+                                <div id="Projections" className="qa-ExportInfo-projections" style={style.checkboxLabel}>
                                     <Checkbox
                                         className="qa-ExportInfo-CheckBox-projection"
                                         label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
@@ -702,6 +789,7 @@ export class ExportInfo extends React.Component {
                                 <div style={style.mapCard}>
                                     <Card
                                         expandable
+                                        id="Map"
                                         className="qa-ExportInfo-Card-map"
                                         onExpandChange={this.expandedChange}
                                     >
@@ -716,8 +804,8 @@ export class ExportInfo extends React.Component {
                                             <span
                                                 role="button"
                                                 tabIndex={0}
-                                                onKeyPress={this.props.handlePrev}
                                                 onClick={this.props.handlePrev}
+                                                onKeyPress={this.props.handlePrev}
                                                 style={style.editAoi}
                                             >
                                                 Edit
@@ -777,6 +865,8 @@ ExportInfo.propTypes = {
     updateExportInfo: PropTypes.func.isRequired,
     setNextDisabled: PropTypes.func.isRequired,
     setNextEnabled: PropTypes.func.isRequired,
+    walkthroughClicked: PropTypes.bool.isRequired,
+    onWalkthroughReset: PropTypes.func.isRequired,
 };
 
 export default connect(
