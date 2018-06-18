@@ -8,12 +8,12 @@ export class DashboardSection extends React.Component {
         this.handlePageChange = this.handlePageChange.bind(this);
         this.state = {
             pageIndex: 0,
-        }
+        };
     }
 
     handlePageChange(pageIndex) {
         this.setState({
-            pageIndex: pageIndex,
+            pageIndex,
         });
     }
 
@@ -111,13 +111,17 @@ export class DashboardSection extends React.Component {
         }
 
         return (
-            <div style={styles.root}>
+            <div
+                style={styles.root}
+                id={`DashboardSection${this.props.title}`}
+                className={`qa-DashboardSection-${this.props.title}`}
+            >
                 <div
-                    className={'qa-DashboardSection-Header'}
+                    className="qa-DashboardSection-Header"
                     style={styles.sectionHeader}
                 >
                     <div
-                        className={'qa-DashboardSection-Header-Title'}
+                        className="qa-DashboardSection-Header-Title"
                         style={styles.sectionHeaderLeft}
                     >
                         {this.props.title}
@@ -136,7 +140,7 @@ export class DashboardSection extends React.Component {
                                         className={'qa-DashboardSection-Tab'}
                                         value={pageIndex}
                                         style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
-                                        disableTouchRipple={true}
+                                        disableTouchRipple
                                         buttonStyle={(pageIndex < childrenPages.length) ?
                                             {
                                                 ...styles.tabButton,
@@ -145,8 +149,7 @@ export class DashboardSection extends React.Component {
                                             :
                                             styles.tabButtonDisabled
                                         }
-                                    >
-                                    </Tab>
+                                    />
                                 ))}
                             </Tabs>
                             {this.props.onViewAll ?
