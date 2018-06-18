@@ -1,11 +1,15 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import Paper from 'material-ui/Paper';
+import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
 import Warning from 'material-ui/svg-icons/alert/warning';
 import ErrorOutline from 'material-ui/svg-icons/alert/error-outline';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataCartDetails from './DataCartDetails';
 import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
@@ -16,23 +20,30 @@ import { viewedJob } from '../../actions/userActivityActions';
 import { getUsers } from '../../actions/userActions';
 import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
+
 import BaseDialog from '../../components/Dialog/BaseDialog';
+import { joyride } from '../../joyride.config';
+
 
 const topoPattern = require('../../../images/ek_topo_pattern.png');
 
 export class StatusDownload extends React.Component {
     constructor(props) {
         super(props);
-        this.initialState = this.initialState.bind(this);
+        this.callback = this.callback.bind(this);
+        this.getInitialState = this.getInitialState.bind(this);
         this.clearError = this.clearError.bind(this);
         this.getErrorMessage = this.getErrorMessage.bind(this);
-        this.state = this.initialState();
+        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
+        this.state = this.getInitialState();
     }
 
-    initialState() {
+    getInitialState() {
         return {
             isLoading: true,
             error: null,
+            steps: [],
+            isRunning: false,
         };
     }
 
@@ -43,6 +54,9 @@ export class StatusDownload extends React.Component {
         this.props.getUsers();
         this.props.getGroups();
         this.startTimer();
+
+        const steps = joyride.StatusAndDownload;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -104,10 +118,11 @@ export class StatusDownload extends React.Component {
                 }
             }
         }
-        if (nextProps.location !== this.props.location) {
+
+        if (nextProps.location.pathname !== this.props.location.pathname) {
             // Refresh the entire component.
             this.componentWillUnmount();
-            this.setState(this.initialState());
+            this.setState(this.getInitialState());
             this.componentDidMount();
         }
     }
@@ -149,6 +164,10 @@ export class StatusDownload extends React.Component {
         return messages;
     }
 
+    handleWalkthroughClick() {
+        this.setState({ isRunning: true });
+    }
+
     handleClone(cartDetails, providerArray) {
         this.props.cloneExport(cartDetails, providerArray);
     }
@@ -164,9 +183,52 @@ export class StatusDownload extends React.Component {
         this.setState({ error: null });
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
+    }
+
+    callback(data) {
+        const { action, type, step } = data;
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
+        }
+    }
+
     render() {
+        const { steps, isRunning } = this.state;
+        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>;
+
         const marginPadding = this.getMarginPadding();
         const styles = {
+            appBar: {
+                backgroundColor: '#161e2e',
+                height: '35px',
+                color: 'white',
+                fontSize: '14px',
+            },
+            pageTitle: {
+                fontSize: '18px',
+                lineHeight: '35px',
+                paddingLeft: '10px',
+                height: '35px',
+            },
             root: {
                 height: window.innerHeight - 95,
                 width: '100%',
@@ -210,7 +272,33 @@ export class StatusDownload extends React.Component {
                 fontWeight: 800,
                 marginLeft: '5px',
             },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginLeft: '10px',
+                fontSize: '16px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleWalkthroughClick}
+                style={styles.tourButton}
+            >
+                <Help style={styles.tourIcon} />
+                Page Tour
+            </EnhancedButton>
+        );
 
         const errorMessage = this.getErrorMessage();
 
@@ -250,6 +338,15 @@ export class StatusDownload extends React.Component {
 
         return (
             <div className="qa-StatusDownload-div-root" style={styles.root}>
+                <AppBar
+                    className="qa-StatusDownload-AppBar"
+                    style={styles.appBar}
+                    title={pageTitle}
+                    titleStyle={styles.pageTitle}
+                    iconStyleRight={{ marginTop: '2px' }}
+                    iconElementRight={iconElementRight}
+                    iconElementLeft={<p style={{ display: 'none' }} />}
+                />
                 {this.props.runDeletion.deleting ?
                     <div style={styles.deleting}>
                         <CircularProgress
@@ -261,12 +358,30 @@ export class StatusDownload extends React.Component {
                     :
                     null
                 }
-                <CustomScrollbar style={{ height: window.innerHeight - 95, width: '100%' }}>
+                <CustomScrollbar ref={(instance) => { this.scrollbar = instance; }} style={{ height: window.innerHeight - 130, width: '100%' }}>
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
+                        <Joyride
+                            callback={this.callback}
+                            ref={(instance) => { this.joyride = instance; }}
+                            steps={steps}
+                            scrollToSteps
+                            autoStart
+                            type="continuous"
+                            showSkipButton
+                            showStepsProgress
+                            locale={{
+                                back: (<span>Back</span>),
+                                close: (<span>Close</span>),
+                                last: (<span>Done</span>),
+                                next: (<span>Next</span>),
+                                skip: (<span>Skip</span>),
+                            }}
+                            run={isRunning}
+                        />
                         <form>
                             <Paper className="qa-Paper" style={{ padding: '20px' }} zDepth={2} >
                                 <div className="qa-StatusDownload-heading" style={styles.heading}>
-                                    Status & Download
+                                    DataPack Details
                                 </div>
                                 {this.state.isLoading ?
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>

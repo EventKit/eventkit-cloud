@@ -89,9 +89,10 @@ export class DataPackShareDialog extends Component {
 
     handleMemberUpdate(members) {
         const permissions = { ...this.state.permissions };
+        const stateLength = Object.keys(permissions.members).length;
         if (this.props.warnPublic) {
             const { length } = Object.keys(members);
-            if (length === this.props.members.length) {
+            if (length === this.props.members.length && length !== stateLength) {
                 this.showPublicWarning();
             }
         }
