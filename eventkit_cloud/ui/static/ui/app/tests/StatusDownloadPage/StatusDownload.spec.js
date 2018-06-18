@@ -3,13 +3,13 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
 import Paper from 'material-ui/Paper';
 import CircularProgress from 'material-ui/CircularProgress';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
-
 
 describe('StatusDownload component', () => {
     const muiTheme = getMuiTheme();
@@ -80,7 +80,7 @@ describe('StatusDownload component', () => {
             },
         },
         provider_tasks: providerTasks,
-        zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 
@@ -183,7 +183,7 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('form')).toHaveLength(1);
-        expect(wrapper.find(Paper)).toHaveLength(1);
+        expect(wrapper.find(Paper)).toHaveLength(2);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(DataCartDetails)).toHaveLength(0);
         const nextProps = getProps();
@@ -191,6 +191,7 @@ describe('StatusDownload component', () => {
         nextProps.datacartDetails.data = [{ ...exampleRun }];
         wrapper.setProps(nextProps);
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('should render a loading icon if data has not been received yet', () => {
@@ -226,19 +227,22 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call getDatacartDetails, getProviders, and startTimer when mounted', () => {
+    it('should call getDatacartDetails, getProviders, joyrideAddSteps and startTimer when mounted', () => {
         StatusDownload.prototype.componentDidMount = didMount;
         const props = getProps();
         props.getDatacartDetails = sinon.spy();
         props.getProviders = sinon.spy();
         const timerStub = sinon.stub(StatusDownload.prototype, 'startTimer');
-        const wrapper = getWrapper(props);
+        const joyrideSpy = sinon.spy(StatusDownload.prototype, 'joyrideAddSteps');
+        getWrapper(props);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
         expect(timerStub.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         timerStub.restore();
         StatusDownload.prototype.componentDidMount = sinon.spy();
+        joyrideSpy.restore();
     });
 
     it('componentWillReceiveProps should call browserHistory push if a run has been deleted', () => {
@@ -342,6 +346,48 @@ describe('StatusDownload component', () => {
         clearStub.restore();
     });
 
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [
+            {
+                title: 'DataPack Info',
+                text: 'This is the name of the datapack.',
+                selector: '.qa-DataCartDetails-table-name',
+                position: 'bottom',
+                style: {},
+                isFixed: true,
+            },
+        ];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(StatusDownload.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(StatusDownload.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
     it('componentWillReceiveProps should handle fetched datacartDetails and not clear interval when tasks are not completed', () => {
         jest.useFakeTimers();
         const props = getProps();
@@ -359,6 +405,7 @@ describe('StatusDownload component', () => {
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
+
 
     it('componentWillUnmount should clear cart details and timers', () => {
         const props = getProps();
@@ -412,10 +459,10 @@ describe('StatusDownload component', () => {
         props.cloneExport = sinon.spy();
         const wrapper = getWrapper(props);
         const cart = { uid: '123' };
-        const providers = ['1', '2'];
-        wrapper.instance().handleClone(cart, providers);
+        const p = ['1', '2'];
+        wrapper.instance().handleClone(cart, p);
         expect(props.cloneExport.calledOnce).toBe(true);
-        expect(props.cloneExport.calledWith(cart, providers));
+        expect(props.cloneExport.calledWith(cart, p));
     });
 
     it('startTimer should create a timer interval', () => {
@@ -446,13 +493,11 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(getProps());
         expect(componentDidMountSpy.callCount).toBe(1);
         expect(componentWillUnmountSpy.callCount).toBe(0);
-        expect(setStateSpy.callCount).toBe(0);
         wrapper.setProps({
-            location: {},
+            location: { pathname: '/new/path' },
         });
         expect(componentDidMountSpy.callCount).toBe(2);
         expect(componentWillUnmountSpy.callCount).toBe(1);
-        expect(setStateSpy.callCount).toBe(1);
         expect(setStateSpy.calledWith(wrapper.instance().getInitialState())).toBe(true);
     });
 });
