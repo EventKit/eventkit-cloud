@@ -279,7 +279,10 @@ export class DataPackListItem extends Component {
                                     :
                                     <div style={styles.ownerLabel}>{this.props.run.user}</div>
                                 }
-                                <div className="qa-DataPackListItem-subtitle-status tour-datapack-status" style={{ display: 'inline-block', float: 'right' }}>
+                                <div
+                                    className="qa-DataPackListItem-subtitle-status tour-datapack-status"
+                                    style={{ display: 'inline-block', float: 'right' }}
+                                >
                                     {this.props.run.job.permissions.value !== 'PRIVATE' ?
                                         <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
                                         :
