@@ -70,15 +70,16 @@ const mockRuns = [
 describe('DashboardPage component', () => {
     const muiTheme = getMuiTheme();
 
+    let props;
     let wrapper;
     let instance;
 
     beforeEach(() => {
-        ({ wrapper, instance } = setup());
+        setup();
     });
 
     function setup({ propsOverride = {}, mounted = false } = {}) {
-        let props = {
+        props = {
             user: {
                 data: {
                     user: {
@@ -142,7 +143,6 @@ describe('DashboardPage component', () => {
             ...propsOverride,
         };
 
-        let wrapper;
         if (mounted) {
             wrapper = mount(<DashboardPage { ...props } />, {
                 context: { muiTheme },
@@ -152,10 +152,7 @@ describe('DashboardPage component', () => {
             wrapper = shallow(<DashboardPage { ...props } />);
         }
 
-        return {
-            wrapper,
-            instance: wrapper.instance(),
-        };
+        instance = wrapper.instance();
     }
 
     function loadEmptyData(wrapper) {
@@ -545,7 +542,7 @@ describe('DashboardPage component', () => {
         beforeEach(() => {
             refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
             jest.useFakeTimers();
-            ({ wrapper, instance } = setup());
+            setup();
             instance.componentDidMount();
         });
 
