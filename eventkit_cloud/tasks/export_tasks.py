@@ -37,7 +37,7 @@ from ..utils.geopackage import add_file_metadata
 from .exceptions import CancelException, DeleteException
 from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
-BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck']
+BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
@@ -1166,14 +1166,14 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 # by directory and then just put each directory in the correct location so that we don't have to
                 # list all support files in the future.
                 basename = os.path.basename(absolute_file_path)
-                if basename == "create_mxd.py":
-                    # put the style file in the root of the zip
-                    filename = basename
-                elif os.path.dirname(absolute_file_path) == 'support':
-                    # Put the support files in the correct directory.
-                    filename = 'support/{0}'.format(basename)
-                elif basename == "__init__.py" or ".pyc" in basename:
+                if basename == "__init__.py":
                     continue
+                elif os.path.basename(os.path.dirname(absolute_file_path)) == 'arcgis':
+                    if basename == "create_mxd.py":
+                        filename = os.path.join('arcgis', '{0}'.format(basename))
+                    else:
+                        # Put the support files in the correct directory.
+                        filename = os.path.join('arcgis', 'templates', '{0}'.format(basename))
                 zipfile.write(
                     absolute_file_path,
                     arcname=filename
@@ -1184,12 +1184,19 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
+
             if filepath.endswith((".qgs", "metadata.json", "ReadMe.txt")):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
                     ext
                 )
+            elif filepath.endswith("metadata.json"):
+                # put the metadata file in arcgis folder unless it becomes more useful.
+                filename = os.path.join('arcgis', '{0}{1}'.format(
+                    name,
+                    ext
+                ))
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
@@ -1633,4 +1640,6 @@ def get_data_type_from_provider(provider_slug):
     data_provider = DataProvider.objects.get(slug=provider_slug)
     type_name = data_provider.export_provider_type.type_name
     type_mapped = data_types.get(type_name)
+    if data_provider.slug.lower() == 'nome':
+        type_mapped = 'nome'
     return type_mapped
