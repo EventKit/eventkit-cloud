@@ -4,7 +4,7 @@ import logging
 from django.test import TestCase
 
 import os
-from mock import Mock, patch, call, mock_open
+from mock import Mock, patch, mock_open
 from ..helpers import cd, get_style_files, get_file_paths, file_to_geojson, \
     read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon
 
