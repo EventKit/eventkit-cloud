@@ -1244,7 +1244,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         db.close_old_connections()
         run.refresh_from_db()
 
-        size = os.path.getsize(zip_dl_filepath) / 1024.0 / 1024.0  # MB
+        size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0  # MB
         downloadable = FileProducingTaskResult.objects.create(size=size, download_url=zipfile_url)
         run.downloadable = downloadable
 

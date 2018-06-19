@@ -153,7 +153,7 @@ class UserDownload(UIDMixin):
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='downloads')
     downloaded_at = models.DateTimeField(verbose_name="Time of Download", default=timezone.now, editable=False)
-    downloadable = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, related_name=)
+    downloadable = models.ForeignKey(FileProducingTaskResult, on_delete=models.CASCADE, related_name='downloads')
 
     class Meta:
         ordering = ['-downloaded_at']
