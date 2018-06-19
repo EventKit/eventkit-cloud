@@ -3,6 +3,8 @@ from django.contrib import admin
 
 from django.utils.html import format_html
 from .models import ExportRun, UserDownload
+from eventkit_cloud.utils.s3 import get_presigned_url
+from django.conf import settings
 
 
 class ExportRunAdmin(admin.ModelAdmin):
@@ -21,13 +23,10 @@ class UserDownloadAdmin(admin.ModelAdmin):
         else:
             return self.provider.slug
     list_display_provider.short_description = 'Provider'
-
-    def download_url(self):
-        return format_html('<a href=\'{}\'>Link</a>'.format(self.downloadable.download_url))
-
     model = UserDownload
+
     readonly_fields = ('user', 'provider', 'job', 'downloaded_at')
-    list_display = ('user', list_display_provider, 'job', 'downloaded_at', download_url)
+    list_display = ('user', list_display_provider, 'job', 'downloaded_at')
     list_filter = ('user', ('downloaded_at', admin.DateFieldListFilter))
 
     def has_add_permission(self, request, obj=None):
