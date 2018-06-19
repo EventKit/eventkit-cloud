@@ -284,7 +284,8 @@ export class DataPackShareDialog extends Component {
                             />,
                         ]}
                     >
-                        Sharing with all members will make this DataPack visible to everyone with an EventKit account. Are you sure you want to share it with everyone?
+                        Sharing with all members will make this DataPack visible to everyone with an EventKit account.
+                        Are you sure you want to share it with everyone?
                     </BaseDialog>
                     :
                     null
