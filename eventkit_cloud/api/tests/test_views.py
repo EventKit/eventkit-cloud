@@ -24,8 +24,8 @@ from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
-from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission,GroupPermissionLevel
+from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
+from ...core.models import GroupPermission, GroupPermissionLevel
 from mock import patch, Mock
 
 
@@ -680,11 +680,12 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(response['Content-Length'], '0')
         self.assertEquals(response['Content-Language'], 'en')
 
-    @patch('eventkit_cloud.api.serializers.get_presigned_url')
-    def test_zipfile_url_s3(self, get_url):
-        self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
+    def test_zipfile_url_s3(self):
+
+        download_url = 'http://cool.s3.url.com/foo.zip'
+        self.export_run.downloadable = FileProducingTaskResult.objects.create(download_url=download_url)
         self.export_run.save()
-        get_url.return_value = self.export_run.zipfile_url
+
         url = reverse('api:runs-detail', args=[self.run_uid])
 
         with self.settings(USE_S3=False):
@@ -695,7 +696,6 @@ class TestExportRunViewSet(APITestCase):
                 self.export_run.zipfile_url,
                 result[0]['zipfile_url']
             )
-            get_url.assert_not_called()
 
         with self.settings(USE_S3=True):
             response = self.client.get(url)
@@ -705,7 +705,6 @@ class TestExportRunViewSet(APITestCase):
                 self.export_run.zipfile_url,
                 result[0]['zipfile_url']
             )
-            get_url.assert_called_with(download_url=self.export_run.zipfile_url)
 
     def test_retrieve_run(self,):
         expected = '/api/runs/{0}'.format(self.run_uid)
