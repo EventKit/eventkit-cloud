@@ -169,7 +169,7 @@ describe('DashboardSection component', () => {
                     columns: 3,
                     rows: 3,
                 },
-                children: generateChildren(9)
+                children: generateChildren(9),
             });
         });
 
@@ -186,7 +186,7 @@ describe('DashboardSection component', () => {
                     columns: 3,
                     rows: 3,
                 },
-                children: generateChildren(9)
+                children: generateChildren(9),
             });
         });
 
