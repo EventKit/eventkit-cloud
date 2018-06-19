@@ -91,9 +91,18 @@ export class CreateExport extends React.Component {
     }
 }
 
+CreateExport.defaultProps = {
+    children: null,
+};
+
 CreateExport.propTypes = {
+    children: PropTypes.oneOf([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+        PropTypes.string,
+    ]),
     router: PropTypes.object.isRequired,
-    routes: PropTypes.array.isRequired,
+    routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default CreateExport;
