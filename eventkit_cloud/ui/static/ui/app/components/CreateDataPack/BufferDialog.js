@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import numeral from 'numeral';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
@@ -153,7 +154,7 @@ export class BufferDialog extends Component {
         this.context.muiTheme.slider.selectionColor = sliderColor;
 
         let over = false;
-        const maxAoi = this.props.maxAoiSqKm;
+        const maxAoi = this.props.maxVectorAoiSqKm;
         const totalArea = getSqKmString(this.props.aoi);
         const size = getSqKm(this.props.aoi);
         if (maxAoi && maxAoi < size) {
@@ -178,7 +179,7 @@ export class BufferDialog extends Component {
                             title="Your AOI is too large!"
                             body={
                                 <p>
-                                    The max size allowed for the AOI is {maxAoi} sq km and yours is {totalArea}.
+                                    The max size allowed for the AOI is {numeral(maxAoi).format('0,0')} sq km and yours is {totalArea}.
                                     Please reduce the size of your buffer and/or polygon
                                 </p>
                             }
@@ -271,7 +272,8 @@ export class BufferDialog extends Component {
 }
 
 BufferDialog.defaultProps = {
-    maxAoiSqKm: null,
+    maxVectorAoiSqKm: null,
+    maxRasterAoiSqKm: null,
 };
 
 BufferDialog.contextTypes = {
@@ -286,7 +288,8 @@ BufferDialog.propTypes = {
     handleBufferChange: PropTypes.func.isRequired,
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
-    maxAoiSqKm: PropTypes.number,
+    maxVectorAoiSqKm: PropTypes.number,
+    maxRasterAoiSqKm: PropTypes.number,
 };
 
 export default BufferDialog;

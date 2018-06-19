@@ -1,8 +1,11 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
+import Help from 'material-ui/svg-icons/action/help';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
@@ -22,10 +25,15 @@ import { getGroups } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
+import { isViewportL } from '../../utils/viewport';
+import { joyride } from '../../joyride.config';
+
+const background = require('../../../images/ek_topo_pattern.png');
 
 export class DataPackPage extends React.Component {
     constructor(props) {
         super(props);
+        this.getViewRef = this.getViewRef.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
         this.onSearch = this.onSearch.bind(this);
         this.checkForEmptySearch = this.checkForEmptySearch.bind(this);
@@ -38,11 +46,13 @@ export class DataPackPage extends React.Component {
         this.loadMore = this.loadMore.bind(this);
         this.loadLess = this.loadLess.bind(this);
         this.getView = this.getView.bind(this);
+        this.callback = this.callback.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
+        this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
             search: '',
@@ -66,6 +76,8 @@ export class DataPackPage extends React.Component {
             pageSize: 12,
             loading: false,
             geojson_geometry: null,
+            steps: [],
+            isRunning: false,
             shareOpen: false,
             targetRun: null,
         };
@@ -117,6 +129,22 @@ export class DataPackPage extends React.Component {
         this.setState({ search: searchText, loading: true }, this.makeRunRequest);
     }
 
+    getViewRef(instance) {
+        this.view = instance;
+    }
+
+    getJoyRideSteps() {
+        switch (this.state.view) {
+            case 'map':
+                return joyride.DataPackPage.map;
+            case 'grid':
+                return joyride.DataPackPage.grid;
+            case 'list':
+                return joyride.DataPackPage.list;
+            default: return null;
+        }
+    }
+
     getView(view) {
         const commonProps = {
             runs: this.props.runsList.runs,
@@ -130,36 +158,37 @@ export class DataPackPage extends React.Component {
             providers: this.props.providers,
             openShare: this.handleShareOpen,
             groups: this.props.groups,
+            ref: this.getViewRef,
         };
         switch (view) {
-        case 'list':
-            return (
-                <DataPackList
-                    {...commonProps}
-                    onSort={this.handleSortChange}
-                    order={this.state.order}
-                />
-            );
-        case 'grid':
-            return (
-                <DataPackGrid
-                    {...commonProps}
-                    name={'DataPackLibrary'}
-                />
-            );
-        case 'map':
-            return (
-                <MapView
-                    {...commonProps}
-                    geocode={this.props.geocode}
-                    getGeocode={this.props.getGeocode}
-                    importGeom={this.props.importGeom}
-                    processGeoJSONFile={this.props.processGeoJSONFile}
-                    resetGeoJSONFile={this.props.resetGeoJSONFile}
-                    onMapFilter={this.handleSpatialFilter}
-                />
-            );
-        default: return null;
+            case 'list':
+                return (
+                    <DataPackList
+                        {...commonProps}
+                        onSort={this.handleSortChange}
+                        order={this.state.order}
+                    />
+                );
+            case 'grid':
+                return (
+                    <DataPackGrid
+                        {...commonProps}
+                        name="DataPackLibrary"
+                    />
+                );
+            case 'map':
+                return (
+                    <MapView
+                        {...commonProps}
+                        geocode={this.props.geocode}
+                        getGeocode={this.props.getGeocode}
+                        importGeom={this.props.importGeom}
+                        processGeoJSONFile={this.props.processGeoJSONFile}
+                        resetGeoJSONFile={this.props.resetGeoJSONFile}
+                        onMapFilter={this.handleSpatialFilter}
+                    />
+                );
+            default: return null;
         }
     }
 
@@ -237,13 +266,20 @@ export class DataPackPage extends React.Component {
     }
 
     changeView(view) {
-        if (['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'].indexOf(this.state.order) < 0) {
+        const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
+        if (sharedViewOrders.indexOf(this.state.order) < 0) {
             this.setState({ order: '-started_at', loading: true }, () => {
                 const promise = this.makeRunRequest();
                 promise.then(() => this.setState({ view }));
             });
         } else {
-            this.setState({ view });
+            this.setState(
+                { view },
+                () => {
+                    const steps = this.getJoyRideSteps();
+                    this.joyrideAddSteps(steps);
+                },
+            );
         }
     }
 
@@ -269,6 +305,101 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState({ steps: newSteps });
+    }
+
+    callback(data) {
+        if (data.action === 'close' || data.action === 'skip' || data.type === 'finished') {
+            // This explicitly stops the tour (otherwise it displays a "beacon" to resume the tour)
+            this.setState({ isRunning: false, steps: [] });
+            this.joyride.reset(true);
+        }
+        if (data.step) {
+            if (data.step.title === 'Filters' && data.type === 'step:before') {
+                if (this.state.open === false) {
+                    this.setState({ open: true });
+                }
+            }
+            if (data.step.title === 'Filters' && data.type === 'step:after' && isViewportL()) {
+                this.setState({ open: false });
+            }
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isViewportL()) {
+                this.setState({ open: false });
+            }
+            if (data.step.title === 'Menu Options'
+                && data.type === 'step:before'
+                && this.state.view === 'list'
+                && isViewportL()
+            ) {
+                this.setState({ open: false });
+            }
+        }
+    }
+
+    handleJoyride() {
+        if (this.state.isRunning === true) {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+        } else {
+            this.view.getScrollbar().scrollToTop();
+            this.setState({ isRunning: true, steps: [] });
+            const steps = this.getJoyRideSteps();
+
+            const hasFeatured = this.props.runsList.runs.some(run => run.job.featured);
+            const stepsIncludeFeatured = steps.find(step => step.title === 'Featured DataPacks');
+
+            const newStep = {
+                title: 'Featured DataPacks',
+                text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
+                selector: '.tour-datapack-featured',
+                style: {
+                    backgroundColor: 'white',
+                    borderRadius: '0',
+                    color: 'black',
+                    mainColor: '#ff4456',
+                    textAlign: 'left',
+                    header: {
+                        textAlign: 'left',
+                        fontSize: '20px',
+                        borderColor: '#4598bf',
+                    },
+                    main: {
+                        paddingTop: '20px',
+                        paddingBottom: '20px',
+                    },
+                    button: {
+                        color: 'white',
+                        backgroundColor: '#4598bf',
+                    },
+                    skip: {
+                        display: 'none',
+                    },
+                    back: {
+                        color: '#8b9396',
+                    },
+                    hole: {
+                        backgroundColor: 'rgba(226,226,226, 0.2)',
+                    },
+                },
+                position: 'top',
+            };
+
+            if (hasFeatured && !stepsIncludeFeatured) {
+                steps.splice(2, 0, newStep);
+            }
+
+            this.joyrideAddSteps(steps);
+        }
+    }
     handleShareOpen(run) {
         this.setState({ shareOpen: true, targetRun: run });
     }
@@ -282,9 +413,10 @@ export class DataPackPage extends React.Component {
         const permissions = { ...perms };
         this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
     }
-
     render() {
-        const pageTitle = 'DataPack Library';
+        const { steps, isRunning } = this.state;
+        const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>;
+
         const styles = {
             wholeDiv: {
                 height: window.innerWidth > 575 ?
@@ -324,7 +456,7 @@ export class DataPackPage extends React.Component {
                 overflowX: 'hidden',
             },
             backgroundStyle: {
-                backgroundImage: `url(${require('../../../images/ek_topo_pattern.png')})`,
+                backgroundImage: `url(${background})`,
             },
             range: window.innerWidth < 768 ?
                 { color: '#a59c9c', lineHeight: '36px', fontSize: '12px' }
@@ -337,16 +469,59 @@ export class DataPackPage extends React.Component {
                     right: '10px',
                     fontSize: '12px',
                 },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginRight: '30px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleJoyride}
+                style={styles.tourButton}
+            >
+                <Help style={styles.tourIcon} />
+                Page Tour
+            </EnhancedButton>
+        );
 
         return (
             <div style={styles.backgroundStyle}>
+                <Joyride
+                    callback={this.callback}
+                    ref={(instance) => { this.joyride = instance; }}
+                    steps={steps}
+                    autoStart
+                    type="continuous"
+                    showSkipButton
+                    showStepsProgress
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}
+                />
                 <AppBar
                     className="qa-DataPackPage-AppBar"
                     style={styles.appBar}
                     title={pageTitle}
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
+                    iconElementRight={iconElementRight}
                 >
                     <DataPackLinkButton />
                 </AppBar>
@@ -440,8 +615,10 @@ export class DataPackPage extends React.Component {
                         groups={this.props.groups}
                         members={this.props.users}
                         permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
+                        groupsText="You may share view and edit rights with groups exclusively.
+                            Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively.
+                            Member sharing is managed separately from group sharing."
                         canUpdateAdmin
                         warnPublic
                     />
@@ -493,6 +670,11 @@ DataPackPage.propTypes = {
         updating: PropTypes.bool,
         updated: PropTypes.bool,
         error: PropTypes.array,
+    }).isRequired,
+    location: PropTypes.shape({
+        query: PropTypes.shape({
+            collection: PropTypes.string,
+        }),
     }).isRequired,
 };
 

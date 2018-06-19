@@ -2,6 +2,7 @@ import React from 'react';
 import { mount, shallow } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { AppBar, CircularProgress } from 'material-ui';
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
@@ -9,7 +10,6 @@ import DashboardSection from '../../components/DashboardPage/DashboardSection';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
 import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from '../../components/DashboardPage/DataPackFeaturedItem';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 const mockNotifications = {
     '1': {
@@ -585,5 +585,62 @@ describe('DashboardPage component', () => {
                 expect(refreshSpy.callCount).toBe(1);
             });
         });
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [
+            {
+                text: 'im the step',
+            },
+        ];
+        const props = getProps();
+        const wrapper = getMountedWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ steps }));
+        stateStub.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.select',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getMountedWrapper(props);
+        const stateSpy = sinon.stub(DashboardPage.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
+    it('callback should set location hash if step has a scrollToId', () => {
+        const callbackData = {
+            action: 'next',
+            index: 3,
+            step: {
+                scrollToId: 'test-id',
+                position: 'bottom',
+                selector: '.select',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getMountedWrapper(props);
+        expect(window.location.hash).toEqual('');
+        wrapper.instance().callback(callbackData);
+        expect(window.location.hash).toEqual('#test-id');
     });
 });

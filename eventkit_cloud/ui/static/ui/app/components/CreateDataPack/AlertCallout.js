@@ -6,9 +6,9 @@ export class AlertCallout extends Component {
     render() {
         const styles = {
             clear: {
-                float: 'right',
                 height: '20px',
                 width: '20px',
+                flex: '0 0 auto',
                 fill: '#4498c0',
                 cursor: 'pointer',
             },
@@ -19,14 +19,17 @@ export class AlertCallout extends Component {
                 className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout`}
                 style={this.props.style}
             >
-                <p style={{ minHeight: '20px' }} className="qa-AlertCallout-title">
-                    <strong>{this.props.title}</strong>
+                <div
+                    style={{ minHeight: '20px', display: 'flex', marginBottom: '10px' }}
+                    className="qa-AlertCallout-title"
+                >
+                    <div style={{ flexWrap: 'wrap', flex: '1 1 auto' }}><strong>{this.props.title}</strong></div>
                     <Clear
                         className="qa-AlertCallout-alert-close"
                         style={styles.clear}
                         onClick={this.props.onClose}
                     />
-                </p>
+                </div>
                 <div className="qa-AlertCallout-body">
                     {this.props.body}
                 </div>

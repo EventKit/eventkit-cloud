@@ -147,9 +147,17 @@ export class Application extends Component {
             });
     }
 
-    handleStayLoggedIn() {
+    getButtonBackgroundColor(route, activeColor = '#161e2e') {
+        return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
+    }
+
+    setNotificationsDropdownContainerRef(ref) {
+        this.notificationsDropdownContainerRef = ref;
+    }
+
+    async handleStayLoggedIn() {
+        await this.startSendingUserActivePings();
         this.hideAutoLogoutWarning();
-        this.startSendingUserActivePings();
     }
 
     handleCloseAutoLoggedOutDialog() {
@@ -177,7 +185,10 @@ export class Application extends Component {
 
         // Unread notifications count.
         this.props.getNotificationsUnreadCount();
-        this.notificationsUnreadCountIntervalId = setInterval(this.autoGetNotificationsUnreadCount, this.notificationsUnreadCountRefreshInterval);
+        this.notificationsUnreadCountIntervalId = setInterval(
+            this.autoGetNotificationsUnreadCount,
+            this.notificationsUnreadCountRefreshInterval,
+        );
 
         // Notifications.
         this.props.getNotifications({
@@ -252,7 +263,7 @@ export class Application extends Component {
         this.checkAutoLogoutIntervalId = null;
     }
 
-    startSendingUserActivePings() {
+    async startSendingUserActivePings() {
         if (this.isSendingUserActivePings) {
             console.warn('Already sending user active pings.');
             return;
@@ -268,7 +279,6 @@ export class Application extends Component {
                 setTimeout(() => {
                     sendPing = true;
                 }, 60 * 1000);
-
                 // Notify server.
                 this.props.userActive();
             }
@@ -280,7 +290,7 @@ export class Application extends Component {
         });
 
         // Send an initial user active ping to kick the whole cycle off.
-        this.props.userActive();
+        await this.props.userActive();
     }
 
     stopSendingUserActivePings() {
@@ -355,9 +365,7 @@ export class Application extends Component {
         // Close the notifications dropdown if it's open and we click outside of it.
         if (this.notificationsDropdownContainerRef && this.state.showNotificationsDropdown) {
             if (!this.notificationsDropdownContainerRef.contains(e.target)) {
-                this.setState({
-                    showNotificationsDropdown: false
-                });
+                this.setState({ showNotificationsDropdown: false });
             }
         }
     }
@@ -398,19 +406,8 @@ export class Application extends Component {
         });
     }
 
-    getButtonBackgroundColor(route, activeColor = '#161e2e') {
-        return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
-    }
-
-    setNotificationsDropdownContainerRef(ref) {
-        this.notificationsDropdownContainerRef = ref;
-    }
-
     handleNotificationsDropdownNavigate() {
-        this.setState({
-            showNotificationsDropdown: false
-        });
-
+        this.setState({ showNotificationsDropdown: false });
         // Allow navigation to proceed.
         return true;
     }
@@ -538,11 +535,11 @@ export class Application extends Component {
                             title={img}
                             titleStyle={styles.title}
                             showMenuIconButton={isLoggedIn}
-                            iconStyleLeft={{margin: '0'}}
+                            iconStyleLeft={{ margin: '0' }}
                             iconElementLeft={
                                 <div>
                                     <IconButton
-                                        className={'qa-Application-AppBar-MenuButton'}
+                                        className="qa-Application-AppBar-MenuButton"
                                         style={styles.menuButton}
                                         iconStyle={styles.menuButtonIcon}
                                         touchRippleColor="white"
@@ -552,7 +549,7 @@ export class Application extends Component {
                                     </IconButton>
                                     <div style={{ display: 'inline-block', position: 'relative' }}>
                                         <IconButton
-                                            className={'qa-Application-AppBar-NotificationsButton'}
+                                            className="qa-Application-AppBar-NotificationsButton"
                                             style={{
                                                 ...styles.notificationsButton,
                                                 backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ? '#4598BF' : '',
@@ -598,16 +595,16 @@ export class Application extends Component {
                         docked
                         open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
-                        <MenuItem className={"qa-Application-MenuItem-dashboard"} onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem className="qa-Application-MenuItem-dashboard" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
                             <IndexLink
-                                className={"qa-Application-Link-dashboard"}
-                                style={{...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard')}}
+                                className="qa-Application-Link-dashboard"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
                                 activeStyle={styles.activeLink}
                                 to="/dashboard"
                                 onMouseEnter={() => this.handleMouseOver('/dashboard')}
                                 onMouseLeave={this.handleMouseOut}
                             >
-                                <Dashboard style={styles.icon}/>
+                                <Dashboard style={styles.icon} />
                                 Dashboard
                             </IndexLink>
                         </MenuItem>
@@ -736,7 +733,7 @@ export class Application extends Component {
                         show={this.state.showLogoutDialog}
                         title="LOG OUT"
                         confirmLabel="Log Out"
-                        isDestructive={true}
+                        isDestructive
                         onCancel={this.handleLogoutDialogCancel}
                         onConfirm={this.handleLogoutDialogConfirm}
                     >
@@ -792,7 +789,8 @@ Application.childContextTypes = {
         BASEMAP_COPYRIGHT: PropTypes.string,
         BASEMAP_URL: PropTypes.string,
         LOGIN_DISCLAIMER: PropTypes.string,
-        MAX_DATAPACK_AOI_SQ_KM: PropTypes.number,
+        MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
+        MAX_RASTER_AOI_SQ_KM: PropTypes.number,
         MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
         VERSION: PropTypes.string,
     }),
@@ -817,9 +815,9 @@ function mapDispatchToProps(dispatch) {
         openDrawer: () => {
             dispatch(timeout.openDrawer());
         },
-        userActive: () => {
-            dispatch(userActive());
-        },
+        userActive: () => (
+            dispatch(userActive())
+        ),
         getNotificationsUnreadCount: () => {
             dispatch(getNotificationsUnreadCount());
         },

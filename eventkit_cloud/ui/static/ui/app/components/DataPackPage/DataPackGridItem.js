@@ -176,36 +176,33 @@ export class DataPackGridItem extends Component {
     }
 
     render() {
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
-            return (
-                <ListItem
-                    key={key}
-                    style={{
-                        backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                        fontWeight: 'bold',
-                        width: '100%',
-                        zIndex: 0,
-                    }}
-                    nestedListStyle={{ padding: '0px' }}
-                    primaryText={key}
-                    initiallyOpen={false}
-                    primaryTogglesNestedList={false}
-                    nestedItems={[
-                        <ListItem
-                            key={1}
-                            primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{
-                                backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                                fontSize: '14px',
-                                width: '100%',
-                                zIndex: 0,
-                            }}
-                        />,
-                    ]}
-                />
-
-            );
-        });
+        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
+            <ListItem
+                key={key}
+                style={{
+                    backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                    fontWeight: 'bold',
+                    width: '100%',
+                    zIndex: 0,
+                }}
+                nestedListStyle={{ padding: '0px' }}
+                primaryText={key}
+                initiallyOpen={false}
+                primaryTogglesNestedList={false}
+                nestedItems={[
+                    <ListItem
+                        key={1}
+                        primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
+                        style={{
+                            backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                            fontSize: '14px',
+                            width: '100%',
+                            zIndex: 0,
+                        }}
+                    />,
+                ]}
+            />
+        ));
 
         const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
         const titleFontSize = 22;
@@ -323,6 +320,16 @@ export class DataPackGridItem extends Component {
                 position: 'relative',
                 zIndex: 1000,
             },
+            titleLink: {
+                color: 'inherit',
+                display: 'block',
+                width: '100%',
+                height: '36px',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                margin: '0px',
+            },
             iconMenu: {
                 padding: '0px',
                 width: '24px',
@@ -333,6 +340,7 @@ export class DataPackGridItem extends Component {
 
         return (
             <Card
+                className="qa-DataPackGridItem-Card"
                 style={styles.card}
                 key={this.props.run.uid}
                 expanded={this.state.expanded}
@@ -340,6 +348,7 @@ export class DataPackGridItem extends Component {
             >
                 <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                 <CardTitle
+                    className="qa-DataPackGridItem-CardTitle"
                     titleColor="#4598bf"
                     style={styles.cardTitle}
                     titleStyle={styles.title}
@@ -353,6 +362,7 @@ export class DataPackGridItem extends Component {
                                 onMouseLeave={() => { this.setState({ overflowTitle: false }); }}
                             >
                                 <Link
+                                    className="qa-DataPackGridItem-Link"
                                     to={`/status/${this.props.run.job.uid}`}
                                     href={`/status/${this.props.run.job.uid}`}
                                     style={this.state.overflowTitle ? styles.titleLinkExpanded : styles.titleLink}
@@ -361,6 +371,7 @@ export class DataPackGridItem extends Component {
                                 </Link>
                             </div>
                             <IconMenu
+                                className="qa-DataPackGridItem-IconMenu"
                                 style={{ float: 'right', width: '24px', height: '36px' }}
                                 iconButtonElement={
                                     <IconButton
@@ -373,16 +384,19 @@ export class DataPackGridItem extends Component {
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                             >
                                 <MenuItem
+                                    className="qa-DataPackGridItem-MenuItem-showHideMap"
                                     style={{ fontSize: cardTextFontSize }}
                                     primaryText={this.state.expanded ? 'Hide Map' : 'Show Map'}
                                     onClick={this.toggleExpanded}
                                 />
                                 <MenuItem
+                                    className="qa-DataPackGridItem-MenuItem-goToStatus"
                                     style={{ fontSize: cardTextFontSize }}
                                     primaryText="Go to Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem
+                                    className="qa-DataPackGridItem-MenuItem-viewProviders"
                                     style={{ fontSize: cardTextFontSize }}
                                     primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen}
@@ -409,6 +423,7 @@ export class DataPackGridItem extends Component {
                                 }
                             </IconMenu>
                             <BaseDialog
+                                className="qa-DataPackGridItem-BaseDialog"
                                 show={this.state.providerDialogOpen}
                                 title="DATA SOURCES"
                                 onClose={this.handleProviderClose}
@@ -416,6 +431,7 @@ export class DataPackGridItem extends Component {
                                 <List>{providersList}</List>
                             </BaseDialog>
                             <DeleteDataPackDialog
+                                className="qa-DataPackGridItem-DeleteDialog"
                                 show={this.state.deleteDialogOpen}
                                 onCancel={this.hideDeleteDialog}
                                 onDelete={this.handleDelete}
@@ -425,6 +441,7 @@ export class DataPackGridItem extends Component {
                     subtitle={
                         <div>
                             <div
+                                className="qa-DataPackGridItem-div-subtitle"
                                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                             >
                                 {`Event: ${this.props.run.job.event}`}
@@ -435,23 +452,24 @@ export class DataPackGridItem extends Component {
                     }
                 />
                 <CardText
+                    className="qa-DataPackGridItem-CardText"
                     style={styles.cardTextContainer}
                     onMouseEnter={() => { this.setState({ overflowText: true }); }}
                     onMouseLeave={() => { this.setState({ overflowText: false }); }}
                     onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
-                    <span style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}>
+                    <span className="qa-DataPackGridItem-span-description" style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}>
                         {this.props.run.job.description}
                     </span>
                 </CardText>
-                <CardMedia expandable>
+                <CardMedia className="qa-DataPackGridItem-CardMedia" expandable>
                     <div
                         id={this.getMapId()}
                         style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }}
                         ref={this.mapContainerRef}
                     />
                 </CardMedia>
-                <CardActions style={{ height: '45px' }}>
+                <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px' }}>
                     <span>
                         {this.props.run.status == "SUBMITTED" ?
                             <NotificationSync style={styles.runningIcon} />
