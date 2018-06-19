@@ -91,6 +91,7 @@ export class CustomTextField extends Component {
                         }
 
                         if (this.props.maxLength && this.props.showRemaining) {
+                            // eslint-disable-next-line react/no-find-dom-node
                             ReactDOM.findDOMNode(textField).style.paddingRight = '55px';
                         }
                     }}

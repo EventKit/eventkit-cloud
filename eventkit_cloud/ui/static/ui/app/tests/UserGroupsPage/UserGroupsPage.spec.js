@@ -150,7 +150,7 @@ describe('UserGroupsPage component', () => {
         const joyrideStub = sinon.stub(UserGroupsPage.prototype, 'joyrideAddSteps');
         // we stub componentDidMount before all tests, so temporarily undo it
         UserGroupsPage.prototype.componentDidMount.restore();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getGroups.calledOnce).toBe(true);
         expect(makeRequestStub.calledOnce).toBe(true);
         expect(joyrideStub.calledOnce).toBe(true);
@@ -372,7 +372,7 @@ describe('UserGroupsPage component', () => {
         wrapper.setState({ selectedUsers: selection });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleUserSelect(props.users.users[0]);
-        const [removedUser, ...expectedUsers] = props.users.users;
+        const [, ...expectedUsers] = props.users.users;
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ selectedUsers: expectedUsers })).toBe(true);
         stateStub.restore();
