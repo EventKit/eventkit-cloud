@@ -399,8 +399,11 @@ class TestExportTasks(ExportTaskBase):
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
+    @patch('os.path.getsize')
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove, copy):
+    def test_zipfile_task(self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy):
+        os_path_getsize.return_value = 20
+
         class MockZipFile:
             def __init__(self):
                 self.files = {}
@@ -432,7 +435,7 @@ class TestExportTasks(ExportTaskBase):
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
-        zipfile_name = os.path.join('{0}'.format(run_uid),'testjob-test-eventkit-{0}.zip'.format(date))
+        zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_file_task.run(run_uid=run_uid, include_files=[
             os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')])
@@ -794,12 +797,13 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         self.finalize_hook_file2 = finalize_hook_file2
         self.finalize_hook_file3 = finalize_hook_file3
 
+    @patch('eventkit_cloud.tasks.models.ExportRun')
     @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
     @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
     @patch('eventkit_cloud.tasks.models.FileProducingTaskResult.objects.create')
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, shutil_copy):
+    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, shutil_copy, ExportRunMock):
         """ Check that expected new files appear in the result & the new files are recorded in
             FileProducingTaskResult.
         """

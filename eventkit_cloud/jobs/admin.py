@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.template import RequestContext
+
 from django.utils.html import format_html
 from django.conf.urls import url
 from django.contrib import messages
@@ -10,7 +11,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus, VisibilityState
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
 
 
 logger = logging.getLogger(__name__)
@@ -185,6 +186,7 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request, obj=None):
         return False
+
 
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
