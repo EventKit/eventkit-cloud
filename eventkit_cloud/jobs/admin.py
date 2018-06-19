@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.template import RequestContext
+
 from django.utils.html import format_html
 from django.conf.urls import url
 from django.contrib import messages
@@ -10,7 +11,7 @@ from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
 from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus, UserDownload
+    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
 
 
 logger = logging.getLogger(__name__)
@@ -187,33 +188,9 @@ class DataProviderStatusAdmin(admin.ModelAdmin):
         return False
 
 
-class UserDownloadAdmin(admin.ModelAdmin):
-    """
-    User download records
-    """
-    def list_display_provider(self):
-        if self.provider is None:
-            return '(Complete DataPack zip)'
-        else:
-            return self.provider.slug
-    list_display_provider.short_description = 'Provider'
-
-    def direct_download_url(self):
-        return format_html('<a href=\'{}\'>Link</a>'.format(self.downloadable.url))
-
-    model = UserDownload
-    readonly_fields = ('user', 'provider', 'job', 'downloaded_at', 'direct_url')
-    list_display = ('user', list_display_provider, 'job', 'downloaded_at', direct_download_url)
-    list_filter = ('user', 'downloaded_at')
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-
 # register the new admin models
 admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
 admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
 admin.site.register(DataProviderStatus, DataProviderStatusAdmin)
-admin.site.register(UserDownload, UserDownloadAdmin)

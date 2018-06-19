@@ -158,7 +158,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         @return A url to reach filepath.
     """
     from ..tasks.models import ExportRun
-    from ..jobs.models import Downloadable, DataProvider
+    from ..jobs.models import DataProvider
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -170,7 +170,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         download_filename = filename
 
     if getattr(settings, "USE_S3", False):
-        direct_download_url = s3.upload_to_s3(
+        download_url = s3.upload_to_s3(
             run_uid,
             os.path.join(provider_slug, filename),
             download_filename,
@@ -182,25 +182,11 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         except OSError as e:
             logger.info(e)
 
-        direct_download_url = os.path.join(download_url_root, run_uid, download_filename)
+        download_url = os.path.join(download_url_root, run_uid, download_filename)
 
         download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
-
-    if direct:
-        download_url = direct_download_url
-    else:
-        try:
-            provider = DataProvider.objects.get(slug=provider_slug)
-        except DataProvider.DoesNotExist:
-            provider = None
-
-        downloadable = Downloadable.objects.create(creator=run.job.user, provider=provider, job=run.job,
-                                                   url=direct_download_url, size=size)
-        downloadable.save()
-        download_url = '/download?id={}'.format(downloadable.uid)
-        logger.info("Made file downloadable: %s -> %s", direct_download_url, download_url)
 
     return download_url
 
@@ -896,10 +882,9 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 
     from .models import ExportRun
     from .task_factory import TaskFactory
-
+    run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
-        run = ExportRun.objects.get(uid=run_uid)
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
@@ -1012,7 +997,7 @@ class FinalizeRunHookTask(LockingTask):
         worker_name = self.request.hostname
         status = AsyncResult(self.request.id).status
         tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
-            run=export_run, celery_uid=self.request.id, task_name=self.name,
+            run=export_run, celery_uid=self.request.id, name=self.name,
             status=status, pid=os.getpid(), worker=worker_name
         )
 
@@ -1152,7 +1137,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     """
     rolls up runs into a zip file
     """
-    from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
+    from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportRun as ExportRunModel
     from .task_runners import normalize_name
     from django import db
 
@@ -1242,18 +1227,16 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
     # be handled as an ExportTaskRecord.
-    # Also it makes download tracking a little more complicated, so here's another TODO:
-    # fix this hacky solution and integrate with the code in make_file_downloadable.
 
     if not adhoc:
-        from ..jobs.models import Downloadable
+        # from ..jobs.models import Downloadable
         run_uid = str(run_uid)
         if getattr(settings, "USE_S3", False):
             zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
         else:
-            download_url_root = settings.EXPORT_MEDIA_ROOT
             if zip_st_filepath != zip_dl_filepath:
                 shutil.copy(zip_st_filepath, zip_dl_filepath)
+            download_url_root = settings.EXPORT_MEDIA_ROOT
             zipfile_url = os.path.join(download_url_root, run_uid, zip_filename)
 
         # Update Connection
@@ -1261,12 +1244,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         run.refresh_from_db()
 
         size = os.path.getsize(zip_dl_filepath) / 1024.0 / 1024.0  # MB
-        downloadable = Downloadable.objects.create(creator=run.job.user, provider=None, job=run.job,
-                                                   url=zipfile_url, size=size)
-        downloadable.save()
-        download_url = '/download?id={}'.format(downloadable.uid)
-
-        run.zipfile_url = download_url
+        downloadable = FileProducingTaskResult.objects.create(size=size, download_url=zipfile_url)
+        run.downloadable = downloadable
 
         try:
             run.save()
