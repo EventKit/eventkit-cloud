@@ -831,9 +831,9 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         expected_url_path = lambda x: os.path.join(settings.EXPORT_MEDIA_ROOT, run_uid, x)
 
         expected_create_calls = [
-            call(download_url=expected_url_path, filename='file1', size=0),
-            call(download_url=expected_url_path, filename='file2', size=0),
-            call(download_url=expected_url_path, filename='file3', size=0),
+            call(download_url=expected_url_path('file1'), filename='file1', size=0),
+            call(download_url=expected_url_path('file2'), filename='file2', size=0),
+            call(download_url=expected_url_path('file3'), filename='file3', size=0),
         ]
         fptr_create.assert_has_calls(expected_create_calls, any_order=True)
 
