@@ -90,6 +90,12 @@ describe('DashboardSection component', () => {
         expect(pages[1]).toHaveLength(2);
     });
 
+    it('updates the page index on a page change', () => {
+        expect(wrapper.state().pageIndex).not.toBe(1);
+        instance.handlePageChange(1);
+        expect(wrapper.state().pageIndex).toBe(1);
+    });
+
     describe('no children', () => {
         it('renders "no data" element', () => {
             expect(wrapper.find('.qa-DashboardSection-NoDataElement')).toHaveLength(1);
@@ -213,11 +219,5 @@ describe('DashboardSection component', () => {
             wrapper.find('.qa-DashboardSection-ViewAll').simulate('click');
             expect(instance.props.onViewAll.callCount).toBe(1);
         });
-    });
-
-    it('updates the page index on a page change', () => {
-        expect(wrapper.state().pageIndex).not.toBe(1);
-        instance.handlePageChange(1);
-        expect(wrapper.state().pageIndex).toBe(1);
     });
 });
