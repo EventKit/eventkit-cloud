@@ -147,7 +147,6 @@ export class DashboardSection extends React.Component {
                                         key={`DashboardSection-${this.props.name}-Tab${pageIndex}`}
                                         className={'qa-DashboardSection-Tab'}
                                         value={pageIndex}
-                                        disableTouchRipple
                                         style={(pageIndex < pages.length) ? styles.tab : styles.tabDisabled}
                                         disableTouchRipple
                                         buttonStyle={(pageIndex < pages.length) ?
