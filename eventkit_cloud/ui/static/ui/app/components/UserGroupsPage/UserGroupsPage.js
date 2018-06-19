@@ -1165,7 +1165,6 @@ UserGroupsPage.propTypes = {
     updateGroup: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired,
-    openDrawer: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
