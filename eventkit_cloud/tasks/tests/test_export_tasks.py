@@ -840,12 +840,11 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         expected_get_calls = [call(celery_uid=fh1_uid), call(celery_uid=fh2_uid), call(celery_uid=fh3_uid)]
         frhtr_get.assert_has_calls(expected_get_calls, any_order=True)
 
-    @patch('eventkit_cloud.tasks.models.ExportRun')
     @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
     @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_manually_passed_files_in_chain_result(self, record_task_state, frhtr_get, os_getsize, shutil_copy, ExportRunMock):
+    def test_manually_passed_files_in_chain_result(self, record_task_state, frhtr_get, os_getsize, shutil_copy):
         os_getsize.return_value = 0
 
         manual_filepath_list = ['my_file_a', 'my_file_b']

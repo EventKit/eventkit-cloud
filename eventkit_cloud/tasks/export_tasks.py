@@ -157,10 +157,6 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
-    from ..tasks.models import ExportRun
-    from ..jobs.models import DataProvider
-
-    run = ExportRun.objects.get(uid=run_uid)
 
     download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     download_url_root = settings.EXPORT_MEDIA_ROOT
@@ -971,7 +967,6 @@ class FinalizeRunHookTask(LockingTask):
                 filename = os.path.split(file_path)[-1]
                 provider_slug = os.path.split(file_path)[-2]
 
-                export_run = ExportRun.objects.get(uid=run_uid)
                 size = os.path.getsize(file_path)
                 download_url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
                                                       size=size)
