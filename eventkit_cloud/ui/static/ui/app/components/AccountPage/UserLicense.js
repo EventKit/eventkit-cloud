@@ -88,7 +88,11 @@ export class UserLicense extends Component {
 }
 
 UserLicense.propTypes = {
-    license: PropTypes.object.isRequired,
+    license: PropTypes.shape({
+        slug: PropTypes.string,
+        name: PropTypes.string,
+        text: PropTypes.string,
+    }).isRequired,
     checked: PropTypes.bool.isRequired,
     onCheck: PropTypes.func.isRequired,
     disabled: PropTypes.bool.isRequired,

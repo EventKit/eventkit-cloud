@@ -1,7 +1,9 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { mount, shallow } from 'enzyme';
+import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import AppBar from 'material-ui/AppBar';
+import Help from 'material-ui/svg-icons/action/help';
 import initialState from '../../reducers/initialState';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';
@@ -41,9 +43,28 @@ describe('CreateExport component', () => {
         expect(wrapper.find(AppBar)).toHaveLength(1);
         expect(wrapper.find(BreadcrumbStepper)).toHaveLength(1);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
         expect(wrapper.find('#my-child-element')).toHaveLength(1);
 
         // restore content function
         BreadcrumbStepper.prototype.getStepContent = content;
+    });
+
+    it('handleWalkthroughReset should set state', () => {
+        const wrapper = shallow(<CreateExport />);
+        const stateSpy = sinon.spy(CreateExport.prototype, 'setState');
+        wrapper.instance().handleWalkthroughReset();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ walkthroughClicked: false }));
+        stateSpy.restore();
+    });
+
+    it('handleWalkthroughClick should set state', () => {
+        const wrapper = shallow(<CreateExport />);
+        const stateSpy = sinon.spy(CreateExport.prototype, 'setState');
+        wrapper.instance().handleWalkthroughClick();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ walkthroughClicked: true }));
+        stateSpy.restore();
     });
 });

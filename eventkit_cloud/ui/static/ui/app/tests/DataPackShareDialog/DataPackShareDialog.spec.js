@@ -288,6 +288,22 @@ describe('DataPackPage component', () => {
         showStub.restore();
     });
 
+    it('handleMemberUpdate should not call showPublicWarning when selected state length is the same as new length', () => {
+        const props = getProps();
+        props.warnPublic = true;
+        const wrapper = getWrapper(props);
+        const showStub = sinon.stub(wrapper.instance(), 'showPublicWarning');
+        const members = {
+            user_one: 'READ',
+            user_two: 'READ',
+            user_three: 'READ',
+        };
+        wrapper.setState({ permissions: { ...wrapper.state().permissions, members } });
+        wrapper.instance().handleMemberUpdate(members);
+        expect(showStub.called).toBe(false);
+        showStub.restore();
+    });
+
     it('showShareInfo should set show to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);

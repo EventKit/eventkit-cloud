@@ -1,6 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
+import Joyride from 'react-joyride';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
@@ -19,6 +20,7 @@ raf.polyfill();
 
 describe('Export Summary Component', () => {
     const muiTheme = getMuiTheme();
+
     const getProps = () => ({
         geojson: {
             type: 'FeatureCollection',
@@ -60,6 +62,8 @@ describe('Export Summary Component', () => {
                 description: 'GeoPackage',
             },
         ],
+        walkthroughClicked: false,
+        onWalkthroughReset: () => {},
     });
 
     const getWrapper = (props) => {
@@ -89,6 +93,18 @@ describe('Export Summary Component', () => {
         expect(wrapper.find(CardHeader).text()).toEqual('Selected Area of Interest');
         expect(wrapper.find(CardText)).toHaveLength(0);
         expect(wrapper.find('#summaryMap')).toHaveLength(0);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+    });
+
+    it('componentDidMount should setJoyRideSteps', () => {
+        const props = getProps();
+        const mountSpy = sinon.spy(ExportSummary.prototype, 'componentDidMount');
+        const joyrideSpy = sinon.stub(ExportSummary.prototype, 'joyrideAddSteps');
+        getWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
+        mountSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('should call initializeOpenLayers  when card is expanded', () => {
@@ -104,8 +120,8 @@ describe('Export Summary Component', () => {
 
     it('expandedChange should call setState', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().expandedChange(true);
         expect(stateSpy.calledOnce).toBe(true);
@@ -129,5 +145,44 @@ describe('Export Summary Component', () => {
         expect(getViewSpy.calledTwice).toBe(true);
         expect(getExtentSpy.calledOnce).toBe(true);
         expect(getSizeSpy.calledOnce).toBe(true);
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{
+            title: 'Verify Information',
+            text: 'Verify the information entered is correct before proceeding.',
+            selector: '.qa-ExportSummary-div',
+            position: 'bottom',
+            style: {},
+        }];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
+        wrapper.update();
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
     });
 });

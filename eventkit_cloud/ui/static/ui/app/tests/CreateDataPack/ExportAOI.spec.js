@@ -5,6 +5,7 @@ import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -77,6 +78,8 @@ describe('ExportAOI component', () => {
                 data: [],
                 error: null,
             },
+            walkthroughClicked: false,
+            onWalkthroughReset: () => {},
             updateAoiInfo: () => {},
             clearAoiInfo: () => {},
             setNextDisabled: () => {},
@@ -120,6 +123,7 @@ describe('ExportAOI component', () => {
         expect(wrapper.find(ZoomLevelLabel)).toHaveLength(1);
         expect(wrapper.find(InvalidDrawWarning)).toHaveLength(1);
         expect(wrapper.find(DropZone)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
     it('the left position should be 200px if drawer is open, otherwise 0px', () => {
@@ -161,7 +165,7 @@ describe('ExportAOI component', () => {
         expect(setSpy.calledWith('search')).toBe(true);
     });
 
-    it('componentDidMount should initialize the map and handle aoiInfo if present', () => {
+    it('componentDidMount should initialize the map, setJoyRideSteps, and handle aoiInfo if present', () => {
         const props = getProps();
         props.aoiInfo.geojson = geojson;
         props.aoiInfo.selectionType = 'fake type';
@@ -172,6 +176,7 @@ describe('ExportAOI component', () => {
         const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
         const fitSpy = sinon.spy(View.prototype, 'fit');
+        const joyrideSpy = sinon.spy(ExportAOI.prototype, 'joyrideAddSteps');
         props.setNextEnabled = sinon.spy();
         const setSpy = sinon.spy(ExportAOI.prototype, 'setButtonSelected');
         getWrapper(props);
@@ -184,6 +189,7 @@ describe('ExportAOI component', () => {
         })).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith('fake type')).toBe(true);
@@ -193,6 +199,7 @@ describe('ExportAOI component', () => {
         addSpy.restore();
         fitSpy.restore();
         setSpy.restore();
+        joyrideSpy.restore();
     });
 
     it('componentDidMount should initialize the map and ignore empty geojson value', () => {
@@ -1388,5 +1395,68 @@ describe('ExportAOI component', () => {
         expect(enable).toBe(true);
         areaStub.restore();
         getStub.restore();
+    });
+
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{
+            title: 'Search for location',
+            text: 'Type in location name to set area of interest.',
+            selector: '.bootstrap-typeahead-input',
+            position: 'bottom',
+            style: {},
+        }];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
+    it('callback function should draw fake bbox if none is currently drawn on map', () => {
+        const callbackData = {
+            action: 'next',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        props.aoiInfo.description = null;
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
+        const drawFakeBboxSpy = sinon.spy(wrapper.instance(), 'drawFakeBbox');
+        wrapper.instance().callback(callbackData);
+        expect(drawFakeBboxSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ fakeData: true }));
+        stateSpy.restore();
+        drawFakeBboxSpy.restore();
     });
 });

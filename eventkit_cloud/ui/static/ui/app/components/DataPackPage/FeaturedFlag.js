@@ -15,10 +15,12 @@ export class FeaturedFlag extends Component {
             ...this.props.style,
         };
 
-        if (!this.props.show) { return null; }
+        if (!this.props.show) {
+            return null;
+        }
 
         return (
-            <div className="qa-FeaturedFlag-div" style={style}>FEATURED</div>
+            <div className="qa-FeaturedFlag-div tour-datapack-featured" style={style}>FEATURED</div>
         );
     }
 }

@@ -1,12 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import AppBar from 'material-ui/AppBar';
 import RaisedButton from 'material-ui/RaisedButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import TextField from 'material-ui/TextField';
 import Warning from 'material-ui/svg-icons/alert/warning';
-import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import AddCircle from 'material-ui/svg-icons/content/add-circle';
 import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
@@ -25,7 +26,9 @@ import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
 import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
+import { DrawerTimeout } from '../../actions/exportsActions';
 import { isViewportXS, isViewportS } from '../../utils/viewport';
+import { joyride } from '../../joyride.config';
 
 export class UserGroupsPage extends Component {
     constructor(props) {
@@ -68,14 +71,14 @@ export class UserGroupsPage extends Component {
         this.hideAddUsersDialog = this.hideAddUsersDialog.bind(this);
         this.showErrorDialog = this.showErrorDialog.bind(this);
         this.hideErrorDialog = this.hideErrorDialog.bind(this);
-        this.showPageInfoDialog = this.showPageInfoDialog.bind(this);
-        this.hidePageInfoDialog = this.hidePageInfoDialog.bind(this);
+        this.callback = this.callback.bind(this);
         this.showAdministratorInfoDialog = this.showAdministratorInfoDialog.bind(this);
         this.hideAdministratorInfoDialog = this.hideAdministratorInfoDialog.bind(this);
         this.showMemberInfoDialog = this.showMemberInfoDialog.bind(this);
         this.hideMemberInfoDialog = this.hideMemberInfoDialog.bind(this);
         this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
+        this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
             drawerOpen: !(isViewportS()),
             selectedUsers: [],
@@ -93,7 +96,9 @@ export class UserGroupsPage extends Component {
             showAdministratorInfo: false,
             showMemberInfo: false,
             showOtherInfo: false,
-            showPageInfo: false,
+            steps: [],
+            stepIndex: 0,
+            isRunning: false,
         };
     }
 
@@ -115,6 +120,8 @@ export class UserGroupsPage extends Component {
         // make api request for users/groups
         this.makeUserRequest();
         this.props.getGroups();
+        const steps = joyride.UserGroupsPage;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -230,7 +237,17 @@ export class UserGroupsPage extends Component {
     }
 
     toggleDrawer() {
-        this.setState({ drawerOpen: !this.state.drawerOpen });
+        // this still executes the call to setState immediately
+        // but it gives you the option to await the state change and the 450ms
+        // that it takes for the drawer transition to complete
+        return new Promise(async (resolve) => {
+            // wait for the state change to be complete
+            await new Promise((r2) => {
+                this.setState({ drawerOpen: !this.state.drawerOpen }, r2);
+            });
+            // wait for drawer to be fully open (transition of 450ms)
+            setTimeout(resolve, 450);
+        });
     }
 
     handleSelectAll(selected) {
@@ -511,28 +528,106 @@ export class UserGroupsPage extends Component {
         this.setState({ showOtherInfo: false });
     }
 
-    showPageInfoDialog() {
-        this.setState({ showPageInfo: true });
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        if (isViewportXS()) {
+            const ix = newSteps.findIndex(step => (
+                step.selector === '.qa-UserGroupsPage-RaisedButton-create'
+            ));
+            if (ix > -1) {
+                newSteps[ix + 1].text = newSteps[ix].text;
+                newSteps.splice(ix, 1);
+            }
+        }
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
     }
 
-    hidePageInfoDialog() {
-        this.setState({ showPageInfo: false });
+    async callback(data) {
+        const {
+            action,
+            index,
+            type,
+            step,
+        } = data;
+
+        if (!action) return;
+
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            const fakeIx = this.props.users.users.findIndex(u => u.user.fake);
+            if (fakeIx > -1) {
+                this.props.users.users.splice(fakeIx, 1);
+            }
+            this.setState({ isRunning: false, stepIndex: 0 });
+            this.joyride.reset(true);
+        } else {
+            if (step.selector === '.qa-GroupsDrawer-addGroup' && isViewportS() && !this.state.drawerOpen) {
+                // because the next step will render immediately after (before the drawer is fully open)
+                // we need to wait till the drawer is open and then update the placement of the step items
+                await this.toggleDrawer();
+                this.joyride.calcPlacement();
+            } else if (step.selector === '.qa-GroupsDrawer-groupsHeading') {
+                if (type === 'step:before') {
+                    this.scrollbar.scrollToTop();
+                    const users = this.props.users.users.filter(u => u.user.username !== this.props.user.username);
+                    if (users.length === 0) {
+                        const fakeUser = {
+                            user: {
+                                fake: true,
+                                username: 'Example User',
+                                email: 'example_user@example.com',
+                            },
+                        };
+                        this.props.users.users.push(fakeUser);
+                    }
+                } else if (type === 'step:after' && isViewportS()) {
+                    this.toggleDrawer();
+                }
+            } else if (step.selector === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
+                this.handleSelectAll(true);
+            } else if (step.selector === '.qa-UserHeader-IconButton-options' && type === 'step:after') {
+                // because the next step will render immidiately after (before the drawer is fully open)
+                // we need to wait till the drawer is open and then update the placement of the step items
+                await this.toggleDrawer();
+                this.joyride.calcPlacement();
+            }
+
+            if (type === 'step:after' || type === 'error:target_not_found') {
+                this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+            }
+        }
+    }
+
+    handleJoyride() {
+        if (this.state.drawerOpen && isViewportS()) {
+            this.toggleDrawer();
+        }
+        if (this.state.isRunning === true) {
+            this.joyride.reset(true);
+            this.setState({ isRunning: true });
+        } else {
+            this.setState({ isRunning: true });
+        }
     }
 
     render() {
+        const { steps, isRunning } = this.state;
         const smallViewport = isViewportS();
         const xsmallViewport = isViewportXS();
         const bodyWidth = !smallViewport ? 'calc(100% - 250px)' : '100%';
         const bodyHeight = window.innerHeight - 130;
         const styles = {
-            pageInfoIcon: {
-                fill: '#4598bf',
-                height: '35px',
-                width: '18px',
-                marginLeft: '10px',
-                verticalAlign: 'bottom',
-                cursor: 'pointer',
-            },
             header: {
                 backgroundColor: '#161e2e',
                 color: 'white',
@@ -547,7 +642,7 @@ export class UserGroupsPage extends Component {
                 overflow: 'visible',
             },
             button: {
-                margin: '0px',
+                margin: '0px 0px 0px 10px',
                 minWidth: '50px',
                 height: '35px',
                 borderRadius: '0px',
@@ -662,7 +757,31 @@ export class UserGroupsPage extends Component {
                 fill: '#CE4427',
                 verticalAlign: 'bottom',
             },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '35px',
+                width: '18px',
+                verticalAlign: 'middle',
+            },
         };
+
+        const tourButton = (
+            <EnhancedButton
+                onClick={this.handleJoyride}
+                style={styles.tourButton}
+            >
+                <Help
+                    style={styles.tourIcon}
+                />
+                {smallViewport ? '' : <span style={{ marginLeft: '5px' }}>Page Tour</span>}
+            </EnhancedButton>
+        );
 
         const ownedGroups = [];
         const sharedGroups = [];
@@ -740,15 +859,29 @@ export class UserGroupsPage extends Component {
 
         return (
             <div style={{ backgroundColor: 'white', position: 'relative' }}>
+                <Joyride
+                    callback={this.callback}
+                    ref={(instance) => { this.joyride = instance; }}
+                    steps={steps}
+                    stepIndex={this.state.stepIndex}
+                    autoStart
+                    type="continuous"
+                    showSkipButton
+                    showStepsProgress
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}
+                />
                 {
                     <AppBar
                         title={
                             <div style={{ lineHeight: '35px' }}>
                                 Members and Groups
-                                <InfoIcon
-                                    style={styles.pageInfoIcon}
-                                    onClick={this.showPageInfoDialog}
-                                />
                             </div>
                         }
                         style={styles.header}
@@ -756,6 +889,7 @@ export class UserGroupsPage extends Component {
                         showMenuIconButton={false}
                         className="qa-UserGroupsPage-AppBar"
                     >
+                        {tourButton}
                         {!xsmallViewport ?
                             <RaisedButton
                                 label={
@@ -831,6 +965,7 @@ export class UserGroupsPage extends Component {
                         <CustomScrollbar
                             style={{ height: bodyHeight - 155, width: '100%' }}
                             className="qa-UserGroupsPage-CustomScrollbar"
+                            ref={(instance) => { this.scrollbar = instance; }}
                         >
                             <div style={styles.ownUser}>
                                 {ownUser}
@@ -951,25 +1086,6 @@ export class UserGroupsPage extends Component {
                         </div>
                     ))}
                 </BaseDialog>
-
-                <BaseDialog
-                    show={!!this.state.showPageInfo}
-                    onClose={this.hidePageInfoDialog}
-                    title="MEMBERS & GROUPS"
-                    className="qa-UserGroupsPage-pageInfo"
-                >
-                    <div style={{ lineHeight: '36px', display: 'flex', justifyContent: 'center' }}>
-                        <div>
-                            <span>On this page you can:</span>
-                            <ul style={{ paddingLeft: '20px' }}>
-                                <li>View all EventKit members</li>
-                                <li>Create and manage user groups for data sharing</li>
-                                <li>View groups that have been shared with you</li>
-                            </ul>
-                        </div>
-                    </div>
-                </BaseDialog>
-
                 <AdministratorInfoDialog
                     onClose={this.hideAdministratorInfoDialog}
                     show={this.state.showAdministratorInfo}
@@ -1049,6 +1165,7 @@ UserGroupsPage.propTypes = {
     updateGroup: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired,
+    openDrawer: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -1060,6 +1177,7 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
+    const timeout = new DrawerTimeout();
     return {
         getGroups: () => (
             dispatch(getGroups())
@@ -1075,6 +1193,9 @@ function mapDispatchToProps(dispatch) {
         ),
         getUsers: params => (
             dispatch(getUsers(params))
+        ),
+        openDrawer: () => (
+            dispatch(timeout.openDrawer())
         ),
     };
 }
