@@ -44,7 +44,8 @@ if arcpy.GetInstallInfo().get('Version') not in SUPPORTED_VERSIONS:
     print(
         "This script only supports versions {0}.  "
         "It might work for {1} but it will likely not support all of the datasets.".format(
-            SUPPORTED_VERSIONS, VERSIONS))
+            SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS]))
+
 
 def update_mxd_from_metadata(file_name, metadata, verify=False):
     """
@@ -213,7 +214,7 @@ if __name__ == "__main__":
 
     #  args = parser.parse_args()
     try:
-        metadata_file = os.path.join(os.path.dirname(__file__), 'arcgis', 'metadata.json')
+        metadata_file = os.path.join(os.path.dirname(__file__), 'metadata.json')
 
         with open(metadata_file, 'r') as open_metadata_file:
             metadata = json.load(open_metadata_file)
