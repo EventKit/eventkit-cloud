@@ -33,9 +33,9 @@ try:
 except Exception as e:
     print(e)
     raw_input(
-        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script."
-        "Please ensure that it is installed and activated."
-        "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS."
+        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script. "
+        "Please ensure that it is installed and activated. "
+        "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS. "
         "Press any key to exit.")
     raise
 
