@@ -13,7 +13,7 @@ logger = logging.getLogger(__file__)
 @receiver(pre_delete, sender=ExportRun)
 def exportrun_delete_exports(sender, instance, *args, **kwargs):
     """
-    Delete the associated export files when an ExportRun is deleted.
+    Delete the associated export files and notifications when an ExportRun is deleted.
     """
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(run_uid=str(instance.uid))
@@ -24,6 +24,7 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
     except OSError:
         logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
 
+    instance.delete_notifications()
 
 @receiver(pre_delete, sender=FileProducingTaskResult)
 def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):

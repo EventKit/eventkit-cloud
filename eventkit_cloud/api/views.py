@@ -10,12 +10,9 @@ from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 
 
 from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
 from notifications.models import Notification
 from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel

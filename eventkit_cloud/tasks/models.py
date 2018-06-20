@@ -9,6 +9,8 @@ from django.utils import timezone
 
 from ..jobs.models import Job, LowerCaseCharField, DataProvider
 from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from notifications.models import Notification
+from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +90,12 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def __str__(self):
         return '{0}'.format(self.uid)
 
+    def delete_notifications(self, **kwargs):
+        for notification in Notification.objects.filter(actor_object_id=self.id):
+            ct = ContentType.objects.filter(pk=notification.actor_content_type_id).get()
+            if ct == ContentType.objects.get_for_model(ExportRun):
+                notification.delete()
+
     def soft_delete(self, user=None, *args, **kwargs):
         from .export_tasks import cancel_run
         from .signals import exportrun_delete_exports
@@ -100,6 +108,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
+        self.delete_notifications()
 
     @property
     def zipfile_url(self):
