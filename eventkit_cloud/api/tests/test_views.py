@@ -24,8 +24,8 @@ from ...tasks.task_factory import InvalidLicense
 from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
-from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission,GroupPermissionLevel
+from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
+from ...core.models import GroupPermission, GroupPermissionLevel
 from mock import patch, Mock
 
 
@@ -671,7 +671,6 @@ class TestExportRunViewSet(APITestCase):
         run = ExportRun.objects.get(uid=self.export_run.uid)
         self.assertEquals(ok_expiration,run.expiration.replace(tzinfo=None))
 
-
     def test_delete_run(self,):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
         response = self.client.delete(url)
@@ -680,11 +679,14 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(response['Content-Length'], '0')
         self.assertEquals(response['Content-Language'], 'en')
 
-    @patch('eventkit_cloud.api.serializers.get_presigned_url')
-    def test_zipfile_url_s3(self, get_url):
-        self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
+    def test_zipfile_url_s3(self):
+
+        example_url = "/downloads/{0}/file.zip".format(self.run_uid)
+        file_result = FileProducingTaskResult.objects.create(download_url=example_url)
+        self.export_run.downloadable = file_result
         self.export_run.save()
-        get_url.return_value = self.export_run.zipfile_url
+        download_url = 'http://testserver/download?uid={0}'.format(file_result.uid)
+
         url = reverse('api:runs-detail', args=[self.run_uid])
 
         with self.settings(USE_S3=False):
@@ -692,20 +694,18 @@ class TestExportRunViewSet(APITestCase):
             result = response.data
 
             self.assertEquals(
-                self.export_run.zipfile_url,
+                download_url,
                 result[0]['zipfile_url']
             )
-            get_url.assert_not_called()
 
         with self.settings(USE_S3=True):
             response = self.client.get(url)
             result = response.data
 
             self.assertEquals(
-                self.export_run.zipfile_url,
+                download_url,
                 result[0]['zipfile_url']
             )
-            get_url.assert_called_with(download_url=self.export_run.zipfile_url)
 
     def test_retrieve_run(self,):
         expected = '/api/runs/{0}'.format(self.run_uid)
