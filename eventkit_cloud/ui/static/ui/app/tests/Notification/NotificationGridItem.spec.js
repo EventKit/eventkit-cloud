@@ -79,6 +79,7 @@ describe('NotificationGridItem component', () => {
 
     it('passes correct props to NotificationMenu', () => {
         const notificationMenu = wrapper.find(NotificationMenu);
+        expect(Object.keys(notificationMenu.props())).toHaveLength(6);
         expect(notificationMenu.props().notification).toBe(instance.props.notification);
         expect(notificationMenu.props().router).toBe(instance.props.router);
         expect(notificationMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
