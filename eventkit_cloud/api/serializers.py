@@ -40,7 +40,6 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord
 )
-from eventkit_cloud.utils.s3 import get_presigned_url
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 import validators
@@ -102,6 +101,7 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
     """Serialize FileProducingTaskResult models."""
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
+    uid = serializers.UUIDField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super(ExportTaskResultSerializer, self).__init__(*args, **kwargs)
@@ -110,14 +110,11 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileProducingTaskResult
-        fields = ('filename', 'size', 'url', 'deleted')
+        fields = ('uid', 'filename', 'size', 'url', 'deleted')
 
     def get_url(self, obj):
         request = self.context['request']
-        if getattr(settings, 'USE_S3', False):
-            return get_presigned_url(download_url=obj.download_url)
-        else:
-            return request.build_absolute_uri(obj.download_url)
+        return request.build_absolute_uri('/download?uid={}'.format(obj.uid))
 
     @staticmethod
     def get_size(obj):
@@ -290,25 +287,20 @@ class ExportRunSerializer(serializers.ModelSerializer):
         return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
-        request = self.context['request']
-        if not obj.zipfile_url:
-            return None
-
-        if obj.zipfile_url.startswith('http'):
-            if getattr(settings, 'USE_S3', False):
-                return get_presigned_url(download_url=obj.zipfile_url)
-            else:
-                return obj.zipfile_url
-
-        # get full URL path from current request
-        uri = request.build_absolute_uri()
-        uri = list(urlparse(uri))
-        # modify path, query parmas, and fragment on the URI to match zipfile URL
-        path = os.path.join(settings.EXPORT_MEDIA_ROOT, obj.zipfile_url)
-        uri[2] = path  # path
-        uri[4] = None  # fragment
-        uri[5] = None  # query
-        return urlunparse(uri)
+        if obj.downloadable:
+            request = self.context['request']
+            return request.build_absolute_uri('/download?uid={}'.format(obj.downloadable.uid))
+        else:
+            return ""
+        # # get full URL path from current request
+        # uri = request.build_absolute_uri()
+        # uri = list(urlparse(uri))
+        # # modify path, query parmas, and fragment on the URI to match zipfile URL
+        # path = os.path.join(settings.EXPORT_MEDIA_ROOT, obj.zipfile_url)
+        # uri[2] = path  # path
+        # uri[4] = None  # fragment
+        # uri[5] = None  # query
+        # return urlunparse(uri)
 
 
 class GroupPermissionSerializer(serializers.ModelSerializer):
@@ -638,11 +630,11 @@ class JobSerializer(serializers.Serializer):
     include_zipfile = serializers.BooleanField(required=False, default=False)
 
     def get_zipfile_url(self, obj):
-        request = self.context['request']
-        if not obj.zipfile_url:
-            return None
-
-        return request.build_absolute_uri('../../downloads/' + obj.zipfile_url)
+        if obj.downloadable:
+            request = self.context['request']
+            return request.build_absolute_uri('/download?uid={}'.format(obj.downloadable.uid))
+        else:
+            return ""
 
     @staticmethod
     def create(validated_data, **kwargs):
