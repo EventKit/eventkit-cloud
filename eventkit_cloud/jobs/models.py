@@ -404,6 +404,19 @@ class UserJobActivity(models.Model):
     type = models.CharField(max_length=100, blank=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
+#
+# class Downloadable(UIDMixin, TimeStampedModelMixin):
+#     """
+#     Model that stores each DataPack or DataPack component that can be downloaded.
+#     """
+#     creator = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='+', null=True)
+#     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='+', null=True)
+#     job = models.ForeignKey(Job, related_name='downloads')
+#     url = models.URLField(verbose_name='URL to download result', max_length=254)
+#     size = models.DecimalField(verbose_name="Download size (MB)", default=0, max_digits=12, decimal_places=3,
+#                                editable=False, null=True)
+
+
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
         return MultiPolygon(geom, srid=geom.srid)
