@@ -1,0 +1,22 @@
+{% autoescape off %}
+EventKit DataPack
+{{ metadata.url }}
+
+Name: {{ metadata.name }}
+Description: {{ metadata.description }}
+Project: {{ metadata.project }}
+Date Created: {{ metadata.date }}
+DataPack UID: {{ metadata.run_uid }}
+
+Data Sources
+{% for provider in metadata.data_providers %}
+	Name: {{ provider.name }}
+	Description: {{ provider.description }}
+	{% if provider.last_update %}Last Update: {{ provider.last_update }}{% else %}Last Update: Unknown, see metadata for more details{% endif %}
+	Metadata: {{ provider.metadata }}
+	{% if provider.copyright %}Copyright: {{ provider.copyright }}{% endif %}
+{% endfor %}
+Area of Interest:
+
+{{ metadata.aoi }}
+{% endautoescape %}

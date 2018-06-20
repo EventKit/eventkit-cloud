@@ -73,8 +73,8 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
 
     for item in items:
         _key = item['Key']
-        response = client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
-        if not response.get("DeleteMarker"):
+        client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
+        if 'Contents' in client.list_objects(Bucket=settings.AWS_BUCKET_NAME, Prefix=_key):
             logger.warn("Could not delete {0} from S3.".format(_key))
 
 
