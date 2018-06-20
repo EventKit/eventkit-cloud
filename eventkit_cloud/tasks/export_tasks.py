@@ -786,7 +786,7 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
         include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
         include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
 
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis' 'metadata.json')
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
