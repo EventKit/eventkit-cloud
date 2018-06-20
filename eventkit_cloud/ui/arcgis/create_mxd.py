@@ -93,7 +93,6 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
 
 def get_mxd_template(version):
     """
-
     :param version: A version for the correct arcgis MapDocument template.
     :return: A file path to the correct arcgis MapDocument template.
     """
@@ -214,7 +213,7 @@ if __name__ == "__main__":
 
     #  args = parser.parse_args()
     try:
-        metadata_file = os.path.join(os.path.dirname(__file__), 'metadata.json')
+        metadata_file = os.path.join(os.path.dirname(__file__), 'arcgis', 'metadata.json')
 
         with open(metadata_file, 'r') as open_metadata_file:
             metadata = json.load(open_metadata_file)

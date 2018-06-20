@@ -791,7 +791,6 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
 
-
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
                                      file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
