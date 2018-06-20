@@ -42,7 +42,7 @@ export function getRuns(args = {}) {
         } else {
             params.ordering = '-job__featured';
         }
-        if (args.ownerFilter) params.user = args.ownerFilter;
+        if (args.ownerFilter !== 'all') params.user = args.ownerFilter;
         if (status.length) params.status = status.join(',');
         if (args.minDate) {
             params.min_date = args.minDate.toISOString().substring(0, 10);

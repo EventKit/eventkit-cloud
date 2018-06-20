@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -72,7 +73,7 @@ export class DataPackPage extends React.Component {
             view: props.runsList.view || 'map',
             pageLoading: true,
             order: props.runsList.order || '-job__featured',
-            ownerFilter: '',
+            ownerFilter: 'all',
             pageSize: 12,
             loading: false,
             geojson_geometry: null,
@@ -95,6 +96,7 @@ export class DataPackPage extends React.Component {
         this.fetch = setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
+        console.log(this.props.location);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -114,6 +116,24 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    componentDidUpdate(prevProps) {
+        let changedQuery = false;
+        if (Object.keys(this.props.location.query).length
+                !== Object.keys(prevProps.location.query).length) {
+            changedQuery = true;
+        } else {
+            const keys = Object.keys(this.props.location.query);
+            if (!keys.every(key => this.props.location.query[key] === prevProps.location.query[key])) {
+                changedQuery = true;
+            }
+        }
+        if (changedQuery) {
+            // this.makeRunRequest();
+            console.log('PARAMS ARE DIFFERENT');
+            console.log(this.props.location.query);
+        }
+    }
+
     componentWillUnmount() {
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
@@ -127,6 +147,7 @@ export class DataPackPage extends React.Component {
 
     onSearch(searchText) {
         this.setState({ search: searchText, loading: true }, this.makeRunRequest);
+        this.updateLocationQuery({ search: searchText });
     }
 
     getViewRef(instance) {
@@ -192,14 +213,28 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    updateLocationQuery(query) {
+        browserHistory.push({
+            ...this.props.location,
+            query: {
+                ...this.props.location.query,
+                ...query,
+            },
+        });
+    }
+
     checkForEmptySearch(searchText) {
         if (searchText === '' && this.state.search) {
             this.setState({ search: '', loading: true }, this.makeRunRequest);
+            const query = { ...this.props.location.query };
+            delete query.search;
+            this.updateLocationQuery(query);
         }
     }
 
     handleSortChange(value) {
         this.setState({ order: value, loading: true }, this.makeRunRequest);
+        this.updateLocationQuery({ order: value });
     }
 
     autoRunRequest() {
@@ -226,6 +261,7 @@ export class DataPackPage extends React.Component {
 
     handleOwnerFilter(event, index, value) {
         this.setState({ ownerFilter: value, loading: true }, this.makeRunRequest);
+        this.updateLocationQuery({ collection: value });
     }
 
     handleFilterApply(state) {
@@ -268,11 +304,13 @@ export class DataPackPage extends React.Component {
     changeView(view) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
         if (sharedViewOrders.indexOf(this.state.order) < 0) {
+            this.updateLocationQuery({ view, order: '-started_at' });
             this.setState({ order: '-started_at', loading: true }, () => {
                 const promise = this.makeRunRequest();
                 promise.then(() => this.setState({ view }));
             });
         } else {
+            this.updateLocationQuery({ view });
             this.setState(
                 { view },
                 () => {
