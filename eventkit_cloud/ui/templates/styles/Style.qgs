@@ -11,49 +11,49 @@
       {% if provider.provider_slug == "nome" %}
       <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.provider_name }}">
         <customproperties/>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points" name="place label">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points" name="place label">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="points of interest">
           <customproperties/>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points" name="POI (points)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points" name="POI (points)">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="POI (areas)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="POI (areas)">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines" name="roads">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines" name="roads">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons" name="building">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons" name="building">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines" name="waterways">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines" name="waterways">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_grassland_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons" name="leisure">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons" name="leisure">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons" name="landuses">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons" name="landuses">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="amenities">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="amenities">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines" name="aviation lines">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines" name="aviation lines">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons" name="aviation polygons">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons" name="aviation polygons">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_water_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="background">
@@ -61,7 +61,7 @@
           <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons" name="land">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_osm_nome{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary" name="boundary">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_{{ provider.provider_slug}}/_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary" name="boundary">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
@@ -70,7 +70,7 @@
       {% if provider.provider_slug == "osm" %}
       <layer-tree-group expanded="0" checked="Qt::Checked" name="{{ provider.provider_name }}">
         <customproperties/>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points" name="place label">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points" name="place label">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
@@ -90,45 +90,45 @@
             </customproperties>
           </layer-tree-layer>
         </layer-tree-group>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_rail_lines_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=rail_lines" name="railway">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=rail_lines" name="railway">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines" name="roads">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines" name="roads">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons" name="building">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons" name="building">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines" name="waterways">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines" name="waterways">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_grassland_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = 'grassland'" name="grassland">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons" name="leisure">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons" name="leisure">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons" name="landuses">
+        <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons" name="landuses">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="amenities">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="amenities">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines" name="aviation lines">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines" name="aviation lines">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons" name="aviation polygons">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons" name="aviation polygons">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_water_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset=&quot;natural&quot; = &quot;water&quot;" name="water">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="background">
           <customproperties/>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygons_osm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons" name="land">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_land_polygons_{{ provider.provider_slug}}/{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons" name="land">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_osm_{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary" name="boundary">
+          <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="osm_bounds_{{ provider.provider_slug}}/_{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary" name="boundary">
             <customproperties/>
           </layer-tree-layer>
         </layer-tree-group>
@@ -191,42 +191,42 @@
     <custom-order enabled="0">
       {% for provider in provider_details %}
       {% if provider.provider_slug == "nome" %}
-      <item>{{ job_name.split|join:"_" }}_places_points_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_aviation_points_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_points_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_roads_lines_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_buildings_polygons_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_waterways_lines_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}natural_polygons_grassland_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_leisure_polygons_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_landuse_polygons_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_aviation_lines_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_aviation_polygons_any_nome{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}natural_polygons_water_nome{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.provider_slug}}{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}</item>
-      <item>osm_bounds_osm_nome{{ job_date_time }}</item>
+      <item>osm_bounds_{{ provider.provider_slug}}/_{{ provider.provider_slug}}{{ job_date_time }}</item>
       {%  endif %}
       {% if provider.provider_slug == "osm" %}
-      <item>{{ job_name.split|join:"_" }}_places_points_any_osm{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_rail_lines_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_roads_lines_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_buildings_polygons_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_waterways_lines_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_natural_polygons_grassland_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_leisure_polygons_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_landuse_polygons_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_aviation_lines_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_aviation_polygons_any_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_natural_polygons_water_osm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_land_polygons_osm{{ job_date_time }}</item>
-      <item>osm_bounds_osm__osm{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_land_polygons_{{ provider.provider_slug}}/{{ job_date_time }}</item>
+      <item>osm_bounds_{{ provider.provider_slug}}/__{{ provider.provider_slug}}/{{ job_date_time }}</item>
       {%  endif %}
       {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
       <item>{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}</item>
@@ -243,74 +243,74 @@
       <legendgroup open="false" checked="Qt::Checked" name="{{ provider.provider_name }}">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_places_points_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_points_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendgroup open="true" checked="Qt::Checked" name="points of interest">
           <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="POI (points)" showFeatureCount="0">
             <filegroup open="false" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_points_any_nome{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
           <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="POI (areas)" showFeatureCount="0">
             <filegroup open="false" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
         <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="roads" showFeatureCount="0">
           <filegroup open="false" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_roads_lines_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="building" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_buildings_polygons_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="waterways" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_waterways_lines_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="grassland" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}natural_polygons_grassland_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="leisure" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_leisure_polygons_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="landuses" showFeatureCount="0">
           <filegroup open="false" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_landuse_polygons_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="amenities" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="aviation lines" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_lines_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="aviation polygons" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_polygons_any_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="water" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}natural_polygons_water_nome{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendgroup open="true" checked="Qt::Checked" name="background">
@@ -321,7 +321,7 @@
           </legendlayer>
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="boundary" showFeatureCount="0">
             <filegroup open="true" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="osm_bounds_osm_nome{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="osm_bounds_{{ provider.provider_slug}}/_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
@@ -331,7 +331,7 @@
       <legendgroup open="false" checked="Qt::Checked" name="{{ provider.provider_name }}">
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="place label" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_places_points_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport" showFeatureCount="0">
@@ -358,68 +358,68 @@
         </legendgroup>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="railway" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_rail_lines_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="roads" showFeatureCount="0">
           <filegroup open="false" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_roads_lines_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="building" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_buildings_polygons_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="waterways" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_waterways_lines_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="grassland" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_natural_polygons_grassland_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="leisure" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_leisure_polygons_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="landuses" showFeatureCount="0">
           <filegroup open="false" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_landuse_polygons_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="amenities" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="aviation lines" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_lines_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="aviation polygons" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_polygons_any_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="water" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_natural_polygons_water_osm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendgroup open="true" checked="Qt::Checked" name="background">
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="land" showFeatureCount="0">
             <filegroup open="true" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_land_polygons_osm{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_land_polygons_{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
           <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="boundary" showFeatureCount="0">
             <filegroup open="true" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="osm_bounds_osm__osm{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="osm_bounds_{{ provider.provider_slug}}/__{{ provider.provider_slug}}/{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
@@ -465,8 +465,8 @@
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>osm_bounds_osm_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary</datasource>
+      <id>osm_bounds_{{ provider.provider_slug}}/_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -761,8 +761,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>osm_bounds_osm__osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary</datasource>
+      <id>osm_bounds_{{ provider.provider_slug}}/__{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=boundary</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -1057,8 +1057,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_points_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
+      <id>{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -1708,7 +1708,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -4253,7 +4253,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -5076,7 +5076,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -7674,8 +7674,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -8115,8 +8115,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -8904,8 +8904,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_aviation_lines_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -9313,8 +9313,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_aviation_points_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
+      <id>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -9659,8 +9659,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_aviation_polygons_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -10059,8 +10059,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_buildings_polygons_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -10393,7 +10393,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons</datasource>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -10695,8 +10695,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_landuse_polygons_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -11560,8 +11560,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_leisure_polygons_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -11923,8 +11923,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}natural_polygons_grassland_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
+      <id>{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12244,8 +12244,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}natural_polygons_water_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
+      <id>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -12567,8 +12567,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_places_points_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points</datasource>
+      <id>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -13082,8 +13082,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_roads_lines_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -14284,8 +14284,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_waterways_lines_any_nome{{ job_date_time }}</id>
-      <datasource>./data/nome/{{ job_name.split|join:"_" }}-nome-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -14836,8 +14836,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -15277,8 +15277,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_aviation_lines_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -15667,7 +15667,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -16012,8 +16012,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_aviation_polygons_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -16412,8 +16412,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_buildings_polygons_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=buildings_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -16745,8 +16745,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_land_polygons_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_land_polygons_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=land_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -17048,8 +17048,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_landuse_polygons_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=landuse_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -17799,8 +17799,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_leisure_polygons_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons</datasource>
+      <id>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=leisure_polygons</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18151,8 +18151,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_natural_polygons_grassland_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
+      <id>{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = 'grassland'</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18472,8 +18472,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_natural_polygons_water_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
+      <id>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18795,8 +18795,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_places_points_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points</datasource>
+      <id>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -19310,8 +19310,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_rail_lines_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=rail_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=rail_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -19688,8 +19688,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_roads_lines_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=roads_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -21669,8 +21669,8 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_waterways_lines_any_osm{{ job_date_time }}</id>
-      <datasource>./data/osm/{{ job_name.split|join:"_" }}-osm-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines</datasource>
+      <id>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</id>
+      <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=waterways_lines</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -22294,40 +22294,40 @@ def my_form_open(dialog, layer, feature):
     <Digitizing>
       <DefaultSnapToleranceUnit type="int">2</DefaultSnapToleranceUnit>
       <LayerSnappingList type="QStringList">
-        <value>osm_bounds_osm_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_points_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_aviation_lines_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_aviation_points_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_aviation_polygons_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_buildings_polygons_any_nome{{ job_date_time }}</value>
+        <value>osm_bounds_{{ provider.provider_slug}}/_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_points_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_land_polygonsnome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_landuse_polygons_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_leisure_polygons_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}natural_polygons_grassland_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}natural_polygons_water_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_places_points_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_roads_lines_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_waterways_lines_any_nome{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_places_points_any_osm{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}natural_polygons_grassland_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_rail_lines_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_roads_lines_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_buildings_polygons_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_waterways_lines_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_natural_polygons_grassland_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_leisure_polygons_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_landuse_polygons_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_aviation_lines_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_aviation_polygons_any_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_natural_polygons_water_osm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_land_polygons_osm{{ job_date_time }}</value>
-        <value>osm_bounds_osm__osm{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_natural_polygons_grassland_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_leisure_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_landuse_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_aviation_lines_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_aviation_polygons_any_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_land_polygons_{{ provider.provider_slug}}/{{ job_date_time }}</value>
+        <value>osm_bounds_{{ provider.provider_slug}}/__{{ provider.provider_slug}}/{{ job_date_time }}</value>
       </LayerSnappingList>
       <LayerSnappingEnabledList type="QStringList">
         <value>disabled</value>
