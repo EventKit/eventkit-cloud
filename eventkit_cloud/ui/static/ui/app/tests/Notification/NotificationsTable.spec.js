@@ -89,6 +89,51 @@ describe('NotificationsTable component', () => {
         }
     });
 
+    it('shows the current selected count', () => {
+        wrapper.setState({
+            selected: {
+                '1': mockNotifications['1'],
+                '2': mockNotifications['2'],
+            },
+        });
+
+        expect(wrapper.find(TableHeaderColumn).at(1).find('span').text()).toBe('2 Selected');
+    });
+
+    it('passes correct props to NotificationsTableMenu', () => {
+        wrapper.setState({
+            selected: {
+                '1': mockNotifications['1'],
+                '2': mockNotifications['2'],
+            },
+        });
+        const tableMenu = wrapper.find(NotificationsTableMenu);
+        expect(Object.keys(tableMenu.props()).length).toBe(6);
+        expect(tableMenu.props().selectedNotifications).toBe(wrapper.state().selected);
+        expect(tableMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(tableMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(tableMenu.props().onRemove).toBe(instance.props.onRemove);
+        expect(tableMenu.props().onMarkAllAsRead).toBe(instance.props.onMarkAllAsRead);
+    });
+
+    it('passes correct props to NotificationsTableItem', () => {
+        wrapper.setState({
+            selected: {
+                '1': mockNotifications['1'],
+            },
+        });
+        const tableItem = wrapper.find(NotificationsTableItem).at(0);
+        expect(Object.keys(tableItem).length).toBe(8);
+        expect(tableItem.props().notification).toBe(instance.props.notificationsArray[0]);
+        expect(tableItem.props().router).toBe(instance.props.router);
+        expect(tableItem.props().isSelected).toBe(true);
+        expect(tableItem.props().setSelected).toBe(instance.setSelected);
+        expect(tableItem.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(tableItem.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(tableItem.props().onRemove).toBe(instance.props.onRemove);
+        expect(tableItem.props().onView).toBe(instance.props.onView);
+    });
+
     describe('when notification checkbox is clicked', () => {
         let notification, wasSelected;
         beforeEach(() => {
@@ -227,40 +272,6 @@ describe('NotificationsTable component', () => {
         });
     });
 
-    it('passes correct props to NotificationsTableMenu', () => {
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
-            },
-        });
-        const tableMenu = wrapper.find(NotificationsTableMenu);
-        expect(Object.keys(tableMenu.props()).length).toBe(6);
-        expect(tableMenu.props().selectedNotifications).toBe(wrapper.state().selected);
-        expect(tableMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
-        expect(tableMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
-        expect(tableMenu.props().onRemove).toBe(instance.props.onRemove);
-        expect(tableMenu.props().onMarkAllAsRead).toBe(instance.props.onMarkAllAsRead);
-    });
-
-    it('passes correct props to NotificationsTableItem', () => {
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-            },
-        });
-        const tableItem = wrapper.find(NotificationsTableItem).at(0);
-        expect(Object.keys(tableItem).length).toBe(8);
-        expect(tableItem.props().notification).toBe(instance.props.notificationsArray[0]);
-        expect(tableItem.props().router).toBe(instance.props.router);
-        expect(tableItem.props().isSelected).toBe(true);
-        expect(tableItem.props().setSelected).toBe(instance.setSelected);
-        expect(tableItem.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
-        expect(tableItem.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
-        expect(tableItem.props().onRemove).toBe(instance.props.onRemove);
-        expect(tableItem.props().onView).toBe(instance.props.onView);
-    });
-
     describe('when notifications disappear from the store', () => {
         beforeEach(() => {
             wrapper.setState({
@@ -284,16 +295,5 @@ describe('NotificationsTable component', () => {
                 '1': mockNotifications['1'],
             });
         });
-    });
-
-    it('shows the current selected count', () => {
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
-            },
-        });
-
-        expect(wrapper.find(TableHeaderColumn).at(1).find('span').text()).toBe('2 Selected');
     });
 });
