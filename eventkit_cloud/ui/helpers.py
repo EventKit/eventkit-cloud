@@ -121,10 +121,11 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     has_elevation = False
     for slug, details in provider_details.iteritems():
         if slug not in ['osm', 'nome']:
-            if details['file_path'].endswith('.gpkg'):
+            if details['file_type'] == '.gpkg':
                 has_raster = True
-            if details['file_path'].endswith('.tif'):
+            if details['file_type'] == '.tif':
                 has_elevation = True
+
     provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
 
 

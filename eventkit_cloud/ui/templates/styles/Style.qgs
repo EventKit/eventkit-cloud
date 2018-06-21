@@ -135,10 +135,10 @@
       </layer-tree-group>
       {%  endif %}
     {%  endfor %}
-    {% if has_rasters %}
+    {% if has_raster %}
       <layer-tree-group expanded="1" checked="Qt::Checked" name="Rasters">
       <customproperties/>
-       {% for provider in provider_details %}
+      {% for provider in provider_details %}
       {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
       {% if provider.file_type == ".gpkg" %}
       <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg" name="{{ provider.provider_name }}">
