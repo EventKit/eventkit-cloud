@@ -1,16 +1,18 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { IconButton, IconMenu, MenuItem } from 'material-ui';
+import { IconMenu } from 'material-ui';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
 import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
+import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 
 describe('NotificationMenu component', () => {
-    function getProps() {
+    let wrapper, instance;
+
+    function defaultProps() {
         return {
             notification: {
                 id: '1',
@@ -28,286 +30,358 @@ describe('NotificationMenu component', () => {
             router: {
                 push: sinon.spy(),
             },
-            markNotificationsAsRead: () => {},
-            markNotificationsAsUnread: () => {},
-            removeNotifications: () => {},
+            onView: sinon.spy(),
+            onMarkAsRead: sinon.spy(),
+            onMarkAsUnread: sinon.spy(),
+            onRemove: sinon.spy(),
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
+            removeNotifications: sinon.spy(),
         };
     }
 
-    function getShallowWrapper(props = getProps()) {
-        return shallow(<NotificationMenu {...props} />);
+    function setup(propsOverride = {}) {
+        const props = {
+            ...defaultProps(),
+            ...propsOverride,
+        };
+        wrapper = shallow(<NotificationMenu { ...props } />);
+        instance = wrapper.instance();
+
+        const handleMenuItemClick = instance.handleMenuItemClick;
+        instance.handleMenuItemClick = sinon.stub().callsFake(() => {
+            handleMenuItemClick({ stopPropagation: () => {} });
+        });
     }
 
     function wrapShallow(element) {
         return shallow(<div>{element}</div>).childAt(0);
     }
 
-    it('should have the correct initial state', () => {
-        const wrapper = getShallowWrapper();
-        expect(wrapper.state().forceClose).toBe(false);
+    beforeEach(setup);
+
+    it('renders IconMenu', () => {
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
     });
 
-    it('should render the basic elements', () => {
-        const wrapper = getShallowWrapper();
-        const instance = wrapper.instance();
+    it('renders IconButton with MoreVertIcon', () => {
         const iconMenu = wrapper.find(IconMenu);
-        expect(iconMenu).toHaveLength(1);
-        const iconButtonElement = wrapShallow(iconMenu.props().iconButtonElement);
-        expect(iconButtonElement.type()).toBe(IconButton);
-        expect(iconButtonElement.find(MoreVertIcon)).toHaveLength(1);
-        expect(iconMenu.props().open).toBe(null);
-        const menuItems = wrapper.find(MenuItem);
-        expect(menuItems).toHaveLength(3);
-        expect(menuItems.at(0).props().primaryText).toBe('View');
-        expect(menuItems.at(0).props().leftIcon).toEqual(<OpenInNewIcon />);
-        expect(menuItems.at(0).props().onClick).toBe(instance.handleView);
-        expect(menuItems.at(1).props().primaryText).toBe('Mark As Read');
-        expect(menuItems.at(1).props().leftIcon).toEqual(<FlagIcon />);
-        expect(menuItems.at(1).props().onClick).toBe(instance.handleMarkAsRead);
-        expect(menuItems.at(2).props().primaryText).toBe('Remove');
-        expect(menuItems.at(2).props().leftIcon).toEqual(<CloseIcon />);
-        expect(menuItems.at(2).props().onClick).toBe(instance.handleRemove);
+        const iconButton = wrapShallow(iconMenu.props().iconButtonElement);
+        expect(iconButton.find(MoreVertIcon)).toHaveLength(1);
     });
 
-    it('should only render View menu item when a view path exists', () => {
-        const wrapper = getShallowWrapper();
-        expect(wrapper.find('.qa-NotificationMenu-MenuItem-View')).toHaveLength(1);
-        const props = wrapper.props();
-        wrapper.setProps({
-            ...props,
-            notification: {
-                ...props.notification,
-                verb: 'some_unhandled_verb',
-            },
+    it('renders Remove menu item', () => {
+        expect(wrapper.find('.qa-NotificationMenu-MenuItem-Remove')).toHaveLength(1);
+    });
+
+    it('renders CloseIcon in Remove menu item', () => {
+        const removeMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-Remove');
+        expect(removeMenuItem.props().leftIcon).toEqual(<CloseIcon />);
+    });
+
+    describe('initial state', () => {
+        it('does not set IconMenu "open" prop', () => {
+            expect(wrapper.find(IconMenu).props().open).toBe(null);
         });
-        expect(wrapper.find('.qa-NotificationMenu-MenuItem-View')).toHaveLength(0);
     });
 
-    it('should change "open" state to false when forceClose is true', () => {
-        const wrapper = getShallowWrapper();
-        const instance = wrapper.instance();
-        expect(wrapper.state().forceClose).toBe(false);
-        expect(wrapper.find(IconMenu).props().open).toBe(null);
-        const componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
-        instance.handleMenuItemClick({ stopPropagation: () => {} });
-        componentDidUpdateStub.restore();
-        expect(instance.state.forceClose).toBe(true);
-        expect(wrapper.find(IconMenu).props().open).toBe(false);
+    describe('when notification is unread', () => {
+        let markAsReadMenuItem;
+        beforeEach(() => {
+            const props = defaultProps();
+            props.notification.unread = true;
+            setup(props);
+            markAsReadMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead');
+        });
+
+        it('renders Mark As Read menu item with FlagIcon', () => {
+            expect(markAsReadMenuItem).toHaveLength(1);
+        });
+
+        it('renders FlagIcon in Mark As Read menu item', () => {
+            expect(markAsReadMenuItem.props().leftIcon).toEqual(<FlagIcon />);
+        });
+
+        it('does not render Mark As Unread menu item', () => {
+            expect(wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread')).toHaveLength(0);
+        });
     });
 
-    it('should reset forceClose to false in componentDidUpdate()', () => {
-        const wrapper = getShallowWrapper();
-        const instance = wrapper.instance();
-        const componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
-        wrapper.setState({ forceClose: true });
-        componentDidUpdateStub.restore();
-        expect(wrapper.state().forceClose).toBe(true);
-        instance.componentDidUpdate();
-        expect(wrapper.state().forceClose).toBe(false);
+    describe('when notification is not unread', () => {
+        let markAsUnreadMenuItem;
+        beforeEach(() => {
+            const props = defaultProps();
+            props.notification.unread = false;
+            setup(props);
+            markAsUnreadMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread');
+        });
+
+        it('renders Mark As Unread menu item', () => {
+            expect(markAsUnreadMenuItem).toHaveLength(1);
+        });
+
+        it('renders FlagIcon in Mark As Unread menu item', () => {
+            expect(markAsUnreadMenuItem.props().leftIcon).toEqual(<FlagIcon />);
+        });
+
+        it('does not render Mark As Read menu item', () => {
+            expect(wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead')).toHaveLength(0);
+        });
     });
 
-    it('should change second item to "Mark As Unread" when notification is read', () => {
-        const props = getProps();
-        props.notification = {
-            ...props.notification,
-            unread: false,
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        const menuItems = wrapper.find(MenuItem);
-        expect(menuItems.at(1).props().primaryText).toBe('Mark As Unread');
-        expect(menuItems.at(1).props().leftIcon).toEqual(<FlagIcon />);
-        expect(menuItems.at(1).props().onClick).toBe(instance.handleMarkAsUnread);
+    describe('when Mark As Read menu item is clicked', () => {
+        beforeEach(() => {
+            const props = defaultProps();
+            props.notification.unread = true;
+            setup(props);
+            instance.componentDidUpdate = sinon.stub();
+            wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
+        });
+
+        it('force closes menu', () => {
+            expect(wrapper.state().forceClose).toBe(true);
+        });
+
+        it('calls onMarkAsRead() with notification', () => {
+            expect(instance.props.onMarkAsRead.callCount).toBe(1);
+            expect(instance.props.onMarkAsRead.calledWith(instance.props.notification)).toBe(true);
+        });
+
+        describe('when onMarkAsRead() returns true', () => {
+            beforeEach(() => {
+                setup({
+                    onMarkAsRead: () => true,
+                });
+                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
+            });
+
+            it('marks notification as read', () => {
+                expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
+                expect(instance.props.markNotificationsAsRead.calledWith([instance.props.notification])).toBe(true);
+            });
+        });
+
+        describe('when onMarkAsRead() returns false', () => {
+            beforeEach(() => {
+                setup({
+                    onMarkAsRead: () => false,
+                });
+                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
+            });
+
+            it('does not mark notifications as read', () => {
+                expect(instance.props.markNotificationsAsRead.callCount).toBe(0);
+            });
+        });
     });
 
-    it('should call onView() with notification', () => {
-        const props = {
-            ...getProps(),
-            onView: sinon.spy(),
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        const viewPath = getNotificationViewPath(instance.props.notification);
-        instance.handleView();
-        expect(instance.handleMenuItemClick.callCount).toBe(1);
-        expect(instance.props.onView.callCount).toBe(1);
-        expect(instance.props.onView.calledWith(props.notification, viewPath)).toBe(true);
+    describe('when Mark As Unread menu item is clicked', () => {
+        beforeEach(() => {
+            const props = defaultProps();
+            props.notification.unread = false;
+            setup(props);
+            instance.componentDidUpdate = sinon.stub();
+            wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+        });
+
+        it('force closes menu', () => {
+            expect(wrapper.state().forceClose).toBe(true);
+        });
+
+        it('calls onMarkAsUnread() with notification', () => {
+            expect(instance.props.onMarkAsUnread.callCount).toBe(1);
+            expect(instance.props.onMarkAsUnread.calledWith(instance.props.notification)).toBe(true);
+        });
+
+        describe('when onMarkAsUnread() returns true', () => {
+            beforeEach(() => {
+                const props = defaultProps();
+                props.notification.unread = false;
+                props.onMarkAsUnread = () => true;
+                setup(props);
+                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+            });
+
+            it('marks notification as unread', () => {
+                expect(instance.props.markNotificationsAsUnread.callCount).toBe(1);
+                expect(instance.props.markNotificationsAsUnread.calledWith([instance.props.notification])).toBe(true);
+            });
+        });
+
+        describe('when onMarkAsUnread() returns false', () => {
+            beforeEach(() => {
+                const props = defaultProps();
+                props.notification.unread = false;
+                props.onMarkAsUnread = () => false;
+                setup(props);
+                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+            });
+
+            it('does not mark notifications as unread', () => {
+                expect(instance.props.markNotificationsAsUnread.callCount).toBe(0);
+            });
+        });
     });
 
-    it('should abort handleView() if parent returns false in onView()', () => {
-        const props = {
-            ...getProps(),
-            onView: () => { return false; },
-            markNotificationsAsRead: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleView();
-        expect(instance.props.router.push.callCount).toBe(0);
-        expect(instance.props.markNotificationsAsRead.callCount).toBe(0);
+    describe('when View menu item is clicked', () => {
+        beforeEach(() => {
+            instance.componentDidUpdate = sinon.stub();
+            wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
+        });
+
+        it('force closes menu', () => {
+            expect(wrapper.state().forceClose).toBe(true);
+        });
+
+        it('calls onView() with notification and view path', () => {
+            const viewPath = getNotificationViewPath(instance.props.notification);
+            expect(instance.props.onView.callCount).toBe(1);
+            expect(instance.props.onView.calledWith(instance.props.notification, viewPath)).toBe(true);
+        });
+
+        describe('when onView() returns true', () => {
+            beforeEach(() => {
+                setup({
+                    onView: () => true,
+                });
+                wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
+            });
+
+            it('navigates to view path', () => {
+                const viewPath = getNotificationViewPath(instance.props.notification);
+                expect(instance.props.router.push.callCount).toBe(1);
+                expect(instance.props.router.push.calledWith(viewPath)).toBe(true);
+            });
+
+            it('marks notification as read', () => {
+                expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
+                expect(instance.props.markNotificationsAsRead.calledWith([instance.props.notification])).toBe(true);
+            });
+        });
+
+        describe('when onView() return false', () => {
+            beforeEach(() => {
+                setup({
+                    onView: () => false,
+                });
+                wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
+            });
+
+            it('does not navigate to view path', () => {
+                expect(instance.props.router.push.callCount).toBe(0);
+            });
+
+            it('does not mark notification as read', () => {
+                expect(instance.props.markNotificationsAsRead.callCount).toBe(0);
+            });
+        });
     });
 
-    it('should continue handleView() if parent returns true in onView()', () => {
-        const props = {
-            ...getProps(),
-            onView: () => { return true; },
-            markNotificationsAsRead: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleView();
-        expect(instance.props.router.push.callCount).toBe(1);
-        expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
-        expect(instance.props.markNotificationsAsRead.calledWith([props.notification])).toBe(true);
+    describe('when Remove menu item is clicked', () => {
+        beforeEach(() => {
+            instance.componentDidUpdate = sinon.stub();
+            wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
+        });
+
+        it('force closes menu', () => {
+            expect(wrapper.state().forceClose).toBe(true);
+        });
+
+        it('calls onRemove() with notification', () => {
+            expect(instance.props.onRemove.callCount).toBe(1);
+            expect(instance.props.onRemove.calledWith(instance.props.notification)).toBe(true);
+        });
+
+        describe('when onRemove() returns true', () => {
+            beforeEach(() => {
+                setup({
+                    onRemove: () => true,
+                });
+                wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
+            });
+
+            it('removes notification', () => {
+                expect(instance.props.removeNotifications.callCount).toBe(1);
+                expect(instance.props.removeNotifications.calledWith([instance.props.notification])).toBe(true);
+            });
+        });
+
+        describe('when onRemove() returns false', () => {
+            beforeEach(() => {
+                setup({
+                    onRemove: () => false,
+                });
+                wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
+            });
+
+            it('does not remove notification', () => {
+                expect(instance.props.removeNotifications.callCount).toBe(0);
+            });
+        });
     });
 
-    it('should call onMarkAsRead() with notification', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsRead: sinon.spy(),
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleMarkAsRead();
-        expect(instance.handleMenuItemClick.callCount).toBe(1);
-        expect(instance.props.onMarkAsRead.callCount).toBe(1);
-        expect(instance.props.onMarkAsRead.calledWith(props.notification)).toBe(true);
+    describe('when view path exists', () => {
+        let viewMenuItem;
+        beforeEach(() => {
+            viewMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-View');
+        });
+
+        it('renders View menu item', () => {
+            expect(viewMenuItem).toHaveLength(1);
+        });
+
+        it('renders OpenInNewIcon in View menu item', () => {
+            expect(viewMenuItem.props().leftIcon).toEqual(<OpenInNewIcon />);
+        });
     });
 
-    it('should abort handleMarkAsRead() if parent returns false in onMarkAsRead()', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsRead: () => { return false; },
-            markNotificationsAsRead: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleMarkAsRead();
-        expect(instance.props.markNotificationsAsRead.callCount).toBe(0);
+    describe('when view path does not exist', () => {
+        beforeEach(() => {
+            const props = defaultProps();
+            props.notification.verb = 'some_unhandled_verb';
+            setup(props);
+        });
+
+        it('does not render View menu item', () => {
+            expect(wrapper.find('.qa-NotificationMenu-MenuItem-View')).toHaveLength(0);
+        });
     });
 
-    it('should continue handleMarkAsRead() if parent returns true in onMarkAsRead()', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsRead: () => { return true; },
-            markNotificationsAsRead: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleMarkAsRead();
-        expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
-        expect(instance.props.markNotificationsAsRead.calledWith([props.notification])).toBe(true);
-    });
-    
-    it('should call onMarkAsUnread() with notification', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsUnread: sinon.spy(),
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleMarkAsUnread();
-        expect(instance.handleMenuItemClick.callCount).toBe(1);
-        expect(instance.props.onMarkAsUnread.callCount).toBe(1);
-        expect(instance.props.onMarkAsUnread.calledWith(props.notification)).toBe(true);
+    describe('when forceClose is set to true', () => {
+        let componentDidUpdateStub;
+        beforeEach(() => {
+            componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
+            wrapper.setState({
+                forceClose: true,
+            });
+        });
+
+        afterEach(() => {
+            if (componentDidUpdateStub.restore) {
+                componentDidUpdateStub.restore();
+            }
+        });
+
+        it('sets IconMenu "open" prop to false', () => {
+            expect(wrapper.find(IconMenu).props().open).toBe(false);
+        });
+
+        it('resets forceClose to false in componentDidUpdate()', () => {
+            componentDidUpdateStub.restore();
+            instance.componentDidUpdate();
+            expect(wrapper.state().forceClose).toBe(false);
+        });
     });
 
-    it('should abort handleMarkAsUnread() if parent returns false in onMarkAsUnread()', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsUnread: () => { return false; },
-            markNotificationsAsUnread: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleMarkAsUnread();
-        expect(instance.props.markNotificationsAsUnread.callCount).toBe(0);
-    });
+    describe('when forceClose is set to false', () => {
+        beforeEach(() => {
+            wrapper.setState({
+                forceClose: false,
+            });
+        });
 
-    it('should continue handleMarkAsUnread() if parent returns true in onMarkAsUnread()', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsUnread: () => { return true; },
-            markNotificationsAsUnread: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleMarkAsUnread();
-        expect(instance.props.markNotificationsAsUnread.callCount).toBe(1);
-        expect(instance.props.markNotificationsAsUnread.calledWith([props.notification])).toBe(true);
-    });
-
-    it('should call onRemove() with notification', () => {
-        const props = {
-            ...getProps(),
-            onRemove: sinon.spy(),
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleRemove();
-        expect(instance.handleMenuItemClick.callCount).toBe(1);
-        expect(instance.props.onRemove.callCount).toBe(1);
-        expect(instance.props.onRemove.calledWith(props.notification)).toBe(true);
-    });
-
-    it('should abort handleRemove() if parent returns false in onRemove()', () => {
-        const props = {
-            ...getProps(),
-            onRemove: () => { return false; },
-            removeNotifications: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleRemove();
-        expect(instance.props.removeNotifications.callCount).toBe(0);
-    });
-
-    it('should continue handleRemove() if parent returns true in onRemove()', () => {
-        const props = {
-            ...getProps(),
-            onRemove: () => { return true; },
-            removeNotifications: sinon.spy(),
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleMenuItemClick = sinon.stub();
-        instance.handleRemove();
-        expect(instance.props.removeNotifications.callCount).toBe(1);
-        expect(instance.props.removeNotifications.calledWith([props.notification])).toBe(true);
+        it('does not set menu "open" prop', () => {
+            expect(wrapper.find(IconMenu).props().open).toBe(null);
+        });
     });
 });

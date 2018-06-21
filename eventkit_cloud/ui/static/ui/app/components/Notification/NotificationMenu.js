@@ -112,6 +112,7 @@ export class NotificationMenu extends React.Component {
                 }
                 {this.props.notification.unread ?
                     <MenuItem
+                        className="qa-NotificationMenu-MenuItem-MarkAsRead"
                         style={styles.menuItem}
                         primaryText="Mark As Read"
                         leftIcon={<FlagIcon />}
@@ -119,6 +120,7 @@ export class NotificationMenu extends React.Component {
                     />
                     :
                     <MenuItem
+                        className="qa-NotificationMenu-MenuItem-MarkAsUnread"
                         style={styles.menuItem}
                         primaryText="Mark As Unread"
                         leftIcon={<FlagIcon />}
@@ -126,6 +128,7 @@ export class NotificationMenu extends React.Component {
                     />
                 }
                 <MenuItem
+                    className="qa-NotificationMenu-MenuItem-Remove"
                     style={styles.menuItem}
                     primaryText="Remove"
                     leftIcon={<CloseIcon />}
