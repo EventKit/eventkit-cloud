@@ -56,7 +56,7 @@ class TestS3Util(TestCase):
 
 
         mock_client.list_objects.return_value = {"contents": [expected_key]}
-        mock_client.list_objects.assert_called_once()
+
         mock_client.delete_object.assert_called_once_with(Bucket='test-bucket', Key=expected_key)
 
 

@@ -9,6 +9,7 @@ import os
 import shutil
 import socket
 import traceback
+from urllib import urlencode
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from django.conf import settings
@@ -24,6 +25,7 @@ from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
+
 from ..feature_selection.feature_selection import FeatureSelection
 from audit_logging.celery_support import UserDetailsBase
 from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file, get_human_readable_metadata_document
@@ -145,14 +147,17 @@ class LockingTask(UserDetailsBase):
         super(LockingTask, self).after_return(*args, **kwargs)
 
 
-def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None):
+def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None,
+                           size=None, direct=False):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
         @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
         @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
             generally can be ignored
+        @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
+
     download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
     download_url_root = settings.EXPORT_MEDIA_ROOT
     run_dir = os.path.join(download_filesystem_root, run_uid)
@@ -164,7 +169,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         download_url = s3.upload_to_s3(
             run_uid,
             os.path.join(provider_slug, filename),
-            download_filename
+            download_filename,
         )
     else:
         try:
@@ -192,10 +197,11 @@ class ExportTask(LockingTask):
     abort_on_error = False
 
     def __call__(self, *args, **kwargs):
+
+        from ..tasks.models import FileProducingTaskResult, ExportTaskRecord, ExportRun
         task_uid = kwargs.get('task_uid')
 
         try:
-            from ..tasks.models import (FileProducingTaskResult, ExportTaskRecord)
             task = ExportTaskRecord.objects.get(uid=task_uid)
 
             try:
@@ -247,11 +253,13 @@ class ExportTask(LockingTask):
                 ext
             )
 
+            export_run = ExportRun.objects.get(uid=run_uid)
+            user = export_run.user.username
             # construct the download url
             skip_copy = (task.name == 'OverpassQuery')
             download_url = make_file_downloadable(
                 output_url, run_uid, provider_slug=provider_slug, skip_copy=skip_copy,
-                download_filename=download_filename
+                download_filename=download_filename,
             )
 
             # save the task and task result
@@ -778,11 +786,11 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
         include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
         include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
 
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
+        os.mkdir(os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis'))
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
-
 
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
@@ -870,10 +878,9 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 
     from .models import ExportRun
     from .task_factory import TaskFactory
-
+    run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
-        run = ExportRun.objects.get(uid=run_uid)
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
@@ -954,15 +961,17 @@ class FinalizeRunHookTask(LockingTask):
 
     def save_files_produced(self, new_files, run_uid):
         if len(new_files) > 0:
-            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord
+            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord, ExportRun
 
             for file_path in new_files:
                 filename = os.path.split(file_path)[-1]
                 provider_slug = os.path.split(file_path)[-2]
-                size = os.path.getsize(file_path)
-                url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug)
 
-                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
+                size = os.path.getsize(file_path)
+                download_url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
+                                                      size=size)
+
+                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=download_url)
                 task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
                 task_record.result = result
                 task_record.save()
@@ -983,7 +992,7 @@ class FinalizeRunHookTask(LockingTask):
         worker_name = self.request.hostname
         status = AsyncResult(self.request.id).status
         tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
-            run=export_run, celery_uid=self.request.id, task_name=self.name,
+            run=export_run, celery_uid=self.request.id, name=self.name,
             status=status, pid=os.getpid(), worker=worker_name
         )
 
@@ -1074,7 +1083,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
             include_files += [license_file]
 
     if include_files:
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
@@ -1123,7 +1132,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     """
     rolls up runs into a zip file
     """
-    from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
+    from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportRun as ExportRunModel
     from .task_runners import normalize_name
     from django import db
 
@@ -1185,7 +1194,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
 
-            if filepath.endswith((".qgs", "metadata.json", "ReadMe.txt")):
+            if filepath.endswith((".qgs", "ReadMe.txt")):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
@@ -1216,19 +1225,23 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     # be handled as an ExportTaskRecord.
 
     if not adhoc:
+        # from ..jobs.models import Downloadable
         run_uid = str(run_uid)
         if getattr(settings, "USE_S3", False):
             zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
         else:
             if zip_st_filepath != zip_dl_filepath:
                 shutil.copy(zip_st_filepath, zip_dl_filepath)
-            zipfile_url = os.path.join(run_uid, zip_filename)
+            download_url_root = settings.EXPORT_MEDIA_ROOT
+            zipfile_url = os.path.join(download_url_root, run_uid, zip_filename)
 
         # Update Connection
         db.close_old_connections()
         run.refresh_from_db()
 
-        run.zipfile_url = zipfile_url
+        size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0  # MB
+        downloadable = FileProducingTaskResult.objects.create(size=size, download_url=zipfile_url)
+        run.downloadable = downloadable
 
         try:
             run.save()

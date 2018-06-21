@@ -145,12 +145,12 @@ describe('DataPackDetails component', () => {
         const wrapper = getWrapper(props);
         props.zipFileProp = null;
         wrapper.instance().isZipFileCompleted();
-        expect(wrapper.instance().isZipFileCompleted()).toEqual(true);
-        const nextProps = { ...props };
+        expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
+        const nextProps = {...props};
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().isZipFileCompleted();
-        expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
+        expect(wrapper.instance().isZipFileCompleted()).toEqual(true);
     });
 
     it('getCloudDownloadIcon should be called with correct data', () => {
@@ -159,7 +159,7 @@ describe('DataPackDetails component', () => {
         props.zipFileProp = null;
         wrapper.instance().getCloudDownloadIcon();
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
-            <CloudDownload className="qa-DataPackDetails-CloudDownload-disabled" style={{ fill: 'gray', verticalAlign: 'middle' }} />
+            <CloudDownload className="qa-DataPackDetails-CloudDownload-disabled" style={{ fill: 'grey', verticalAlign: 'middle' }} />
         ));
         const nextProps = { ...props };
         nextProps.zipFileProp = 'TESTING.zip';
