@@ -105,12 +105,12 @@ describe('DataPackDetails component', () => {
         const zipSpy = new sinon.spy(DataPackDetails.prototype, 'isZipFileCompleted');
         props.zipFileProp = null;
         wrapper.instance().isZipFileCompleted();
-        expect(wrapper.instance().isZipFileCompleted()).toEqual(true);
+        expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
         let nextProps = {...props};
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().isZipFileCompleted();
-        expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
+        expect(wrapper.instance().isZipFileCompleted()).toEqual(true);
     });
 
     it('getCloudDownloadIcon should be called with correct data', () => {
@@ -119,7 +119,7 @@ describe('DataPackDetails component', () => {
         const wrapper = getWrapper(props);
         props.zipFileProp = null;
         wrapper.instance().getCloudDownloadIcon();
-        expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload className={'qa-DataPackDetails-CloudDownload-disabled'} style={{fill:'gray', verticalAlign: 'middle'}}/>);
+        expect(wrapper.instance().getCloudDownloadIcon()).toEqual(<CloudDownload className={'qa-DataPackDetails-CloudDownload-disabled'} style={{fill:'grey', verticalAlign: 'middle'}}/>);
         let nextProps = {...props};
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
