@@ -135,9 +135,10 @@
       </layer-tree-group>
       {%  endif %}
     {%  endfor %}
-    <layer-tree-group expanded="1" checked="Qt::Checked" name="Rasters">
+    {% if has_rasters %}
+      <layer-tree-group expanded="1" checked="Qt::Checked" name="Rasters">
       <customproperties/>
-      {% for provider in provider_details %}
+       {% for provider in provider_details %}
       {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
       {% if provider.file_type == ".gpkg" %}
       <layer-tree-layer expanded="1" providerKey="gdal" checked="Qt::Checked" id="{{ job_name }}_{{ provider.provider_slug }}_{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg" name="{{ provider.provider_name }}">
@@ -146,8 +147,10 @@
       {% endif %}
       {% endif %}
       {% endfor %}
-    </layer-tree-group>
-    <layer-tree-group expanded="1" checked="Qt::Checked" name="Elevation">
+      </layer-tree-group>
+    {% endif %}
+    {% if has_elevation %}
+      <layer-tree-group expanded="1" checked="Qt::Checked" name="Elevation">
       <customproperties/>
       {% for provider in provider_details %}
         {% if provider.provider_slug != "osm" and provider.provider_slug != "nome" %}
@@ -159,6 +162,7 @@
         {% endif %}
       {% endfor %}
     </layer-tree-group>
+    {% endif %}
     </layer-tree-group>
   </layer-tree-group>
   <relations/>

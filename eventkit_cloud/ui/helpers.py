@@ -117,7 +117,16 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))
 
+    has_raster = False
+    has_elevation = False
+    for slug, details in provider_details.iteritems():
+        if slug not in ['osm', 'nome']:
+            if details['file_path'].endswith('.gpkg'):
+                has_raster = True
+            if details['file_path'].endswith('.tif'):
+                has_elevation = True
     provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
+
 
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),
@@ -125,7 +134,9 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'provider_details': provider_details,
-                                                                      'bbox': run.job.extents}))
+                                                                      'bbox': run.job.extents,
+                                                                      'has_raster': has_raster,
+                                                                      'has_elevation': has_elevation}))
     return style_file
 
 def get_human_readable_metadata_document(run_uid):
