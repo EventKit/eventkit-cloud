@@ -146,7 +146,7 @@ describe('DataPackDetails component', () => {
         props.zipFileProp = null;
         wrapper.instance().isZipFileCompleted();
         expect(wrapper.instance().isZipFileCompleted()).toEqual(false);
-        const nextProps = {...props};
+        const nextProps = { ...props };
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().isZipFileCompleted();
