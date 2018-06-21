@@ -363,7 +363,7 @@ describe('DashboardPage component', () => {
         loadData(wrapper);
         instance.handleMyDataPacksViewAll();
         expect(browserHistoryPushStub.callCount).toBe(1);
-        expect(browserHistoryPushStub.calledWith('/exports?collection=myDataPacks')).toBe(true);
+        expect(browserHistoryPushStub.calledWith('/exports?collection=admin')).toBe(true);
         browserHistoryPushStub.restore();
     });
 
