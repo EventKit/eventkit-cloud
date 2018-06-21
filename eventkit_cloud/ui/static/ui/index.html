@@ -92,7 +92,9 @@
           body.appendChild(bundle);
           body.appendChild(metrics);
       } catch (error) {
-          console.error('Browser is not supported by EventKit');
+          if (window.console) {
+            console.error('Browser is not supported by EventKit');
+          }
           body.innerHTML = "<div class='no-ie'>\
             <p>The browser you are using is not supported by EventKit.</p>\
             <p>EventKit does not support any versions of Internet Explorer or other legacy browsers.</p>\
