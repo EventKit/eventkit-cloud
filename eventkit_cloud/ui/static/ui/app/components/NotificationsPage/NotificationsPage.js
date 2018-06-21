@@ -14,6 +14,7 @@ export class NotificationsPage extends React.Component {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
+        this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
         this.itemsPerPage = 12;
         this.state = {
@@ -43,6 +44,19 @@ export class NotificationsPage extends React.Component {
     
     getGridPadding() {
         return window.innerWidth >= 768 ? 7 : 2;
+    }
+
+    getRange(notifications) {
+        if (this.props.notifications.range) {
+            const rangeParts = this.props.notifications.range.split('/');
+            if (rangeParts.length !== 2) {
+                return '';
+            }
+
+            return `${notifications.length}/${rangeParts[1]}`;
+        }
+
+        return '';
     }
 
     handleLoadMore() {
@@ -111,12 +125,6 @@ export class NotificationsPage extends React.Component {
         };
 
         const notifications = this.props.notifications.notificationsSorted.slice(0, this.state.pageSize);
-
-        let range = '';
-        if (this.props.notifications.range) {
-            const rangeParts = this.props.notifications.range.split('/');
-            range = (rangeParts.length === 2) ? `${notifications.length}/${rangeParts[1]}` : '';
-        }
 
         return (
             <div style={styles.root}>
@@ -188,7 +196,7 @@ export class NotificationsPage extends React.Component {
                                         </GridList>
                                     }
                                     <LoadButtons
-                                        range={range}
+                                        range={this.getRange(notifications)}
                                         handleLoadMore={this.handleLoadMore}
                                         loadMoreDisabled={!this.props.notifications.nextPage}
                                     />
