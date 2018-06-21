@@ -740,9 +740,9 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (args) => {
-            dispatch(getRuns(args));
-        },
+        getRuns: args => (
+            dispatch(getRuns(args))
+        ),
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
         },
