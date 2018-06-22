@@ -1,20 +1,20 @@
+import moment from 'moment';
 import * as reducers from '../../reducers/notificationsReducer';
 import initialState from '../../reducers/initialState';
 import types from '../../actions/actionTypes';
-import moment from 'moment';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         unread: false,
         timestamp: '2018-05-04T17:32:04.716806Z',
     },
-    '2': {
+    2: {
         id: '2',
         unread: true,
         timestamp: '2018-05-04T17:34:04.716806Z',
     },
-    '3': {
+    3: {
         id: '3',
         unread: true,
         timestamp: '2018-05-04T17:36:04.716806Z',
@@ -111,15 +111,15 @@ describe('notificationsReducer', () => {
 
         const expectedNotifications = {
             ...mockNotifications,
-            '1': {
+            1: {
                 ...mockNotifications['1'],
                 unread: false,
             },
-            '2': {
+            2: {
                 ...mockNotifications['2'],
                 unread: false,
             },
-            '3': {
+            3: {
                 ...mockNotifications['3'],
                 unread: false,
             },
@@ -166,15 +166,15 @@ describe('notificationsReducer', () => {
 
         const expectedNotifications = {
             ...mockNotifications,
-            '1': {
+            1: {
                 ...mockNotifications['1'],
                 unread: true,
             },
-            '2': {
+            2: {
                 ...mockNotifications['2'],
                 unread: true,
             },
-            '3': {
+            3: {
                 ...mockNotifications['3'],
                 unread: true,
             },
@@ -220,15 +220,15 @@ describe('notificationsReducer', () => {
 
         const expectedNotifications = {
             ...mockNotifications,
-            '1': {
+            1: {
                 ...mockNotifications['1'],
                 unread: false,
             },
-            '2': {
+            2: {
                 ...mockNotifications['2'],
                 unread: false,
             },
-            '3': {
+            3: {
                 ...mockNotifications['3'],
                 unread: false,
             },
@@ -385,14 +385,12 @@ describe('notificationsReducer', () => {
 
     it('should sort notifications by descending date', () => {
         const notificationsSorted = reducers.getSortedNotifications(mockNotifications);
-        for (let i = 0; i < notificationsSorted.length; i++) {
-            if (i === 0) {
-                continue;
+        for (let i = 0; i < notificationsSorted.length; i += 1) {
+            if (i !== 0) {
+                const notification = notificationsSorted[i];
+                const prevNotification = notificationsSorted[i - 1];
+                expect(moment(notification.timestamp) < moment(prevNotification.timestamp)).toBe(true);
             }
-
-            const notification = notificationsSorted[i];
-            const prevNotification = notificationsSorted[i-1];
-            expect(moment(notification.timestamp) < moment(prevNotification.timestamp)).toBe(true);
         }
     });
 });

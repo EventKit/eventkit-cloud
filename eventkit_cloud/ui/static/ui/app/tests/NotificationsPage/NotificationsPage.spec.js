@@ -8,7 +8,7 @@ import LoadButtons from '../../components/DataPackPage/LoadButtons';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -21,7 +21,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {

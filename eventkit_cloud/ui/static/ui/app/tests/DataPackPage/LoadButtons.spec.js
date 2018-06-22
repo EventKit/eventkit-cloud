@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import ReactDOM from 'react-dom';
@@ -10,23 +10,19 @@ import LoadButtons from '../../components/DataPackPage/LoadButtons';
 
 describe('LoadButtons component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            range: '12/26',
-            handleLoadLess: () => {},
-            handleLoadMore: () => {},
-            loadLessDisabled: true,
-            loadMoreDisabled: false
-        }
-    };
-    const getWrapper = (props) => {
-        return mount(<LoadButtons {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            }
-        });
-    }
+    const getProps = () => ({
+        range: '12/26',
+        handleLoadLess: () => {},
+        handleLoadMore: () => {},
+        loadLessDisabled: true,
+        loadMoreDisabled: false,
+    });
+    const getWrapper = props => mount(<LoadButtons {...props} />, {
+        context: { muiTheme },
+        childContextTypes: {
+            muiTheme: React.PropTypes.object,
+        },
+    });
 
     it('should render all the basic components', () => {
         const props = getProps();
@@ -48,45 +44,46 @@ describe('LoadButtons component', () => {
     });
 
     it('Load less should call handleLoadLess', () => {
-        let props = getProps();
+        const props = getProps();
         props.loadLessDisabled = false;
-        props.handleLoadLess = new sinon.spy();
+        props.handleLoadLess = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.find(RaisedButton).first().find('button').simulate('click');
         expect(props.handleLoadLess.calledOnce).toBe(true);
     });
 
     it('Load more should call handleLoadMore', () => {
-        let props = getProps();
+        const props = getProps();
         props.loadMoreDisabled = false;
-        props.handleLoadMore = new sinon.spy();
+        props.handleLoadMore = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.find(RaisedButton).last().find('button').simulate('click');
         expect(props.handleLoadMore.calledOnce).toBe(true);
     });
 
     it('should set width in state on mount', () => {
-        const mountSpy = new sinon.spy(LoadButtons.prototype, 'componentDidMount');
-        const stateSpy = new sinon.spy(LoadButtons.prototype, 'setState');
+        const mountSpy = sinon.spy(LoadButtons.prototype, 'componentDidMount');
+        const stateSpy = sinon.spy(LoadButtons.prototype, 'setState');
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({width: ReactDOM.findDOMNode(wrapper.instance()).offsetWidth})).toBe(true);
+        // eslint-disable-next-line react/no-find-dom-node
+        expect(stateSpy.calledWith({ width: ReactDOM.findDOMNode(wrapper.instance()).offsetWidth })).toBe(true);
         mountSpy.restore();
         stateSpy.restore();
     });
 
     it('should update width in state if component updates with new width', () => {
-        const updateSpy = new sinon.spy(LoadButtons.prototype, 'componentDidUpdate');
-        const stateSpy = new sinon.spy(LoadButtons.prototype, 'setState');
+        const updateSpy = sinon.spy(LoadButtons.prototype, 'componentDidUpdate');
+        const stateSpy = sinon.spy(LoadButtons.prototype, 'setState');
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(stateSpy.calledOnce).toBe(true);
-        ReactDOM.findDOMNode = (that) => {return {offsetWidth: 12}}
+        ReactDOM.findDOMNode = () => ({ offsetWidth: 12 });
         wrapper.update();
         expect(stateSpy.calledTwice);
-        expect(stateSpy.calledWith({width: 12})).toBe(true);
+        expect(stateSpy.calledWith({ width: 12 })).toBe(true);
         updateSpy.restore();
         stateSpy.restore();
     });

@@ -5,7 +5,7 @@ import { CircularProgress } from 'material-ui';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -18,7 +18,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: true,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {

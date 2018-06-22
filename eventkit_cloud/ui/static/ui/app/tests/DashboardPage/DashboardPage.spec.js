@@ -159,7 +159,7 @@ describe('DashboardPage component', () => {
     }
 
     function loadEmptyData(wrapper) {
-        const props = wrapper.instance().props;
+        const { props } = wrapper.instance();
         wrapper.setProps({
             ...props,
             runsList: {
