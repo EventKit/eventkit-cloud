@@ -400,7 +400,8 @@ def osm_data_collection_pipeline(
     feature_selection = FeatureSelection.example(config)
     update_progress(export_task_record_uid, progress=25)
     geom = Polygon.from_bbox(bbox)
-    g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
+    g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
+                   export_task_record_uid=export_task_record_uid)
     g.run()
     update_progress(export_task_record_uid, progress=75)
     # --- Add the Land Boundaries polygon layer
@@ -1599,7 +1600,7 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if absolute_progress > 100:
         absolute_progress = 100
 
-    # We need to close the existing connection because the logger could be using a forked process which,
+    # We need to close the existing connection because the logger could be using a forked process which
     # will be invalid and throw an error.
     connection.close()
 

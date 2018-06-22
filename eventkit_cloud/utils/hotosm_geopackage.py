@@ -246,7 +246,7 @@ class Geopackage(object):
         return [self.output_gpkg]
 
     def __init__(self, input_pbf, output_gpkg, stage_dir, feature_selection, aoi_geom, tempdir=None, per_theme=False,
-                 progress=None):
+                 progress=None, export_task_record_uid=None):
         """
         Initialize the OSMParser.
 
@@ -261,6 +261,8 @@ class Geopackage(object):
         self.feature_selection = feature_selection
         self.aoi_geom = aoi_geom
         self.per_theme = per_theme
+        # Supplying an ExportTaskRecord ID allows progress updates
+        self.export_task_record_uid = export_task_record_uid
 
         """
         OGR Command to run.
@@ -284,6 +286,9 @@ class Geopackage(object):
         Create the GeoPackage from the osm data.
         """
 
+        # avoiding a circular import
+        from eventkit_cloud.tasks.export_tasks import update_progress
+
         if self.is_complete:
             LOG.debug("Skipping Geopackage, file exists")
             return
@@ -306,14 +311,18 @@ class Geopackage(object):
         cur.execute("select load_extension('mod_spatialite')")
         cur.execute("CREATE TABLE boundary (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, geom GEOMETRY)");
         cur.execute("INSERT INTO boundary (geom) VALUES (GeomFromWKB(?,4326));", (self.aoi_geom.wkb,))
+        update_progress(self.export_task_record_uid, progress=30)
         cur.executescript(SPATIAL_SQL)
         self.update_zindexes(cur, self.feature_selection)
+        update_progress(self.export_task_record_uid, progress=42)
 
+        # note to EJ - this "add themes" section is over 35 seconds - should break it down further.
         # add themes
         create_sqls, index_sqls = self.feature_selection.sqls
         for query in create_sqls:
             LOG.debug(query)
             cur.executescript(query)
+        update_progress(self.export_task_record_uid, progress=50)
         for query in index_sqls:
             LOG.debug(query)
             cur.executescript(query)
