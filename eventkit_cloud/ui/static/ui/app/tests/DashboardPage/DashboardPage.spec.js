@@ -286,8 +286,59 @@ describe('DashboardPage component', () => {
         expect(window.location.hash).toEqual('#test-id');
     });
 
+    describe('when it mounts', () => {
+        let refreshSpy;
+
+        beforeEach(() => {
+            refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
+            jest.useFakeTimers();
+            setup();
+            instance.componentDidMount();
+        });
+
+        afterEach(() => {
+            refreshSpy.restore();
+        });
+
+        it('requests groups', () => {
+            expect(instance.props.getGroups.callCount).toBe(1);
+        });
+
+        it('requests providers', () => {
+            expect(instance.props.getProviders.callCount).toBe(1);
+        });
+
+        it('requests notifications', () => {
+            expect(instance.props.getNotifications.callCount).toBe(1);
+        });
+
+        it('refreshes the page periodically', () => {
+            expect(instance.autoRefreshIntervalId).not.toBe(null);
+            expect(refreshSpy.callCount).toBe(1);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(2);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(3);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(4);
+        });
+
+        describe('then it unmounts', () => {
+            beforeEach(() => {
+                instance.componentWillUnmount();
+            });
+
+            it('stops auto refreshing', () => {
+                expect(instance.autoRefreshIntervalId).toBe(null);
+                expect(refreshSpy.callCount).toBe(1);
+                jest.runOnlyPendingTimers();
+                expect(refreshSpy.callCount).toBe(1);
+            });
+        });
+    });
+
     describe('initial state', () => {
-        it('renders loading indicator', () => {
+        it('renders loading spinner', () => {
             expect(wrapper.find(CircularProgress)).toHaveLength(1);
         });
 
@@ -300,12 +351,12 @@ describe('DashboardPage component', () => {
         });
     });
 
-    describe('after data has loaded', () => {
+    describe('when data has loaded', () => {
         beforeEach(() => {
             loadData();
         });
 
-        it('does not render loading indicator', () => {
+        it('does not render loading spinner', () => {
             expect(wrapper.find(CircularProgress)).toHaveLength(0);
         });
 
@@ -379,166 +430,14 @@ describe('DashboardPage component', () => {
             const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').dive();
             expect(myDataPacksSection.find('.qa-DashboardSection-MyDataPacks-NoData')).toHaveLength(0);
         });
-
-        it('refreshes the page when deleting a datapack', () => {
-            instance.refresh = sinon.spy();
-            wrapper.setProps({
-                runsDeletion: {
-                    deleted: true,
-                },
-            });
-            expect(instance.refresh.callCount).toBe(1);
-        });
-
-        it('refreshes the page when updating permissions', () => {
-            instance.refresh = sinon.spy();
-            wrapper.setProps({
-                updatePermission: {
-                    updated: true,
-                },
-            });
-            expect(instance.refresh.callCount).toBe(1);
-        });
-
-        it('renders loading indicator while deleting a datapack', () => {
-            wrapper.setProps({
-                runsDeletion: {
-                    deleting: true,
-                },
-            });
-            expect(wrapper.find(CircularProgress)).toHaveLength(1);
-            wrapper.setProps({
-                runsDeletion: {
-                    deleting: false,
-                },
-            });
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        });
-
-        it('renders loading indicator while updating permissions', () => {
-            wrapper.setProps({
-                updatePermission: {
-                    updating: true,
-                },
-            });
-            expect(wrapper.find(CircularProgress)).toHaveLength(1);
-            wrapper.setProps({
-                updatePermission: {
-                    updating: false,
-                },
-            });
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        });
-
-        it('does not render loading indicator when automatically refreshing', () => {
-            instance.autoRefresh();
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        });
-
-        it('navigates to /notifications on Notifications section "View All" click', () => {
-            const browserHistoryPushStub = sinon.stub(browserHistory, 'push');
-            instance.handleNotificationsViewAll();
-            expect(browserHistoryPushStub.callCount).toBe(1);
-            expect(browserHistoryPushStub.calledWith('/notifications')).toBe(true);
-            browserHistoryPushStub.restore();
-        });
-
-        it('navigates to /exports on Featured section "View All" click', () => {
-            const browserHistoryPushStub = sinon.stub(browserHistory, 'push');
-            instance.handleFeaturedViewAll();
-            expect(browserHistoryPushStub.callCount).toBe(1);
-            expect(browserHistoryPushStub.calledWith('/exports')).toBe(true);
-            browserHistoryPushStub.restore();
-        });
-
-        it('navigates to /exports?collection=myDataPacks on My DataPacks "View All" click', () => {
-            const browserHistoryPushStub = sinon.stub(browserHistory, 'push');
-            instance.handleMyDataPacksViewAll();
-            expect(browserHistoryPushStub.callCount).toBe(1);
-            expect(browserHistoryPushStub.calledWith('/exports?collection=myDataPacks')).toBe(true);
-            browserHistoryPushStub.restore();
-        });
-
-        describe('on share open', () => {
-            let targetRun;
-
-            beforeEach(() => {
-                targetRun = {
-                    job: {
-                        permissions: {},
-                    },
-                };
-                instance.handleShareOpen(targetRun);
-            });
-
-            it('opens the share dialog', () => {
-                expect(wrapper.state().shareOpen).toBe(true);
-                expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-            });
-
-            it('passes the share dialog the target run permissions', () => {
-                expect(wrapper.find(DataPackShareDialog).props().permissions).toBe(targetRun.job.permissions);
-            });
-
-            it('sets the target run', () => {
-                expect(wrapper.state().targetRun).toEqual(targetRun);
-            });
-        });
-
-        describe('on share close', () => {
-            beforeEach(() => {
-                wrapper.setState({
-                    shareOpen: true,
-                    run: 'test',
-                });
-                instance.handleShareClose();
-            });
-
-            it('closes the share dialog', () => {
-                expect(wrapper.state().shareOpen).toBe(false);
-                expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
-            });
-
-            it('nullifies the target run', () => {
-                expect(wrapper.state().targetRun).toBe(null);
-            });
-        });
-
-        describe('on share save', () => {
-            let targetRun, permissions;
-
-            beforeEach(() => {
-                instance.handleShareClose = sinon.spy();
-                targetRun = {
-                    job: {
-                        uid: 1,
-                    },
-                };
-                wrapper.setState({
-                    shareOpen: true,
-                    targetRun,
-                });
-                permissions = { some: 'permissions' };
-                instance.handleShareSave(permissions);
-            });
-
-            it('closes the share dialog', () => {
-                expect(instance.handleShareClose.callCount).toBe(1);
-            });
-
-            it('updates datacart permissions', () => {
-                expect(instance.props.updateDataCartPermissions.callCount).toBe(1);
-                expect(instance.props.updateDataCartPermissions.calledWith(targetRun.job.uid, permissions)).toBe(true);
-            });
-        });
     });
 
-    describe('after empty data has loaded', () => {
+    describe('when empty data has loaded', () => {
         beforeEach(() => {
             loadEmptyData();
         });
 
-        it('does not render loading indicator', () => {
+        it('does not render loading spinner', () => {
             expect(wrapper.find(CircularProgress)).toHaveLength(0);
         });
 
@@ -574,54 +473,192 @@ describe('DashboardPage component', () => {
         });
     });
 
-    describe('mount', () => {
-        let refreshSpy;
+    describe('when automatically refreshing', () => {
+        beforeEach(() => {
+            loadData();
+            instance.autoRefresh();
+        });
+
+        it('does not render loading spinner', () => {
+            expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        });
+    });
+
+    describe('when Notifications section "View All" button is clicked', () => {
+        let browserHistoryPushStub;
 
         beforeEach(() => {
-            refreshSpy = sinon.spy(DashboardPage.prototype, 'refresh');
-            jest.useFakeTimers();
-            setup();
-            instance.componentDidMount();
+            browserHistoryPushStub = sinon.stub(browserHistory, 'push');
+            instance.handleNotificationsViewAll();
         });
 
         afterEach(() => {
-            refreshSpy.restore();
+            browserHistoryPushStub.restore();
         });
 
-        it('requests groups', () => {
-            expect(instance.props.getGroups.callCount).toBe(1);
+        it('navigates to "/notifications"', () => {
+            expect(browserHistoryPushStub.callCount).toBe(1);
+            expect(browserHistoryPushStub.calledWith('/notifications')).toBe(true);
+        });
+    });
+
+    describe('when Featured section "View All" button is clicked', () => {
+        let browserHistoryPushStub;
+
+        beforeEach(() => {
+            browserHistoryPushStub = sinon.stub(browserHistory, 'push');
+            instance.handleFeaturedViewAll();
         });
 
-        it('requests providers', () => {
-            expect(instance.props.getProviders.callCount).toBe(1);
+        afterEach(() => {
+            browserHistoryPushStub.restore();
         });
 
-        it('requests notifications', () => {
-            expect(instance.props.getNotifications.callCount).toBe(1);
+        it('navigates to "/exports"', () => {
+            expect(browserHistoryPushStub.callCount).toBe(1);
+            expect(browserHistoryPushStub.calledWith('/exports')).toBe(true);
+        });
+    });
+
+    describe('when My DataPacks section "View All" button is clicked', () => {
+        let browserHistoryPushStub;
+
+        beforeEach(() => {
+            browserHistoryPushStub = sinon.stub(browserHistory, 'push');
+            instance.handleMyDataPacksViewAll();
         });
 
-        it('refreshes the page periodically', () => {
-            expect(instance.autoRefreshIntervalId).not.toBe(null);
-            expect(refreshSpy.callCount).toBe(1);
-            jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(2);
-            jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(3);
-            jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(4);
+        afterEach(() => {
+            browserHistoryPushStub.restore();
         });
 
-        describe('unmount', () => {
+        it('navigates to "/exports?collection=myDataPacks"', () => {
+            expect(browserHistoryPushStub.callCount).toBe(1);
+            expect(browserHistoryPushStub.calledWith('/exports?collection=myDataPacks')).toBe(true);
+        });
+    });
+
+    describe('when a datapack is being deleted', () => {
+        beforeEach(() => {
+            loadData();
+            instance.refresh = sinon.spy();
+            wrapper.setProps({
+                runsDeletion: {
+                    deleting: true,
+                    deleted: false,
+                },
+            });
+        });
+
+        it('renders loading spinner', () => {
+            expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        });
+
+        describe('then it is successfully deleted', () => {
             beforeEach(() => {
-                instance.componentWillUnmount();
+                loadData();
+                instance.refresh = sinon.spy();
+                wrapper.setProps({
+                    runsDeletion: {
+                        deleting: false,
+                        deleted: true,
+                    },
+                });
             });
 
-            it('stops auto refreshing', () => {
-                expect(instance.autoRefreshIntervalId).toBe(null);
-                expect(refreshSpy.callCount).toBe(1);
-                jest.runOnlyPendingTimers();
-                expect(refreshSpy.callCount).toBe(1);
+            it('does not render loading spinner', () => {
+                expect(wrapper.find(CircularProgress)).toHaveLength(0);
             });
+
+            it('refreshes the page', () => {
+                expect(instance.refresh.callCount).toBe(1);
+            });
+        });
+    });
+
+    describe('when permissions are updated', () => {
+        beforeEach(() => {
+            instance.refresh = sinon.spy();
+            wrapper.setProps({
+                updatePermission: {
+                    updated: true,
+                },
+            });
+        });
+
+        it('refreshes page', () => {
+            expect(instance.refresh.callCount).toBe(1);
+        });
+
+        it('renders loading spinner', () => {
+            expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        });
+    });
+
+    describe('when share dialog is opened', () => {
+        let targetRun;
+
+        beforeEach(() => {
+            loadData();
+            targetRun = {
+                job: {
+                    uid: 1,
+                    permissions: {},
+                },
+            };
+            instance.handleShareOpen(targetRun);
+        });
+
+        it('opens the share dialog', () => {
+            expect(wrapper.state().shareOpen).toBe(true);
+            expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        });
+
+        it('passes the share dialog the target run permissions', () => {
+            expect(wrapper.find(DataPackShareDialog).props().permissions).toBe(targetRun.job.permissions);
+        });
+
+        it('sets the target run', () => {
+            expect(wrapper.state().targetRun).toEqual(targetRun);
+        });
+
+        describe('then datapack is shared', () => {
+            let permissions;
+
+            beforeEach(() => {
+                instance.handleShareClose = sinon.spy();
+                permissions = { some: 'permissions' };
+                instance.handleShareSave(permissions);
+            });
+
+            it('closes the share dialog', () => {
+                expect(instance.handleShareClose.callCount).toBe(1);
+            });
+
+            it('updates datacart permissions', () => {
+                expect(instance.props.updateDataCartPermissions.callCount).toBe(1);
+                expect(instance.props.updateDataCartPermissions.calledWith(targetRun.job.uid, permissions)).toBe(true);
+            });
+        });
+    });
+
+    describe('when share dialog is closed', () => {
+        beforeEach(() => {
+            loadData();
+            wrapper.setState({
+                shareOpen: true,
+                run: 'test',
+            });
+            instance.handleShareClose();
+        });
+
+        it('closes the share dialog', () => {
+            expect(wrapper.state().shareOpen).toBe(false);
+            expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+        });
+
+        it('nullifies the target run', () => {
+            expect(wrapper.state().targetRun).toBe(null);
         });
     });
 });
