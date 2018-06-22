@@ -316,7 +316,6 @@ class Geopackage(object):
         self.update_zindexes(cur, self.feature_selection)
         update_progress(self.export_task_record_uid, progress=42)
 
-        # note to EJ - this "add themes" section is over 35 seconds - should break it down further.
         # add themes
         create_sqls, index_sqls = self.feature_selection.sqls
         for query in create_sqls:
