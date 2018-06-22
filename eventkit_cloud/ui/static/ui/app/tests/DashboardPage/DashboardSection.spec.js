@@ -1,49 +1,33 @@
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { Tab, Tabs } from 'material-ui';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import SwipeableViews from 'react-swipeable-views';
 import DashboardSection from '../../components/DashboardPage/DashboardSection';
 
 describe('DashboardSection component', () => {
-    const muiTheme = getMuiTheme();
-    let props;
-    let wrapper;
-    let instance;
+    let wrapper, instance;
 
-    beforeEach(() => {
-        setup();
-    });
-
-    function setup({ propsOverride = {}, mounted = false, children = [] } = {}) {
-        props = {
+    function defaultProps() {
+        return {
             title: 'Test',
             name: 'test',
             columns: 3,
             providers: [],
             noDataElement: <div className={'qa-DashboardSection-NoDataElement'} />,
+        };
+    }
+
+    function setup(propsOverride = {}, options = { children: [] }) {
+        const props = {
+            ...defaultProps(),
             ...propsOverride,
         };
-
-        if (mounted) {
-            wrapper = mount(
-                <DashboardSection { ...props }>
-                    {children}
-                </DashboardSection>,
-                {
-                    context: { muiTheme },
-                    childContextTypes: { muiTheme: React.PropTypes.object },
-                }
-            );
-        } else {
-            wrapper = shallow(
-                <DashboardSection { ...props }>
-                    {children}
-                </DashboardSection>
-            );
-        }
-
+        wrapper = shallow(
+            <DashboardSection { ...props }>
+                {options.children}
+            </DashboardSection>
+        );
         instance = wrapper.instance();
     }
 
@@ -56,20 +40,17 @@ describe('DashboardSection component', () => {
         return children;
     }
 
-    it('renders header', () => {
-        expect(wrapper.find('.qa-DashboardSection-Header')).toHaveLength(1);
-    });
+    beforeEach(setup);
 
     it('renders header title', () => {
-        expect(wrapper.find('.qa-DashboardSection-Header-Title').text()).toBe(props.title);
+        expect(wrapper.find('.qa-DashboardSection-Header-Title').text()).toBe(instance.props.title);
     });
 
     it('limits the number of pages to maxPages', () => {
         setup({
-            propsOverride: {
-                columns: 1,
-                rows: 1,
-            },
+            columns: 1,
+            rows: 1,
+        }, {
             children: generateChildren(10),
         });
         expect(wrapper.find('.qa-DashboardSection-Page-Item')).toHaveLength(instance.itemsPerPage * instance.maxPages);
@@ -77,10 +58,9 @@ describe('DashboardSection component', () => {
 
     it('constructs the correct number of pages, each with the correct number of children', () => {
         setup({
-            propsOverride: {
-                columns: 3,
-                rows: 2,
-            },
+            columns: 3,
+            rows: 2,
+        }, {
             children: generateChildren(8),
         });
         expect(instance.maxPages).toBe(3);
@@ -105,9 +85,8 @@ describe('DashboardSection component', () => {
     describe('3 columns, 3 children (1 page)', () => {
         beforeEach(() => {
             setup({
-                propsOverride: {
-                    columns: 3,
-                },
+                columns: 3,
+            }, {
                 children: generateChildren(3),
             });
         });
@@ -164,11 +143,10 @@ describe('DashboardSection component', () => {
     describe('when rowMajor is true', () => {
         beforeEach(() => {
             setup({
-                propsOverride: {
-                    rowMajor: true,
-                    columns: 3,
-                    rows: 3,
-                },
+                rowMajor: true,
+                columns: 3,
+                rows: 3,
+            }, {
                 children: generateChildren(9),
             });
         });
@@ -181,11 +159,10 @@ describe('DashboardSection component', () => {
     describe('when rowMajor is false', () => {
         beforeEach(() => {
             setup({
-                propsOverride: {
-                    rowMajor: false,
-                    columns: 3,
-                    rows: 3,
-                },
+                rowMajor: false,
+                columns: 3,
+                rows: 3,
+            }, {
                 children: generateChildren(9),
             });
         });
@@ -204,9 +181,8 @@ describe('DashboardSection component', () => {
     describe('when onViewAll handler is passed in', () => {
         beforeEach(() => {
             setup({
-                propsOverride: {
-                    onViewAll: sinon.spy(),
-                },
+                onViewAll: sinon.spy(),
+            }, {
                 children: generateChildren(1),
             });
         });

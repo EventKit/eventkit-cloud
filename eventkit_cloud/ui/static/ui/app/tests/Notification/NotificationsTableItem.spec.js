@@ -66,6 +66,7 @@ describe('NotificationsTableItem component', () => {
 
     describe('when checkbox is clicked', () => {
         let isChecked;
+
         beforeEach(() => {
             const checkbox = wrapper.find('.qa-NotificationsTableItem-Checkbox');
             isChecked = !checkbox.props().checked;

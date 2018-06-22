@@ -1,30 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import moment from 'moment';
 import { CardTitle, CardText } from 'material-ui/Card';
 import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';
 
 describe('DataPackFeaturedItem component', () => {
-    let props;
-    let wrapper;
-    let instance;
+    let wrapper, instance;
 
-    beforeAll(() => {
-        DataPackFeaturedItem.prototype.initMap = sinon.spy();
-    });
-
-    afterAll(() => {
-        DataPackFeaturedItem.prototype.initMap.restore();
-    });
-
-    beforeEach(() => {
-        setup();
-    });
-
-    function setup({ propsOverride = {}, mounted = false } = {}) {
-        props = {
+    function defaultProps() {
+        return {
             run: {
                 uid: '6870234f-d876-467c-a332-65fdf0399a0d',
                 started_at: '2017-03-10T15:52:35.637331Z',
@@ -38,29 +24,31 @@ describe('DataPackFeaturedItem component', () => {
             },
             gridName: 'test',
             index: 0,
+        };
+    }
+
+    function setup(propsOverride = {}) {
+        const props = {
+            ...defaultProps(),
             ...propsOverride,
         };
-
-        if (mounted) {
-            wrapper = mount(
-                <DataPackFeaturedItem { ...props } />,
-                {
-                    context: { muiTheme },
-                    childContextTypes: { muiTheme: React.PropTypes.object },
-                }
-            );
-        } else {
-            wrapper = shallow(
-                <DataPackFeaturedItem { ...props } />
-            );
-        }
-
+        wrapper = shallow(<DataPackFeaturedItem { ...props } />);
         instance = wrapper.instance();
     }
 
     function wrapShallow(element) {
         return shallow(<div>{element}</div>).childAt(0);
     }
+
+    beforeAll(() => {
+        DataPackFeaturedItem.prototype.initMap = sinon.spy();
+    });
+
+    afterAll(() => {
+        DataPackFeaturedItem.prototype.initMap.restore();
+    });
+
+    beforeEach(setup);
 
     it('renders card title with correct text and props', () => {
         const title = wrapShallow(wrapper.find(CardTitle).props().title);

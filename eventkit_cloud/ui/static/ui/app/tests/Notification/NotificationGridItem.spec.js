@@ -8,10 +8,10 @@ import NotificationMenu from '../../components/Notification/NotificationMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 
 describe('NotificationGridItem component', () => {
-    let props, wrapper, instance;
+    let wrapper, instance;
 
-    function setup({ propsOverride = {} } = {}) {
-        props = {
+    function defaultProps() {
+        return {
             notification: {
                 id: '1',
                 verb: 'run_completed',
@@ -34,19 +34,19 @@ describe('NotificationGridItem component', () => {
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
+        };
+    }
+
+    function setup(propsOverride = {}) {
+        const props = {
+            ...defaultProps(),
             ...propsOverride,
         };
-
-        wrapper = shallow(
-            <NotificationGridItem { ...props } />
-        );
-
+        wrapper = shallow(<NotificationGridItem { ...props } />);
         instance = wrapper.instance();
     }
 
-    beforeEach(() => {
-        setup();
-    });
+    beforeEach(setup);
 
     it('renders a Paper component', () => {
         expect(wrapper.find(Paper)).toHaveLength(1);
@@ -142,16 +142,14 @@ describe('NotificationGridItem component', () => {
 
             it('calls onView() with notification and view path', () => {
                 expect(instance.props.onView.callCount).toBe(1);
-                expect(instance.props.onView.calledWith(props.notification, viewPath)).toBe(true);
+                expect(instance.props.onView.calledWith(instance.props.notification, viewPath)).toBe(true);
             });
         });
 
         describe('when onView() returns false', () => {
             beforeEach(() => {
                 setup({
-                    propsOverride: {
-                        onView: () => false,
-                    },
+                    onView: () => false,
                 });
                 instance.handleView();
             });

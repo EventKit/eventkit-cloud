@@ -87,6 +87,7 @@ describe('NotificationMenu component', () => {
 
     describe('when notification is unread', () => {
         let markAsReadMenuItem;
+
         beforeEach(() => {
             const props = defaultProps();
             props.notification.unread = true;
@@ -109,6 +110,7 @@ describe('NotificationMenu component', () => {
 
     describe('when notification is not unread', () => {
         let markAsUnreadMenuItem;
+
         beforeEach(() => {
             const props = defaultProps();
             props.notification.unread = false;
@@ -322,6 +324,7 @@ describe('NotificationMenu component', () => {
 
     describe('when view path exists', () => {
         let viewMenuItem;
+
         beforeEach(() => {
             viewMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-View');
         });
@@ -349,6 +352,7 @@ describe('NotificationMenu component', () => {
 
     describe('when forceClose is set to true', () => {
         let componentDidUpdateStub;
+
         beforeEach(() => {
             componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
             wrapper.setState({

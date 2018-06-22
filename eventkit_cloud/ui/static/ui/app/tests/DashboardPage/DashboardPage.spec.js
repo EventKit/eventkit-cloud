@@ -1,9 +1,8 @@
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { AppBar, CircularProgress } from 'material-ui';
+import { CircularProgress } from 'material-ui';
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DashboardSection from '../../components/DashboardPage/DashboardSection';
@@ -68,18 +67,10 @@ const mockRuns = [
 ];
 
 describe('DashboardPage component', () => {
-    const muiTheme = getMuiTheme();
+    let wrapper, instance;
 
-    let props;
-    let wrapper;
-    let instance;
-
-    beforeEach(() => {
-        setup();
-    });
-
-    function setup({ propsOverride = {}, mounted = false } = {}) {
-        props = {
+    function defaultProps() {
+        return {
             user: {
                 data: {
                     user: {
@@ -130,38 +121,35 @@ describe('DashboardPage component', () => {
                 fetching: false,
                 fetched: false,
             },
-            refresh: () => {},
-            getRuns: () => {},
-            getFeaturedRuns: () => {},
-            getViewedJobs: () => {},
-            deleteRuns: () => {},
-            getUsers: () => {},
+            refresh: sinon.spy(),
+            getRuns: sinon.spy(),
+            getFeaturedRuns: sinon.spy(),
+            getViewedJobs: sinon.spy(),
+            deleteRuns: sinon.spy(),
+            getUsers: sinon.spy(),
             updateDataCartPermissions: sinon.spy(),
             getGroups: sinon.spy(),
             getProviders: sinon.spy(),
             getNotifications: sinon.spy(),
+        };
+    }
+
+    function setup(propsOverride = {}) {
+        const props = {
+            ...defaultProps(),
             ...propsOverride,
         };
-
-        if (mounted) {
-            wrapper = mount(<DashboardPage { ...props } />, {
-                context: { muiTheme },
-                childContextTypes: { muiTheme: React.PropTypes.object },
-            });
-        } else {
-            wrapper = shallow(<DashboardPage { ...props } />);
-        }
-
+        wrapper = shallow(<DashboardPage { ...props } />);
         instance = wrapper.instance();
+
         instance.joyride = {
             reset: () => {},
         };
     }
 
-    function loadEmptyData(wrapper) {
-        const { props } = wrapper.instance();
+    function loadEmptyData() {
         wrapper.setProps({
-            ...props,
+            ...instance.props,
             runsList: {
                 fetching: false,
                 fetched: true,
@@ -173,16 +161,16 @@ describe('DashboardPage component', () => {
                 runs: [],
             },
             userActivity: {
-                ...props.userActivity,
+                ...instance.props.userActivity,
                 viewedJobs: {
-                    ...props.userActivity.viewedJobs,
+                    ...instance.props.userActivity.viewedJobs,
                     fetching: false,
                     fetched: true,
                     viewedJobs: [],
                 },
             },
             notifications: {
-                ...props.notifications,
+                ...instance.props.notifications,
                 fetching: false,
                 fetched: true,
                 notifications: [],
@@ -199,10 +187,9 @@ describe('DashboardPage component', () => {
         });
     }
 
-    function loadData(wrapper) {
-        const props = wrapper.instance().props;
+    function loadData() {
         wrapper.setProps({
-            ...props,
+            ...instance.props,
             runsList: {
                 fetching: false,
                 fetched: true,
@@ -214,9 +201,9 @@ describe('DashboardPage component', () => {
                 runs: mockRuns,
             },
             userActivity: {
-                ...props.userActivity,
+                ...instance.props.userActivity,
                 viewedJobs: {
-                    ...props.userActivity.viewedJobs,
+                    ...instance.props.userActivity.viewedJobs,
                     fetching: false,
                     fetched: true,
                     viewedJobs: [
@@ -226,7 +213,7 @@ describe('DashboardPage component', () => {
                 },
             },
             notifications: {
-                ...props.notifications,
+                ...instance.props.notifications,
                 fetching: false,
                 fetched: true,
                 notifications: mockNotifications,
@@ -246,9 +233,7 @@ describe('DashboardPage component', () => {
         });
     }
 
-    it('renders app bar', () => {
-        expect(wrapper.find(AppBar)).toHaveLength(1);
-    });
+    beforeEach(setup);
 
     it('joyrideAddSteps sets state for steps in tour', () => {
         const steps = [
@@ -317,7 +302,7 @@ describe('DashboardPage component', () => {
 
     describe('after data has loaded', () => {
         beforeEach(() => {
-            loadData(wrapper);
+            loadData();
         });
 
         it('does not render loading indicator', () => {
@@ -520,8 +505,7 @@ describe('DashboardPage component', () => {
         });
 
         describe('on share save', () => {
-            let targetRun;
-            let permissions;
+            let targetRun, permissions;
 
             beforeEach(() => {
                 instance.handleShareClose = sinon.spy();
@@ -551,7 +535,7 @@ describe('DashboardPage component', () => {
 
     describe('after empty data has loaded', () => {
         beforeEach(() => {
-            loadEmptyData(wrapper);
+            loadEmptyData();
         });
 
         it('does not render loading indicator', () => {

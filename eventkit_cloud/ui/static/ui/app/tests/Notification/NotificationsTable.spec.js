@@ -9,7 +9,7 @@ import NotificationsTableMenu from '../../components/Notification/NotificationsT
 import NotificationsTableItem from '../../components/Notification/NotificationsTableItem';
 
 const mockNotifications = {
-    1: {
+    '1': {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -22,7 +22,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    2: {
+    '2': {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -103,8 +103,8 @@ describe('NotificationsTable component', () => {
     it('passes correct props to NotificationsTableMenu', () => {
         wrapper.setState({
             selected: {
-                1: mockNotifications['1'],
-                2: mockNotifications['2'],
+                '1': mockNotifications['1'],
+                '2': mockNotifications['2'],
             },
         });
         const tableMenu = wrapper.find(NotificationsTableMenu);
@@ -119,7 +119,7 @@ describe('NotificationsTable component', () => {
     it('passes correct props to NotificationsTableItem', () => {
         wrapper.setState({
             selected: {
-                1: mockNotifications['1'],
+                '1': mockNotifications['1'],
             },
         });
         const tableItem = wrapper.find(NotificationsTableItem).at(0);
@@ -136,6 +136,7 @@ describe('NotificationsTable component', () => {
 
     describe('when notification checkbox is clicked', () => {
         let notification, wasSelected;
+
         beforeEach(() => {
             notification = instance.props.notificationsArray[0];
             wasSelected = instance.isSelected(notification);
@@ -149,6 +150,7 @@ describe('NotificationsTable component', () => {
 
     describe('when no notifications are selected', () => {
         let selectAllCheckbox;
+
         beforeEach(() => {
             wrapper.setState({
                 selected: {},
@@ -191,6 +193,7 @@ describe('NotificationsTable component', () => {
 
     describe('when all notifications are selected', () => {
         let selectAllCheckbox;
+
         beforeEach(() => {
             const selected = {};
             for (const notification of instance.props.notificationsArray) {
@@ -237,6 +240,7 @@ describe('NotificationsTable component', () => {
 
     describe('when some (but not all) notifications are selected', () => {
         let selectAllCheckbox;
+
         beforeEach(() => {
             wrapper.setState({
                 selected: {
