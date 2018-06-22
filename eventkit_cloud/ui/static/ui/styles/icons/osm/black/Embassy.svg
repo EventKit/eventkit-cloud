@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 4.7624996 4.7625049"
+   height="4.7625046mm"
+   width="4.7624998mm">
+  <defs
+     id="defs2">
+    <pattern
+       id="EMFhbasepattern"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+    <pattern
+       id="EMFhbasepattern-8"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+    <pattern
+       id="EMFhbasepattern-1"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-121.27864,-28.53998)"
+     id="layer1">
+    <g
+       transform="matrix(0.26458333,0,0,0.26458333,120.36632,-201.93337)"
+       id="g5354">
+      <rect
+         style="opacity:0.3;fill:none;stroke:none"
+         id="rect7026"
+         width="18"
+         height="18"
+         x="0"
+         y="866.36218" />
+      <g
+         transform="translate(-93.625326,53.056688)"
+         id="g5663">
+        <rect
+           style="fill:none;stroke:none"
+           id="rect4844"
+           width="18"
+           height="18"
+           x="102"
+           y="812.36218" />
+        <g
+           transform="translate(-4.9265233,-174.33848)"
+           id="g5714">
+          <path
+             style="opacity:0.3;fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+             d="m 115,1001.3622 c 0,-2 -3.5,-2.5 -3.5,-2.5 v -1.5 h 4.5 l -1.5,-1.5 1.5,-1.5 h -4.5 v -1 h -1 v 5.5 c 0,0 -3.5,0.5 -3.5,2.5 0,0 -1,0 -1,1 h 10 c 0,-1 -1,-1 -1,-1 z m -11,2 h 14 v 6 h -5 v -1 h -4 v 1 h -5 z"
+             id="path6827" />
+          <path
+             id="path6788"
+             d="m 115,1001.3622 c 0,-2 -3.5,-2.5 -3.5,-2.5 v -1.5 h 4.5 l -1.5,-1.5 1.5,-1.5 h -4.5 v -1 h -1 v 5.5 c 0,0 -3.5,0.5 -3.5,2.5 0,0 -1,0 -1,1 h 10 c 0,-1 -1,-1 -1,-1 z m -11,2 h 14 v 6 h -5 v -1 h -4 v 1 h -5 z"
+             style="fill:#000000;fill-opacity:1" />
+          <rect
+             style="opacity:0.3;fill:none;stroke:none"
+             id="rect6817"
+             width="18"
+             height="18"
+             x="102"
+             y="992.36218" />
+        </g>
+      </g>
+      <g
+         transform="translate(-97.123436,36.007642)"
+         id="g5667" />
+    </g>
+  </g>
+</svg>
