@@ -80,7 +80,7 @@ describe('StatusDownload component', () => {
             },
         },
         provider_tasks: providerTasks,
-        zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 
@@ -233,8 +233,8 @@ describe('StatusDownload component', () => {
         props.getDatacartDetails = sinon.spy();
         props.getProviders = sinon.spy();
         const timerStub = sinon.stub(StatusDownload.prototype, 'startTimer');
-        const joyrideSpy = new sinon.spy(StatusDownload.prototype, 'joyrideAddSteps');
-        const wrapper = getWrapper(props);
+        const joyrideSpy = sinon.spy(StatusDownload.prototype, 'joyrideAddSteps');
+        getWrapper(props);
         expect(props.getDatacartDetails.calledOnce).toBe(true);
         expect(props.getDatacartDetails.calledWith('123456789')).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
@@ -355,7 +355,7 @@ describe('StatusDownload component', () => {
                 position: 'bottom',
                 style: {},
                 isFixed: true,
-            }
+            },
         ];
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -368,17 +368,17 @@ describe('StatusDownload component', () => {
 
     it('callback function should stop tour if close is clicked', () => {
         const callbackData = {
-            action: "close",
+            action: 'close',
             index: 2,
             step: {
-                position: "bottom",
-                selector: ".qa-DataPackLinkButton-RaisedButton",
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
                 style: {},
-                text: "Click here to Navigate to Create a DataPack.",
-                title: "Create DataPack",
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
             },
-            type: "step:before",
-        }
+            type: 'step:before',
+        };
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateSpy = sinon.stub(StatusDownload.prototype, 'setState');
@@ -459,10 +459,10 @@ describe('StatusDownload component', () => {
         props.cloneExport = sinon.spy();
         const wrapper = getWrapper(props);
         const cart = { uid: '123' };
-        const providers = ['1', '2'];
-        wrapper.instance().handleClone(cart, providers);
+        const p = ['1', '2'];
+        wrapper.instance().handleClone(cart, p);
         expect(props.cloneExport.calledOnce).toBe(true);
-        expect(props.cloneExport.calledWith(cart, providers));
+        expect(props.cloneExport.calledWith(cart, p));
     });
 
     it('startTimer should create a timer interval', () => {

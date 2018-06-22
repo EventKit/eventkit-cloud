@@ -152,6 +152,7 @@ services:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
        - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
        - ./package.json:/var/lib/eventkit/package.json
+       - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
        - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
        - ./.git:/var/lib/eventkit/.git
      ports:
