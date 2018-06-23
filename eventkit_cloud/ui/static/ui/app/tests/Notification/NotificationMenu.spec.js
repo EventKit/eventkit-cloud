@@ -132,12 +132,21 @@ describe('NotificationMenu component', () => {
     });
 
     describe('when Mark As Read menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            const props = defaultProps();
-            props.notification.unread = true;
-            setup(props);
-            instance.componentDidUpdate = sinon.stub();
-            wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
+            setupA = (props) => {
+                setup({
+                    notification: {
+                        ...instance.props.notification,
+                        unread: true,
+                    },
+                    ...props,
+                });
+                instance.componentDidUpdate = sinon.stub();
+                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
+            };
+            setupA();
         });
 
         it('force closes menu', () => {
@@ -151,10 +160,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onMarkAsRead() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onMarkAsRead: () => true,
                 });
-                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
             });
 
             it('marks notification as read', () => {
@@ -165,10 +173,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onMarkAsRead() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onMarkAsRead: () => false,
                 });
-                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
             });
 
             it('does not mark notifications as read', () => {
@@ -178,12 +185,21 @@ describe('NotificationMenu component', () => {
     });
 
     describe('when Mark As Unread menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            const props = defaultProps();
-            props.notification.unread = false;
-            setup(props);
-            instance.componentDidUpdate = sinon.stub();
-            wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+            setupA = (props) => {
+                setup({
+                    notification: {
+                        ...instance.props.notification,
+                        unread: false,
+                    },
+                    ...props,
+                });
+                instance.componentDidUpdate = sinon.stub();
+                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+            };
+            setupA();
         });
 
         it('force closes menu', () => {
@@ -197,11 +213,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onMarkAsUnread() returns true', () => {
             beforeEach(() => {
-                const props = defaultProps();
-                props.notification.unread = false;
-                props.onMarkAsUnread = () => true;
-                setup(props);
-                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+                setupA({
+                    onMarkAsUnread: () => true,
+                });
             });
 
             it('marks notification as unread', () => {
@@ -212,11 +226,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onMarkAsUnread() returns false', () => {
             beforeEach(() => {
-                const props = defaultProps();
-                props.notification.unread = false;
-                props.onMarkAsUnread = () => false;
-                setup(props);
-                wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsUnread').props().onClick();
+                setupA({
+                    onMarkAsUnread: () => false,
+                });
             });
 
             it('does not mark notifications as unread', () => {
@@ -226,9 +238,15 @@ describe('NotificationMenu component', () => {
     });
 
     describe('when View menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            instance.componentDidUpdate = sinon.stub();
-            wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                instance.componentDidUpdate = sinon.stub();
+                wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
+            };
+            setupA();
         });
 
         it('force closes menu', () => {
@@ -243,10 +261,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onView() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onView: () => true,
                 });
-                wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
             });
 
             it('navigates to view path', () => {
@@ -263,10 +280,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onView() return false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onView: () => false,
                 });
-                wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
             });
 
             it('does not navigate to view path', () => {
@@ -280,9 +296,15 @@ describe('NotificationMenu component', () => {
     });
 
     describe('when Remove menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            instance.componentDidUpdate = sinon.stub();
-            wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                instance.componentDidUpdate = sinon.stub();
+                wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
+            };
+            setupA();
         });
 
         it('force closes menu', () => {
@@ -296,10 +318,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onRemove() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onRemove: () => true,
                 });
-                wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
             });
 
             it('removes notification', () => {
@@ -310,10 +331,9 @@ describe('NotificationMenu component', () => {
 
         describe('when onRemove() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onRemove: () => false,
                 });
-                wrapper.find('.qa-NotificationMenu-MenuItem-Remove').props().onClick();
             });
 
             it('does not remove notification', () => {

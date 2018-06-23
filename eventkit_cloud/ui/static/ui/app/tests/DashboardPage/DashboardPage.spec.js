@@ -539,15 +539,20 @@ describe('DashboardPage component', () => {
     });
 
     describe('when a datapack is being deleted', () => {
+        let setupA;
+
         beforeEach(() => {
-            loadData();
-            instance.refresh = sinon.spy();
-            wrapper.setProps({
-                runsDeletion: {
-                    deleting: true,
-                    deleted: false,
-                },
-            });
+            setupA = () => {
+                loadData();
+                instance.refresh = sinon.spy();
+                wrapper.setProps({
+                    runsDeletion: {
+                        deleting: true,
+                        deleted: false,
+                    },
+                });
+            };
+            setupA();
         });
 
         it('renders loading spinner', () => {
@@ -556,8 +561,7 @@ describe('DashboardPage component', () => {
 
         describe('then it is successfully deleted', () => {
             beforeEach(() => {
-                loadData();
-                instance.refresh = sinon.spy();
+                setupA();
                 wrapper.setProps({
                     runsDeletion: {
                         deleting: false,

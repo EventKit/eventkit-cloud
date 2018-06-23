@@ -81,8 +81,14 @@ describe('NotificationsTableItem component', () => {
     });
 
     describe('when "View" button is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.find('.qa-NotificationsTableItem-ActionButtons-View').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                wrapper.find('.qa-NotificationsTableItem-ActionButtons-View').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onView() with notification and view path', () => {
@@ -93,10 +99,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onView() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onView: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-View').props().onClick();
             });
 
             it('navigates to view path', () => {
@@ -113,10 +118,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onView() return false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onView: () => false,
                 });
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-View').props().onClick();
             });
 
             it('does not navigate to view path', () => {
@@ -130,8 +134,14 @@ describe('NotificationsTableItem component', () => {
     });
 
     describe('when "Mark As Read" button is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsRead').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsRead').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onMarkAsRead() with notification', () => {
@@ -141,10 +151,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onMarkAsRead() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onMarkAsRead: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsRead').props().onClick();
             });
 
             it('marks notification as read', () => {
@@ -155,10 +164,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onMarkAsRead() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onMarkAsRead: () => false,
                 });
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsRead').props().onClick();
             });
 
             it('does not mark notifications as read', () => {
@@ -168,14 +176,20 @@ describe('NotificationsTableItem component', () => {
     });
 
     describe('when "Mark As Unread" button is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.setProps({
-                notification: {
-                    ...instance.props.notification,
-                    unread: false,
-                },
-            });
-            wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsUnread').props().onClick();
+            setupA = (props) => {
+                setup({
+                    notification: {
+                        ...instance.props.notification,
+                        unread: false,
+                    },
+                    ...props,
+                });
+                wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsUnread').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onMarkAsUnread() with notification', () => {
@@ -185,11 +199,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onMarkAsUnread() returns true', () => {
             beforeEach(() => {
-                const props = defaultProps();
-                props.notification.unread = false;
-                props.onMarkAsUnread = () => true;
-                setup(props);
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsUnread').props().onClick();
+                setupA({
+                    onMarkAsUnread: () => true,
+                });
             });
 
             it('marks notification as unread', () => {
@@ -200,11 +212,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onMarkAsUnread() returns false', () => {
             beforeEach(() => {
-                const props = defaultProps();
-                props.notification.unread = false;
-                props.onMarkAsUnread = () => false;
-                setup(props);
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-MarkAsUnread').props().onClick();
+                setupA({
+                    onMarkAsUnread: () => false,
+                });
             });
 
             it('does not mark notifications as unread', () => {
@@ -214,8 +224,14 @@ describe('NotificationsTableItem component', () => {
     });
 
     describe('when "Remove" button is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.find('.qa-NotificationsTableItem-ActionButtons-Remove').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                wrapper.find('.qa-NotificationsTableItem-ActionButtons-Remove').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onRemove() with notification', () => {
@@ -225,10 +241,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onRemove() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onRemove: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-Remove').props().onClick();
             });
 
             it('removes notification', () => {
@@ -239,10 +254,9 @@ describe('NotificationsTableItem component', () => {
 
         describe('when onRemove() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onRemove: () => false,
                 });
-                wrapper.find('.qa-NotificationsTableItem-ActionButtons-Remove').props().onClick();
             });
 
             it('does not remove notification', () => {

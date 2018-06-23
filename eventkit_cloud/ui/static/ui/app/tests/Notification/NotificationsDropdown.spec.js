@@ -145,8 +145,14 @@ describe('NotificationsDropdown component', () => {
     });
 
     describe('when "View All" is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.find('.qa-NotificationsDropdown-ViewAll').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                wrapper.find('.qa-NotificationsDropdown-ViewAll').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onNavigate() with "/notifications"', () => {
@@ -156,10 +162,9 @@ describe('NotificationsDropdown component', () => {
 
         describe('when onNavigate() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onNavigate: () => true,
                 });
-                wrapper.find('.qa-NotificationsDropdown-ViewAll').props().onClick();
             });
 
             it('navigates to "/notifications"', () => {
@@ -170,10 +175,9 @@ describe('NotificationsDropdown component', () => {
 
         describe('when onNavigate() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onNavigate: () => false,
                 });
-                wrapper.find('.qa-NotificationsDropdown-ViewAll').props().onClick();
             });
 
             it('does not navigate to "/notifications"', () => {

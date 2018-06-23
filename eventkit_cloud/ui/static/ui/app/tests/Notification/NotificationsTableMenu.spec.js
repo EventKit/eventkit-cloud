@@ -139,16 +139,22 @@ describe('NotificationsTableMenu component', () => {
     });
 
     describe('when "Mark As Read" menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.setProps({
-                selectedNotifications: {
-                    '1': {
-                        ...mockNotifications['1'],
-                        unread: true,
+            setupA = (props) => {
+                setup({
+                    selectedNotifications: {
+                        '1': {
+                            ...mockNotifications['1'],
+                            unread: true,
+                        },
                     },
-                },
-            });
-            wrapper.find('.qa-NotificationsTableMenu-MarkAsRead').props().onClick();
+                    ...props,
+                });
+                wrapper.find('.qa-NotificationsTableMenu-MarkAsRead').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onMarkAsRead() with selected notifications', () => {
@@ -158,16 +164,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onMarkAsRead() returns true', () => {
             beforeEach(() => {
-                setup({
-                    selectedNotifications: {
-                        '1': {
-                            ...mockNotifications['1'],
-                            unread: true,
-                        },
-                    },
+                setupA({
                     onMarkAsRead: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-MarkAsRead').props().onClick();
             });
 
             it('marks selected notification as read', () => {
@@ -178,16 +177,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onMarkAsRead() returns false', () => {
             beforeEach(() => {
-                setup({
-                    selectedNotifications: {
-                        '1': {
-                            ...mockNotifications['1'],
-                            unread: true,
-                        },
-                    },
+                setupA({
                     onMarkAsRead: () => false,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-MarkAsRead').props().onClick();
             });
 
             it('does not mark selected notifications as read', () => {
@@ -197,16 +189,22 @@ describe('NotificationsTableMenu component', () => {
     });
 
     describe('when "Mark As Unread" menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.setProps({
-                selectedNotifications: {
-                    '1': {
-                        ...mockNotifications['1'],
-                        unread: false,
+            setupA = (props) => {
+                setup({
+                    selectedNotifications: {
+                        '1': {
+                            ...mockNotifications['1'],
+                            unread: false,
+                        },
                     },
-                },
-            });
-            wrapper.find('.qa-NotificationsTableMenu-MarkAsUnread').props().onClick();
+                    ...props,
+                });
+                wrapper.find('.qa-NotificationsTableMenu-MarkAsUnread').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onMarkAsUnread() with selected notifications', () => {
@@ -216,16 +214,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onMarkAsUnread() returns true', () => {
             beforeEach(() => {
-                setup({
-                    selectedNotifications: {
-                        '1': {
-                            ...mockNotifications['1'],
-                            unread: false,
-                        },
-                    },
+                setupA({
                     onMarkAsUnread: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-MarkAsUnread').props().onClick();
             });
 
             it('marks selected notification as unread', () => {
@@ -236,13 +227,7 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onMarkAsUnread() returns false', () => {
             beforeEach(() => {
-                setup({
-                    selectedNotifications: {
-                        '1': {
-                            ...mockNotifications['1'],
-                            unread: false,
-                        },
-                    },
+                setupA({
                     onMarkAsUnread: () => false,
                 });
                 wrapper.find('.qa-NotificationsTableMenu-MarkAsUnread').props().onClick();
@@ -255,8 +240,14 @@ describe('NotificationsTableMenu component', () => {
     });
 
     describe('when "Remove" menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.find('.qa-NotificationsTableMenu-Remove').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                wrapper.find('.qa-NotificationsTableMenu-Remove').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onRemove() with selected notifications', () => {
@@ -266,10 +257,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onRemove() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onRemove: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-Remove').props().onClick();
             });
 
             it('removes selected notifications', () => {
@@ -280,10 +270,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onRemove() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onRemove: () => false,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-Remove').props().onClick();
             });
 
             it('does not remove selected notification', () => {
@@ -293,8 +282,14 @@ describe('NotificationsTableMenu component', () => {
     });
 
     describe('when "Mark All As Read" menu item is clicked', () => {
+        let setupA;
+
         beforeEach(() => {
-            wrapper.find('.qa-NotificationsTableMenu-MarkAllAsRead').props().onClick();
+            setupA = (props) => {
+                setup(props);
+                wrapper.find('.qa-NotificationsTableMenu-MarkAllAsRead').props().onClick();
+            };
+            setupA();
         });
 
         it('calls onMarkAllAsRead()', () => {
@@ -303,10 +298,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onMarkAllAsRead() returns true', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onMarkAllAsRead: () => true,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-MarkAllAsRead').props().onClick();
             });
 
             it('marks all notifications as read', () => {
@@ -316,10 +310,9 @@ describe('NotificationsTableMenu component', () => {
 
         describe('and onMarkAllAsRead() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onMarkAllAsRead: () => false,
                 });
-                wrapper.find('.qa-NotificationsTableMenu-MarkAllAsRead').props().onClick();
             });
 
             it('does not mark all notifications as read', () => {

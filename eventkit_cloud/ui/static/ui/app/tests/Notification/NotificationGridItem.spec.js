@@ -34,6 +34,7 @@ describe('NotificationGridItem component', () => {
             onMarkAsRead: sinon.spy(),
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
+            onView: sinon.spy(),
         };
     }
 
@@ -119,15 +120,27 @@ describe('NotificationGridItem component', () => {
     });
 
     describe('when handleView() is called', () => {
-        describe('when onView() returns true', () => {
-            let viewPath;
+        let setupA, viewPath;
 
-            beforeEach(() => {
-                wrapper.setProps({
-                    onView: sinon.stub().callsFake(() => true),
-                });
+        beforeEach(() => {
+            setupA = (props) => {
+                setup(props);
                 viewPath = getNotificationViewPath(instance.props.notification);
                 instance.handleView();
+            };
+            setupA();
+        });
+
+        it('calls onView() with notification and view path', () => {
+            expect(instance.props.onView.callCount).toBe(1);
+            expect(instance.props.onView.calledWith(instance.props.notification, viewPath)).toBe(true);
+        });
+
+        describe('when onView() returns true', () => {
+            beforeEach(() => {
+                setupA({
+                    onView: () => true,
+                });
             });
 
             it('navigates to view path', () => {
@@ -139,23 +152,20 @@ describe('NotificationGridItem component', () => {
                 expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
                 expect(instance.props.markNotificationsAsRead.calledWith([instance.props.notification])).toBe(true);
             });
-
-            it('calls onView() with notification and view path', () => {
-                expect(instance.props.onView.callCount).toBe(1);
-                expect(instance.props.onView.calledWith(instance.props.notification, viewPath)).toBe(true);
-            });
         });
 
         describe('when onView() returns false', () => {
             beforeEach(() => {
-                setup({
+                setupA({
                     onView: () => false,
                 });
-                instance.handleView();
             });
 
-            it('does nothing', () => {
+            it('does not navigate anywhere', () => {
                 expect(instance.props.router.push.callCount).toBe(0);
+            });
+
+            it('does not mark notification as read', () => {
                 expect(instance.props.markNotificationsAsRead.callCount).toBe(0);
             });
         });
