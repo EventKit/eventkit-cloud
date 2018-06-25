@@ -21,7 +21,7 @@ class FileProducingTaskResult(UIDMixin):
     size = models.FloatField(null=True, editable=False)
     download_url = models.URLField(
         verbose_name='URL to export task result output.',
-        max_length=254
+        max_length=506
     )
     deleted = models.BooleanField(default=False)
 
