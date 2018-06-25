@@ -1,9 +1,8 @@
 import React from 'react';
-import { Provider } from "react-redux";
 import axios from 'axios';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import configureMockStore from "redux-mock-store";
+import configureMockStore from 'redux-mock-store';
 import AppBar from 'material-ui/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
@@ -27,43 +26,37 @@ const mockStore = configureMockStore();
 const store = mockStore({});
 
 describe('Application component', () => {
-    const getProps = () => {
-        return {
-            userData: {},
-            drawer: 'open',
-            router: {
-                push: () => {},
-                location: {
-                    pathname: '/exports',
-                },
+    const getProps = () => ({
+        userData: {},
+        drawer: 'open',
+        router: {
+            push: () => {},
+            location: {
+                pathname: '/exports',
             },
-            notifications: {
+        },
+        notifications: {
+            fetching: false,
+            fetched: false,
+            notifications: {},
+            notificationsSorted: [],
+            unreadCount: {
                 fetching: false,
                 fetched: false,
-                notifications: {},
-                notificationsSorted: [],
-                unreadCount: {
-                    fetching: false,
-                    fetched: false,
-                    unreadCount: 0,
-                },
+                unreadCount: 0,
             },
-            store,
-            openDrawer: () => {},
-            closeDrawer: () => {},
-            userActive: () => {},
-            getNotifications: () => {},
-            getNotificationsUnreadCount: () => {},
-        };
-    };
+        },
+        store,
+        openDrawer: () => {},
+        closeDrawer: () => {},
+        userActive: () => {},
+        getNotifications: () => {},
+        getNotificationsUnreadCount: () => {},
+    });
 
-    const getMountedWrapper = (props) => {
-        return mount(<Application {...props} />);
-    };
+    const getMountedWrapper = props => mount(<Application {...props} />);
 
-    const getShallowWrapper = (props) => {
-        return shallow(<Application {...props} />);
-    };
+    const getShallowWrapper = props => shallow(<Application {...props} />);
 
     const mountFunc = Application.prototype.componentDidMount;
 
@@ -150,7 +143,7 @@ describe('Application component', () => {
         props.openDrawer = sinon.spy();
         const wrapper = getShallowWrapper(props);
         const nextProps = getProps();
-        nextProps.userData = {data: {}};
+        nextProps.userData = { data: {} };
         window.resizeTo(1200, 1000);
         expect(window.innerWidth).toEqual(1200);
         const spy = sinon.spy(Application.prototype, 'componentWillReceiveProps');
@@ -197,14 +190,14 @@ describe('Application component', () => {
     });
 
     it('handleToggle should open and close the drawer', () => {
-        let props = getProps();
+        const props = getProps();
         props.openDrawer = sinon.spy();
         props.closeDrawer = sinon.spy();
         props.drawer = 'open';
         const wrapper = getShallowWrapper(props);
         wrapper.instance().handleToggle();
         expect(props.closeDrawer.calledOnce).toBe(true);
-        wrapper.setProps({...props, drawer: 'closed'});
+        wrapper.setProps({ ...props, drawer: 'closed' });
         wrapper.instance().handleToggle();
         expect(props.openDrawer.calledOnce).toBe(true);
     });
@@ -227,9 +220,9 @@ describe('Application component', () => {
     it('getChildContext should return config', () => {
         const props = getProps();
         const wrapper = getShallowWrapper(props);
-        wrapper.setState({config: {key: 'value'}});
+        wrapper.setState({ config: { key: 'value' } });
         const context = wrapper.instance().getChildContext();
-        expect(context).toEqual({config: {key: 'value'}});
+        expect(context).toEqual({ config: { key: 'value' } });
     });
 
     it('getConfig should update the state when config is received', async () => {
@@ -254,7 +247,7 @@ describe('Application component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleMouseOver('test string');
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({hovered: 'test string'})).toBe(true);
+        expect(stateSpy.calledWith({ hovered: 'test string' })).toBe(true);
     });
 
     it('handleMouseOut should set the hovered state to an empty string', () => {
@@ -265,7 +258,7 @@ describe('Application component', () => {
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleMouseOut();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({hovered: ''})).toBe(true);
+        expect(stateSpy.calledWith({ hovered: '' })).toBe(true);
     });
 
     it('Auto logout warning should show remaining minutes when above one minute', () => {

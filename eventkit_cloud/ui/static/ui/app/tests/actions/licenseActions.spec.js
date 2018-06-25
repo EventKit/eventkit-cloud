@@ -17,7 +17,7 @@ describe('license actions', () => {
         ]);
         const expectedActions = [
             { type: types.FETCHING_LICENSES },
-            { type: types.RECEIVED_LICENSES, licenses: [{ name: 'license 1' }, { name: 'license 2' }] }
+            { type: types.RECEIVED_LICENSES, licenses: [{ name: 'license 1' }, { name: 'license 2' }] },
         ];
         const store = mockStore({ licenses: [] });
 
