@@ -17,7 +17,7 @@ class FileProducingTaskResult(UIDMixin):
     """
     A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
-    filename = models.CharField(max_length=100, blank=True, editable=False)
+    filename = models.CharField(max_length=508, blank=True, editable=False)
     size = models.FloatField(null=True, editable=False)
     download_url = models.URLField(
         verbose_name='URL to export task result output.',

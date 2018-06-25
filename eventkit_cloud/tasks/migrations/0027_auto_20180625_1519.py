@@ -17,4 +17,9 @@ class Migration(migrations.Migration):
             name='download_url',
             field=models.URLField(max_length=508, verbose_name='URL to export task result output.'),
         ),
+        migrations.AlterField(
+            model_name='fileproducingtaskresult',
+            name='filename',
+            field=models.CharField(blank=True, editable=False, max_length=508),
+        ),
     ]
