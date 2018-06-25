@@ -76,7 +76,7 @@ describe('GroupBody component', () => {
     it('should sort groups by name', () => {
         const props = getProps();
         const sortSpy = sinon.spy(GroupsBody.prototype, 'sortByGroup');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(sortSpy.calledOnce).toBe(true);
         sortSpy.restore();
     });
@@ -264,7 +264,7 @@ describe('GroupBody component', () => {
         const e = { target: { value: 'search text' } };
         wrapper.instance().handleSearchInput(e);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ search: 'search text'}));
+        expect(stateStub.calledWith({ search: 'search text' }));
         stateStub.restore();
     });
 

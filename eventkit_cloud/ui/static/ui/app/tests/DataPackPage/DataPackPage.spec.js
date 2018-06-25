@@ -29,7 +29,7 @@ jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
     const muiTheme = getMuiTheme();
-    const providers = [
+    const testProviders = [
         {
             id: 2,
             model_url: 'http://cloud.eventkit.test/api/providers/osm',
@@ -42,7 +42,7 @@ describe('DataPackPage component', () => {
             slug: 'osm',
             preview_url: '',
             service_copyright: '',
-            service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+            service_description: 'OpenStreetMap vector data.',
             layer: null,
             level_from: 0,
             level_to: 10,
@@ -52,91 +52,89 @@ describe('DataPackPage component', () => {
         },
     ];
 
-    const getProps = () => {
-        return {
-            runsList: {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '12/24',
-                order: '',
-                view: '',
+    const getProps = () => ({
+        runsList: {
+            fetching: false,
+            fetched: false,
+            runs: [],
+            error: null,
+            nextPage: false,
+            range: '12/24',
+            order: '',
+            view: '',
+        },
+        user: { data: { user: { username: 'admin' } } },
+        getRuns: () => {},
+        deleteRuns: () => {},
+        getProviders: () => {},
+        runsDeletion: {
+            deleting: false,
+            deleted: false,
+            error: null,
+        },
+        drawer: 'open',
+        providers: testProviders,
+        importGeom: {},
+        geocode: {},
+        getGeocode: () => {},
+        processGeoJSONFile: () => {},
+        resetGeoJSONFile: () => {},
+        setOrder: () => {},
+        setView: () => {},
+        groups: [
+            {
+                id: 1,
+                name: 'group_one',
+                members: ['user_one'],
+                administrators: ['user_three'],
             },
-            user: { data: { user: { username: 'admin' } } },
-            getRuns: () => {},
-            deleteRuns: () => {},
-            getProviders: () => {},
-            runsDeletion: {
-                deleting: false,
-                deleted: false,
-                error: null,
+            {
+                id: 2,
+                name: 'group_two',
+                members: ['user_two'],
+                administrators: ['user_three'],
             },
-            drawer: 'open',
-            providers,
-            importGeom: {},
-            geocode: {},
-            getGeocode: () => {},
-            processGeoJSONFile: () => {},
-            resetGeoJSONFile: () => {},
-            setOrder: () => {},
-            setView: () => {},
-            groups: [
-                {
-                    id: 1,
-                    name: 'group_one',
-                    members: ['user_one'],
-                    administrators: ['user_three'],
-                },
-                {
-                    id: 2,
-                    name: 'group_two',
-                    members: ['user_two'],
-                    administrators: ['user_three'],
-                },
-                {
-                    id: 3,
-                    name: 'group_three',
-                    members: ['user_one', 'user_two'],
-                    administrators: ['user_one'],
-                },
-            ],
-            users: [
-                {
-                    user: {
-                        first_name: 'user',
-                        last_name: 'one',
-                        username: 'user_one',
-                        email: 'user.one@email.com',
-                    },
-                    groups: [1, 3],
-                },
-                {
-                    user: {
-                        first_name: 'user',
-                        last_name: 'two',
-                        username: 'user_two',
-                        email: 'user.two@email.com',
-                    },
-                    groups: [2, 3],
-                },
-            ],
-            getGroups: () => {},
-            getUsers: () => {},
-            updateDataCartPermissions: () => {},
-            updatePermissions: {
-                updating: false,
-                updated: false,
-                error: null,
+            {
+                id: 3,
+                name: 'group_three',
+                members: ['user_one', 'user_two'],
+                administrators: ['user_one'],
             },
-            location: {
-                query: {
-                    collection: '',
+        ],
+        users: [
+            {
+                user: {
+                    first_name: 'user',
+                    last_name: 'one',
+                    username: 'user_one',
+                    email: 'user.one@email.com',
                 },
+                groups: [1, 3],
             },
-        };
-    };
+            {
+                user: {
+                    first_name: 'user',
+                    last_name: 'two',
+                    username: 'user_two',
+                    email: 'user.two@email.com',
+                },
+                groups: [2, 3],
+            },
+        ],
+        getGroups: () => {},
+        getUsers: () => {},
+        updateDataCartPermissions: () => {},
+        updatePermissions: {
+            updating: false,
+            updated: false,
+            error: null,
+        },
+        location: {
+            query: {
+                collection: '',
+            },
+        },
+    });
 
     const getWrapper = props => (
         mount(<DataPackPage {...props} />, {
@@ -305,7 +303,7 @@ describe('DataPackPage component', () => {
         jest.useFakeTimers();
         const props = getProps();
         props.getRuns = sinon.spy();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
         expect(setInterval.mock.calls[0][1]).toEqual(10000);
@@ -618,7 +616,7 @@ describe('DataPackPage component', () => {
             handleLoadMore: wrapper.instance().loadMore,
             loadLessDisabled: props.runsList.runs.length <= 12,
             loadMoreDisabled: !props.runsList.nextPage,
-            providers,
+            providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
             groups: props.groups,
             ref: wrapper.instance().getViewRef,

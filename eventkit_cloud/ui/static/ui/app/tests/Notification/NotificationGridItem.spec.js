@@ -82,7 +82,7 @@ describe('NotificationGridItem component', () => {
     it('should abort its own handleView() func if parent returns false in onView', () => {
         const props = {
             ...getProps(),
-            onView: () => { return false; },
+            onView: () => false,
             router: {
                 push: sinon.spy(),
             },
@@ -96,7 +96,7 @@ describe('NotificationGridItem component', () => {
     it('should continue its own handleView() func if parent returns true in onView', () => {
         const props = {
             ...getProps(),
-            onView: () => { return true; },
+            onView: () => true,
             router: {
                 push: sinon.spy(),
             },
