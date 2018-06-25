@@ -2,16 +2,14 @@ import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import AppBar from 'material-ui/AppBar';
+import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Joyride from 'react-joyride';
+import Help from 'material-ui/svg-icons/action/help';
 import UserInfo from '../../components/AccountPage/UserInfo';
-import Warning from '../../components/AccountPage/Warning';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import { Account } from '../../components/AccountPage/Account';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
-import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 
 describe('Account Component', () => {
     const muiTheme = getMuiTheme();
@@ -57,7 +55,7 @@ describe('Account Component', () => {
         const props = getProps();
         const joyrideSpy = sinon.spy(Account.prototype, 'joyrideAddSteps');
         const mountSpy = sinon.spy(Account.prototype, 'componentDidMount');
-        const wrapper = getMountedWrapper(props);
+        getMountedWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
         joyrideSpy.restore();
@@ -140,7 +138,7 @@ describe('Account Component', () => {
         props.getLicenses = sinon.spy();
         const mountSpy = sinon.spy(Account.prototype, 'componentWillMount');
         const stateSpy = sinon.spy(Account.prototype, 'setState');
-        const wrapper = getMountedWrapper(props);
+        getMountedWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ acceptedLicenses: props.user.data.accepted_licenses })).toBe(true);
         expect(props.getLicenses.calledOnce).toBe(true);
