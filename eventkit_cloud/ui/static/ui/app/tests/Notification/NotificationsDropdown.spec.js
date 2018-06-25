@@ -5,7 +5,7 @@ import { CircularProgress, Paper } from 'material-ui';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -18,7 +18,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: true,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -34,7 +34,7 @@ const mockNotifications = {
 };
 
 function loadNotifications(wrapper) {
-    const props = wrapper.instance().props;
+    const { props } = wrapper.instance();
     wrapper.setProps({
         ...props,
         notifications: {
@@ -50,7 +50,7 @@ function loadNotifications(wrapper) {
 }
 
 function loadNotificationsEmpty(wrapper) {
-    const props = wrapper.instance().props;
+    const { props } = wrapper.instance();
     wrapper.setProps({
         ...props,
         notifications: {
@@ -184,7 +184,7 @@ describe('NotificationsDropdown component', () => {
             router: {
                 push: sinon.spy(),
             },
-            onNavigate: () => { return false; },
+            onNavigate: () => false,
         };
         const wrapper = getShallowWrapper(props);
         const instance = wrapper.instance();
@@ -198,7 +198,7 @@ describe('NotificationsDropdown component', () => {
             router: {
                 push: sinon.spy(),
             },
-            onNavigate: () => { return true; },
+            onNavigate: () => true,
         };
         const wrapper = getShallowWrapper(props);
         const instance = wrapper.instance();

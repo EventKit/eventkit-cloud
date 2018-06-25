@@ -20,8 +20,8 @@ describe('userActivityReducer', () => {
                 fetching: true,
                 fetched: false,
                 error: null,
-                cancelSource: action.cancelSource
-            }
+                cancelSource: action.cancelSource,
+            },
         });
     });
 
@@ -32,13 +32,13 @@ describe('userActivityReducer', () => {
                 ...initialState.viewedJobs,
                 fetching: true,
                 cancelSource: 'test',
-            }
+            },
         };
         const action = {
             type: types.RECEIVED_VIEWED_JOBS,
             viewedJobs: [
                 { id: '1' },
-                { id: '2' }
+                { id: '2' },
             ],
             nextPage: true,
             range: '12/24',
@@ -66,7 +66,7 @@ describe('userActivityReducer', () => {
                 ...initialState.viewedJobs,
                 fetching: true,
                 cancelSource: 'test',
-            }
+            },
         };
         const action = {
             type: types.FETCH_VIEWED_JOBS_ERROR,
@@ -80,7 +80,7 @@ describe('userActivityReducer', () => {
                 fetching: false,
                 fetched: false,
                 error: action.error,
-                cancelSource: null
+                cancelSource: null,
             },
         });
     });
@@ -93,7 +93,7 @@ describe('userActivityReducer', () => {
                 fetched: true,
                 viewedJobs: [
                     { id: '1' },
-                    { id: '2' }
+                    { id: '2' },
                 ],
             },
         };
