@@ -9,7 +9,7 @@ import NotificationsTableMenu from '../../components/Notification/NotificationsT
 import NotificationsTableItem from '../../components/Notification/NotificationsTableItem';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -22,7 +22,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -100,7 +100,7 @@ describe('NotificationsTable component', () => {
         expect(instance.state.selected).toEqual({});
         instance.setSelected(mockNotifications['1'], true);
         expect(instance.state.selected).toEqual({
-            '1': mockNotifications['1'],
+            1: mockNotifications['1'],
         });
         instance.setSelected(mockNotifications['1'], false);
         expect(instance.state.selected).toEqual({});
@@ -112,14 +112,14 @@ describe('NotificationsTable component', () => {
         expect(instance.state.selected).toEqual({});
         instance.handleSelectAllCheck();
         expect(instance.state.selected).toEqual({
-            '1': mockNotifications['1'],
-            '2': mockNotifications['2'],
+            1: mockNotifications['1'],
+            2: mockNotifications['2'],
         });
         instance.handleSelectAllCheck();
         expect(instance.state.selected).toEqual({});
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
+                1: mockNotifications['1'],
             },
         });
         instance.handleSelectAllCheck();
@@ -131,14 +131,14 @@ describe('NotificationsTable component', () => {
         const instance = wrapper.instance();
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
         expect(elementType(instance.getSelectAllCheckedIcon())).toBe(CheckboxIcon);
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
+                1: mockNotifications['1'],
             },
         });
         expect(elementType(instance.getSelectAllCheckedIcon())).toBe(IndeterminateCheckboxIcon);
@@ -151,8 +151,8 @@ describe('NotificationsTable component', () => {
         expect(checkbox.props.onCheck).toBe(wrapper.instance().handleSelectAllCheck);
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
         checkbox = wrapper.find(TableHeaderColumn).at(0).find(Checkbox).get(0);
@@ -160,7 +160,7 @@ describe('NotificationsTable component', () => {
         expect(elementType(checkbox.props.checkedIcon)).toBe(CheckboxIcon);
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
+                1: mockNotifications['1'],
             },
         });
         checkbox = wrapper.find(TableHeaderColumn).at(0).find(Checkbox).get(0);
@@ -179,8 +179,8 @@ describe('NotificationsTable component', () => {
         const wrapper = getShallowWrapper(props);
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
         const menu = wrapper.find(NotificationsTableMenu).get(0);
@@ -203,7 +203,7 @@ describe('NotificationsTable component', () => {
         const instance = wrapper.instance();
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
+                1: mockNotifications['1'],
             },
         });
         const item = wrapper.find(NotificationsTableItem).get(0);
@@ -222,24 +222,24 @@ describe('NotificationsTable component', () => {
         const wrapper = getShallowWrapper(props);
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
         expect(wrapper.state().selected).toEqual({
-            '1': mockNotifications['1'],
-            '2': mockNotifications['2'],
+            1: mockNotifications['1'],
+            2: mockNotifications['2'],
         });
         wrapper.setProps({
             notifications: {
                 ...props.notifications,
                 notifications: {
-                    '1': mockNotifications['1'],
+                    1: mockNotifications['1'],
                 },
             },
         });
         expect(wrapper.state().selected).toEqual({
-            '1': mockNotifications['1'],
+            1: mockNotifications['1'],
         });
     });
 
@@ -247,8 +247,8 @@ describe('NotificationsTable component', () => {
         const wrapper = getShallowWrapper();
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
         expect(wrapper.find(TableHeaderColumn).at(1).find('span').text()).toBe('2 Selected');
