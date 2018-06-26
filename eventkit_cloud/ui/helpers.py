@@ -14,12 +14,12 @@ from django.utils import timezone
 from django.template.loader import render_to_string
 from celery.utils.log import get_task_logger
 from ..utils.gdalutils import get_meta, get_band_statistics
+from ..utils import auth_requests
 from uuid import uuid4
 from string import Template
 from datetime import datetime
 import pytz
 from numpy import linspace
-
 
 logger = get_task_logger(__name__)
 
@@ -82,6 +82,9 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     # A dict is used here to ensure that just one file per provider is added,
     # this should be updated when multiple formats are supported.
     provider_details = {}
+    has_raster = False
+    has_elevation = False
+    # This collecting of metadata should be generalized and used for both QGS styles and arcmap styles.
     if export_provider_task:
         provider_details[export_provider_task.slug] = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
     else:
@@ -101,10 +104,16 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                     # Exclude zip files created by zip_export_provider and the selection geojson
                     # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
                     # GeoTIFF are elevation.  This will need to be updated in the future.
-                    if not (full_file_path.endswith(".zip") or full_file_path.endswith(".geojson")):
+                    file_ext = os.path.splitext(full_file_path)[1]
+                    if file_ext not in [".zip", ".geojson"]:
                         provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
                                            'provider_name': provider_task.name,
-                                           'file_type': os.path.splitext(full_file_path)[1]}
+                                           'file_type': file_ext}
+                        if provider_task.slug not in ['osm', 'nome']:
+                            if file_ext == '.gpkg':
+                                has_raster = True
+                            if file_ext == '.tif':
+                                has_elevation = True
                         if os.path.splitext(full_file_path)[1] == '.tif':
                             # Get statistics to update ranges in template.
                             band_stats = get_band_statistics(full_file_path)
@@ -125,8 +134,51 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'provider_details': provider_details,
-                                                                      'bbox': run.job.extents}))
+                                                                      'bbox': run.job.extents,
+                                                                      'has_raster': has_raster,
+                                                                      'has_elevation': has_elevation}))
     return style_file
+
+def get_human_readable_metadata_document(run_uid):
+    """
+
+    :param run_uid: A UID for the export run.
+    :return: A filepath to a txt document.
+    """
+    from eventkit_cloud.tasks.models import ExportRun
+    from eventkit_cloud.jobs.models import DataProvider
+    from ..tasks.task_runners import normalize_name
+    run = ExportRun.objects.get(uid=run_uid)
+    stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
+
+    data_providers = []
+    for provider_task in run.provider_tasks.all():
+        data_provider = DataProvider.objects.get(slug=provider_task.slug)
+        provider_type = data_provider.export_provider_type.type_name
+        data_provider_metadata = {'name': data_provider.name,
+                                  'description': data_provider.service_description.replace('\r\n', '\n').replace('\n', '\r\n\t'),
+                                  'last_update': get_last_update(data_provider.url,
+                                                                 provider_type,
+                                                                 slug=data_provider.slug),
+                                  'metadata': get_metadata_url(data_provider.url, provider_type),
+                                  'copyright': data_provider.service_copyright}
+        data_providers += [data_provider_metadata]
+
+    metadata = {'name': run.job.name,
+                'url': "{0}/status/{1}".format(getattr(settings, "SITE_URL"), run.job.uid),
+                'description': run.job.description,
+                'project': run.job.event,
+                'date': timezone.now().strftime("%Y%m%d"),
+                'run_uid': run.uid,
+                'data_providers': data_providers,
+                'aoi': run.job.bounds_geojson}
+
+    metadata_file = os.path.join(stage_dir, '{0}_ReadMe.txt'.format(normalize_name(run.job.name)))
+
+    with open(metadata_file, 'w') as open_file:
+        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).replace('\r\n', '\n').replace('\n', '\r\n'))
+
+    return metadata_file
 
 
 def get_file_paths(directory, paths=None):
@@ -136,6 +188,52 @@ def get_file_paths(directory, paths=None):
             for f in filenames:
                 paths[os.path.abspath(os.path.join(dirpath, f))] = os.path.join(dirpath, f)
     return paths
+
+
+def get_last_update(url, type, slug=None):
+    """
+    A wrapper to get different timestamps.
+    :param url: The url to get the timestamp
+    :param type: The type of services (e.g. osm)
+    :param slug: Optionally a slug if the service requires credentials.
+    :return: The timestamp as a string.
+    """
+    if type == 'osm':
+        return get_osm_last_update(url, slug=slug)
+
+
+def get_metadata_url(url, type):
+    """
+    A wrapper to get different timestamps.
+    :param url: The url to get the timestamp
+    :param type: The type of services (e.g. osm)
+    :param slug: Optionally a slug if the service requires credentials.
+    :return: The timestamp as a string.
+    """
+    if type in ['wcs', 'wms', 'wmts']:
+        return "{0}?request=GetCapabilities".format(url.split('?')[0])
+    else:
+        return url
+
+
+def get_osm_last_update(url, slug=None):
+    """
+
+    :param url: A path to the overpass api.
+    :param slug: Optionally a slug if credentials are needed
+    :return: The default timestamp as a string (2018-06-18T13:09:59Z)
+    """
+
+    timestamp_url = "{0}timestamp".format(url.rstrip('/').rstrip('interpreter'))
+    try:
+        response = auth_requests.get(timestamp_url, slug=slug)
+        if response:
+            return response.content
+        raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
+    except Exception as e:
+        logger.warning(e)
+        logger.warning("Could not get the timestamp from the overpass url.")
+        return None
 
 
 def file_to_geojson(in_memory_file):

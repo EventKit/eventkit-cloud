@@ -5,7 +5,6 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Drawer from 'material-ui/Drawer';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
-import Vert from 'material-ui/svg-icons/navigation/more-vert';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 
 

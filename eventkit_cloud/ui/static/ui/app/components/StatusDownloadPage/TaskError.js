@@ -46,12 +46,16 @@ export class TaskError extends Component {
 
         return (
             <span className="qa-TaskError-errorLink">
-                <a 
-                    onClick={() => {this.handleTaskErrorOpen()}} 
+                <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={this.handleTaskErrorOpen}
+                    onKeyPress={this.handleTaskErrorOpen}
                     style={styles.errorText}
+                    className="qa-TaskError-error-text"
                 >
                     ERROR
-                </a>
+                </span>
 
                 <BaseDialog
                     className="qa-TaskError-BaseDialog"
@@ -82,7 +86,6 @@ export class TaskError extends Component {
                         </div>
                     ))}
                 </BaseDialog>
-
             </span>
         );
     }

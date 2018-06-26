@@ -39,7 +39,7 @@ const providerTasks = [{
     slug: 'osm',
     tasks,
     uid: 'e261d619-2a02-4ba5-a58c-be0908f97d04',
-    url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04'
+    url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
 }];
 
 const providers = [{
@@ -54,7 +54,7 @@ const providers = [{
     slug: 'osm',
     preview_url: '',
     service_copyright: '',
-    service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+    service_description: 'OpenStreetMap vector data.',
     layer: null,
     level_from: 0,
     level_to: 10,
@@ -62,6 +62,86 @@ const providers = [{
     display: true,
     export_provider_type: 2,
 }];
+
+function getRuns() {
+    return [
+        {
+            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+            url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+            started_at: '2017-03-10T15:52:35.637331Z',
+            finished_at: '2017-03-10T15:52:39.837Z',
+            duration: '0:00:04.199825',
+            user: 'admin',
+            status: 'COMPLETED',
+            job: {
+                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                name: 'Test1',
+                event: 'Test1 event',
+                description: 'Test1 description',
+                url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+                extent: {},
+                permissions: {
+                    value: 'PRIVATE',
+                    groups: {},
+                    members: {},
+                },
+            },
+            provider_tasks: providerTasks,
+            zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+            expiration: '2017-03-24T15:52:35.637258Z',
+        },
+        {
+            uid: 'c7466114-8c0c-4160-8383-351414b11e37',
+            url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
+            started_at: '2017-03-10T15:52:29.311523Z',
+            finished_at: '2017-03-10T15:52:33.612Z',
+            duration: '0:00:04.301278',
+            user: 'notAdmin',
+            status: 'COMPLETED',
+            job: {
+                uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
+                name: 'Test2',
+                event: 'Test2 event',
+                description: 'Test2 description',
+                url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
+                extent: {},
+                permissions: {
+                    value: 'PUBLIC',
+                    groups: {},
+                    members: {},
+                },
+            },
+            provider_tasks: providerTasks,
+            zipfile_url: 'http://cloud.eventkit.test/downloads/c7/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
+            expiration: '2017-03-24T15:52:29.311458Z',
+        },
+        {
+            uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
+            url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
+            started_at: '2017-03-10T15:52:18.796929Z',
+            finished_at: '2017-03-10T15:52:27.500Z',
+            duration: '0:00:08.703092',
+            user: 'admin',
+            status: 'COMPLETED',
+            job: {
+                uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                name: 'Test3',
+                event: 'Test3 event',
+                description: 'Test3 description',
+                url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                extent: {},
+                permissions: {
+                    value: 'PUBLIC',
+                    groups: {},
+                    members: {},
+                },
+            },
+            provider_tasks: providerTasks,
+            zipfile_url: 'http://cloud.eventkit.test/downloads/28/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',
+            expiration: '2017-03-24T15:52:18.796854Z',
+        },
+    ];
+}
 
 beforeAll(() => {
     DataPackGridItem.prototype.initMap = sinon.stub();
@@ -71,12 +151,10 @@ afterAll(() => {
     DataPackGridItem.prototype.initMap.restore();
 });
 
-const getWrapper = (props) => {
-    return mount(<DataPackGridItem {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
-    });
-}
+const getWrapper = props => mount(<DataPackGridItem {...props} />, {
+    context: { muiTheme },
+    childContextTypes: { muiTheme: React.PropTypes.object },
+});
 
 describe('DataPackGridItem component', () => {
     const getProps = () => (
@@ -86,7 +164,7 @@ describe('DataPackGridItem component', () => {
             providers,
             onRunDelete: () => {},
         }
-    )
+    );
 
     it('should display general run information', () => {
         const props = getProps();
@@ -115,7 +193,7 @@ describe('DataPackGridItem component', () => {
         const props = getProps();
         const mountSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidMount');
         DataPackGridItem.prototype.initMap.reset();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(DataPackGridItem.prototype.initMap.calledOnce).toBe(true);
         mountSpy.restore();
@@ -130,7 +208,7 @@ describe('DataPackGridItem component', () => {
 
     it('should display information specific to a published & owned run', () => {
         const props = getProps();
-        props.run = getRuns()[2];
+        [, , props.run] = getRuns();
         const wrapper = getWrapper(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
@@ -138,7 +216,7 @@ describe('DataPackGridItem component', () => {
 
     it('should display information specific to a published & not owned run', () => {
         const props = getProps();
-        props.run = getRuns()[1];
+        [, props.run] = getRuns();
         const wrapper = getWrapper(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
         expect(wrapper.find(CardActions).find('p').text()).toEqual('notAdmin');
@@ -186,6 +264,7 @@ describe('DataPackGridItem component', () => {
         const expectedBool = !wrapper.state().overflow;
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         const div = TestUtils.findRenderedComponentWithType(wrapper.instance(), CardText);
+        // eslint-disable-next-line react/no-find-dom-node
         const node = ReactDOM.findDOMNode(div);
         TestUtils.Simulate.touchTap(node);
         expect(stateSpy.calledOnce).toBe(true);
@@ -255,7 +334,7 @@ describe('DataPackGridItem component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({
             providerDescs: {
-                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
             },
             providerDialogOpen: true,
         })).toBe(true);
@@ -297,83 +376,3 @@ describe('DataPackGridItem component', () => {
         expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 });
-
-function getRuns() {
-    return [
-        {
-            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-            url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-            started_at: '2017-03-10T15:52:35.637331Z',
-            finished_at: '2017-03-10T15:52:39.837Z',
-            duration: '0:00:04.199825',
-            user: 'admin',
-            status: 'COMPLETED',
-            job: {
-                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                name: 'Test1',
-                event: 'Test1 event',
-                description: 'Test1 description',
-                url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-                extent: {},
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: providerTasks,
-            zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-            expiration: '2017-03-24T15:52:35.637258Z',
-        },
-        {
-            uid: 'c7466114-8c0c-4160-8383-351414b11e37',
-            url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
-            started_at: '2017-03-10T15:52:29.311523Z',
-            finished_at: '2017-03-10T15:52:33.612Z',
-            duration: '0:00:04.301278',
-            user: 'notAdmin',
-            status: 'COMPLETED',
-            job: {
-                uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
-                name: 'Test2',
-                event: 'Test2 event',
-                description: 'Test2 description',
-                url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
-                extent: {},
-                permissions: {
-                    value: 'PUBLIC',
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: providerTasks,
-            zipfile_url: 'http://cloud.eventkit.test/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
-            expiration: '2017-03-24T15:52:29.311458Z',
-        },
-        {
-            uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
-            url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
-            started_at: '2017-03-10T15:52:18.796929Z',
-            finished_at: '2017-03-10T15:52:27.500Z',
-            duration: '0:00:08.703092',
-            user: 'admin',
-            status: 'COMPLETED',
-            job: {
-                uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-                name: 'Test3',
-                event: 'Test3 event',
-                description: 'Test3 description',
-                url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-                extent: {},
-                permissions: {
-                    value: 'PUBLIC',
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: providerTasks,
-            zipfile_url: 'http://cloud.eventkit.test/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',
-            expiration: '2017-03-24T15:52:18.796854Z',
-        },
-    ];
-}

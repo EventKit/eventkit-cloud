@@ -35,7 +35,7 @@ from ..export_tasks import (
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
     bounds_export_task, parse_result, finalize_export_provider_task,
-    FormatTask, wait_for_providers_task, example_finalize_run_hook_task
+    FormatTask, wait_for_providers_task, example_finalize_run_hook_task, prepare_for_export_zip_task
 )
 
 
@@ -239,6 +239,8 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.tests.test_export_tasks.os.mkdir')
+    @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.json')
     @patch('__builtin__.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
@@ -248,7 +250,8 @@ class TestExportTasks(ExportTaskBase):
     @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
     @patch('celery.app.task.Task.request')
     def test_run_zip_export_provider(self, mock_request, mock_zip_file, mock_export_provider_task, mock_isfile,
-                                     mock_logger, mock_qgs_file, mock_open, mock_json):
+                                     mock_logger, mock_qgs_file, mock_open, mock_json,
+                                     mock_get_human_readable_metadata_document, os_mkdir):
         file_names = ('file1', 'file2', 'file3')
         tasks = (Mock(result=Mock(filename=file_names[0])),
                  Mock(result=Mock(filename=file_names[1])),
@@ -398,8 +401,11 @@ class TestExportTasks(ExportTaskBase):
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
+    @patch('os.path.getsize')
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    def test_zipfile_task(self, s3, mock_os_walk, mock_zipfile, remove, copy):
+    def test_zipfile_task(self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy):
+        os_path_getsize.return_value = 20
+
         class MockZipFile:
             def __init__(self):
                 self.files = {}
@@ -431,7 +437,7 @@ class TestExportTasks(ExportTaskBase):
         )]
         date = timezone.now().strftime('%Y%m%d')
         fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
-        zipfile_name = os.path.join('{0}'.format(run_uid),'testjob-test-eventkit-{0}.zip'.format(date))
+        zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_file_task.run(run_uid=run_uid, include_files=[
             os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')])
@@ -701,15 +707,15 @@ class TestExportTasks(ExportTaskBase):
             mock_export_run.objects.filter().first().__nonzero__.return_value = False
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
+    @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.json')
     @patch('__builtin__.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('os.path.join', side_effect=lambda *args: args[-1])
     @patch('os.path.isfile')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_prepare_for_export_zip_task(self, mock_ExportRun, isfile, join, mock_generate_qgs_style, mock_open, mock_json):
-
-        from eventkit_cloud.tasks.export_tasks import prepare_for_export_zip_task
+    def test_prepare_for_export_zip_task(self, mock_ExportRun, isfile, join, mock_generate_qgs_style, mock_open,
+                                         mock_json, mock_get_human_readable_metadata_document):
 
         # This doesn't need to be valid with ExportRun mocked
         mock_run_uid = str(uuid.uuid4())
@@ -717,9 +723,13 @@ class TestExportTasks(ExportTaskBase):
 
         style_file = "style.qgs"
         mock_generate_qgs_style.return_value = style_file
-        expected_file_list = ['e1', 'e2', 'e3', style_file, 'metadata.json']
+        metadata_file = "ReadMe.txt"
+        mock_get_human_readable_metadata_document.return_value = metadata_file
+        
+        expected_file_list = ['e1', 'e2', 'e3', style_file, 'metadata.json', metadata_file]
         missing_file_list = ['e4']
         all_file_list = expected_file_list + missing_file_list
+
 
         def fake_isfile(fname):
             if fname in expected_file_list:
@@ -789,12 +799,13 @@ class FinalizeRunHookTaskTests(ExportTaskBase):
         self.finalize_hook_file2 = finalize_hook_file2
         self.finalize_hook_file3 = finalize_hook_file3
 
+    @patch('eventkit_cloud.tasks.models.ExportRun')
     @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
     @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
     @patch('eventkit_cloud.tasks.models.FileProducingTaskResult.objects.create')
     @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
     @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, shutil_copy):
+    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, shutil_copy, ExportRunMock):
         """ Check that expected new files appear in the result & the new files are recorded in
             FileProducingTaskResult.
         """

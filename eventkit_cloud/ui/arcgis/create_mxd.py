@@ -33,9 +33,9 @@ try:
 except Exception as e:
     print(e)
     raw_input(
-        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script."
-        "Please ensure that it is installed and activated."
-        "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS."
+        "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script. "
+        "Please ensure that it is installed and activated. "
+        "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS. "
         "Press any key to exit.")
     raise
 
@@ -44,7 +44,8 @@ if arcpy.GetInstallInfo().get('Version') not in SUPPORTED_VERSIONS:
     print(
         "This script only supports versions {0}.  "
         "It might work for {1} but it will likely not support all of the datasets.".format(
-            SUPPORTED_VERSIONS, VERSIONS))
+            SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS]))
+
 
 def update_mxd_from_metadata(file_name, metadata, verify=False):
     """
@@ -93,7 +94,6 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
 
 def get_mxd_template(version):
     """
-
     :param version: A version for the correct arcgis MapDocument template.
     :return: A file path to the correct arcgis MapDocument template.
     """

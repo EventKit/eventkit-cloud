@@ -11,7 +11,6 @@ import VectorSource from 'ol/source/vector';
 import VectorLayer from 'ol/layer/vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
-import { WGS84, WEB_MERCATOR } from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -483,7 +482,7 @@ describe('mapUtils', () => {
         const map = { getView: sinon.spy(() => ({ fit: fitSpy })) };
         utils.zoomToFeature(feature, map);
         expect(transformStub.calledOnce).toBe(true);
-        expect(transformStub.calledWith([1, 1, 1, 1], WGS84, WEB_MERCATOR)).toBe(true);
+        expect(transformStub.calledWith([1, 1, 1, 1], utils.WGS84, utils.WEB_MERCATOR)).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith([1, 1, 1, 1])).toBe(true);
         transformStub.restore();
