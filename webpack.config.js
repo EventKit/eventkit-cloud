@@ -149,6 +149,5 @@ if (!PROD) {
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'inline-source-map';
 }
-config.devtool = '';
 
 module.exports = config;
