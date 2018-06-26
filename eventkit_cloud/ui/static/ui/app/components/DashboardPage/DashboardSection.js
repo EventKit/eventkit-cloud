@@ -92,6 +92,7 @@ export class DashboardSection extends React.Component {
                 ...styles.tabButton,
                 backgroundColor: 'lightgray',
                 border: '3px solid gray',
+                opacity: '0.5',
             },
         };
 

@@ -23,6 +23,21 @@ import * as utils from '../../utils/generic';
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
 
+const formats = [
+    {
+        uid: 'ed48a7c1-1fc3-463e-93b3-e93eb3861a5a',
+        url: 'http://cloud.eventkit.test/api/formats/shp',
+        slug: 'shp',
+        name: 'ESRI Shapefile Format',
+        description: 'Esri Shapefile (OSM Schema)',
+    },
+    {
+        uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+    }];
 
 describe('ExportInfo component', () => {
     const muiTheme = getMuiTheme();
@@ -63,22 +78,6 @@ describe('ExportInfo component', () => {
             setNextEnabled: () => {},
         }
     );
-
-    const formats = [
-        {
-            "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
-            "url": "http://cloud.eventkit.test/api/formats/shp",
-            "slug": "shp",
-            "name": "ESRI Shapefile Format",
-            "description": "Esri Shapefile (OSM Schema)"
-        },
-        {
-            "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
-            "url": "http://cloud.eventkit.test/api/formats/gpkg",
-            "slug": "gpkg",
-            "name": "Geopackage",
-            "description": "GeoPackage"
-        },]
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
@@ -124,7 +123,7 @@ describe('ExportInfo component', () => {
         const areaSpy = sinon.spy(utils, 'getSqKmString');
         const hasFieldsSpy = sinon.spy(ExportInfo.prototype, 'hasRequiredFields');
         const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledOnce).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
@@ -280,7 +279,6 @@ describe('ExportInfo component', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
         const wrapper = getWrapper(props);
-        //expect(stateSpy.called).toBe(false);
         // dont actually create a map when expanded
         wrapper.instance().initializeOpenLayers = sinon.spy();
         wrapper.instance().expandedChange(true);
@@ -412,16 +410,16 @@ describe('ExportInfo component', () => {
 
     it('callback function should stop tour if close is clicked', () => {
         const callbackData = {
-            action: "close",
+            action: 'close',
             index: 2,
             step: {
-                position: "bottom",
-                selector: ".qa-DataPackLinkButton-RaisedButton",
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
                 style: {},
-                text: "Click here to Navigate to Create a DataPack.",
-                title: "Create DataPack",
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
             },
-            type: "step:before",
+            type: 'step:before',
         };
         const props = getProps();
         const wrapper = getWrapper(props);
