@@ -1644,9 +1644,10 @@ def create_filepath(dirs, filename_parts, ext):
     final_path = ''
     for dir in dirs:
         final_path = os.path.join(final_path, dir)
-    filename = ''
-    for part in filename_parts:
-        filename += '-{}'.format(part)
+    if filename_parts:
+        filename = filename_parts.pop(0)
+        for part in filename_parts:
+            filename += '-{}'.format(part)
     if not ext.startswith('.'):
         ext = '.{}'.format(ext)
     return os.path.join(final_path, filename) + ext
