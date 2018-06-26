@@ -66,7 +66,7 @@ export class StatusFilter extends Component {
                             </div>
                         }
                     />
-                    
+
                     <Checkbox
                         className="qa-StatusFilter-Checkbox-running"
                         style={styles.checkBox}

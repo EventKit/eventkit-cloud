@@ -22,6 +22,7 @@ export class LoadButtons extends React.Component {
     }
 
     setWidth() {
+        // eslint-disable-next-line react/no-find-dom-node
         const width = ReactDOM.findDOMNode(this).offsetWidth;
         if (width !== this.state.width) {
             this.setState({ width });

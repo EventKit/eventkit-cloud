@@ -9,7 +9,6 @@ import os
 import shutil
 import socket
 import traceback
-from urllib import urlencode
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from django.conf import settings
@@ -172,11 +171,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
             download_filename,
         )
     else:
-        try:
-            if not os.path.isdir(run_dir):
-                os.makedirs(run_dir)
-        except OSError as e:
-            logger.info(e)
+        make_dirs(run_dir)
 
         download_url = os.path.join(download_url_root, run_uid, download_filename)
 
@@ -786,11 +781,11 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
         include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
         include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
 
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
+        make_dirs(os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis'))
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
-
 
         logger.debug("Zipping files: {0}".format(include_files))
         zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
@@ -1083,7 +1078,8 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
             include_files += [license_file]
 
     if include_files:
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'metadata.json')
+        make_dirs(os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis'))
+        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
@@ -1194,7 +1190,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
 
-            if filepath.endswith((".qgs", "metadata.json", "ReadMe.txt")):
+            if filepath.endswith((".qgs", "ReadMe.txt")):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
@@ -1656,3 +1652,11 @@ def get_data_type_from_provider(provider_slug):
     if data_provider.slug.lower() == 'nome':
         type_mapped = 'nome'
     return type_mapped
+
+
+def make_dirs(path):
+    try:
+        os.makedirs(path)
+    except OSError:
+        if not os.path.isdir(path):
+            raise

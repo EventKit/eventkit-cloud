@@ -11,7 +11,7 @@ describe('DataPackLinkButton component', () => {
     it('should render a linked button', () => {
         const wrapper = mount(<DataPackLinkButton />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object }
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual('/create');
