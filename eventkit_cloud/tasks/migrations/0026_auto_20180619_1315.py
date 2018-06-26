@@ -71,6 +71,11 @@ class Migration(migrations.Migration):
             name='uid',
             field=models.UUIDField(default=uuid.uuid4, editable=False, db_index=True, unique=True)
         ),
+        migrations.AlterField(
+            model_name='fileproducingtaskresult',
+            name='download_url',
+            field=models.URLField(max_length=506, verbose_name='URL to export task result output.'),
+        ),
         migrations.AddField(
             model_name='userdownload',
             name='downloadable',
