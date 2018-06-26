@@ -20,7 +20,9 @@ export class DataCartInfoTable extends Component {
                 />
                 <CustomTableRow
                     title="Finished"
-                    data={this.props.dataPack.finished_at === null ? 'Currently Processing...' : moment(this.props.dataPack.finished_at).format('h:mm:ss a, MMMM Do YYYY')}
+                    data={this.props.dataPack.finished_at === null ?
+                        'Currently Processing...' : moment(this.props.dataPack.finished_at).format('h:mm:ss a, MMMM Do YYYY')
+                    }
                 />
             </div>
         );
