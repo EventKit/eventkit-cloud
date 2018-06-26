@@ -716,13 +716,13 @@ export class ExportInfo extends React.Component {
                                                 checkedIcon={
                                                     <ActionCheckCircle
                                                         className="qa-ExportInfo-ActionCheckCircle-provider"
-                                                        style={{ fill: '#55ba63', paddingLeft: '5px' }}
+                                                        style={{ fill: '#55ba63' }}
                                                     />
                                                 }
                                                 uncheckedIcon={
                                                     <UncheckedCircle
                                                         className="qa-ExportInfo-UncheckedCircle-provider"
-                                                        style={{ fill: '#4598bf', paddingLeft: '5px' }}
+                                                        style={{ fill: '#4598bf' }}
                                                     />
                                                 }
                                             />}
