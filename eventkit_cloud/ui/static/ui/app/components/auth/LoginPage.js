@@ -80,6 +80,7 @@ export class LoginPage extends React.Component {
                                         </div>
                                         <div
                                             style={{ color: '#fff', paddingRight: '10px' }}
+                                            // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={
                                                 { __html: this.context.config.LOGIN_DISCLAIMER }
                                             }
