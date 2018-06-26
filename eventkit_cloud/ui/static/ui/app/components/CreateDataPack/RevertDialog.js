@@ -177,7 +177,7 @@ RevertDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onRevertClick: PropTypes.func.isRequired,
     onRevertClose: PropTypes.func.isRequired,
-    aoiInfo: PropTypes.object,
+    aoiInfo: PropTypes.object.isRequired,
 };
 
 export default RevertDialog;
