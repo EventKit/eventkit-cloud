@@ -8,6 +8,45 @@ import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('ProviderError component', () => {
+    const tasks = [
+        {
+            name: 'OSM Data (.gpkg)',
+            status: 'INCOMPLETE',
+            errors: [
+                {
+                    exception: 'OSM should show',
+                },
+            ],
+            display: true,
+        },
+        {
+            name: 'QGIS Project file (.qgs)',
+            status: 'INCOMPLETE',
+            errors: [
+                {
+                    exception: 'QGIS should show',
+                },
+            ],
+            display: true,
+        },
+        {
+            name: 'Area of Interest (.geojson)',
+            status: 'INCOMPLETE',
+            errors: [],
+            display: true,
+        },
+        {
+            name: 'Area of Interest (.gpkg)',
+            status: 'INCOMPLETE',
+            errors: [
+                {
+                    exception: 'AOI should not show',
+                },
+            ],
+            display: false,
+        },
+    ];
+
     const getProps = () => (
         {
             provider: {
@@ -91,42 +130,3 @@ describe('ProviderError component', () => {
         stateSpy.restore();
     });
 });
-
-const tasks = [
-    {
-        name: 'OSM Data (.gpkg)',
-        status: 'INCOMPLETE',
-        errors: [
-            {
-                exception: 'OSM should show',
-            },
-        ],
-        display: true,
-    },
-    {
-        name: 'QGIS Project file (.qgs)',
-        status: 'INCOMPLETE',
-        errors: [
-            {
-                exception: 'QGIS should show',
-            },
-        ],
-        display: true,
-    },
-    {
-        name: 'Area of Interest (.geojson)',
-        status: 'INCOMPLETE',
-        errors: [],
-        display: true,
-    },
-    {
-        name: 'Area of Interest (.gpkg)',
-        status: 'INCOMPLETE',
-        errors: [
-            {
-                exception: 'AOI should not show',
-            },
-        ],
-        display: false,
-    },
-];

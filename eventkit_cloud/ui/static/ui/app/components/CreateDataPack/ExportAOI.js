@@ -499,7 +499,8 @@ export class ExportAOI extends Component {
             const coords = geom.getCoordinates();
             const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
             geom.setCoordinates(unwrappedCoords);
-            const geojson = new GeoJSON().writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
+            const geo = new GeoJSON();
+            const geojson = geo.writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
                 dataProjection: WGS84,
                 featureProjection: WEB_MERCATOR,
             });

@@ -182,7 +182,7 @@ describe('ProviderRow component', () => {
     it('componentWillMount should set selectedRows', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ selectedRows: { 123: false } })).toBe(true);
         stateSpy.restore();

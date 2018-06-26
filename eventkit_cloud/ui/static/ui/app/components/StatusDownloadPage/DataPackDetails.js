@@ -28,11 +28,11 @@ export class DataPackDetails extends Component {
     }
 
     getCloudDownloadIcon() {
-        if (this.props.zipFileProp === null) {
+        if (!this.props.zipFileProp) {
             return (
                 <CloudDownload
                     className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{ fill: 'gray', verticalAlign: 'middle' }}
+                    style={{ fill: 'grey', verticalAlign: 'middle' }}
                 />
             );
         }
@@ -69,10 +69,10 @@ export class DataPackDetails extends Component {
     }
 
     isZipFileCompleted() {
-        if (this.props.zipFileProp === null) {
-            return true;
+        if (!this.props.zipFileProp) {
+            return false;
         }
-        return false;
+        return true;
     }
 
     render() {
@@ -126,19 +126,18 @@ export class DataPackDetails extends Component {
                                 className="qa-DataPackDetails-TableHeaderColumn-zipButton"
                                 style={styles.download}
                             >
-                                <a href={this.props.zipFileProp}>
-                                    <RaisedButton
-                                        id="CompleteDownload"
-                                        className="qa-DataPackDetails-RaisedButton-zipButton"
-                                        backgroundColor="rgba(179,205,224,0.5)"
-                                        disabled={this.isZipFileCompleted()}
-                                        disableTouchRipple
-                                        labelColor="#4598bf"
-                                        labelStyle={{ fontWeight: 'bold', fontSize: textFontSize }}
-                                        label={this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
-                                        icon={this.getCloudDownloadIcon()}
-                                    />
-                                </a>
+                                <RaisedButton
+                                    id="CompleteDownload"
+                                    href={this.props.zipFileProp}
+                                    className="qa-DataPackDetails-RaisedButton-zipButton"
+                                    backgroundColor="rgba(179,205,224,0.5)"
+                                    disabled={!this.isZipFileCompleted()}
+                                    disableTouchRipple
+                                    labelColor="#4598bf"
+                                    labelStyle={{ fontWeight: 'bold', fontSize: textFontSize }}
+                                    label={this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
+                                    icon={this.getCloudDownloadIcon()}
+                                />
                             </TableHeaderColumn>
                             <TableHeaderColumn
                                 className="qa-DataPackDetails-TableHeaderColumn-fileSize"
