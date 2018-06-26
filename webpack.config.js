@@ -14,20 +14,21 @@ var plugins = [
     new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         reportFilename: 'report.html'
-    })
+    }),
+    new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
+    new webpack.HashedModuleIdsPlugin(),
 ];
 var app = [APP_DIR + '/index.js'];
-
 var config = {
     mode: PROD ? 'production' : 'development',
     devtool: devtool,
     entry: {
-        app: app,
+        bundle: app,
     },
     output: {
         path: BUILD_DIR,
-        filename: 'bundle.js',
-        chunkFilename: '[name].js',
+        filename: '[name].js',
+        chunkFilename: '[name].[chunkhash].js',
         publicPath: '/static/ui/build/'
     },
     resolve: {
@@ -86,15 +87,44 @@ var config = {
     },
     optimization: {
         splitChunks: {
-            chunks: 'all',
             cacheGroups: {
-                vendor: {
-                    test: /[\\/]node_modules[\\/]/,
-                    name: 'node-modules',
+                commons: {
                     chunks: 'all',
+                    minChunks: 2,
+                    priority: -5,
+                    test: /[\\/]node_modules[\\/]/,
+                    enforce: true,
                 },
-            },
-        },
+                mui: {
+                    name: 'mui',
+                    chunks: 'all',
+                    minChunks: 2,
+                    test: /node_modules\/material-ui/,
+                    enforce: true,
+                },
+                ol: {
+                    name: 'openlayers',
+                    chunks: 'all',
+                    minChunks: 2,
+                    test: /node_modules\/ol/,
+                    enforce: true,
+                },
+                jsts: {
+                    name: 'jsts',
+                    chunks: 'all',
+                    minChunks: 2,
+                    test: /node_modules\/jsts/,
+                    enforce: true,
+                },
+                fonts: {
+                    name: 'fonts',
+                    chunks: 'all',
+                    minChunks: 1,
+                    test: /\.eot?$/,
+                    enforce: true
+                }
+            }
+        }
     },
     plugins: plugins,
     devServer: {
@@ -115,9 +145,10 @@ var config = {
 
 if (!PROD) {
     config.plugins.push(new WriteFilePlugin());
-    config.entry.app.push('webpack-dev-server/client?http://0.0.0.0:8080');
+    config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'inline-source-map';
 }
+config.devtool = '';
 
 module.exports = config;

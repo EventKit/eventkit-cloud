@@ -2,25 +2,16 @@ import 'babel-polyfill';
 import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
+import Loadable from 'react-loadable';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 import { UserAuthWrapper } from 'redux-auth-wrapper';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
-import Application from './components/Application';
-import LoginPage from './components/auth/LoginPage';
-import Loading from './components/auth/Loading';
-import Logout from './containers/logoutContainer';
-import About from './components/About/About';
-import Account from './components/AccountPage/Account';
-import DashboardPage from './components/DashboardPage/DashboardPage';
-import DataPackPage from './components/DataPackPage/DataPackPage';
-import CreateExport from './components/CreateDataPack/CreateExport';
-import StatusDownload from './components/StatusDownloadPage/StatusDownload';
-import UserGroupsPage from './components/UserGroupsPage/UserGroupsPage';
-import NotificationsPage from './components/NotificationsPage/NotificationsPage';
+
 import { login, userActive } from './actions/userActions';
 
+const Loading = () => <div>Loading. . .</div>;
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
@@ -34,10 +25,16 @@ function allTrue(acceptedLicenses) {
     return true;
 }
 
+const Loader = Loadable({
+    loader: () =>
+        import ('./components/auth/Loading'),
+    loading: Loading,
+});
+
 const UserIsAuthenticated = UserAuthWrapper({
     authSelector: state => state.user.data,
     authenticatingSelector: state => state.user.isLoading,
-    LoadingComponent: Loading,
+    LoadingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
 });
@@ -68,6 +65,71 @@ function checkAuth(store) {
         }
     };
 }
+
+const Application = Loadable({
+    loader: () => import('./components/Application'),
+    loading: Loading,
+});
+
+const LoginPage = Loadable({
+    loader: () =>
+        import ('./components/auth/LoginPage'),
+    loading: Loading,
+});
+
+const Logout = Loadable({
+    loader: () =>
+        import ('./containers/logoutContainer'),
+    loading: Loading,
+});
+
+const About = Loadable({
+    loader: () =>
+        import ('./components/About/About'),
+    loading: Loading,
+});
+
+const Account = Loadable({
+    loader: () =>
+        import ('./components/AccountPage/Account'),
+    loading: Loading,
+});
+
+const DashboardPage = Loadable({
+    loader: () =>
+        import ('./components/DashboardPage/DashboardPage'),
+    loading: Loading,
+});
+
+const DataPackPage = Loadable({
+    loader: () =>
+        import ('./components/DataPackPage/DataPackPage'),
+    loading: Loading,
+});
+
+const CreateExport = Loadable({
+    loader: () =>
+        import ('./components/CreateDataPack/CreateExport'),
+    loading: Loading,
+});
+
+const StatusDownload = Loadable({
+    loader: () =>
+        import ('./components/StatusDownloadPage/StatusDownload'),
+    loading: Loading,
+});
+
+const UserGroupsPage = Loadable({
+    loader: () =>
+        import ('./components/UserGroupsPage/UserGroupsPage'),
+    loading: Loading,
+});
+
+const NotificationsPage = Loadable({
+    loader: () =>
+        import ('./components/NotificationsPage/NotificationsPage'),
+    loading: Loading,
+});
 
 render(
     <Provider store={store}>
