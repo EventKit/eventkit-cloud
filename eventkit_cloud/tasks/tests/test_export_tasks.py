@@ -239,6 +239,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
+    @patch('eventkit_cloud.tasks.tests.test_export_tasks.os.mkdir')
     @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.json')
     @patch('__builtin__.open')
@@ -249,7 +250,8 @@ class TestExportTasks(ExportTaskBase):
     @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
     @patch('celery.app.task.Task.request')
     def test_run_zip_export_provider(self, mock_request, mock_zip_file, mock_export_provider_task, mock_isfile,
-                                     mock_logger, mock_qgs_file, mock_open, mock_json, mock_get_human_readable_metadata_document):
+                                     mock_logger, mock_qgs_file, mock_open, mock_json,
+                                     mock_get_human_readable_metadata_document, os_mkdir):
         file_names = ('file1', 'file2', 'file3')
         tasks = (Mock(result=Mock(filename=file_names[0])),
                  Mock(result=Mock(filename=file_names[1])),
