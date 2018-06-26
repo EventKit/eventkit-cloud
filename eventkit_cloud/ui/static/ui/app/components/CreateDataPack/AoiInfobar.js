@@ -230,8 +230,8 @@ export class AoiInfobar extends Component {
                             <MoreVertIcon />
                         </IconButton>
                     }
-                    anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-                    targetOrigin={{ horizontal: 'left', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                 >
                     <MenuItem
                         primaryText="ZOOM TO"
