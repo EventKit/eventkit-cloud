@@ -707,7 +707,7 @@ export class ExportInfo extends React.Component {
                                             leftCheckbox={<Checkbox
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
-                                                style={{ left: '0px', paddingLeft: '5px' }}
+                                                style={{ left: '0px', paddingLeft: '10px' }}
                                                 defaultChecked={
                                                     this.props.exportInfo.providers.map(x => x.name)
                                                         .indexOf(provider.name) !== -1
