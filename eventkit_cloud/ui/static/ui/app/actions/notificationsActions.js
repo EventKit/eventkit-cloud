@@ -1,7 +1,6 @@
 import axios from 'axios';
-import actions from './actionTypes';
 import cookie from 'react-cookie';
-import moment from 'moment';
+import actions from './actionTypes';
 
 export function getNotifications(args = {}) {
     return (dispatch, getState) => {
@@ -11,10 +10,9 @@ export function getNotifications(args = {}) {
             if (args.isAuto) {
                 // Just ignore this request.
                 return null;
-            } else {
-                // Cancel the last request.
-                state.notifications.cancelSource.cancel('Request is no longer valid, cancelling.');
             }
+            // Cancel the last request.
+            state.notifications.cancelSource.cancel('Request is no longer valid, cancelling.');
         }
 
         const cancelSource = axios.CancelToken.source();
@@ -40,14 +38,15 @@ export function getNotifications(args = {}) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-            }
+            });
             let range = '';
             if (response.headers['content-range']) {
-                range = response.headers['content-range'].split('-')[1];
+                [, range] = response.headers['content-range'].split('-');
             }
 
             dispatch({
@@ -69,6 +68,17 @@ export function getNotifications(args = {}) {
     };
 }
 
+function cancelNotificationsSources(state) {
+    // Avoid out-of-sync issues if we call this right as we're receiving notifications.
+    if (state.notifications.fetching && state.notifications.cancelSource) {
+        state.notifications.cancelSource.cancel('Taking another action on notifications, cancelling.');
+    }
+
+    if (state.notifications.unreadCount.fetching && state.notifications.unreadCount.cancelSource) {
+        state.notifications.unreadCount.cancelSource.cancel('Taking another action on notifications, cancelling.');
+    }
+}
+
 export function markNotificationsAsRead(notifications) {
     return (dispatch, getState) => {
         cancelNotificationsSources(getState());
@@ -79,12 +89,13 @@ export function markNotificationsAsRead(notifications) {
         });
 
         const data = [];
-        for (let notification of notifications) {
+
+        notifications.forEach((notification) => {
             data.push({
                 id: notification.id,
                 action: 'READ',
             });
-        }
+        });
 
         return axios({
             url: '/api/notifications/mark',
@@ -115,12 +126,13 @@ export function markNotificationsAsUnread(notifications) {
         });
 
         const data = [];
-        for (let notification of notifications) {
+
+        notifications.forEach((notification) => {
             data.push({
                 id: notification.id,
                 action: 'UNREAD',
             });
-        }
+        });
 
         return axios({
             url: '/api/notifications/mark',
@@ -151,12 +163,13 @@ export function removeNotifications(notifications) {
         });
 
         const data = [];
-        for (let notification of notifications) {
+
+        notifications.forEach((notification) => {
             data.push({
                 id: notification.id,
                 action: 'DELETE',
             });
-        }
+        });
 
         return axios({
             url: '/api/notifications/mark',
@@ -199,7 +212,7 @@ export function markAllNotificationsAsRead() {
                 error: error.response.data,
             });
         });
-    }
+    };
 }
 
 export function getNotificationsUnreadCount(args = {}) {
@@ -210,10 +223,9 @@ export function getNotificationsUnreadCount(args = {}) {
             if (args.isAuto) {
                 // Just ignore this request.
                 return null;
-            } else {
-                // Cancel the last request.
-                state.notifications.unreadCount.cancelSource.cancel('Request is no longer valid, cancelling.');
             }
+            // Cancel the last request.
+            state.notifications.unreadCount.cancelSource.cancel('Request is no longer valid, cancelling.');
         }
 
         const cancelSource = axios.CancelToken.source();
@@ -242,16 +254,5 @@ export function getNotificationsUnreadCount(args = {}) {
                 });
             }
         });
-    }
-}
-
-function cancelNotificationsSources(state) {
-    // Avoid out-of-sync issues if we call this right as we're receiving notifications.
-    if (state.notifications.fetching && state.notifications.cancelSource) {
-        state.notifications.cancelSource.cancel('Taking another action on notifications, cancelling.');
-    }
-
-    if (state.notifications.unreadCount.fetching && state.notifications.unreadCount.cancelSource) {
-        state.notifications.unreadCount.cancelSource.cancel('Taking another action on notifications, cancelling.');
-    }
+    };
 }

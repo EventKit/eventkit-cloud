@@ -25,7 +25,7 @@ describe('CreateExport component', () => {
 
     function getMountedWrapper(props = getProps()) {
         const store = fakeStore(initialState);
-        return mount(<CreateExport {...props}><div id='my-child-element' /></CreateExport>, {
+        return mount(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
             context: { muiTheme, store },
             childContextTypes: {
                 muiTheme: React.PropTypes.object,
@@ -37,7 +37,7 @@ describe('CreateExport component', () => {
     it('should render the elements', () => {
         // dont render the full component tree
         const content = BreadcrumbStepper.prototype.getStepContent;
-        BreadcrumbStepper.prototype.getStepContent = () => {return <div/>};
+        BreadcrumbStepper.prototype.getStepContent = () => <div />;
 
         const wrapper = getMountedWrapper();
         expect(wrapper.find(AppBar)).toHaveLength(1);

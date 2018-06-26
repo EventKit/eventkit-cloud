@@ -8,7 +8,6 @@ import Clear from 'material-ui/svg-icons/content/clear';
 import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
 import ActionRoom from 'material-ui/svg-icons/action/room';
-import Triangle from 'material-ui/svg-icons/image/details';
 import Line from 'material-ui/svg-icons/action/timeline';
 import Extent from 'material-ui/svg-icons/action/settings-overscan';
 import RevertDialog from '../../components/CreateDataPack/RevertDialog';
@@ -89,7 +88,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ImageCropSquare
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-box"
             />
         );
@@ -102,7 +103,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Extent
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-mapview"
             />
         );
@@ -115,7 +118,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <ActionRoom
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-point"
             />
         );
@@ -128,7 +133,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <Line
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-line"
             />
         );
@@ -141,7 +148,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <IrregularPolygon
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-polygon"
             />
         );
@@ -154,7 +163,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <IrregularPolygon
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-polygon"
             />
         );
@@ -167,7 +178,9 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         const expected = (
             <AlertWarning
-                style={{ width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0 }}
+                style={{
+                    width: '35px', height: '35px', verticalAlign: 'top', flexShrink: 0,
+                }}
                 className="qa-RevertDialog-icon-no-selection"
             />
         );
