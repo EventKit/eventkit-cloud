@@ -1,3 +1,4 @@
+/* eslint prefer-destructuring: 0 */
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
@@ -11,7 +12,7 @@ import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from '../../components/DashboardPage/DataPackFeaturedItem';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -24,7 +25,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -67,7 +68,8 @@ const mockRuns = [
 ];
 
 describe('DashboardPage component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -139,7 +141,7 @@ describe('DashboardPage component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<DashboardPage { ...props } />);
+        wrapper = shallow(<DashboardPage {...props} />);
         instance = wrapper.instance();
 
         instance.joyride = {
@@ -381,9 +383,9 @@ describe('DashboardPage component', () => {
             const notificationsSorted = instance.props.notifications.notificationsSorted;
             expect(notificationItems).not.toHaveLength(0);
             expect(notificationItems).toHaveLength(notificationsSorted.length);
-            for (let i = 0; i < notificationsSorted.length; i++) {
+            notificationsSorted.forEach((notification, i) => {
                 expect(notificationItems.at(i).props().notification).toBe(notificationsSorted[i]);
-            }
+            });
         });
 
         it('renders recently viewed datapacks', () => {
@@ -391,9 +393,9 @@ describe('DashboardPage component', () => {
             const viewedJobs = instance.props.userActivity.viewedJobs.viewedJobs;
             expect(recentlyViewedItems).not.toHaveLength(0);
             expect(recentlyViewedItems).toHaveLength(viewedJobs.length);
-            for (let i = 0; i < viewedJobs.length; i++) {
-                expect(recentlyViewedItems.at(i).props().run).toBe(viewedJobs[i].last_export_run);
-            }
+            viewedJobs.forEach((viewedJob, i) => {
+                expect(recentlyViewedItems.at(i).props().run).toBe(viewedJob.last_export_run);
+            });
         });
 
         it('renders featured datapacks', () => {
@@ -401,9 +403,9 @@ describe('DashboardPage component', () => {
             const featuredRuns = instance.props.featuredRunsList.runs;
             expect(featuredItems).not.toHaveLength(0);
             expect(featuredItems).toHaveLength(featuredRuns.length);
-            for (let i = 0; i < featuredRuns.length; i++) {
-                expect(featuredItems.at(i).props().run).toBe(featuredRuns[i]);
-            }
+            featuredRuns.forEach((featuredRun, i) => {
+                expect(featuredItems.at(i).props().run).toBe(featuredRun);
+            });
         });
 
         it('renders my datapacks', () => {
@@ -411,9 +413,9 @@ describe('DashboardPage component', () => {
             const runs = instance.props.runsList.runs;
             expect(myDataPacksItems).not.toHaveLength(0);
             expect(myDataPacksItems).toHaveLength(runs.length);
-            for (let i = 0; i < runs.length; i++) {
-                expect(myDataPacksItems.at(i).props().run).toBe(runs[i]);
-            }
+            runs.forEach((run, i) => {
+                expect(myDataPacksItems.at(i).props().run).toBe(run);
+            });
         });
 
         it('does not render Notifications "no data" element', () => {

@@ -1,3 +1,4 @@
+/* eslint prefer-destructuring: 0 */
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
@@ -10,7 +11,8 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 
 describe('NotificationMenu component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -45,7 +47,7 @@ describe('NotificationMenu component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationMenu { ...props } />);
+        wrapper = shallow(<NotificationMenu {...props} />);
         instance = wrapper.instance();
 
         const handleMenuItemClick = instance.handleMenuItemClick;

@@ -5,7 +5,7 @@ import values from 'lodash/values';
 import { NotificationsTableMenu } from '../../components/Notification/NotificationsTableMenu';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -18,7 +18,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -34,7 +34,8 @@ const mockNotifications = {
 };
 
 describe('NotificationsTableMenu component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -59,7 +60,7 @@ describe('NotificationsTableMenu component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsTableMenu { ...props } />);
+        wrapper = shallow(<NotificationsTableMenu {...props} />);
         instance = wrapper.instance();
     }
 
@@ -81,8 +82,8 @@ describe('NotificationsTableMenu component', () => {
         beforeEach(() => {
             wrapper.setProps({
                 selectedNotifications: {
-                    '1': mockNotifications['1'],
-                    '2': mockNotifications['2'],
+                    1: mockNotifications['1'],
+                    2: mockNotifications['2'],
                 },
             });
         });
@@ -91,14 +92,14 @@ describe('NotificationsTableMenu component', () => {
             beforeEach(() => {
                 wrapper.setProps({
                     selectedNotifications: {
-                        '1': {
+                        1: {
                             ...mockNotifications['1'],
                             unread: true,
                         },
-                        '2': {
+                        2: {
                             ...mockNotifications['2'],
                             unread: true,
-                        }
+                        },
                     },
                 });
             });
@@ -116,14 +117,14 @@ describe('NotificationsTableMenu component', () => {
             beforeEach(() => {
                 wrapper.setProps({
                     selectedNotifications: {
-                        '1': {
+                        1: {
                             ...mockNotifications['1'],
                             unread: false,
                         },
-                        '2': {
+                        2: {
                             ...mockNotifications['2'],
                             unread: false,
-                        }
+                        },
                     },
                 });
             });
@@ -145,7 +146,7 @@ describe('NotificationsTableMenu component', () => {
             setupA = (props) => {
                 setup({
                     selectedNotifications: {
-                        '1': {
+                        1: {
                             ...mockNotifications['1'],
                             unread: true,
                         },
@@ -195,7 +196,7 @@ describe('NotificationsTableMenu component', () => {
             setupA = (props) => {
                 setup({
                     selectedNotifications: {
-                        '1': {
+                        1: {
                             ...mockNotifications['1'],
                             unread: false,
                         },

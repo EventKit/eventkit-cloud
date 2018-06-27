@@ -1,3 +1,4 @@
+/* eslint prefer-destructuring: 0 */
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
@@ -9,7 +10,7 @@ import NotificationsTableMenu from '../../components/Notification/NotificationsT
 import NotificationsTableItem from '../../components/Notification/NotificationsTableItem';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -22,7 +23,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -38,7 +39,8 @@ const mockNotifications = {
 };
 
 describe('NotificationsTable component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -73,7 +75,7 @@ describe('NotificationsTable component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsTable { ...props } />);
+        wrapper = shallow(<NotificationsTable {...props} />);
         instance = wrapper.instance();
     }
 
@@ -83,17 +85,16 @@ describe('NotificationsTable component', () => {
         const tableItems = wrapper.find(NotificationsTableItem);
         expect(tableItems).not.toHaveLength(0);
         expect(tableItems).toHaveLength(instance.props.notificationsArray.length);
-        for (let i = 0; i < instance.props.notificationsArray.length; i++) {
-            const notification = instance.props.notificationsArray[i];
+        instance.props.notificationsArray.forEach((notification, i) => {
             expect(tableItems.at(i).props().notification).toBe(notification);
-        }
+        });
     });
 
     it('shows the current selected count', () => {
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
 
@@ -103,8 +104,8 @@ describe('NotificationsTable component', () => {
     it('passes correct props to NotificationsTableMenu', () => {
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
         const tableMenu = wrapper.find(NotificationsTableMenu);
@@ -119,7 +120,7 @@ describe('NotificationsTable component', () => {
     it('passes correct props to NotificationsTableItem', () => {
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
+                1: mockNotifications['1'],
             },
         });
         const tableItem = wrapper.find(NotificationsTableItem).at(0);
@@ -135,7 +136,8 @@ describe('NotificationsTable component', () => {
     });
 
     describe('when notification checkbox is clicked', () => {
-        let notification, wasSelected;
+        let notification;
+        let wasSelected;
 
         beforeEach(() => {
             notification = instance.props.notificationsArray[0];
@@ -163,10 +165,10 @@ describe('NotificationsTable component', () => {
         });
 
         it('unselects all notifications', () => {
-            for (let i = 0; i < instance.props.notificationsArray.length; i++) {
+            instance.props.notificationsArray.forEach((notification, i) => {
                 const tableItem = wrapper.find(NotificationsTableItem).at(i);
                 expect(tableItem.props().isSelected).toBe(false);
-            }
+            });
         });
 
         describe('then "Select All" checkbox is clicked', () => {
@@ -176,17 +178,16 @@ describe('NotificationsTable component', () => {
 
             it('updates "selected" state', () => {
                 const selected = {};
-                for (const notification of instance.props.notificationsArray) {
+                instance.props.notificationsArray.forEach((notification) => {
                     selected[notification.id] = notification;
-                }
+                });
                 expect(instance.state.selected).toEqual(selected);
             });
 
             it('selects all notifications', () => {
-                for (let i = 0; i < instance.props.notificationsArray.length; i++) {
-                    const notification = instance.props.notificationsArray[i];
+                instance.props.notificationsArray.forEach((notification) => {
                     expect(instance.isSelected(notification)).toBe(true);
-                }
+                });
             });
         });
     });
@@ -196,9 +197,9 @@ describe('NotificationsTable component', () => {
 
         beforeEach(() => {
             const selected = {};
-            for (const notification of instance.props.notificationsArray) {
+            instance.props.notificationsArray.forEach((notification) => {
                 selected[notification.id] = notification;
-            }
+            });
             wrapper.setState({
                 selected,
             });
@@ -214,10 +215,10 @@ describe('NotificationsTable component', () => {
         });
 
         it('selects all notification table items', () => {
-            for (let i = 0; i < instance.props.notificationsArray.length; i++) {
+            instance.props.notificationsArray.forEach((notification, i) => {
                 const tableItem = wrapper.find(NotificationsTableItem).at(i);
                 expect(tableItem.props().isSelected).toBe(true);
-            }
+            });
         });
 
         describe('then "Select All" checkbox is clicked', () => {
@@ -230,10 +231,10 @@ describe('NotificationsTable component', () => {
             });
 
             it('deselects all notifications', () => {
-                for (let i = 0; i < instance.props.notificationsArray.length; i++) {
+                instance.props.notificationsArray.forEach((notification, i) => {
                     const tableItem = wrapper.find(NotificationsTableItem).at(i);
                     expect(tableItem.props().isSelected).toBe(false);
-                }
+                });
             });
         });
     });
@@ -244,7 +245,7 @@ describe('NotificationsTable component', () => {
         beforeEach(() => {
             wrapper.setState({
                 selected: {
-                    '1': mockNotifications['1'],
+                    1: mockNotifications['1'],
                 },
             });
             selectAllCheckbox = wrapper.find('.qa-NotificationsTable-SelectAllCheckbox');
@@ -268,10 +269,10 @@ describe('NotificationsTable component', () => {
             });
 
             it('deselects all notifications', () => {
-                for (let i = 0; i < instance.props.notificationsArray.length; i++) {
+                instance.props.notificationsArray.forEach((notification, i) => {
                     const tableItem = wrapper.find(NotificationsTableItem).at(i);
                     expect(tableItem.props().isSelected).toBe(false);
-                }
+                });
             });
         });
     });
@@ -280,15 +281,15 @@ describe('NotificationsTable component', () => {
         beforeEach(() => {
             wrapper.setState({
                 selected: {
-                    '1': mockNotifications['1'],
-                    '2': mockNotifications['2'],
+                    1: mockNotifications['1'],
+                    2: mockNotifications['2'],
                 },
             });
             wrapper.setProps({
                 notifications: {
                     ...instance.props.notifications,
                     notifications: {
-                        '1': mockNotifications['1'],
+                        1: mockNotifications['1'],
                     },
                 },
             });
@@ -296,7 +297,7 @@ describe('NotificationsTable component', () => {
 
         it('updates "selected" state', () => {
             expect(wrapper.state().selected).toEqual({
-                '1': mockNotifications['1'],
+                1: mockNotifications['1'],
             });
         });
     });

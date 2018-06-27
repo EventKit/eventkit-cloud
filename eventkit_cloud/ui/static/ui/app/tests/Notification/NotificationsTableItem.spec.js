@@ -7,7 +7,8 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { NotificationsTableItem } from '../../components/Notification/NotificationsTableItem';
 
 describe('NotificationsTableItem component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -44,7 +45,7 @@ describe('NotificationsTableItem component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsTableItem { ...props } />);
+        wrapper = shallow(<NotificationsTableItem {...props} />);
         instance = wrapper.instance();
     }
 
@@ -76,7 +77,7 @@ describe('NotificationsTableItem component', () => {
 
         it('calls setSelected() with notification and isChecked', () => {
             expect(instance.props.setSelected.callCount).toBe(1);
-            expect(instance.props.setSelected.calledWith(instance.props.notification, isChecked))
+            expect(instance.props.setSelected.calledWith(instance.props.notification, isChecked));
         });
     });
 

@@ -8,7 +8,7 @@ import LoadButtons from '../../components/DataPackPage/LoadButtons';
 import NotificationGridItem from '../../components/Notification/NotificationGridItem';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -21,7 +21,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -37,7 +37,8 @@ const mockNotifications = {
 };
 
 describe('NotificationsPage component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -60,7 +61,7 @@ describe('NotificationsPage component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsPage { ...props } />);
+        wrapper = shallow(<NotificationsPage {...props} />);
         instance = wrapper.instance();
     }
 
@@ -91,7 +92,7 @@ describe('NotificationsPage component', () => {
                 range: '20/40',
             },
         });
-        const range = instance.getRange([1,2,3,4,5,6,7,8]);
+        const range = instance.getRange([1, 2, 3, 4, 5, 6, 7, 8]);
         expect(range).toBe('8/40');
     });
 
@@ -199,10 +200,9 @@ describe('NotificationsPage component', () => {
 
             it('renders notification grid items', () => {
                 const gridItems = wrapper.find(NotificationGridItem);
-                for (let i = 0; i < instance.props.notifications.notificationsSorted.length; i++) {
-                    const notification = instance.props.notifications.notificationsSorted[i];
+                instance.props.notifications.notificationsSorted.forEach((notification, i) => {
                     expect(gridItems.at(i).props().notification).toBe(notification);
-                }
+                });
             });
         });
     });

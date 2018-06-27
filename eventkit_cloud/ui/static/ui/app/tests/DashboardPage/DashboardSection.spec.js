@@ -6,7 +6,8 @@ import SwipeableViews from 'react-swipeable-views';
 import DashboardSection from '../../components/DashboardPage/DashboardSection';
 
 describe('DashboardSection component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -14,7 +15,7 @@ describe('DashboardSection component', () => {
             name: 'test',
             columns: 3,
             providers: [],
-            noDataElement: <div className={'qa-DashboardSection-NoDataElement'} />,
+            noDataElement: <div className="qa-DashboardSection-NoDataElement" />,
         };
     }
 
@@ -23,18 +24,18 @@ describe('DashboardSection component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(
-            <DashboardSection { ...props }>
+        wrapper = shallow((
+            <DashboardSection {...props}>
                 {options.children}
             </DashboardSection>
-        );
+        ));
         instance = wrapper.instance();
     }
 
     function generateChildren(count) {
         const children = [];
-        for (let i = 0; i < count; i++) {
-            children.push(<div className={'qa-DashboardSection-Child'} />);
+        for (let i = 0; i < count; i += 1) {
+            children.push(<div className="qa-DashboardSection-Child" />);
         }
 
         return children;

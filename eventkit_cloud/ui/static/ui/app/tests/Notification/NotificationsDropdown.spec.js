@@ -5,7 +5,7 @@ import { CircularProgress } from 'material-ui';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -18,7 +18,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: true,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -34,7 +34,8 @@ const mockNotifications = {
 };
 
 describe('NotificationsDropdown component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -56,7 +57,7 @@ describe('NotificationsDropdown component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsDropdown { ...props } />);
+        wrapper = shallow(<NotificationsDropdown {...props} />);
         instance = wrapper.instance();
     }
 
@@ -116,11 +117,10 @@ describe('NotificationsDropdown component', () => {
             const grid = wrapper.find('.qa-NotificationsDropdown-Grid');
             expect(grid.children()).not.toHaveLength(0);
             expect(grid.children()).toHaveLength(instance.props.notifications.notificationsSorted.length);
-            for (let i = 0; i < instance.props.notifications.notificationsSorted.length; i++) {
-                const notification = instance.props.notifications.notificationsSorted[i];
+            instance.props.notifications.notificationsSorted.forEach((notification, i) => {
                 const gridItem = grid.children().at(i);
                 expect(gridItem.props().notification).toBe(notification);
-            }
+            });
         });
     });
 

@@ -8,7 +8,8 @@ import NotificationMenu from '../../components/Notification/NotificationMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 
 describe('NotificationGridItem component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -43,7 +44,7 @@ describe('NotificationGridItem component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationGridItem { ...props } />);
+        wrapper = shallow(<NotificationGridItem {...props} />);
         instance = wrapper.instance();
     }
 
@@ -120,7 +121,8 @@ describe('NotificationGridItem component', () => {
     });
 
     describe('when handleView() is called', () => {
-        let setupA, viewPath;
+        let setupA;
+        let viewPath;
 
         beforeEach(() => {
             setupA = (props) => {

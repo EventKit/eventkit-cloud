@@ -1,3 +1,4 @@
+/* eslint function-paren-newline: 0 */
 import React from 'react';
 import { Link } from 'react-router';
 import sinon from 'sinon';
@@ -7,7 +8,8 @@ import { CardTitle, CardText } from 'material-ui/Card';
 import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';
 
 describe('DataPackFeaturedItem component', () => {
-    let wrapper, instance;
+    let wrapper;
+    let instance;
 
     function defaultProps() {
         return {
@@ -32,7 +34,7 @@ describe('DataPackFeaturedItem component', () => {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<DataPackFeaturedItem { ...props } />);
+        wrapper = shallow(<DataPackFeaturedItem {...props} />);
         instance = wrapper.instance();
     }
 
@@ -60,9 +62,15 @@ describe('DataPackFeaturedItem component', () => {
 
     it('renders card subtitle with correct text', () => {
         const subtitle = wrapShallow(wrapper.find(CardTitle).props().subtitle);
-        expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Event').text()).toBe(`Event: ${instance.props.run.job.event}`);
-        expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Added').text()).toBe(`Added: ${moment(instance.props.run.started_at).format('YYYY-MM-DD')}`);
-        expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Expires').text()).toBe(`Expires: ${moment(instance.props.run.expiration).format('YYYY-MM-DD')}`);
+        expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Event').text()).toBe(
+            `Event: ${instance.props.run.job.event}`,
+        );
+        expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Added').text()).toBe(
+            `Added: ${moment(instance.props.run.started_at).format('YYYY-MM-DD')}`,
+        );
+        expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Expires').text()).toBe(
+            `Expires: ${moment(instance.props.run.expiration).format('YYYY-MM-DD')}`,
+        );
     });
 
     it('renders card text with the job description', () => {
