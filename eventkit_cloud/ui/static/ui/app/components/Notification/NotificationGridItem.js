@@ -1,10 +1,11 @@
 import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
+import moment from 'moment';
 import { Paper } from 'material-ui';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMenu from './NotificationMenu';
-import moment from 'moment';
+
 
 export class NotificationGridItem extends Component {
     constructor(props) {
@@ -22,7 +23,7 @@ export class NotificationGridItem extends Component {
     }
 
     render() {
-        let styles = {
+        const styles = {
             root: {
                 display: 'flex',
                 alignItems: 'center',
@@ -39,7 +40,7 @@ export class NotificationGridItem extends Component {
             },
             icon: {
                 flex: '0 0 auto',
-                marginRight: '10px'
+                marginRight: '10px',
             },
             date: {
                 margin: '0 10px',
@@ -102,6 +103,7 @@ NotificationGridItem.propTypes = {
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
+    markNotificationsAsRead: PropTypes.func.isRequired,
 };
 
 NotificationGridItem.defaultProps = {
@@ -109,14 +111,14 @@ NotificationGridItem.defaultProps = {
     onMarkAsRead: undefined,
     onMarkAsUnread: undefined,
     onRemove: undefined,
-    onView: () => { return true; },
+    onView: () => true,
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: (notification) => dispatch(markNotificationsAsRead(notification)),
-        markNotificationsAsUnread: (notification) => dispatch(markNotificationsAsUnread(notification)),
-        removeNotifications: (notification) => dispatch(removeNotifications(notification)),
+        markNotificationsAsRead: notification => dispatch(markNotificationsAsRead(notification)),
+        markNotificationsAsUnread: notification => dispatch(markNotificationsAsUnread(notification)),
+        removeNotifications: notification => dispatch(removeNotifications(notification)),
     };
 }
 
