@@ -18,7 +18,9 @@ export class UserInfo extends Component {
                 <h4><strong>Personal Information</strong></h4>
                 {this.props.updateLink ?
                     <div className="qa-UserInfo-personalDetails" style={{ color: 'grey' }}>
-                        <strong style={{ color: '#000' }}>To update</strong> your personal details, please <strong style={{ color: '#000' }}>visit</strong>
+                        <strong style={{ color: '#000' }}>To update </strong>
+                        your personal details, please
+                        <strong style={{ color: '#000' }}> visit</strong>
                         <a href={this.props.updateLink}> here</a>
                     </div>
                     :

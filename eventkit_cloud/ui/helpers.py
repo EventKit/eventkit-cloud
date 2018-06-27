@@ -82,6 +82,9 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     # A dict is used here to ensure that just one file per provider is added,
     # this should be updated when multiple formats are supported.
     provider_details = {}
+    has_raster = False
+    has_elevation = False
+    # This collecting of metadata should be generalized and used for both QGS styles and arcmap styles.
     if export_provider_task:
         provider_details[export_provider_task.slug] = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
     else:
@@ -101,10 +104,16 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                     # Exclude zip files created by zip_export_provider and the selection geojson
                     # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
                     # GeoTIFF are elevation.  This will need to be updated in the future.
-                    if not (full_file_path.endswith(".zip") or full_file_path.endswith(".geojson")):
+                    file_ext = os.path.splitext(full_file_path)[1]
+                    if file_ext not in [".zip", ".geojson"]:
                         provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
                                            'provider_name': provider_task.name,
-                                           'file_type': os.path.splitext(full_file_path)[1]}
+                                           'file_type': file_ext}
+                        if provider_task.slug not in ['osm', 'nome']:
+                            if file_ext == '.gpkg':
+                                has_raster = True
+                            if file_ext == '.tif':
+                                has_elevation = True
                         if os.path.splitext(full_file_path)[1] == '.tif':
                             # Get statistics to update ranges in template.
                             band_stats = get_band_statistics(full_file_path)
@@ -125,7 +134,9 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
                                                                           :-3]),
                                                                       'provider_details': provider_details,
-                                                                      'bbox': run.job.extents}))
+                                                                      'bbox': run.job.extents,
+                                                                      'has_raster': has_raster,
+                                                                      'has_elevation': has_elevation}))
     return style_file
 
 def get_human_readable_metadata_document(run_uid):

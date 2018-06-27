@@ -46,7 +46,9 @@ describe('DataPackList actions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_RUNS, cancelSource: testSource },
-            { type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24' }
+            {
+                type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24',
+            },
         ];
 
         const store = mockStore({ runsList: {} });
@@ -68,7 +70,9 @@ describe('DataPackList actions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_RUNS, cancelSource: testSource },
-            { type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: false, range: '' }
+            {
+                type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: false, range: '',
+            },
         ];
 
         const store = mockStore({ runsList: {} });
@@ -223,7 +227,7 @@ describe('DataPackList actions', () => {
 
     it('deleteRuns should dispatch deleting and error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        
+
         mock.onDelete('/api/runs/12233').reply(400, 'oh no an error');
         const expectedActions = [
             { type: types.DELETING_RUN },
@@ -238,22 +242,18 @@ describe('DataPackList actions', () => {
 
     it('setPageOrder should return type SET_PAGE_ORDER and the order', () => {
         const order = 'featured';
-        expect(actions.setPageOrder(order)).toEqual(
-            {
-                type: types.SET_PAGE_ORDER,
-                order,
-            }
-        );
+        expect(actions.setPageOrder(order)).toEqual({
+            type: types.SET_PAGE_ORDER,
+            order,
+        });
     });
 
     it('setPageView should return type SET_PAGE_VIEW and the view', () => {
         const view = 'map';
-        expect(actions.setPageView(view)).toEqual(
-            {
-                type: types.SET_PAGE_VIEW,
-                view,
-            }
-        );
+        expect(actions.setPageView(view)).toEqual({
+            type: types.SET_PAGE_VIEW,
+            view,
+        });
     });
 });
 
