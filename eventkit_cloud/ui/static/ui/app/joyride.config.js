@@ -268,7 +268,8 @@ export const joyride = {
     ExportSummary: [
         {
             title: '',
-            text: 'The Review & Submit page provides you the opportunity to review the details of the DataPack before submitting it for processing.',
+            text: `The Review & Submit page provides you the opportunity to
+                review the details of the DataPack before submitting it for processing.`,
             selector: '.qa-BreadcrumbStepper-div-stepLabel',
             position: 'bottom',
             style: JoyRideStyles.welcomeTooltipStyle,
