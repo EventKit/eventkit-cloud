@@ -8,22 +8,18 @@ import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 
 describe('TypeaheadMenuItem component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => (
-        {
-            result: {},
-            index: 1,
-        }
-    );
+    const getProps = () => ({
+        result: {},
+        index: 1,
+    });
 
-    const getContext = () => (
-        {
-            activeIndex: -1,
-            onActiveItemChange: () => {},
-            onInitialItemChange: () => {},
-            onMenuItemClick: () => {},
-            muiTheme,
-        }
-    );
+    const getContext = () => ({
+        activeIndex: -1,
+        onActiveItemChange: () => {},
+        onInitialItemChange: () => {},
+        onMenuItemClick: () => {},
+        muiTheme,
+    });
 
     it('should return a MenuItem with proper child components', () => {
         const props = getProps();
@@ -67,7 +63,7 @@ describe('TypeaheadMenuItem component', () => {
                 muiTheme: PropTypes.object,
             },
         });
-        const description = wrapper.instance().createDescription(result)
+        const description = wrapper.instance().createDescription(result);
         expect(description).toEqual('province, region, country name');
     });
 

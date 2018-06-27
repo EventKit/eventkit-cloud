@@ -258,6 +258,7 @@ export function getNotificationMessage({
 }
 
 // NOTE: This should ideally be a NotificationIcon component, but is here for consistency with getNotificationMessage().
+// eslint-disable-next-line react/prop-types
 export function getNotificationIcon({ notification, iconStyle }) {
     const styles = {
         icon: iconStyle || {

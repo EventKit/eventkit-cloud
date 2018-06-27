@@ -1,8 +1,8 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import DashboardSection from '../../components/DashboardPage/DashboardSection';
 import { Tab, Tabs } from 'material-ui';
 import SwipeableViews from 'react-swipeable-views';
+import DashboardSection from '../../components/DashboardPage/DashboardSection';
 
 describe('DashboardSection component', () => {
     function getProps() {
@@ -11,21 +11,21 @@ describe('DashboardSection component', () => {
             name: 'test',
             columns: 3,
             providers: [],
-        }
+        };
     }
 
     function getShallowWrapper(props = getProps(), children = []) {
-        return shallow(
+        return shallow((
             <DashboardSection {...props}>
                 {children}
             </DashboardSection>
-        );
+        ));
     }
 
     function generateChildren(columns, rows) {
         const children = [];
-        for (let i = 0; i < columns * rows; i++) {
-            children.push(<div className={'qa-DashboardSection-Child'} />);
+        for (let i = 0; i < columns * rows; i += 1) {
+            children.push(<div className="qa-DashboardSection-Child" />);
         }
 
         return children;
@@ -56,7 +56,7 @@ describe('DashboardSection component', () => {
     it('should show "noDataElement" if no children are provided', () => {
         const props = {
             ...getProps(),
-            noDataElement: <div className={'qa-DashboardSection-NoDataElement'} />,
+            noDataElement: <div className="qa-DashboardSection-NoDataElement" />,
         };
         const wrapper = getShallowWrapper(props, []);
         expect(wrapper.find('.qa-DashboardSection-NoDataElement')).toHaveLength(1);

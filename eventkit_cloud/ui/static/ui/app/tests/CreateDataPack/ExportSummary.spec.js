@@ -1,6 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
+import Joyride from 'react-joyride';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
@@ -11,7 +12,6 @@ import GeoJSON from 'ol/format/geojson';
 
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import Joyride from 'react-joyride';
 import CustomTableRow from '../../components/CustomTableRow';
 
 
@@ -21,50 +21,50 @@ raf.polyfill();
 describe('Export Summary Component', () => {
     const muiTheme = getMuiTheme();
 
-    const getProps = () => {
-        return {
-            geojson: {
-                "type": "FeatureCollection",
-                "features": [{ "type": "Feature",
-                    "geometry": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
-                        [100.0, 1.0], [100.0, 0.0] ]
-                        ]
-                    },}]
+    const getProps = () => ({
+        geojson: {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                            [100.0, 1.0], [100.0, 0.0]],
+                    ],
+                },
+            }],
+        },
+        exportName: 'name',
+        datapackDescription: 'description',
+        projectName: 'project',
+        makePublic: true,
+        providers: [
+            { name: 'one', uid: 1, display: true },
+            { name: 'two', uid: 2, display: false },
+            { name: 'three', uid: 3, display: false },
+        ],
+        areaStr: '12 sq km',
+        formats: 'gpkg',
+        allFormats: [
+            {
+                uid: 'ed48a7c1-1fc3-463e-93b3-e93eb3861a5a',
+                url: 'http://cloud.eventkit.test/api/formats/shp',
+                slug: 'shp',
+                name: 'ESRI Shapefile Format',
+                description: 'Esri Shapefile (OSM Schema)',
             },
-            exportName: 'name',
-            datapackDescription: 'description',
-            projectName: 'project',
-            makePublic: true,
-            providers: [
-                { name: 'one', uid: 1, display: true },
-                { name: 'two', uid: 2, display: false },
-                { name: 'three', uid: 3, display: false },
-            ],
-            areaStr: '12 sq km',
-            formats: 'gpkg',
-            allFormats: [
-                {
-                    "uid": "ed48a7c1-1fc3-463e-93b3-e93eb3861a5a",
-                    "url": "http://cloud.eventkit.test/api/formats/shp",
-                    "slug": "shp",
-                    "name": "ESRI Shapefile Format",
-                    "description": "Esri Shapefile (OSM Schema)"
-                },
-                {
-                    "uid": "978ab89c-caf7-4296-9a0c-836fc679ea07",
-                    "url": "http://cloud.eventkit.test/api/formats/gpkg",
-                    "slug": "gpkg",
-                    "name": "Geopackage",
-                    "description": "GeoPackage"
-                },
-            ],
-            walkthroughClicked: false,
-            onWalkthroughReset: () => {},
-        }
-    }
+            {
+                uid: '978ab89c-caf7-4296-9a0c-836fc679ea07',
+                url: 'http://cloud.eventkit.test/api/formats/gpkg',
+                slug: 'gpkg',
+                name: 'Geopackage',
+                description: 'GeoPackage',
+            },
+        ],
+        walkthroughClicked: false,
+        onWalkthroughReset: () => {},
+    });
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
@@ -100,7 +100,7 @@ describe('Export Summary Component', () => {
         const props = getProps();
         const mountSpy = sinon.spy(ExportSummary.prototype, 'componentDidMount');
         const joyrideSpy = sinon.stub(ExportSummary.prototype, 'joyrideAddSteps');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
         mountSpy.restore();
@@ -167,16 +167,16 @@ describe('Export Summary Component', () => {
 
     it('callback function should stop tour if close is clicked', () => {
         const callbackData = {
-            action: "close",
+            action: 'close',
             index: 2,
             step: {
-                position: "bottom",
-                selector: ".qa-DataPackLinkButton-RaisedButton",
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
                 style: {},
-                text: "Click here to Navigate to Create a DataPack.",
-                title: "Create DataPack",
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
             },
-            type: "step:before",
+            type: 'step:before',
         };
         const props = getProps();
         const wrapper = getWrapper(props);

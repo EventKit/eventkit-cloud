@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   id="svg8"
+   version="1.1"
+   viewBox="0 0 4.7624998 4.7624999"
+   height="4.7624998mm"
+   width="4.7624998mm">
+  <defs
+     id="defs2">
+    <pattern
+       id="EMFhbasepattern"
+       patternUnits="userSpaceOnUse"
+       width="6"
+       height="6"
+       x="0"
+       y="0" />
+  </defs>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-120.48315,-27.716127)"
+     id="layer1">
+    <g
+       transform="matrix(0.26458333,0,0,0.26458333,120.36632,-201.93337)"
+       id="g5354">
+      <rect
+         style="opacity:0.3;fill:none;stroke:none"
+         id="rect7026"
+         width="18"
+         height="18"
+         x="0"
+         y="866.36218" />
+      <g
+         transform="translate(0.44154942,-106.39557)"
+         id="g5393">
+        <path
+           style="opacity:0.3;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="path10613"
+           d="m 4,990.3622 v -13 h 2.982763 l 0.04022,5 H 11 l -0.04022,-5 H 14 v 13 h -3.04022 l 0.04022,-5 H 7.022983 l -0.04022,5 z" />
+        <path
+           d="m 4,990.3622 v -13 h 2.982763 l 0.04022,5 H 11 l -0.04022,-5 H 14 v 13 h -3.04022 l 0.04022,-5 H 7.022983 l -0.04022,5 z"
+           id="path4497"
+           style="fill:#000000;fill-opacity:1;stroke:none" />
+        <rect
+           style="opacity:0.3;fill:none;stroke:none"
+           id="rect9599"
+           width="18"
+           height="18"
+           x="0"
+           y="974.36218" />
+      </g>
+    </g>
+  </g>
+</svg>

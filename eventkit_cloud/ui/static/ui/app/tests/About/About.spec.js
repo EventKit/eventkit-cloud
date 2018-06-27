@@ -12,12 +12,12 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 
 describe('About component', () => {
     const muiTheme = getMuiTheme();
-    const getWrapper = () => {
-        return mount(<About />, {
+    const getWrapper = () => (
+        mount(<About />, {
             context: { muiTheme },
             childContextTypes: { muiTheme: PropTypes.object },
-        });
-    };
+        })
+    );
 
     it('should render all the basic elements', () => {
         const mapping = { InfoParagraph: 0, ThreeStepInfo: 0, InfoGrid: 0 };
