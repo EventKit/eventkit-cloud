@@ -1,4 +1,4 @@
-import React, { isValidElement } from 'react';
+import React, { PropTypes } from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import Paper from 'material-ui/Paper';
@@ -19,9 +19,9 @@ describe('LoginPage component', () => {
         return mount(<LoginPage />, {
             context: { muiTheme, store, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                store: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                store: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     }

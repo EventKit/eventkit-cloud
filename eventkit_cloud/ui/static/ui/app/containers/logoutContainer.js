@@ -1,20 +1,19 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { logout } from '../actions/userActions';
 
 
-let createHandlers = function(dispatch) {
-    let handleLogout = function (node, data) {
-        dispatch(logout())
+const createHandlers = (dispatch) => {
+    const handleLogout = () => {
+        dispatch(logout());
     };
 
     return {
         handleLogout,
     };
-}
+};
 
 class Logout extends React.Component {
-
     constructor(props) {
         super(props);
         this.handlers = createHandlers(this.props.dispatch);
@@ -38,15 +37,18 @@ class Logout extends React.Component {
                 flexWrap: 'wrap',
                 height: window.innerHeight - 95,
             },
-        }
+        };
         return (
             <div style={styles.wholeDiv}>
-                <div style={styles.root}>
-                </div>
+                <div style={styles.root} />
             </div>
-        )
+        );
     }
 }
+
+Logout.propTypes = {
+    dispatch: PropTypes.func.isRequired,
+};
 
 export default connect()(Logout);
 

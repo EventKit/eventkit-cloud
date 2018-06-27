@@ -167,7 +167,11 @@ export class MembersHeaderRow extends Component {
                             <div style={styles.share} className="qa-MembersHeaderRow-CardHeader-icons">
                                 <EnhancedButton
                                     onClick={this.handleClick}
-                                    style={{ marginRight: '10px', color: !this.props.activeOrder.includes('member') ? '#4598bf' : '#707274' }}
+                                    style={{
+                                        marginRight: '10px',
+                                        color: !this.props.activeOrder.includes('member') ?
+                                            '#4598bf' : '#707274',
+                                    }}
                                     disableTouchRipple
                                 >
                                     {sharedSort}

@@ -165,9 +165,12 @@ div.map {
 .olPopupCloser {
     text-decoration: none;
     position: absolute;
+    color: #4598bf;
+    cursor: pointer;
     top: 2px;
     right: 8px;
 }
+
 .olPopupCloser:after {
     content: "✖";
 }

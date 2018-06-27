@@ -15,16 +15,91 @@ import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 
 describe('DataPackTableItem component', () => {
-    const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            run,
-            user: { data: { user: { username: 'admin' } } },
-            onRunDelete: () => {},
-            providers,
-            adminPermissions: true,
-        };
+    const providers = [
+        {
+            id: 2,
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            type: 'osm',
+            license: null,
+            created_at: '2017-08-15T19:25:10.844911Z',
+            updated_at: '2017-08-15T19:25:10.844919Z',
+            uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+            name: 'OpenStreetMap Data (Themes)',
+            slug: 'osm',
+            preview_url: '',
+            service_copyright: '',
+            service_description: 'OpenStreetMap vector data.',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            zip: false,
+            display: true,
+            export_provider_type: 2,
+        },
+    ];
+
+    const tasks = [
+        {
+            duration: '0:00:15.317672',
+            errors: [],
+            estimated_finish: '',
+            finished_at: '2017-05-15T15:29:04.356182Z',
+            name: 'OverpassQuery',
+            progress: 100,
+            started_at: '2017-05-15T15:28:49.038510Z',
+            status: 'SUCCESS',
+            uid: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34',
+            result: {
+                size: '1.234 MB',
+                url: 'http://cloud.eventkit.test/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34',
+            },
+            display: true,
+        },
+    ];
+
+    const providerTasks = [{
+        name: 'OpenStreetMap Data (Themes)',
+        status: 'COMPLETED',
+        display: true,
+        slug: 'osm',
+        tasks,
+        uid: 'e261d619-2a02-4ba5-a58c-be0908f97d04',
+        url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
+    }];
+    const run = {
+        uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        started_at: '2017-03-10T15:52:35.637331Z',
+        finished_at: '2017-03-10T15:52:39.837Z',
+        duration: '0:00:04.199825',
+        user: 'admin',
+        status: 'COMPLETED',
+        job: {
+            uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+            name: 'Test1',
+            event: 'Test1 event',
+            description: 'Test1 description',
+            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            extent: {},
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+        },
+        provider_tasks: providerTasks,
+        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        expiration: '2017-03-24T15:52:35.637258Z',
     };
+
+    const muiTheme = getMuiTheme();
+    const getProps = () => ({
+        run,
+        user: { data: { user: { username: 'admin' } } },
+        onRunDelete: () => {},
+        providers,
+        adminPermissions: true,
+    });
 
     it('should render a table row with the correct table columns', () => {
         const props = getProps();
@@ -90,9 +165,19 @@ describe('DataPackTableItem component', () => {
         let icon = wrapper.instance().getStatusIcon('SUBMITTED');
         expect(icon).toEqual(<NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: '#f4d225' }} />);
         icon = wrapper.instance().getStatusIcon('INCOMPLETE');
-        expect(icon).toEqual(<AlertError className="qa-DataPackTableItem-AlertError" style={{ color: '#ce4427', opacity: '0.6', height: '22px' }} />);
+        expect(icon).toEqual((
+            <AlertError
+                className="qa-DataPackTableItem-AlertError"
+                style={{ color: '#ce4427', opacity: '0.6', height: '22px' }}
+            />
+        ));
         icon = wrapper.instance().getStatusIcon('COMPLETED');
-        expect(icon).toEqual(<NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: '#bcdfbb', height: '22px' }} />);
+        expect(icon).toEqual((
+            <NavigationCheck
+                className="qa-DataPackTableItem-NavigationCheck"
+                style={{ color: '#bcdfbb', height: '22px' }}
+            />
+        ));
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
@@ -115,7 +200,7 @@ describe('DataPackTableItem component', () => {
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({
             providerDescs: {
-                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
             },
             providerDialogOpen: true,
         })).toBe(true);
@@ -157,80 +242,3 @@ describe('DataPackTableItem component', () => {
         expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 });
-
-const providers = [
-    {
-        id: 2,
-        model_url: 'http://cloud.eventkit.test/api/providers/osm',
-        type: 'osm',
-        license: null,
-        created_at: '2017-08-15T19:25:10.844911Z',
-        updated_at: '2017-08-15T19:25:10.844919Z',
-        uid: 'bc9a834a-727a-4779-8679-2500880a8526',
-        name: 'OpenStreetMap Data (Themes)',
-        slug: 'osm',
-        preview_url: '',
-        service_copyright: '',
-        service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
-        layer: null,
-        level_from: 0,
-        level_to: 10,
-        zip: false,
-        display: true,
-        export_provider_type: 2,
-    },
-];
-
-const tasks = [
-    {
-        duration: '0:00:15.317672',
-        errors: [],
-        estimated_finish: '',
-        finished_at: '2017-05-15T15:29:04.356182Z',
-        name: 'OverpassQuery',
-        progress: 100,
-        started_at: '2017-05-15T15:28:49.038510Z',
-        status: 'SUCCESS',
-        uid: 'fcfcd526-8949-4c26-a669-a2cf6bae1e34',
-        result: {
-            size: '1.234 MB',
-            url: 'http://cloud.eventkit.test/api/tasks/fcfcd526-8949-4c26-a669-a2cf6bae1e34',
-        },
-        display: true,
-    },
-];
-
-const providerTasks = [{
-    name: 'OpenStreetMap Data (Themes)',
-    status: 'COMPLETED',
-    display: true,
-    slug: 'osm',
-    tasks,
-    uid: 'e261d619-2a02-4ba5-a58c-be0908f97d04',
-    url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
-}];
-const run = {
-    uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-    url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-    started_at: '2017-03-10T15:52:35.637331Z',
-    finished_at: '2017-03-10T15:52:39.837Z',
-    duration: '0:00:04.199825',
-    user: 'admin',
-    status: 'COMPLETED',
-    job: {
-        uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-        name: 'Test1',
-        event: 'Test1 event',
-        description: 'Test1 description',
-        url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-        extent: {},
-        permissions: {
-            value: 'PRIVATE',
-            groups: {},
-            members: {},
-        },
-    },
-    provider_tasks: providerTasks,
-    zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-    expiration: '2017-03-24T15:52:35.637258Z',
-};

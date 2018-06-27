@@ -358,7 +358,10 @@ export class StatusDownload extends React.Component {
                     :
                     null
                 }
-                <CustomScrollbar ref={(instance) => { this.scrollbar = instance; }} style={{ height: window.innerHeight - 130, width: '100%' }}>
+                <CustomScrollbar
+                    ref={(instance) => { this.scrollbar = instance; }}
+                    style={{ height: window.innerHeight - 130, width: '100%' }}
+                >
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <Joyride
                             callback={this.callback}
@@ -448,6 +451,7 @@ StatusDownload.propTypes = {
     getGroups: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
+    viewedJob: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {

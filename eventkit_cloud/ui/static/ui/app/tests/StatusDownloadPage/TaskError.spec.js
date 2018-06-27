@@ -45,7 +45,7 @@ describe('TaskError component', () => {
     it('should render UI elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
+        expect(wrapper.find('.qa-TaskError-error-text').text()).toEqual('ERROR');
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
@@ -81,7 +81,7 @@ describe('TaskError component', () => {
         const errorSpy = sinon.spy(TaskError.prototype, 'handleTaskErrorOpen');
         const wrapper = getWrapper(props);
         expect(errorSpy.notCalled).toBe(true);
-        wrapper.find('a').simulate('click');
+        wrapper.find('.qa-TaskError-error-text').simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ taskErrorDialogOpen: true })).toBe(true);
         stateSpy.restore();

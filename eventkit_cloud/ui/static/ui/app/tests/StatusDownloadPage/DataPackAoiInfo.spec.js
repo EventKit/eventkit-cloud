@@ -55,7 +55,7 @@ describe('DataPackAoiInfo component', () => {
         const props = getProps();
         const initStub = sinon.stub(DataPackAoiInfo.prototype, 'initializeOpenLayers');
         DataPackAoiInfo.prototype.componentDidMount = didMount;
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(initStub.calledOnce).toBe(true);
         initStub.restore();
         DataPackAoiInfo.prototype.componentDidMount = sinon.spy();
