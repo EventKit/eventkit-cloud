@@ -1641,6 +1641,13 @@ def make_dirs(path):
 
 
 def create_filepath(dirs, filename_parts, ext):
+    """
+    :param dirs: The series of directories before the file at the end of the path (can be empty).
+    :param filename_parts: These will be concatenated in order with a dash between each one, and that will become the
+                           filename. (Shouldn't be empty)
+    :param ext: The file extension
+    :return: A string representing a file path
+    """
     final_path = ''
     for dir in dirs:
         final_path = os.path.join(final_path, dir)
