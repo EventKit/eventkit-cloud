@@ -518,11 +518,11 @@ export class DashboardPage extends React.Component {
                                     >
                                         <span>{"You don't have any DataPacks."}&nbsp;</span>
                                         <Link
-                                            to="/exports"
-                                            href="/exports"
+                                            to="/create"
+                                            href="/create"
                                             style={styles.link}
                                         >
-                                            View DataPack Library
+                                            Create DataPack
                                         </Link>
                                     </Paper>
                                 }

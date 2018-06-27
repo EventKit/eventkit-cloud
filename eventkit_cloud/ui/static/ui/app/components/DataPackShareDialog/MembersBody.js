@@ -283,7 +283,7 @@ export class MembersBody extends Component {
                 </div>
             );
         }
-        
+
         let tooltip = null;
         if (this.state.tooltip.target !== null) {
             tooltip = (

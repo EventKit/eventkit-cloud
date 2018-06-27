@@ -105,6 +105,8 @@ services:
      volumes:
        - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
        - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
+       - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
+       - ./.eslintignore:/var/lib/eventkit/.eslintignore
        - ./.git:/var/lib/eventkit/.git
      ports:
         - "8080:8080"

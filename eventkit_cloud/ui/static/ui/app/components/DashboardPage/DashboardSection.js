@@ -1,3 +1,4 @@
+/* eslint react/no-array-index-key: 0 */
 import React, { PropTypes } from 'react';
 import { GridList, Tab, Tabs } from 'material-ui';
 import SwipeableViews from 'react-swipeable-views';
@@ -14,12 +15,6 @@ export class DashboardSection extends React.Component {
         this.itemsPerPage = this.props.columns * this.props.rows;
     }
 
-    handlePageChange(pageIndex) {
-        this.setState({
-            pageIndex,
-        });
-    }
-
     getPages() {
         // Group children into pages, each of length maxPages.
         const children = React.Children.toArray(this.props.children);
@@ -32,6 +27,12 @@ export class DashboardSection extends React.Component {
         }
 
         return pages;
+    }
+
+    handlePageChange(pageIndex) {
+        this.setState({
+            pageIndex,
+        });
     }
 
     render() {
@@ -109,14 +110,94 @@ export class DashboardSection extends React.Component {
                 ...styles.tabButton,
                 backgroundColor: 'lightgray',
                 border: '3px solid gray',
+                opacity: '0.5',
             },
         };
 
-        const tabButtonBorderStyle = (selected) => {
-            return selected ? '8px solid rgb(69, 152, 191)' : '3px solid rgb(69, 152, 191)';
-        };
+        const tabButtonBorderStyle = selected => (
+            selected ? '8px solid rgb(69, 152, 191)' : '3px solid rgb(69, 152, 191)'
+        );
 
-        const pages = this.getPages();
+        const childrenPages = this.getPages();
+
+        let view = null;
+        if (childrenPages.length > 0) {
+            // swipe here
+            view = (
+                <SwipeableViews
+                    style={styles.swipeableViews}
+                    index={this.state.pageIndex}
+                    onChangeIndex={this.handlePageChange}
+                >
+                    {childrenPages.map((childrenPage, pageIndex) => {
+                        let content;
+                        if (this.props.rowMajor) {
+                            content = childrenPage.map((child, index) => (
+                                <div
+                                    key={`DashboardSection-${this.props.name}-Page${pageIndex}-Item${index}`}
+                                    className="qa-DashboardSection-Page-Item"
+                                >
+                                    {child}
+                                </div>
+                            ));
+                        } else {
+                            // For column-major layouts, create an inner single-column GridList for each column, so
+                            // that items each column gets filled completely before adding to the next one.
+                            const childrenColumns = [];
+                            let column = [];
+
+                            childrenPage.forEach((child) => {
+                                column.push(child);
+                                if (column.length >= this.props.rows) {
+                                    // Filled the column. Onto the next one.
+                                    childrenColumns.push(column);
+                                    column = [];
+                                }
+                            });
+
+                            // Partial column at the end.
+                            if (column.length > 0) {
+                                childrenColumns.push(column);
+                            }
+
+                            content = childrenColumns.map((childrenColumn, columnIndex) => (
+                                <GridList
+                                    key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}`}
+                                    className="qa-DashboardSection-Page-Column"
+                                    cellHeight={this.props.cellHeight || 'auto'}
+                                    padding={this.props.gridPadding}
+                                    cols={1}
+                                >
+                                    {childrenColumn.map((child, index) => (
+                                        <div
+                                            key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}-Item${index}`}
+                                            className="qa-DashboardSection-Page-Item"
+                                        >
+                                            {child}
+                                        </div>
+                                    ))}
+                                </GridList>
+                            ));
+                        }
+
+                        return (
+                            <GridList
+                                key={`DashboardSection-${this.props.name}-Page${pageIndex}`}
+                                className="qa-DashboardSection-Page"
+                                cellHeight={this.props.cellHeight || 'auto'}
+                                style={styles.gridList}
+                                padding={this.props.gridPadding}
+                                cols={this.props.columns}
+                            >
+                                {content}
+                            </GridList>
+                        );
+                    })}
+                </SwipeableViews>
+            );
+        } else if (this.props.noDataElement) {
+            view = this.props.noDataElement;
+        }
 
         return (
             <div
@@ -134,7 +215,7 @@ export class DashboardSection extends React.Component {
                     >
                         {this.props.title}
                     </div>
-                    {(pages.length > 0) ?
+                    {(childrenPages.length > 0) ?
                         <div style={styles.sectionHeaderRight}>
                             <Tabs
                                 tabItemContainerStyle={styles.tabButtonsContainer}
@@ -145,14 +226,14 @@ export class DashboardSection extends React.Component {
                                 {[...Array(this.maxPages)].map((nothing, pageIndex) => (
                                     <Tab
                                         key={`DashboardSection-${this.props.name}-Tab${pageIndex}`}
-                                        className={'qa-DashboardSection-Tab'}
+                                        className="qa-DashboardSection-Tab"
                                         value={pageIndex}
-                                        style={(pageIndex < pages.length) ? styles.tab : styles.tabDisabled}
+                                        style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
                                         disableTouchRipple
-                                        buttonStyle={(pageIndex < pages.length) ?
+                                        buttonStyle={(pageIndex < childrenPages.length) ?
                                             {
                                                 ...styles.tabButton,
-                                                border: tabButtonBorderStyle(pageIndex === this.state.pageIndex)
+                                                border: tabButtonBorderStyle(pageIndex === this.state.pageIndex),
                                             }
                                             :
                                             styles.tabButtonDisabled
@@ -161,13 +242,16 @@ export class DashboardSection extends React.Component {
                                 ))}
                             </Tabs>
                             {this.props.onViewAll ?
-                                <a
-                                    className={'qa-DashboardSection-ViewAll'}
+                                <span
+                                    role="button"
+                                    tabIndex={0}
+                                    className="qa-DashboardSection-ViewAll"
                                     style={styles.viewAll}
                                     onClick={this.props.onViewAll}
+                                    onKeyPress={this.props.onViewAll}
                                 >
                                     View All
-                                </a>
+                                </span>
                                 :
                                 null
                             }
@@ -176,84 +260,9 @@ export class DashboardSection extends React.Component {
                         null
                     }
                 </div>
-                {(pages.length === 0) ?
-                    this.props.noDataElement ?
-                        this.props.noDataElement
-                        :
-                        null
-                    :
-                    <SwipeableViews
-                        style={styles.swipeableViews}
-                        index={this.state.pageIndex}
-                        onChangeIndex={this.handlePageChange}
-                    >
-                        {pages.map((page, pageIndex) => {
-                            let content;
-                            if (this.props.rowMajor) {
-                                content = page.map((child, index) => (
-                                    <div
-                                        key={`DashboardSection-${this.props.name}-Page${pageIndex}-Item${index}`}
-                                        className={'qa-DashboardSection-Page-Item'}
-                                    >
-                                        {child}
-                                    </div>
-                                ))
-                            } else {
-                                // For column-major layouts, create an inner single-column GridList for each column, so
-                                // that items each column gets filled completely before adding to the next one.
-                                const childrenColumns = [];
-                                let column = [];
-                                for (let child of page) {
-                                    column.push(child);
-                                    if (column.length >= this.props.rows) {
-                                        // Filled the column. Onto the next one.
-                                        childrenColumns.push(column);
-                                        column = [];
-                                    }
-                                }
-
-                                // Partial column at the end.
-                                if (column.length > 0) {
-                                    childrenColumns.push(column);
-                                }
-
-                                content = childrenColumns.map((childrenColumn, columnIndex) => (
-                                    <GridList
-                                        key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}`}
-                                        className={'qa-DashboardSection-Page-Column'}
-                                        cellHeight={this.props.cellHeight || 'auto'}
-                                        padding={this.props.gridPadding}
-                                        cols={1}
-                                    >
-                                        {childrenColumn.map((child, index) => (
-                                            <div
-                                                key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}-Item${index}`}
-                                                className={'qa-DashboardSection-Page-Item'}
-                                            >
-                                                {child}
-                                            </div>
-                                        ))}
-                                    </GridList>
-                                ));
-                            }
-
-                            return (
-                                <GridList
-                                    key={`DashboardSection-${this.props.name}-Page${pageIndex}`}
-                                    className={'qa-DashboardSection-Page'}
-                                    cellHeight={this.props.cellHeight || 'auto'}
-                                    style={styles.gridList}
-                                    padding={this.props.gridPadding}
-                                    cols={this.props.columns}
-                                >
-                                    {content}
-                                </GridList>
-                            );
-                        })}
-                    </SwipeableViews>
-                }
+                {view}
             </div>
-        )
+        );
     }
 }
 
@@ -262,13 +271,17 @@ DashboardSection.propTypes = {
     title: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     columns: PropTypes.number.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     onViewAll: PropTypes.func,
     noDataElement: PropTypes.element,
     cellHeight: PropTypes.number,
     gridPadding: PropTypes.number,
     rows: PropTypes.number,
     rowMajor: PropTypes.bool,
+    children: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+        PropTypes.string,
+    ]),
 };
 
 DashboardSection.defaultProps = {
@@ -279,6 +292,7 @@ DashboardSection.defaultProps = {
     gridPadding: 2,
     rows: 1,
     rowMajor: true,
+    children: undefined,
 };
 
 export default DashboardSection;

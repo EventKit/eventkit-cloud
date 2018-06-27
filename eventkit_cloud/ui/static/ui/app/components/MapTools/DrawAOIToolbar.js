@@ -27,7 +27,7 @@ export class DrawAOIToolbar extends Component {
         };
 
         return (
-            <div id="container" className='qa-DrawAOIToolbar-div' style={styles.container}>
+            <div id="container" className="qa-DrawAOIToolbar-div" style={styles.container}>
                 <div className="qa-DrawAOIToolbar-div-title" style={styles.title}>
                     <strong>{this.props.title}</strong>
                 </div>

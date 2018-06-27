@@ -413,6 +413,9 @@ export class Application extends Component {
     }
 
     render() {
+        let imgWidth = '180px';
+        if (window.innerWidth > 768) imgWidth = '256px';
+        else if (window.innerWidth > 500) imgWidth = '200px';
         const styles = {
             appBar: {
                 position: 'absolute',
@@ -453,8 +456,7 @@ export class Application extends Component {
                 pointerEvents: 'none',
             },
             img: {
-                width: (window.innerWidth > 768) ? '256px' :
-                       (window.innerWidth > 500) ? '200px' : '180px',
+                width: imgWidth,
                 margin: '0 20px',
             },
             title: {
@@ -510,7 +512,7 @@ export class Application extends Component {
             },
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
-                marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0
+                marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0,
             },
         };
 
@@ -552,7 +554,8 @@ export class Application extends Component {
                                             className="qa-Application-AppBar-NotificationsButton"
                                             style={{
                                                 ...styles.notificationsButton,
-                                                backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ? '#4598BF' : '',
+                                                backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
+                                                    '#4598BF' : '',
                                             }}
                                             iconStyle={styles.notificationsButtonIcon}
                                             touchRippleColor="white"
@@ -595,7 +598,11 @@ export class Application extends Component {
                         docked
                         open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
-                        <MenuItem className="qa-Application-MenuItem-dashboard" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                        <MenuItem
+                            className="qa-Application-MenuItem-dashboard"
+                            onClick={this.onMenuItemClick}
+                            innerDivStyle={styles.menuItem}
+                        >
                             <IndexLink
                                 className="qa-Application-Link-dashboard"
                                 style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
@@ -698,7 +705,7 @@ export class Application extends Component {
                             className="qa-Application-MenuItem-logout"
                             innerDivStyle={styles.menuItem}
                         >
-                            <Link
+                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
                                 className="qa-Application-Link-logout"
                                 style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/logout') }}
                                 activeStyle={styles.activeLink}
@@ -759,6 +766,9 @@ Application.propTypes = {
     userActive: PropTypes.func.isRequired,
     drawer: PropTypes.string.isRequired,
     router: PropTypes.shape({
+        location: PropTypes.shape({
+            pathname: PropTypes.arrayOf(PropTypes.string),
+        }),
         push: PropTypes.func,
     }).isRequired,
     userData: PropTypes.shape({
@@ -779,6 +789,7 @@ Application.propTypes = {
     notifications: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
+    store: PropTypes.object.isRequired,
 };
 
 Application.childContextTypes = {

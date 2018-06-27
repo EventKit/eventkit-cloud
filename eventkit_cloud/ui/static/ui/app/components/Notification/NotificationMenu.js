@@ -9,12 +9,13 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 import {
     markNotificationsAsRead,
     markNotificationsAsUnread,
-    removeNotifications
+    removeNotifications,
 } from '../../actions/notificationsActions';
 
 export class NotificationMenu extends React.Component {
     constructor(props) {
         super(props);
+        this.onMount = this.onMount.bind(this);
         this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
         this.handleMarkAsRead = this.handleMarkAsRead.bind(this);
         this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
@@ -29,6 +30,10 @@ export class NotificationMenu extends React.Component {
     }
 
     componentDidUpdate() {
+        this.onMount();
+    }
+
+    onMount() {
         if (this.state.forceClose) {
             this.setState({ forceClose: false });
         }
@@ -70,7 +75,7 @@ export class NotificationMenu extends React.Component {
     }
 
     render() {
-        let styles = {
+        const styles = {
             menuButton: {
                 padding: '0',
                 width: '20px',
@@ -147,21 +152,24 @@ NotificationMenu.propTypes = {
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsUnread: PropTypes.func.isRequired,
+    removeNotifications: PropTypes.func.isRequired,
 };
 
 NotificationMenu.defaultProps = {
     style: {},
-    onMarkAsRead: () => { return true; },
-    onMarkAsUnread: () => { return true; },
-    onRemove: () => { return true; },
-    onView: () => { return true; },
+    onMarkAsRead: () => true,
+    onMarkAsUnread: () => true,
+    onRemove: () => true,
+    onView: () => true,
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
-        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
-        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
+        markNotificationsAsRead: notifications => dispatch(markNotificationsAsRead(notifications)),
+        markNotificationsAsUnread: notifications => dispatch(markNotificationsAsUnread(notifications)),
+        removeNotifications: notifications => dispatch(removeNotifications(notifications)),
     };
 }
 

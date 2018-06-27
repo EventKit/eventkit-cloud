@@ -11,8 +11,8 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     fetching: true,
                     fetched: false,
                     error: null,
-                    cancelSource: action.cancelSource
-                }
+                    cancelSource: action.cancelSource,
+                },
             };
         case types.RECEIVED_VIEWED_JOBS:
             return {
@@ -25,8 +25,8 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     nextPage: action.nextPage,
                     range: action.range,
                     error: action.error,
-                    cancelSource: null
-                }
+                    cancelSource: null,
+                },
             };
         case types.FETCH_VIEWED_JOBS_ERROR:
             return {
@@ -36,8 +36,8 @@ export function userActivityReducer(state = initialState.userActivity, action) {
                     fetching: false,
                     fetched: false,
                     error: action.error,
-                    cancelSource: null
-                }
+                    cancelSource: null,
+                },
             };
         case types.USER_LOGGED_OUT:
             return initialState.userActivity;

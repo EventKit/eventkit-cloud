@@ -75,6 +75,10 @@ export class NotificationsTableItem extends React.Component {
             },
         };
 
+        let optionsWidth = '60px';
+        if (window.innerWidth > 1600) optionsWidth = '600px';
+        else if (window.innerWidth > 1280) optionsWidth = '435px';
+
         styles = {
             ...styles,
             checkboxRowColumn: {
@@ -92,8 +96,7 @@ export class NotificationsTableItem extends React.Component {
             },
             optionsRowColumn: {
                 ...styles.tableRowColumn,
-                width: (window.innerWidth > 1600) ? '600px' :
-                       (window.innerWidth > 1280) ? '435px' : '60px',
+                width: optionsWidth,
             },
         };
 
@@ -148,8 +151,12 @@ export class NotificationsTableItem extends React.Component {
                         {(window.innerWidth > 1280) ?
                             <div
                                 className="qa-NotificationsTableItem-ActionButtons"
-                                style={{ display: 'flex', flex: '1' }}>
-                                <div style={{ flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box' }}>
+                                style={{ display: 'flex', flex: '1' }}
+                            >
+                                <div style={{
+                                    flex: '1', textAlign: 'right', marginRight: '6px', boxSizing: 'border-box',
+                                }}
+                                >
                                     {viewPath ?
                                         <FlatButton
                                             className="qa-NotificationsTableItem-ActionButtons-View"
@@ -164,7 +171,10 @@ export class NotificationsTableItem extends React.Component {
                                         null
                                     }
                                 </div>
-                                <div style={{ flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box' }}>
+                                <div style={{
+                                    flex: '0 1 180px', textAlign: 'center', margin: '0 6px', boxSizing: 'border-box',
+                                }}
+                                >
                                     {this.props.notification.unread ?
                                         <FlatButton
                                             className="qa-NotificationsTableItem-ActionButtons-MarkAsRead"
@@ -187,7 +197,10 @@ export class NotificationsTableItem extends React.Component {
                                         />
                                     }
                                 </div>
-                                <div style={{ flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box' }}>
+                                <div style={{
+                                    flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box',
+                                }}
+                                >
                                     <FlatButton
                                         className="qa-NotificationsTableItem-ActionButtons-Remove"
                                         label="Remove"
@@ -226,6 +239,9 @@ NotificationsTableItem.propTypes = {
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onView: PropTypes.func,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsUnread: PropTypes.func.isRequired,
+    removeNotifications: PropTypes.func.isRequired,
 };
 
 NotificationsTableItem.defaultProps = {

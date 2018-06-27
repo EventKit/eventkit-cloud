@@ -1,10 +1,6 @@
-export const fakeStore = (state) => {
-	return {
-		default: () => {},
-		subscribe: () => {},
-		dispatch: () => {},
-		getState: () => {
-			return { ...state };
-		},
-	};
-};
+export const fakeStore = state => ({
+    default: () => {},
+    subscribe: () => {},
+    dispatch: () => {},
+    getState: () => ({ ...state }),
+});

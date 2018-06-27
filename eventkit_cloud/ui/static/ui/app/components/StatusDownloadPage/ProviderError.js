@@ -86,12 +86,16 @@ export class ProviderError extends Component {
 
         return (
             <span className="qa-ProviderError-span-errorText">
-                <a 
+                <span
+                    role="button"
+                    tabIndex={0}
+                    onKeyPress={this.handleProviderErrorOpen}
                     onClick={this.handleProviderErrorOpen}
                     style={styles.errorText}
+                    className="qa-ProviderError-error-text"
                 >
                     ERROR
-                </a>
+                </span>
                 <Warning
                     className="qa-ProviderError-Warning"
                     onClick={this.handleProviderErrorOpen}
