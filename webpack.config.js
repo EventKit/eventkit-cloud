@@ -66,7 +66,7 @@ var config = {
             {
                 test: /\.(woff2?|ttf|eot)$/,
                 use: {
-                    loader: 'url-loader',
+                    loader: 'file-loader',
                     options: {
                         limit: 100000,
                         name: 'fonts/[hash].[ext]',
@@ -76,7 +76,7 @@ var config = {
             {
                 test: /\.(svg|png|jpg|gif)$/,
                 use: {
-                    loader: 'url-loader',
+                    loader: 'file-loader',
                     options: {
                         limit: 100000,
                         name: 'images/[hash].[ext]',
@@ -116,13 +116,6 @@ var config = {
                     test: /node_modules\/jsts/,
                     enforce: true,
                 },
-                fonts: {
-                    name: 'fonts',
-                    chunks: 'all',
-                    minChunks: 1,
-                    test: /\.eot?$/,
-                    enforce: true
-                }
             }
         }
     },
