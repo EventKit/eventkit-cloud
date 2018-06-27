@@ -1188,7 +1188,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
-                filename = create_filepath(['data', provider_slug], [name, date], ext)
+                filename = create_filepath(['data', provider_slug], [name, provider_slug, date], ext)
 
             zipfile.write(
                 filepath,
