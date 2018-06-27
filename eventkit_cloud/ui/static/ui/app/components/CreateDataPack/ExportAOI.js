@@ -46,7 +46,7 @@ import {
 
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import background from '../../../images/topoBackground.jpg';
+import background from '../../../images/topoBackground.png';
 import { joyride } from '../../joyride.config';
 
 export const WGS84 = 'EPSG:4326';

@@ -20,8 +20,7 @@ import { getGroups } from '../../actions/userGroupsActions';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getUsers } from '../../actions/userActions';
 import { joyride } from '../../joyride.config';
-
-const backgroundUrl = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export class DashboardPage extends React.Component {
     constructor(props) {
@@ -262,7 +261,7 @@ export class DashboardPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${backgroundUrl})`,
+                backgroundImage: `url(${background})`,
                 color: 'white',
             },
             appBar: {
