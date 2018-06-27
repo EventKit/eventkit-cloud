@@ -81,13 +81,13 @@ export class AoiInfobar extends Component {
                 width: '100%',
                 bottom: '40px',
                 display: 'flex',
-                justifyContent: 'center',
+                justifyContent: (window.innerHeight < 737 && window.innerWidth < 500) ? 'start' : 'center',
                 pointerEvents: 'none',
             },
             infobar: {
                 backgroundColor: '#fff',
                 display: 'flex',
-                margin: '0px 10px',
+                margin: (window.innerHeight < 737 && window.innerWidth < 500) ? '0 70px 0 10px' : '0 10px',
                 pointerEvents: 'auto',
             },
             body: {
