@@ -19,7 +19,7 @@ import CreateExport from './components/CreateDataPack/CreateExport';
 import StatusDownload from './components/StatusDownloadPage/StatusDownload';
 import UserGroupsPage from './components/UserGroupsPage/UserGroupsPage';
 import NotificationsPage from './components/NotificationsPage/NotificationsPage';
-import { login, userActive } from './actions/userActions';
+import { login } from './actions/userActions';
 
 
 const store = configureStore();
@@ -27,11 +27,7 @@ const history = syncHistoryWithStore(browserHistory, store);
 injectTapEventPlugin();
 
 function allTrue(acceptedLicenses) {
-    for (const l in acceptedLicenses) {
-        if (acceptedLicenses[l]) {continue;}
-        else {return false;}
-    }
-    return true;
+    return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
 }
 
 const UserIsAuthenticated = UserAuthWrapper({
@@ -60,11 +56,11 @@ const UserHasAgreed = UserAuthWrapper({
     predicate: userData => allTrue(userData.accepted_licenses),
 });
 
-function checkAuth(store) {
-    return (nextState, replace) => {
-        const { user } = store.getState();
+function checkAuth(storeObj) {
+    return (nextState) => {
+        const { user } = storeObj.getState();
         if (!user.data) {
-            store.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
+            storeObj.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
         }
     };
 }

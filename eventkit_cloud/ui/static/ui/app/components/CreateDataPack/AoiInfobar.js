@@ -428,7 +428,10 @@ export class AoiInfobar extends Component {
                                             <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoTitle">
                                                 <strong>{this.props.aoiInfo.title || ''}</strong>
                                             </div>
-                                            <div style={{ flex: '1 1 auto', wordBreak: 'break-word' }} className="qa-AoiInfobar-infoDescription">
+                                            <div
+                                                style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
+                                                className="qa-AoiInfobar-infoDescription"
+                                            >
                                                 <span className="qa-AoiInfobar-description" style={{ color: 'grey' }}>
                                                     {this.props.aoiInfo.description}
                                                 </span>

@@ -283,7 +283,11 @@ export class GroupsBody extends Component {
                     className="qa-GroupsBody-GroupBodyTooltip"
                     target={this.state.tooltip.target}
                     body={this.body}
-                    text={this.state.tooltip.admin ? 'Remove administrative rights from group administrators' : 'Share administrative rights with group administrators'}
+                    text={this.state.tooltip.admin ?
+                        'Remove administrative rights from group administrators'
+                        :
+                        'Share administrative rights with group administrators'
+                    }
                 />
             );
         }
