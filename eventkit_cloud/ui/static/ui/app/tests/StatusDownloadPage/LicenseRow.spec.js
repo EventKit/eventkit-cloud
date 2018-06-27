@@ -28,7 +28,7 @@ describe('LicenseRow component', () => {
         expect(wrapper.find(TableRowColumn)).toHaveLength(6);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find('i')).toHaveLength(1);
-        expect(wrapper.find('i').text()).toEqual('Use of this data is governed by test name');
+        expect(wrapper.find('i').text()).toEqual('Use of this data is governed by\u00a0test name');
     });
 
     it('getTextFontSize should return the font string for table text based on window width', () => {

@@ -64,6 +64,20 @@ export class DataPackGridItem extends Component {
         }
     }
 
+    getMapId() {
+        let mapId = '';
+        if (!isUndefined(this.props.gridName)) {
+            mapId += `${this.props.gridName}_`;
+        }
+        mapId += `${this.props.run.uid}_`;
+        if (!isUndefined(this.props.index)) {
+            mapId += `${this.props.index}_`;
+        }
+        mapId += 'map';
+
+        return mapId;
+    }
+
     initMap() {
         const map = new Map({
             target: this.getMapId(),
@@ -150,20 +164,6 @@ export class DataPackGridItem extends Component {
         this.props.onRunDelete(this.props.run.uid);
     }
 
-    getMapId() {
-        let mapId = '';
-        if (!isUndefined(this.props.gridName)) {
-            mapId += `${this.props.gridName}_`;
-        }
-        mapId += `${this.props.run.uid}_`;
-        if (!isUndefined(this.props.index)) {
-            mapId += `${this.props.index}_`;
-        }
-        mapId += 'map';
-
-        return mapId;
-    }
-
     mapContainerRef(element) {
         if (!element) {
             return;
@@ -236,11 +236,11 @@ export class DataPackGridItem extends Component {
                 color: 'inherit',
                 display: 'block',
                 width: '100%',
-                height: '28px',
+                height: '36px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                margin: '0px 0px 8px',
+                margin: '0px',
             },
             titleLinkExpanded: {
                 color: 'inherit',
@@ -320,16 +320,6 @@ export class DataPackGridItem extends Component {
                 position: 'relative',
                 zIndex: 1000,
             },
-            titleLink: {
-                color: 'inherit',
-                display: 'block',
-                width: '100%',
-                height: '36px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                margin: '0px',
-            },
             iconMenu: {
                 padding: '0px',
                 width: '24px',
@@ -337,6 +327,13 @@ export class DataPackGridItem extends Component {
                 verticalAlign: 'middle',
             },
         };
+
+        let status = <NavigationCheck style={styles.completeIcon} />;
+        if (this.props.run.status === 'SUBMITTED') {
+            status = <NotificationSync style={styles.runningIcon} />;
+        } else if (this.props.run.status === 'INCOMPLETE') {
+            status = <AlertError style={styles.errorIcon} />;
+        }
 
         return (
             <Card
@@ -458,7 +455,10 @@ export class DataPackGridItem extends Component {
                     onMouseLeave={() => { this.setState({ overflowText: false }); }}
                     onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
-                    <span className="qa-DataPackGridItem-span-description" style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}>
+                    <span
+                        className="qa-DataPackGridItem-span-description"
+                        style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}
+                    >
                         {this.props.run.job.description}
                     </span>
                 </CardText>
@@ -471,14 +471,7 @@ export class DataPackGridItem extends Component {
                 </CardMedia>
                 <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px' }}>
                     <span>
-                        {this.props.run.status == "SUBMITTED" ?
-                            <NotificationSync style={styles.runningIcon} />
-                            :
-                            this.props.run.status == "INCOMPLETE" ?
-                                <AlertError style={styles.errorIcon} />
-                                :
-                                <NavigationCheck style={styles.completeIcon} />
-                        }
+                        {status}
                         {this.props.run.user === this.props.user.data.user.username ?
                             <p style={styles.ownerLabel}>My DataPack</p>
                             :
@@ -498,14 +491,14 @@ export class DataPackGridItem extends Component {
 }
 
 DataPackGridItem.contextTypes = {
-    config: React.PropTypes.object,
+    config: PropTypes.object,
 };
 
 DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     showFeaturedFlag: PropTypes.bool,
