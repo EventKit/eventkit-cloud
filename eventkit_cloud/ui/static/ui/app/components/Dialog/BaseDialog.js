@@ -99,10 +99,31 @@ export class BaseDialog extends Component {
     }
 }
 
+BaseDialog.defaultProps = {
+    onClose: undefined,
+    title: undefined,
+    actions: undefined,
+    buttonText: undefined,
+    children: undefined,
+    dialogStyle: {},
+    titleStyle: {},
+    bodyStyle: {},
+    actionsStyle: {},
+    labelStyle: {},
+    buttonStyle: {},
+    overlayStyle: {},
+};
+
 BaseDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onClose: PropTypes.func,
     title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    actions: PropTypes.arrayOf(PropTypes.node),
+    children: PropTypes.oneOf([
+        PropTypes.string,
+        PropTypes.node,
+        PropTypes.arrayOf(PropTypes.node),
+    ]),
     buttonText: PropTypes.string,
     dialogStyle: PropTypes.object,
     titleStyle: PropTypes.object,

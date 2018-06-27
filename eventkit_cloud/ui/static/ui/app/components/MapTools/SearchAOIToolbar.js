@@ -120,7 +120,11 @@ export class SearchAOIToolbar extends Component {
             } else if (this.props.geocode.fetched) {
                 if (results.length) {
                     content = results.map((result, index) => (
-                        <TypeaheadMenuItem result={result} index={index} key={index} />
+                        <TypeaheadMenuItem
+                            result={result}
+                            index={index}
+                            key={`${result.name}${result.province}${result.region}${result.country}`}
+                        />
                     ));
                 } else {
                     content = (
