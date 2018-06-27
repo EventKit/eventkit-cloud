@@ -8,7 +8,7 @@ import rootReducer from '../reducers/rootReducer';
 const baseHistory = browserHistory;
 const routingMiddleware = routerMiddleware(baseHistory);
 
-const crashReporter = store => next => (action) => {
+const crashReporter = () => next => (action) => {
     try {
         return next(action);
     } catch (err) {
