@@ -708,7 +708,7 @@ export class ExportInfo extends React.Component {
                                             leftCheckbox={<Checkbox
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
-                                                style={{ left: '0px', paddingLeft: '5px' }}
+                                                style={{ left: '0px', paddingLeft: '10px' }}
                                                 defaultChecked={
                                                     this.props.exportInfo.providers.map(x => x.name)
                                                         .indexOf(provider.name) !== -1
@@ -717,13 +717,13 @@ export class ExportInfo extends React.Component {
                                                 checkedIcon={
                                                     <ActionCheckCircle
                                                         className="qa-ExportInfo-ActionCheckCircle-provider"
-                                                        style={{ fill: '#55ba63', paddingLeft: '5px' }}
+                                                        style={{ fill: '#55ba63' }}
                                                     />
                                                 }
                                                 uncheckedIcon={
                                                     <UncheckedCircle
                                                         className="qa-ExportInfo-UncheckedCircle-provider"
-                                                        style={{ fill: '#4598bf', paddingLeft: '5px' }}
+                                                        style={{ fill: '#4598bf' }}
                                                     />
                                                 }
                                             />}
