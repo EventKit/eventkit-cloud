@@ -72,7 +72,7 @@ describe('DashboardPage component', () => {
             updateDataCartPermissions: () => {},
             getUsers: () => {},
             getGroups: () => {},
-        }
+        };
     }
 
     function getShallowWrapper(props = getProps()) {
@@ -81,8 +81,8 @@ describe('DashboardPage component', () => {
 
     function getMountedWrapper(props = getProps()) {
         return mount(<DashboardPage {...props} />, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
     }
 
@@ -116,7 +116,7 @@ describe('DashboardPage component', () => {
     }
 
     function loadEmptyData(wrapper) {
-        const props = wrapper.instance().props;
+        const { props } = wrapper.instance();
         wrapper.setProps({
             ...props,
             runsList: {
@@ -156,19 +156,19 @@ describe('DashboardPage component', () => {
     }
 
     function loadData(wrapper) {
-        const props = wrapper.instance().props;
+        const { props } = wrapper.instance();
         const runs = getRuns();
         wrapper.setProps({
             ...props,
             runsList: {
                 fetching: false,
                 fetched: true,
-                runs: runs,
+                runs,
             },
             featuredRunsList: {
                 fetching: false,
                 fetched: true,
-                runs: runs,
+                runs,
             },
             userActivity: {
                 ...props.userActivity,
@@ -177,8 +177,8 @@ describe('DashboardPage component', () => {
                     fetching: false,
                     fetched: true,
                     viewedJobs: [
-                        {last_export_run: runs[0]},
-                        {last_export_run: runs[1]},
+                        { last_export_run: runs[0] },
+                        { last_export_run: runs[1] },
                     ],
                 },
             },

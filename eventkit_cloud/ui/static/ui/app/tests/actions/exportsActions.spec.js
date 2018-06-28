@@ -6,25 +6,25 @@ import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
 import types from '../../actions/actionTypes';
 import * as actions from '../../actions/exportsActions';
-import { setCloseDrawerTimeout, getOpenDrawerTimeout, DrawerTimeout } from '../../actions/exportsActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
 describe('export actions', () => {
     const geojson = {
-        "type": "FeatureCollection",
-        "features": [
-        { "type": "Feature",
-            "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
-                [100.0, 1.0], [100.0, 0.0] ]
-                ]
+        type: 'FeatureCollection',
+        features: [
+            {
+                type: 'Feature',
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                            [100.0, 1.0], [100.0, 0.0]],
+                    ],
+                },
             },
-            }
-        ]
+        ],
     };
 
     const jobData = {
@@ -32,15 +32,18 @@ describe('export actions', () => {
         description: 'testJobDesc',
         event: 'testJobEvent',
         include_zipfile: false,
-        provider_tasks: {'provider': ['provider1'], 'formats': ['gpkg']},
-        selection: {"type": "FeatureCollection",
-                    "features": [{
-                        "type": "Feature",
-                        "bbox": [1,1,1,1],
-                        "geometry" : {
-                            "type": "Polygon",
-                            "coordinates": [[[1,1],[1,1],[1,1],[1,1]]]
-                        }}]},
+        provider_tasks: { provider: ['provider1'], formats: ['gpkg'] },
+        selection: {
+            type: 'FeatureCollection',
+            features: [{
+                type: 'Feature',
+                bbox: [1, 1, 1, 1],
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [[[1, 1], [1, 1], [1, 1], [1, 1]]],
+                },
+            }],
+        },
         tags: [],
 
     };

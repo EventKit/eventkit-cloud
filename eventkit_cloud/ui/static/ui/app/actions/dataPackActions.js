@@ -36,9 +36,9 @@ export function getRuns(args = {}) {
         params.page_size = args.page_size;
         if (args.ordering) {
             params.ordering = args.ordering.includes('featured') ?
-            `${args.ordering},-started_at`
-            :
-            args.ordering;
+                `${args.ordering},-started_at`
+                :
+                args.ordering;
         } else {
             params.ordering = '-job__featured';
         }
@@ -97,7 +97,7 @@ export function getRuns(args = {}) {
 
             let range = '';
             if (response.headers['content-range']) {
-                range = response.headers['content-range'].split('-')[1]; 
+                [, range] = response.headers['content-range'].split('-');
             }
 
             const runs = response.data.map((run) => {
@@ -165,7 +165,7 @@ export function getFeaturedRuns(args) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            
+
             links.forEach((link) => {
                 if (link.includes('rel="next"')) {
                     nextPage = true;
@@ -174,7 +174,7 @@ export function getFeaturedRuns(args) {
 
             let range = '';
             if (response.headers['content-range']) {
-                range = response.headers['content-range'].split('-')[1];
+                [, range] = response.headers['content-range'].split('-');
             }
 
             const runs = [...response.data];
@@ -201,13 +201,13 @@ export function deleteRuns(uid) {
 
         const csrftoken = cookie.load('csrftoken');
 
-        const form_data = new FormData();
-        form_data.append('csrfmiddlewaretoken', csrftoken);
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrftoken);
 
         return axios({
             url: `/api/runs/${uid}`,
             method: 'DELETE',
-            data: form_data,
+            data: formData,
             headers: { 'X-CSRFToken': csrftoken },
         }).then(() => {
             dispatch({ type: types.DELETED_RUN });

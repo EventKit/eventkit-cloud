@@ -53,7 +53,7 @@ describe('DataPackStatusTable component', () => {
 
     it('should render the share dialog', () => {
         const props = getProps();
-        const stub = sinon.stub(DataPackShareDialog.prototype, 'render').returns(null);        
+        const stub = sinon.stub(DataPackShareDialog.prototype, 'render').returns(null);
         const wrapper = getWrapper(props);
         wrapper.setState({ shareDialogOpen: true });
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);

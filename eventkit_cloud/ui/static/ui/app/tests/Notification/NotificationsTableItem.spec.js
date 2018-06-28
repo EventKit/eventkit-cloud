@@ -5,9 +5,9 @@ import moment from 'moment';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
 import FlagIcon from 'material-ui/svg-icons/content/flag';
 import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
 import { NotificationsTableItem } from '../../components/Notification/NotificationsTableItem';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
-import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
 
 describe('NotificationsTableItem component', () => {
     beforeEach(() => {
@@ -135,7 +135,7 @@ describe('NotificationsTableItem component', () => {
     it('should abort handleView() if parent returns false in onView()', () => {
         const props = {
             ...getProps(),
-            onView: () => { return false; },
+            onView: () => false,
             markNotificationsAsRead: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -151,7 +151,7 @@ describe('NotificationsTableItem component', () => {
     it('should continue handleView() if parent returns true in onView()', () => {
         const props = {
             ...getProps(),
-            onView: () => { return true; },
+            onView: () => true,
             markNotificationsAsRead: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -180,7 +180,7 @@ describe('NotificationsTableItem component', () => {
     it('should abort handleMarkAsRead() if parent returns false in onMarkAsRead()', () => {
         const props = {
             ...getProps(),
-            onMarkAsRead: () => { return false; },
+            onMarkAsRead: () => false,
             markNotificationsAsRead: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -222,7 +222,7 @@ describe('NotificationsTableItem component', () => {
     it('should abort handleMarkAsUnread() if parent returns false in onMarkAsUnread()', () => {
         const props = {
             ...getProps(),
-            onMarkAsUnread: () => { return false; },
+            onMarkAsUnread: () => false,
             markNotificationsAsUnread: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -237,7 +237,7 @@ describe('NotificationsTableItem component', () => {
     it('should continue handleMarkAsUnread() if parent returns true in onMarkAsUnread()', () => {
         const props = {
             ...getProps(),
-            onMarkAsUnread: () => { return true; },
+            onMarkAsUnread: () => true,
             markNotificationsAsUnread: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -265,7 +265,7 @@ describe('NotificationsTableItem component', () => {
     it('should abort handleRemove() if parent returns false in onRemove()', () => {
         const props = {
             ...getProps(),
-            onRemove: () => { return false; },
+            onRemove: () => false,
             removeNotifications: sinon.spy(),
             router: {
                 push: sinon.spy(),
@@ -280,7 +280,7 @@ describe('NotificationsTableItem component', () => {
     it('should continue handleRemove() if parent returns true in onRemove()', () => {
         const props = {
             ...getProps(),
-            onRemove: () => { return true; },
+            onRemove: () => true,
             removeNotifications: sinon.spy(),
             router: {
                 push: sinon.spy(),

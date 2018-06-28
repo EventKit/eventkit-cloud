@@ -18,15 +18,16 @@ export class NotificationsTable extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if(nextProps.notifications !== this.props.notifications) {
+        if (nextProps.notifications !== this.props.notifications) {
             // Make sure to deselect any notifications that have been removed. Handle it here instead of
             // the standard callback in case it was removed by the notifications dropdown.
             const selected = { ...this.state.selected };
-            for (let uid of Object.keys(selected)) {
+
+            Object.keys(selected).forEach((uid) => {
                 if (!nextProps.notifications.notifications[uid]) {
                     delete selected[uid];
                 }
-            }
+            });
 
             this.setState({ selected });
         }
@@ -34,6 +35,13 @@ export class NotificationsTable extends React.Component {
 
     getSelectedCount() {
         return Object.keys(this.state.selected).length;
+    }
+
+    getSelectAllCheckedIcon() {
+        if (this.getSelectedCount() === this.props.notificationsArray.length) {
+            return <CheckboxIcon />;
+        }
+        return <IndeterminateCheckboxIcon />;
     }
 
     setSelected(notification, isSelected) {
@@ -50,22 +58,13 @@ export class NotificationsTable extends React.Component {
     handleSelectAllCheck() {
         let selected = { ...this.state.selected };
         if (this.getSelectedCount() === 0) {
-            this.props.notificationsArray.map((notification) => {
+            this.props.notificationsArray.forEach((notification) => {
                 selected[notification.id] = notification;
             });
         } else {
             selected = {};
         }
-
         this.setState({ selected });
-    }
-
-    getSelectAllCheckedIcon() {
-        if (this.getSelectedCount() === this.props.notificationsArray.length) {
-            return <CheckboxIcon />;
-        } else {
-            return <IndeterminateCheckboxIcon />;
-        }
     }
 
     render() {
@@ -89,7 +88,7 @@ export class NotificationsTable extends React.Component {
             contentHeaderColumnWrapper: {
                 display: 'flex',
                 alignItems: 'center',
-                height: '100%'
+                height: '100%',
             },
             multiMenu: {
                 marginLeft: '6px',
@@ -97,6 +96,10 @@ export class NotificationsTable extends React.Component {
                 top: '1px',
             },
         };
+
+        let optionsWidth = '60px';
+        if (window.innerWidth > 1600) optionsWidth = '600px';
+        else if (window.innerWidth > 1280) optionsWidth = '435px';
 
         styles = {
             ...styles,
@@ -116,8 +119,7 @@ export class NotificationsTable extends React.Component {
             optionsHeaderColumn: {
                 ...styles.tableHeaderColumn,
                 textAlign: (window.innerWidth > 1280) ? 'center' : 'right',
-                width: (window.innerWidth > 1600) ? '600px' :
-                       (window.innerWidth > 1280) ? '435px' : '60px',
+                width: optionsWidth,
                 padding: '0 15px 0 0',
             },
         };
@@ -139,7 +141,7 @@ export class NotificationsTable extends React.Component {
                                     checked={this.getSelectedCount() > 0}
                                     checkedIcon={this.getSelectAllCheckedIcon()}
                                     onCheck={this.handleSelectAllCheck}
-                                    disableTouchRipple={true}
+                                    disableTouchRipple
                                 />
                             </TableHeaderColumn>
                             <TableHeaderColumn
@@ -173,7 +175,7 @@ export class NotificationsTable extends React.Component {
                         </TableRow>
                     </TableHeader>
                     <TableBody displayRowCheckbox={false}>
-                        {this.props.notificationsArray.map((notification) => (
+                        {this.props.notificationsArray.map(notification => (
                             <NotificationsTableItem
                                 key={`NotificationsTableItem-${notification.id}`}
                                 notification={notification}
