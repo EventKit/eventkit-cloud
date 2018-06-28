@@ -41,6 +41,7 @@
     "babel-preset-env": "~1.7.0",
     "babel-preset-stage-0": "~6.16.0",
     "canvas":"1.6.7",
+    "compression-webpack-plugin": "~1.1.11",
     "css-loader": "~0.28.0",
     "enzyme": "~2.7.1",
     "eslint": "~4.9.0",

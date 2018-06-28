@@ -3,13 +3,14 @@ var webpack = require('webpack');
 var path = require('path');
 var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+var CompressionPlugin = require('compression-webpack-plugin');
 
 var BASE_DIR = path.resolve('/var', 'lib', 'eventkit', 'eventkit_cloud', 'ui', 'static', 'ui')
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
 var APP_DIR = path.resolve(BASE_DIR, 'app');
 
 var PROD = JSON.parse(process.env.PROD || false);
-var devtool = 'source-map';
+var devtool = 'cheap-source-map';
 var plugins = [
     new BundleAnalyzerPlugin({
         analyzerMode: 'static',
@@ -17,6 +18,9 @@ var plugins = [
     }),
     new webpack.ContextReplacementPlugin(/moment[\/\\]locale$/, /en/),
     new webpack.HashedModuleIdsPlugin(),
+    new CompressionPlugin({
+        test: /(\.js$|\.css$)/
+    })
 ];
 var app = [APP_DIR + '/index.js'];
 var config = {
