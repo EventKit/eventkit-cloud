@@ -8,7 +8,7 @@ import { UserAuthWrapper } from 'redux-auth-wrapper';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
-import { login, userActive } from './actions/userActions';
+import { login } from './actions/userActions';
 
 const Loading = () => <div>Loading. . .</div>;
 

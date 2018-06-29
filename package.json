@@ -34,6 +34,7 @@
   "devDependencies": {
     "axios-mock-adapter": "~1.7.1",
     "babel-core": "~6.26.3",
+    "babel-eslint": "~8.2.5",
     "babel-jest": "17.0.2",
     "babel-loader": "~7.0.0",
     "babel-plugin-transform-class-properties": "~6.19.0",
