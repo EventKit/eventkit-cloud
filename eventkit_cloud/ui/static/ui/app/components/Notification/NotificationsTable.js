@@ -9,6 +9,7 @@ export class NotificationsTable extends React.Component {
     constructor(props) {
         super(props);
         this.getSelectedCount = this.getSelectedCount.bind(this);
+        this.isSelected = this.isSelected.bind(this);
         this.setSelected = this.setSelected.bind(this);
         this.handleSelectAllCheck = this.handleSelectAllCheck.bind(this);
         this.getSelectAllCheckedIcon = this.getSelectAllCheckedIcon.bind(this);
@@ -53,6 +54,10 @@ export class NotificationsTable extends React.Component {
         }
 
         this.setState({ selected });
+    }
+
+    isSelected(notification) {
+        return !!this.state.selected[notification.id];
     }
 
     handleSelectAllCheck() {
@@ -138,6 +143,7 @@ export class NotificationsTable extends React.Component {
                                 style={styles.checkboxHeaderColumn}
                             >
                                 <Checkbox
+                                    className="qa-NotificationsTable-SelectAllCheckbox"
                                     checked={this.getSelectedCount() > 0}
                                     checkedIcon={this.getSelectAllCheckedIcon()}
                                     onCheck={this.handleSelectAllCheck}
@@ -180,7 +186,7 @@ export class NotificationsTable extends React.Component {
                                 key={`NotificationsTableItem-${notification.id}`}
                                 notification={notification}
                                 router={this.props.router}
-                                isSelected={!!this.state.selected[notification.id]}
+                                isSelected={this.isSelected(notification)}
                                 setSelected={this.setSelected}
                                 onMarkAsRead={this.props.onMarkAsRead}
                                 onMarkAsUnread={this.props.onMarkAsUnread}

@@ -7,9 +7,26 @@ export class DashboardSection extends React.Component {
     constructor(props) {
         super(props);
         this.handlePageChange = this.handlePageChange.bind(this);
+        this.getPages = this.getPages.bind(this);
         this.state = {
             pageIndex: 0,
         };
+        this.maxPages = 3;
+        this.itemsPerPage = this.props.columns * this.props.rows;
+    }
+
+    getPages() {
+        // Group children into pages, each of length maxPages.
+        const children = React.Children.toArray(this.props.children);
+        const pages = [];
+        for (let i = 0; i < children.length; i += this.itemsPerPage) {
+            pages.push(children.slice(i, i + this.itemsPerPage));
+            if (pages.length === this.maxPages) {
+                break;
+            }
+        }
+
+        return pages;
     }
 
     handlePageChange(pageIndex) {
@@ -101,16 +118,7 @@ export class DashboardSection extends React.Component {
             selected ? '8px solid rgb(69, 152, 191)' : '3px solid rgb(69, 152, 191)'
         );
 
-        const maxPages = 3;
-        const itemsPerPage = this.props.columns * this.props.rows;
-        const childrenPages = [];
-        const children = React.Children.toArray(this.props.children);
-        for (let i = 0; i < children.length; i += itemsPerPage) {
-            childrenPages.push(children.slice(i, i + itemsPerPage));
-            if (childrenPages.length === maxPages) {
-                break;
-            }
-        }
+        const childrenPages = this.getPages();
 
         let view = null;
         if (childrenPages.length > 0) {
@@ -215,7 +223,7 @@ export class DashboardSection extends React.Component {
                                 onChange={this.handlePageChange}
                                 value={this.state.pageIndex}
                             >
-                                {[...Array(maxPages)].map((nothing, pageIndex) => (
+                                {[...Array(this.maxPages)].map((nothing, pageIndex) => (
                                     <Tab
                                         key={`DashboardSection-${this.props.name}-Tab${pageIndex}`}
                                         className="qa-DashboardSection-Tab"
