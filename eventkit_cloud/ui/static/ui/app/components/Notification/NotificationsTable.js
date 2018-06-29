@@ -38,10 +38,6 @@ export class NotificationsTable extends React.Component {
         return Object.keys(this.state.selected).length;
     }
 
-    isSelected(notification) {
-        return !!this.state.selected[notification.id];
-    }
-
     getSelectAllCheckedIcon() {
         if (this.getSelectedCount() === this.props.notificationsArray.length) {
             return <CheckboxIcon />;
@@ -58,6 +54,10 @@ export class NotificationsTable extends React.Component {
         }
 
         this.setState({ selected });
+    }
+
+    isSelected(notification) {
+        return !!this.state.selected[notification.id];
     }
 
     handleSelectAllCheck() {

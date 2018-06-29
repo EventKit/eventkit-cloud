@@ -41,11 +41,6 @@ export class NotificationsPage extends React.Component {
         return window.innerWidth >= 768 ? 7 : 2;
     }
 
-    refresh() {
-        this.props.getNotifications({ pageSize: this.state.pageSize });
-        this.setState({ loading: true });
-    }
-
     getRange(notifications) {
         if (this.props.notifications.range) {
             const rangeParts = this.props.notifications.range.split('/');
@@ -57,6 +52,11 @@ export class NotificationsPage extends React.Component {
         }
 
         return '';
+    }
+
+    refresh() {
+        this.props.getNotifications({ pageSize: this.state.pageSize });
+        this.setState({ loading: true });
     }
 
     handleLoadMore() {
