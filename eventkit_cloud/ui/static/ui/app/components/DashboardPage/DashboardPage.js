@@ -409,8 +409,11 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 onViewAll={this.handleNotificationsViewAll}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any notifications."}
+                                    <Paper
+                                        className="qa-DashboardSection-Notifications-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any notifications."}</span>
                                     </Paper>
                                 }
                                 rowMajor={false}
@@ -433,8 +436,11 @@ export class DashboardPage extends React.Component {
                                 gridPadding={this.getGridPadding()}
                                 providers={this.props.providers}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any recently viewed DataPacks."}&nbsp;
+                                    <Paper
+                                        className="qa-DashboardSection-RecentlyViewed-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any recently viewed DataPacks."}&nbsp;</span>
                                         <Link
                                             to="/exports"
                                             href="/exports"
@@ -505,8 +511,11 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any DataPacks."}&nbsp;
+                                    <Paper
+                                        className="qa-DashboardSection-MyDataPacks-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any DataPacks."}&nbsp;</span>
                                         <Link
                                             to="/create"
                                             href="/create"
