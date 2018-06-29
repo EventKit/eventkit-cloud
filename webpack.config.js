@@ -4,6 +4,7 @@ var path = require('path');
 var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var CompressionPlugin = require('compression-webpack-plugin');
+var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 var BASE_DIR = path.resolve('/var', 'lib', 'eventkit', 'eventkit_cloud', 'ui', 'static', 'ui')
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
@@ -20,7 +21,8 @@ var plugins = [
     new webpack.HashedModuleIdsPlugin(),
     new CompressionPlugin({
         test: /(\.js$|\.css$)/
-    })
+    }),
+    new ExtractTextPlugin({ filename: '[name].css' })
 ];
 var app = [APP_DIR + '/index.js'];
 var config = {
@@ -55,7 +57,8 @@ var config = {
                 },
             },
             {
-                test: /\.css$/,
+                // process all the scoped imports
+                include: /(ol3map.css$|typeahead.css$|popup.css$)/,
                 use: [
                     { loader: 'style-loader' },
                     {
@@ -63,9 +66,19 @@ var config = {
                         options: {
                             modules: true,
                             localIdentName: '[name]__[local]___[hash:base64:5]',
+                            minimize: true,
                         },
                     },
                 ],
+            },
+            {
+                // process all the global css imports
+                test: /\.css$/,
+                exclude: /(ol3map.css|typeahead.css$|popup.css$)/,
+                use: ExtractTextPlugin.extract({
+                    fallback: 'style-loader',
+                    use: [{ loader: 'css-loader', options: { minimize: true }}]
+                })
             },
             {
                 test: /\.(woff2?|ttf|eot)$/,

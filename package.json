@@ -49,6 +49,7 @@
     "eslint-plugin-react": "~7.4.0",
     "eslint-plugin-jsx-a11y": "~6.0.2",
     "eslint-config-airbnb": "~16.1.0",
+    "extract-text-webpack-plugin": "4.0.0-beta.0",
     "file-loader": "~1.1.11",
     "identity-obj-proxy": "~3.0.0",
     "image-webpack-loader": "~3.0.0",

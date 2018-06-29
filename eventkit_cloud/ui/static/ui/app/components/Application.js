@@ -25,8 +25,13 @@ import { userActive } from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';
 import NotificationsDropdown from './Notification/NotificationsDropdown';
+import '../styles/bootstrap/css/bootstrap.css';
+import '../styles/openlayers/ol.css';
+import '../styles/flexboxgrid.css';
+import '../styles/react-joyride-compliled.css';
 
 require('../fonts/index.css');
+
 
 const muiTheme = getMuiTheme({
     datePicker: {

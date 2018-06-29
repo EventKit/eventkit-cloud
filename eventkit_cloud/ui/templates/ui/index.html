@@ -1,16 +1,13 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
   <head>
     <title>EventKit</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {% load staticfiles %}
-    <link rel="icon" href="{% static 'ui/images/favicon.ico'%}'">
-    <link rel="stylesheet" href="{% static 'ui/app/styles/bootstrap/css/bootstrap.min.css'%}">
-    <link rel="stylesheet" href="{% static 'ui/app/styles/openlayers/ol.css'%}">
-    <link rel="stylesheet" href="{% static 'ui/app/styles/flexboxgrid.css'%}">
-    <link rel="stylesheet" href="{% static 'ui/app/styles/react-joyride-compliled.css'%}">
+    <link rel="icon" href="{% static 'ui/images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'ui/build/bundle.css' %}">
 
     <style>
       body {
@@ -31,35 +28,6 @@
         color: #fff;
         padding: 40px;
         text-align: center;
-      }
-
-      .ol-scale-line {
-        background: rgba(0,0,0,0);
-      }
-      .ol-attribution.ol-uncollapsible {
-        bottom: 10px;
-        left: 10px;
-        right: auto;
-        border-radius: 4px 0 0;
-        height: 1.1em;
-        line-height: 1em;
-      }
-
-      .ol-attribution:not(.ol-collapsed) {
-        background: rgba(255,255,255,.0);
-      }
-
-      .form-control:focus {
-        box-shadow: none
-      }
-
-      .dropdown-menu > .active > a,
-      .dropdown-menu > .active > a:hover,
-      .dropdown-menu > .active > a:focus {
-        color: #fff;
-        text-decoration: none;
-        background-color: #cecece;
-        outline: 0;
       }
     </style>
   </head>
