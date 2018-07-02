@@ -23,9 +23,7 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
-
-
-const topoPattern = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export class StatusDownload extends React.Component {
     constructor(props) {
@@ -234,7 +232,7 @@ export class StatusDownload extends React.Component {
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
-                backgroundImage: `url(${topoPattern})`,
+                backgroundImage: `url(${background})`,
                 backgroundRepeat: 'repeat repeat',
             },
             content: {

@@ -6,8 +6,7 @@ import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../DataPackPage/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
-
-const backgroundUrl = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export class NotificationsPage extends React.Component {
     constructor(props) {
@@ -76,7 +75,7 @@ export class NotificationsPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${backgroundUrl})`,
+                backgroundImage: `url(${background})`,
                 color: 'rgba(0, 0, 0, 0.54)',
             },
             appBar: {

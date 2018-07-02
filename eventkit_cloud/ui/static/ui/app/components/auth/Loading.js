@@ -1,7 +1,6 @@
 import React from 'react';
 import CircularProgress from 'material-ui/CircularProgress';
-
-const background = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export default function Loading() {
     const constainerStyle = {

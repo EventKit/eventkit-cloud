@@ -34,7 +34,7 @@ import ol3mapCss from '../../styles/ol3map.css';
 import BaseTooltip from '../BaseTooltip';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
-import background from '../../../images/topoBackground.jpg';
+import background from '../../../images/topoBackground.png';
 
 export class ExportInfo extends React.Component {
     constructor(props) {
