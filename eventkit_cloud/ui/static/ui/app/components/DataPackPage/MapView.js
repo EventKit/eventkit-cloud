@@ -46,6 +46,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import { userIsDataPackAdmin } from '../../utils/generic';
+import globe from '../../../images/globe-americas.svg';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -360,8 +361,11 @@ export class MapView extends Component {
 
     // add map with controls and basemap to the page
     initMap() {
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-globe';
+        const img = document.createElement('img');
+        img.src = globe;
+        img.alt = 'globe';
+        img.height = '16';
+        img.width = '16';
         return new Map({
             controls: [
                 new ScaleLine({
@@ -377,7 +381,7 @@ export class MapView extends Component {
                 }),
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
-                    label: icon,
+                    label: img,
                     extent: [
                         -14251567.50789682,
                         -10584983.780136958,

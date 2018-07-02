@@ -46,7 +46,8 @@ import {
 
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import background from '../../../images/topoBackground.jpg';
+import background from '../../../images/topoBackground.png';
+import globe from '../../../images/globe-americas.svg';
 import { joyride } from '../../joyride.config';
 
 export const WGS84 = 'EPSG:4326';
@@ -419,8 +420,11 @@ export class ExportAOI extends Component {
         this.drawFreeInteraction.on('drawstart', this.handleDrawStart);
         this.drawFreeInteraction.on('drawend', this.handleDrawEnd);
 
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-globe';
+        const img = document.createElement('img');
+        img.src = globe;
+        img.alt = 'globe';
+        img.height = '16';
+        img.width = '16';
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -436,7 +440,7 @@ export class ExportAOI extends Component {
                 }),
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
-                    label: icon,
+                    label: img,
                     extent: [
                         -14251567.50789682,
                         -10584983.780136958,
