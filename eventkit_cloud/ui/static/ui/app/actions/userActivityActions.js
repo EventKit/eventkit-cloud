@@ -6,24 +6,24 @@ export function viewedJob(jobuid) {
     return (dispatch) => {
         dispatch({
             type: actions.VIEWED_JOB,
-            jobuid: jobuid,
+            jobuid,
         });
 
         return axios({
             url: '/api/user/activity/jobs?activity=viewed',
             method: 'POST',
             data: { job_uid: jobuid },
-            headers: { 'X-CSRFToken': cookie.load('csrftoken') }
+            headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {
             dispatch({
                 type: actions.VIEWED_JOB_SUCCESS,
-                jobuid: jobuid,
+                jobuid,
             });
         }).catch((error) => {
             console.error(error.message);
             dispatch({
                 type: actions.VIEWED_JOB_ERROR,
-                jobuid: jobuid,
+                jobuid,
             });
         });
     };
@@ -37,17 +37,16 @@ export function getViewedJobs(args = {}) {
             if (args.isAuto) {
                 // Just ignore this request.
                 return null;
-            } else {
-                // Cancel the last request.
-                state.userActivity.viewedJobs.cancelSource.cancel('Request is no longer valid, cancelling.');
             }
+            // Cancel the last request.
+            state.userActivity.viewedJobs.cancelSource.cancel('Request is no longer valid, cancelling.');
         }
 
         const cancelSource = axios.CancelToken.source();
 
         dispatch({
             type: actions.FETCHING_VIEWED_JOBS,
-            cancelSource: cancelSource,
+            cancelSource,
         });
 
         const params = {
@@ -67,18 +66,20 @@ export function getViewedJobs(args = {}) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-            }
+            });
+
             let range = '';
             if (response.headers['content-range']) {
-                range = response.headers['content-range'].split('-')[1];
+                [, range] = response.headers['content-range'].split('-');
             }
 
-            const viewedJobs = response.data.map((viewedJob) => {
-                const newViewedJob = { ...viewedJob };
+            const viewedJobs = response.data.map((job) => {
+                const newViewedJob = { ...job };
                 const run = newViewedJob.last_export_run;
                 run.job.permissions = {
                     value: run.job.visibility,
@@ -104,5 +105,5 @@ export function getViewedJobs(args = {}) {
                 });
             }
         });
-    }
+    };
 }

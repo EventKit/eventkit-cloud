@@ -22,6 +22,7 @@ before_script:
     - docker-compose -f docker-compose-test.yml exec -T eventkit scripts/wait-for-postgis.sh python manage.py runinitial setup
 
 script:
+    - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run lint
     - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run coverage
     - sudo chown -R eventkit:eventkit ./coverage
     - docker-compose -f docker-compose-test.yml run --rm -T eventkit pytest -n 4

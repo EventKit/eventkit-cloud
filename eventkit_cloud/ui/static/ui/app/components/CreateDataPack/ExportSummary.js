@@ -20,8 +20,7 @@ import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import ol3mapCss from '../../styles/ol3map.css';
 import { joyride } from '../../joyride.config';
-
-const background = require('../../../images/topoBackground.jpg');
+import background from '../../../images/topoBackground.png';
 
 export class ExportSummary extends Component {
     constructor(props) {

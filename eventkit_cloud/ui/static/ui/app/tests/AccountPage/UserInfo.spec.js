@@ -1,27 +1,24 @@
 import React from 'react';
-import {mount} from 'enzyme';
-import moment from 'moment';
+import { mount } from 'enzyme';
 import UserInfo from '../../components/AccountPage/UserInfo';
 import UserInfoTableRow from '../../components/AccountPage/UserInfoTableRow';
 
 describe('UserInfo component', () => {
-    const getProps = () => {
-        return {
-            user: {
-                username: 'admin', 
-                first_name: 'first', 
-                last_name: 'last', 
-                email: 'admin@admin.com', 
-                date_joined: '2017-05-10T11:28:03.300240Z',
-                last_login: '2017-05-10T11:28:03.300240Z'
-            },
-            updateLink: 'http://www.google.com',
-        }
-    }
+    const getProps = () => ({
+        user: {
+            username: 'admin',
+            first_name: 'first',
+            last_name: 'last',
+            email: 'admin@admin.com',
+            date_joined: '2017-05-10T11:28:03.300240Z',
+            last_login: '2017-05-10T11:28:03.300240Z',
+        },
+        updateLink: 'http://www.google.com',
+    });
 
     it('should display a section title, update link, and table with user data', () => {
         const props = getProps();
-        const wrapper = mount(<UserInfo {...props}/>);
+        const wrapper = mount(<UserInfo {...props} />);
         expect(wrapper.find('h4')).toHaveLength(1);
         expect(wrapper.find('h4').text()).toEqual('Personal Information');
         expect(wrapper.find('div').at(1).text()).toEqual('To update your personal details, please visit here');
@@ -46,9 +43,9 @@ describe('UserInfo component', () => {
     });
 
     it('should not display the update link', () => {
-        let props = getProps();
+        const props = getProps();
         props.updateLink = '';
-        const wrapper = mount(<UserInfo {...props}/>);
+        const wrapper = mount(<UserInfo {...props} />);
         expect(wrapper.find('div').at(1).exists()).toBe(false);
         expect(wrapper.find('a')).toHaveLength(0);
     });

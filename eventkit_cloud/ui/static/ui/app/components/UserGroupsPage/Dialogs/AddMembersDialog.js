@@ -423,7 +423,8 @@ export class AddMembersDialog extends Component {
                     className="qa-AddMembersDialog-description"
                 >
                     <strong>You can add selected members to the groups listed in the &apos;AVAILABLE GROUPS&apos; tab.</strong>
-                    &nbsp;For additional reference, groups that already contain those selected members are listed in the &apos;ALREADY IN GROUPS&apos; tab.
+                    &nbsp;For additional reference, groups that already contain those selected members are listed in
+                    the &apos;ALREADY IN GROUPS&apos; tab.
                     &nbsp;To make further edits, go to the individual group on the Members and Groups page.
                 </p>
                 <Tabs

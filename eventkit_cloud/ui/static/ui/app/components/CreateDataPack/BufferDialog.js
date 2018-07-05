@@ -260,7 +260,7 @@ export class BufferDialog extends Component {
                         </div>
                     </div>
                     <div className="qa-BufferDialog-footnote" style={styles.footnote}>
-                        Once updated, you must <strong>'Revert' to set again.</strong>
+                        Once updated, you must <strong>&apos;Revert&apos; to set again.</strong>
                     </div>
                     <div className="qa-BufferDialog-footer" style={styles.footer}>
                         {bufferActions}
@@ -273,7 +273,6 @@ export class BufferDialog extends Component {
 
 BufferDialog.defaultProps = {
     maxVectorAoiSqKm: null,
-    maxRasterAoiSqKm: null,
 };
 
 BufferDialog.contextTypes = {
@@ -289,7 +288,6 @@ BufferDialog.propTypes = {
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
     maxVectorAoiSqKm: PropTypes.number,
-    maxRasterAoiSqKm: PropTypes.number,
 };
 
 export default BufferDialog;

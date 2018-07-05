@@ -20,8 +20,7 @@ import { getGroups } from '../../actions/userGroupsActions';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getUsers } from '../../actions/userActions';
 import { joyride } from '../../joyride.config';
-
-const backgroundUrl = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export class DashboardPage extends React.Component {
     constructor(props) {
@@ -262,7 +261,7 @@ export class DashboardPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${backgroundUrl})`,
+                backgroundImage: `url(${background})`,
                 color: 'white',
             },
             appBar: {
@@ -410,8 +409,11 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 onViewAll={this.handleNotificationsViewAll}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any notifications."}
+                                    <Paper
+                                        className="qa-DashboardSection-Notifications-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any notifications."}</span>
                                     </Paper>
                                 }
                                 rowMajor={false}
@@ -434,8 +436,11 @@ export class DashboardPage extends React.Component {
                                 gridPadding={this.getGridPadding()}
                                 providers={this.props.providers}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any recently viewed DataPacks."}&nbsp;
+                                    <Paper
+                                        className="qa-DashboardSection-RecentlyViewed-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any recently viewed DataPacks."}&nbsp;</span>
                                         <Link
                                             to="/exports"
                                             href="/exports"
@@ -506,14 +511,17 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any DataPacks."}&nbsp;
+                                    <Paper
+                                        className="qa-DashboardSection-MyDataPacks-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any DataPacks."}&nbsp;</span>
                                         <Link
-                                            to="/exports"
-                                            href="/exports"
+                                            to="/create"
+                                            href="/create"
                                             style={styles.link}
                                         >
-                                            View DataPack Library
+                                            Create DataPack
                                         </Link>
                                     </Paper>
                                 }
