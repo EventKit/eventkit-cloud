@@ -241,12 +241,7 @@ class ExportTask(LockingTask):
             provider_slug = parts[-2]
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
-            download_filename = '{0}-{1}-{2}{3}'.format(
-                name,
-                provider_slug,
-                finished.strftime('%Y%m%d'),
-                ext
-            )
+            download_filename = create_filepath([], [name, provider_slug, finished.strftime('%Y%m%d')], ext)
 
             export_run = ExportRun.objects.get(uid=run_uid)
             user = export_run.user.username
@@ -1153,13 +1148,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     if file_name:
         zip_filename = file_name
     else:
-        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-            normalize_name(name),
-            normalize_name(project),
-            "eventkit",
-            date,
-            'zip'
-        )
+        zip_filename = create_filepath([], [normalize_name(name), normalize_name(project), 'eventkit', date], 'zip')
 
     zip_st_filepath = os.path.join(st_filepath, zip_filename)
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
@@ -1192,25 +1181,14 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
             if filepath.endswith((".qgs", "ReadMe.txt")):
                 # put the style file in the root of the zip
-                filename = '{0}{1}'.format(
-                    name,
-                    ext
-                )
+                filename = create_filepath([], [name], ext)
             elif filepath.endswith("metadata.json"):
                 # put the metadata file in arcgis folder unless it becomes more useful.
-                filename = os.path.join('arcgis', '{0}{1}'.format(
-                    name,
-                    ext
-                ))
+                filename = create_filepath(['arcgis'], [name], ext)
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
-                filename = 'data/{0}/{1}-{0}-{2}{3}'.format(
-                    provider_slug,
-                    name,
-                    date,
-                    ext
-                )
+                filename = create_filepath(['data', provider_slug], [name, provider_slug, date], ext)
 
             zipfile.write(
                 filepath,
@@ -1660,3 +1638,23 @@ def make_dirs(path):
     except OSError:
         if not os.path.isdir(path):
             raise
+
+
+def create_filepath(dirs, filename_parts, ext):
+    """
+    :param dirs: The series of directories before the file at the end of the path (can be empty).
+    :param filename_parts: These will be concatenated in order with a dash between each one, and that will become the
+                           filename. (Shouldn't be empty)
+    :param ext: The file extension
+    :return: A string representing a file path
+    """
+    final_path = ''
+    for dir in dirs:
+        final_path = os.path.join(final_path, dir)
+    if filename_parts:
+        filename = filename_parts.pop(0)
+        for part in filename_parts:
+            filename += '-{}'.format(part)
+    if not ext.startswith('.'):
+        ext = '.{}'.format(ext)
+    return os.path.join(final_path, filename) + ext
