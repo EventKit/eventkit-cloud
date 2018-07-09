@@ -9,3 +9,7 @@ pydevd==1.0.0
 pytest==3.2.5
 pytest-django==3.1.2
 pytest-xdist==1.20.1
+django-rest-swagger==2.1.2
+coreapi==2.3.0
+itypes==1.1.0
+coreschema==0.0.4
