@@ -20,7 +20,9 @@ GDAL==2.2.2
 gunicorn==19.7.1
 # Kombu declared explicitly because of incompatibility with celery requirements.
 kombu==4.0.2
+lxml==3.7.3
 MapProxy==1.11.0
+Markdown==2.6.8
 numpy==1.14.3
 Pillow==4.1.1
 psycopg2==2.7.3.2
@@ -29,8 +31,10 @@ pyparsing==2.1.10
 pysqlite==2.8.3
 python-dateutil==2.7.2
 python-ldap==2.4.39
+python-magic==0.4.12
 pytz==2017.2
 PyYAML==3.12
 requests==2.18.4
 Shapely==1.5.17
+simplejson==3.10.0
 whitenoise==3.3.0
