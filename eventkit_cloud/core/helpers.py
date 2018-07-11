@@ -9,6 +9,7 @@ import shutil
 import logging
 from notifications.signals import notify
 from enum import Enum
+from ..tasks.task_runners import normalize_name
 
 
 logger = logging.getLogger(__name__)

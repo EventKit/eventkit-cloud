@@ -32,6 +32,7 @@ from .task_runners import (
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
+from .helpers import get_run_staging_dir
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ class TaskFactory:
         if run_uid:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
-            run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
+            run_dir = get_run_staging_dir(run.uid)
             os.makedirs(run_dir, 0750)
 
             finalize_task_settings = {

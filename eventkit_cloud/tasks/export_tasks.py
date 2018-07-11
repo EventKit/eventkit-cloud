@@ -24,9 +24,9 @@ from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
+from audit_logging.celery_support import UserDetailsBase
 
 from ..feature_selection.feature_selection import FeatureSelection
-from audit_logging.celery_support import UserDetailsBase
 from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file, get_human_readable_metadata_document
 from ..celery import app, TaskPriority
 from ..utils import (
@@ -34,9 +34,11 @@ from ..utils import (
 )
 from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
+from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from .exceptions import CancelException, DeleteException
-from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
+from .helpers import normalize_name, get_archive_data_path, get_run_download_url, get_download_filename, get_run_staging_dir, \
+    get_zip_filename
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -157,9 +159,9 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         @return A url to reach filepath.
     """
 
-    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-    download_url_root = settings.EXPORT_MEDIA_ROOT
-    run_dir = os.path.join(download_filesystem_root, run_uid)
+    run_dir = get_run_staging_dir(run_uid)
+    run_download_url = get_run_download_url(run_uid)
+
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
@@ -173,9 +175,9 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
     else:
         make_dirs(run_dir)
 
-        download_url = os.path.join(download_url_root, run_uid, download_filename)
+        download_url = os.path.join(run_download_url, download_filename)
 
-        download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
+        download_filepath = os.path.join(run_dir, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
 
@@ -241,12 +243,10 @@ class ExportTask(LockingTask):
             provider_slug = parts[-2]
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
-            download_filename = '{0}-{1}-{2}{3}'.format(
-                name,
-                provider_slug,
-                finished.strftime('%Y%m%d'),
-                ext
-            )
+            download_filename = get_download_filename(name,
+                                                      provider_slug,
+                                                      finished.strftime('%Y%m%d'),
+                                                      ext)
 
             export_run = ExportRun.objects.get(uid=run_uid)
             user = export_run.user.username
@@ -730,7 +730,6 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
                         stage_dir=None, *args, **kwargs):
     from .models import DataProviderTaskRecord
-    from .task_runners import normalize_name
 
     result = result or {}
 
@@ -753,15 +752,9 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
             full_file_path = os.path.join(stage_dir, filename)
             ext = os.path.splitext(filename)[1]
             if ext in ['.gpkg', '.tif']:
-                filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
-                    export_provider_task.slug,
-                    os.path.splitext(os.path.basename(filename))[0],
-                    timezone.now().strftime('%Y%m%d'),
-                    ext
-                )
-                metadata['data_sources'][export_provider_task.slug]['file_path'] = os.path.join('data',
-                                                                                                export_provider_task.slug,
-                                                                                                filepath)
+                download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0], export_provider_task.slug, timezone.now(), ext)
+                filepath = get_archive_data_path(export_provider_task.slug, download_filename)
+                metadata['data_sources'][export_provider_task.slug]['file_path'] = filepath
                 metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path,
@@ -1032,7 +1025,6 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.tasks.task_runners import normalize_name
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -1055,11 +1047,12 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                                               provider_task.slug, filename)
                 ext = os.path.splitext(filename)[1]
                 if ext in ['.gpkg', '.tif']:
-                    filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
+                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
+                                                              timezone.now().strftime('%Y%m%d'),
+                                                              ext)
+                    filepath = get_archive_data_path(
                         provider_task.slug,
-                        os.path.splitext(os.path.basename(filename))[0],
-                        timezone.now().strftime('%Y%m%d'),
-                        ext
+                        download_filename
                     )
                     metadata['data_sources'][provider_task.slug]['file_path'] = filepath
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
@@ -1129,7 +1122,6 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     rolls up runs into a zip file
     """
     from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportRun as ExportRunModel
-    from .task_runners import normalize_name
     from django import db
 
     download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
@@ -1205,11 +1197,15 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
-                filename = 'data/{0}/{1}-{0}-{2}{3}'.format(
+                download_filename = get_download_filename(
                     provider_slug,
                     name,
                     date,
                     ext
+                )
+                filename = get_archive_data_path(
+                    provider_slug,
+                    download_filename
                 )
 
             zipfile.write(
