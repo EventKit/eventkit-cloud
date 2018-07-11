@@ -1,5 +1,11 @@
 import os, re
 from django.conf import settings
+from enum import Enum
+
+
+class Directory(Enum):
+    ARCGIS = 'arcgis'
+    DATA = 'data'
 
 
 def get_run_staging_dir(run_uid):
@@ -9,11 +15,26 @@ def get_run_staging_dir(run_uid):
     :param run_uid: The unique value to store the directory for the run data.
     :return: The path to the run directory.
     """
-    return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), run_uid)
+    return os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run_uid))
+
+
+def get_run_download_dir(run_uid):
+    """
+    The run download dir is where all files are stored after they are processed.
+    It is a unique space to ensure that files aren't being improperly modified.
+    :param run_uid: The unique value to store the directory for the run data.
+    :return: The path to the run directory.
+    """
+    return os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/'), str(run_uid))
 
 
 def get_run_download_url(run_uid):
-    return os.path.join(settings.EXPORT_MEDIA_ROOT.rstrip('\/'), run_uid)
+    """
+    A URL path to the run data
+    :param run_uid: The unique identifier for the run data.
+    :return: The url context. (e.g. /downloads/123e4567-e89b-12d3-a456-426655440000)
+    """
+    return "{0}/{1}".format(settings.EXPORT_MEDIA_ROOT.rstrip('\/'), str(run_uid))
 
 
 def get_provider_staging_dir(run_uid, provider_slug):
@@ -27,18 +48,18 @@ def get_provider_staging_dir(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug)
 
 
-def get_download_filename(name, meta_name, time, ext):
+def get_download_filename(name, meta_names, time, ext):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param meta_name: An additional descriptor, typically the provider slug or project name.
+    :param meta_names: An additional descriptors, typically the provider slug or project name.
     :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
     """
     return '{0}-{1}-{2}{3}'.format(
         name,
-        meta_name,
+        '-'.join(meta_names),
         time.strftime('%Y%m%d'),
         ext
     )
@@ -51,8 +72,7 @@ def get_archive_data_path(provider_slug=None, file_name=None):
     :param file_name: The name of a file.
     :return:
     """
-
-    file_path = 'data'
+    file_path = Directory.DATA.value
     if provider_slug:
         file_path = os.path.join(file_path, provider_slug)
     if file_name:
