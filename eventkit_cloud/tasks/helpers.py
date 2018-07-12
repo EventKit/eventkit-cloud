@@ -48,19 +48,22 @@ def get_provider_staging_dir(run_uid, provider_slug):
     return os.path.join(run_staging_dir, provider_slug)
 
 
-def get_download_filename(name, meta_names, time, ext):
+def get_download_filename(name, time, ext, additional_descriptors=None):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param meta_names: An additional descriptors, typically the provider slug or project name.
+    :param additional_descriptors: Additional descriptors, typically the provider slug or project name or any list of items.
     :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
     """
+    # Allow numbers or strings.
+    if not isinstance(additional_descriptors, (list, tuple)):
+        additional_descriptors = [str(additional_descriptors)]
     return '{0}-{1}-{2}{3}'.format(
         name,
-        '-'.join(meta_names),
-        time.strftime('%Y%m%d'),
+        '-'.join(additional_descriptors),
+        default_format_time(time),
         ext
     )
 
@@ -78,6 +81,10 @@ def get_archive_data_path(provider_slug=None, file_name=None):
     if file_name:
         file_path = os.path.join(file_path, file_name)
     return file_path
+
+
+def default_format_time(date_time):
+    return date_time.strftime("%Y%m%d")
 
 
 def normalize_name(name):

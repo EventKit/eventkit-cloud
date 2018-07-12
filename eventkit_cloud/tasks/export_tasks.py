@@ -38,7 +38,7 @@ from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from .exceptions import CancelException, DeleteException
 from .helpers import normalize_name, get_archive_data_path, get_run_download_url, get_download_filename, get_run_staging_dir, \
-    get_provider_staging_dir, get_run_download_dir, Directory
+    get_provider_staging_dir, get_run_download_dir, Directory, default_format_time
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -159,7 +159,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         @return A url to reach filepath.
     """
 
-    run_dir = get_run_staging_dir(run_uid)
+    run_download_dir = get_run_download_dir(run_uid)
     run_download_url = get_run_download_url(run_uid)
 
     filename = os.path.basename(filepath)
@@ -173,11 +173,11 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
             download_filename,
         )
     else:
-        make_dirs(run_dir)
+        make_dirs(run_download_dir)
 
         download_url = os.path.join(run_download_url, download_filename)
 
-        download_filepath = os.path.join(run_dir, download_filename)
+        download_filepath = os.path.join(run_download_dir, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
 
@@ -244,9 +244,9 @@ class ExportTask(LockingTask):
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
             download_filename = get_download_filename(name,
-                                                      provider_slug,
-                                                      finished.strftime('%Y%m%d'),
-                                                      ext)
+                                                      finished,
+                                                      ext,
+                                                      additional_descriptors=provider_slug)
 
             export_run = ExportRun.objects.get(uid=run_uid)
             # construct the download url
@@ -469,7 +469,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
     bbox = job.extents
-    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, date_time.strftime("%Y%m%d")),
+    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, default_format_time(date_time)),
                        "abstract": job.description,
                        "title": job.name,
                        "westBoundLongitude": bbox[0],
@@ -751,7 +751,9 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
             full_file_path = os.path.join(stage_dir, filename)
             ext = os.path.splitext(filename)[1]
             if ext in ['.gpkg', '.tif']:
-                download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0], export_provider_task.slug, timezone.now(), ext)
+                download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
+                                                          timezone.now(), ext,
+                                                          additional_descriptors=export_provider_task.slug)
                 filepath = get_archive_data_path(export_provider_task.slug, download_filename)
                 metadata['data_sources'][export_provider_task.slug]['file_path'] = filepath
                 metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
@@ -1047,7 +1049,7 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 ext = os.path.splitext(filename)[1]
                 if ext in ['.gpkg', '.tif']:
                     download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
-                                                              timezone.now().strftime('%Y%m%d'),
+                                                              timezone.now(),
                                                               ext)
                     filepath = get_archive_data_path(
                         provider_task.slug,
@@ -1142,9 +1144,9 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
         zip_filename = file_name
     else:
         zip_filename = get_download_filename(normalize_name(name),
-                                             [normalize_name(project),"eventkit"],
                                              date,
-                                             '.zip')
+                                             '.zip',
+                                             additional_descriptors=[normalize_name(project), "eventkit"])
 
     zip_st_filepath = os.path.join(run_staging_dir, zip_filename)
 
@@ -1191,10 +1193,10 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
                 download_filename = get_download_filename(
-                    provider_slug,
                     name,
                     date,
-                    ext
+                    ext,
+                    additional_descriptors=provider_slug
                 )
                 filename = get_archive_data_path(
                     provider_slug,
