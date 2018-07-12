@@ -23,7 +23,9 @@ before_script:
 
 script:
     - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run lint
-    - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run coverage
+    - docker-compose -f docker-compose-test.yml run --rm -T webpack npm test
+# Running coverage is currently currently produces a Javascript out of memory error
+#    - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run coverage
     - sudo chown -R eventkit:eventkit ./coverage
     - docker-compose -f docker-compose-test.yml run --rm -T eventkit pytest -n 4
 #    - docker-compose -f docker-compose-test.yml run --rm -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit python manage.py test eventkit_cloud
