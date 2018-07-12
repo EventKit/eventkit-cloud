@@ -36,7 +36,7 @@ class TestJob(TestCase):
         username = 'admin'
         password = '@dm1n'
         self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings, "SITE_NAME", "cloud.eventkit.test")))
-        self.login_url = self.base_url + '/auth'
+        self.login_url = self.base_url + '/api/login/'
         self.create_export_url = self.base_url + '/status/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')
@@ -47,26 +47,18 @@ class TestJob(TestCase):
         self.client.get(self.login_url)
         self.csrftoken = self.client.cookies['csrftoken']
 
-        login_data = dict(username=username, password=password, csrfmiddlewaretoken=self.csrftoken, next='/')
+        login_data = dict(username=username, password=password, csrfmiddlewaretoken=self.csrftoken, next='/exports', submit='Log in')
         self.client.post(self.login_url, data=login_data, headers=dict(Referer=self.login_url),
                          auth=(username, password))
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
-        self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "MultiPolygon",
-                                                                                              "coordinates": [
-                                                                                                  [[[127.01, 37.01],
-                                                                                                    [127.03, 37.02],
-                                                                                                    [127.03, 37.03],
-                                                                                                    [127.02, 37.03],
-                                                                                                    [127.01, 37.01]]],
-                                                                                                  [[[127.03, 37.03],
-                                                                                                    [127.04, 37.03],
-                                                                                                    [127.05, 37.05],
-                                                                                                    [127.03, 37.04],
-                                                                                                    [127.03, 37.03]]]
-                                                                                              ]
-                                                                                              }}]}
+        self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
+                                                              "geometry": {"type": "Polygon", "coordinates": [
+                                                                  [[31.128165, 29.971509], [31.128521, 29.971509],
+                                                                   [31.128521, 29.971804], [31.128165, 29.971804],
+                                                                   [31.128165, 29.971509]]]}}]}
+
     def tearDown(self):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
@@ -310,6 +302,23 @@ class TestJob(TestCase):
                                                    ]}
         self.assertTrue(self.run_job(job_data, run_timeout=300))
 
+    def test_loaded(self):
+        """
+
+        :return: This test will run all currently loaded providers.
+        """
+        provider_tasks = []
+        for data_provider in get_all_providers():
+            provider_tasks += [{"provider": data_provider,
+                            "formats": ["gpkg"]}]
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "Pyramids of Queens",
+                    "description": "An Integration Test ", "event": "Integration Tests",
+                    "include_zipfile": True,
+                    "provider_tasks": provider_tasks,
+                    "selection": self.selection,
+                    "tags": []}
+        self.assertTrue(self.run_job(job_data, run_timeout=300))
+
     def test_rerun_all(self):
         """
         This test ensures that if all formats and all providers are selected
@@ -381,6 +390,8 @@ class TestJob(TestCase):
                                     json=data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
+        if response.status_code != 202:
+            logger.error(response.content)
         self.assertEquals(response.status_code, 202)
         job = response.json()
 
@@ -392,19 +403,20 @@ class TestJob(TestCase):
         self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
 
-        test_zip_url = '%s%s%s/%s' % (
-            self.base_url,
-            settings.EXPORT_MEDIA_ROOT,
-            run.get('uid'),
-            '%s-%s-%s-%s.zip' % (
-                normalize_name(orm_run.job.name),
-                normalize_name(orm_run.job.event),
-                'eventkit',
-                date
-            ))
-
-        if not getattr(settings, "USE_S3", False):
-            self.assertEquals(test_zip_url, run['zipfile_url'])
+        # This can be added back during filename refactoring. 
+        # test_zip_url = '%s%s%s/%s' % (
+        #     self.base_url,
+        #     settings.EXPORT_MEDIA_ROOT,
+        #     run.get('uid'),
+        #     '%s-%s-%s-%s.zip' % (
+        #         normalize_name(orm_run.job.name),
+        #         normalize_name(orm_run.job.event),
+        #         'eventkit',
+        #         date
+        #     ))
+        #
+        # if not getattr(settings, "USE_S3", False):
+        #     self.assertEquals(test_zip_url, run['zipfile_url'])
 
         assert '.zip' in orm_run.zipfile_url
 
@@ -591,3 +603,7 @@ def delete_providers():
         ).first()
         if provider:
             provider.delete(using='default')
+
+
+def get_all_providers():
+    return [provider.name for provider in DataProvider.objects.all()]
