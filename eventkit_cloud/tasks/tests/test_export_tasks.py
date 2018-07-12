@@ -441,8 +441,6 @@ class TestExportTasks(ExportTaskBase):
         zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
         result = zip_file_task.run(run_uid=run_uid, include_files=[zipfile_path])
-        print zipfile.files
-        print {fname: zipfile_path}
         self.assertEqual(zipfile.files,{fname: zipfile_path})
         run = ExportRun.objects.get(uid=run_uid)
         if getattr(settings, "USE_S3", False):
