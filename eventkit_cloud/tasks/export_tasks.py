@@ -1165,7 +1165,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                         filename = os.path.join(Directory.ARCGIS.value, '{0}'.format(basename))
                     else:
                         # Put the support files in the correct directory.
-                        filename = os.path.join(Directory.ARCGIS.value, 'templates', '{0}'.format(basename))
+                        filename = os.path.join(Directory.ARCGIS.value, TEMPLATES, '{0}'.format(basename))
                 zipfile.write(
                     absolute_file_path,
                     arcname=filename

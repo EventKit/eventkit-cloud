@@ -6,6 +6,7 @@ from enum import Enum
 class Directory(Enum):
     ARCGIS = 'arcgis'
     DATA = 'data'
+    TEMPLATES = 'templates'
 
 
 def get_run_staging_dir(run_uid):
