@@ -10,10 +10,10 @@ class Command(BaseCommand):
         parser.add_argument('tests', nargs='*')
 
     def handle(self, *args, **options):
-        print('Loading test providers')
         if options['tests']:
             suite = unittest.TestLoader().loadTestsFromNames(options['tests'])
         else:
+            print('Loading test providers')
             delete_providers()
             load_providers()
             suite = unittest.TestLoader().loadTestsFromTestCase(TestJob)
