@@ -36,15 +36,13 @@ RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
 
 RUN export PATH=/var/lib/.virtualenvs/eventkit/bin:/usr/local/bin:$PATH
 RUN echo "PATH=:$PATH" >> /etc/profile.d/path.sh
-ENV PATH /var/lib/.virtualenvs/eventkit/bin:$PATH
+RUN echo "alias python=python3" >> /etc/profile.d/path.sh
 RUN groupadd -g 880 eventkit
 RUN useradd -u 8800 -g 880 eventkit
 # Python dependecies needed for python-ldap
-RUN apt-get update && apt-get -y install python-pip libsasl2-dev python-dev libldap2-dev libssl-dev
-RUN pip install virtualenv
-RUN virtualenv /var/lib/.virtualenvs/eventkit
+RUN apt-get update && apt-get -y install python3-pip libsasl2-dev python3-dev libldap2-dev libssl-dev
 
-RUN apt-get -y install git libpq-dev python-dev gcc g++ software-properties-common
+RUN apt-get -y install git libpq-dev gcc g++ software-properties-common
 RUN git clone https://gitlab.com/osm-c-tools/osmctools.git /var/lib/eventkit/osmctools
 RUN gcc /var/lib/eventkit/osmctools/src/osmupdate.c -o /var/lib/eventkit/osmctools/osmupdate
 RUN gcc /var/lib/eventkit/osmctools/src/osmfilter.c -O3 -o /var/lib/eventkit/osmctools/osmfilter
@@ -67,7 +65,7 @@ COPY ./.coveragerc /var/lib/eventkit/.coveragerc
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
-  /var/lib/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements-dev.txt
+  /var/lib/.virtualenvs/eventkit/bin/pip3 install -r /var/lib/eventkit/requirements-dev.txt
 
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download
@@ -82,11 +80,11 @@ RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
 # Adds remote path mapping via env vars to pydevd to support remote debugging.
 COPY ./config/pydevd_path_mapping_snippet.py /var/lib/eventkit/
-RUN bash -c '\
-    export SNIPPET=`cat /var/lib/eventkit/pydevd_path_mapping_snippet.py`;\
-    export PYDEVD_FILE_UTILS=/var/lib/.virtualenvs/eventkit/lib/python2.7/site-packages/pydevd_file_utils.py;\
-    perl -0777 -i -pe "s/PATHS_FROM_ECLIPSE_TO_PYTHON = \[\]/$SNIPPET/" $PYDEVD_FILE_UTILS \
-'
+#RUN bash -c '\
+#    export SNIPPET=`cat /var/lib/eventkit/pydevd_path_mapping_snippet.py`;\
+#    export PYDEVD_FILE_UTILS=/var/lib/.virtualenvs/eventkit/lib/python2.7/site-packages/pydevd_file_utils.py;\
+#    perl -0777 -i -pe "s/PATHS_FROM_ECLIPSE_TO_PYTHON = \[\]/$SNIPPET/" $PYDEVD_FILE_UTILS \
+#'
 
 ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh"]
 CMD ["echo", "Override this command in the docker-compose.yaml"]
