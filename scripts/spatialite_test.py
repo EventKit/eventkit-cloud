@@ -10,7 +10,12 @@ from __future__ import print_function
 """
 
 import os
-from pysqlite2 import dbapi2 as sqlite3
+
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
+
 from string import Template
 
 

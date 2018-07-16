@@ -7,7 +7,10 @@ import os
 import subprocess
 from ..tasks.task_process import TaskProcess
 from string import Template
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
 
 logger = logging.getLogger(__name__)
 

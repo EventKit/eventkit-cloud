@@ -4,7 +4,11 @@ from __future__ import absolute_import
 from mock import MagicMock, Mock, patch
 from ..sqlite import execute_spatialite_script, enable_spatialite
 from django.test import TestCase
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
+
 
 class TestSQLite(TestCase):
 

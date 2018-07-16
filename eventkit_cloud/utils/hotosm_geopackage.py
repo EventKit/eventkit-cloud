@@ -8,7 +8,10 @@ from artifact import Artifact
 
 from osgeo import gdal, ogr, osr
 
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
 
