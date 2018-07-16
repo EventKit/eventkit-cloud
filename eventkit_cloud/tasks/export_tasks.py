@@ -574,7 +574,7 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
         with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
-            open_file.write(selection)
+            open_file.write(selection.encode('utf-8'))
         result['selection'] = geojson_file
         result['result'] = geojson_file
 
