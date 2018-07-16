@@ -26,7 +26,7 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
@@ -434,10 +434,10 @@ class JobViewSet(viewsets.ModelViewSet):
         try:
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=uid, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        except (InvalidLicense, Error) as err:
+            return Response([{'detail': _(err.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
-        except Unauthorized as ua:
+        except Unauthorized:
             return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
         if run:
