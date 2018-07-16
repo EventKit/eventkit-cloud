@@ -319,6 +319,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
+                            job.provider_tasks = provider_serializer.save()
+                            job.save()
                         except ValidationError:
                             status_code = status.HTTP_400_BAD_REQUEST
                             error_data = {"errors": [{"status": status_code,
@@ -326,8 +328,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       "detail": _('A provider and an export format must be selected.')
                                                       }]}
                             return Response(error_data, status=status_code)
-                        job.provider_tasks = provider_serializer.save()
-
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             for provider_task in job.provider_tasks.all():
