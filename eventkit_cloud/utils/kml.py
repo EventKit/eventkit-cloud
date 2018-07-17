@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
+
+
+
+
 
 import argparse
 import logging
@@ -47,15 +50,15 @@ class GPKGToKml(object):
         convert_cmd = self.cmd.safe_substitute({'kmlfile': self.kmlfile,
                                                 'gpkg': self.gpkg})
         if (self.debug):
-            print 'Running: %s' % convert_cmd
+            print('Running: %s' % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
+            raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
         if (self.debug):
-            print 'ogr2ogr returned: %s' % task_process.exitcode
+            print('ogr2ogr returned: {}'.format(task_process.exitcode))
         if self.zipped and task_process.exitcode == 0:
             kmzfile = self._zip_kml_file()
             return kmzfile
@@ -72,12 +75,12 @@ class GPKGToKml(object):
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, 'Failed to create zipfile for {0}'.format(self.kmlfile)
+            raise Exception('Failed to create zipfile for {0}'.format(self.kmlfile))
         else:
             # remove the kml file
             os.remove(self.kmlfile)
         if self.debug:
-            print 'Zipped KML: {0}'.format(kmzfile)
+            print('Zipped KML: {0}'.format(kmzfile))
         return kmzfile
 
 
@@ -93,7 +96,7 @@ if __name__ == '__main__':
                         help="Turn on debug output")
     args = parser.parse_args()
     config = {}
-    for k, v in vars(args).items():
+    for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:

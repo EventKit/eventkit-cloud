@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
+
+
+
+
 
 import logging
 import os
@@ -8,7 +11,7 @@ try:
     from pysqlite2 import dbapi2 as sqlite3
 except ImportError:
     import sqlite3
-from sqlite import execute_spatialite_script
+from .sqlite import execute_spatialite_script
 from .geopackage import create_table_from_existing
 from .sqlite import enable_spatialite
 from string import Template
@@ -110,7 +113,7 @@ class ThematicGPKG(object):
             raise
         geom_types = {'points': 'POINT', 'lines': 'LINESTRING', 'polygons': 'MULTIPOLYGON'}
         # create and execute thematic sql statements
-        for layer, spec in self.thematic_spec.iteritems():
+        for layer, spec in self.thematic_spec.items():
             layer_type = layer.split('_')[-1]
             isPoly = layer_type == 'polygons'
             osm_way_id = ''
@@ -203,7 +206,7 @@ class ThematicGPKG(object):
         #                                                'update_sql': thematic_spatial_index_file})
         execute_spatialite_script(self.thematic_gpkg, thematic_spatial_index_file)
         if self.debug:
-            print 'Running: %s' % sql
+            print('Running: {}'.format(sql))
         # task_process = TaskProcess(task_uid=self.task_uid)
         # task_process.start_process(index_cmd, shell=True, executable='/bin/bash',
         #                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)

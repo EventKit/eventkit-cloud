@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 
 from mock import MagicMock, Mock, patch
@@ -44,10 +44,10 @@ class TestSQLite(TestCase):
         mock_connection = MagicMock()
         mock_connection.execute.return_value = True
         connection = enable_spatialite(mock_connection)
-        self.assertEquals(mock_connection, connection)
+        self.assertEqual(mock_connection, connection)
         mock_connection.execute.assert_called_with("SELECT load_extension('mod_spatialite')")
 
         mock_connection.execute.side_effect = [sqlite3.OperationalError, True]
         connection = enable_spatialite(mock_connection)
-        self.assertEquals(mock_connection, connection)
+        self.assertEqual(mock_connection, connection)
         mock_connection.execute.assert_called_with("SELECT load_extension('libspatialite')")

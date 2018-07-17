@@ -18,8 +18,8 @@ class TestHelpers(TestCase):
         current_path = os.getcwd()
         parent_path = os.path.dirname(current_path)
         with cd(parent_path):
-            self.assertEquals(parent_path, os.getcwd())
-        self.assertEquals(current_path, os.getcwd())
+            self.assertEqual(parent_path, os.getcwd())
+        self.assertEqual(current_path, os.getcwd())
 
     def test_get_style_files(self):
         for file in get_style_files():
@@ -64,7 +64,7 @@ class TestHelpers(TestCase):
             expected_in_path = os.path.join(dir, 'in_{0}{1}'.format(expected_file_name, expected_file_ext))
             expected_out_path = os.path.join(dir, 'out_{0}.geojson'.format(expected_file_name))
             ret = file_to_geojson(file)
-            self.assertEquals(ret, geojson)
+            self.assertEqual(ret, geojson)
             makedir.assert_called_once_with(dir)
             write.assert_called_once_with(file, expected_in_path)
             meta.assert_called_once_with(expected_in_path)
@@ -84,7 +84,7 @@ class TestHelpers(TestCase):
             updated_in_path = os.path.join(dir, 'something.shp')
             updated_cmd = 'ogr2ogr -f geojson {0} {1}'.format(expected_out_path, updated_in_path)
             ret = file_to_geojson(file)
-            self.assertEquals(ret, geojson)
+            self.assertEqual(ret, geojson)
             unzip.assert_called_once_with(expected_in_path, dir)
             listdirs.assert_called_with(dir)
             meta.assert_called_with(updated_in_path)
@@ -129,7 +129,7 @@ class TestHelpers(TestCase):
         fake_json.load.return_value = geojson
         with patch('eventkit_cloud.ui.helpers.open', new_callable=mock_open()) as m:
             ret = read_json_file(file_path)
-            self.assertEquals(ret, geojson)
+            self.assertEqual(ret, geojson)
             m.assert_called_once_with(file_path)
             fake_json.load.assert_called_once_with(m.return_value.__enter__.return_value)
 

@@ -1,6 +1,10 @@
+
+
+
+
 from django.conf import settings
 import logging
-from geocode_auth import get_auth_headers, authenticate
+from .geocode_auth import get_auth_headers, authenticate
 from abc import ABCMeta, abstractmethod
 import requests
 from .geocode import AuthenticationError
@@ -9,13 +13,11 @@ from .geocode import AuthenticationError
 logger = logging.getLogger(__name__)
 
 
-class ReverseGeocodeAdapter:
+class ReverseGeocodeAdapter(metaclass=ABCMeta):
     """
     An abstract class to implement a new reverse geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
     """
-
-    __metaclass__ = ABCMeta
 
     _properties = ['name', 'province', 'region', 'country']
 
@@ -165,7 +167,7 @@ class ReverseGeocodeAdapter:
     def map_properties(self, feature, properties=None):
         props = properties or feature.get('properties')
         if props:
-            for key, value in self.property_map().iteritems():
+            for key, value in self.property_map().items():
                 props[key] = props.get(value)
         feature['properties'] = props
         return feature

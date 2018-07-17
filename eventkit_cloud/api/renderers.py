@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+
+
+
 from rest_framework.renderers import BrowsableAPIRenderer
 from django.shortcuts import render, resolve_url
 from rest_framework.renderers import BaseRenderer, JSONRenderer

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from ..utils import auth_requests
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration
@@ -12,7 +10,10 @@ from django.conf import settings
 import yaml
 import logging
 from django.db import connections
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
 from .geopackage import (get_tile_table_names, get_zoom_levels_table,
                          get_table_tile_matrix_information, set_gpkg_contents_bounds)
 

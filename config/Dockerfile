@@ -65,7 +65,7 @@ COPY ./.coveragerc /var/lib/eventkit/.coveragerc
 RUN apt-get -y install libxml2-dev libxslt-dev
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
-  /var/lib/.virtualenvs/eventkit/bin/pip3 install -r /var/lib/eventkit/requirements-dev.txt
+  pip3 install -r /var/lib/eventkit/requirements-dev.txt
 
 RUN mkdir /var/lib/eventkit/exports_stage
 RUN mkdir /var/lib/eventkit/exports_download

@@ -22,7 +22,7 @@ from eventkit_cloud.tasks import TaskStates
 class TestStyles(TestCase):
 
     @patch('eventkit_cloud.ui.helpers.os.path.isfile')
-    @patch('__builtin__.open')
+    @patch('builtins.open')
     @patch('eventkit_cloud.tasks.models.ExportRun')
     def test_generate_qgs_style(self, ExportRun, mock_open, mock_isfile):
         run_uid = 1234
@@ -57,9 +57,9 @@ class TestStyles(TestCase):
         datestamp = "%s%02d%02d" % (now.year, now.month, now.day)
         style_file = os.path.join(stage_dir, mocked_run.job.name + "-" + datestamp + ".qgs")
         mock_open.assert_called_once_with(style_file, 'w')
-        self.assertEquals(returnvalue, style_file)
+        self.assertEqual(returnvalue, style_file)
 
         # test 2 - without a provider task
 
         returnvalue = generate_qgs_style(run_uid, None)
-        self.assertEquals(returnvalue, style_file)
+        self.assertEqual(returnvalue, style_file)

@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+
+
+
 
 import logging
 import os
@@ -78,11 +80,11 @@ class WFSToGPKG(object):
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
+            raise Exception("ogr2ogr process failed with returncode {0}".format(task_process.exitcode))
 
         # Check for geopackage contents; gdal wfs driver fails silently
         if not check_content_exists(self.gpkg):
-            raise Exception, "Empty response: Unknown layer name '{}' or invalid AOI bounds".format(self.layer)
+            raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(self.layer))
 
         if self.debug:
             logger.debug('ogr2ogr returned: %s' % task_process.exitcode)

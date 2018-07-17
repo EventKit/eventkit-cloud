@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+
+
+
 import importlib
 import json
 import logging
@@ -94,7 +98,7 @@ class ExportOSMTaskRunner(TaskRunner):
                                                                           status=TaskStates.PENDING.value,
                                                                           display=True)
 
-        for format, task in export_tasks.iteritems():
+        for format, task in export_tasks.items():
             export_task = create_export_task_record(
                 task_name=task.get('obj').name,
                 export_provider_task=data_provider_task_record, worker=worker,
@@ -111,7 +115,7 @@ class ExportOSMTaskRunner(TaskRunner):
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
                     user_details=user_details, locking_task_key=data_provider_task_record.uid
                 ).set(queue=worker, routing_key=worker)
-                for format_ignored, task in export_tasks.iteritems()
+                for format_ignored, task in export_tasks.items()
             )
         else:
             format_tasks = None
@@ -190,7 +194,7 @@ class ExportWFSTaskRunner(TaskRunner):
                                                                          status=TaskStates.PENDING.value,
                                                                          display=True)
 
-            for task_type, task in export_tasks.iteritems():
+            for task_type, task in export_tasks.items():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
                                                         export_provider_task=export_provider_task, worker=worker,
                                                         display=getattr(task.get('obj'), "display", False))
@@ -229,7 +233,7 @@ class ExportWFSTaskRunner(TaskRunner):
                                                        user_details=user_details).set(queue=worker, routing_key=worker)
                                      for task_name, task
                                      in
-                                     export_tasks.iteritems() if task is not None)
+                                     export_tasks.items() if task is not None)
 
                 task_chain = (task_chain | format_tasks)
 
@@ -293,7 +297,7 @@ class ExportWCSTaskRunner(TaskRunner):
 
             export_tasks.pop('gpkg')
 
-            for task_type, task in export_tasks.iteritems():
+            for task_type, task in export_tasks.items():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
                                                         export_provider_task=export_provider_task, worker=worker,
                                                         display=getattr(task.get('obj'), "display", False))
@@ -333,7 +337,7 @@ class ExportWCSTaskRunner(TaskRunner):
                                                        user_details=user_details).set(queue=worker, routing_key=worker)
                                      for task_name, task
                                      in
-                                     export_tasks.iteritems() if task is not None)
+                                     export_tasks.items() if task is not None)
 
                 task_chain = (task_chain | format_tasks)
 
@@ -400,7 +404,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                                                          status=TaskStates.PENDING.value,
                                                                          display=True)
 
-            for task_type, task in export_tasks.iteritems():
+            for task_type, task in export_tasks.items():
                 export_task = create_export_task_record(task_name=task.get('obj').name,
                                                         export_provider_task=export_provider_task, worker=worker,
                                                         display=getattr(task.get('obj'), "display", False))
@@ -439,7 +443,7 @@ class ExportArcGISFeatureServiceTaskRunner(TaskRunner):
                                                        locking_task_key=export_provider_task.uid).set(queue=worker, routing_key=worker)
                                      for task_name, task
                                      in
-                                     export_tasks.iteritems() if task is not None)
+                                     export_tasks.items() if task is not None)
 
                 task_chain = (task_chain | format_tasks)
 

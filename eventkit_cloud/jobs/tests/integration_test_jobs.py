@@ -42,7 +42,7 @@ class TestJob(TestCase):
         self.runs_url = self.base_url + reverse('api:runs-list')
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
         if not os.path.exists(self.download_dir):
-            os.makedirs(self.download_dir, mode=0660)
+            os.makedirs(self.download_dir, mode=0o660)
         self.client = requests.session()
         self.client.get(self.login_url)
         self.csrftoken = self.client.cookies['csrftoken']
@@ -339,7 +339,7 @@ class TestJob(TestCase):
                                     json=job_data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
-        self.assertEquals(response.status_code, 202)
+        self.assertEqual(response.status_code, 202)
         job = response.json()
 
         run = self.wait_for_run(job.get('uid'), run_timeout=300)
@@ -357,7 +357,7 @@ class TestJob(TestCase):
                                          headers={'X-CSRFToken': self.csrftoken,
                                                   'Referer': self.create_export_url})
 
-        self.assertEquals(rerun_response.status_code, 202)
+        self.assertEqual(rerun_response.status_code, 202)
         rerun = self.wait_for_run(job.get('uid'), run_timeout=300)
         self.assertTrue(rerun.get('status') == "COMPLETED")
         for provider_task in rerun.get('provider_tasks'):
@@ -381,7 +381,7 @@ class TestJob(TestCase):
                                     json=data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
-        self.assertEquals(response.status_code, 202)
+        self.assertEqual(response.status_code, 202)
         job = response.json()
 
         if not wait_for_run:
@@ -404,7 +404,7 @@ class TestJob(TestCase):
             ))
 
         if not getattr(settings, "USE_S3", False):
-            self.assertEquals(test_zip_url, run['zipfile_url'])
+            self.assertEqual(test_zip_url, run['zipfile_url'])
 
         assert '.zip' in orm_run.zipfile_url
 
@@ -465,7 +465,7 @@ class TestJob(TestCase):
                     for task in provider_task['tasks']:
                         if task['status'] == 'FAILED':
                             errors_as_list = [
-                                '{}: {}'.format(k, v) for error_dict in task['errors'] for k, v in error_dict.items()
+                                '{}: {}'.format(k, v) for error_dict in task['errors'] for k, v in list(error_dict.items())
                             ]
                             errors_text = ', '.join(errors_as_list)
                             msg = 'Task "{}" failed: {}'.format(task['name'], errors_text)

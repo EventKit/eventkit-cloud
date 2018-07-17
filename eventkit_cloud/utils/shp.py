@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
+
+
+
+
 
 import argparse
 import logging
@@ -47,15 +50,15 @@ class GPKGToShp(object):
         layer_name = os.path.splitext(os.path.basename(self.gpkg))[0]
         convert_cmd = self.cmd.safe_substitute({'shp': self.shapefile, 'gpkg': self.gpkg, 'layer_name': layer_name})
         if (self.debug):
-            print 'Running: %s' % convert_cmd
+            print('Running: %s' % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
+            raise Exception("ogr2ogr process failed with returncode {0}".format(task_process.exitcode))
         if (self.debug):
-            print 'ogr2ogr returned: %s' % task_process.exitcode
+            print('ogr2ogr returned: %s'.format(task_process.exitcode))
         if self.zipped and task_process.exitcode == 0:
             zipfile = self._zip_shape_dir()
             return zipfile
@@ -75,14 +78,14 @@ class GPKGToShp(object):
             logger.warn('No shapefile files to zip')
         elif task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, 'Error zipping shape directory. Exited with returncode: {0}'.format(task_process.exitcode)
+            raise Exception('Error zipping shape directory. Exited with returncode: {0}'.format(task_process.exitcode))
 
         if task_process.exitcode == 0:
             # remove the shapefile directory
             shutil.rmtree(self.shapefile)
 
         if self.debug:
-            print 'Zipped shapefiles: {0}'.format(self.shapefile)
+            print('Zipped shapefiles: {0}'.format(self.shapefile))
         return zipfile
 
 
@@ -96,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}
-    for k, v in vars(args).items():
+    for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:

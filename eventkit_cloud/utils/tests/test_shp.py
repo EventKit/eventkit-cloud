@@ -40,7 +40,7 @@ class TestGPKGToShp(TestCase):
         exists.assert_called_once_with(gpkg)
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
         self.task_process.return_value = Mock(exitcode=1)
-        self.assertEquals(out, shapefile)
+        self.assertEqual(out, shapefile)
         with self.assertRaises(Exception):
             s2s.convert()
 
@@ -60,7 +60,7 @@ class TestGPKGToShp(TestCase):
         exists.assert_called_once_with(gpkg)
         self.task_process().start_process.assert_called_once_with(zip_cmd, executable='/bin/bash', shell=True, stderr=-1, stdout=-1)
         self.task_process.return_value = Mock(exitcode=1)
-        self.assertEquals(result, zipfile)
+        self.assertEqual(result, zipfile)
         rmtree.assert_called_once_with(shapefile)
         with self.assertRaises(Exception):
             s2s.convert()

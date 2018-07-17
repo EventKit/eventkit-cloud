@@ -21,7 +21,7 @@ class TestOSMConf(TestCase):
         self.tags = preset.json_tags
 
         self.assertIsNotNone(self.tags)
-        self.assertEquals(259, len(self.tags))
+        self.assertEqual(259, len(self.tags))
         self.formats = ExportFormat.objects.all()  # pre-loaded by 'insert_export_formats' migration
         group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:

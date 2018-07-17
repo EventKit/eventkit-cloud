@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import ConfigParser
+
+
+
+
+import configparser
 import logging
 import os
 
@@ -39,7 +43,7 @@ class OSMConfig(object):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.tmpl = self.path + '/conf/hotosm.ini.tmpl'
         self.categories = categories
-        self.config = ConfigParser.SafeConfigParser()
+        self.config = configparser.SafeConfigParser()
         self.job_name = job_name
 
     def create_osm_conf(self, stage_dir=None, user_details=None):

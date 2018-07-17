@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
+
+
+
 
 from .views import oauth, callback, logout
 from django.views.decorators.csrf import ensure_csrf_cookie

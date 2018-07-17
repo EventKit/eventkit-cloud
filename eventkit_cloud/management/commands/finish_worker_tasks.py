@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 from django.core.management import BaseCommand
 from logging import getLogger
 from eventkit_cloud.celery import app
@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = 'Updates celery workers to accept no more tasks and waits for tasks to complete.'
 
     def handle(self, *args, **options):
-        print('Waiting for workers to finish up...', end='')
+        print('Waiting for workers to finish up...')
         self.finish_worker_tasks()
         print('done')
 
@@ -21,7 +21,7 @@ class Command(BaseCommand):
         # Leave worker & cancel queues alone so workers will finish up those tasks
         default_q = app.conf.task_default_queue
         # Get the worker node name from the list of nodes
-        worker_nodename = [node_name for node_name in app.control.inspect().ping().keys() if 'worker' in node_name][0]
+        worker_nodename = [node_name for node_name in list(app.control.inspect().ping().keys()) if 'worker' in node_name][0]
 
         r = app.control.cancel_consumer(default_q, reply=True)
         logger.info('cancel_consumer({}): {}'.format(default_q, r))

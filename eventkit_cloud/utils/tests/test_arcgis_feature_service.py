@@ -45,7 +45,7 @@ class TestArcFeatureServiceToGPKG(TransactionTestCase):
         exists.assert_called_once_with(os.path.dirname(gpkg))
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/sh', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, gpkg)
+        self.assertEqual(out, gpkg)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

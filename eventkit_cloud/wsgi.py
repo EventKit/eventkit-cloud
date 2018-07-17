@@ -11,7 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-import sys
 
 from whitenoise.django import DjangoWhiteNoise
 

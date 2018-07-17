@@ -40,7 +40,7 @@ class TestThematicGPKG(TestCase):
     @patch('eventkit_cloud.utils.thematic_gpkg.execute_spatialite_script')
     @patch('eventkit_cloud.utils.thematic_gpkg.enable_spatialite')
     @patch('os.remove')
-    @patch('__builtin__.open')
+    @patch('builtins.open')
     @patch('eventkit_cloud.utils.thematic_gpkg.shutil.copy')
     @patch('eventkit_cloud.utils.thematic_gpkg.os.path.exists')
     @patch('eventkit_cloud.utils.thematic_gpkg.sqlite3')

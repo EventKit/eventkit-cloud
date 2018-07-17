@@ -1,15 +1,15 @@
 """Provides validation for API operations."""
-
 # -*- coding: utf-8 -*-
+
+
+
+
 import logging
 import math
-import os
 from collections import OrderedDict
-from StringIO import StringIO
 import json
 
 import magic
-from lxml import etree
 
 from django.conf import settings
 from django.contrib.gis.geos import GEOSException, GEOSGeometry, GeometryCollection, Polygon
@@ -202,11 +202,11 @@ def validate_selection(data, user=None):
         else:
             raise serializers.ValidationError(detail)
     except GEOSException as geos_exception:
-        logger.error(geos_exception.message)
+        logger.error(geos_exception)
         raise serializers.ValidationError(detail)
     except GDALException as gdal_exception:
         detail['id'] = _('GDAL Error')
-        detail['message'] = _('GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}'.format(gdal_exception.message, geometry))
+        detail['message'] = _('GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}'.format(gdal_exception, geometry))
         raise serializers.ValidationError(detail)
 
 

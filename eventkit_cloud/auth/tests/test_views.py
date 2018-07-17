@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import logging
 
@@ -12,7 +12,7 @@ from django.test import Client, override_settings
 from django.core.urlresolvers import reverse
 from django.conf import settings
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class TestAuthViews(TestCase):
                            OAUTH_RESPONSE_TYPE=response_type,
                            OAUTH_SCOPE=scope):
             response = self.client.post(reverse('oauth'))
-            params = urllib.urlencode((
+            params = urllib.parse.urlencode((
                 ('client_id', client_id),
                 ('redirect_uri', redirect_uri),
                 ('response_type', response_type),
@@ -105,6 +105,6 @@ class TestAuthViews(TestCase):
             self.client.login(username='test', password='password')
             self.client.get(reverse('callback'), params={'code': example_auth_code}, follow=True)
             response = self.client.get(reverse('logout'))
-            self.assertEquals(response.json().get('OAUTH_LOGOUT_URL'), settings.OAUTH_LOGOUT_URL)
+            self.assertEqual(response.json().get('OAUTH_LOGOUT_URL'), settings.OAUTH_LOGOUT_URL)
 
 

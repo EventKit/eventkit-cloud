@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+
+
+
 
 import logging
 import os
@@ -70,7 +72,7 @@ class ArcGISFeatureServiceToGPKG(object):
 
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, "ogr2ogr process failed with returncode {0}".format(task_process.exitcode)
+            raise Exception("ogr2ogr process failed with returncode {0}".format(task_process.exitcode))
         if self.debug:
             logger.debug('ogr2ogr returned: %s' % task_process.exitcode)
 

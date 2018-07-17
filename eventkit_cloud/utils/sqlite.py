@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
+
+
+
+
 
 import argparse
 import logging
@@ -48,15 +51,15 @@ class GPKGToSQLite(object):
         convert_cmd = self.cmd.safe_substitute({'sqlitefile': self.sqlitefile,
                                                 'gpkg': self.gpkg})
         if (self.debug):
-            print 'Running: %s' % convert_cmd
+            print('Running: %s' % convert_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
+            raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
         if (self.debug):
-            print 'ogr2ogr returned: %s' % task_process.exitcode
+            print('ogr2ogr returned: {0}'.format(task_process.exitcode))
         return self.sqlitefile
 
 
@@ -111,7 +114,7 @@ if __name__ == '__main__':
                         help="Turn on debug output")
     args = parser.parse_args()
     config = {}
-    for k, v in vars(args).items():
+    for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:

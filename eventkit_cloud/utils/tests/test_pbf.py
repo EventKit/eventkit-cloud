@@ -33,7 +33,7 @@ class TestOSMToPBF(TransactionTestCase):
         exists.assert_called_once_with(osm)
         self.task_process().start_process.assert_called_once_with(convert_cmd, executable='/bin/bash', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, pbffile)
+        self.assertEqual(out, pbffile)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

@@ -6,11 +6,16 @@ Used by the View classes api/views.py to serialize API responses as JSON or HTML
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
 # -*- coding: utf-8 -*-
-import cPickle
+
+
+
+
+import pickle
+from ..tasks.helpers import load_exception_info
 import json
 import logging
 import os
-from urlparse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 
 from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
@@ -42,7 +47,7 @@ from eventkit_cloud.tasks.models import (
 )
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
-import validators
+from . import validators
 
 try:
     from collections import OrderedDict
@@ -131,8 +136,10 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = cPickle.loads(str(obj.exception)).exc_info
-
+        if isinstance(obj.exception, bytes):
+            exc_info = pickle.loads(str(obj.exception).exc_info)
+        else:
+            exc_info = load_exception_info(obj.exception).exc_info
         return str(exc_info[1])
 
 
@@ -417,7 +424,7 @@ class UserDataSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
-            for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
+            for slug, selected in self.context.get('request').data.get('accepted_licenses').items():
                 user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()
@@ -758,12 +765,12 @@ class NotificationSerializer(serializers.ModelSerializer):
     def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
 
         response = {}
-        if referenced_object_id > 0:
-            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+        if referenced_object_id:
+            response['type'] =  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
             response['id'] = referenced_object_id
 
         if isinstance(referenced_object, User):
-            response['details'] =   UserSerializer(referenced_object).data
+            response['details'] = UserSerializer(referenced_object).data
         if isinstance(referenced_object, Job):
             job = Job.objects.get(pk=obj.actor_object_id)
             response['details'] = ListJobSerializer(job,context={'request': request}).data

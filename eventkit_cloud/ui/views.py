@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+
+
+
 """UI view definitions."""
 import json
 from django.conf import settings
@@ -388,7 +392,7 @@ def convert_to_geojson(request):
         return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
         logger.error(e)
-        return HttpResponse(e.message, status=400)
+        return HttpResponse(e, status=400)
 
 
 def user_active(request):
