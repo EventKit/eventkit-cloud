@@ -369,7 +369,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                               }]}
                     return Response(error_data, status=status_code)
 
-
             # run the tasks
             job_uid = str(job.uid)
             # run needs to be created so that the UI can be updated with the task list.
