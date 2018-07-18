@@ -67,7 +67,7 @@ class TestFeatureSelection(unittest.TestCase):
         f = FeatureSelection(y)
         self.assertTrue(f.valid)
         self.assertEqual(f.themes,["A Theme Name"])
-        self.assertEqual(f.slug_themes,["a_theme_name"])
+        self.assertEqual(f.slug_themes, ["a_theme_name"])
 
 
     def test_key_union_and_filters(self):
@@ -90,13 +90,13 @@ class TestFeatureSelection(unittest.TestCase):
             where: building IS NOT NULL
         '''
         f = FeatureSelection(y)
-        self.assertEqual(f.themes,['buildings','waterways'])
-        self.assertEqual(f.geom_types('waterways'),['lines','polygons'])
-        self.assertEqual(f.key_selections('waterways'),['name','waterway'])
-        self.assertEqual(f.filter_clause('waterways'),'"name" IS NOT NULL OR "waterway" IS NOT NULL')
-        self.assertEqual(f.key_union(), ['building','name','waterway'])
-        self.assertEqual(f.key_union('points'), ['building','name'])
-        self.assertEqual(f.filter_clause('buildings'),'building IS NOT NULL')
+        self.assertCountEqual(f.themes, ['buildings', 'waterways'])
+        self.assertCountEqual(f.geom_types('waterways'), ['lines', 'polygons'])
+        self.assertCountEqual(f.key_selections('waterways'), ['name', 'waterway'])
+        self.assertEqual(f.filter_clause('waterways'), '"name" IS NOT NULL OR "waterway" IS NOT NULL')
+        self.assertCountEqual(f.key_union(), ['building', 'name', 'waterway'])
+        self.assertCountEqual(f.key_union('points'), ['building', 'name'])
+        self.assertEqual(f.filter_clause('buildings'), 'building IS NOT NULL')
 
     def test_sql_list(self):
         y = '''

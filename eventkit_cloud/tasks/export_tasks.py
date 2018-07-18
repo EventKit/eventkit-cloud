@@ -279,7 +279,7 @@ class ExportTask(LockingTask):
             return result
 
     @transaction.atomic
-    def task_failure(self, exc, task_id, args, kwargs, exception):
+    def task_failure(self, exc, task_id, args, kwargs, einfo):
         """
         Update the failed task as follows:
 
@@ -302,14 +302,14 @@ class ExportTask(LockingTask):
             logger.error(traceback.format_exc())
             logger.error('Cannot update the status of ExportTaskRecord object: no such object has been created for '
                          'this task yet.')
-        if isinstance(exception, ExceptionInfo):
-            exception = dump_exception_info(exception)
-        ete = ExportTaskException(task=task, exception=exception)
+        if isinstance(einfo, ExceptionInfo):
+            einfo = dump_exception_info(einfo)
+        ete = ExportTaskException(task=task, exception=einfo)
         ete.save()
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
             task.save()
-            logger.debug('Task name: {0} failed, {1}'.format(self.name, exception))
+            logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
                 cancel_synchronous_task_chain(export_provider_task_uid=export_provider_task.uid)

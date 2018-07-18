@@ -74,9 +74,10 @@ BANNED_THEME_NAMES = [
 # adapted from https://github.com/django/django/blob/92053acbb9160862c3e743a99ed8ccff8d4f8fd6/django/utils/text.py#L417
 def slugify(s):
     slug = unicodedata.normalize('NFKD', str(s))
+    slug = slug.encode('ascii', 'ignore').lower().decode('ascii')
     slug = re.sub(r'[^a-z0-9]+', '_', slug).strip('_')
     slug = re.sub(r'[_]+', '_', slug)
-    return slug.encode('ascii', 'ignore').lower()
+    return slug
 
 
 # FeatureSelection serializes as YAML.

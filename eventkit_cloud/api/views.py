@@ -1,22 +1,16 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
 
-
-
-
-from collections import OrderedDict
 from datetime import datetime, timedelta, date
 from dateutil import parser
 import logging
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Prefetch
-from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
-
+import json
 
 from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
 from notifications.models import Notification
 from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -27,7 +21,8 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..tasks.task_factory import create_run, get_invalid_licenses
+from eventkit_cloud.tasks.exceptions import InvalidLicense
 from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
@@ -141,10 +136,8 @@ class JobViewSet(viewsets.ModelViewSet):
                 serializer = ListJobSerializer(queryset, many=True, context={'request': request})
                 return Response(serializer.data)
         if len(params.split(',')) < 4:
-            errors = OrderedDict()
-            errors['errors'] = {}
-            errors['errors']['id'] = str('missing_bbox_parameter')
-            errors['errors']['message'] = str('Missing bounding box parameter')
+            errors = {'errors': {'id': str('missing_bbox_parameter'),
+                                 'message': str('Missing bounding box parameter')}}
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             extents = params.split(',')
@@ -286,7 +279,8 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from ..tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.exceptions import Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -427,7 +421,8 @@ class JobViewSet(viewsets.ModelViewSet):
         if user_details is None:
             user_details = {'username': 'unknown-JobViewSet.run'}
 
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from ..tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.exceptions import Unauthorized
 
         try:
             # run needs to be created so that the UI can be updated with the task list.
@@ -676,7 +671,8 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             response['Content-Disposition'] = 'attachment; filename="{}.txt"'.format(slug)
             return response
         except Exception:
-            return Response([{'detail': str('Not found')}], status=status.HTTP_400_BAD_REQUEST)
+            # Need to dump the JSON here because of the renderer_classes
+            return Response(json.dumps([{'detail': 'Not found'}]), content_type="application/json", status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request, slug=None, *args, **kwargs):
         """

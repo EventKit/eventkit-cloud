@@ -35,7 +35,6 @@ RUN set -xe \
 RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
 
 RUN export PATH=/var/lib/.virtualenvs/eventkit/bin:/usr/local/bin:$PATH
-RUN echo "PATH=:$PATH" >> /etc/profile.d/path.sh
 RUN echo "alias python=python3" >> /etc/profile.d/path.sh
 RUN groupadd -g 880 eventkit
 RUN useradd -u 8800 -g 880 eventkit
@@ -63,6 +62,8 @@ COPY ./manage.py /var/lib/eventkit/manage.py
 COPY ./.coveragerc /var/lib/eventkit/.coveragerc
 
 RUN apt-get -y install libxml2-dev libxslt-dev
+
+RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
   export C_INCLUDE_PATH=/usr/include/gdal &&\
   pip3 install -r /var/lib/eventkit/requirements-dev.txt

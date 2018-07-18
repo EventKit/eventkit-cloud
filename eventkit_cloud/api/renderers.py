@@ -142,7 +142,7 @@ class CustomOpenAPIRenderer(BaseRenderer):
             import coreapi
             from openapi_codec import OpenAPICodec
 
-            OpenAPICodec.encode = self.encode()
+            OpenAPICodec.encode = self.encode
             if renderer_context['response'].status_code != status.HTTP_200_OK:
                 return JSONRenderer().render(data)
             options = self.get_customizations()

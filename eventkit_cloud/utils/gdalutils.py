@@ -40,8 +40,8 @@ def open_ds(ds_path):
         if gdal_dataset:
             return gdal_dataset
     except RuntimeError as ex:
-        if ('not recognized as a supported file format' not in ex) or \
-                ('Error browsing database for PostGIS Raster tables' in ex):
+        if ('not recognized as a supported file format' not in str(ex)) or \
+                ('Error browsing database for PostGIS Raster tables' in str(ex)):
             raise ex
     finally:
         if not use_exceptions:

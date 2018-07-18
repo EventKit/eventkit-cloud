@@ -20,7 +20,7 @@ from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, P
 from django.core import serializers
 from ..pagination import LinkHeaderPagination
 from ..views import get_models, get_provider_task, ExportRunViewSet
-from ...tasks.task_factory import InvalidLicense
+from eventkit_cloud.tasks.exceptions import InvalidLicense
 from ...tasks.export_tasks import TaskStates
 from ...jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
@@ -48,7 +48,7 @@ class TestJobViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo' )
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         original_selection = GeometryCollection(Point(1,1), LineString((5.625, 48.458),(0.878, 44.339)))
@@ -221,7 +221,7 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, request_data, format='json')
-        msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content)
+        msg = 'status_code {} != {}: {}'.format(200, response.status_code, response.content.decode('utf-8'))
         self.assertEqual(202, response.status_code, msg)
         job_uid = response.data['uid']
 
@@ -267,7 +267,9 @@ class TestJobViewSet(APITestCase):
                 ]
             }
         }
+        print(request_data)
         response = self.client.post(url, request_data, format='json')
+        print(response.content)
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
@@ -323,6 +325,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
 
         # test significant response content
+        print(response.data)
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
                          request_data['provider_tasks'][0]['formats'][0])
         self.assertEqual(response.data['exports'][0]['formats'][1]['slug'],
@@ -554,7 +557,7 @@ class TestBBoxSearch(APITestCase):
                 'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
-            self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
+            self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content.decode('utf-8'))
         self.assertEqual(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
@@ -983,7 +986,6 @@ class TestStaticFunctions(APITestCase):
 class TestLicenseViewSet(APITestCase):
 
     def setUp(self,):
-        group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
         self.licenses = [License.objects.create(slug='test1', name='name1', text='text1')]
         self.licenses += [License.objects.create(slug='test0', name='name0', text='text0')]
@@ -1025,15 +1027,16 @@ class TestLicenseViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(self.licenses[0].text, response.content)
+        self.assertEqual(self.licenses[0].text, response.content.decode('utf-8'))
 
         expected_bad_url = '/api/licenses/test22/download'
         bad_url = reverse('api:licenses-download', args=['test22'])
         self.assertEqual(expected_bad_url, bad_url)
         bad_response = self.client.get(bad_url);
         self.assertIsNotNone(bad_response)
-        self.assertEqual(400, bad_response.status_code)
-        self.assertEqual(str({'detail': _('Not found')}), bad_response.content)
+        self.assertEqual(404, bad_response.status_code)
+
+        self.assertEqual([{'detail': 'Not found'}], bad_response.json())
 
 
 class TestUserDataViewSet(APITestCase):
@@ -1041,7 +1044,7 @@ class TestUserDataViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo')
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo')
         self.licenses = [License.objects.create(slug='test1', name='Test1', text='text')]
         self.licenses += [License.objects.create(slug='test2', name='Test2', text='text')]
         token = Token.objects.create(user=self.user)
@@ -1093,13 +1096,13 @@ class TestUserDataViewSet(APITestCase):
         request_data = data
         request_data['accepted_licenses'][self.licenses[1].slug] = True
         patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        data = json.loads(patch_response.content)
+        data = patch_response.json()
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), True)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
         request_data = data
         request_data['accepted_licenses'][self.licenses[0].slug] = False
         patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        data = json.loads(patch_response.content)
+        data = patch_response.json()
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
 

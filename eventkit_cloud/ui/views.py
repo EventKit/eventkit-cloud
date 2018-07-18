@@ -360,7 +360,7 @@ def data_estimator(request):
     :param request: Example {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
     :return: HttpResponse, with the size.
     """
-    request_data = json.loads(request.body)
+    request_data = json.loads(request.body.decode('utf-8'))
     size = 0
     providers = request_data.get('providers')
     bbox = request_data.get('bbox')
@@ -379,7 +379,7 @@ def get_config(request):
     :return: a dict of available configurations
     """
     config = getattr(settings, 'UI_CONFIG', {})
-    return HttpResponse(json.dumps(config), status=200)
+    return HttpResponse(json.dumps(config), content_type="application/json", status=200)
 
 
 @require_http_methods(['POST'])

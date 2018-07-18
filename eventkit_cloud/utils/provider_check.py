@@ -143,7 +143,7 @@ class ProviderCheck(object):
         :return: True if AOI is lower than area limit
         """
 
-        if self.aoi is None or self.max_area <= 0:
+        if not (self.aoi and self.max_area):
             return True
 
         geom = self.aoi.transform(3857, clone=True)

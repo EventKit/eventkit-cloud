@@ -217,7 +217,7 @@ class TestHelpers(TestCase):
         expected_url = "https://test/timestamp"
         expected_time = "2017-12-29T13:09:59Z"
 
-        mock_auth_requests.get.return_value.content = expected_time
+        mock_auth_requests.get.return_value.text = expected_time
         returned_time = get_osm_last_update(test_url, slug=test_slug)
         mock_auth_requests.get.assert_called_once_with(expected_url, slug=test_slug)
         self.assertEqual(expected_time, returned_time)

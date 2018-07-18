@@ -103,23 +103,24 @@ class Overpass(object):
                     size = len(req.content)
                 else:
                     raise Exception("Overpass Query failed to return any data")
-            inflated_size = size * 2
+            # inflated_size = size * 2
             CHUNK = 1024 * 1024 * 2  # 2MB chunks
             from audit_logging.file_logging import logging_open
             with logging_open(self.raw_osm, 'wb', user_details=user_details) as fd:
-                for chunk in req.iter_content(CHUNK):
-                    fd.write(chunk)
-                    size += CHUNK
-                    # removing this call to update_progress for now because every time update_progress is called,
-                    # the ExportTask model is updated, causing django_audit_logging to update the audit way to much
-                    # (via the post_save hook). In the future, we might try still using update progress just as much
-                    # but update the model less to make the audit log less spammed, or making audit_logging only log
-                    # certain model changes rather than logging absolutely everything.
-                    ## Because progress is already at 50, we need to make this part start at 50 percent
-                    #update_progress(
-                    #    self.task_uid, progress=(float(size) / float(inflated_size)) * 100,
-                    #    subtask_percentage=subtask_percentage
-                    #)
+                for chunk in req.iter_content(chunk_size=CHUNK):
+                    if chunk:
+                        fd.write(chunk)
+                        # size += CHUNK
+                        # removing this call to update_progress for now because every time update_progress is called,
+                        # the ExportTask model is updated, causing django_audit_logging to update the audit way to much
+                        # (via the post_save hook). In the future, we might try still using update progress just as much
+                        # but update the model less to make the audit log less spammed, or making audit_logging only log
+                        # certain model changes rather than logging absolutely everything.
+                        ## Because progress is already at 50, we need to make this part start at 50 percent
+                        #update_progress(
+                        #    self.task_uid, progress=(float(size) / float(inflated_size)) * 100,
+                        #    subtask_percentage=subtask_percentage
+                        #)
         except exceptions.RequestException as e:
             logger.error('Overpass query threw: {0}'.format(e))
             raise exceptions.RequestException(e)

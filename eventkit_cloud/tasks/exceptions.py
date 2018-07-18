@@ -32,3 +32,18 @@ class DeleteException(Exception):
         if not self.message:
                 self.message = "{0} was deleted by {1}.".format(task_name, user_name)
         super(DeleteException, self).__init__(self.message, *args, **kwargs)
+
+
+class Error(Exception):
+    def __init__(self, message):
+        super(Exception, self).__init__(message)
+
+
+class Unauthorized(Error):
+    def __init__(self, message):
+        super(Error, self).__init__('Unauthorized: {0}'.format(message))
+
+
+class InvalidLicense(Error):
+    def __init__(self, message):
+        super(Error, self).__init__('InvalidLicense: {0}'.format(message))

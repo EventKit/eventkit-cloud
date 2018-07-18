@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-
-
-
 import json
 import logging
 import uuid
@@ -18,7 +15,6 @@ from django.contrib.postgres.fields.jsonb import JSONField
 from django.utils import timezone
 
 from ..core.models import TimeStampedModelMixin, UIDMixin
-
 
 logger = logging.getLogger(__name__)
 
@@ -79,9 +75,6 @@ class License(TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self,):
-        return '{0}'.format(self.slug)
-
 
 class UserLicense(TimeStampedModelMixin):
     """
@@ -92,9 +85,6 @@ class UserLicense(TimeStampedModelMixin):
 
     def __str__(self):
         return '{0}: {1}'.format(self.user.username, self.license.name)
-
-    def __unicode__(self):
-        return '{0}: {1}'.format(self.user.username, self.license.slug)
 
 
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
@@ -114,9 +104,6 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self,):
-        return '{0}'.format(self.slug)
-
 
 class DataProviderType(TimeStampedModelMixin):
     """
@@ -129,9 +116,6 @@ class DataProviderType(TimeStampedModelMixin):
                                                blank=True)
 
     def __str__(self):
-        return '{0}'.format(self.type_name)
-
-    def __unicode__(self,):
         return '{0}'.format(self.type_name)
 
 
@@ -150,7 +134,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     preview_url = models.CharField(verbose_name="Preview URL", max_length=1000, null=True, default='', blank=True,
                                    help_text="This url will be served to the front end for displaying in the map.")
     service_copyright = models.CharField(verbose_name="Copyright", max_length=2000, null=True, default='', blank=True,
-                                   help_text="This information is used to display relevant copyright information.")
+                                         help_text="This information is used to display relevant copyright information.")
     service_description = models.TextField(verbose_name="Description", null=True, default='', blank=True,
                                            help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
@@ -187,9 +171,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self,):
-        return '{0}'.format(self.name)
-
 
 class DataProviderStatus(UIDMixin, TimeStampedModelMixin):
     """
@@ -210,6 +191,7 @@ class Region(UIDMixin, TimeStampedModelMixin):
     """
     Model for a HOT Export Region.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
         kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
@@ -219,7 +201,8 @@ class Region(UIDMixin, TimeStampedModelMixin):
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, blank=True)
     the_geom = models.MultiPolygonField(verbose_name='HOT Export Region', srid=4326, default='')
-    the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export region', srid=3857, default='')
+    the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export region', srid=3857,
+                                                    default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export region', geography=True, default='')
     objects = models.GeoManager()
 
@@ -249,14 +232,11 @@ class DataProviderTask(models.Model):
     def __str__(self):
         return '{0} - {1}'.format(self.uid, self.provider)
 
-    def __unicode__(self,):
-        return '{0} - {1}'.format(self.uid, self.provider)
-
 
 class VisibilityState(Enum):
     PRIVATE = "PRIVATE"
-    PUBLIC  = "PUBLIC"
-    SHARED  = "SHARED"
+    PUBLIC = "PUBLIC"
+    SHARED = "SHARED"
 
 
 class Job(UIDMixin, TimeStampedModelMixin):
@@ -288,7 +268,8 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
-    original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326, default=GeometryCollection(), null=True, blank=True)
+    original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326,
+                                                        default=GeometryCollection(), null=True, blank=True)
     objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
@@ -308,7 +289,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return '{0}'.format(self.name)
 
     @property
-    def overpass_extents(self,):
+    def overpass_extents(self, ):
         """
         Return the export extents in order required by Overpass API.
         """
@@ -319,11 +300,11 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return overpass_extents
 
     @property
-    def extents(self,):
+    def extents(self, ):
         return GEOSGeometry(self.the_geom).extent  # (w,s,e,n)
 
     @property
-    def filters(self,):
+    def filters(self, ):
         """
         Return key=value pairs for each tag in this export.
 
@@ -337,7 +318,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return filters
 
     @property
-    def categorised_tags(self,):
+    def categorised_tags(self, ):
         """
         Return tags mapped according to their geometry types.
         """
@@ -354,7 +335,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
         return {'points': sorted(list(points)), 'lines': sorted(list(lines)), 'polygons': sorted(list(polygons))}
 
     @property
-    def bounds_geojson(self,):
+    def bounds_geojson(self, ):
         return serialize('geojson', [self],
                          geometry_field='the_geom',
                          fields=('name', 'the_geom'))
@@ -364,6 +345,7 @@ class RegionMask(models.Model):
     """
     Model to hold region mask.
     """
+
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
         super(Region, self).__init__(*args, **kwargs)
@@ -406,6 +388,7 @@ class UserJobActivity(models.Model):
     job = models.ForeignKey(Job)
     type = models.CharField(max_length=100, blank=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
+
 
 #
 # class Downloadable(UIDMixin, TimeStampedModelMixin):
