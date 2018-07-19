@@ -36,7 +36,7 @@ class TestGPKGToKml(TransactionTestCase):
         exists.assert_called_once_with(gpkg)
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/bash', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, kmlfile)
+        self.assertEqual(out, kmlfile)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
@@ -60,7 +60,7 @@ class TestGPKGToKml(TransactionTestCase):
         self.task_process().start_process.assert_called_once_with(zip_cmd, executable='/bin/bash', shell=True,
                                                                   stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, zipfile)
+        self.assertEqual(out, zipfile)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

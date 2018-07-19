@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """
     Harness for running sql commands against a spatialite db from python.
     This is work in progress towards a schema translation task.
@@ -8,7 +10,12 @@
 """
 
 import os
-from pysqlite2 import dbapi2 as sqlite3
+
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
+
 from string import Template
 
 
@@ -22,9 +29,9 @@ def run(*script_args):
         pair = line.strip().split(',')
         trans.append(pair)
     for entry in trans:
-        print entry[0], entry[1]
+        print(entry[0], entry[1])
 
-    print trans
+    print(trans)
     conn = sqlite3.connect('/home/ubuntu/export_downloads/0c937545-cb43-4f9a-97b4-6e90e0c791a7/query.sqlite')
 
     # load spatialite extension

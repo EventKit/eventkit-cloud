@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import os
 from .base import *  # NOQA
@@ -10,7 +10,7 @@ INSTALLED_APPS += (
     'rest_framework',
     'rest_framework_gis',
     'rest_framework.authtoken',
-    'rest_framework_swagger',
+    # 'rest_framework_swagger',
     # 'social.apps.django_app.default'
 )
 

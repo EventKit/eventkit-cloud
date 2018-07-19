@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import unicode_literals
+
+
+
+
 import uuid
 from enum import Enum
 from django.contrib.gis.db import models

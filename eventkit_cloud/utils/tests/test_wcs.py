@@ -22,9 +22,9 @@ class TestWCSConverter(TransactionTestCase):
         self.task_uid = uuid4()
 
     @patch('eventkit_cloud.utils.wcs.auth_requests.get_cred')
-    @patch('eventkit_cloud.utils.wcs.os.write')
+    @patch('builtins.open')
     @patch('eventkit_cloud.utils.wcs.os.path.exists')
-    def test_convert_geotiff(self, exists, write, get_cred):
+    def test_convert_geotiff(self, exists, mock_open, get_cred):
         geotiff = '/path/to/geotiff.tif'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
@@ -55,13 +55,15 @@ class TestWCSConverter(TransactionTestCase):
         out = wcs_conv.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         exists.assert_called_once_with(os.path.dirname(geotiff))
-        write.assert_called_once_with(ANY, expected_wcs_xml)
+        # called with any because it will be assigned a temp file descriptor.
+        mock_open.assert_called_once_with(ANY, 'w')
+        mock_open().__enter__().write.assert_called_once_with(expected_wcs_xml)
 
         cmd = cmd.safe_substitute({'out': geotiff, 'wcs': wcs_conv.wcs_xml_path, 'minX': bbox[0], 'minY': bbox[1],
                                    'maxX': bbox[2], 'maxY': bbox[3], 'type': ''})
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/sh', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, geotiff)
+        self.assertEqual(out, geotiff)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
@@ -89,7 +91,7 @@ class TestWCSConverter(TransactionTestCase):
                                    'maxX': bbox[2], 'maxY': bbox[3], 'type': '-ot byte'})
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/sh', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, geotiff)
+        self.assertEqual(out, geotiff)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+
+
+
 
 import logging
 import os
@@ -93,8 +95,8 @@ class WCSConverter(object):
             'auth': wcs_xml_auth_string
         })
         logger.debug("Creating temporary WCS XML at %s:\n%s", self.wcs_xml_path, wcs_xml_string)
-        os.write(wcs_xml_fd, wcs_xml_string)
-        os.close(wcs_xml_fd)
+        with open(wcs_xml_fd, 'w') as temp_file:
+            temp_file.write(wcs_xml_string)
 
         if self.bbox:
             convert_cmd = self.cmd.safe_substitute(

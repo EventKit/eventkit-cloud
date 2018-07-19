@@ -38,7 +38,7 @@ class TestGeopackage(TransactionTestCase):
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/bash', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, gpkgfile)
+        self.assertEqual(out, gpkgfile)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
@@ -213,7 +213,7 @@ class TestGeopackage(TransactionTestCase):
 
         self.assertEqual([call(gpkg), call(gpkg)], get_table_names.mock_calls)
 
-    @patch('__builtin__.open')
+    @patch('builtins.open')
     def test_add_geojson_to_geopackage(self, open):
 
         geojson = "{}"

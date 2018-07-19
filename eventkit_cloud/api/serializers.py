@@ -6,13 +6,10 @@ Used by the View classes api/views.py to serialize API responses as JSON or HTML
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
 # -*- coding: utf-8 -*-
-import cPickle
+import pickle
+from ..tasks.helpers import load_exception_info
 import json
 import logging
-import os
-from urlparse import urlparse, urlunparse
-
-from django.conf import settings
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
 
@@ -42,13 +39,7 @@ from eventkit_cloud.tasks.models import (
 )
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
-import validators
-
-try:
-    from collections import OrderedDict
-# python 2.6
-except ImportError:
-    from ordereddict import OrderedDict
+from . import validators
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -69,13 +60,11 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create(validated_data, **kwargs):
-        from eventkit_cloud.api.views import get_models
         """Creates an export DataProviderTask."""
-        format_names = validated_data.pop("formats")
-        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
+        formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
-        provider_task.formats.add(*format_models)
+        provider_task.formats.add(*formats)
         provider_task.save()
         return provider_task
 
@@ -131,8 +120,10 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = cPickle.loads(str(obj.exception)).exc_info
-
+        if isinstance(obj.exception, bytes):
+            exc_info = pickle.loads(str(obj.exception).exc_info)
+        else:
+            exc_info = load_exception_info(obj.exception).exc_info
         return str(exc_info[1])
 
 
@@ -219,10 +210,9 @@ class SimpleJobSerializer(serializers.Serializer):
         name = obj.name
         geom = obj.the_geom
         geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
-        feature['type'] = 'Feature'
-        feature['properties'] = {'uid': uid, 'name': name}
-        feature['geometry'] = geometry
+        feature = {'type': 'Feature',
+                   'properties': {'uid': uid, 'name': name},
+                   'geometry': geometry}
         return feature
 
     @staticmethod
@@ -230,14 +220,13 @@ class SimpleJobSerializer(serializers.Serializer):
         geom_collection = obj.original_selection
         if not geom_collection:
             return None
-        feature_collection = OrderedDict()
+        feature_collection = {}
         feature_collection['type'] = 'FeatureCollection'
         feature_collection['features'] = []
         for geom in geom_collection:
             geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
-            feature['type'] = 'Feature'
-            feature['geometry'] = geojson_geom
+            feature = {'type': 'Feature',
+                       'geometry': geojson_geom}
             feature_collection['features'].append(feature)
         return feature_collection
 
@@ -245,7 +234,8 @@ class SimpleJobSerializer(serializers.Serializer):
     def get_permissions(obj):
         return JobPermission.jobpermissions(obj)
 
-    def get_provider_tasks(self, obj):
+    @staticmethod
+    def get_provider_tasks(obj):
         return [format.name for format in obj.provider_tasks.first().formats.all()]
 
 
@@ -417,7 +407,7 @@ class UserDataSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
-            for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
+            for slug, selected in self.context.get('request').data.get('accepted_licenses').items():
                 user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()
@@ -555,7 +545,7 @@ class ListJobSerializer(serializers.Serializer):
         name = obj.name
         geom = obj.the_geom
         geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
+        feature = {}
         feature['type'] = 'Feature'
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
@@ -566,12 +556,12 @@ class ListJobSerializer(serializers.Serializer):
         geom_collection = obj.original_selection
         if not geom_collection:
             return None
-        feature_collection = OrderedDict()
+        feature_collection = {}
         feature_collection['type'] = 'FeatureCollection'
         feature_collection['features'] = []
         for geom in geom_collection:
             geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
+            feature = {}
             feature['type'] = 'Feature'
             feature['geometry'] = geojson_geom
             feature_collection['features'].append(feature)
@@ -672,7 +662,7 @@ class JobSerializer(serializers.Serializer):
         name = obj.name
         geom = obj.the_geom
         geometry = json.loads(GEOSGeometry(geom).geojson)
-        feature = OrderedDict()
+        feature = {}
         feature['type'] = 'Feature'
         feature['properties'] = {'uid': uid, 'name': name}
         feature['geometry'] = geometry
@@ -683,12 +673,12 @@ class JobSerializer(serializers.Serializer):
         geom_collection = obj.original_selection
         if not geom_collection:
             return None
-        feature_collection = OrderedDict()
+        feature_collection = {}
         feature_collection['type'] = 'FeatureCollection'
         feature_collection['features'] = []
         for geom in geom_collection:
             geojson_geom = json.loads(geom.geojson)
-            feature = OrderedDict()
+            feature = {}
             feature['type'] = 'Feature'
             feature['geometry'] = geojson_geom
             feature_collection['features'].append(feature)
@@ -758,12 +748,12 @@ class NotificationSerializer(serializers.ModelSerializer):
     def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
 
         response = {}
-        if referenced_object_id > 0:
-            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+        if referenced_object_id:
+            response['type'] =  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
             response['id'] = referenced_object_id
 
         if isinstance(referenced_object, User):
-            response['details'] =   UserSerializer(referenced_object).data
+            response['details'] = UserSerializer(referenced_object).data
         if isinstance(referenced_object, Job):
             job = Job.objects.get(pk=obj.actor_object_id)
             response['details'] = ListJobSerializer(job,context={'request': request}).data

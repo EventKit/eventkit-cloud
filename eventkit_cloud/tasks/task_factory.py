@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-from datetime import datetime, timedelta
+
 import logging
 import os
 import itertools
@@ -9,7 +8,9 @@ import itertools
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-from ..core.models import JobPermission,JobPermissionLevel
+
+from eventkit_cloud.tasks.exceptions import Unauthorized, InvalidLicense
+from ..core.models import JobPermission, JobPermissionLevel
 from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from celery import chain
@@ -42,7 +43,7 @@ class TaskFactory:
     A class create Task Runners based on an Export Run.
     """
 
-    def __init__(self,):
+    def __init__(self, ):
         self.type_task_map = {'osm': ExportOSMTaskRunner,
                               'wfs': ExportWFSTaskRunner,
                               'wms': ExportExternalRasterServiceTaskRunner,
@@ -95,7 +96,7 @@ class TaskFactory:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
             run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
-            os.makedirs(run_dir, 0750)
+            os.makedirs(run_dir, 0o750)
 
             finalize_task_settings = {
                 'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
@@ -127,7 +128,8 @@ class TaskFactory:
                     wait_for_providers_signature = wait_for_providers_task.s(
                         run_uid=run_uid,
                         locking_task_key=run_uid,
-                        callback_task=create_finalize_run_task_collection(run_uid, run_dir, worker, apply_args=finalize_task_settings),
+                        callback_task=create_finalize_run_task_collection(run_uid, run_dir, worker,
+                                                                          apply_args=finalize_task_settings),
                         apply_args=finalize_task_settings).set(**finalize_task_settings)
 
                     if provider_subtask_chain:
@@ -194,13 +196,14 @@ def create_run(job_uid, user=None):
             invalid_licenses = get_invalid_licenses(job)
             if invalid_licenses:
                 raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
-                            "Please use the user account page, or the user api to agree to the " \
-                            "licenses prior to exporting the data.".format(job.user.username, invalid_licenses))
+                                     "Please use the user account page, or the user api to agree to the " \
+                                     "licenses prior to exporting the data.".format(job.user.username,
+                                                                                    invalid_licenses))
             if not user:
                 user = job.user
 
             perms, job_ids = JobPermission.userjobs(user, JobPermissionLevel.ADMIN.value)
-            if  not job.id in job_ids:
+            if not job.id in job_ids:
                 raise Unauthorized("The user: {0} is not authorized to create a run based on the job: {1}.".format(
                     job.user.username, job.name
                 ))
@@ -217,7 +220,8 @@ def create_run(job_uid, user=None):
                                            expiration=(timezone.now() + timezone.timedelta(days=14)))  # persist the run
             job.last_export_run = run
             job.save()
-            sendnotification(run, run.user, NotificationVerb.RUN_STARTED.value, None, None, NotificationLevel.INFO.value, '')
+            sendnotification(run, run.user, NotificationVerb.RUN_STARTED.value, None, None,
+                             NotificationLevel.INFO.value, '')
             run_uid = run.uid
             logger.debug('Saved run with id: {0}'.format(str(run_uid)))
             return run_uid
@@ -252,7 +256,7 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 
 def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
     return chain(
-        #create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
+        # create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
         #            task=bounds_export_task, job_name=job_name),
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=zip_export_provider, job_name=job_name)
@@ -274,19 +278,6 @@ def get_invalid_licenses(job, user=None):
         if license and not licenses.get(license.slug):
             invalid_licenses += [license.name]
     return invalid_licenses
-
-
-class Error(Exception):
-    def __init__(self, message):
-        super(Exception, self).__init__(message)
-
-class Unauthorized(Error):
-    def __init__(self, message):
-        super(Error, self).__init__('Unauthorized: {0}'.format(message))
-
-class InvalidLicense(Error):
-    def __init__(self, message):
-        super(Error, self).__init__('InvalidLicense: {0}'.format(message))
 
 
 def create_finalize_run_task_collection(run_uid=None, run_dir=None, worker=None, apply_args=None):

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
+
+
 
 from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
@@ -10,7 +12,7 @@ import logging
 import re
 import requests
 import xml.etree.ElementTree as ET
-from StringIO import StringIO
+from io import StringIO
 
 from django.conf import settings
 
@@ -141,7 +143,7 @@ class ProviderCheck(object):
         :return: True if AOI is lower than area limit
         """
 
-        if self.aoi is None or self.max_area <= 0:
+        if not (self.aoi and self.max_area):
             return True
 
         geom = self.aoi.transform(3857, clone=True)
@@ -184,12 +186,12 @@ class ProviderCheck(object):
             return None
 
         except requests.exceptions.SSLError as ex:
-            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, ex))
             self.result = CheckResults.SSL_EXCEPTION
             return None
 
         except requests.exceptions.ConnectionError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex))
             self.result = CheckResults.CONNECTION
             return None
 
@@ -255,18 +257,18 @@ class OverpassProviderCheck(ProviderCheck):
                 self.result = CheckResults.UNAVAILABLE
                 return
 
-        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
+        except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
             logger.error("Provider check timed out for URL {}".format(self.service_url))
             self.result = CheckResults.TIMEOUT
             return
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex))
             self.result = CheckResults.SSL_EXCEPTION
             return
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex))
             self.result = CheckResults.CONNECTION
             return
 
@@ -342,7 +344,7 @@ class OWSProviderCheck(ProviderCheck):
                 self.check_intersection(bbox)
 
         except ET.ParseError as ex:
-            logger.error("Provider check failed to parse GetCapabilities XML: {}".format(ex.message))
+            logger.error("Provider check failed to parse GetCapabilities XML: {}".format(ex))
             self.result = CheckResults.UNKNOWN_FORMAT
             return
 
@@ -394,8 +396,8 @@ class WCSProviderCheck(OWSProviderCheck):
         if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
             return None
 
-        x1, y1 = map(float, pos[0].text.split(' '))
-        x2, y2 = map(float, pos[1].text.split(' '))
+        x1, y1 = list(map(float, pos[0].text.split(' ')))
+        x2, y2 = list(map(float, pos[1].text.split(' ')))
 
         minx, maxx = sorted([x1, x2])
         miny, maxy = sorted([y1, y2])
@@ -547,7 +549,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         southwest = bbox_element.find("lowercorner").text.split()[::-1]
         northeast = bbox_element.find("uppercorner").text.split()[::-1]
 
-        bbox = map(float, southwest + northeast)
+        bbox = list(map(float, southwest + northeast))
         return bbox
 
 

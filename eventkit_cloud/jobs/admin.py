@@ -1,3 +1,7 @@
+
+
+
+
 from django.contrib import admin
 from django import forms
 from django.template import RequestContext
@@ -126,7 +130,7 @@ class DataProviderForm(forms.ModelForm):
             try:
                 service.get_check_config()
             except ConfigurationError as e:
-                raise forms.ValidationError(e.message)
+                raise forms.ValidationError(e)
 
         elif service_type in ['osm', 'osm-generic']:
             if not config:

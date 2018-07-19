@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
+
+
+
 from django.conf import settings
 
 from .auth import request_access_token, fetch_user_from_token
 from ..core.helpers import get_id
 from django.contrib.auth import login
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from django.shortcuts import redirect
 from django.http import HttpResponse, JsonResponse
 import json
@@ -26,7 +29,7 @@ def oauth(request):
                                 content_type="application/json",
                                 status=200)
         else:
-            params = urllib.urlencode((
+            params = urllib.parse.urlencode((
                 ('client_id', settings.OAUTH_CLIENT_ID),
                 ('redirect_uri', settings.OAUTH_REDIRECT_URI),
                 ('response_type', settings.OAUTH_RESPONSE_TYPE),

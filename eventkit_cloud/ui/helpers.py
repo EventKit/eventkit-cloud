@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+
+
+
 
 from contextlib import contextmanager
 import os
@@ -121,12 +123,12 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                             provider_details[provider_task.slug]["band_stats"] = band_stats
                             # Calculate the value for each elevation step (of 16)
                             steps = linspace(band_stats[0], band_stats[1], num=16)
-                            provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
+                            provider_details[provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))
 
-    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
+    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.items()]
 
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),
@@ -228,8 +230,8 @@ def get_osm_last_update(url, slug=None):
     try:
         response = auth_requests.get(timestamp_url, slug=slug)
         if response:
-            return response.content
-        raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.content))
+            return response.text
+        raise Exception("Get OSM last update failed with {0}: {1}".format(response.status_code, response.text))
     except Exception as e:
         logger.warning(e)
         logger.warning("Could not get the timestamp from the overpass url.")

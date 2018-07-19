@@ -67,7 +67,7 @@ class TestExportTaskRunner(TestCase):
         self.assertIsNotNone(run)
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
-        self.assertEquals(len(tasks), 2)
+        self.assertEqual(len(tasks), 2)
 
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
@@ -108,7 +108,7 @@ class TestExportTaskRunner(TestCase):
         task_result = create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
                                          worker=worker, display=False)
 
-        self.assertEquals(task_result, expected_result)
+        self.assertEqual(task_result, expected_result)
         mock_export_task.objects.create.assert_called_with(export_provider_task=export_provider_task_name,
                                             status=TaskStates.PENDING.value,
                                             name=task_name, worker=worker, display=False)
@@ -119,7 +119,7 @@ class TestExportTaskRunner(TestCase):
 
         task_result = create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
                                          worker=worker, display=True)
-        self.assertEquals(task_result, expected_result)
+        self.assertEqual(task_result, expected_result)
         mock_export_task.objects.create.assert_called_with(export_provider_task=export_provider_task_name, status=TaskStates.PENDING.value,
                                                 name=task_name, worker=worker, display=True)
 

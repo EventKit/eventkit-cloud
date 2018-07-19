@@ -1,21 +1,16 @@
 """Provides classes for handling API requests."""
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
+
 from datetime import datetime, timedelta, date
 from dateutil import parser
 import logging
-import json
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Prefetch
-from django.utils.translation import ugettext as _
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-
+import json
 
 from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
 from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
 from notifications.models import Notification
 from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
@@ -26,7 +21,8 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..tasks.task_factory import create_run, get_invalid_licenses
+from eventkit_cloud.tasks.exceptions import InvalidLicense
 from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
@@ -36,7 +32,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from serializers import (
+from .serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
@@ -47,15 +43,12 @@ from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
-from .renderers import HOTExportApiRenderer
-from .renderers import PlainTextRenderer
+from .renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, CustomOpenAPIRenderer, update_schema
 from .validators import validate_bbox_params, validate_search_bbox
 from rest_framework.permissions import AllowAny
 from rest_framework.schemas import SchemaGenerator
-from rest_framework_swagger import renderers
-from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
-import coreapi
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -143,10 +136,8 @@ class JobViewSet(viewsets.ModelViewSet):
                 serializer = ListJobSerializer(queryset, many=True, context={'request': request})
                 return Response(serializer.data)
         if len(params.split(',')) < 4:
-            errors = OrderedDict()
-            errors['errors'] = {}
-            errors['errors']['id'] = _('missing_bbox_parameter')
-            errors['errors']['message'] = _('Missing bounding box parameter')
+            errors = {'errors': {'id': str('missing_bbox_parameter'),
+                                 'message': str('Missing bounding box parameter')}}
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             extents = params.split(',')
@@ -167,8 +158,8 @@ class JobViewSet(viewsets.ModelViewSet):
                     serializer = ListJobSerializer(queryset, many=True, context={'request': request})
                     return Response(serializer.data)
             except ValidationError as e:
-                logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                logger.debug(str(e))
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
         """
@@ -288,7 +279,8 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from ..tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.exceptions import Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -322,8 +314,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         except ValidationError:
                             status_code = status.HTTP_400_BAD_REQUEST
                             error_data = {"errors": [{"status": status_code,
-                                                      "title": _('Invalid provider task.'),
-                                                      "detail": _('A provider and an export format must be selected.')
+                                                      "title": str('Invalid provider task.'),
+                                                      "detail": str('A provider and an export format must be selected.')
                                                       }]}
                             return Response(error_data, status=status_code)
                         job.provider_tasks = provider_serializer.save()
@@ -336,8 +328,8 @@ class JobViewSet(viewsets.ModelViewSet):
                                 if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):
                                     status_code = status.HTTP_400_BAD_REQUEST
                                     error_data = {"errors": [{"status": status_code,
-                                                              "title": _('Selection area too large'),
-                                                              "detail": _('The selected area is too large '
+                                                              "title": str('Selection area too large'),
+                                                              "detail": str('The selected area is too large '
                                                                           'for provider \'%s\'') % provider.name}]}
                                     return Response(error_data, status=status_code)
 
@@ -365,18 +357,17 @@ class JobViewSet(viewsets.ModelViewSet):
                     except Exception as e:
                         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
                         error_data = {"errors": [{"status": status_code,
-                                                  "title": _('Server Error'),
-                                                  "detail": _('Error creating export job: {0}'.format(e))
+                                                  "title": str('Server Error'),
+                                                  "detail": str('Error creating export job: {0}'.format(e))
                                                   }]}
                         return Response(error_data, status=status_code)
                 else:
                     status_code = status.HTTP_400_BAD_REQUEST
                     error_data = {"errors": [{"status": status_code,
-                                              "title": _('Invalid provider task'),
-                                              "detail": _('One or more: {0} are invalid'.format(provider_tasks))
+                                              "title": str('Invalid provider task'),
+                                              "detail": str('One or more: {0} are invalid'.format(provider_tasks))
                                               }]}
                     return Response(error_data, status=status_code)
-
 
             # run the tasks
             job_uid = str(job.uid)
@@ -388,16 +379,16 @@ class JobViewSet(viewsets.ModelViewSet):
             except InvalidLicense as il:
                 status_code = status.HTTP_400_BAD_REQUEST
                 error_data = {"errors": [{"status": status_code,
-                                          "title": _('Invalid License'),
-                                          "detail": _(il.message)
+                                          "title": str('Invalid License'),
+                                          "detail": str(il)
                                           }]}
                 return Response(error_data, status=status_code)
                 # Run is passed to celery to start the tasks.
             except Unauthorized as ua:
                 status_code = status.HTTP_403_FORBIDDEN
                 error_data = {"errors": [{"status": status_code,
-                                          "title": _('Invalid License'),
-                                          "detail": _(ua.message)
+                                          "title": str('Invalid License'),
+                                          "detail": str(ua)
                                           }]}
                 return Response(error_data, status=status_code)
 
@@ -429,13 +420,14 @@ class JobViewSet(viewsets.ModelViewSet):
         if user_details is None:
             user_details = {'username': 'unknown-JobViewSet.run'}
 
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from ..tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.exceptions import Unauthorized
 
         try:
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=uid, user=request.user)
         except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': str(il)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
         except Unauthorized as ua:
             return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
@@ -450,7 +442,7 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response(running.data, status=status.HTTP_202_ACCEPTED)
 
         else:
-            return Response([{'detail': _('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': str('Failed to run Export')}], status.HTTP_400_BAD_REQUEST)
 
     @transaction.atomic
     def partial_update(self, request, uid=None, *args, **kwargs):
@@ -490,7 +482,7 @@ class JobViewSet(viewsets.ModelViewSet):
         response = {}
         payload = request.data
 
-        for attribute, value in payload.iteritems():
+        for attribute, value in payload.items():
             if attribute == 'visibility' and value not in VisibilityState.__members__:
                 msg = "unknown visibility value - %s" % value
                 return Response([{'detail': msg}], status.HTTP_400_BAD_REQUEST)
@@ -678,7 +670,8 @@ class LicenseViewSet(viewsets.ReadOnlyModelViewSet):
             response['Content-Disposition'] = 'attachment; filename="{}.txt"'.format(slug)
             return response
         except Exception:
-            return Response([{'detail': _('Not found')}], status=status.HTTP_400_BAD_REQUEST)
+            # Need to dump the JSON here because of the renderer_classes
+            return Response(json.dumps([{'detail': 'Not found'}]), content_type="application/json", status=status.HTTP_404_NOT_FOUND)
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -726,12 +719,11 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(perform_provider_check(provider, geojson), status=status.HTTP_200_OK)
 
         except DataProvider.DoesNotExist as e:
-            return Response([{'detail': _('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': str('Provider not found')}], status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
-            logger.error(e)
-            logger.error(e.message)
-            return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(str(e))
+            return Response([{'detail': str('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def list(self, request, slug=None, *args, **kwargs):
         """
@@ -876,7 +868,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': str(il)}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -910,7 +902,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': str(il)}], status.HTTP_400_BAD_REQUEST)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={'request': request})
@@ -942,8 +934,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 geom = geojson_to_geos(search_geojson, 4326)
                 queryset = queryset.filter(job__the_geom__intersects=geom)
             except ValidationError as e:
-                logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                logger.debug(str(e))
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         search_bbox = self.request.query_params.get('bbox', None)
         if search_bbox is not None and len(search_bbox.split(',')) == 4:
@@ -961,8 +953,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                 queryset = queryset.filter(job__the_geom__within=bbox)
 
             except ValidationError as e:
-                logger.debug(e.detail)
-                return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
+                logger.debug(str(e))
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         search_term = self.request.query_params.get('search_term', None)
         if search_term is not None:
@@ -1415,8 +1407,8 @@ class GroupViewSet(viewsets.ModelViewSet):
         matches = Group.objects.filter(name__iexact=name.lower())
         if len(matches) > 0:
             error_data = {"errors": [{"status": status.HTTP_400_BAD_REQUEST,
-                                      "title": _('Duplicate Group Name'),
-                                      "detail": _('A group named %s already exists.' % name)
+                                      "title": str('Duplicate Group Name'),
+                                      "detail": str('A group named %s already exists.' % name)
                                       }]}
             return Response(error_data, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1528,8 +1520,8 @@ class GroupViewSet(viewsets.ModelViewSet):
             request_admins = request.data["administrators"]
             if len(request_admins) < 1:
                 error_data = {"errors": [{"status": status.HTTP_403_FORBIDDEN,
-                                          "title": _('Not Permitted'),
-                                          "detail": _(
+                                          "title": str('Not Permitted'),
+                                          "detail": str(
                                               'You must assign another group administator before you can perform this action')
                                           }]}
                 return Response(error_data, status=status.HTTP_403_FORBIDDEN)
@@ -1614,7 +1606,7 @@ class NotificationViewSet(viewsets.GenericViewSet):
         if page is not None:
             payload = self.serialize_records(page, request)
         else:
-            payload = self.serialize_records(notifications,request)
+            payload = self.serialize_records(notifications, request)
         return self.get_paginated_response(payload)
 
     @list_route(methods=['get'])
@@ -1789,64 +1781,73 @@ def get_job_ids_via_permissions(permissions):
 
     return master_job_list
 
+
 class SwaggerSchemaView(views.APIView):
+
     _ignore_model_permissions = True
     exclude_from_schema = True
     permission_classes = [AllowAny]
     renderer_classes = [
-        CoreJSONRenderer,
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer
+        # CoreJSONRenderer,
+        CustomOpenAPIRenderer,
+        CustomSwaggerUIRenderer
     ]
 
     def get(self, request):
-        generator = SchemaGenerator()
-        generator.get_schema(request=request)
-        links = generator.get_links(request=request)
-        # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('users', {}).get('partial_update')
-        if partial_update_link:
-            links['users']['partial_update'] = coreapi.Link(
-                url=partial_update_link.url,
-                action=partial_update_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='username',
-                        required=True,
-                        location='path')),
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=partial_update_link.description
+
+        try:
+            import coreapi
+            generator = SchemaGenerator()
+            generator.get_schema(request=request)
+            links = generator.get_links(request=request)
+            # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
+            partial_update_link = links.get('users', {}).get('partial_update')
+            if partial_update_link:
+                links['users']['partial_update'] = coreapi.Link(
+                    url=partial_update_link.url,
+                    action=partial_update_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='username',
+                            required=True,
+                            location='path')),
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=partial_update_link.description
+                )
+
+            members_link = links.get('users', {}).get('members')['create']
+            if members_link:
+                links['users']['members'] = coreapi.Link(
+                    url=members_link.url,
+                    action=members_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=members_link.description
+                )
+
+            schema = coreapi.Document(
+                title='EventKit API',
+                url='/api/docs',
+                content=links
             )
 
-        members_link = links.get('users', {}).get('members')['create']
-        if members_link:
-            links['users']['members'] = coreapi.Link(
-                url=members_link.url,
-                action=members_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=members_link.description
-            )
+            if not schema:
+                raise exceptions.ValidationError(
+                    'A schema could not be generated, please ensure that you are logged in.'
+                )
 
-        schema = coreapi.Document(
-            title='EventKit API',
-            url='/api/docs',
-            content=links
-        )
-
-        if not schema:
-            raise exceptions.ValidationError(
-                'A schema could not be generated, please ensure that you are logged in.'
-            )
-        return Response(schema)
+            return Response(schema)
+        except ImportError:
+            # CoreAPI couldn't be imported, falling back to static schema
+            return Response()
 

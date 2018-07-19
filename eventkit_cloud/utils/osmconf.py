@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-import ConfigParser
+
+
+
+
+import configparser
 import logging
 import os
 
@@ -39,7 +43,7 @@ class OSMConfig(object):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.tmpl = self.path + '/conf/hotosm.ini.tmpl'
         self.categories = categories
-        self.config = ConfigParser.SafeConfigParser()
+        self.config = configparser.SafeConfigParser()
         self.job_name = job_name
 
     def create_osm_conf(self, stage_dir=None, user_details=None):
@@ -69,7 +73,7 @@ class OSMConfig(object):
 
         try:
             from audit_logging.file_logging import logging_open
-            with logging_open(config_file, 'wb', user_details=user_details) as configfile:
+            with logging_open(config_file, 'w', user_details=user_details) as configfile:
                 self.config.write(EqualsSpaceRemover(configfile))
         except IOError as e:
             logger.error(e)

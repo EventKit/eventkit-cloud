@@ -25,7 +25,7 @@ class TestSupport(TestCase):
     def test_create_mxd(self):
         from ..arcgis.create_mxd import create_mxd
 
-        with patch('__builtin__.open') as mock_open, patch(
+        with patch('builtins.open') as mock_open, patch(
                 'eventkit_cloud.ui.arcgis.create_mxd.shutil') as mock_shutil, patch(
             'eventkit_cloud.ui.arcgis.create_mxd.get_mxd_template') as mock_get_mxd_template, patch(
             'eventkit_cloud.ui.arcgis.create_mxd.get_version') as mock_get_version, patch(

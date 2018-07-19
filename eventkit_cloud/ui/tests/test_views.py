@@ -39,7 +39,7 @@ class TestUIViews(TestCase):
         ):
             response = self.client.get('/configuration')
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(json.loads(response.content), {
+            self.assertEqual(response.json(), {
                 'LOGIN_DISCLAIMER': '<div>This is a disclaimer</div>',
                 'BANNER_BACKGROUND_COLOR': 'red',
                 'BANNER_TEXT_COLOR': 'green',
@@ -74,20 +74,20 @@ class TestUIViews(TestCase):
         file_to_geojson.return_value = geojson
         response = self.client.post('/file_upload')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.content, 'No file supplied in the POST request')
+        self.assertEqual(response.content.decode('utf-8'), 'No file supplied in the POST request')
 
-        with tempfile.TemporaryFile() as fp:
+        with tempfile.NamedTemporaryFile() as fp:
             response = self.client.post('/file_upload',
                                         {'file': fp})
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, json.dumps(geojson))
+            self.assertEqual(response.json(), geojson)
 
         file_to_geojson.side_effect = Exception('This is the message')
-        with tempfile.TemporaryFile() as fp:
+        with tempfile.NamedTemporaryFile() as fp:
             response = self.client.post('/file_upload',
                                         {'file': fp})
             self.assertEqual(response.status_code, 400)
-            self.assertEqual(response.content, 'This is the message')
+            self.assertEqual(response.content.decode('utf-8'), 'This is the message')
 
 
     @patch('eventkit_cloud.ui.views.get_size_estimate')
@@ -104,7 +104,7 @@ class TestUIViews(TestCase):
 
         response = self.client.post('/estimator', data=json.dumps({}), content_type='application/json')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.content, 'Providers or BBOX were not supplied in the request')
+        self.assertEqual(response.content.decode('utf-8'), 'Providers or BBOX were not supplied in the request')
 
     @patch('eventkit_cloud.ui.views.is_lat_lon')
     @patch('eventkit_cloud.ui.views.is_mgrs')
@@ -118,13 +118,13 @@ class TestUIViews(TestCase):
         mock_is_mgrs.return_value = True
         with self.settings(CONVERT_API_URL=None):
             response = self.client.get('/search', {'query': 'some query'})
-            self.assertEquals(response.status_code, 501)
-            self.assertEquals(response.content, 'No Convert API specified')
+            self.assertEqual(response.status_code, 501)
+            self.assertEqual(response.content.decode('utf-8'), 'No Convert API specified')
 
         with self.settings(CONVERT_API_URL="url", REVERSE_GEOCODING_API_URL=None):
             response = self.client.get('/search', {'query': 'some query'})
             self.assertEqual(response.status_code, 501)
-            self.assertEqual(response.content, 'No Reverse Geocode API specified')
+            self.assertEqual(response.content.decode('utf-8'), 'No Reverse Geocode API specified')
 
         with self.settings(CONVERT_API_URL="url", REVERSE_GEOCODING_API_URL="url"):
             convert = Mock()
@@ -161,14 +161,14 @@ class TestUIViews(TestCase):
 
             response = self.client.get('/search', {'query': 'some query'})
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, expected)
+            self.assertEqual(response.content.decode('utf-8'), expected)
 
             reverse.search.return_value = {'features': [feature]}
             expected = json.dumps({'features': [feature, feature]})
 
             response = self.client.get('/search', {'query': 'some query'})
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, expected)
+            self.assertEqual(response.content.decode('utf-8'), expected)
 
         mock_is_mgrs.return_value = False
         mock_is_lat_lon.return_value = [1, 1]
@@ -176,7 +176,7 @@ class TestUIViews(TestCase):
         with self.settings(REVERSE_GEOCODING_API_URL=None):
             response = self.client.get('/search', {'query': 'some query'})
             self.assertEqual(response.status_code, 501)
-            self.assertEqual(response.content, 'No Reverse Geocode API specified')
+            self.assertEqual(response.content.decode('utf-8'), 'No Reverse Geocode API specified')
 
         with self.settings(REVERSE_GEOCODING_API_URL="url"):
             reverse = Mock()
@@ -204,14 +204,14 @@ class TestUIViews(TestCase):
 
             response = self.client.get('/search', {'query': 'some query'})
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, expected)
+            self.assertEqual(response.content.decode('utf-8'), expected)
 
             reverse.search.return_value = {'features': [point_feature]}
             expected = json.dumps({'features': [point_feature, point_feature]})
 
             response = self.client.get('/search', {'query': 'some query'})
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.content, expected)
+            self.assertEqual(response.content.decode('utf-8'), expected)
 
         mock_is_lat_lon.return_value = False
         geocode = Mock()
@@ -220,7 +220,7 @@ class TestUIViews(TestCase):
 
         response = self.client.get('/search', {'query': 'some query'})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, json.dumps({'features': ['features go here']}))
+        self.assertEqual(response.json(), {'features': ['features go here']})
 
     @patch('eventkit_cloud.ui.views.Geocode')
     def test_geocode_view(self, mock_geocode):
@@ -230,21 +230,21 @@ class TestUIViews(TestCase):
         geocode.search.return_value = expected_result
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode',{'search': 'some_search'})
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.content), expected_result)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), expected_result)
 
         expected_result = {"something-else": "value", "bbox": [1, 1, 1, 1]}
         # test result
         geocode.add_bbox.return_value = expected_result
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode', {"result": '{"something-else": "value"}'})
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.content), expected_result)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), expected_result)
 
         expected_result = None
         # test result
         geocode.search.return_value = expected_result
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode', {'wrong-key': 'value'})
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 

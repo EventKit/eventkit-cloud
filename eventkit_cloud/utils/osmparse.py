@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+
+
+
 import argparse
 import logging
 from os.path import exists
@@ -6,7 +10,7 @@ import os
 import subprocess
 from string import Template
 from ..tasks.task_process import TaskProcess
-from sqlite import execute_spatialite_script
+from .sqlite import execute_spatialite_script
 
 from osgeo import gdal, ogr, osr
 
@@ -64,15 +68,15 @@ class OSMParser(object):
         ogr_cmd = self.ogr_cmd.safe_substitute({'gpkg': self.gpkg,
                                                 'osm': self.osm, 'osmconf': self.osmconf})
         if (self.debug):
-            print 'Running: %s' % ogr_cmd
+            print('Running: %s' % ogr_cmd)
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(ogr_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 0:
             logger.error('%s', task_process.stderr)
-            raise Exception, "ogr2ogr process failed with returncode: {0}".format(task_process.exitcode)
+            raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
         if (self.debug):
-            print 'ogr2ogr returned: %s' % task_process.exitcode
+            print('ogr2ogr returned: %s'.format(task_process.exitcode))
 
     def create_default_schema_gpkg(self, user_details=None):
         """
@@ -112,7 +116,7 @@ class OSMParser(object):
             layer = ds.GetLayerByIndex(layer_idx).GetName()
             try:
                 # update highway z_indexes
-                for key in zindexes.keys():
+                for key in list(zindexes.keys()):
                     sql = 'UPDATE {0} SET z_index = {1} WHERE highway IN {2};'.format(layer, key, zindexes[key])
                     ds.ExecuteSQL(sql)
             except RuntimeError:
@@ -161,7 +165,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}
-    for k, v in vars(args).items():
+    for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:

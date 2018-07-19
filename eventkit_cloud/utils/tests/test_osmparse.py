@@ -69,5 +69,5 @@ class TestOSMParser(TestCase):
         parser.update_zindexes()
         exists.assert_called_with('/path/to/query.gpkg')
         ogr_open.assert_called_once_with('/path/to/query.gpkg', update=True)
-        self.assertEquals(30, ogr_ds.ExecuteSQL.call_count)
+        self.assertEqual(30, ogr_ds.ExecuteSQL.call_count)
         ogr_ds.Destroy.assert_called_once()

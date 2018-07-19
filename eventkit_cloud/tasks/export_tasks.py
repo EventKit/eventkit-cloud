@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-import cPickle
 from collections import Sequence
 import json
 import logging
@@ -36,6 +34,7 @@ from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
 
 from .exceptions import CancelException, DeleteException
+from .helpers import dump_exception_info
 from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
@@ -276,7 +275,7 @@ class ExportTask(LockingTask):
             logger.error('Exception in the handler for {}:\n{}'.format(self.name, tb))
             from billiard.einfo import ExceptionInfo
             einfo = ExceptionInfo()
-            result = self.task_failure(e, task_uid, args, kwargs, einfo)
+            result = self.task_failure(e, task_uid, args, kwargs, dump_exception_info(einfo))
             return result
 
     @transaction.atomic
@@ -293,6 +292,7 @@ class ExportTask(LockingTask):
         """
         from ..tasks.models import ExportTaskRecord
         from ..tasks.models import ExportTaskException, DataProviderTaskRecord
+        from billiard.einfo import ExceptionInfo
         try:
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
@@ -302,8 +302,9 @@ class ExportTask(LockingTask):
             logger.error(traceback.format_exc())
             logger.error('Cannot update the status of ExportTaskRecord object: no such object has been created for '
                          'this task yet.')
-        exception = cPickle.dumps(einfo)
-        ete = ExportTaskException(task=task, exception=exception)
+        if isinstance(einfo, ExceptionInfo):
+            einfo = dump_exception_info(einfo)
+        ete = ExportTaskException(task=task, exception=einfo)
         ete.save()
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
@@ -1166,7 +1167,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
     with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
-            for absolute_file_path, relative_file_path in static_files.iteritems():
+            for absolute_file_path, relative_file_path in static_files.items():
                 filename = relative_file_path
                 # Support files should go in the correct directory.  It might make sense to break these files up
                 # by directory and then just put each directory in the correct location so that we don't have to
@@ -1497,7 +1498,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
-            ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
+            ExportTaskException.objects.create(task=export_task, exception=dump_exception_info(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
         task_result = export_task.result
@@ -1517,17 +1518,6 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
         else:
             export_provider_task.status = TaskStates.CANCELED.value
     export_provider_task.save()
-
-    # if error:
-    #    finalize_export_provider_task(
-    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
-    #        status=TaskStates.INCOMPLETE.value
-    #    )
-    # else:
-    #    finalize_export_provider_task(
-    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
-    #        status=TaskStates.CANCELED.value
-    #    )
 
     return result
 

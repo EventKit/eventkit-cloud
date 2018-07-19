@@ -1,14 +1,20 @@
 # -*- coding: utf-8 -*-
-import argparse
+
+
+
+
 import logging
 import os
 import subprocess
 from string import Template
-from artifact import Artifact
+from .artifact import Artifact
 
 from osgeo import gdal, ogr, osr
 
-from pysqlite2 import dbapi2 as sqlite3
+try:
+    from pysqlite2 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3
 
 from eventkit_cloud.feature_selection.feature_selection import slugify
 
@@ -228,7 +234,7 @@ class OSMConfig(object):
             lines_attributes=','.join(self.lines),
             multipolygons_attributes=','.join(self.polygons)
         )
-        with open(self.output_ini, 'wb') as f:
+        with open(self.output_ini, 'w') as f:
             f.write(result)
         return self.output_ini
 

@@ -1,20 +1,22 @@
+
+
+
+
 from django.conf import settings
 import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
-from geocode_auth import get_auth_headers, authenticate
+from .geocode_auth import get_auth_headers, authenticate
 import requests
 
 
 logger = logging.getLogger(__name__)
 
 
-class GeocodeAdapter:
+class GeocodeAdapter(metaclass=ABCMeta):
     """
     An abstract class to implement a new geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
     """
-
-    __metaclass__ = ABCMeta
 
     _properties = ['name', 'province', 'region', 'country']
 
@@ -164,7 +166,7 @@ class GeocodeAdapter:
     def map_properties(self, feature, properties=None):
         props = properties or feature.get('properties')
         if props:
-            for key, value in self.property_map().iteritems():
+            for key, value in self.property_map().items():
                 props[key] = props.get(value)
         feature['properties'] = props
         return feature

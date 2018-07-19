@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+
+
+
 import argparse
 import logging
 import os
@@ -46,15 +50,15 @@ class TransformSQlite(object):
         sql_cmd = self.update_sql.safe_substitute({'sqlite': self.sqlite,
                                                    'transform_sql': self.transform})
         if (self.debug):
-            print 'Running: %s' % sql_cmd
+            print('Running: {0}'.format(sql_cmd))
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(sql_cmd, shell=True, executable='/bin/bash',
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if task_process.exitcode != 1:
             logger.error('%s', task_process.stderr)
-            raise Exception, "{0} process failed with returncode: {1}".format(sql_cmd, task_process.exitcode)
+            raise Exception("{0} process failed with returncode: {1}".format(sql_cmd, task_process.exitcode))
         if self.debug:
-            print 'spatialite returned: %s' % task_process.exitcode
+            print('spatialite returned: {0}'.format(task_process.exitcode))
 
 
 if __name__ == '__main__':
@@ -72,7 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}
-    for k, v in vars(args).items():
+    for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:
