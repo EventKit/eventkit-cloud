@@ -24,9 +24,9 @@ from celery import signature
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 from enum import Enum
+from audit_logging.celery_support import UserDetailsBase
 
 from ..feature_selection.feature_selection import FeatureSelection
-from audit_logging.celery_support import UserDetailsBase
 from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file, get_human_readable_metadata_document
 from ..celery import app, TaskPriority
 from ..utils import (
@@ -34,9 +34,11 @@ from ..utils import (
 )
 from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
+from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from .exceptions import CancelException, DeleteException
-from ..core.helpers import sendnotification, NotificationVerb,NotificationLevel
+from .helpers import normalize_name, get_archive_data_path, get_run_download_url, get_download_filename, get_run_staging_dir, \
+    get_provider_staging_dir, get_run_download_dir, Directory, default_format_time
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -157,9 +159,9 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         @return A url to reach filepath.
     """
 
-    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-    download_url_root = settings.EXPORT_MEDIA_ROOT
-    run_dir = os.path.join(download_filesystem_root, run_uid)
+    run_download_dir = get_run_download_dir(run_uid)
+    run_download_url = get_run_download_url(run_uid)
+
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
@@ -171,11 +173,11 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
             download_filename,
         )
     else:
-        make_dirs(run_dir)
+        make_dirs(run_download_dir)
 
-        download_url = os.path.join(download_url_root, run_uid, download_filename)
+        download_url = os.path.join(run_download_url, download_filename)
 
-        download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
+        download_filepath = os.path.join(run_download_dir, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
 
@@ -241,15 +243,12 @@ class ExportTask(LockingTask):
             provider_slug = parts[-2]
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
-            download_filename = '{0}-{1}-{2}{3}'.format(
-                name,
-                provider_slug,
-                finished.strftime('%Y%m%d'),
-                ext
-            )
+            download_filename = get_download_filename(name,
+                                                      finished,
+                                                      ext,
+                                                      additional_descriptors=provider_slug)
 
             export_run = ExportRun.objects.get(uid=run_uid)
-            user = export_run.user.username
             # construct the download url
             skip_copy = (task.name == 'OverpassQuery')
             download_url = make_file_downloadable(
@@ -471,7 +470,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
     bbox = job.extents
-    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, date_time.strftime("%Y%m%d")),
+    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, default_format_time(date_time)),
                        "abstract": job.description,
                        "title": job.name,
                        "westBoundLongitude": bbox[0],
@@ -731,7 +730,6 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
 def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
                         stage_dir=None, *args, **kwargs):
     from .models import DataProviderTaskRecord
-    from .task_runners import normalize_name
 
     result = result or {}
 
@@ -754,15 +752,11 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
             full_file_path = os.path.join(stage_dir, filename)
             ext = os.path.splitext(filename)[1]
             if ext in ['.gpkg', '.tif']:
-                filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
-                    export_provider_task.slug,
-                    os.path.splitext(os.path.basename(filename))[0],
-                    timezone.now().strftime('%Y%m%d'),
-                    ext
-                )
-                metadata['data_sources'][export_provider_task.slug]['file_path'] = os.path.join('data',
-                                                                                                export_provider_task.slug,
-                                                                                                filepath)
+                download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
+                                                          timezone.now(), ext,
+                                                          additional_descriptors=export_provider_task.slug)
+                filepath = get_archive_data_path(export_provider_task.slug, download_filename)
+                metadata['data_sources'][export_provider_task.slug]['file_path'] = filepath
                 metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
             if not os.path.isfile(full_file_path):
                 logger.error("Could not find file {0} for export {1}.".format(full_file_path,
@@ -782,8 +776,9 @@ def zip_export_provider(self, result=None, job_name=None, export_provider_task_u
         include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
         include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
 
-        make_dirs(os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis'))
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
+        arcgis_dir = os.path.join(stage_dir, Directory.ARCGIS.value)
+        make_dirs(arcgis_dir)
+        metadata_file = os.path.join(arcgis_dir, 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
@@ -938,12 +933,12 @@ class FinalizeRunHookTask(LockingTask):
 
         # Ensure that the staging and download directories for the run this task is associated with exist
         try:
-            os.makedirs(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), run_uid))
+            os.makedirs(get_run_staging_dir(run_uid))
         except OSError:
             pass  # Already exists
 
         try:
-            os.makedirs(os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/'), run_uid))
+            os.makedirs(get_run_download_dir(run_uid))
         except OSError:
             pass  # Already exists
 
@@ -1009,7 +1004,6 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
     """ Just a placeholder hook task that doesn't do anything except create a new file to collect from the chain
         It's included in.
     """
-    staging_root = settings.EXPORT_STAGING_ROOT
 
     f1_name = 'non_downloadable_file_not_included_in_zip'
     # If this were a real task, you'd do something with a file at f1_path now.
@@ -1017,12 +1011,12 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
 
     # The path to this file is returned, so it will be duplicated to the download directory, it's location
     #    stored in the database, and passed along the finalize run task chain for inclusion in the run's zip.
-    f2_name = 'downloadable_file_to_be_included_in_zip'
-    f2_stage_path = os.path.join(staging_root, str(run_uid), f2_name)
-    with open(f2_stage_path, 'w+') as f2:
+    f1_name = 'downloadable_file_to_be_included_in_zip'
+    f1_stage_path = os.path.join(get_run_staging_dir(run_uid), f1_name)
+    with open(f1_stage_path, 'w+') as f2:
         f2.write('hi')
 
-    created_files = [f2_stage_path]
+    created_files = [f1_stage_path]
 
     logger.debug('example_finalize_run_hook_task.  Created files: {}, new_zip_filepaths: {}, run_uid: {}' \
                  .format(created_files, new_zip_filepaths, run_uid))
@@ -1033,7 +1027,6 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.tasks.task_runners import normalize_name
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -1047,20 +1040,21 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
     for provider_task in provider_tasks:
         metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+            provider_staging_dir = get_provider_staging_dir(run_uid, provider_task.slug)
             for export_task in provider_task.tasks.all():
                 try:
                     filename = export_task.result.filename
                 except Exception:
                     continue
-                full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                              provider_task.slug, filename)
+                full_file_path = os.path.join(provider_staging_dir, filename)
                 ext = os.path.splitext(filename)[1]
                 if ext in ['.gpkg', '.tif']:
-                    filepath = 'data/{0}/{1}-{0}-{2}{3}'.format(
+                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
+                                                              timezone.now(),
+                                                              ext)
+                    filepath = get_archive_data_path(
                         provider_task.slug,
-                        os.path.splitext(os.path.basename(filename))[0],
-                        timezone.now().strftime('%Y%m%d'),
-                        ext
+                        download_filename
                     )
                     metadata['data_sources'][provider_task.slug]['file_path'] = filepath
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
@@ -1079,8 +1073,9 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
             include_files += [license_file]
 
     if include_files:
-        make_dirs(os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis'))
-        metadata_file = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid), 'arcgis', 'metadata.json')
+        arcgis_dir = os.path.join(get_run_staging_dir(run_uid), Directory.ARCGIS.value)
+        make_dirs(arcgis_dir)
+        metadata_file = os.path.join(arcgis_dir, 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
@@ -1130,14 +1125,9 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     rolls up runs into a zip file
     """
     from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportRun as ExportRunModel
-    from .task_runners import normalize_name
     from django import db
 
-    download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-    staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
-
-    dl_filepath = os.path.join(download_root, str(run_uid))
-    st_filepath = os.path.join(staging_root, str(run_uid))
+    run_staging_dir = get_run_staging_dir(run_uid)
 
     files = []
     if not include_files:
@@ -1149,21 +1139,18 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
     name = run.job.name
     project = run.job.event
-    date = timezone.now().strftime('%Y%m%d')
+    date = timezone.now()
     # XXX: name-project-eventkit-yyyymmdd.zip
     if file_name:
         zip_filename = file_name
     else:
-        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-            normalize_name(name),
-            normalize_name(project),
-            "eventkit",
-            date,
-            'zip'
-        )
+        zip_filename = get_download_filename(normalize_name(name),
+                                             date,
+                                             '.zip',
+                                             additional_descriptors=[normalize_name(project), "eventkit"])
 
-    zip_st_filepath = os.path.join(st_filepath, zip_filename)
-    zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
+    zip_st_filepath = os.path.join(run_staging_dir, zip_filename)
+
     with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.iteritems():
@@ -1174,12 +1161,12 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 basename = os.path.basename(absolute_file_path)
                 if basename == "__init__.py":
                     continue
-                elif os.path.basename(os.path.dirname(absolute_file_path)) == 'arcgis':
+                elif os.path.basename(os.path.dirname(absolute_file_path)) == Directory.ARCGIS.value:
                     if basename == "create_mxd.py":
-                        filename = os.path.join('arcgis', '{0}'.format(basename))
+                        filename = os.path.join(Directory.ARCGIS.value, '{0}'.format(basename))
                     else:
                         # Put the support files in the correct directory.
-                        filename = os.path.join('arcgis', 'templates', '{0}'.format(basename))
+                        filename = os.path.join(Directory.ARCGIS.value, Directory.TEMPLATES.value, '{0}'.format(basename))
                 zipfile.write(
                     absolute_file_path,
                     arcname=filename
@@ -1199,18 +1186,22 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 )
             elif filepath.endswith("metadata.json"):
                 # put the metadata file in arcgis folder unless it becomes more useful.
-                filename = os.path.join('arcgis', '{0}{1}'.format(
+                filename = os.path.join(Directory.ARCGIS.value, '{0}{1}'.format(
                     name,
                     ext
                 ))
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
-                filename = 'data/{0}/{1}-{0}-{2}{3}'.format(
-                    provider_slug,
+                download_filename = get_download_filename(
                     name,
                     date,
-                    ext
+                    ext,
+                    additional_descriptors=provider_slug
+                )
+                filename = get_archive_data_path(
+                    provider_slug,
+                    download_filename
                 )
 
             zipfile.write(
@@ -1222,22 +1213,14 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     # be handled as an ExportTaskRecord.
 
     if not adhoc:
-        # from ..jobs.models import Downloadable
-        run_uid = str(run_uid)
-        if getattr(settings, "USE_S3", False):
-            zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
-        else:
-            if zip_st_filepath != zip_dl_filepath:
-                shutil.copy(zip_st_filepath, zip_dl_filepath)
-            download_url_root = settings.EXPORT_MEDIA_ROOT
-            zipfile_url = os.path.join(download_url_root, run_uid, zip_filename)
-
+        file_size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0
+        zipfile_url = make_file_downloadable(zip_st_filepath, run_uid, provider_slug=provider_slug, download_filename=zip_filename,
+                               size=file_size)
         # Update Connection
         db.close_old_connections()
         run.refresh_from_db()
 
-        size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0  # MB
-        downloadable = FileProducingTaskResult.objects.create(size=size, download_url=zipfile_url)
+        downloadable = FileProducingTaskResult.objects.create(size=file_size, download_url=zipfile_url)
         run.downloadable = downloadable
 
         try:
@@ -1517,17 +1500,6 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
         else:
             export_provider_task.status = TaskStates.CANCELED.value
     export_provider_task.save()
-
-    # if error:
-    #    finalize_export_provider_task(
-    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
-    #        status=TaskStates.INCOMPLETE.value
-    #    )
-    # else:
-    #    finalize_export_provider_task(
-    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
-    #        status=TaskStates.CANCELED.value
-    #    )
 
     return result
 
