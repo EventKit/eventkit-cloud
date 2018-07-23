@@ -13,13 +13,13 @@ from ..core.models import JobPermission,JobPermissionLevel
 from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from celery import chain
-from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
+from eventkit_cloud.tasks.export_tasks import (finalize_run_task,
                                                prepare_for_export_zip_task,
                                                zip_file_task,
                                                output_selection_geojson_task)
 
 from ..jobs.models import Job
-from ..ui.helpers import get_style_files
+from eventkit_cloud.tasks import get_style_files
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
                                   wait_for_providers_task, TaskStates)
 
@@ -66,6 +66,7 @@ class TaskFactory:
             AD_HOC_TASK1 -> AD_HOC_TASK2 -> FINALIZE_RUN_TASK = FINALIZE_RUN_TASK_COLLECTION
 
         If the PROVIDER_SUBTASK_CHAIN fails it needs to be cleaned up.  The clean up task also calls the finalize provider
+        task. This is because when a task fails the failed task will call an on_error (link_error) task and never return.
         task. This is because when a task fails the failed task will call an on_error (link_error) task and never return.
             PROVIDER_SUBTASK_CHAIN -> FINALIZE_PROVIDER_TASK
                    |
@@ -251,10 +252,9 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
     ).set(queue=worker, routing_key=worker)
 
 
-def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
+def get_zip_task_chain(export_provider_task_uid=None, worker=None, stage_dir=None):
     return chain(
-        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
-                    task=zip_export_provider, job_name=job_name)
+        create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker, task=prepare_for_export_zip_task)
     )
 
 
@@ -279,9 +279,11 @@ class Error(Exception):
     def __init__(self, message):
         super(Exception, self).__init__(message)
 
+
 class Unauthorized(Error):
     def __init__(self, message):
         super(Error, self).__init__('Unauthorized: {0}'.format(message))
+
 
 class InvalidLicense(Error):
     def __init__(self, message):

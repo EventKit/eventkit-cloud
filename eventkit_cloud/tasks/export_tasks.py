@@ -27,7 +27,8 @@ from enum import Enum
 from audit_logging.celery_support import UserDetailsBase
 
 from ..feature_selection.feature_selection import FeatureSelection
-from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file, get_human_readable_metadata_document
+from eventkit_cloud.tasks.helpers import get_style_files, create_license_file, generate_qgs_style, \
+    get_human_readable_metadata_document
 from ..celery import app, TaskPriority
 from ..utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
@@ -726,76 +727,6 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
         raise Exception(e)
 
 
-@app.task(name='Project file (.zip)', bind=True, base=FormatTask)
-def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
-                        stage_dir=None, *args, **kwargs):
-    from .models import DataProviderTaskRecord
-
-    result = result or {}
-
-    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-    # deleted during cancellation.
-    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
-
-    logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
-    include_files = []
-    metadata = {"name": normalize_name(job_name), "bbox": export_provider_task.run.job.extents,
-                "data_sources": {export_provider_task.slug: {"name": export_provider_task.name}}}
-    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-        for export_task in export_provider_task.tasks.all():
-            try:
-                filename = export_task.result.filename
-                export_task.display = False
-            except Exception:
-                logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
-                continue
-            full_file_path = os.path.join(stage_dir, filename)
-            ext = os.path.splitext(filename)[1]
-            if ext in ['.gpkg', '.tif']:
-                download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
-                                                          timezone.now(), ext,
-                                                          additional_descriptors=export_provider_task.slug)
-                filepath = get_archive_data_path(export_provider_task.slug, download_filename)
-                metadata['data_sources'][export_provider_task.slug]['file_path'] = filepath
-                metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
-            if not os.path.isfile(full_file_path):
-                logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                              export_task.name))
-                continue
-            include_files += [full_file_path]
-            export_task.save()
-    # Need to remove duplicates from the list because
-    # some intermediate tasks produce files with the same name.
-    # sorted while adding time allows comparisons in tests.
-    include_files = sorted(list(set(include_files)))
-    if include_files:
-        license_file = create_license_file(export_provider_task)
-
-        if license_file:
-            include_files += [license_file]
-        include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
-        include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
-
-        arcgis_dir = os.path.join(stage_dir, Directory.ARCGIS.value)
-        make_dirs(arcgis_dir)
-        metadata_file = os.path.join(arcgis_dir, 'metadata.json')
-        with open(metadata_file, 'w') as open_md_file:
-            json.dump(metadata, open_md_file)
-        include_files += [metadata_file]
-
-        logger.debug("Zipping files: {0}".format(include_files))
-        zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
-                                     adhoc=True, static_files=get_style_files()).get('result')
-    else:
-        raise Exception("There are no files in this provider available to zip.")
-    if not zip_file:
-        raise Exception("A zipfile could not be created, please contact an administrator.")
-    result['result'] = zip_file
-
-    return result
-
-
 @app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
 def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None,
                        *args, **kwargs):
@@ -875,9 +806,11 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
-    except Exception:
+    except Exception as e:
         run.status = TaskStates.FAILED.value
         run.save()
+        logger.error(str(e))
+        raise e
 
 
 # This could be improved by using Redis or Memcached to help manage state.
@@ -1025,16 +958,35 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
 
 
 @app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
-def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
-    from eventkit_cloud.tasks.models import ExportRun
+def prepare_for_export_zip_task(result=None, data_provider_task_uid=None, run_uid=None, *args, **kwargs):
+    """
 
-    run = ExportRun.objects.get(uid=run_uid)
+    :param result: The celery task result value, it should be a dict with the current state.
+    :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
+    :param run_uid: A run to be zipped (this or data_provider_task_uid must be passed).
+    :return: The run files, or a single zip file if data_provider_task_uid is passed.
+    """
+    from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+    from eventkit_cloud.tasks.task_runners import normalize_name
+
+    if run_uid and data_provider_task_uid:
+        logger.error("Both a 'run_uid' and a 'data_provider_task_uid' were provided to prepare_for_export_zip task.")
+        logger.error("This is ambiguous and the function should only be called with one.")
+        raise Exception("Prepare Export Zip was called for both a DataPack and a data source.")
+    if run_uid:
+        run = ExportRun.objects.get(uid=run_uid)
+        provider_tasks = run.provider_tasks.all()
+    elif data_provider_task_uid:
+        provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+        run = provider_task.run
+        provider_tasks = [provider_task]
+    else:
+        raise Exception("Prepare Export Zip was called without a DataPack and a data source.")
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
     include_files = list([])
 
-    provider_tasks = run.provider_tasks.all()
     metadata = {"name": normalize_name(run.job.name), "bbox": run.job.extents, "data_sources": {}}
 
     for provider_task in provider_tasks:
@@ -1063,12 +1015,11 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
-                if full_file_path.endswith(".zip") == False:
+                if not full_file_path.endswith(".zip"):
                     include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
         license_file = create_license_file(provider_task)
-        logger.error("LICENSE FILE: {0}".format(license_file))
         if license_file:
             include_files += [license_file]
 
@@ -1085,9 +1036,13 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
-        include_files = set(include_files)
-
-    return include_files
+        result = set(include_files)
+        if data_provider_task_uid:
+            result = zip_file_task.run(run_uid=run_uid, include_files=include_files,
+                                       file_name=os.path.join(get_run_staging_dir(run_uid),
+                                                              "{0}.zip".format(normalize_name(run.job))),
+                                       adhoc=True, static_files=get_style_files()).get('result')
+    return result
 
 
 @app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
@@ -1213,7 +1168,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     # be handled as an ExportTaskRecord.
 
     if not adhoc:
-        file_size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0
+        file_size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0  # Size in MB
         zipfile_url = make_file_downloadable(zip_st_filepath, run_uid, provider_slug=provider_slug, download_filename=zip_filename,
                                size=file_size)
         # Update Connection

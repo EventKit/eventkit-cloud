@@ -8,7 +8,6 @@ from django.conf import settings
 
 from mock import Mock, patch, MagicMock
 from ..data_estimator import get_size_estimate, get_gb_estimate
-from ..helpers import generate_qgs_style
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -16,7 +15,7 @@ from eventkit_cloud.tasks.models import (
     DataProviderTaskRecord
 )
 
-from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.tasks import TaskStates, generate_qgs_style
 
 
 class TestStyles(TestCase):
