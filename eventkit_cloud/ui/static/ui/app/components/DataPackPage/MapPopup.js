@@ -140,7 +140,7 @@ export class MapPopup extends Component {
                             }}
                         >
                             <a id="details-url" href={this.props.detailUrl} style={{ color: '#4598bf' }}>
-                                Go To Status and Download
+                                Status & Download
                             </a>
                         </div>
                         <div
