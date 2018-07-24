@@ -745,7 +745,7 @@ export const joyride = {
             title: 'My DataPacks',
             text: `Finally, you can view the DataPacks that you’ve created.
                 Keep in mind that by default DataPacks expire after two weeks,
-                though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expiration field.`,
+                though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expires field.`,
             selector: '.qa-DashboardSection-My.DataPacks',
             position: 'top',
             scrollToId: 'DashboardSectionMy DataPacks',

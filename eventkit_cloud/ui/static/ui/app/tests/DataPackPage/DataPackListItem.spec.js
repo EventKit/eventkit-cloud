@@ -118,7 +118,7 @@ describe('DataPackListItem component', () => {
         const cardText = wrapper.find(CardTitle).text();
         expect(cardText).toContain('Test1');
         expect(cardText).toContain('Event: Test1 event');
-        expect(cardText).toContain('Added: 2017-03-10');
+        expect(cardText).toContain('Added: 3/10/17');
         expect(cardText).toContain('My DataPack');
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(1);
@@ -132,7 +132,7 @@ describe('DataPackListItem component', () => {
         const wrapper = getWrapper(props);
         props.run.started_at = '2017-04-11T15:52:35.637331Z';
         wrapper.setProps(props);
-        expect(wrapper.find(CardTitle).text()).toContain('Added: 2017-04-11');
+        expect(wrapper.find(CardTitle).text()).toContain('Added: 4/11/17');
         props.run.job.name = 'jobby job';
         wrapper.setProps(props);
         expect(wrapper.find(CardTitle).text()).toContain('jobby job');
