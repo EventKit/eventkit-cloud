@@ -293,7 +293,7 @@ export const joyride = {
         {
             title: 'Submit DataPack',
             text: `Once ready, click the large green button to kick off the DataPack submission process.
-                You will be redirected to the Status and Download page.`,
+                You will be redirected to the Status & Download page.`,
             selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
             position: 'bottom',
             scrollToId: 'Next',
