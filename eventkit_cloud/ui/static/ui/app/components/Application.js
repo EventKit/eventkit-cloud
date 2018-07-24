@@ -108,6 +108,7 @@ export class Application extends Component {
 
     componentDidMount() {
         this.getConfig();
+        this.props.getNotifications();
         window.addEventListener('resize', this.handleResize);
         window.addEventListener('click', this.handleClick);
     }
