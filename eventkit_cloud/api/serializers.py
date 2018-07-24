@@ -288,9 +288,7 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_zipfile_url(self, obj):
         request = self.context['request']
-        if obj.downloadable:
-            return request.build_absolute_uri('/download?uid={}'.format(obj.downloadable.uid))
-        elif obj.provider_tasks.filter(name='run'):
+        if obj.provider_tasks.filter(name='run'):
             task_downloadable = obj.provider_tasks.get(name='run').tasks.filter(name__icontains='zip')[0].result
             if task_downloadable:
                 return request.build_absolute_uri('/download?uid={}'.format(task_downloadable.uid))
