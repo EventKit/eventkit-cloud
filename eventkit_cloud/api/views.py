@@ -330,7 +330,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
-                            for provider_task in job.provider_tasks.all():
+                            for provider_task in job.provider_tasks.filter(~Q(name='run')):
                                 provider = provider_task.provider
                                 max_selection = provider.max_selection
                                 if max_selection and 0 < float(max_selection) < get_area(job.the_geom.geojson):

@@ -6,6 +6,7 @@ import logging
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from django.http import HttpRequest
 
 from ..jobs.models import Job, LowerCaseCharField, DataProvider
 from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
@@ -101,12 +102,9 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
 
-    @property
-    def zipfile_url(self):
-        if self.downloadable:
-            return self.downloadable.download_url
-        else:
-            return ""
+    # @property
+    # def zipfile_url(self):
+
 
 
 class FinalizeRunHookTaskRecord(UIDMixin, TimeStampedModelMixin):

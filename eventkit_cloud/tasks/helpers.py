@@ -2,6 +2,7 @@ import os, re
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.db.models import Q
 from enum import Enum
 from numpy import linspace
 
@@ -108,7 +109,7 @@ def get_style_files():
 
     :return: A list of all of the static files used for styles (e.g. icons)
     """
-    style_dir = os.path.join(os.path.dirname(__file__), 'static', 'ui', 'styles')
+    style_dir = os.path.join(os.path.dirname(__file__), 'static', 'tasks', 'styles')
     files = get_file_paths(style_dir)
     arcgis_dir = os.path.join(os.path.dirname(__file__), 'arcgis')
     files = get_file_paths(arcgis_dir, files)
@@ -125,8 +126,8 @@ def create_license_file(provider_task):
     if data_provider_license is None:
         return
 
-    license_file_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
-                                     provider_task.slug, '{0}.txt'.format(normalize_name(data_provider_license.name)))
+    license_file_path = os.path.join(get_provider_staging_dir(provider_task.run.uid, provider_task.slug),
+                                     '{0}.txt'.format(normalize_name(data_provider_license.name)))
 
     with open(license_file_path, 'w') as license_file:
         license_file.write(data_provider_license.text)
@@ -146,7 +147,7 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
 
     job_name = run.job.name.lower()
 
-    provider_tasks = run.provider_tasks.all()
+    provider_tasks = run.provider_tasks.filter(~Q(name='run'))
 
     # A dict is used here to ensure that just one file per provider is added,
     # this should be updated when multiple formats are supported.
@@ -193,7 +194,7 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                             provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
-                                                              timezone.now().strftime("%Y%m%d")))
+                                                              default_format_time(timezone.now())))
 
     provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
 
@@ -222,7 +223,7 @@ def get_human_readable_metadata_document(run_uid):
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
     data_providers = []
-    for provider_task in run.provider_tasks.all():
+    for provider_task in run.provider_tasks.filter(~Q(name='run')):
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         data_provider_metadata = {'name': data_provider.name,
