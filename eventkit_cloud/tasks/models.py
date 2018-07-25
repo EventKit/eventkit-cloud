@@ -30,10 +30,8 @@ class FileProducingTaskResult(UIDMixin):
         from .signals import exporttaskresult_delete_exports
         exporttaskresult_delete_exports(self.__class__, self)
         self.deleted = True
+        self.export_task.display = False
         self.save()
-        if hasattr(self.task, 'display'):
-            self.task.display = False
-            self.task.save()
 
     class Meta:
         managed = True

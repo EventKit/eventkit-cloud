@@ -97,14 +97,14 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         return data
 
 
-class ExportTaskResultSerializer(serializers.ModelSerializer):
+class FileProducingTaskResultSerializer(serializers.ModelSerializer):
     """Serialize FileProducingTaskResult models."""
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
     uid = serializers.UUIDField(read_only=True)
 
     def __init__(self, *args, **kwargs):
-        super(ExportTaskResultSerializer, self).__init__(*args, **kwargs)
+        super(FileProducingTaskResultSerializer, self).__init__(*args, **kwargs)
         if self.context.get('no_license'):
             self.fields.pop('url')
 
@@ -155,7 +155,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         """Serialize the FileProducingTaskResult for this ExportTaskRecord."""
         try:
             result = obj.result
-            serializer = ExportTaskResultSerializer(result, many=False, context=self.context)
+            serializer = FileProducingTaskResultSerializer(result, many=False, context=self.context)
             return serializer.data
         except FileProducingTaskResult.DoesNotExist:
             return None  # no result yet
@@ -744,11 +744,11 @@ class NotificationSerializer(serializers.ModelSerializer):
 
         response = {}
         if referenced_object_id > 0:
-            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+            response['type'] = str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
             response['id'] = referenced_object_id
 
         if isinstance(referenced_object, User):
-            response['details'] =   UserSerializer(referenced_object).data
+            response['details'] = UserSerializer(referenced_object).data
         if isinstance(referenced_object, Job):
             job = Job.objects.get(pk=obj.actor_object_id)
             response['details'] = ListJobSerializer(job,context={'request': request}).data

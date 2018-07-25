@@ -889,7 +889,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         job = instance.job
 
-
         perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],

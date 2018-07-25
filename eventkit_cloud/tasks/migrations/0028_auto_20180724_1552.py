@@ -10,28 +10,21 @@ from uuid import uuid4
 def move_run_hook_to_export_tasks(apps, *args):
     ExportTaskRecord = apps.get_model('tasks', 'ExportTaskRecord')
     DataProviderTaskRecord = apps.get_model('tasks', 'DataProviderTaskRecord')
-    FinalizeRunHookTaskRecord = apps.get_model('tasks', 'FinalizeRunHookTaskRecord')
-    finalize_run_hook_tasks = FinalizeRunHookTaskRecord.objects.all()
+    ExportRun = apps.get_model('tasks', 'ExportRun')
+    runs = ExportRun.objects.all()
 
-    for finalize_run_hook_task in finalize_run_hook_tasks:
-        run = finalize_run_hook_task.run
-        run_task_record = DataProviderTaskRecord.objects.get_or_create(run=run,
-                                                                name="run",
-                                                                slug="run",
-                                                                status="SUCCESS",
-                                                                display=False)
-
-        ExportTaskRecord.objects.create(name=finalize_run_hook_task.name,
-                                        celery_uid=finalize_run_hook_task.celery_uid,
-                                        export_provider_task=run_task_record,
-                                        status=finalize_run_hook_task.status,
-                                        pid=finalize_run_hook_task.pid,
-                                        worker=finalize_run_hook_task.worker,
-                                        cancel_user=finalize_run_hook_task.cancel_user,
-                                        result=finalize_run_hook_task.result,
-                                        created_at=finalize_run_hook_task.created_at,
-                                        updated_at=finalize_run_hook_task.updated_at)
-        finalize_run_hook_tasks.delete()
+    for run in runs:
+        if run.downloadable:
+            run_task_record, created = DataProviderTaskRecord.objects.get_or_create(run=run,
+                                                                    name="run",
+                                                                    slug="run",
+                                                                    status="SUCCESS",
+                                                                    display=False)
+            ExportTaskRecord.objects.create(name="Project File (.zip)",
+                                            celery_uid=uuid4(),
+                                            export_provider_task=run_task_record,
+                                            status=run.status,
+                                            result=run.downloadable)
 
 
 def move_export_tasks_to_run_hook(apps, *args):
@@ -40,16 +33,19 @@ def move_export_tasks_to_run_hook(apps, *args):
     data_provider_task_records = DataProviderTaskRecord.objects.filter(name='run')
 
     for data_provider_task_record in data_provider_task_records:
+        run = data_provider_task_record.run
         for task in data_provider_task_record.tasks.all():
-            FinalizeRunHookTaskRecord.objects.create(name=task.name,
-                                            celery_uid=task.celery_uid,
-                                            status=task.status,
-                                            pid=task.pid,
-                                            worker=task.worker,
-                                            cancel_user=task.cancel_user,
-                                            result=task.result,
-                                            created_at=task.created_at,
-                                            updated_at=task.updated_at)
+            FinalizeRunHookTaskRecord.objects.create(run=run,
+                                                     name=task.name,
+                                                     celery_uid=task.celery_uid or uuid4(),
+                                                     status=task.status,
+                                                     pid=task.pid,
+                                                     worker=task.worker,
+                                                     cancel_user=task.cancel_user,
+                                                     result=task.result,
+                                                     created_at=task.created_at,
+                                                     updated_at=task.updated_at)
+        data_provider_task_record.delete()
 
 
 class Migration(migrations.Migration):
