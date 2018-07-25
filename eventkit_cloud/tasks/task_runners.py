@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import importlib
-import json
 import logging
-import re
 
 from django.conf import settings
 from django.db import DatabaseError
+from .helpers import normalize_name
 
 from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import DataProviderTask
@@ -541,14 +540,6 @@ def create_format_task(task_format):
     module = importlib.import_module(module_path)
     CeleryExportTask = getattr(module, class_name)
     return CeleryExportTask
-
-
-def normalize_name(name):
-    # Remove all non-word characters
-    s = re.sub(r"[^\w\s]", '', name)
-    # Replace all whitespace with a single underscore
-    s = re.sub(r"\s+", '_', s)
-    return s.lower()
 
 
 def create_export_task_record(task_name=None, export_provider_task=None, worker=None, display=False):
