@@ -55,7 +55,6 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
     worker = models.CharField(max_length=50, editable=False, default='', null=True)
-    downloadable = models.OneToOneField(FileProducingTaskResult, null=True, on_delete=models.CASCADE, related_name='run')
     status = models.CharField(
         blank=True,
         max_length=20,

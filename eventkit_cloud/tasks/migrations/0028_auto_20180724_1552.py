@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
+from django.db import models
 from uuid import uuid4
 
 
@@ -14,17 +15,23 @@ def move_run_hook_to_export_tasks(apps, *args):
 
     for finalize_run_hook_task in finalize_run_hook_tasks:
         run = finalize_run_hook_task.run
-        run_task_record = DataProviderTaskRecord.objects.create(run=run,
+        run_task_record = DataProviderTaskRecord.objects.get_or_create(run=run,
                                                                 name="run",
                                                                 slug="run",
                                                                 status="SUCCESS",
                                                                 display=False)
 
-        export_task = ExportTaskRecord.objects.create(name=finalize_run_hook_task.name,
-                                                      export_provider_task=run_task_record)
-        for prop in dir(finalize_run_hook_task):
-            setattr(export_task, prop, getattr(finalize_run_hook_task, prop))
-        export_task.save()
+        ExportTaskRecord.objects.create(name=finalize_run_hook_task.name,
+                                        celery_uid=finalize_run_hook_task.celery_uid,
+                                        export_provider_task=run_task_record,
+                                        status=finalize_run_hook_task.status,
+                                        pid=finalize_run_hook_task.pid,
+                                        worker=finalize_run_hook_task.worker,
+                                        cancel_user=finalize_run_hook_task.cancel_user,
+                                        result=finalize_run_hook_task.result,
+                                        created_at=finalize_run_hook_task.created_at,
+                                        updated_at=finalize_run_hook_task.updated_at)
+        finalize_run_hook_tasks.delete()
 
 
 def move_export_tasks_to_run_hook(apps, *args):
@@ -34,17 +41,15 @@ def move_export_tasks_to_run_hook(apps, *args):
 
     for data_provider_task_record in data_provider_task_records:
         for task in data_provider_task_record.tasks.all():
-            run = data_provider_task_record.run
-
-            finalize_run_hook_task = FinalizeRunHookTaskRecord.objects.create(name=task.name,
-                                                                              run=run,
-                                                                              celery_uid=uuid4())
-            for prop in dir(task):
-                try:
-                    setattr(finalize_run_hook_task, prop, getattr(task, prop))
-                except (AttributeError, TypeError):
-                    continue
-            finalize_run_hook_task.save()
+            FinalizeRunHookTaskRecord.objects.create(name=task.name,
+                                            celery_uid=task.celery_uid,
+                                            status=task.status,
+                                            pid=task.pid,
+                                            worker=task.worker,
+                                            cancel_user=task.cancel_user,
+                                            result=task.result,
+                                            created_at=task.created_at,
+                                            updated_at=task.updated_at)
 
 
 class Migration(migrations.Migration):
@@ -54,6 +59,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterField(
+            model_name='finalizerunhooktaskrecord',
+            name='result',
+            field=models.OneToOneField(blank=True, null=True, on_delete=models.deletion.SET_NULL,
+                                       related_name='finalize_task', to='tasks.FileProducingTaskResult'),
+        ),
+        migrations.AlterField(
+            model_name='finalizerunhooktaskrecord',
+            name='run',
+            field=models.ForeignKey(null=True, on_delete=models.deletion.SET_NULL, to='tasks.ExportRun'),
+        ),
         migrations.RunPython(move_run_hook_to_export_tasks, reverse_code=move_export_tasks_to_run_hook),
         migrations.RemoveField(
             model_name='finalizerunhooktaskrecord',
@@ -69,5 +85,9 @@ class Migration(migrations.Migration):
         ),
         migrations.DeleteModel(
             name='FinalizeRunHookTaskRecord',
+        ),
+        migrations.RemoveField(
+            model_name='exportrun',
+            name='downloadable',
         ),
     ]
