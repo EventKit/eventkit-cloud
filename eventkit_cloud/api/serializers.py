@@ -118,7 +118,10 @@ class FileProducingTaskResultSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_size(obj):
-        return "{0:.3f} MB".format(obj.size)
+        size = ""
+        if obj.size:
+            size = "{0:.3f} MB".format(obj.size)
+        return size
 
 
 class ExportTaskExceptionSerializer(serializers.ModelSerializer):
