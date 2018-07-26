@@ -593,7 +593,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEquals('Cancel Export Provider Task', cancel_export_provider_task.name)
-        cancel_export_provider_task.run(export_provider_task_uid=export_provider_task.uid,
+        cancel_export_provider_task.run(data_provider_task_uid=export_provider_task.uid,
                                         canceling_username=user.username)
         mock_kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
                                                            queue="{0}.cancel".format(worker_name),
