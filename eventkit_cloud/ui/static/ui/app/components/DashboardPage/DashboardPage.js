@@ -449,8 +449,8 @@ export class DashboardPage extends React.Component {
                                             gridName="RecentlyViewed"
                                             index={index}
                                             showFeaturedFlag={false}
-                                            users={this.props.users}
-                                            groups={this.props.groups}
+                                            users={this.props.users.users}
+                                            groups={this.props.groups.groups}
                                         />
                                     );
                                 })}
@@ -524,8 +524,8 @@ export class DashboardPage extends React.Component {
                                         gridName="MyDataPacks"
                                         index={index}
                                         showFeaturedFlag={false}
-                                        users={this.props.users}
-                                        groups={this.props.groups}
+                                        users={this.props.users.users}
+                                        groups={this.props.groups.groups}
                                     />
                                 ))}
                             </DashboardSection>
