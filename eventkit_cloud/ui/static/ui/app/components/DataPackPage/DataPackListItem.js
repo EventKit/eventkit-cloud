@@ -187,135 +187,133 @@ export class DataPackListItem extends Component {
         }
 
         return (
-            <div>
-                <Card
-                    className="qa-DataPackListItem-Card"
-                    style={styles.card}
-                    key={this.props.run.uid}
-                    containerStyle={{ padding: '0px' }}
-                    onMouseEnter={onMouseEnter}
-                    onMouseLeave={onMouseLeave}
-                    onClick={onClick}
-                >
-                    <FeaturedFlag show={this.props.run.job.featured} />
-                    <CardTitle
-                        className="qa-DataPackListItem-CardTitle"
-                        titleColor="#4598bf"
-                        style={cardTitleStyle}
-                        titleStyle={{ fontSize: '21px', height: '36px' }}
-                        subtitleStyle={{ fontSize: '12px' }}
-                        title={
-                            <div>
-                                <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
-                                    <div className="qa-DataPackListItem-titleLink" style={styles.titleLink}>
-                                        <Link
-                                            to={`/status/${this.props.run.job.uid}`}
-                                            href={`/status/${this.props.run.job.uid}`}
-                                            style={{ color: 'inherit' }}
-                                        >
-                                            {this.props.run.job.name}
-                                        </Link>
-                                    </div>
-                                </div>
-                                <IconMenu
-                                    className="qa-DataPackListItem-IconMenu tour-datapack-options"
-                                    style={{ float: 'right', width: '24px', height: '100%' }}
-                                    iconButtonElement={
-                                        <IconButton
-                                            className="qa-DataPackListItem-IconButton"
-                                            style={{
-                                                padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle',
-                                            }}
-                                            iconStyle={{ color: '#4598bf' }}
-                                            onClick={this.handleMenuButtonClick}
-                                        >
-                                            <NavigationMoreVert className="qa-DataPackListItem-NavigationMoreVert" />
-                                        </IconButton>}
-                                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                    targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                >
-                                    <MenuItem
-                                        className="qa-DataPackListItem-MenuItem-statusDownloadLink"
-                                        style={{ fontSize: subtitleFontSize }}
-                                        primaryText="Go to Status & Download"
-                                        onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
-                                    />
-                                    <MenuItem
-                                        className="qa-DataPackListItem-MenuItem-viewDataSources"
-                                        style={{ fontSize: subtitleFontSize }}
-                                        primaryText="View Data Sources"
-                                        onClick={() => this.handleProviderOpen(runProviders)}
-                                    />
-
-                                    {this.props.adminPermission ?
-                                        [
-                                            <MenuItem
-                                                key="delete"
-                                                className="qa-DataPackListItem-MenuItem-deleteExport"
-                                                style={{ fontSize: subtitleFontSize }}
-                                                primaryText="Delete Export"
-                                                onClick={this.showDeleteDialog}
-                                            />,
-                                            <MenuItem
-                                                key="share"
-                                                className="qa-DataPackListItem-MenuItem-share"
-                                                style={{ fontSize: subtitleFontSize }}
-                                                primaryText="Share"
-                                                onClick={this.handleShareOpen}
-                                            />,
-                                        ]
-                                        :
-                                        null
-                                    }
-                                </IconMenu>
-                                <BaseDialog
-                                    className="qa-DataPackListItem-BaseDialog"
-                                    show={this.state.providerDialogOpen}
-                                    title="DATA SOURCES"
-                                    onClose={this.handleProviderClose}
-                                >
-                                    <List>{providersList}</List>
-                                </BaseDialog>
-                                <DeleteDataPackDialog
-                                    className="qa-DataPackListItem-DeleteDialog"
-                                    show={this.state.deleteDialogOpen}
-                                    onCancel={this.hideDeleteDialog}
-                                    onDelete={this.handleDelete}
-                                />
-                            </div>
-                        }
-                        subtitle={
-                            <div>
-                                <div className="qa-DataPackListItem-subtitle-event" style={styles.eventText}>
-                                    {`Event: ${this.props.run.job.event}`}
-                                </div>
-                                <div
-                                    className="qa-DataPackListItem-subtitle-date"
-                                    style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}
-                                >
-                                    {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
-                                    {this.props.run.user === this.props.user.data.user.username ?
-                                        <div style={styles.ownerLabel}>My DataPack</div>
-                                        :
-                                        <div style={styles.ownerLabel}>{this.props.run.user}</div>
-                                    }
-                                    <div
-                                        className="qa-DataPackListItem-subtitle-status tour-datapack-status"
-                                        style={{ display: 'inline-block', float: 'right' }}
+            <Card
+                className="qa-DataPackListItem-Card"
+                style={styles.card}
+                key={this.props.run.uid}
+                containerStyle={{ padding: '0px' }}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
+                onClick={onClick}
+            >
+                <FeaturedFlag show={this.props.run.job.featured} />
+                <CardTitle
+                    className="qa-DataPackListItem-CardTitle"
+                    titleColor="#4598bf"
+                    style={cardTitleStyle}
+                    titleStyle={{ fontSize: '21px', height: '36px' }}
+                    subtitleStyle={{ fontSize: '12px' }}
+                    title={
+                        <div>
+                            <div style={{ display: 'inline-block', width: 'calc(100% - 24px)', height: '36px' }}>
+                                <div className="qa-DataPackListItem-titleLink" style={styles.titleLink}>
+                                    <Link
+                                        to={`/status/${this.props.run.job.uid}`}
+                                        href={`/status/${this.props.run.job.uid}`}
+                                        style={{ color: 'inherit' }}
                                     >
-                                        {this.props.run.job.permissions.value !== 'PRIVATE' ?
-                                            <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
-                                            :
-
-                                            <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
-                                        }
-                                        {status}
-                                    </div>
+                                        {this.props.run.job.name}
+                                    </Link>
                                 </div>
                             </div>
-                        }
-                    />
-                </Card>
+                            <IconMenu
+                                className="qa-DataPackListItem-IconMenu tour-datapack-options"
+                                style={{ float: 'right', width: '24px', height: '100%' }}
+                                iconButtonElement={
+                                    <IconButton
+                                        className="qa-DataPackListItem-IconButton"
+                                        style={{
+                                            padding: '0px', width: '24px', height: '24px', verticalAlign: 'middle',
+                                        }}
+                                        iconStyle={{ color: '#4598bf' }}
+                                        onClick={this.handleMenuButtonClick}
+                                    >
+                                        <NavigationMoreVert className="qa-DataPackListItem-NavigationMoreVert" />
+                                    </IconButton>}
+                                anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                            >
+                                <MenuItem
+                                    className="qa-DataPackListItem-MenuItem-statusDownloadLink"
+                                    style={{ fontSize: subtitleFontSize }}
+                                    primaryText="Go to Status & Download"
+                                    onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
+                                />
+                                <MenuItem
+                                    className="qa-DataPackListItem-MenuItem-viewDataSources"
+                                    style={{ fontSize: subtitleFontSize }}
+                                    primaryText="View Data Sources"
+                                    onClick={() => this.handleProviderOpen(runProviders)}
+                                />
+
+                                {this.props.adminPermission ?
+                                    [
+                                        <MenuItem
+                                            key="delete"
+                                            className="qa-DataPackListItem-MenuItem-deleteExport"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Delete Export"
+                                            onClick={this.showDeleteDialog}
+                                        />,
+                                        <MenuItem
+                                            key="share"
+                                            className="qa-DataPackListItem-MenuItem-share"
+                                            style={{ fontSize: subtitleFontSize }}
+                                            primaryText="Share"
+                                            onClick={this.handleShareOpen}
+                                        />,
+                                    ]
+                                    :
+                                    null
+                                }
+                            </IconMenu>
+                            <BaseDialog
+                                className="qa-DataPackListItem-BaseDialog"
+                                show={this.state.providerDialogOpen}
+                                title="DATA SOURCES"
+                                onClose={this.handleProviderClose}
+                            >
+                                <List>{providersList}</List>
+                            </BaseDialog>
+                            <DeleteDataPackDialog
+                                className="qa-DataPackListItem-DeleteDialog"
+                                show={this.state.deleteDialogOpen}
+                                onCancel={this.hideDeleteDialog}
+                                onDelete={this.handleDelete}
+                            />
+                        </div>
+                    }
+                    subtitle={
+                        <div>
+                            <div className="qa-DataPackListItem-subtitle-event" style={styles.eventText}>
+                                {`Event: ${this.props.run.job.event}`}
+                            </div>
+                            <div
+                                className="qa-DataPackListItem-subtitle-date"
+                                style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}
+                            >
+                                {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
+                                {this.props.run.user === this.props.user.data.user.username ?
+                                    <div style={styles.ownerLabel}>My DataPack</div>
+                                    :
+                                    <div style={styles.ownerLabel}>{this.props.run.user}</div>
+                                }
+                                <div
+                                    className="qa-DataPackListItem-subtitle-status tour-datapack-status"
+                                    style={{ display: 'inline-block', float: 'right' }}
+                                >
+                                    {this.props.run.job.permissions.value !== 'PRIVATE' ?
+                                        <SocialGroup className="qa-DataPackListItem-SocialGroup" style={styles.publishedIcon} />
+                                        :
+
+                                        <Lock className="qa-DataPackListItem-Lock" style={styles.unpublishedIcon} />
+                                    }
+                                    {status}
+                                </div>
+                            </div>
+                        </div>
+                    }
+                />
                 <DataPackShareDialog
                     show={this.state.shareDialogOpen}
                     onClose={this.handleShareClose}
@@ -331,7 +329,7 @@ export class DataPackListItem extends Component {
                     canUpdateAdmin
                     warnPublic
                 />
-            </div>
+            </Card>
         );
     }
 }
