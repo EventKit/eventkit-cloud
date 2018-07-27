@@ -23,19 +23,13 @@ def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_
     if not client:
         client = get_s3_client()
 
-    asset_path = os.path.join(
-        settings.EXPORT_STAGING_ROOT,
-        run_uuid,
-        source_path
-    )
-
-    if not os.path.isfile(asset_path):
-        raise Exception("The file path given to upload to S3: {0}\n Does not exist.".format(asset_path))
+    if not os.path.isfile(source_path):
+        raise Exception("The file path given to upload to S3:\n {0} \n Does not exist.".format(source_path))
 
     asset_remote_path = os.path.join(run_uuid, destination_filename)
 
     from audit_logging.file_logging import logging_open
-    with logging_open(asset_path, 'rb', user_details=user_details) as asset_file:
+    with logging_open(source_path, 'rb', user_details=user_details) as asset_file:
         client.upload_fileobj(
             Bucket=settings.AWS_BUCKET_NAME,
             Key=asset_remote_path,
