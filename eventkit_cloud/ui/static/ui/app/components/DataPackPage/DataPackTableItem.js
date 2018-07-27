@@ -15,6 +15,7 @@ import { List, ListItem } from 'material-ui/List';
 import moment from 'moment';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
@@ -24,10 +25,14 @@ export class DataPackTableItem extends Component {
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
+            shareDialogOpen: false,
         };
     }
 
@@ -81,6 +86,20 @@ export class DataPackTableItem extends Component {
     handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
+    }
+
+    handleShareOpen() {
+        this.setState({ shareDialogOpen: true });
+    }
+
+    handleShareClose() {
+        this.setState({ shareDialogOpen: false });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.onRunShare(this.props.run.job.uid, permissions);
     }
 
     render() {
@@ -250,7 +269,7 @@ export class DataPackTableItem extends Component {
                                     className="qa-DataPackTableItem-MenuItem-share"
                                     style={{ fontSize: '12px' }}
                                     primaryText="Share"
-                                    onClick={() => this.props.openShare(this.props.run)}
+                                    onClick={this.handleShareOpen}
                                 />,
                             ]
                             :
@@ -272,6 +291,25 @@ export class DataPackTableItem extends Component {
                         onDelete={this.handleDelete}
                     />
                 </TableRowColumn>
+                {this.state.shareDialogOpen ?
+                    <DataPackShareDialog
+                        show
+                        onClose={this.handleShareClose}
+                        onSave={this.handleShareSave}
+                        user={this.props.user.data}
+                        groups={this.props.groups}
+                        members={this.props.users}
+                        permissions={this.props.run.job.permissions}
+                        groupsText="You may share view and edit rights with groups exclusively.
+                            Group sharing is managed separately from member sharing."
+                        membersText="You may share view and edit rights with members exclusively.
+                            Member sharing is managed separately from group sharing."
+                        canUpdateAdmin
+                        warnPublic
+                    />
+                    :
+                    null
+                }
             </TableRow>
         );
     }
@@ -281,9 +319,11 @@ DataPackTableItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    openShare: PropTypes.func.isRequired,
     adminPermissions: PropTypes.bool.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default DataPackTableItem;

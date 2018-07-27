@@ -13,6 +13,7 @@ import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
+import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackTableItem component', () => {
     const providers = [
@@ -96,7 +97,10 @@ describe('DataPackTableItem component', () => {
     const getProps = () => ({
         run,
         user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
         onRunDelete: () => {},
+        onRunShare: sinon.spy(),
         providers,
         adminPermissions: true,
     });
@@ -240,5 +244,35 @@ describe('DataPackTableItem component', () => {
         expect(hideSpy.calledOnce).toBe(true);
         expect(props.onRunDelete.calledOnce).toBe(true);
         expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
+    });
+
+    it('handleShareOpen should open share dialog', () => {
+        const wrapper = shallow(<DataPackTableItem {...getProps()} />);
+        const instance = wrapper.instance();
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+        instance.handleShareOpen();
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+    });
+
+    it('handleShareClose should close share dialog', () => {
+        const wrapper = shallow(<DataPackTableItem {...getProps()} />);
+        wrapper.setState({ shareDialogOpen: true });
+        const instance = wrapper.instance();
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        instance.handleShareClose();
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+    });
+
+    it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
+        const wrapper = shallow(<DataPackTableItem {...getProps()} />);
+        wrapper.setState({ shareDialogOpen: true });
+        const instance = wrapper.instance();
+        instance.handleShareClose = sinon.spy();
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        const permissions = { some: 'permissions' };
+        instance.handleShareSave(permissions);
+        expect(instance.handleShareClose.callCount).toBe(1);
+        expect(instance.props.onRunShare.callCount).toBe(1);
+        expect(instance.props.onRunShare.calledWithExactly(instance.props.run.job.uid, permissions));
     });
 });

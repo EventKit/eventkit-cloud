@@ -16,7 +16,6 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
@@ -47,9 +46,6 @@ export class DataPackPage extends React.Component {
         this.getView = this.getView.bind(this);
         this.callback = this.callback.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
-        this.handleShareOpen = this.handleShareOpen.bind(this);
-        this.handleShareClose = this.handleShareClose.bind(this);
-        this.handleShareSave = this.handleShareSave.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
@@ -77,8 +73,6 @@ export class DataPackPage extends React.Component {
             geojson_geometry: null,
             steps: [],
             isRunning: false,
-            shareOpen: false,
-            targetRun: null,
         };
 
         if (props.location.query.collection === 'myDataPacks') {
@@ -149,13 +143,14 @@ export class DataPackPage extends React.Component {
             runs: this.props.runsList.runs,
             user: this.props.user,
             onRunDelete: this.props.deleteRuns,
+            onRunShare: this.props.updateDataCartPermissions,
             range: this.props.runsList.range,
             handleLoadLess: this.loadLess,
             handleLoadMore: this.loadMore,
             loadLessDisabled: this.props.runsList.runs.length <= 12,
             loadMoreDisabled: !this.props.runsList.nextPage,
             providers: this.props.providers,
-            openShare: this.handleShareOpen,
+            users: this.props.users,
             groups: this.props.groups,
             ref: this.getViewRef,
         };
@@ -399,19 +394,7 @@ export class DataPackPage extends React.Component {
             this.joyrideAddSteps(steps);
         }
     }
-    handleShareOpen(run) {
-        this.setState({ shareOpen: true, targetRun: run });
-    }
 
-    handleShareClose() {
-        this.setState({ shareOpen: false, targetRun: null });
-    }
-
-    handleShareSave(perms) {
-        this.handleShareClose();
-        const permissions = { ...perms };
-        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
-    }
     render() {
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>;
@@ -605,25 +588,6 @@ export class DataPackPage extends React.Component {
                         </div>
                     }
                 </div>
-                {this.state.shareOpen && this.state.targetRun ?
-                    <DataPackShareDialog
-                        show
-                        onClose={this.handleShareClose}
-                        onSave={this.handleShareSave}
-                        user={this.props.user.data}
-                        groups={this.props.groups}
-                        members={this.props.users}
-                        permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively.
-                            Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively.
-                            Member sharing is managed separately from group sharing."
-                        canUpdateAdmin
-                        warnPublic
-                    />
-                    :
-                    null
-                }
             </div>
         );
     }
