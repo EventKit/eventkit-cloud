@@ -291,25 +291,21 @@ export class DataPackTableItem extends Component {
                         onDelete={this.handleDelete}
                     />
                 </TableRowColumn>
-                {this.state.shareDialogOpen ?
-                    <DataPackShareDialog
-                        show
-                        onClose={this.handleShareClose}
-                        onSave={this.handleShareSave}
-                        user={this.props.user.data}
-                        groups={this.props.groups}
-                        members={this.props.users}
-                        permissions={this.props.run.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively.
-                            Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively.
-                            Member sharing is managed separately from group sharing."
-                        canUpdateAdmin
-                        warnPublic
-                    />
-                    :
-                    null
-                }
+                <DataPackShareDialog
+                    show={this.state.shareDialogOpen}
+                    onClose={this.handleShareClose}
+                    onSave={this.handleShareSave}
+                    user={this.props.user.data}
+                    groups={this.props.groups}
+                    members={this.props.users}
+                    permissions={this.props.run.job.permissions}
+                    groupsText="You may share view and edit rights with groups exclusively.
+                        Group sharing is managed separately from member sharing."
+                    membersText="You may share view and edit rights with members exclusively.
+                        Member sharing is managed separately from group sharing."
+                    canUpdateAdmin
+                    warnPublic
+                />
             </TableRow>
         );
     }

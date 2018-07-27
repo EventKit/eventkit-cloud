@@ -191,7 +191,7 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(CardText).find('span').text()).toEqual('Test1 description');
         expect(wrapper.find(CardMedia)).toHaveLength(1);
         expect(wrapper.find(CardActions)).toHaveLength(1);
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
     it('should call initMap when component has mounted', () => {
@@ -382,31 +382,30 @@ describe('DataPackGridItem component', () => {
     });
 
     it('handleShareOpen should open share dialog', () => {
-        const wrapper = getWrapper(getProps());
+        const wrapper = shallow(<DataPackGridItem {...getProps()} />);
         const instance = wrapper.instance();
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         instance.handleShareOpen();
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
     });
 
     it('handleShareClose should close share dialog', () => {
-        const wrapper = getWrapper(getProps());
+        const wrapper = shallow(<DataPackGridItem {...getProps()} />);
         wrapper.setState({ shareDialogOpen: true });
         const instance = wrapper.instance();
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
         instance.handleShareClose();
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
-        const wrapper = getWrapper(getProps());
+        const wrapper = shallow(<DataPackGridItem {...getProps()} />);
         wrapper.setState({ shareDialogOpen: true });
         const instance = wrapper.instance();
-        instance.handleShareClose = sinon.spy();
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
         const permissions = { some: 'permissions' };
         instance.handleShareSave(permissions);
-        expect(instance.handleShareClose.callCount).toBe(1);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         expect(instance.props.onRunShare.callCount).toBe(1);
         expect(instance.props.onRunShare.calledWithExactly(instance.props.run.job.uid, permissions));
     });
