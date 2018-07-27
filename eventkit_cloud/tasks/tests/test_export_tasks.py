@@ -430,6 +430,7 @@ class TestExportTasks(ExportTaskBase):
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         stage_dir = settings.EXPORT_STAGING_ROOT
+        zipfile_path = os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')
         mock_os_walk.return_value = [(
             os.path.join(stage_dir, run_uid, 'osm-vector'),
             None,
@@ -439,14 +440,8 @@ class TestExportTasks(ExportTaskBase):
         fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
         zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
-        result = zip_file_task.run(run_uid=run_uid, include_files=[
-            os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')])
-
-        self.assertEqual(
-            zipfile.files,
-            {fname: os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg'),
-             }
-        )
+        result = zip_file_task.run(run_uid=run_uid, include_files=[zipfile_path])
+        self.assertEqual(zipfile.files,{fname: zipfile_path})
         run = ExportRun.objects.get(uid=run_uid)
         if getattr(settings, "USE_S3", False):
             self.assertEqual(
