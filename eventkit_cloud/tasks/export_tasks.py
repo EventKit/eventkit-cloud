@@ -16,6 +16,7 @@ from django.contrib.gis.geos import Polygon
 
 from django.core.cache import caches
 from django.core.mail import EmailMultiAlternatives
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, transaction
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
@@ -1459,7 +1460,12 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
 
     result = result or {}
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
-    canceling_user = User.objects.get(username=canceling_username)
+
+    # There might not be a canceling user...
+    try:
+        canceling_user = User.objects.get(username=canceling_username)
+    except ObjectDoesNotExist:
+        canceling_user = None
 
     export_tasks = data_provider_task_record.tasks.all()
 

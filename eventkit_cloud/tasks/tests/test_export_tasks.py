@@ -651,28 +651,29 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task.refresh_from_db()
         self.assertEqual(export_provider_task.status, TaskStates.COMPLETED.value)
 
-    @patch('os.kill')
+    @patch('eventkit_cloud.tasks.export_tasks.progressive_kill')
     @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
-    def test_kill_task(self, async_result, kill):
+    def test_kill_task(self, async_result, mock_progressive_kill):
         # Ensure that kill isn't called with default.
         task_pid = -1
+        celery_uid = uuid.uuid4()
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid=task_pid)
-        kill.assert_not_called()
+        kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
+        mock_progressive_kill.assert_not_called()
 
         # Ensure that kill is not called with an invalid state
         task_pid = 55
         async_result.return_value = Mock(state=celery.states.FAILURE)
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid=task_pid)
-        kill.assert_not_called()
+        kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
+        mock_progressive_kill.assert_not_called()
 
         # Ensure that kill is called with a valid pid
         task_pid = 55
         async_result.return_value = Mock(state=celery.states.STARTED)
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid=task_pid)
-        kill.assert_called_once_with(task_pid, signal.SIGTERM)
+        kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
+        mock_progressive_kill.assert_called_once_with(task_pid)
 
     @patch('eventkit_cloud.tasks.models.ExportRun')
     def test_wait_for_providers_task(self, mock_export_run):
