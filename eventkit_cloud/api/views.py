@@ -47,15 +47,12 @@ from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
-from .renderers import HOTExportApiRenderer
-from .renderers import PlainTextRenderer
+from .renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, CustomOpenAPIRenderer, update_schema
 from .validators import validate_bbox_params, validate_search_bbox
 from rest_framework.permissions import AllowAny
 from rest_framework.schemas import SchemaGenerator
-from rest_framework_swagger import renderers
-from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
-import coreapi
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -1789,64 +1786,73 @@ def get_job_ids_via_permissions(permissions):
 
     return master_job_list
 
+
 class SwaggerSchemaView(views.APIView):
+
     _ignore_model_permissions = True
     exclude_from_schema = True
     permission_classes = [AllowAny]
     renderer_classes = [
-        CoreJSONRenderer,
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer
+        # CoreJSONRenderer,
+        CustomOpenAPIRenderer,
+        CustomSwaggerUIRenderer
     ]
 
     def get(self, request):
-        generator = SchemaGenerator()
-        generator.get_schema(request=request)
-        links = generator.get_links(request=request)
-        # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('users', {}).get('partial_update')
-        if partial_update_link:
-            links['users']['partial_update'] = coreapi.Link(
-                url=partial_update_link.url,
-                action=partial_update_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='username',
-                        required=True,
-                        location='path')),
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=partial_update_link.description
+
+        try:
+            import coreapi
+            generator = SchemaGenerator()
+            generator.get_schema(request=request)
+            links = generator.get_links(request=request)
+            # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
+            partial_update_link = links.get('users', {}).get('partial_update')
+            if partial_update_link:
+                links['users']['partial_update'] = coreapi.Link(
+                    url=partial_update_link.url,
+                    action=partial_update_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='username',
+                            required=True,
+                            location='path')),
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=partial_update_link.description
+                )
+
+            members_link = links.get('users', {}).get('members')['create']
+            if members_link:
+                links['users']['members'] = coreapi.Link(
+                    url=members_link.url,
+                    action=members_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=members_link.description
+                )
+
+            schema = coreapi.Document(
+                title='EventKit API',
+                url='/api/docs',
+                content=links
             )
 
-        members_link = links.get('users', {}).get('members')['create']
-        if members_link:
-            links['users']['members'] = coreapi.Link(
-                url=members_link.url,
-                action=members_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=members_link.description
-            )
+            if not schema:
+                raise exceptions.ValidationError(
+                    'A schema could not be generated, please ensure that you are logged in.'
+                )
 
-        schema = coreapi.Document(
-            title='EventKit API',
-            url='/api/docs',
-            content=links
-        )
-
-        if not schema:
-            raise exceptions.ValidationError(
-                'A schema could not be generated, please ensure that you are logged in.'
-            )
-        return Response(schema)
+            return Response(schema)
+        except ImportError:
+            # CoreAPI couldn't be imported, falling back to static schema
+            return Response()
 
