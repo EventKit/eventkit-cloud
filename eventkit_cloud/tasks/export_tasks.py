@@ -148,7 +148,7 @@ class LockingTask(UserDetailsBase):
         super(LockingTask, self).after_return(*args, **kwargs)
 
 
-def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None,
+def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None,
                            size=None, direct=False):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
@@ -159,6 +159,9 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
         @return A url to reach filepath.
     """
 
+    staging_dir = get_run_staging_dir(run_uid)
+    if provider_slug:
+        staging_dir = get_provider_staging_dir(run_uid, provider_slug)
     run_download_dir = get_run_download_dir(run_uid)
     run_download_url = get_run_download_url(run_uid)
 
@@ -169,7 +172,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
     if getattr(settings, "USE_S3", False):
         download_url = s3.upload_to_s3(
             run_uid,
-            os.path.join(provider_slug, filename),
+            os.path.join(staging_dir, filename),
             download_filename,
         )
     else:
@@ -248,7 +251,6 @@ class ExportTask(LockingTask):
                                                       ext,
                                                       additional_descriptors=provider_slug)
 
-            export_run = ExportRun.objects.get(uid=run_uid)
             # construct the download url
             skip_copy = (task.name == 'OverpassQuery')
             download_url = make_file_downloadable(
@@ -959,6 +961,7 @@ class FinalizeRunHookTask(LockingTask):
                 provider_slug = os.path.split(file_path)[-2]
 
                 size = os.path.getsize(file_path)
+
                 download_url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
                                                       size=size)
 
@@ -1214,7 +1217,9 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
 
     if not adhoc:
         file_size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0
-        zipfile_url = make_file_downloadable(zip_st_filepath, run_uid, provider_slug=provider_slug, download_filename=zip_filename,
+
+        # Not adhoc means the zip for the run, which doesn't need a provider slug.
+        zipfile_url = make_file_downloadable(zip_st_filepath, run_uid, download_filename=zip_filename,
                                size=file_size)
         # Update Connection
         db.close_old_connections()
