@@ -20,6 +20,7 @@ import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
@@ -28,13 +29,21 @@ export class DataPackListItem extends Component {
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
-        this.iconMenuRef = this.iconMenuRef.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
             shareDialogOpen: false,
+            menuOpen: false,
         };
+    }
+
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
+    handleMenuChange(menuOpen) {
+        this.setState({ menuOpen });
     }
 
     handleProviderClose() {
@@ -42,22 +51,23 @@ export class DataPackListItem extends Component {
     }
 
     handleProviderOpen(runProviders) {
-        this.iconMenu.setState({ open: false });
         const providerDesc = {};
         runProviders.forEach((runProvider) => {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDesc[a.name] = a.service_description;
         });
-        this.setState({ providerDescs: providerDesc, providerDialogOpen: true });
-    }
-
-    handleMenuButtonClick(e) {
-        e.stopPropagation();
+        this.setState({
+            menuOpen: false,
+            providerDescs: providerDesc,
+            providerDialogOpen: true,
+        });
     }
 
     showDeleteDialog() {
-        this.iconMenu.setState({ open: false });
-        this.setState({ deleteDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            deleteDialogOpen: true,
+        });
     }
 
     hideDeleteDialog() {
@@ -69,13 +79,11 @@ export class DataPackListItem extends Component {
         this.props.onRunDelete(this.props.run.uid);
     }
 
-    iconMenuRef(element) {
-        this.iconMenu = element;
-    }
-
     handleShareOpen() {
-        this.iconMenu.setState({ open: false });
-        this.setState({ shareDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            shareDialogOpen: true,
+        });
     }
 
     handleShareClose() {
@@ -227,6 +235,7 @@ export class DataPackListItem extends Component {
                             <IconMenu
                                 className="qa-DataPackListItem-IconMenu tour-datapack-options"
                                 style={{ float: 'right', width: '24px', height: '100%' }}
+                                open={this.state.menuOpen}
                                 iconButtonElement={
                                     <IconButton
                                         className="qa-DataPackListItem-IconButton"
@@ -240,7 +249,7 @@ export class DataPackListItem extends Component {
                                     </IconButton>}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                ref={this.iconMenuRef}
+                                onRequestChange={this.handleMenuChange}
                             >
                                 <MenuItem
                                     className="qa-DataPackListItem-MenuItem-statusDownloadLink"

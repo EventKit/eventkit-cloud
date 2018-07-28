@@ -109,18 +109,14 @@ describe('DataPackListItem component', () => {
     });
 
     const getWrapperMount = (props) => {
-        const wrapper = mount(<DataPackListItem {...props} />, {
+        return mount(<DataPackListItem {...props} />, {
             context: { muiTheme },
             childContextTypes: { muiTheme: React.PropTypes.object },
         });
-        wrapper.instance().iconMenu = { setState: sinon.spy() };
-        return wrapper;
     };
 
     const getWrapperShallow = (props) => {
-        const wrapper = shallow(<DataPackListItem {...props} />);
-        wrapper.instance().iconMenu = { setState: sinon.spy() };
-        return wrapper;
+        return shallow(<DataPackListItem {...props} />);
     };
 
     it('should render a list item with complete and private icons and owner text', () => {
@@ -181,17 +177,15 @@ describe('DataPackListItem component', () => {
         stateSpy.restore();
     });
 
-    it('handleProviderOpen should immediately close menu then set provider dialog to open', () => {
+    it('handleProviderOpen should close menu then set provider dialog to open', () => {
         const props = getProps();
         const wrapper = getWrapperMount(props);
-        const instance = wrapper.instance();
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
-        instance.handleProviderOpen(props.run.provider_tasks);
-        expect(instance.iconMenu.setState.callCount).toBe(1);
-        expect(instance.iconMenu.setState.calledWithExactly({ open: false })).toBe(true);
+        wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({
+        expect(stateSpy.calledWithExactly({
+            menuOpen: false,
             providerDescs: {
                 'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
             },
@@ -200,17 +194,17 @@ describe('DataPackListItem component', () => {
         stateSpy.restore();
     });
 
-    it('showDeleteDialog should immediately close menu then set deleteDialogOpen to true', () => {
+    it('showDeleteDialog should close menu then set deleteDialogOpen to true', () => {
         const props = getProps();
         const wrapper = getWrapperMount(props);
-        const instance = wrapper.instance();
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
-        instance.showDeleteDialog();
-        expect(instance.iconMenu.setState.callCount).toBe(1);
-        expect(instance.iconMenu.setState.calledWithExactly({ open: false })).toBe(true);
+        wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ deleteDialogOpen: true }));
+        expect(stateSpy.calledWithExactly({
+            menuOpen: false,
+            deleteDialogOpen: true,
+        }));
         stateSpy.restore();
     });
 
@@ -238,34 +232,51 @@ describe('DataPackListItem component', () => {
         expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 
-    it('handleShareOpen should immediately close menu then open share dialog', () => {
+    it('handleShareOpen should close menu and open share dialog', () => {
         const wrapper = getWrapperShallow(getProps());
-        const instance = wrapper.instance();
-        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
-        instance.handleShareOpen();
-        expect(instance.iconMenu.setState.callCount).toBe(1);
-        expect(instance.iconMenu.setState.calledWithExactly({ open: false })).toBe(true);
-        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
+        const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
+        wrapper.instance().handleShareOpen();
+        expect(stateSpy.callCount).toBe(1);
+        expect(stateSpy.calledWithExactly({
+            menuOpen: false,
+            shareDialogOpen: true,
+        }));
+        stateSpy.restore();
     });
 
     it('handleShareClose should close share dialog', () => {
         const wrapper = getWrapperShallow(getProps());
-        wrapper.setState({ shareDialogOpen: true });
-        const instance = wrapper.instance();
-        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
-        instance.handleShareClose();
-        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
+        const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
+        wrapper.instance().handleShareClose();
+        expect(stateSpy.callCount).toBe(1);
+        expect(stateSpy.calledWithExactly({ shareDialogOpen: false }));
+        stateSpy.restore();
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
         const wrapper = getWrapperShallow(getProps());
-        wrapper.setState({ shareDialogOpen: true });
         const instance = wrapper.instance();
-        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
+        instance.handleShareClose = sinon.spy();
         const permissions = { some: 'permissions' };
         instance.handleShareSave(permissions);
-        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
+        expect(instance.handleShareClose.callCount).toBe(1);
         expect(instance.props.onRunShare.callCount).toBe(1);
         expect(instance.props.onRunShare.calledWithExactly(instance.props.run.job.uid, permissions));
+    });
+
+    it('should set menu open prop with menuOpen value', () => {
+        const wrapper = getWrapperMount(getProps());
+        expect(wrapper.state().menuOpen).toBe(false);
+        expect(wrapper.find(IconMenu).props().open).toBe(false);
+        wrapper.setState({ menuOpen: true });
+        expect(wrapper.find(IconMenu).props().open).toBe(true);
+    });
+
+    it('should set share dialog open prop with shareDialogOpen value', () => {
+        const wrapper = getWrapperMount(getProps());
+        expect(wrapper.state().shareDialogOpen).toBe(false);
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
+        wrapper.setState({ shareDialogOpen: true });
+        expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
     });
 });

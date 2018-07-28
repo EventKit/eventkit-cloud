@@ -38,6 +38,7 @@ export class DataPackGridItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
@@ -46,7 +47,6 @@ export class DataPackGridItem extends Component {
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
-        this.iconMenuRef = this.iconMenuRef.bind(this);
         this.state = {
             expanded: true,
             overflowTitle: false,
@@ -55,6 +55,7 @@ export class DataPackGridItem extends Component {
             providerDialogOpen: false,
             deleteDialogOpen: false,
             shareDialogOpen: false,
+            menuOpen: false,
         };
     }
 
@@ -138,12 +139,19 @@ export class DataPackGridItem extends Component {
         this.setState({ expanded });
     }
 
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
+    handleMenuChange(menuOpen) {
+        this.setState({ menuOpen });
+    }
+
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
 
     handleProviderOpen() {
-        this.iconMenu.setState({ open: false });
         const runProviders = this.props.run.provider_tasks
             .filter(provider => (provider.display !== false));
         const providerDescs = {};
@@ -151,7 +159,11 @@ export class DataPackGridItem extends Component {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDescs[a.name] = a.service_description;
         });
-        this.setState({ providerDescs, providerDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            providerDescs,
+            providerDialogOpen: true,
+        });
     }
 
     toggleExpanded() {
@@ -159,8 +171,10 @@ export class DataPackGridItem extends Component {
     }
 
     showDeleteDialog() {
-        this.iconMenu.setState({ open: false });
-        this.setState({ deleteDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            deleteDialogOpen: true
+        });
     }
 
     hideDeleteDialog() {
@@ -183,13 +197,11 @@ export class DataPackGridItem extends Component {
         });
     }
 
-    iconMenuRef(element) {
-        this.iconMenu = element;
-    }
-
     handleShareOpen() {
-        this.iconMenu.setState({ open: false });
-        this.setState({ shareDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            shareDialogOpen: true,
+        });
     }
 
     handleShareClose() {
@@ -397,16 +409,18 @@ export class DataPackGridItem extends Component {
                             <IconMenu
                                 className="qa-DataPackGridItem-IconMenu"
                                 style={{ float: 'right', width: '24px', height: '36px' }}
+                                open={this.state.menuOpen}
                                 iconButtonElement={
                                     <IconButton
                                         style={styles.iconMenu}
                                         iconStyle={{ color: '#4598bf' }}
+                                        onClick={this.handleMenuButtonClick}
                                     >
                                         <NavigationMoreVert />
                                     </IconButton>}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                ref={this.iconMenuRef}
+                                onRequestChange={this.handleMenuChange}
                             >
                                 <MenuItem
                                     className="qa-DataPackGridItem-MenuItem-showHideMap"
