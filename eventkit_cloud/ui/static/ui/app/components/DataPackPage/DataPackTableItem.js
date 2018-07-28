@@ -28,6 +28,7 @@ export class DataPackTableItem extends Component {
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
+        this.iconMenuRef = this.iconMenuRef.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
@@ -67,6 +68,7 @@ export class DataPackTableItem extends Component {
     }
 
     handleProviderOpen(runProviders) {
+        this.iconMenu.setState({ open: false });
         const providerDesc = {};
         runProviders.forEach((runProvider) => {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
@@ -76,6 +78,7 @@ export class DataPackTableItem extends Component {
     }
 
     showDeleteDialog() {
+        this.iconMenu.setState({ open: false });
         this.setState({ deleteDialogOpen: true });
     }
 
@@ -88,7 +91,12 @@ export class DataPackTableItem extends Component {
         this.props.onRunDelete(this.props.run.uid);
     }
 
+    iconMenuRef(element) {
+        this.iconMenu = element;
+    }
+
     handleShareOpen() {
+        this.iconMenu.setState({ open: false });
         this.setState({ shareDialogOpen: true });
     }
 
@@ -242,6 +250,7 @@ export class DataPackTableItem extends Component {
                             </IconButton>}
                         anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        ref={this.iconMenuRef}
                     >
                         <MenuItem
                             className="qa-DataPackTableItem-MenuItem-statusDownloadLink"

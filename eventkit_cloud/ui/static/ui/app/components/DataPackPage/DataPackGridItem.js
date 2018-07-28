@@ -46,6 +46,7 @@ export class DataPackGridItem extends Component {
         this.handleShareOpen = this.handleShareOpen.bind(this);
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
+        this.iconMenuRef = this.iconMenuRef.bind(this);
         this.state = {
             expanded: true,
             overflowTitle: false,
@@ -142,6 +143,7 @@ export class DataPackGridItem extends Component {
     }
 
     handleProviderOpen() {
+        this.iconMenu.setState({ open: false });
         const runProviders = this.props.run.provider_tasks
             .filter(provider => (provider.display !== false));
         const providerDescs = {};
@@ -157,6 +159,7 @@ export class DataPackGridItem extends Component {
     }
 
     showDeleteDialog() {
+        this.iconMenu.setState({ open: false });
         this.setState({ deleteDialogOpen: true });
     }
 
@@ -180,7 +183,12 @@ export class DataPackGridItem extends Component {
         });
     }
 
+    iconMenuRef(element) {
+        this.iconMenu = element;
+    }
+
     handleShareOpen() {
+        this.iconMenu.setState({ open: false });
         this.setState({ shareDialogOpen: true });
     }
 
@@ -398,6 +406,7 @@ export class DataPackGridItem extends Component {
                                     </IconButton>}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                ref={this.iconMenuRef}
                             >
                                 <MenuItem
                                     className="qa-DataPackGridItem-MenuItem-showHideMap"

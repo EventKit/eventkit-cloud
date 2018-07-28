@@ -105,12 +105,24 @@ describe('DataPackTableItem component', () => {
         adminPermissions: true,
     });
 
-    it('should render a table row with the correct table columns', () => {
-        const props = getProps();
+    const getWrapperMount = (props) => {
         const wrapper = mount(<DataPackTableItem {...props} />, {
             context: { muiTheme },
             childContextTypes: { muiTheme: React.PropTypes.object },
         });
+        wrapper.instance().iconMenu = { setState: sinon.spy() };
+        return wrapper;
+    };
+
+    const getWrapperShallow = (props) => {
+        const wrapper = shallow(<DataPackTableItem {...props} />);
+        wrapper.instance().iconMenu = { setState: sinon.spy() };
+        return wrapper;
+    };
+
+    it('should render a table row with the correct table columns', () => {
+        const props = getProps();
+        const wrapper = getWrapperMount(props);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn)).toHaveLength(8);
         expect(wrapper.find(Link)).toHaveLength(1);
@@ -129,10 +141,7 @@ describe('DataPackTableItem component', () => {
 
     it('should render differently when props change', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackTableItem {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        });
+        const wrapper = getWrapperMount(props);
         props.run.user = 'Not Admin';
         props.run.job.permissions.value = 'PUBLIC';
         props.run.status = 'INCOMPLETE';
@@ -148,7 +157,7 @@ describe('DataPackTableItem component', () => {
     it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user', () => {
         const props = getProps();
         props.run.user = 'admin';
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
         let text = wrapper.instance().getOwnerText(run, 'not the admin user');
         expect(text).toEqual('admin');
         text = wrapper.instance().getOwnerText(run, 'admin');
@@ -157,7 +166,7 @@ describe('DataPackTableItem component', () => {
 
     it('getPermissionsIcon should return either Group or Person', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
         let icon = wrapper.instance().getPermissionsIcon('SHARED');
         expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{ color: 'bcdfbb' }} />);
         icon = wrapper.instance().getPermissionsIcon('PRIVATE');
@@ -166,7 +175,7 @@ describe('DataPackTableItem component', () => {
 
     it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
         let icon = wrapper.instance().getStatusIcon('SUBMITTED');
         expect(icon).toEqual(<NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: '#f4d225' }} />);
         icon = wrapper.instance().getStatusIcon('INCOMPLETE');
@@ -187,7 +196,7 @@ describe('DataPackTableItem component', () => {
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
@@ -196,12 +205,15 @@ describe('DataPackTableItem component', () => {
         stateSpy.restore();
     });
 
-    it('handleProviderOpen should set provider dialog to open', () => {
+    it('handleProviderOpen should immediately close menu then set provider dialog to open', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
+        const instance = wrapper.instance();
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
-        wrapper.instance().handleProviderOpen(props.run.provider_tasks);
+        instance.handleProviderOpen(props.run.provider_tasks);
+        expect(instance.iconMenu.setState.callCount).toBe(1);
+        expect(instance.iconMenu.setState.calledWithExactly({ open: false })).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({
             providerDescs: {
@@ -212,12 +224,15 @@ describe('DataPackTableItem component', () => {
         stateSpy.restore();
     });
 
-    it('showDeleteDialog should set deleteDialogOpen to true', () => {
+    it('showDeleteDialog should immediately close menu then set deleteDialogOpen to true', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
+        const instance = wrapper.instance();
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
-        wrapper.instance().showDeleteDialog();
+        instance.showDeleteDialog();
+        expect(instance.iconMenu.setState.callCount).toBe(1);
+        expect(instance.iconMenu.setState.calledWithExactly({ open: false })).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ deleteDialogOpen: true }));
         stateSpy.restore();
@@ -225,7 +240,7 @@ describe('DataPackTableItem component', () => {
 
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
@@ -238,7 +253,7 @@ describe('DataPackTableItem component', () => {
         const props = getProps();
         props.onRunDelete = sinon.spy();
         const hideSpy = sinon.spy(DataPackTableItem.prototype, 'hideDeleteDialog');
-        const wrapper = shallow(<DataPackTableItem {...props} />);
+        const wrapper = getWrapperShallow(props);
         expect(props.onRunDelete.called).toBe(false);
         expect(hideSpy.called).toBe(false);
         wrapper.instance().handleDelete();
@@ -247,16 +262,18 @@ describe('DataPackTableItem component', () => {
         expect(props.onRunDelete.calledWith(props.run.uid)).toBe(true);
     });
 
-    it('handleShareOpen should open share dialog', () => {
-        const wrapper = shallow(<DataPackTableItem {...getProps()} />);
+    it('handleShareOpen should immediately close menu then open share dialog', () => {
+        const wrapper = getWrapperShallow(getProps());
         const instance = wrapper.instance();
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         instance.handleShareOpen();
+        expect(instance.iconMenu.setState.callCount).toBe(1);
+        expect(instance.iconMenu.setState.calledWithExactly({ open: false })).toBe(true);
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
     });
 
     it('handleShareClose should close share dialog', () => {
-        const wrapper = shallow(<DataPackTableItem {...getProps()} />);
+        const wrapper = getWrapperShallow(getProps());
         wrapper.setState({ shareDialogOpen: true });
         const instance = wrapper.instance();
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
@@ -265,7 +282,7 @@ describe('DataPackTableItem component', () => {
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
-        const wrapper = shallow(<DataPackTableItem {...getProps()} />);
+        const wrapper = getWrapperShallow(getProps());
         wrapper.setState({ shareDialogOpen: true });
         const instance = wrapper.instance();
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(true);
