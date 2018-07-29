@@ -845,105 +845,10 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 @app.task(name='Project File (.zip)', base=FormatTask)
 def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *args, **kwargs):
     """
-
-<<<<<<< HEAD
     :param result: The celery task result value, it should be a dict with the current state.
     :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
     :param run_uid: A run to be zipped (this or data_provider_task_uid must be passed).
     :return: The run files, or a single zip file if data_provider_task_uid is passed.
-=======
-    def __call__(self, new_zip_filepaths=None, run_uid=None):
-        """ Override execution so tasks derived from this aren't responsible for concatenating files
-            from previous tasks to their return value.
-        """
-        if new_zip_filepaths is None:
-            new_zip_filepaths = []
-
-        if not isinstance(new_zip_filepaths, Sequence):
-            msg = 'new_zip_filepaths is not a sequence, got: {}'.format(new_zip_filepaths)
-            logger.error(msg)
-            raise Exception(msg)
-
-        self.run_uid = run_uid
-        if run_uid is None:
-            raise ValueError('"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask')
-
-        self.record_task_state()
-
-        # Ensure that the staging and download directories for the run this task is associated with exist
-        try:
-            os.makedirs(get_run_staging_dir(run_uid))
-        except OSError:
-            pass  # Already exists
-
-        try:
-            os.makedirs(get_run_download_dir(run_uid))
-        except OSError:
-            pass  # Already exists
-
-        task_files = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths, run_uid=run_uid)
-        # task_files could be None
-        task_files = task_files or []
-
-        self.save_files_produced(task_files, run_uid)
-        new_zip_filepaths.extend(task_files)
-        return new_zip_filepaths
-
-    def save_files_produced(self, new_files, run_uid):
-        if len(new_files) > 0:
-            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord, ExportRun
-
-            for file_path in new_files:
-                filename = os.path.split(file_path)[-1]
-                provider_slug = os.path.split(file_path)[-2]
-
-                size = os.path.getsize(file_path)
-
-                download_url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
-                                                      size=size)
-
-                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=download_url)
-                task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
-                task_record.result = result
-                task_record.save()
-
-    def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
-        """ When testing-only param testing_run_uid is set, this value will be used if self.run_uid is not set
-        """
-        run_uid = getattr(self, 'run_uid', None) or testing_run_uid
-        if run_uid is None:
-            msg = 'ExportRun uid is {}, unable to record task state.'.format(self.run_uid)
-            logger.error(msg)
-            raise TypeError(msg)
-
-        from eventkit_cloud.tasks.models import FinalizeRunHookTaskRecord
-        from eventkit_cloud.tasks.models import ExportRun
-
-        export_run = ExportRun.objects.get(uid=run_uid)
-        worker_name = self.request.hostname
-        status = AsyncResult(self.request.id).status
-        tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
-            run=export_run, celery_uid=self.request.id, name=self.name,
-            status=status, pid=os.getpid(), worker=worker_name
-        )
-
-        if started_at or finished_at:
-            if started_at:
-                tr.started_at = started_at
-            if finished_at:
-                tr.finished_at = finished_at
-            tr.save()
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        self.record_task_state(finished_at=timezone.now())
-        super(FinalizeRunHookTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
-
-
-@app.task(name='Do Some Example Thing', base=FinalizeRunHookTask, bind=True)
-def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *args, **kwargs):
-    """ Just a placeholder hook task that doesn't do anything except create a new file to collect from the chain
-        It's included in.
->>>>>>> master
     """
     from eventkit_cloud.tasks.models import DataProviderTaskRecord
     from eventkit_cloud.tasks.task_runners import normalize_name
@@ -1131,34 +1036,8 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filepath,
                 arcname=filename
             )
-
-<<<<<<< HEAD
+            
     return file_path
-=======
-    # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
-    # be handled as an ExportTaskRecord.
-
-    if not adhoc:
-        file_size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0
-
-        # Not adhoc means the zip for the run, which doesn't need a provider slug.
-        zipfile_url = make_file_downloadable(zip_st_filepath, run_uid, download_filename=zip_filename,
-                               size=file_size)
-        # Update Connection
-        db.close_old_connections()
-        run.refresh_from_db()
-
-        downloadable = FileProducingTaskResult.objects.create(size=file_size, download_url=zipfile_url)
-        run.downloadable = downloadable
-
-        try:
-            run.save()
-        except Exception as e:
-            logger.error(e)
-
-    result = {'result': zip_st_filepath}
-    return result
->>>>>>> master
 
 
 class FinalizeRunBase(LockingTask):
