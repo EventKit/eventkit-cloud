@@ -10,6 +10,7 @@ from ..helpers import cd, file_to_geojson, \
 from eventkit_cloud.tasks.helpers import get_file_paths, get_last_update, get_metadata_url, get_osm_last_update
 from eventkit_cloud.tasks import get_style_files, get_human_readable_metadata_document
 
+
 logger = logging.getLogger(__name__)
 
 

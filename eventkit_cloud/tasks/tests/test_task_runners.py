@@ -16,16 +16,15 @@ from ..task_runners import (
     ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
 )
 from ..task_factory import create_run
-from ...core.models import GroupPermission,JobPermission
+from ...core.models import GroupPermission, JobPermission
 
 logger = logging.getLogger(__name__)
 
 
 class TestExportTaskRunner(TestCase):
-
     fixtures = ('insert_provider_types', 'osm_provider', 'test_providers')
 
-    def setUp(self,):
+    def setUp(self, ):
         self.path = os.path.dirname(os.path.realpath(__file__))
         group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
         with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
@@ -33,11 +32,10 @@ class TestExportTaskRunner(TestCase):
             self.user = User.objects.create(username='demo', email='demo@demo.com', password='demo')
         bbox = Polygon.from_bbox((-10.85, 6.25, -10.62, 6.40))
         the_geom = GEOSGeometry(bbox, srid=4326)
-        
-        # This should be loaded by migrations, but fails when using pytest.
+
         self.shp_task, _ = ExportFormat.objects.get_or_create(name='ESRI Shapefile Format',
-                                                           description='Esri Shapefile (OSM Schema)',
-                                                           slug='shp')
+                                                              description='Esri Shapefile (OSM Schema)',
+                                                              slug='shp')
 
         self.job = Job.objects.create(name='TestJob', description='Test description', user=self.user,
                                       the_geom=the_geom)
@@ -45,16 +43,15 @@ class TestExportTaskRunner(TestCase):
         self.job.region = self.region
         self.job.save()
 
-        create_run(job_uid=self.job.uid)
-
     @patch('eventkit_cloud.tasks.task_runners.chain')
     def test_run_osm_task(self, mock_chain):
         provider = DataProvider.objects.get(slug='osm')
         provider_task = DataProviderTask.objects.create(provider=provider)
+        provider_task.formats.add(self.shp_task)
+        provider_task.save()
         self.job.provider_tasks.add(provider_task)
+        create_run(job_uid=self.job.uid)
 
-        # celery chain mock
-        self.job.provider_tasks.first().formats.add(self.shp_task)
         runner = ExportOSMTaskRunner()
 
         # Even though code using pipes seems to be supported here it is throwing an error.
@@ -68,7 +65,6 @@ class TestExportTaskRunner(TestCase):
         tasks = run.provider_tasks.first().tasks.all()
         self.assertIsNotNone(tasks)
         self.assertEquals(len(tasks), 2)
-
 
     @patch('eventkit_cloud.tasks.task_runners.chain')
     @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
@@ -84,6 +80,7 @@ class TestExportTaskRunner(TestCase):
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.first().formats.add(self.shp_task)
+        create_run(job_uid=self.job.uid)
         runner = ExportExternalRasterServiceTaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
@@ -106,25 +103,24 @@ class TestExportTaskRunner(TestCase):
         expected_result = MagicMock(display=False)
         mock_export_task.objects.create.return_value = expected_result
         task_result = create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
-                                         worker=worker, display=False)
+                                                worker=worker, display=False)
 
         self.assertEquals(task_result, expected_result)
         mock_export_task.objects.create.assert_called_with(export_provider_task=export_provider_task_name,
-                                            status=TaskStates.PENDING.value,
-                                            name=task_name, worker=worker, display=False)
-
+                                                           status=TaskStates.PENDING.value,
+                                                           name=task_name, worker=worker, display=False)
 
         expected_result = MagicMock(display=True)
         mock_export_task.objects.create.return_value = expected_result
 
         task_result = create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
-                                         worker=worker, display=True)
+                                                worker=worker, display=True)
         self.assertEquals(task_result, expected_result)
-        mock_export_task.objects.create.assert_called_with(export_provider_task=export_provider_task_name, status=TaskStates.PENDING.value,
-                                                name=task_name, worker=worker, display=True)
-
+        mock_export_task.objects.create.assert_called_with(export_provider_task=export_provider_task_name,
+                                                           status=TaskStates.PENDING.value,
+                                                           name=task_name, worker=worker, display=True)
 
         mock_export_task.objects.create.side_effect = DatabaseError("SomeError")
         with self.assertRaises(DatabaseError):
             create_export_task_record(task_name=task_name, export_provider_task=export_provider_task_name,
-                               worker=worker, display=True)
+                                      worker=worker, display=True)
