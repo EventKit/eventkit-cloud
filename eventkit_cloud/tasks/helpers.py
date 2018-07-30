@@ -1,15 +1,20 @@
-import os, re
+import os
+import re
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q
 from enum import Enum
 from numpy import linspace
-
 from eventkit_cloud.ui.helpers import logger, cd
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
+import logging
+import errno
+from time import sleep
+import signal
 
+logger = logging.getLogger()
 
 class Directory(Enum):
     ARCGIS = 'arcgis'
@@ -305,3 +310,20 @@ def get_osm_last_update(url, slug=None):
         logger.warning(e)
         logger.warning("Could not get the timestamp from the overpass url.")
         return None
+def progressive_kill(pid):
+    """
+    Tries to kill first with TERM and then with KILL.
+    :param pid: The process ID to kill
+    :return: None.
+    """
+    try:
+        logger.info("Trying to kill pid {0} with SIGTERM.".format(pid))
+        os.kill(pid, signal.SIGTERM)
+        sleep(5)
+
+        logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
+        os.kill(pid, signal.SIGKILL)
+        sleep(1)
+
+    except OSError:
+        logger.info("{0} PID no longer exists.".format(pid))

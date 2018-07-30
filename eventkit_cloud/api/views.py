@@ -1138,8 +1138,7 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         if data_provider_task_record.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task(export_provider_task_uid=data_provider_task_record.uid,
-                                    canceling_username=request.user.username)
+        cancel_export_provider_task.run(data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
