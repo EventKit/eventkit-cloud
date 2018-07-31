@@ -26,10 +26,10 @@ class TestSupport(TestCase):
         from ..arcgis.create_mxd import create_mxd
 
         with patch('__builtin__.open') as mock_open, patch(
-                'eventkit_cloud.ui.arcgis.create_mxd.shutil') as mock_shutil, patch(
-            'eventkit_cloud.ui.arcgis.create_mxd.get_mxd_template') as mock_get_mxd_template, patch(
-            'eventkit_cloud.ui.arcgis.create_mxd.get_version') as mock_get_version, patch(
-            'eventkit_cloud.ui.arcgis.create_mxd.update_mxd_from_metadata') as mock_update_from_metadata:
+                'eventkit_cloud.tasks.arcgis.create_mxd.shutil') as mock_shutil, patch(
+            'eventkit_cloud.tasks.arcgis.create_mxd.get_mxd_template') as mock_get_mxd_template, patch(
+            'eventkit_cloud.tasks.arcgis.create_mxd.get_version') as mock_get_version, patch(
+            'eventkit_cloud.tasks.arcgis.create_mxd.update_mxd_from_metadata') as mock_update_from_metadata:
             test_mxd = "test.mxd"
             mxd_contents = "Test data."
             test_metadata = {'metadata_keys': 'metadata_values'}
@@ -45,8 +45,8 @@ class TestSupport(TestCase):
     def test_create_mxd_process(self):
         from ..arcgis.create_mxd import create_mxd_process
 
-        with patch('eventkit_cloud.ui.arcgis.create_mxd.create_mxd') as mock_create_mxd, patch(
-                'eventkit_cloud.ui.arcgis.create_mxd.Pool') as mock_pool:
+        with patch('eventkit_cloud.tasks.arcgis.create_mxd.create_mxd') as mock_create_mxd, patch(
+                'eventkit_cloud.tasks.arcgis.create_mxd.Pool') as mock_pool:
             example_mxd = "value"
             example_metadata = {"some": "data"}
             result = Mock()
@@ -72,14 +72,14 @@ class TestSupport(TestCase):
         layer_type = "raster"
         arc_version = "10.5"
 
-        with patch('eventkit_cloud.ui.arcgis.create_mxd.os') as mock_os:
+        with patch('eventkit_cloud.tasks.arcgis.create_mxd.os') as mock_os:
             mock_os.path.isfile.return_value = True
             mock_os.path.abspath.return_value = example_layer
             returned_layer = get_layer_file(layer_type, arc_version)
             self.assertEqual(example_layer, returned_layer)
 
 
-        with patch('eventkit_cloud.ui.arcgis.create_mxd.os') as mock_os:
+        with patch('eventkit_cloud.tasks.arcgis.create_mxd.os') as mock_os:
             mock_os.path.isfile.return_value = False
             mock_os.path.abspath.return_value = example_layer
             self.assertIsNone(get_layer_file(layer_type, arc_version))

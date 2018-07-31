@@ -16,7 +16,6 @@ from celery import chain
 from eventkit_cloud.tasks.export_tasks import (finalize_run_task, create_zip_task, output_selection_geojson_task)
 
 from ..jobs.models import Job
-from eventkit_cloud.tasks import get_style_files
 from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
                                   wait_for_providers_task, TaskStates)
 

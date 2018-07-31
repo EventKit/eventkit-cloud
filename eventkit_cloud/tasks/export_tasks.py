@@ -18,6 +18,7 @@ from django.core.cache import caches
 from django.core.mail import EmailMultiAlternatives
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, transaction
+from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
 from celery import signature
@@ -36,6 +37,7 @@ from ..utils import (
 from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
 from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
+
 
 from .exceptions import CancelException, DeleteException
 from .helpers import normalize_name, get_archive_data_path, get_run_download_url, get_download_filename, get_run_staging_dir, \
@@ -858,7 +860,6 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
     :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
     from eventkit_cloud.tasks.models import DataProviderTaskRecord
-    from eventkit_cloud.tasks.task_runners import normalize_name
 
     if not result:
         result = {}
@@ -952,8 +953,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None,
     result_status = parse_result(result, 'status')
 
     with transaction.atomic():
-
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
         if TaskStates[result_status] == TaskStates.CANCELED:
             export_provider_task.status = TaskStates.CANCELED.value
         elif TaskStates[result_status] != TaskStates.SUCCESS:
@@ -975,7 +975,6 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
     :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
     :return: The zipfile path.
     """
-
 
     if not include_files:
         logger.error("zip_file_task called with no include_files.")
@@ -1044,9 +1043,163 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filepath,
                 arcname=filename
             )
-            
+
     return file_path
-    
+
+
+class FinalizeRunBase(UserDetailsBase):
+    name = 'Finalize Export Run'
+
+    def run(self, result=None, run_uid=None, stage_dir=None):
+        """
+         Finalizes export run.
+
+        Cleans up staging directory.
+        Updates run with finish time.
+        Emails user notification.
+        """
+        """
+        """
+        from eventkit_cloud.tasks.models import ExportRun
+        result = result or {}
+
+        run = ExportRun.objects.get(uid=run_uid)
+        if run.job.include_zipfile and not run.zipfile_url:
+            logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
+        run.status = TaskStates.COMPLETED.value
+        notification_level = NotificationLevel.SUCCESS.value
+        verb = NotificationVerb.RUN_COMPLETED.value
+        provider_tasks = run.provider_tasks.all()
+
+        # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
+        #    this waits until all provider tasks have finished before continuing.
+        if any(getattr(TaskStates, task.status, None) == TaskStates.PENDING for task in provider_tasks):
+            finalize_run_task.retry(
+                result=result, run_uid=run_uid, stage_dir=stage_dir, interval_start=4, interval_max=10
+            )
+
+        # mark run as incomplete if any tasks fail
+        if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
+            run.status = TaskStates.INCOMPLETE.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_FAILED.value
+        if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
+            run.status = TaskStates.CANCELED.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_CANCELED.value
+        finished = timezone.now()
+        run.finished_at = finished
+        run.save()
+
+        # sendnotification to user via django notifications
+        sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
+
+        # send notification email to user
+        site_url = settings.SITE_URL.rstrip('/')
+        url = '{0}/exports/{1}'.format(site_url, run.job.uid)
+        addr = run.user.email
+        if run.status == TaskStates.CANCELED.value:
+            subject = "Your Eventkit Data Pack was CANCELED."
+        else:
+            subject = "Your Eventkit Data Pack is ready."
+        to = [addr]
+        from_email = getattr(
+            settings,
+            'DEFAULT_FROM_EMAIL',
+            'Eventkit Team <eventkit.team@gmail.com>'
+        )
+        ctx = {'url': url, 'status': run.status}
+
+        text = get_template('email/email.txt').render(ctx)
+        html = get_template('email/email.html').render(ctx)
+        try:
+            msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+            msg.attach_alternative(html, "text/html")
+            msg.send()
+        except Exception as e:
+            logger.error("Encountered an error when sending status email: {}".format(e))
+
+        result['stage_dir'] = stage_dir
+        return result
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        super(FinalizeRunBase, self).after_return(status, retval, task_id, args, kwargs, einfo)
+        stage_dir = None if retval is None else retval.get('stage_dir')
+        try:
+            if stage_dir and os.path.isdir(stage_dir):
+                if not os.getenv('KEEP_STAGE', False):
+                    shutil.rmtree(stage_dir)
+        except IOError or OSError:
+            logger.error('Error removing {0} during export finalize'.format(stage_dir))
+
+
+# There's a celery bug with callbacks that use bind=True.  If altering this task do not use Bind.
+# @see: https://github.com/celery/celery/issues/3723
+@app.task(name='Finalize Run Task', base=FinalizeRunBase)
+def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None, *args, **kwargs):
+    """
+             Finalizes export run.
+
+            Cleans up staging directory.
+            Updates run with finish time.
+            Emails user notification.
+            """
+    from eventkit_cloud.tasks.models import ExportRun
+    result = result or {}
+
+    run = ExportRun.objects.get(uid=run_uid)
+    if run.job.include_zipfile and not run.zipfile_url:
+        logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
+    run.status = TaskStates.COMPLETED.value
+    verb = NotificationVerb.RUN_COMPLETED.value
+    notification_level = NotificationLevel.SUCCESS.value
+    provider_tasks = run.provider_tasks.all()
+
+    # mark run as incomplete if any tasks fail
+    if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
+        run.status = TaskStates.INCOMPLETE.value
+        notification_level = NotificationLevel.WARNING.value
+        verb = NotificationVerb.RUN_FAILED.value
+    if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
+        run.status = TaskStates.CANCELED.value
+        verb = NotificationVerb.RUN_CANCELED.value
+        notification_level = NotificationLevel.WARNING.value
+    finished = timezone.now()
+    run.finished_at = finished
+    run.save()
+
+    #sendnotification to user via django notifications
+
+    sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
+
+    # send notification email to user
+    site_url = settings.SITE_URL.rstrip('/')
+    url = '{0}/exports/{1}'.format(site_url, run.job.uid)
+    addr = run.user.email
+    if run.status == TaskStates.CANCELED.value:
+        subject = "Your Eventkit Data Pack was CANCELED."
+    else:
+        subject = "Your Eventkit Data Pack is ready."
+    to = [addr]
+    from_email = getattr(
+        settings,
+        'DEFAULT_FROM_EMAIL',
+        'Eventkit Team <eventkit.team@gmail.com>'
+    )
+    ctx = {'url': url, 'status': run.status}
+
+    text = get_template('email/email.txt').render(ctx)
+    html = get_template('email/email.html').render(ctx)
+    try:
+        msg = EmailMultiAlternatives(subject, text, to=to, from_email=from_email)
+        msg.attach_alternative(html, "text/html")
+        msg.send()
+    except Exception as e:
+        logger.error("Encountered an error when sending status email: {}".format(e))
+
+    result['stage_dir'] = stage_dir
+    return result
+
 
 @app.task(name='Export Task Error Handler', bind=True)
 def export_task_error_handler(self, result=None, run_uid=None, task_id=None, stage_dir=None, *args, **kwargs):
