@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from mock import Mock, patch, MagicMock, call
+import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
-import uuid
+from mock import patch, MagicMock, call
 
 from eventkit_cloud.jobs.models import Job, DatamodelPreset
-
-from ..thematic_gpkg import ThematicGPKG
+from eventkit_cloud.utils.thematic_gpkg import ThematicGPKG
 
 logger = logging.getLogger(__name__)
 

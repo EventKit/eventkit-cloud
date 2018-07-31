@@ -1,8 +1,8 @@
 from celery import Task
 from celery.app import app_or_default
-from eventkit_cloud.celery import app
 
-from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.celery import app
+from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
 
 class RevokeTask(Task):

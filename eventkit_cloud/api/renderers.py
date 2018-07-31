@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from rest_framework.renderers import BrowsableAPIRenderer
-from django.shortcuts import render, resolve_url
-from rest_framework.renderers import BaseRenderer, JSONRenderer
-import simplejson as json
 import json as default_json
 import os
-from rest_framework import status
+
+import simplejson as json
 from django.conf import settings
+from django.shortcuts import render, resolve_url
+from rest_framework import status
+from rest_framework.renderers import BaseRenderer, JSONRenderer
+from rest_framework.renderers import BrowsableAPIRenderer
 
 
 class HOTExportApiRenderer(BrowsableAPIRenderer):
@@ -138,7 +139,7 @@ class CustomOpenAPIRenderer(BaseRenderer):
             import coreapi
             from openapi_codec import OpenAPICodec
 
-            OpenAPICodec.encode = self.encode()
+            OpenAPICodec.encode = self.encode
             if renderer_context['response'].status_code != status.HTTP_200_OK:
                 return JSONRenderer().render(data)
             options = self.get_customizations()

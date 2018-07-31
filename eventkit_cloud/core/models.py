@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+
+import unicodedata
 import uuid
-from enum import Enum
+
+from django.contrib.auth.models import User, Group
 from django.contrib.gis.db import models
 from django.utils import timezone
-from django.contrib.auth.models import User, Group
+from enum import Enum
 from notifications.models import Notification
-import unicodedata
-
 
 Notification.old_str_func = Notification.__str__
 
@@ -106,7 +107,7 @@ class GroupPermission(TimeStampedModelMixin):
         return '{0}: {1}: {2}'.format(self.user, self.group.name, self.permission)
 
 
-from ..tasks.models import Job
+from eventkit_cloud.tasks.models import Job
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 

@@ -9,19 +9,17 @@ See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled re
 import cPickle
 import json
 import logging
-import os
-from urlparse import urlparse, urlunparse
-
-from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry
-from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import GEOSGeometry
+from django.utils.translation import ugettext as _
 from notifications.models import Notification
+from rest_framework import serializers
+from rest_framework_gis import serializers as geo_serializers
 
-from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission
-
+import validators
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     DatamodelPreset,
@@ -40,9 +38,6 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord
 )
-from rest_framework import serializers
-from rest_framework_gis import serializers as geo_serializers
-import validators
 
 try:
     from collections import OrderedDict

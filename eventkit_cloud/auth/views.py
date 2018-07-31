@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from django.conf import settings
-
-from .auth import request_access_token, fetch_user_from_token
-from ..core.helpers import get_id
-from django.contrib.auth import login
-import urllib
-from django.shortcuts import redirect
-from django.http import HttpResponse, JsonResponse
 import json
-from django.contrib.auth import logout as auth_logout
-
+import urllib
 from logging import getLogger
+
+from django.conf import settings
+from django.contrib.auth import login
+from django.contrib.auth import logout as auth_logout
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
+
+from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token
+from eventkit_cloud.core.helpers import get_id
 
 logger = getLogger(__name__)
 

@@ -1,7 +1,8 @@
 # https://docs.djangoproject.com/en/dev/howto/writing-migrations/#migrations-that-add-unique-fields
 
-from django.db import migrations
 import uuid
+
+from django.db import migrations
 
 
 def gen_uuid(apps, schema_editor):

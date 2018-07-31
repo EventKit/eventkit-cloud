@@ -2,23 +2,20 @@
 import json
 import logging
 import os
-import requests
 import shutil
-from time import sleep
 from datetime import timedelta, datetime
+from time import sleep
 
-from ...tasks.models import DataProviderTaskRecord
-from ...tasks.export_tasks import TaskStates
-from ...tasks.task_runners import normalize_name
-from ...core.helpers import download_file
-from ..models import DataProvider, DataProviderType, Job
-from ...utils.geopackage import check_content_exists, check_zoom_levels
-
+import requests
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.utils import timezone
 
+from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
+from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.models import DataProviderTaskRecord
+from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_levels
 
 logger = logging.getLogger(__name__)
 

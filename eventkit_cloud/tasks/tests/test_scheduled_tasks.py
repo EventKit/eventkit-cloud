@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-import logging
-import mock
 import json
+import logging
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
+from django.template.loader import get_template
 from django.test import TestCase
 from django.utils import timezone
-from django.conf import settings
-from django.template.loader import get_template
+from mock import patch, call
 
+from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.scheduled_tasks import expire_runs, send_warning_email, check_provider_availability
 from eventkit_cloud.utils.provider_check import CheckResults
-from eventkit_cloud.jobs.models import DataProvider, DataProviderStatus
-from mock import patch, call
 
 logger = logging.getLogger(__name__)
 

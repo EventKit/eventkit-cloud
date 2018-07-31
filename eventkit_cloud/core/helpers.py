@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-import requests
-import os
-from django.conf import settings
-import subprocess
-import dj_database_url
-import zipfile
-import shutil
 import logging
-from notifications.signals import notify
-from enum import Enum
+import os
+import shutil
+import subprocess
+import zipfile
 
+import dj_database_url
+import requests
+from django.conf import settings
+from enum import Enum
+from notifications.signals import notify
 
 logger = logging.getLogger(__name__)
 

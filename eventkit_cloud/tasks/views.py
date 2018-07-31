@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from django.conf import settings
-
-from django.shortcuts import redirect
-from django.http import HttpResponse
-from ..jobs.models import User
-from ..tasks.models import FileProducingTaskResult,  UserDownload, ExportRun
-from eventkit_cloud.utils.s3 import get_presigned_url
-
 from logging import getLogger
+
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import redirect
+
+from eventkit_cloud.jobs.models import User
+from eventkit_cloud.tasks.models import FileProducingTaskResult, UserDownload
+from eventkit_cloud.utils.s3 import get_presigned_url
 
 logger = getLogger(__name__)
 
