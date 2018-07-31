@@ -1013,14 +1013,14 @@ export class UserGroupsPage extends Component {
                     onRenameGroupClick={this.handleRenameOpen}
                     className="qa-UserGroupsPage-drawer"
                 />
-                {this.state.showAddUsers ? <AddMembersDialog
+                <AddMembersDialog
                     show={this.state.showAddUsers}
                     onClose={this.hideAddUsersDialog}
                     onSave={this.handleAddUsersSave}
                     groups={ownedGroups}
                     selectedUsers={this.state.addUsers}
                     className="qa-UserGroupsPage-addMembersDialog"
-                /> : null }
+                />
                 <CreateGroupDialog
                     show={this.state.showCreate}
                     onClose={this.handleCreateClose}
