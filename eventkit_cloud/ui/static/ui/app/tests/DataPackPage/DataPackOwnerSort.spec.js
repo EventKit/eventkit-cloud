@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
@@ -18,7 +19,7 @@ describe('DataPackOwnerSort component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackOwnerSort {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
     });
@@ -27,7 +28,7 @@ describe('DataPackOwnerSort component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackOwnerSort {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.text()).toEqual('All DataPacks');
     });
@@ -37,7 +38,7 @@ describe('DataPackOwnerSort component', () => {
         props.value = 'test_user';
         const wrapper = mount(<DataPackOwnerSort {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.text()).toEqual('My DataPacks');
     });
@@ -46,7 +47,7 @@ describe('DataPackOwnerSort component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackOwnerSort {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, { context: { muiTheme } });
@@ -57,7 +58,7 @@ describe('DataPackOwnerSort component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackOwnerSort {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
         const menu = shallow(wrapper.find(DropDownMenu).node, { context: { muiTheme } });
@@ -96,7 +97,7 @@ describe('DataPackOwnerSort component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackOwnerSort {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(DropDownMenu).props().labelStyle.fontSize).toEqual('14px');
 

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -105,7 +106,7 @@ describe('DataPackListItem component', () => {
 
     const getWrapper = props => mount(<DataPackListItem {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     });
 
     it('should render a list item with complete and private icons and owner text', () => {

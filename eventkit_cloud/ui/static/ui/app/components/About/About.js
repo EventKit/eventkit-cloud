@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import AppBar from 'material-ui/AppBar';
 import CustomScrollbar from '../CustomScrollbar';
 import InfoParagraph from './InfoParagraph';

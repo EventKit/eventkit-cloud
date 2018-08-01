@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -105,7 +106,7 @@ describe('DataPackTableItem component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackTableItem {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn)).toHaveLength(8);
@@ -126,7 +127,7 @@ describe('DataPackTableItem component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackTableItem {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         props.run.user = 'Not Admin';
         props.run.job.permissions.value = 'PUBLIC';

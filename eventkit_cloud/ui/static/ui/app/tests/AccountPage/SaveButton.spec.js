@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
@@ -17,7 +18,7 @@ describe('SaveButton component', () => {
 
     const getMountedWrapper = props => mount(<SaveButton {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     });
 
     it('should render a disabled save button', () => {

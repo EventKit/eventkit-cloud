@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import Banner from '../components/Banner';
@@ -13,7 +14,7 @@ describe('Banner component', () => {
                 },
             },
             childContextTypes: {
-                context: React.PropTypes.object,
+                context: PropTypes.object,
             },
         });
         expect(wrapper.find('div')).toHaveLength(1);
@@ -25,7 +26,7 @@ describe('Banner component', () => {
     it('should render div with empty string and default style when no config', () => {
         const wrapper = mount(<Banner />, {
             context: { config: {} },
-            childContextTypes: { context: React.PropTypes.object },
+            childContextTypes: { context: PropTypes.object },
         });
         expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('div').text()).toEqual('');

@@ -1,5 +1,7 @@
 /* eslint react/no-array-index-key: 0 */
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+
+import React from 'react';
 import { GridList, Tab, Tabs } from 'material-ui';
 import SwipeableViews from 'react-swipeable-views';
 

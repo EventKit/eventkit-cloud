@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Clear from 'material-ui/svg-icons/content/clear';
 import { Card } from 'material-ui/Card';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';

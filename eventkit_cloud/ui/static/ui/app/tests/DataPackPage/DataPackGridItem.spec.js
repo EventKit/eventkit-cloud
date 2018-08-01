@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -153,7 +154,7 @@ afterAll(() => {
 
 const getWrapper = props => mount(<DataPackGridItem {...props} />, {
     context: { muiTheme },
-    childContextTypes: { muiTheme: React.PropTypes.object },
+    childContextTypes: { muiTheme: PropTypes.object },
 });
 
 describe('DataPackGridItem component', () => {

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
@@ -25,7 +26,7 @@ describe('User License component', () => {
 
     const getMountedWrapper = props => mount(<UserLicense {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     });
 
     it('should render a minimized card with the license information', () => {

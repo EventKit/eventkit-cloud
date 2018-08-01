@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -16,7 +17,7 @@ describe('DataPackFilterButton component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackFilterButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(FlatButton)).toHaveLength(1);
         expect(wrapper.text()).toEqual('SHOW FILTERS');
@@ -32,7 +33,7 @@ describe('DataPackFilterButton component', () => {
         props.handleToggle = sinon.spy();
         const wrapper = mount(<DataPackFilterButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         wrapper.find('button').simulate('click');
         expect(props.handleToggle.calledOnce).toBe(true);
@@ -44,7 +45,7 @@ describe('DataPackFilterButton component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackFilterButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(FlatButton).props().style.width).toEqual('90px');
         expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('12px');

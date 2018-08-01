@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
 import { Card, CardTitle } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';

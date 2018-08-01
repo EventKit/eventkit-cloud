@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { GridList } from 'material-ui/GridList';
 import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
 import axios from 'axios';

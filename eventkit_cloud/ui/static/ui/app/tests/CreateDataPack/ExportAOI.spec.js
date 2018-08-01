@@ -1,6 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import axios from 'axios';
@@ -99,8 +100,8 @@ describe('ExportAOI component', () => {
         return mount(<ExportAOI {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };

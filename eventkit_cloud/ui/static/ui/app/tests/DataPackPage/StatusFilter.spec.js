@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -21,7 +22,7 @@ describe('StatusFilter component', () => {
         const props = getProps();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find('p').first().text()).toEqual('Export Status');
         expect(wrapper.find(Checkbox)).toHaveLength(3);
@@ -42,7 +43,7 @@ describe('StatusFilter component', () => {
         props.onChange = sinon.spy();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const input = wrapper.find(Checkbox).at(0).find('input');
         input.node.checked = true;
@@ -56,7 +57,7 @@ describe('StatusFilter component', () => {
         props.onChange = sinon.spy();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const input = wrapper.find(Checkbox).at(2).find('input');
         input.node.checked = true;
@@ -70,7 +71,7 @@ describe('StatusFilter component', () => {
         props.onChange = sinon.spy();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const input = wrapper.find(Checkbox).at(1).find('input');
         input.node.checked = true;
@@ -83,7 +84,7 @@ describe('StatusFilter component', () => {
         const props = getProps();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const input = wrapper.find(Checkbox).at(0).find('input');
         expect(input.node.checked).toBe(false);
@@ -97,7 +98,7 @@ describe('StatusFilter component', () => {
         const props = getProps();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const input = wrapper.find(Checkbox).at(2).find('input');
         expect(input.node.checked).toBe(false);
@@ -111,7 +112,7 @@ describe('StatusFilter component', () => {
         const props = getProps();
         const wrapper = mount(<StatusFilter {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const input = wrapper.find(Checkbox).at(1).find('input');
         expect(input.node.checked).toBe(false);

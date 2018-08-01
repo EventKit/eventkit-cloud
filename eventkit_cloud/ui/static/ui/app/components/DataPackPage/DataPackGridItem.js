@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
 import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
@@ -453,7 +454,7 @@ export class DataPackGridItem extends Component {
                     style={styles.cardTextContainer}
                     onMouseEnter={() => { this.setState({ overflowText: true }); }}
                     onMouseLeave={() => { this.setState({ overflowText: false }); }}
-                    onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
+                    onClick={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
                     <span
                         className="qa-DataPackGridItem-span-description"
