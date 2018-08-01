@@ -205,7 +205,7 @@ class SimpleJobSerializer(serializers.Serializer):
     published = serializers.BooleanField()
     visibility = serializers.CharField()
     featured = serializers.BooleanField()
-    formats = serializers.SerializerMethodField('get_provider_tasks')
+    formats = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
@@ -245,8 +245,13 @@ class SimpleJobSerializer(serializers.Serializer):
     def get_permissions(obj):
         return JobPermission.jobpermissions(obj)
 
-    def get_provider_tasks(self, obj):
-        return [format.name for format in obj.provider_tasks.first().formats.all()]
+    def get_formats(self, obj):
+        # Since formats are the same for all provider_tasks (1.1.0) just grab anyone and print them.
+        provider_task = obj.provider_tasks.first()
+        formats = []
+        if hasattr(provider_task, "formats"):
+            formats = [format.name for format in obj.provider_tasks.first().formats.all()]
+        return formats
 
 
 class LicenseSerializer(serializers.ModelSerializer):

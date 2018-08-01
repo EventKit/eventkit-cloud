@@ -430,6 +430,7 @@ class TestExportTasks(ExportTaskBase):
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         stage_dir = settings.EXPORT_STAGING_ROOT
+        zipfile_path = os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')
         mock_os_walk.return_value = [(
             os.path.join(stage_dir, run_uid, 'osm-vector'),
             None,
@@ -439,14 +440,8 @@ class TestExportTasks(ExportTaskBase):
         fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
         zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
-        result = zip_file_task.run(run_uid=run_uid, include_files=[
-            os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')])
-
-        self.assertEqual(
-            zipfile.files,
-            {fname: os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg'),
-             }
-        )
+        result = zip_file_task.run(run_uid=run_uid, include_files=[zipfile_path])
+        self.assertEqual(zipfile.files,{fname: zipfile_path})
         run = ExportRun.objects.get(uid=run_uid)
         if getattr(settings, "USE_S3", False):
             self.assertEqual(
@@ -598,7 +593,7 @@ class TestExportTasks(ExportTaskBase):
         )
 
         self.assertEquals('Cancel Export Provider Task', cancel_export_provider_task.name)
-        cancel_export_provider_task.run(export_provider_task_uid=export_provider_task.uid,
+        cancel_export_provider_task.run(data_provider_task_uid=export_provider_task.uid,
                                         canceling_username=user.username)
         mock_kill_task.apply_async.assert_called_once_with(kwargs={"task_pid": task_pid, "celery_uid": celery_uid},
                                                            queue="{0}.cancel".format(worker_name),
@@ -656,28 +651,29 @@ class TestExportTasks(ExportTaskBase):
         export_provider_task.refresh_from_db()
         self.assertEqual(export_provider_task.status, TaskStates.COMPLETED.value)
 
-    @patch('os.kill')
+    @patch('eventkit_cloud.tasks.export_tasks.progressive_kill')
     @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
-    def test_kill_task(self, async_result, kill):
+    def test_kill_task(self, async_result, mock_progressive_kill):
         # Ensure that kill isn't called with default.
         task_pid = -1
+        celery_uid = uuid.uuid4()
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid=task_pid)
-        kill.assert_not_called()
+        kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
+        mock_progressive_kill.assert_not_called()
 
         # Ensure that kill is not called with an invalid state
         task_pid = 55
         async_result.return_value = Mock(state=celery.states.FAILURE)
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid=task_pid)
-        kill.assert_not_called()
+        kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
+        mock_progressive_kill.assert_not_called()
 
         # Ensure that kill is called with a valid pid
         task_pid = 55
         async_result.return_value = Mock(state=celery.states.STARTED)
         self.assertEquals('Kill Task', kill_task.name)
-        kill_task.run(task_pid=task_pid)
-        kill.assert_called_once_with(task_pid, signal.SIGTERM)
+        kill_task.run(task_pid=task_pid, celery_uid=celery_uid)
+        mock_progressive_kill.assert_called_once_with(task_pid)
 
     @patch('eventkit_cloud.tasks.models.ExportRun')
     def test_wait_for_providers_task(self, mock_export_run):
