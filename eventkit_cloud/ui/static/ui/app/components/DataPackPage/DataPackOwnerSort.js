@@ -63,7 +63,7 @@ export class DataPackOwnerSort extends React.Component {
                 <MenuItem
                     className="qa-DataPackOwnerSort-MenuItem-allDatapacks"
                     style={styles.item}
-                    value=""
+                    value="all"
                     primaryText="All DataPacks"
                 />
                 <MenuItem

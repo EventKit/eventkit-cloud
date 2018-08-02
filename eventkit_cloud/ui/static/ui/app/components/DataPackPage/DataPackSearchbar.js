@@ -62,14 +62,20 @@ class DataPackSearchbar extends React.Component {
                 underlineStyle={styles.underline}
                 underlineFocusStyle={styles.underlineFocus}
                 onKeyDown={this.handleKeyDown}
+                defaultValue={this.props.defaultValue}
             />
         );
     }
 }
 
+DataPackSearchbar.defaultProps = {
+    defaultValue: '',
+};
+
 DataPackSearchbar.propTypes = {
     onSearchChange: PropTypes.func.isRequired,
     onSearchSubmit: PropTypes.func.isRequired,
+    defaultValue: PropTypes.string,
 };
 
 export default DataPackSearchbar;

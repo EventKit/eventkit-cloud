@@ -89,16 +89,13 @@
     "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
     "collectCoverageFrom": [
-      "**/*.{js,jsx}",
-      "!**/coverage/**",
+      "**/app/**.{js,jsx}",
+      "!**/config.js",
+      "!**/*.config.{js, jsx}",
       "!**/setupFile.js",
       "!**/initialState.js",
-      "!**/webpack.config.js",
-      "!**/build/**",
-      "!**/staticfiles/**",
       "!**/styles/**",
       "!**/node_modules/**",
-      "!**/vendor/**",
       "!**/e2e/**"
     ],
     "moduleFileExtensions": [

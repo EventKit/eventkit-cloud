@@ -7,7 +7,7 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 
 describe('DataPackOwnerSort component', () => {
     const getProps = () => ({
-        value: '',
+        value: 'all',
         handleChange: () => {},
         owner: 'test_user',
     });
