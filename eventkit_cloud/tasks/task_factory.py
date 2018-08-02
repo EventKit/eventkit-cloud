@@ -192,6 +192,9 @@ def create_run(job_uid, user=None):
 
             # get the number of existing runs for this job
             job = Job.objects.get(uid=job_uid)
+            if not job.provider_tasks.all():
+                raise Error("This job does not have any data sources or formats associated with it, "
+                            "try cloning the job or submitting a new request.")
             invalid_licenses = get_invalid_licenses(job)
             if invalid_licenses:
                 raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
