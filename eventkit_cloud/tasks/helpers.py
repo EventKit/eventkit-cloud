@@ -1,7 +1,13 @@
-import os, re
+import os
+import re
 from django.conf import settings
 from enum import Enum
+import logging
+import errno
+from time import sleep
+import signal
 
+logger = logging.getLogger()
 
 class Directory(Enum):
     ARCGIS = 'arcgis'
@@ -94,3 +100,22 @@ def normalize_name(name):
     # Replace all whitespace with a single underscore
     s = re.sub(r"\s+", '_', s)
     return s.lower()
+
+
+def progressive_kill(pid):
+    """
+    Tries to kill first with TERM and then with KILL.
+    :param pid: The process ID to kill
+    :return: None.
+    """
+    try:
+        logger.info("Trying to kill pid {0} with SIGTERM.".format(pid))
+        os.kill(pid, signal.SIGTERM)
+        sleep(5)
+
+        logger.info("Trying to kill pid {0} with SIGKILL.".format(pid))
+        os.kill(pid, signal.SIGKILL)
+        sleep(1)
+
+    except OSError:
+        logger.info("{0} PID no longer exists.".format(pid))

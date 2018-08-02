@@ -26,7 +26,7 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
@@ -316,6 +316,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
+                            job.provider_tasks = provider_serializer.save()
+                            job.save()
                         except ValidationError:
                             status_code = status.HTTP_400_BAD_REQUEST
                             error_data = {"errors": [{"status": status_code,
@@ -323,8 +325,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       "detail": _('A provider and an export format must be selected.')
                                                       }]}
                             return Response(error_data, status=status_code)
-                        job.provider_tasks = provider_serializer.save()
-
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             for provider_task in job.provider_tasks.all():
@@ -431,10 +431,10 @@ class JobViewSet(viewsets.ModelViewSet):
         try:
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=uid, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        except (InvalidLicense, Error) as err:
+            return Response([{'detail': _(err.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
-        except Unauthorized as ua:
+        except Unauthorized:
             return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
         if run:
@@ -1133,12 +1133,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
+        data_provider_task_record = DataProviderTaskRecord.objects.get(uid=uid)
 
-        if export_provider_task.run.user != request.user and not request.user.is_superuser:
+        if data_provider_task_record.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
+        cancel_export_provider_task.run(data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):

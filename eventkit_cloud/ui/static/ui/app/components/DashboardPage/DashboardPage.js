@@ -176,7 +176,7 @@ export class DashboardPage extends React.Component {
     }
 
     handleMyDataPacksViewAll() {
-        browserHistory.push('/exports?collection=myDataPacks');
+        browserHistory.push(`/exports?collection=${this.props.user.data.user.username}`);
     }
 
     isLoading() {
