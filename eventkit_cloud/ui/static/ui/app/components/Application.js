@@ -29,6 +29,7 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
+import { isViewportL, isViewportXL, L_MAX_WIDTH } from '../utils/viewport';
 
 require('../fonts/index.css');
 
@@ -98,6 +99,7 @@ export class Application extends Component {
         this.notificationsPageSize = 10;
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
+        this.prevWindowWidth = 0;
     }
 
     getChildContext() {
@@ -364,6 +366,18 @@ export class Application extends Component {
 
     handleResize() {
         this.forceUpdate();
+
+        // Close the drawer if we resize down to mobile width.
+        if (isViewportL() && this.prevWindowWidth >= L_MAX_WIDTH) {
+            this.props.closeDrawer();
+        }
+
+        // Open the drawer if we resize up to desktop width.
+        if (isViewportXL() && this.prevWindowWidth < L_MAX_WIDTH) {
+            this.props.openDrawer();
+        }
+
+        this.prevWindowWidth = window.innerWidth;
     }
 
     handleClick(e) {
