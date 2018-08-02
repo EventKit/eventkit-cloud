@@ -44,8 +44,8 @@ describe('AlertCallout component', () => {
         expect(wrapper.find(Slider)).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footnote')).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footer')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-FlatButton-close')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-RaisedButton-buffer')).toHaveLength(1);
+        expect(wrapper.find('.qa-BufferDialog-FlatButton-close').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-BufferDialog-RaisedButton-buffer').hostNodes()).toHaveLength(1);
         expect(wrapper.find(RaisedButton).props().labelStyle.color).toEqual('whitesmoke');
         expect(wrapper.find(RaisedButton).props().buttonStyle.backgroundColor).toEqual('#4598bf');
         expect(wrapper.find(TextField).props().inputStyle.color).toEqual('grey');
@@ -55,8 +55,8 @@ describe('AlertCallout component', () => {
         const props = getProps();
         props.show = false;
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-BufferDialog-main')).toHaveLength(0);
-        expect(wrapper.find('.qa-BufferDialog-background')).toHaveLength(0);
+        expect(wrapper.find('.qa-BufferDialog-main').hostNodes()).toHaveLength(0);
+        expect(wrapper.find('.qa-BufferDialog-background').hostNodes()).toHaveLength(0);
     });
 
     it('should render a warning if the area exceeds the aoi limit', () => {

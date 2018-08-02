@@ -74,6 +74,7 @@ describe('MembersHeaderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         window.resizeTo(500, 500);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find(Dialog).props().contentStyle.transform).toEqual('translate(0px, 16px)');
     });

@@ -1,6 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import { mount, shallow } from 'enzyme';
 import configureMockStore from 'redux-mock-store';
 import AppBar from 'material-ui/AppBar';
@@ -54,7 +55,10 @@ describe('Application component', () => {
         getNotificationsUnreadCount: () => {},
     });
 
-    const getMountedWrapper = props => mount(<Application {...props} />);
+    const getMountedWrapper = props => mount(<Application {...props} />, {
+        context: { store },
+        childContextTypes: { store: PropTypes.object },
+    });
 
     const getShallowWrapper = props => shallow(<Application {...props} />);
 
@@ -75,9 +79,9 @@ describe('Application component', () => {
         expect(wrapper.find(Banner)).toHaveLength(1);
         expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-MenuButton').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-NotificationsButton').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator').hostNodes()).toHaveLength(1);
         expect(wrapper.find(NotificationsDropdown)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
@@ -168,10 +172,10 @@ describe('Application component', () => {
     });
 
     it('should remove event listener on unmount', () => {
-        const eventSpy = sinon.spy(window, 'removeEventListener');
         const props = getProps();
         const wrapper = getMountedWrapper(props);
         const resize = wrapper.instance().handleResize;
+        const eventSpy = sinon.spy(window, 'removeEventListener');
         expect(eventSpy.called).toBe(false);
         wrapper.unmount();
         expect(eventSpy.called).toBe(true);
@@ -362,7 +366,7 @@ describe('Application component', () => {
 
     it('should change notifications button background color when viewing notifications page', () => {
         const wrapper = getMountedWrapper(getProps());
-        const button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
+        let button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('');
         wrapper.setProps({
             router: {
@@ -371,6 +375,7 @@ describe('Application component', () => {
                 },
             },
         });
+        button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('#4598BF');
         wrapper.setProps({
             router: {
@@ -379,12 +384,13 @@ describe('Application component', () => {
                 },
             },
         });
+        button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('');
     });
 
     it('should scale the notifications indicator up/down when unread count is positive/zero', () => {
         const wrapper = getMountedWrapper(getProps());
-        const indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
+        let indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(0)');
         wrapper.setProps({
             notifications: {
@@ -395,6 +401,7 @@ describe('Application component', () => {
                 },
             },
         });
+        indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(1)');
         wrapper.setProps({
             notifications: {
@@ -405,20 +412,23 @@ describe('Application component', () => {
                 },
             },
         });
+        indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(0)');
     });
 
     it('should open/close notifications dropdown when notifications button is clicked', () => {
         const wrapper = getMountedWrapper(getProps());
-        const dropdown = wrapper.find(NotificationsDropdown);
+        let dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown.props().style.opacity).toBe('0');
         expect(dropdown.props().style.pointerEvents).toBe('none');
         expect(dropdown.props().style.transform).toBe('scale(0)');
-        wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click');
+        wrapper.find('.qa-Application-AppBar-NotificationsButton').hostNodes().simulate('click');
+        dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown.props().style.opacity).toBe('1');
         expect(dropdown.props().style.pointerEvents).toBe('auto');
         expect(dropdown.props().style.transform).toBe('scale(1)');
-        wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click');
+        wrapper.find('.qa-Application-AppBar-NotificationsButton').hostNodes().simulate('click');
+        dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown.props().style.opacity).toBe('0');
         expect(dropdown.props().style.pointerEvents).toBe('none');
         expect(dropdown.props().style.transform).toBe('scale(0)');

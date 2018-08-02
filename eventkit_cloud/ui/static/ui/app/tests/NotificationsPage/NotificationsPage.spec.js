@@ -220,6 +220,7 @@ describe('NotificationsPage component', () => {
 
     describe('when it refreshes', () => {
         beforeEach(() => {
+            instance.props.getNotifications.reset();
             instance.refresh();
         });
 

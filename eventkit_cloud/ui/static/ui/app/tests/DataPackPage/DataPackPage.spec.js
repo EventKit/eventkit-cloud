@@ -413,6 +413,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         props.getRuns = sinon.spy((ps) => { console.log(ps); });
         const wrapper = shallow(<DataPackPage {...props} />);
+        props.getRuns.reset();
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
@@ -446,7 +447,7 @@ describe('DataPackPage component', () => {
         });
         wrapper.update();
         wrapper.instance().makeRunRequest();
-        expect(props.getRuns.called).toBe(true);
+        expect(props.getRuns.calledOnce).toBe(true);
         expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 

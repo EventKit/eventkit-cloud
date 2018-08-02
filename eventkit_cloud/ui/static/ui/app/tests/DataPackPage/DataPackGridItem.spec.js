@@ -10,8 +10,6 @@ import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/C
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import Lock from 'material-ui/svg-icons/action/lock-outline';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-dom/test-utils';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 
 const muiTheme = getMuiTheme();

@@ -58,7 +58,7 @@ describe('UserHeader component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-UserHeader-IconButton-options')).toHaveLength(0);
         wrapper.setProps({ selectedUsers: getProps().selectedUsers });
-        expect(wrapper.find('.qa-UserHeader-IconButton-options')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserHeader-IconButton-options').hostNodes()).toHaveLength(1);
     });
 
     it('should render the admin and remove buttons', () => {

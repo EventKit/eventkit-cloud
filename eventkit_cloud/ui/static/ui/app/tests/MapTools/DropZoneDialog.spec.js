@@ -36,7 +36,7 @@ describe('DropZoneDialog component', () => {
         expect(children.find('.qa-DropZoneDialog-text')).toHaveLength(1);
         expect(children.find('.qa-DropZoneDialog-text').find('span').first().text())
             .toEqual('GeoJSON, KML, GPKG, zipped SHP,and other major geospatial data formats are supported. 5 MB maxDrag and drop or');
-        expect(children.find('.qa-DropZoneDialog-RaisedButton-select')).toHaveLength(1);
+        expect(children.find('.qa-DropZoneDialog-RaisedButton-select').hostNodes()).toHaveLength(1);
         expect(children.find(FileFileUpload)).toHaveLength(1);
     });
 

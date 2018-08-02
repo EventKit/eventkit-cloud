@@ -133,6 +133,7 @@ describe('ExportAOI component', () => {
         const wrapper = getWrapper(props);
         window.resizeTo(1300, 800);
         expect(window.innerWidth).toBe(1300);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find('#map').props().style.left).toEqual('200px');
         const nextProps = getProps();
@@ -235,6 +236,7 @@ describe('ExportAOI component', () => {
         const updateSpy = sinon.spy(wrapper.instance(), 'componentDidUpdate');
         expect(updateSpy.called).toBe(false);
         expect(updateMapSpy.called).toBe(false);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(updateSpy.calledOnce).toBe(true);
         expect(updateMapSpy.calledOnce).toBe(true);

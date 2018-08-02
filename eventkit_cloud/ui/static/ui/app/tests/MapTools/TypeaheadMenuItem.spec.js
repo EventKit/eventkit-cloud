@@ -37,7 +37,7 @@ describe('TypeaheadMenuItem component', () => {
         });
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(6);
-        expect(wrapper.find('.menuItem')).toHaveLength(1);
+        expect(wrapper.find('.menuItem').hostNodes()).toHaveLength(1);
         expect(wrapper.find('.qa-TypeaheadMenuItem-icon-div')).toHaveLength(1);
         expect(wrapper.find(ActionRoom)).toHaveLength(0);
         expect(wrapper.find('.qa-TypeaheadMenuItem-name')).toHaveLength(1);

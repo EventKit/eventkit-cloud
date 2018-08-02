@@ -63,7 +63,7 @@ describe('LoginPage component', () => {
         expect(wrapper.find(Paper)).toHaveLength(2);
         expect(wrapper.find(LoginForm)).toHaveLength(1);
         expect(wrapper.find(Paper).last().find('strong').text()).toEqual('ATTENTION');
-        expect(wrapper.find(CustomScrollbar).last().childAt(0).childAt(1)
+        expect(wrapper.find(CustomScrollbar).find('.qa-LoginPage-disclaimer')
             .text()).toEqual('This is a disclaimer');
         isValidStub.restore();
     });

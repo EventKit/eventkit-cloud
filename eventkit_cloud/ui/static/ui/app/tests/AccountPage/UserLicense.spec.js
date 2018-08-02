@@ -9,8 +9,6 @@ import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-o
 import HardwareKeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import HardwareKeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-dom/test-utils';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import UserLicense from '../../components/AccountPage/UserLicense';
 
@@ -42,13 +40,11 @@ describe('User License component', () => {
         expect(wrapper.find(CustomScrollbar)).toHaveLength(0);
     });
 
-    it('should expand the card on touchTap', () => {
+    it('should expand the card on click', () => {
         const props = getProps();
         const wrapper = getMountedWrapper(props);
         expect(wrapper.find(CardText)).toHaveLength(0);
-        // eslint-disable-next-line react/no-find-dom-node
-        const node = ReactDOM.findDOMNode(TestUtils.findRenderedDOMComponentWithTag(wrapper.instance(), 'button'));
-        TestUtils.Simulate.touchTap(node);
+        wrapper.find('button').simulate('click');
         expect(wrapper.find(CardText)).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find('a')).toHaveLength(1);

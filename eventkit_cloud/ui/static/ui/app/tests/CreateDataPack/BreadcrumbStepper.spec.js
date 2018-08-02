@@ -108,6 +108,7 @@ describe('BreadcrumbStepper component', () => {
         clearJobInfo: () => {},
         getNotifications: () => {},
         getNotificationsUnreadCount: () => {},
+        getFormats: () => {},
     });
     const getWrapper = props => (
         shallow(<BreadcrumbStepper {...props} />, {
@@ -150,7 +151,7 @@ describe('BreadcrumbStepper component', () => {
             ],
         };
         wrapper.setProps(nextProps);
-        expect(getMessageSpy.calledTwice).toBe(true);
+        expect(getMessageSpy.called).toBe(true);
     });
 
     it('componentDidMount should set nextDisabled and get providers and formats', () => {
@@ -160,8 +161,7 @@ describe('BreadcrumbStepper component', () => {
         props.getProviders = sinon.spy();
         props.getFormats = sinon.spy();
         props.setNextDisabled = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().componentDidMount();
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);

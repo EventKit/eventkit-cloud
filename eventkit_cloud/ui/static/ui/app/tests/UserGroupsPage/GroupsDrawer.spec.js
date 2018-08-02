@@ -60,8 +60,8 @@ describe('GroupsDrawer component', () => {
     it('should show both MY GROUPS and SHARED GROUPS', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem')).toHaveLength(1);
-        expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupsDrawer-groupItem').hostNodes()).toHaveLength(1);
     });
 
     it('Change Group Name should call onRenameGroupClick', () => {

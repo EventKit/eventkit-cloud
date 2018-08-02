@@ -87,10 +87,13 @@ export class BaseTooltip extends Component {
 
         return (
             <div
+                role="button"
+                tabIndex={0}
                 className="qa-BaseTooltip"
                 style={styles.tooltip}
                 onMouseOver={this.onMouseOver}
                 onMouseOut={this.onMouseOut}
+                onKeyPress={this.onClick}
                 onFocus={this.onMouseOver}
                 onBlur={this.onMouseOut}
                 onClick={this.onClick}

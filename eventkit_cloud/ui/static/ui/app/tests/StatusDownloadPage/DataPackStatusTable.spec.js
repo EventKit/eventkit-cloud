@@ -66,7 +66,7 @@ describe('DataPackStatusTable component', () => {
         const props = getProps();
         props.permissions.value = 'SHARED';
         const wrapper = getWrapper(props);
-        let button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        let button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button).toHaveLength(1);
         expect(button.text()).toEqual('No Members / No Groups');
 
@@ -77,7 +77,7 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ', user_two: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('All Members / All Groups');
 
         nextProps = getProps();
@@ -87,7 +87,7 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('1 Member / 1 Group');
 
 
@@ -98,7 +98,7 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ', user_two: 'READ', user_three: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('3 Members / 3 Groups');
     });
 

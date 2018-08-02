@@ -150,7 +150,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
+        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
         menu.setState({ open: true });
         expect(menu.find(MenuItem)).toHaveLength(2);
         menu.find(MenuItem).first().simulate('click');
@@ -162,7 +162,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
+        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
         menu.setState({ open: true });
         expect(menu.find(MenuItem)).toHaveLength(2);
         menu.find(MenuItem).first().simulate('click');
@@ -379,6 +379,7 @@ describe('ProviderRow component', () => {
         wrapper.instance().handleProviderOpen();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
+        wrapper.update();
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual('provider description');
         stateSpy.restore();
     });

@@ -79,6 +79,7 @@ export class LoginPage extends React.Component {
                                             <strong>ATTENTION</strong>
                                         </div>
                                         <div
+                                            className="qa-LoginPage-disclaimer"
                                             style={{ color: '#fff', paddingRight: '10px' }}
                                             // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={

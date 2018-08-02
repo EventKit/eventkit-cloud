@@ -430,10 +430,12 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         window.resizeTo(600, 700);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         let padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('0px');
         window.resizeTo(800, 900);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('30px');
