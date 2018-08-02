@@ -177,6 +177,8 @@ export class GroupsDrawer extends Component {
                                         listStyle={styles.groupActionList}
                                         menuItemStyle={styles.groupActionItem}
                                         className="qa-GroupsDrawer-groupOptions"
+                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     >
                                         <MenuItem
                                             className="qa-GroupsDrawer-group-rename"
@@ -239,6 +241,8 @@ export class GroupsDrawer extends Component {
                                         listStyle={styles.groupActionList}
                                         menuItemStyle={styles.groupActionItem}
                                         className="qa-GroupsDrawer-groupOptions"
+                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     >
                                         <MenuItem
                                             className="qa-GroupsDrawer-group-leave"
