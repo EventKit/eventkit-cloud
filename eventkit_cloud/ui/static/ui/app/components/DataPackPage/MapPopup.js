@@ -184,12 +184,12 @@ export class MapPopup extends Component {
                         }
                         {this.props.featureInfo.created_at ?
                             <div style={{ margin: '5px 0px' }}>
-                                Created at: {moment(this.props.featureInfo.created_at).format('YYYY-MM-DD')}
+                                Created: {moment(this.props.featureInfo.created_at).format('M/D/YY')}
                             </div>
                             : null}
                         {this.props.featureInfo.expiration ?
                             <div style={{ margin: '5px 0px' }}>
-                                Expiration: {moment(this.props.featureInfo.expiration).format('YYYY-MM-DD')}
+                                Expires: {moment(this.props.featureInfo.expiration).format('M/D/YY')}
                             </div>
                             : null}
                         {this.props.featureInfo.user ?

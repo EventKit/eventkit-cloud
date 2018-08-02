@@ -125,7 +125,7 @@ export class DataPackStatusTable extends Component {
             membersCheck: this.props.permissions.value !== 'PRIVATE' ? checkIcon : null,
         };
 
-        const expiration = moment(this.props.expiration).format('YYYY-MM-DD');
+        const expiration = moment(this.props.expiration).format('M/D/YY');
 
         let expirationData = expiration;
         let permissionData = <div>{permissionsIcons.members}Shared</div>;
@@ -251,7 +251,7 @@ export class DataPackStatusTable extends Component {
                     }}
                 />
                 <CustomTableRow
-                    title="Expiration"
+                    title="Expires"
                     data={expirationData}
                 />
                 <CustomTableRow

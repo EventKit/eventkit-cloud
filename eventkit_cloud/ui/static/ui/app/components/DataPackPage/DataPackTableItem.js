@@ -181,7 +181,7 @@ export class DataPackTableItem extends Component {
                     className="qa-DataPackTableItem-TableRowColumn-started"
                     style={styles.startedColumn}
                 >
-                    {moment(this.props.run.started_at).format('YYYY-MM-DD')}
+                    {moment(this.props.run.started_at).format('M/D/YY')}
                 </TableRowColumn>
                 <TableRowColumn
                     className="qa-DataPackTableItem-TableRowColumn-status tour-datapack-status"

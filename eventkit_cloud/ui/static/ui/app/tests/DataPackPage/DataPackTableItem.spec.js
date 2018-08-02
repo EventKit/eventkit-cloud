@@ -116,7 +116,7 @@ describe('DataPackTableItem component', () => {
         expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn).at(0).text()).toEqual(run.job.name);
         expect(wrapper.find(TableRowColumn).at(1).text()).toEqual(run.job.event);
-        expect(wrapper.find(TableRowColumn).at(2).text()).toEqual('2017-03-10');
+        expect(wrapper.find(TableRowColumn).at(2).text()).toEqual('3/10/17');
         expect(wrapper.find(TableRowColumn).at(3).find(NavigationCheck)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn).at(4).find(Lock)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn).at(5).text()).toEqual('My DataPack');
