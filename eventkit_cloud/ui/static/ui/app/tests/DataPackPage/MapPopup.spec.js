@@ -48,8 +48,8 @@ describe('LoadButtons component', () => {
         expect(wrapper.find('#popup-event')).toHaveLength(1);
         expect(wrapper.find('#popup-event').text()).toEqual('Event: test event');
         expect(wrapper.find('#popup-actions')).toHaveLength(1);
-        expect(wrapper.find('#details-url').text()).toEqual('Go To Status and Download');
-        expect(wrapper.find('#zoom-to').text()).toEqual('Zoom To Selection');
+        expect(wrapper.find('#details-url').text()).toEqual('Status & Download');
+        expect(wrapper.find('#zoom-to').text()).toEqual('Zoom To');
         expect(wrapper.find('#show-more').text()).toEqual('Show More');
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find('#moreInfo')).toHaveLength(0);
