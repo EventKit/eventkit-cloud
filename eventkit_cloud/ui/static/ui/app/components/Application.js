@@ -29,6 +29,7 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
+import { isViewportL, isViewportXL, L_MAX_WIDTH } from '../utils/viewport';
 
 require('../fonts/index.css');
 
@@ -98,6 +99,7 @@ export class Application extends Component {
         this.notificationsPageSize = 10;
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
+        this.prevWindowWidth = 0;
     }
 
     getChildContext() {
@@ -108,6 +110,7 @@ export class Application extends Component {
 
     componentDidMount() {
         this.getConfig();
+        this.props.getNotifications();
         window.addEventListener('resize', this.handleResize);
         window.addEventListener('click', this.handleClick);
     }
@@ -364,6 +367,18 @@ export class Application extends Component {
 
     handleResize() {
         this.forceUpdate();
+
+        // Close the drawer if we resize down to mobile width.
+        if (isViewportL() && this.prevWindowWidth >= L_MAX_WIDTH) {
+            this.props.closeDrawer();
+        }
+
+        // Open the drawer if we resize up to desktop width.
+        if (isViewportXL() && this.prevWindowWidth < L_MAX_WIDTH) {
+            this.props.openDrawer();
+        }
+
+        this.prevWindowWidth = window.innerWidth;
     }
 
     handleClick(e) {
@@ -762,6 +777,7 @@ Application.defaultProps = {
     autoLogoutAt: null,
     autoLogoutWarningAt: null,
     userData: {},
+    store: null,
 };
 
 Application.propTypes = {
@@ -772,7 +788,7 @@ Application.propTypes = {
     drawer: PropTypes.string.isRequired,
     router: PropTypes.shape({
         location: PropTypes.shape({
-            pathname: PropTypes.arrayOf(PropTypes.string),
+            pathname: PropTypes.string,
         }),
         push: PropTypes.func,
     }).isRequired,
@@ -794,7 +810,7 @@ Application.propTypes = {
     notifications: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
-    store: PropTypes.object.isRequired,
+    store: PropTypes.object,
 };
 
 Application.childContextTypes = {

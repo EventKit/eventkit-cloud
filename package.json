@@ -85,6 +85,7 @@
     ]
   },
   "jest": {
+    "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
     "collectCoverageFrom": [
       "**/app/**.{js,jsx}",
