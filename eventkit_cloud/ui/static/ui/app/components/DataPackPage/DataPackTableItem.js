@@ -15,19 +15,26 @@ import { List, ListItem } from 'material-ui/List';
 import moment from 'moment';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
         super(props);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
+            shareDialogOpen: false,
+            menuOpen: false,
         };
     }
 
@@ -57,6 +64,14 @@ export class DataPackTableItem extends Component {
         return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: '#bcdfbb', height: '22px' }} />;
     }
 
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
+    handleMenuChange(menuOpen) {
+        this.setState({ menuOpen });
+    }
+
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
@@ -67,11 +82,18 @@ export class DataPackTableItem extends Component {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDesc[a.name] = a.service_description;
         });
-        this.setState({ providerDescs: providerDesc, providerDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            providerDescs: providerDesc,
+            providerDialogOpen: true,
+        });
     }
 
     showDeleteDialog() {
-        this.setState({ deleteDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            deleteDialogOpen: true,
+        });
     }
 
     hideDeleteDialog() {
@@ -81,6 +103,23 @@ export class DataPackTableItem extends Component {
     handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
+    }
+
+    handleShareOpen() {
+        this.setState({
+            menuOpen: false,
+            shareDialogOpen: true,
+        });
+    }
+
+    handleShareClose() {
+        this.setState({ shareDialogOpen: false });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.onRunShare(this.props.run.job.uid, permissions);
     }
 
     render() {
@@ -213,16 +252,19 @@ export class DataPackTableItem extends Component {
                 >
                     <IconMenu
                         className="qa-DataPackTableItem-IconMenu"
+                        open={this.state.menuOpen}
                         iconButtonElement={
                             <IconButton
                                 className="qa-DataPackTableItem-IconMenu"
                                 style={styles.dropDownIcon}
                                 iconStyle={{ color: '#4598bf' }}
+                                onClick={this.handleMenuButtonClick}
                             >
                                 <NavigationMoreVert className="qa-DataPackTableItem-NavigationMoreVert" />
                             </IconButton>}
                         anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                         targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        onRequestChange={this.handleMenuChange}
                     >
                         <MenuItem
                             className="qa-DataPackTableItem-MenuItem-statusDownloadLink"
@@ -250,7 +292,7 @@ export class DataPackTableItem extends Component {
                                     className="qa-DataPackTableItem-MenuItem-share"
                                     style={{ fontSize: '12px' }}
                                     primaryText="Share"
-                                    onClick={() => this.props.openShare(this.props.run)}
+                                    onClick={this.handleShareOpen}
                                 />,
                             ]
                             :
@@ -272,6 +314,21 @@ export class DataPackTableItem extends Component {
                         onDelete={this.handleDelete}
                     />
                 </TableRowColumn>
+                <DataPackShareDialog
+                    show={this.state.shareDialogOpen}
+                    onClose={this.handleShareClose}
+                    onSave={this.handleShareSave}
+                    user={this.props.user.data}
+                    groups={this.props.groups}
+                    members={this.props.users}
+                    permissions={this.props.run.job.permissions}
+                    groupsText="You may share view and edit rights with groups exclusively.
+                        Group sharing is managed separately from member sharing."
+                    membersText="You may share view and edit rights with members exclusively.
+                        Member sharing is managed separately from group sharing."
+                    canUpdateAdmin
+                    warnPublic
+                />
             </TableRow>
         );
     }
@@ -281,9 +338,11 @@ DataPackTableItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    openShare: PropTypes.func.isRequired,
     adminPermissions: PropTypes.bool.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default DataPackTableItem;

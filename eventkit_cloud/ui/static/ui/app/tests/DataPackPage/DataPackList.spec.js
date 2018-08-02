@@ -114,8 +114,11 @@ describe('DataPackList component', () => {
         runs: getRuns(),
         user: { data: { user: { username: 'admin' } } },
         onRunDelete: () => {},
+        onRunShare: () => {},
         onSort: () => {},
         order: '-started_at',
+        users: [],
+        groups: [],
         providers,
     });
 
