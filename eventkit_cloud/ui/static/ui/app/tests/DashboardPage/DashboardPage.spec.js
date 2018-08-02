@@ -237,7 +237,7 @@ describe('DashboardPage component', () => {
 
     beforeEach(setup);
 
-    it('joyrideAddSteps sets state for steps in tour', () => {
+    it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [
             {
                 text: 'im the step',
@@ -536,7 +536,7 @@ describe('DashboardPage component', () => {
 
         it('navigates to "/exports?collection=myDataPacks"', () => {
             expect(browserHistoryPushStub.callCount).toBe(1);
-            expect(browserHistoryPushStub.calledWith('/exports?collection=myDataPacks')).toBe(true);
+            expect(browserHistoryPushStub.calledWith('/exports?collection=admin')).toBe(true);
         });
     });
 

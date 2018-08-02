@@ -60,7 +60,7 @@ def create_license_file(provider_task):
                                      provider_task.slug, '{0}.txt'.format(normalize_name(data_provider_license.name)))
 
     with open(license_file_path, 'w') as license_file:
-        license_file.write(data_provider_license.text)
+        license_file.write(data_provider_license.text.encode('utf-8'))
 
     return license_file_path
 
@@ -139,6 +139,7 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                                                                       'has_elevation': has_elevation}))
     return style_file
 
+
 def get_human_readable_metadata_document(run_uid):
     """
 
@@ -156,7 +157,7 @@ def get_human_readable_metadata_document(run_uid):
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         data_provider_metadata = {'name': data_provider.name,
-                                  'description': data_provider.service_description.replace('\r\n', '\n').replace('\n', '\r\n\t'),
+                                  'description': data_provider.service_description.encode('utf-8').replace('\r\n', '\n').replace('\n', '\r\n\t'),
                                   'last_update': get_last_update(data_provider.url,
                                                                  provider_type,
                                                                  slug=data_provider.slug),
@@ -176,7 +177,7 @@ def get_human_readable_metadata_document(run_uid):
     metadata_file = os.path.join(stage_dir, '{0}_ReadMe.txt'.format(normalize_name(run.job.name)))
 
     with open(metadata_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).replace('\r\n', '\n').replace('\n', '\r\n'))
+        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).encode('utf-8').replace('\r\n', '\n').replace('\n', '\r\n'))
 
     return metadata_file
 
