@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Link } from 'react-router';
 import { Card, CardTitle } from 'material-ui/Card';
@@ -14,7 +14,6 @@ import NavigationCheck from 'material-ui/svg-icons/navigation/check';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
-import { shallow } from 'enzyme/build/index';
 
 describe('DataPackListItem component', () => {
     const muiTheme = getMuiTheme();
@@ -108,16 +107,16 @@ describe('DataPackListItem component', () => {
         providers,
     });
 
-    const getWrapperMount = (props) => {
-        return mount(<DataPackListItem {...props} />, {
+    const getWrapperMount = props => (
+        mount(<DataPackListItem {...props} />, {
             context: { muiTheme },
             childContextTypes: { muiTheme: React.PropTypes.object },
-        });
-    };
+        })
+    );
 
-    const getWrapperShallow = (props) => {
-        return shallow(<DataPackListItem {...props} />);
-    };
+    const getWrapperShallow = props => (
+        shallow(<DataPackListItem {...props} />)
+    );
 
     it('should render a list item with complete and private icons and owner text', () => {
         const props = getProps();

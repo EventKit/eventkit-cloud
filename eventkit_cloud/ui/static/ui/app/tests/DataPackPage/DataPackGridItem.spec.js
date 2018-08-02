@@ -152,16 +152,16 @@ afterAll(() => {
     DataPackGridItem.prototype.initMap.restore();
 });
 
-const getWrapperMount = (props) => {
-    return mount(<DataPackGridItem {...props} />, {
+const getWrapperMount = props => (
+    mount(<DataPackGridItem {...props} />, {
         context: { muiTheme },
         childContextTypes: { muiTheme: React.PropTypes.object },
-    });
-};
+    })
+);
 
-const getWrapperShallow = (props) => {
-    return shallow(<DataPackGridItem {...props} />);
-};
+const getWrapperShallow = props => (
+    shallow(<DataPackGridItem {...props} />)
+);
 
 describe('DataPackGridItem component', () => {
     const getProps = () => (

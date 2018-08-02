@@ -173,7 +173,7 @@ export class DataPackGridItem extends Component {
     showDeleteDialog() {
         this.setState({
             menuOpen: false,
-            deleteDialogOpen: true
+            deleteDialogOpen: true,
         });
     }
 
