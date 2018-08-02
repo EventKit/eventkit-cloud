@@ -16,8 +16,8 @@ from django.contrib.gis.geos import Polygon
 
 from django.core.cache import caches
 from django.core.mail import EmailMultiAlternatives
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import DatabaseError, transaction
-from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
 from celery import signature
@@ -38,7 +38,7 @@ from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
 from .exceptions import CancelException, DeleteException
 from .helpers import normalize_name, get_archive_data_path, get_run_download_url, get_download_filename, get_run_staging_dir, \
-    get_provider_staging_dir, get_run_download_dir, Directory, default_format_time
+    get_provider_staging_dir, get_run_download_dir, Directory, default_format_time, progressive_kill
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -188,7 +188,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=Fals
 
 
 # ExportTaskRecord abstract base class and subclasses.
-class ExportTask(LockingTask):
+class ExportTask(UserDetailsBase):
     """
     Abstract base class for export tasks.
     """
@@ -210,7 +210,8 @@ class ExportTask(LockingTask):
                 task_state_result = None
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
-            retval = super(ExportTask, self).__call__(*args, **kwargs)
+            if not TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
+                retval = super(ExportTask, self).__call__(*args, **kwargs)
 
             """
             Update the successfully completed task as follows:
@@ -231,7 +232,10 @@ class ExportTask(LockingTask):
             finished = timezone.now()
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 logging.info('Task reported on success but was previously canceled ', format(task_uid))
-                raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
+                username = None
+                if task.cancel_user:
+                    username = task.cancel_user.username
+                raise CancelException(task_name=task.export_provider_task.name, user_name=username)
 
             task.finished_at = finished
             task.progress = 100
@@ -312,7 +316,7 @@ class ExportTask(LockingTask):
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
-                cancel_synchronous_task_chain(export_provider_task_uid=export_provider_task.uid)
+                cancel_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
                 run = export_provider_task.run
                 stage_dir = kwargs['stage_dir']
                 export_task_error_handler(
@@ -334,6 +338,8 @@ class ExportTask(LockingTask):
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
             celery_uid = self.request.id
+            if not celery_uid:
+                raise Exception("Failed to save celery_UID")
             task.celery_uid = celery_uid
             task.save()
             result = parse_result(result, 'status') or []
@@ -342,7 +348,8 @@ class ExportTask(LockingTask):
                 task.status = TaskStates.CANCELED.value
                 task.save()
                 raise CancelException(task_name=task.export_provider_task.name)
-            task.pid = os.getpid()
+            # The parent ID is actually the process running in celery.
+            task.pid = os.getppid()
             task.status = task_status
             task.export_provider_task.status = TaskStates.RUNNING.value
             task.started_at = started
@@ -629,7 +636,7 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     return result
 
 
-@app.task(name='Clip Export', bind=True, base=LockingTask)
+@app.task(name='Clip Export', bind=True, base=UserDetailsBase)
 def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                      *args, **kwargs):
     """
@@ -883,7 +890,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 
 
 # This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', base=LockingTask)
+@app.task(name='Wait For Providers', base=UserDetailsBase)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from .models import ExportRun
 
@@ -901,7 +908,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-class FinalizeRunHookTask(LockingTask):
+class FinalizeRunHookTask(UserDetailsBase):
     """ Base for tasks which execute after all export provider tasks have completed, but before finalize_run_task.
         - Ensures the task state is recorded when the task is started and after it has completed.
         - Combines new_zip_filepaths list from the previous FinalizeRunHookTask in a chain with the new
@@ -1111,11 +1118,12 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
     with transaction.atomic():
 
         export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
-        if TaskStates[result_status] != TaskStates.SUCCESS:
+        if TaskStates[result_status] == TaskStates.CANCELED:
+            export_provider_task.status = TaskStates.CANCELED.value
+        elif TaskStates[result_status] != TaskStates.SUCCESS:
             export_provider_task.status = TaskStates.INCOMPLETE.value
         else:
             export_provider_task.status = TaskStates.COMPLETED.value
-
         export_provider_task.finished_at = timezone.now()
         export_provider_task.save()
 
@@ -1237,7 +1245,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
     return result
 
 
-class FinalizeRunBase(LockingTask):
+class FinalizeRunBase(UserDetailsBase):
     name = 'Finalize Export Run'
 
     def run(self, result=None, run_uid=None, stage_dir=None):
@@ -1426,10 +1434,11 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     return result
 
 
-def cancel_synchronous_task_chain(export_provider_task_uid=None):
+def cancel_synchronous_task_chain(data_provider_task_uid=None):
     from ..tasks.models import DataProviderTaskRecord
-    export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
-    for export_task in export_provider_task.tasks.all():
+
+    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    for export_task in data_provider_task_record.tasks.all():
         if TaskStates[export_task.status] == TaskStates.PENDING.value:
             export_task.status = TaskStates.CANCELED.value
             export_task.save()
@@ -1440,8 +1449,8 @@ def cancel_synchronous_task_chain(export_provider_task_uid=None):
                 routing_key="{0}.cancel".format(export_task.worker))
 
 
-@app.task(name='Cancel Export Provider Task', base=LockingTask)
-def cancel_export_provider_task(result=None, export_provider_task_uid=None, canceling_username=None, delete=False,
+@app.task(name='Cancel Export Provider Task', base=UserDetailsBase)
+def cancel_export_provider_task(result=None, data_provider_task_uid=None, canceling_username=None, delete=False,
                                 error=False, *args, **kwargs):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
@@ -1457,18 +1466,18 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
     from django.contrib.auth.models import User
 
     result = result or {}
+    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
-    export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
-    canceling_user = User.objects.filter(username=canceling_username).first()
+    # There might not be a canceling user...
+    try:
+        canceling_user = User.objects.get(username=canceling_username)
+    except ObjectDoesNotExist:
+        canceling_user = None
 
-    if not export_provider_task:
-        result['result'] = False
-        return result
-
-    export_tasks = export_provider_task.tasks.all()
+    export_tasks = data_provider_task_record.tasks.all()
 
     # Loop through both the tasks in the DataProviderTaskRecord model, as well as the Task Chain in celery
-    for export_task in export_tasks.filter(~Q(status=TaskStates.CANCELED.value) | ~Q(status=TaskStates.FAILED.value)):
+    for export_task in export_tasks.all():
         if delete:
             exception_class = DeleteException
         else:
@@ -1481,7 +1490,7 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
         # This part is to populate the UI with the cancel message.  If a different mechanism is incorporated
         # to pass task information to the users, then it may make sense to replace this.
         try:
-            raise exception_class(task_name=export_provider_task.name, user_name=canceling_user)
+            raise exception_class(task_name=data_provider_task_record.name, user_name=canceling_user)
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
@@ -1499,12 +1508,12 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.cancel".format(export_task.worker))
 
-    if TaskStates[export_provider_task.status] not in TaskStates.get_finished_states():
+    if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():
         if error:
-            export_provider_task.status = TaskStates.FAILED.value
+            data_provider_task_record.status = TaskStates.FAILED.value
         else:
-            export_provider_task.status = TaskStates.CANCELED.value
-    export_provider_task.save()
+            data_provider_task_record.status = TaskStates.CANCELED.value
+    data_provider_task_record.save()
 
     return result
 
@@ -1515,41 +1524,39 @@ def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete
 
     result = result or {}
 
-    export_run = ExportRun.objects.filter(uid=export_run_uid).first()
-
-    if not export_run:
-        result['result'] = False
-        return result
+    export_run = ExportRun.objects.get(uid=export_run_uid)
 
     for export_provider_task in export_run.provider_tasks.all():
-        cancel_export_provider_task(export_provider_task_uid=export_provider_task.uid,
+        cancel_export_provider_task(data_provider_task_uid=export_provider_task.uid,
                                     canceling_username=canceling_username, delete=delete,
                                     locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid))
     result['result'] = True
     return result
 
 
-@app.task(name='Kill Task', base=LockingTask)
+@app.task(name='Kill Task', base=UserDetailsBase)
 def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.
     """
 
-    import os, signal
     import celery
     result = result or {}
 
-    if task_pid:
-        # Don't kill tasks with default pid.
-        if task_pid <= 0:
-            return
+    if celery_uid:
         try:
             # Ensure the task is still running otherwise the wrong process will be killed
             if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
                 # If the task finished prior to receiving this kill message it could throw an OSError.
-                os.kill(task_pid, signal.SIGTERM)
+                logger.info("Attempting to kill {0}".format(task_pid))
+                # Don't kill tasks with default pid.
+                if task_pid > 0:
+                    progressive_kill(task_pid)
+            else:
+                logger.info("The celery_uid {0} has the status of {1}.".format(celery_uid,
+                                                                               AsyncResult(celery_uid, app=app).state))
         except OSError:
-            logger.info("{0} PID does not exist.")
+            logger.info("{0} PID does not exist.".format(task_pid))
     return result
 
 
