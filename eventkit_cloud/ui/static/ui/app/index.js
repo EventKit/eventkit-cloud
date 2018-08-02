@@ -1,10 +1,10 @@
 import 'babel-polyfill';
 import React from 'react';
+import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import Loadable from 'react-loadable';
-import injectTapEventPlugin from 'react-tap-event-plugin';
-import { UserAuthWrapper } from 'redux-auth-wrapper';
+import { connectedReduxRedirect } from 'redux-auth-wrapper/history3/redirect';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
@@ -14,7 +14,6 @@ const Loading = () => <div>Loading. . .</div>;
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
-injectTapEventPlugin();
 
 function allTrue(acceptedLicenses) {
     return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
@@ -26,30 +25,28 @@ const Loader = Loadable({
     loading: Loading,
 });
 
-const UserIsAuthenticated = UserAuthWrapper({
-    authSelector: state => state.user.data,
+const UserIsAuthenticated = connectedReduxRedirect({
+    authenticatedSelector: state => !!state.user.data,
     authenticatingSelector: state => state.user.isLoading,
-    LoadingComponent: Loader,
+    AuthenticatingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
+    redirectPath: '/login',
 });
 
-const UserIsNotAuthenticated = UserAuthWrapper({
-    authSelector: state => state.user,
+const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
-    // Want to redirect the user when they are done loading and authenticated
-    predicate: user => !user.data && user.isLoading === false,
-    failureRedirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/exports',
+    authenticatedSelector: state => !state.user.data && state.user.isLoading === false,
+    redirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/exports',
     allowRedirectBack: false,
 });
 
-const UserHasAgreed = UserAuthWrapper({
-    authSelector: state => state.user.data,
+const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
-    failureRedirectPath: '/account',
+    redirectPath: '/account',
     wrapperDisplayName: 'UserHasAgreed',
-    predicate: userData => allTrue(userData.accepted_licenses),
+    authenticatedSelector: state => allTrue(state.user.data.accepted_licenses),
 });
 
 function checkAuth(storeObj) {

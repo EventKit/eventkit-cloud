@@ -40,8 +40,8 @@ describe('DataPackFilterButton component', () => {
     });
 
     it('should display differently on small vs large screens', () => {
-        window.resizeTo(1000, 900);
-        expect(window.innerWidth).toBe(1000);
+        global.window.resizeTo(1000, 900);
+        expect(global.window.innerWidth).toBe(1000);
         const props = getProps();
         const wrapper = mount(<DataPackFilterButton {...props} />, {
             context: { muiTheme },
@@ -50,8 +50,9 @@ describe('DataPackFilterButton component', () => {
         expect(wrapper.find(FlatButton).props().style.width).toEqual('90px');
         expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('12px');
 
-        window.resizeTo(400, 500);
-        expect(window.innerWidth).toBe(400);
+        global.window.resizeTo(400, 500);
+        expect(global.window.innerWidth).toBe(400);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find(FlatButton).props().style.width).toEqual('40px');
         expect(wrapper.find(FlatButton).props().labelStyle.fontSize).toEqual('10px');

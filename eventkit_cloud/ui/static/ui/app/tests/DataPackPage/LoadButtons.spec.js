@@ -82,6 +82,7 @@ describe('LoadButtons component', () => {
         const wrapper = getWrapper(props);
         expect(stateSpy.calledOnce).toBe(true);
         ReactDOM.findDOMNode = () => ({ offsetWidth: 12 });
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(stateSpy.calledTwice);
         expect(stateSpy.calledWith({ width: 12 })).toBe(true);

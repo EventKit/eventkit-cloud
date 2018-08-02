@@ -83,25 +83,25 @@ describe('PermissionsFilter component', () => {
         const wrapper = getWrapper(props);
         const button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
 
-        expect(button.text()).toEqual('No Members / No Groups');
+        expect(button.hostNodes().text()).toEqual('No Members / No Groups');
 
         let nextProps = { ...props };
         nextProps.permissions.groups = { 1: '' };
         nextProps.permissions.members = { user_one: '' };
         wrapper.setProps(nextProps);
-        expect(button.text()).toEqual('1 Member / 1 Group');
+        expect(button.hostNodes().text()).toEqual('1 Member / 1 Group');
 
         nextProps = { ...nextProps };
         nextProps.permissions.groups = { 1: '', 2: '' };
         nextProps.permissions.members = { user_one: '', user_two: '' };
         wrapper.setProps(nextProps);
-        expect(button.text()).toEqual('All Members / All Groups');
+        expect(button.hostNodes().text()).toEqual('All Members / All Groups');
 
         nextProps = { ...nextProps };
         nextProps.permissions.groups = { 1: '', 2: '', 3: '' };
         nextProps.permissions.members = { user_one: '', user_two: '', user_three: '' };
         wrapper.setProps(nextProps);
-        expect(button.text()).toEqual('3 Members / 3 Groups');
+        expect(button.hostNodes().text()).toEqual('3 Members / 3 Groups');
     });
 
     it('handleOpen should setState to open', () => {

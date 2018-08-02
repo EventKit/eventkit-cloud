@@ -102,9 +102,8 @@ function getRuns() {
     ];
 }
 
-
 beforeAll(() => {
-    DataPackGridItem.prototype.initMap = sinon.spy();
+    sinon.stub(DataPackGridItem.prototype, 'initMap');
 });
 
 afterAll(() => {

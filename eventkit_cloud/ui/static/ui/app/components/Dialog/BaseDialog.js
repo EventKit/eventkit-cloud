@@ -120,7 +120,7 @@ BaseDialog.propTypes = {
     onClose: PropTypes.func,
     title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     actions: PropTypes.arrayOf(PropTypes.node),
-    children: PropTypes.oneOf([
+    children: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),

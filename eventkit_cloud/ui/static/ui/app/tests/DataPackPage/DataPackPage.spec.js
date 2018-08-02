@@ -411,7 +411,7 @@ describe('DataPackPage component', () => {
 
     it('makeRunRequest should build a params object and pass it to props.getRuns', () => {
         const props = getProps();
-        props.getRuns = sinon.spy();
+        props.getRuns = sinon.spy((ps) => { console.log(ps); });
         const wrapper = shallow(<DataPackPage {...props} />);
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
@@ -444,8 +444,9 @@ describe('DataPackPage component', () => {
             providers,
             geojson_geometry: geojson,
         });
+        wrapper.update();
         wrapper.instance().makeRunRequest();
-        expect(props.getRuns.calledOnce).toBe(true);
+        expect(props.getRuns.called).toBe(true);
         expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 

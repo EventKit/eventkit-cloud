@@ -1,10 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import Dropzone from 'react-dropzone';
 import RaisedButton from 'material-ui/RaisedButton';
 import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
 import BaseDialog from '../Dialog/BaseDialog';
-
-const Dropzone = require('react-dropzone');
 
 export class DropZoneDialog extends Component {
     constructor(props) {

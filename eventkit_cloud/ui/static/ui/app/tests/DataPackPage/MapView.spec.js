@@ -562,6 +562,7 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const updates = updateSpy.args.length;
         const mapUpdate = mapUpdateSpy.args.length;
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(updateSpy.args.length).toEqual(updates + 1);
         expect(mapUpdateSpy.args.length).toEqual(mapUpdate + 1);

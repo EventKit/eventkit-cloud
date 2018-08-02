@@ -86,6 +86,7 @@
     ]
   },
   "jest": {
+    "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
     "collectCoverageFrom": [
       "**/*.{js,jsx}",
@@ -121,7 +122,7 @@
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",
     "start": "node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline",
     "coverage": "node_modules/jest-cli/bin/jest.js --coverage --silent && mkdir -p /var/lib/eventkit/coverage/coveralls && coveralls-lcov -v -n /var/lib/eventkit/coverage/lcov.info > /var/lib/eventkit/coverage/coveralls/coveralls.json",
-    "test": "node_modules/jest-cli/bin/jest.js --silent",
+    "test": "node_modules/jest-cli/bin/jest.js",
     "e2e": "node_modules/nightwatch/bin/nightwatch",
     "install-linter": "npm install eslint@4.9.0 eslint-plugin-import@2.7.0 eslint-plugin-react@7.4.0 eslint-plugin-jsx-a11y@6.0.2 eslint-config-airbnb@16.1.0",
     "lint": "node_modules/eslint/bin/eslint.js '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.js'"

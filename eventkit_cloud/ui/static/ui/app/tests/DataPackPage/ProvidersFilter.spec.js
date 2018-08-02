@@ -57,7 +57,7 @@ describe('ProvidersFilter component', () => {
 
     it('should not have checkboxes', () => {
         const props = getProps();
-        props.providers = null;
+        props.providers = [];
         const wrapper = getWrapper(props);
         expect(wrapper.find(Checkbox)).toHaveLength(0);
     });
@@ -67,21 +67,20 @@ describe('ProvidersFilter component', () => {
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
         const input = wrapper.find(Checkbox).at(0).find('input');
-        input.node.checked = true;
-        input.simulate('change');
+        input.simulate('change', { target: { checked: true } });
+        wrapper.update();
         expect(props.onChange.calledOnce).toEqual(true);
-        expect(props.onChange.args[0][0]).toEqual(providers[0].slug);
-        expect(props.onChange.args[0][1]).toEqual(true);
     });
 
     it('should set source as checked', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const input = wrapper.find(Checkbox).at(0).find('input');
-        expect(input.node.checked).toEqual(false);
+        let input = wrapper.find(Checkbox).at(0).find('input');
+        expect(input.props().checked).toEqual(false);
         const nextProps = getProps();
         nextProps.selected[providers[0].slug] = true;
         wrapper.setProps(nextProps);
-        expect(input.node.checked).toEqual(true);
+        input = wrapper.find(Checkbox).at(0).find('input');
+        expect(input.props().checked).toEqual(true);
     });
 });

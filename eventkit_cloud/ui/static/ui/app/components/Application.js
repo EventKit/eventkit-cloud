@@ -472,6 +472,7 @@ export class Application extends Component {
                 position: 'absolute',
                 width: '100%',
                 height: '100%',
+                pointerEvents: 'none',
             },
             drawer: {
                 width: '200px',
@@ -589,7 +590,6 @@ export class Application extends Component {
                                                 notifications={this.props.notifications}
                                                 router={this.props.router}
                                                 onNavigate={this.handleNotificationsDropdownNavigate}
-                                                store={this.props.store}
                                             />
                                         </div>
                                     </div>
@@ -773,7 +773,7 @@ Application.propTypes = {
     drawer: PropTypes.string.isRequired,
     router: PropTypes.shape({
         location: PropTypes.shape({
-            pathname: PropTypes.arrayOf(PropTypes.string),
+            pathname: PropTypes.string,
         }),
         push: PropTypes.func,
     }).isRequired,
@@ -795,7 +795,6 @@ Application.propTypes = {
     notifications: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
-    store: PropTypes.object.isRequired,
 };
 
 Application.childContextTypes = {

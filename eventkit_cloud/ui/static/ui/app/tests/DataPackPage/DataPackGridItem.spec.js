@@ -145,7 +145,7 @@ function getRuns() {
 }
 
 beforeAll(() => {
-    DataPackGridItem.prototype.initMap = sinon.stub();
+    sinon.stub(DataPackGridItem.prototype, 'initMap');
 });
 
 afterAll(() => {
@@ -180,7 +180,8 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
-        const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
+        const subtitle = wrapper.find(CardTitle).find('.qa-DataPackGridItem-div-subtitle').hostNodes();
+        expect(subtitle).toHaveLength(1);
         expect(subtitle.find('div').at(1).text()).toEqual('Event: Test1 event');
         expect(subtitle.find('span').at(0).text()).toEqual('Added: 2017-03-10');
         expect(subtitle.find('span').at(1).text()).toEqual('Expires: 2017-03-24');
@@ -230,12 +231,12 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapper(props);
         const updateSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
-        expect(wrapper.find(`#${uid}_map`)).toHaveLength(1);
+        expect(wrapper.find(`#map_${uid}`).hostNodes()).toHaveLength(1);
         wrapper.setState({ expanded: false });
         expect(wrapper.find(CardMedia)).toHaveLength(0);
         expect(updateSpy.called).toBe(true);
         expect(wrapper.instance().initMap.called).toBe(false);
-        expect(wrapper.find(`#${uid}_map`)).toHaveLength(0);
+        expect(wrapper.find(`#map_${uid}`).hostNodes()).toHaveLength(0);
         updateSpy.restore();
     });
 
@@ -264,10 +265,7 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapper(props);
         const expectedBool = !wrapper.state().overflow;
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        const div = TestUtils.findRenderedComponentWithType(wrapper.instance(), CardText);
-        // eslint-disable-next-line react/no-find-dom-node
-        const node = ReactDOM.findDOMNode(div);
-        TestUtils.Simulate.touchTap(node);
+        wrapper.find(CardText).find('div').simulate('click');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ overflowText: expectedBool })).toBe(true);
         stateSpy.restore();

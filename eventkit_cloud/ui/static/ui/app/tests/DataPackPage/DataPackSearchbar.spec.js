@@ -24,8 +24,8 @@ describe('DataPackSearchbar component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(TextField)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackSearchBar-TextField')).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackSearchBar-TextField').children().first().text()).toEqual('Search DataPacks');
+        expect(wrapper.find('.qa-DataPackSearchBar-TextField').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-DataPackSearchBar-TextField').hostNodes().text()).toEqual('Search DataPacks');
     });
 
     it('should call handleChange', () => {
