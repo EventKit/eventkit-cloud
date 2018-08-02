@@ -269,7 +269,7 @@ export class DataPackTableItem extends Component {
                         <MenuItem
                             className="qa-DataPackTableItem-MenuItem-statusDownloadLink"
                             style={{ fontSize: '12px' }}
-                            primaryText="Go to Status & Download"
+                            primaryText="Status & Download"
                             onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                         />
                         <MenuItem

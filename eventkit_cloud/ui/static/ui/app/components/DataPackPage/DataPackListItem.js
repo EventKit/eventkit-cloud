@@ -254,7 +254,7 @@ export class DataPackListItem extends Component {
                                 <MenuItem
                                     className="qa-DataPackListItem-MenuItem-statusDownloadLink"
                                     style={{ fontSize: subtitleFontSize }}
-                                    primaryText="Go to Status & Download"
+                                    primaryText="Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem

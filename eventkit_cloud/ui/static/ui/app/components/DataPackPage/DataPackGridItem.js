@@ -431,7 +431,7 @@ export class DataPackGridItem extends Component {
                                 <MenuItem
                                     className="qa-DataPackGridItem-MenuItem-goToStatus"
                                     style={{ fontSize: cardTextFontSize }}
-                                    primaryText="Go to Status & Download"
+                                    primaryText="Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem
