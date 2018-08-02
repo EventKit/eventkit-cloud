@@ -776,6 +776,7 @@ Application.defaultProps = {
     autoLogoutAt: null,
     autoLogoutWarningAt: null,
     userData: {},
+    store: null,
 };
 
 Application.propTypes = {
@@ -786,7 +787,7 @@ Application.propTypes = {
     drawer: PropTypes.string.isRequired,
     router: PropTypes.shape({
         location: PropTypes.shape({
-            pathname: PropTypes.arrayOf(PropTypes.string),
+            pathname: PropTypes.string,
         }),
         push: PropTypes.func,
     }).isRequired,
@@ -808,7 +809,7 @@ Application.propTypes = {
     notifications: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
-    store: PropTypes.object.isRequired,
+    store: PropTypes.object,
 };
 
 Application.childContextTypes = {
