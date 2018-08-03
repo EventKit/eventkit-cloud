@@ -100,6 +100,7 @@ export class Application extends Component {
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
         this.prevWindowWidth = 0;
+        this.loggedIn = false;
     }
 
     getChildContext() {
@@ -116,20 +117,21 @@ export class Application extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.userData !== this.props.userData) {
-            if (nextProps.userData != null) {
-                // if the user is logged in and the screen is large the drawer should be open
-                if (window.innerWidth >= 1200) {
-                    this.props.openDrawer();
-                }
-                this.startCheckingForAutoLogout();
-                this.startSendingUserActivePings();
-                this.startListeningForNotifications();
-            } else {
-                this.stopCheckingForAutoLogout();
-                this.stopSendingUserActivePings();
-                this.stopListeningForNotifications();
+        if (!this.loggedIn && nextProps.userData) {
+            this.loggedIn = true;
+            // If the user is logged in and the screen is large the drawer should be open
+            if (isViewportXL()) {
+                this.props.openDrawer();
             }
+            console.log('innerWidth', window.innerWidth);
+            this.startCheckingForAutoLogout();
+            this.startSendingUserActivePings();
+            this.startListeningForNotifications();
+        } else if (this.loggedIn && !nextProps.userData) {
+            this.loggedIn = false;
+            this.stopCheckingForAutoLogout();
+            this.stopSendingUserActivePings();
+            this.stopListeningForNotifications();
         }
     }
 
@@ -368,14 +370,16 @@ export class Application extends Component {
     handleResize() {
         this.forceUpdate();
 
-        // Close the drawer if we resize down to mobile width.
-        if (isViewportL() && this.prevWindowWidth >= L_MAX_WIDTH) {
-            this.props.closeDrawer();
-        }
+        if (this.loggedIn) {
+            // Close the drawer if we resize down to mobile width.
+            if (isViewportL() && this.prevWindowWidth >= L_MAX_WIDTH) {
+                this.props.closeDrawer();
+            }
 
-        // Open the drawer if we resize up to desktop width.
-        if (isViewportXL() && this.prevWindowWidth < L_MAX_WIDTH) {
-            this.props.openDrawer();
+            // Open the drawer if we resize up to desktop width.
+            if (isViewportXL() && this.prevWindowWidth < L_MAX_WIDTH) {
+                this.props.openDrawer();
+            }
         }
 
         this.prevWindowWidth = window.innerWidth;

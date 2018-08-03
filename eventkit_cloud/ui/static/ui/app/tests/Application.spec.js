@@ -197,10 +197,10 @@ describe('Application component', () => {
         props.drawer = 'open';
         const wrapper = getShallowWrapper(props);
         wrapper.instance().handleToggle();
-        expect(props.closeDrawer.calledOnce).toBe(true);
+        expect(props.closeDrawer.callCount).toBe(1);
         wrapper.setProps({ ...props, drawer: 'closed' });
         wrapper.instance().handleToggle();
-        expect(props.openDrawer.calledOnce).toBe(true);
+        expect(props.openDrawer.callCount).toBe(2);
     });
 
     it('onMenuItemClick should call handleToggle if screen size is smaller than 1200', () => {
@@ -352,6 +352,7 @@ describe('Application component', () => {
         const stopListeningForNotificationsSpy = sinon.spy(Application.prototype, 'stopListeningForNotifications');
         const wrapper = getMountedWrapper(getProps());
         const instance = wrapper.instance();
+        instance.loggedIn = true;
         wrapper.setProps({
             userData: null,
         });

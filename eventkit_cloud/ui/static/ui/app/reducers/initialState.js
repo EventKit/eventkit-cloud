@@ -1,5 +1,4 @@
 import { userState, usersState } from './userReducer';
-import { isViewportXL } from '../utils/viewport';
 
 export default {
     auth: userState,
@@ -26,7 +25,7 @@ export default {
         error: null,
         filename: '',
     },
-    drawer: isViewportXL() ? 'open' : 'closed',
+    drawer: 'closed',
     runsList: {
         fetching: false,
         fetched: false,
