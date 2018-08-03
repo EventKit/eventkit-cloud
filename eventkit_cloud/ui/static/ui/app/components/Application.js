@@ -30,6 +30,7 @@ import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 import { isViewportL, isViewportXL, L_MAX_WIDTH } from '../utils/viewport';
+import background from '../../images/ek_topo_pattern.png';
 
 require('../fonts/index.css');
 
@@ -440,6 +441,7 @@ export class Application extends Component {
         let imgWidth = '180px';
         if (window.innerWidth > 768) imgWidth = '256px';
         else if (window.innerWidth > 500) imgWidth = '200px';
+        const mainAppBarHeight = 95;
         const styles = {
             appBar: {
                 position: 'absolute',
@@ -537,6 +539,9 @@ export class Application extends Component {
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0,
+                background: 'rgb(17, 24, 35)',
+                backgroundImage: `url(${background})`,
+                height: window.innerHeight - mainAppBarHeight,
             },
         };
 
