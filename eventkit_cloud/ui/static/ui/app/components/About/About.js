@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import AppBar from 'material-ui/AppBar';
+import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
 import ThreeStepInfo from './ThreeStepInfo';
@@ -27,14 +27,12 @@ export class About extends Component {
             header: {
                 backgroundColor: '#161e2e',
                 height: '35px',
+                lineHeight: '35px',
                 color: 'white',
                 fontSize: '14px',
                 padding: '0px 34px',
-            },
-            headerTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                height: '35px',
+                display: 'flex',
+                justifyContent: 'space-between',
             },
             body: {
                 height: window.innerHeight - 130,
@@ -59,7 +57,7 @@ export class About extends Component {
             return null;
         }
 
-        let version = '';
+        let version = '1';
         let contactUrl = '';
         if (this.context.config) {
             version = this.context.config.VERSION;
@@ -68,24 +66,12 @@ export class About extends Component {
 
         return (
             <div style={{ backgroundColor: 'white' }}>
-                <AppBar
-                    className="qa-About-AppBar"
+                <PageHeader
+                    className="qa-About-PageHeader"
                     title="About EventKit"
-                    style={styles.header}
-                    titleStyle={styles.headerTitle}
-                    showMenuIconButton={false}
                 >
-                    {version ?
-                        <span
-                            style={{ height: '35px', lineHeight: '35px' }}
-                            className="qa-About-version"
-                        >
-                            Version {version}
-                        </span>
-                        :
-                        null
-                    }
-                </AppBar>
+                    {version}
+                </PageHeader>
                 <div style={styles.body}>
                     <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
                         {contactUrl ?

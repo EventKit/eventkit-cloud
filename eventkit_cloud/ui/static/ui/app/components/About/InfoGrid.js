@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { GridList, GridTile } from 'material-ui';
+import GridList from '@material-ui/core/GridList';
+import GridTile from '@material-ui/core/GridListTile';
 
 export class InfoGrid extends Component {
     render() {
