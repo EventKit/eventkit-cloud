@@ -3,8 +3,8 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ImageCropSquare from '@material-ui/icons/CropSquare';
+import ContentClear from '@material-ui/icons/Clear';
 import { DrawBoxButton } from '../../components/MapTools/DrawBoxButton';
 
 describe('DrawBoxButton component', () => {

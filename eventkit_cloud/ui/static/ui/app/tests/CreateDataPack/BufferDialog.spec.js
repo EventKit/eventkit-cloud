@@ -7,7 +7,7 @@ import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import Slider from 'material-ui/Slider';
-import Clear from 'material-ui/svg-icons/content/clear';
+import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import BufferDialog from '../../components/CreateDataPack/BufferDialog';
 

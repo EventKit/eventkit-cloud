@@ -5,8 +5,8 @@ import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import TextField from 'material-ui/TextField';
 import Slider from 'material-ui/Slider';
-import AlertWarning from 'material-ui/svg-icons/alert/warning';
-import Clear from 'material-ui/svg-icons/content/clear';
+import AlertWarning from '@material-ui/icons/Warning';
+import Clear from '@material-ui/icons/Clear';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 

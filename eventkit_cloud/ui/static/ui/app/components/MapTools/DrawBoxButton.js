@@ -1,8 +1,8 @@
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ImageCropSquare from '@material-ui/icons/CropSquare';
+import ContentClear from '@material-ui/icons/Clear';
 
 export class DrawBoxButton extends Component {
     constructor(props) {

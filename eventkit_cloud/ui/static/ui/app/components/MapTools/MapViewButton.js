@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import ActionSettingsOverscan from 'material-ui/svg-icons/action/settings-overscan';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ActionSettingsOverscan from '@material-ui/icons/SettingsOverscan';
+import ContentClear from '@material-ui/icons/Clear';
 
 export class MapViewButton extends Component {
     constructor(props) {

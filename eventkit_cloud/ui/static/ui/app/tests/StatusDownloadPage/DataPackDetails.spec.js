@@ -5,7 +5,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Table, TableHeader, TableHeaderColumn, TableRow }
     from 'material-ui/Table';
 import RaisedButton from 'material-ui/RaisedButton';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 import ProviderRow from '../../components/StatusDownloadPage/ProviderRow';
 

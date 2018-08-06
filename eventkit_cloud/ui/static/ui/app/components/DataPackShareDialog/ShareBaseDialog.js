@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
-import Clear from 'material-ui/svg-icons/content/clear';
+import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../CustomScrollbar';
 import { isViewportS } from '../../utils/viewport';
 

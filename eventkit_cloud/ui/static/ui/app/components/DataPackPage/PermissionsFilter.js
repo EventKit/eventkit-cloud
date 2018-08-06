@@ -2,9 +2,9 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import CheckCircle from 'material-ui/svg-icons/action/check-circle';
+import Lock from '@material-ui/icons/LockOutlined';
+import SocialGroup from '@material-ui/icons/Group';
+import CheckCircle from '@material-ui/icons/CheckCircle';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class PermissionsFilter extends Component {

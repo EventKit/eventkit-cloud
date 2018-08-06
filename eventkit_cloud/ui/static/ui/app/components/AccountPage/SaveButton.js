@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import NavigationCheck from '@material-ui/icons/Check';
 import RaisedButton from 'material-ui/RaisedButton';
 
 export class SaveButton extends Component {

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { GridList } from 'material-ui/GridList';
-import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
+import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
 
 import Map from 'ol/map';

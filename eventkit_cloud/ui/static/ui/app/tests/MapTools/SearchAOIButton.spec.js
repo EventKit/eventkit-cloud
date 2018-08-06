@@ -3,8 +3,8 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ActionSearch from 'material-ui/svg-icons/action/search';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ActionSearch from '@material-ui/icons/Search';
+import ContentClear from '@material-ui/icons/Clear';
 import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
 
 describe('SearchAOIButton component', () => {

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { MenuItem } from 'react-bootstrap-typeahead';
-import ActionRoom from 'material-ui/svg-icons/action/room';
+import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../icons/IrregularPolygon';
 import css from '../../styles/typeahead.css';
 

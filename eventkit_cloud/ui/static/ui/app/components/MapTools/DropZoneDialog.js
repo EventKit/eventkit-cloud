@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import RaisedButton from 'material-ui/RaisedButton';
-import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
+import FileFileUpload from '@material-ui/icons/CloudUpload';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneDialog extends Component {

@@ -5,7 +5,7 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader } from 'material-ui/Card';
 import Popover from 'material-ui/Popover';
-import CheckBox from 'material-ui/svg-icons/toggle/check-box';
+import CheckBox from '@material-ui/icons/CheckBox';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';

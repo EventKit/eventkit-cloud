@@ -2,9 +2,9 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { Divider, IconButton, IconMenu, MenuItem } from 'material-ui';
-import MoreHorizIcon from 'material-ui/svg-icons/navigation/more-horiz';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
 import values from 'lodash/values';
 import {
     markAllNotificationsAsRead,

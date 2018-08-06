@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Checkbox from 'material-ui/Checkbox';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
+import Checked from '@material-ui/icons/CheckBox';
 
 export class ProvidersFilter extends Component {
     render() {

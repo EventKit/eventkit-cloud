@@ -5,12 +5,12 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
-import Clear from 'material-ui/svg-icons/content/clear';
-import AlertWarning from 'material-ui/svg-icons/alert/warning';
-import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
-import ActionRoom from 'material-ui/svg-icons/action/room';
-import Line from 'material-ui/svg-icons/action/timeline';
-import Extent from 'material-ui/svg-icons/action/settings-overscan';
+import Clear from '@material-ui/icons/Clear';
+import AlertWarning from '@material-ui/icons/Warning';
+import ImageCropSquare from '@material-ui/icons/CropSquare';
+import ActionRoom from '@material-ui/icons/Room';
+import Line from '@material-ui/icons/Timeline';
+import Extent from '@material-ui/icons/SettingsOverscan';
 import RevertDialog from '../../components/CreateDataPack/RevertDialog';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 

@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import AlertWarning from 'material-ui/svg-icons/alert/warning';
-import AlertError from 'material-ui/svg-icons/alert/error';
-import ActionDone from 'material-ui/svg-icons/action/done';
+import AlertWarning from '@material-ui/icons/Warning';
+import AlertError from '@material-ui/icons/Error';
+import ActionDone from '@material-ui/icons/Done';
 import CircularProgress from 'material-ui/CircularProgress';
 import BaseTooltip from '../BaseTooltip';
 
@@ -106,7 +106,6 @@ export class ProviderStatusIcon extends Component {
                     onFocus={this.handleTooltipOpen}
                     onBlur={this.handleTooltipClose}
                     size={20}
-                    color={style.icon.color}
                     {...otherProps}
                 />
                 <BaseTooltip

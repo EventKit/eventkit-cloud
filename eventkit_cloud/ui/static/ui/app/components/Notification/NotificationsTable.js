@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui';
-import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
+import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import NotificationsTableItem from './NotificationsTableItem';
 import NotificationsTableMenu from './NotificationsTableMenu';

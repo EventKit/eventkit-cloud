@@ -4,7 +4,7 @@ import { mount, shallow } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import AppBar from 'material-ui/AppBar';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import initialState from '../../reducers/initialState';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';

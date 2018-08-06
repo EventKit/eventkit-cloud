@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Checkbox from 'material-ui/Checkbox';
-import ToggleCheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import ToggleCheckBox from '@material-ui/icons/CheckBox';
+import ToggleCheckBoxOutlineBlank from '@material-ui/icons/CheckBoxOutlineBlank';
 import Warning from './Warning';
 import UserLicense from './UserLicense';
 

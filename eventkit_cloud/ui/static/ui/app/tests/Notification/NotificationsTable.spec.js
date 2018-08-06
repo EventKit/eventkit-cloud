@@ -3,7 +3,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { TableHeaderColumn } from 'material-ui';
-import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
+import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../../components/icons/IndeterminateIcon';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
 import NotificationsTableMenu from '../../components/Notification/NotificationsTableMenu';

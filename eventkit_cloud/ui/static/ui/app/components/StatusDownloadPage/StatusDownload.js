@@ -3,13 +3,13 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import ErrorOutline from 'material-ui/svg-icons/alert/error-outline';
+import Warning from '@material-ui/icons/Warning';
+import ErrorOutline from '@material-ui/icons/ErrorOutlined';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataCartDetails from './DataCartDetails';
 import {

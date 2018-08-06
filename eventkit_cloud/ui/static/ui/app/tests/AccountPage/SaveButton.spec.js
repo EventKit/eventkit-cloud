@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import NavigationCheck from '@material-ui/icons/Check';
 import RaisedButton from 'material-ui/RaisedButton';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import SaveButton from '../../components/AccountPage/SaveButton';

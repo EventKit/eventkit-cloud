@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import AppBar from 'material-ui/AppBar';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import UserInfo from './UserInfo';

@@ -17,12 +17,12 @@ import ScaleLine from 'ol/control/scaleline';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 
-import Info from 'material-ui/svg-icons/action/info';
-import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
+import Info from '@material-ui/icons/Info';
+import NavigationRefresh from '@material-ui/icons/Refresh';
 import { List, ListItem } from 'material-ui/List';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
-import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
-import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
+import ActionCheckCircle from '@material-ui/icons/CheckCircle';
+import UncheckedCircle from '@material-ui/icons/RadioButtonUnchecked';
 import Paper from 'material-ui/Paper';
 import Checkbox from 'material-ui/Checkbox';
 import CustomScrollbar from '../../components/CustomScrollbar';

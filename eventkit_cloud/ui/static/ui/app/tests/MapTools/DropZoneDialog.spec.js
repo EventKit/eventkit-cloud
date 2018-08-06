@@ -3,7 +3,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
+import FileFileUpload from '@material-ui/icons/FileUpload';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneDialog } from '../../components/MapTools/DropZoneDialog';
 

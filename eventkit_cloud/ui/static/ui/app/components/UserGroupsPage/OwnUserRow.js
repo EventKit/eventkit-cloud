@@ -3,8 +3,8 @@ import React, { Component } from 'react';
 import IconButton from 'material-ui/IconButton';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
-import Person from 'material-ui/svg-icons/social/person';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
+import Person from '@material-ui/icons/Person';
+import ArrowDown from '@material-ui/icons/ArrowDropDown';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 
 export class OwnUserRow extends Component {

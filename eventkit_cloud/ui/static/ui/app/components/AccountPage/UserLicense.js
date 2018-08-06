@@ -2,10 +2,10 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Checkbox from 'material-ui/Checkbox';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
-import ToggleCheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import HardwareKeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import HardwareKeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import ToggleCheckBox from '@material-ui/icons/CheckBox';
+import ToggleCheckBoxOutlineBlank from '@material-ui/icons/CheckBoxOutlineBlank';
+import HardwareKeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import HardwareKeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class UserLicense extends Component {

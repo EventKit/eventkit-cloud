@@ -1,9 +1,10 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withStyles } from '@material-ui/core/styles';
 import { Table, TableHeader, TableHeaderColumn, TableRow }
     from 'material-ui/Table';
-import RaisedButton from 'material-ui/RaisedButton';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import Button from '@material-ui/core/Button';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
 
 export class DataPackDetails extends Component {
@@ -33,14 +34,14 @@ export class DataPackDetails extends Component {
             return (
                 <CloudDownload
                     className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{ fill: 'grey', verticalAlign: 'middle' }}
+                    style={{ fill: 'grey', verticalAlign: 'middle', marginRight: '5px' }}
                 />
             );
         }
         return (
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{ fill: '#4598bf', verticalAlign: 'middle' }}
+                style={{ fill: '#4598bf', verticalAlign: 'middle', marginRight: '5px' }}
             />
         );
     }
@@ -106,6 +107,8 @@ export class DataPackDetails extends Component {
             },
         };
 
+        const { classes } = this.props;
+
         return (
             <div>
                 <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
@@ -127,18 +130,20 @@ export class DataPackDetails extends Component {
                                 className="qa-DataPackDetails-TableHeaderColumn-zipButton"
                                 style={styles.download}
                             >
-                                <RaisedButton
+                                <Button
                                     id="CompleteDownload"
                                     href={this.props.zipFileProp}
+                                    variant="contained"
                                     className="qa-DataPackDetails-RaisedButton-zipButton"
-                                    backgroundColor="rgba(179,205,224,0.5)"
+                                    classes={{ root: classes.root }}
                                     disabled={!this.isZipFileCompleted()}
                                     disableTouchRipple
-                                    labelColor="#4598bf"
-                                    labelStyle={{ fontWeight: 'bold', fontSize: textFontSize }}
-                                    label={this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
-                                    icon={this.getCloudDownloadIcon()}
-                                />
+                                    style={{ fontSize: textFontSize }}
+                                >
+                                    {this.getCloudDownloadIcon()}
+                                    {this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
+
+                                </Button>
                             </TableHeaderColumn>
                             <TableHeaderColumn
                                 className="qa-DataPackDetails-TableHeaderColumn-fileSize"
@@ -187,6 +192,23 @@ DataPackDetails.propTypes = {
     onProviderCancel: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     zipFileProp: PropTypes.string,
+    classes: PropTypes.object.isRequired,
 };
 
-export default DataPackDetails;
+const classStyles = {
+    root: {
+        backgroundColor: 'rgba(179, 205, 224, 0.5)',
+        color: '#4598bf',
+        fontWeight: 'bold',
+        '&:hover': {
+            backgroundColor: 'rgba(179, 205, 224, 0.8)',
+            color: '#4598bf',
+        },
+        '&:disabled': {
+            backgroundColor: '#e5e5e5',
+            color: 'rgba(0, 0, 0, 0.3)',
+        },
+    },
+};
+
+export default withStyles(classStyles)(DataPackDetails);

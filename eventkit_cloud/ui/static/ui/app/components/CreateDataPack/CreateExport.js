@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import AppBar from 'material-ui/AppBar';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import BreadcrumbStepper from './BreadcrumbStepper';
 

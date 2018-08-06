@@ -4,9 +4,9 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Checkbox from 'material-ui/Checkbox';
-import AlertError from 'material-ui/svg-icons/alert/error';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import AlertError from '@material-ui/icons/Error';
+import NotificationSync from '@material-ui/icons/Sync';
+import NavigationCheck from '@material-ui/icons/Check';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 
 describe('StatusFilter component', () => {

@@ -3,10 +3,10 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { IconMenu } from 'material-ui';
-import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 

@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Checkbox from 'material-ui/Checkbox';
-import AlertError from 'material-ui/svg-icons/alert/error';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import ToggleCheckBox from 'material-ui/svg-icons/toggle/check-box';
+import AlertError from '@material-ui/icons/Error';
+import NotificationSync from '@material-ui/icons/Sync';
+import NavigationCheck from '@material-ui/icons/Check';
+import ToggleCheckBox from '@material-ui/icons/CheckBox';
 
 export class StatusFilter extends Component {
     render() {

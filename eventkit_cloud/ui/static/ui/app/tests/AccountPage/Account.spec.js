@@ -5,7 +5,7 @@ import sinon from 'sinon';
 import AppBar from 'material-ui/AppBar';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import UserInfo from '../../components/AccountPage/UserInfo';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';

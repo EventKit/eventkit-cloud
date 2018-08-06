@@ -4,10 +4,10 @@ import { Card, CardHeader } from 'material-ui/Card';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
-import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import CheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import ArrowUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBox from '@material-ui/icons/CheckBox';
+import ArrowDown from '@material-ui/icons/ArrowDropDown';
+import ArrowUp from '@material-ui/icons/ArrowDropUp';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 

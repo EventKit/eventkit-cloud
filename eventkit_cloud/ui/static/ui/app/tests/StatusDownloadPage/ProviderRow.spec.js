@@ -14,11 +14,11 @@ import {
     TableRow,
     TableRowColumn,
 } from 'material-ui/Table';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import Check from 'material-ui/svg-icons/navigation/check';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import Warning from '@material-ui/icons/Warning';
+import Check from '@material-ui/icons/Check';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import LinearProgress from 'material-ui/LinearProgress';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
