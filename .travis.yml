@@ -36,6 +36,8 @@ script:
     - docker-compose logs eventkit
     - echo $SITE_NAME $SITE_IP
     - ping -c 4 cloud.eventkit.test
+    - docker-compose ps
+    - docker-compose tail eventkit celery
     - docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded
     # Check that finish_worker_tasks finishes active tasks but leaves new tasks on the queue
 #    - docker-compose -f docker-compose-test.yml exec eventkit bash -c 'PYTHONPATH=/var/lib/eventkit/ python /var/lib/eventkit/eventkit_cloud/management/tests/shutdown_celery_workers_test_script.py' &&
