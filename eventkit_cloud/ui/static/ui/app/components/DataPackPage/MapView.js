@@ -46,6 +46,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import { userIsDataPackAdmin } from '../../utils/generic';
+import globe from '../../../images/globe-americas.svg';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -205,10 +206,124 @@ export class MapView extends Component {
         this.map.updateSize();
     }
 
+    onMapClick(evt) {
+        if (this.state.mode !== MODE_NORMAL || this.state.disableMapClick) {
+            return false;
+        }
+        const features = [];
+        this.map.forEachFeatureAtPixel(evt.pixel, (mapFeature) => {
+            if (mapFeature.getProperties().uid) {
+                features.push(mapFeature);
+            }
+        }, { hitTolerance: 3 });
+        if (features.length) {
+            if (features.length === 1) {
+                this.handleClick(features[0].getId());
+            } else {
+                this.setState({ groupedFeatures: features, disableMapClick: true });
+                // disable scroll zoom while popup is open
+                let zoom = null;
+                this.map.getInteractions().forEach((mapInteraction) => {
+                    if (mapInteraction instanceof MouseWheelZoom) {
+                        zoom = mapInteraction;
+                    }
+                });
+                if (zoom) {
+                    this.map.removeInteraction(zoom);
+                }
+                const coord = evt.coordinate;
+                this.overlay.setPosition(coord);
+            }
+        }
+        return true;
+    }
+
+    onDrawStart() {
+        clearDraw(this.drawLayer);
+        this.setState({ disableMapClick: true });
+    }
+
+    onDrawEnd(event) {
+        // get the drawn geometry
+        const geom = event.feature.getGeometry();
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
+        const geojson = createGeoJSON(geom);
+        // Since this is a controlled draw we make the assumption
+        // that there is only one feature in the collection
+        const { bbox } = geojson.features[0];
+        // make sure the user didnt create a polygon with no area
+        if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
+            if (this.state.mode === MODE_DRAW_FREE) {
+                const drawFeature = new Feature({ geometry: geom });
+                this.drawLayer.getSource().addFeature(drawFeature);
+                if (isGeoJSONValid(geojson)) {
+                    const geojsonGeometry = createGeoJSONGeometry(geom);
+                    this.props.onMapFilter(geojsonGeometry);
+                } else {
+                    this.showInvalidDrawWarning(true);
+                }
+            } else if (this.state.mode === MODE_DRAW_BBOX) {
+                const geojsonGeometry = createGeoJSONGeometry(geom);
+                this.props.onMapFilter(geojsonGeometry);
+            }
+            this.updateMode(MODE_NORMAL);
+            window.setTimeout(() => {
+                this.setState({ disableMapClick: false });
+            }, 300);
+        }
+    }
+
+    // helper function that changes feature style to unselected
+    setFeatureNotSelected(unselectedFeature) {
+        unselectedFeature.setStyle(this.defaultStyleFunction);
+    }
+
+    // helper function that changes feature style to selected
+    setFeatureSelected(selectedFeature) {
+        selectedFeature.setStyle(this.selectedStyleFunction);
+    }
+
+    setButtonSelected(iconName) {
+        const icons = { ...this.state.toolbarIcons };
+        Object.keys(icons).forEach((key) => {
+            if (key === iconName) {
+                icons[key] = 'SELECTED';
+            } else {
+                icons[key] = 'INACTIVE';
+            }
+        });
+        this.setState({ toolbarIcons: icons });
+    }
+
+    setAllButtonsDefault() {
+        const icons = { ...this.state.toolbarIcons };
+        Object.keys(icons).forEach((key) => {
+            icons[key] = 'DEFAULT';
+        });
+        this.setState({ toolbarIcons: icons });
+    }
+
+    setMapView() {
+        clearDraw(this.drawLayer);
+        const mapExtent = this.map.getView().calculateExtent(this.map.getSize());
+        const geom = Polygon.fromExtent(mapExtent);
+        const coords = geom.getCoordinates();
+        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
+        geom.setCoordinates(unwrappedCoords);
+        const viewFeature = new Feature({
+            geometry: geom,
+        });
+        this.drawLayer.getSource().addFeature(viewFeature);
+        const geojsonGeometry = createGeoJSONGeometry(geom);
+        this.props.onMapFilter(geojsonGeometry);
+    }
+
     getScrollbar() {
         return this.scrollbar;
     }
-    
+
     updateZoomLevel() {
         this.setState({ zoomLevel: this.map.getView().getZoom() });
     }
@@ -246,8 +361,11 @@ export class MapView extends Component {
 
     // add map with controls and basemap to the page
     initMap() {
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-globe';
+        const img = document.createElement('img');
+        img.src = globe;
+        img.alt = 'globe';
+        img.height = '16';
+        img.width = '16';
         return new Map({
             controls: [
                 new ScaleLine({
@@ -263,7 +381,7 @@ export class MapView extends Component {
                 }),
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
-                    label: icon,
+                    label: img,
                     extent: [
                         -14251567.50789682,
                         -10584983.780136958,
@@ -323,7 +441,6 @@ export class MapView extends Component {
     handleOlPopupClose() {
         this.map.addInteraction(new MouseWheelZoom());
         this.overlay.setPosition(undefined);
-        this.closer.blur();
         window.setTimeout(() => {
             this.setState({ disableMapClick: false });
         }, 300);
@@ -395,7 +512,7 @@ export class MapView extends Component {
         const elapsed = frameState.time - start;
         const elapsedRatio = elapsed / 3000;
 
-        const radius = easing.easeOut(elapsedRatio) * 25 + 5 + featureRad;
+        const radius = (easing.easeOut(elapsedRatio) * 25) + 5 + featureRad;
         const opacity = easing.easeOut(1 - elapsedRatio);
 
         const style = new Style({
@@ -415,38 +532,7 @@ export class MapView extends Component {
             return 0;
         }
         this.map.render();
-    }
-
-    onMapClick(evt) {
-        if (this.state.mode !== MODE_NORMAL || this.state.disableMapClick) {
-            return false;
-        }
-        const features = [];
-        this.map.forEachFeatureAtPixel(evt.pixel, (mapFeature) => {
-            if (mapFeature.getProperties().uid) {
-                features.push(mapFeature);
-            }
-        }, { hitTolerance: 3 });
-        if (features.length) {
-            if (features.length === 1) {
-                this.handleClick(features[0].getId());
-            } else {
-                this.setState({ groupedFeatures: features, disableMapClick: true });
-                // disable scroll zoom while popup is open
-                let zoom = null;
-                this.map.getInteractions().forEach((mapInteraction) => {
-                    if (mapInteraction instanceof MouseWheelZoom) {
-                        zoom = mapInteraction;
-                    }
-                });
-                if (zoom) {
-                    this.map.removeInteraction(zoom);
-                }
-                const coord = evt.coordinate;
-                this.overlay.setPosition(coord);
-            }
-        }
-        return true;
+        return 0;
     }
 
     // checks the state for a selectedFeature ID and zooms to that feature
@@ -460,16 +546,6 @@ export class MapView extends Component {
     // call handleClick with currently selected feature if user closes popup
     handlePopupClose() {
         this.handleClick(this.state.selectedFeature);
-    }
-
-    // helper function that changes feature style to unselected
-    setFeatureNotSelected(unselectedFeature) {
-        unselectedFeature.setStyle(this.defaultStyleFunction);
-    }
-
-    // helper function that changes feature style to selected
-    setFeatureSelected(selectedFeature) {
-        selectedFeature.setStyle(this.selectedStyleFunction);
     }
 
     displayAsPoint(inFeature) {
@@ -487,6 +563,8 @@ export class MapView extends Component {
         return true;
     }
 
+    // for some reason if you remove res from the signature it breaks everything. . .
+    // eslint-disable-next-line no-unused-vars
     defaultStyleFunction(inFeature, res) {
         const pointStyle = new Style({
             geometry: featureToPoint,
@@ -509,6 +587,8 @@ export class MapView extends Component {
         return BLUE_STYLE;
     }
 
+    // for some reason if you remove res from the signature it breaks everything. . .
+    // eslint-disable-next-line no-unused-vars
     selectedStyleFunction(inFeature, res) {
         const pointStyle = new Style({
             geometry: featureToPoint,
@@ -571,26 +651,6 @@ export class MapView extends Component {
         this.props.onMapFilter(null);
     }
 
-    setButtonSelected(iconName) {
-        const icons = { ...this.state.toolbarIcons };
-        Object.keys(icons).forEach((key) => {
-            if (key === iconName) {
-                icons[key] = 'SELECTED';
-            } else {
-                icons[key] = 'INACTIVE';
-            }
-        });
-        this.setState({ toolbarIcons: icons });
-    }
-
-    setAllButtonsDefault() {
-        const icons = { ...this.state.toolbarIcons };
-        Object.keys(icons).forEach((key) => {
-            icons[key] = 'DEFAULT';
-        });
-        this.setState({ toolbarIcons: icons });
-    }
-
     toggleImportModal(show) {
         if (show !== undefined) {
             this.setState({ showImportModal: show });
@@ -605,58 +665,6 @@ export class MapView extends Component {
         } else {
             this.setState({ showInvalidDrawWarning: !this.state.showInvalidDrawWarning });
         }
-    }
-
-    onDrawStart() {
-        clearDraw(this.drawLayer);
-        this.setState({ disableMapClick: true });
-    }
-
-    onDrawEnd(event) {
-        // get the drawn geometry
-        const geom = event.feature.getGeometry();
-        const coords = geom.getCoordinates();
-        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
-        geom.setCoordinates(unwrappedCoords);
-        const geojson = createGeoJSON(geom);
-        // Since this is a controlled draw we make the assumption
-        // that there is only one feature in the collection
-        const { bbox } = geojson.features[0];
-        // make sure the user didnt create a polygon with no area
-        if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
-            if (this.state.mode === MODE_DRAW_FREE) {
-                const drawFeature = new Feature({ geometry: geom });
-                this.drawLayer.getSource().addFeature(drawFeature);
-                if (isGeoJSONValid(geojson)) {
-                    const geojsonGeometry = createGeoJSONGeometry(geom);
-                    this.props.onMapFilter(geojsonGeometry);
-                } else {
-                    this.showInvalidDrawWarning(true);
-                }
-            } else if (this.state.mode = MODE_DRAW_BBOX) {
-                const geojsonGeometry = createGeoJSONGeometry(geom);
-                this.props.onMapFilter(geojsonGeometry);
-            }
-            this.updateMode(MODE_NORMAL);
-            window.setTimeout(() => {
-                this.setState({ disableMapClick: false });
-            }, 300);
-        }
-    }
-
-    setMapView() {
-        clearDraw(this.drawLayer);
-        const mapExtent = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = Polygon.fromExtent(mapExtent);
-        const coords = geom.getCoordinates();
-        const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
-        geom.setCoordinates(unwrappedCoords);
-        const viewFeature = new Feature({
-            geometry: geom,
-        });
-        this.drawLayer.getSource().addFeature(viewFeature);
-        const geojsonGeometry = createGeoJSONGeometry(geom);
-        this.props.onMapFilter(geojsonGeometry);
     }
 
     updateMode(mode, callback) {
@@ -729,10 +737,10 @@ export class MapView extends Component {
             coords = coords.map((coord) => {
                 const newCoord = [...coord];
                 if (coord[0] === this.coordinate[0]) {
-                    newCoord[0] = evt.coordinate[0];
+                    [newCoord[0]] = evt.coordinate;
                 }
                 if (coord[1] === this.coordinate[1]) {
-                    newCoord[1] = evt.coordinate[1];
+                    [, newCoord[1]] = evt.coordinate;
                 }
                 return newCoord;
             });
@@ -956,21 +964,34 @@ export class MapView extends Component {
                         />
                     </div>
                     <div id="popup" className={css.olPopup}>
-                        <a href="#" id="popup-closer" className={css.olPopupCloser} />
+                        <span
+                            id="popup-closer"
+                            role="button"
+                            tabIndex={0}
+                            className={css.olPopupCloser}
+                            onClick={this.handleOlPopupClose}
+                            onKeyPress={this.handleOlPopupClose}
+                        />
                         <div className="qa-MapView-div-popupContent" id="popup-content">
                             <p style={{ color: 'grey' }}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                                 {this.state.groupedFeatures.map(groupFeature => (
-                                    <a
+                                    <span
+                                        role="button"
+                                        tabIndex={0}
                                         key={groupFeature.getId()}
                                         onClick={() => {
+                                            this.handleClick(groupFeature.getId());
+                                            this.closer.onclick();
+                                        }}
+                                        onKeyPress={() => {
                                             this.handleClick(groupFeature.getId());
                                             this.closer.onclick();
                                         }}
                                         style={{ display: 'block', cursor: 'pointer' }}
                                     >
                                         <Dot style={styles.dot} /> {groupFeature.getProperties().name}
-                                    </a>
+                                    </span>
                                 ))}
                             </CustomScrollbar>
                         </div>
@@ -996,11 +1017,11 @@ export class MapView extends Component {
 }
 
 MapView.contextTypes = {
-    config: React.PropTypes.object,
+    config: PropTypes.object,
 };
 
 MapView.propTypes = {
-    runs: PropTypes.array.isRequired,
+    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     range: PropTypes.string.isRequired,
@@ -1008,7 +1029,7 @@ MapView.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     geocode: PropTypes.object.isRequired,
     getGeocode: PropTypes.func.isRequired,
     importGeom: PropTypes.object.isRequired,

@@ -1,28 +1,24 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import {SearchAOIButton} from '../../components/MapTools/SearchAOIButton';
-import {fakeStore} from '../../__mocks__/fakeStore'
-import { Provider } from 'react-redux';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import ActionSearch from 'material-ui/svg-icons/action/search';
 import ContentClear from 'material-ui/svg-icons/content/clear';
+import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
 
 describe('SearchAOIButton component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            buttonState: 'DEFAULT',
-            handleCancel: () => {},
-            setSearchAOIButtonSelected: () => {},
-            setAllButtonsDefault: () => {},
-        }
-    }
+    const getProps = () => ({
+        buttonState: 'DEFAULT',
+        handleCancel: () => {},
+        setSearchAOIButtonSelected: () => {},
+        setAllButtonsDefault: () => {},
+    });
     it('should render its default state', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        const wrapper = mount(<SearchAOIButton {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ActionSearch)).toHaveLength(1);
@@ -32,11 +28,11 @@ describe('SearchAOIButton component', () => {
 
     it('should render its inactive state', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        const wrapper = mount(<SearchAOIButton {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.buttonState = 'INACTIVE';
         wrapper.setProps(nextProps);
         expect(wrapper.find('div')).toHaveLength(2);
@@ -47,11 +43,11 @@ describe('SearchAOIButton component', () => {
 
     it('should render its active state', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        const wrapper = mount(<SearchAOIButton {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.buttonState = 'SELECTED';
         wrapper.setProps(nextProps);
         expect(wrapper.find('div')).toHaveLength(2);
@@ -62,11 +58,11 @@ describe('SearchAOIButton component', () => {
 
     it('should handle onClick', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        const wrapper = mount(<SearchAOIButton {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.buttonState = 'SELECTED';
         nextProps.handleCancel = sinon.spy();
         nextProps.setAllButtonsDefault = sinon.spy();
@@ -78,11 +74,11 @@ describe('SearchAOIButton component', () => {
 
     it('should do nothing onClick when inactive', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        const wrapper = mount(<SearchAOIButton {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: React.PropTypes.object },
         });
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.buttonState = 'INACTIVE';
         nextProps.handleCancel = sinon.spy();
         nextProps.setAllButtonsDefault = sinon.spy();

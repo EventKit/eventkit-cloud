@@ -135,7 +135,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.calledWith({ showRerunDialog: false })).toBe(true);
         stateStub.restore();
     });
-    
+
     it('handleClone should clone a job with the correct data', () => {
         const props = getProps();
         props.onClone = sinon.stub();

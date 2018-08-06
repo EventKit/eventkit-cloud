@@ -23,7 +23,7 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
+from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from ..utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
 
@@ -44,15 +44,12 @@ from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
 from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
 from .pagination import LinkHeaderPagination
 from .permissions import IsOwnerOrReadOnly
-from .renderers import HOTExportApiRenderer
-from .renderers import PlainTextRenderer
+from .renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, CustomOpenAPIRenderer, update_schema
 from .validators import validate_bbox_params, validate_search_bbox
 from rest_framework.permissions import AllowAny
 from rest_framework.schemas import SchemaGenerator
-from rest_framework_swagger import renderers
-from rest_framework.renderers import CoreJSONRenderer
 from rest_framework import exceptions
-import coreapi
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -316,6 +313,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
+                            job.provider_tasks = provider_serializer.save()
+                            job.save()
                         except ValidationError:
                             status_code = status.HTTP_400_BAD_REQUEST
                             error_data = {"errors": [{"status": status_code,
@@ -323,8 +322,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       "detail": _('A provider and an export format must be selected.')
                                                       }]}
                             return Response(error_data, status=status_code)
-                        job.provider_tasks = provider_serializer.save()
-
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             for provider_task in job.provider_tasks.all():
@@ -431,10 +428,10 @@ class JobViewSet(viewsets.ModelViewSet):
         try:
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=uid, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        except (InvalidLicense, Error) as err:
+            return Response([{'detail': _(err.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
-        except Unauthorized as ua:
+        except Unauthorized:
             return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
         if run:
@@ -1133,12 +1130,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
+        data_provider_task_record = DataProviderTaskRecord.objects.get(uid=uid)
 
-        if export_provider_task.run.user != request.user and not request.user.is_superuser:
+        if data_provider_task_record.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
+        cancel_export_provider_task.run(data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
@@ -1786,64 +1783,73 @@ def get_job_ids_via_permissions(permissions):
 
     return master_job_list
 
+
 class SwaggerSchemaView(views.APIView):
+
     _ignore_model_permissions = True
     exclude_from_schema = True
     permission_classes = [AllowAny]
     renderer_classes = [
-        CoreJSONRenderer,
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer
+        # CoreJSONRenderer,
+        CustomOpenAPIRenderer,
+        CustomSwaggerUIRenderer
     ]
 
     def get(self, request):
-        generator = SchemaGenerator()
-        generator.get_schema(request=request)
-        links = generator.get_links(request=request)
-        # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('users', {}).get('partial_update')
-        if partial_update_link:
-            links['users']['partial_update'] = coreapi.Link(
-                url=partial_update_link.url,
-                action=partial_update_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='username',
-                        required=True,
-                        location='path')),
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=partial_update_link.description
+
+        try:
+            import coreapi
+            generator = SchemaGenerator()
+            generator.get_schema(request=request)
+            links = generator.get_links(request=request)
+            # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
+            partial_update_link = links.get('users', {}).get('partial_update')
+            if partial_update_link:
+                links['users']['partial_update'] = coreapi.Link(
+                    url=partial_update_link.url,
+                    action=partial_update_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='username',
+                            required=True,
+                            location='path')),
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=partial_update_link.description
+                )
+
+            members_link = links.get('users', {}).get('members')['create']
+            if members_link:
+                links['users']['members'] = coreapi.Link(
+                    url=members_link.url,
+                    action=members_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=members_link.description
+                )
+
+            schema = coreapi.Document(
+                title='EventKit API',
+                url='/api/docs',
+                content=links
             )
 
-        members_link = links.get('users', {}).get('members')['create']
-        if members_link:
-            links['users']['members'] = coreapi.Link(
-                url=members_link.url,
-                action=members_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=members_link.description
-            )
+            if not schema:
+                raise exceptions.ValidationError(
+                    'A schema could not be generated, please ensure that you are logged in.'
+                )
 
-        schema = coreapi.Document(
-            title='EventKit API',
-            url='/api/docs',
-            content=links
-        )
-
-        if not schema:
-            raise exceptions.ValidationError(
-                'A schema could not be generated, please ensure that you are logged in.'
-            )
-        return Response(schema)
+            return Response(schema)
+        except ImportError:
+            # CoreAPI couldn't be imported, falling back to static schema
+            return Response()
 

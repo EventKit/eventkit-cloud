@@ -8,10 +8,13 @@ export const about = [
         type: 'InfoParagraph',
         title: 'Overview',
         body:
-        `EventKit's mission is to save its users' time and frustration by simplifying the process for getting deployment-ready geospatial information.
-            EventKit works by configuring geospatial data web services in the application, and then exporting that data into a portable data format based on a custom,
+        `EventKit's mission is to save its users' time and frustration by simplifying
+            the process for getting deployment-ready geospatial information.
+            EventKit works by configuring geospatial data web services in the application,
+            and then exporting that data into a portable data format based on a custom,
             user-provided extent. The results are downloadable and ready-to-use datasets called DataPacks.
-            For EventKit v1.1, the maximum allowable size for an Area of Interest (AOI) is set to the approximate size of a large city, with scalability improvements coming soon.
+            For EventKit v1.1, the maximum allowable size for an Area of Interest (AOI) is set to the approximate size of a large city,
+            with scalability improvements coming soon.
             Reach out to us if you need to processs a larger area.`,
     },
     {
@@ -85,7 +88,8 @@ export const about = [
             },
             {
                 title: 'Data Availablity Check',
-                body: 'EventKit is at the mercy of its external data providers.  This check pings the external service to let you know if it is available.',
+                body: `EventKit is at the mercy of its external data providers.
+                    This check pings the external service to let you know if it is available.`,
             },
             {
                 title: 'Improved Buffer',
@@ -99,12 +103,14 @@ export const about = [
         body: (
             <div>
                 <p>
-                    The EventKit roadmap outlines the development of new features, and our next few releases include improvements across a range of topics.
-                     In general these include more datasets, formats, and projections, the ability to preview data sources, ways to pre-build,
+                    The EventKit roadmap outlines the development of new features,
+                     and our next few releases include improvements across a range of topics.
+                     In general these include more datasets, formats, and projections,
+                     the ability to preview data sources, ways to pre-build,
                      recommend, and discover new datasets, ability to process larger areas, and continued integrations into QGIS and ESRI.
                 </p>
                 <p>
-                    If you have specific features or workflows that you'd like to see in EventKit,
+                    If you have specific features or workflows that you&apos;d like to see in EventKit,
                      please let us know.
                 </p>
             </div>

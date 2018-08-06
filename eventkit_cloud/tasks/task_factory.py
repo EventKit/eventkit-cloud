@@ -32,6 +32,7 @@ from .task_runners import (
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
+from .helpers import get_run_staging_dir, get_provider_staging_dir
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -94,7 +95,7 @@ class TaskFactory:
         if run_uid:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
-            run_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(run.uid))
+            run_dir = get_run_staging_dir(run.uid)
             os.makedirs(run_dir, 0750)
 
             finalize_task_settings = {
@@ -109,7 +110,7 @@ class TaskFactory:
                     type_name = provider_task_record.provider.export_provider_type.type_name
                     task_runner = self.type_task_map.get(type_name)()
 
-                    stage_dir = os.path.join(run_dir, provider_task_record.provider.slug)
+                    stage_dir = get_provider_staging_dir(run_dir, provider_task_record.provider.slug)
                     os.makedirs(stage_dir, 6600)
 
                     args = {
@@ -191,6 +192,9 @@ def create_run(job_uid, user=None):
 
             # get the number of existing runs for this job
             job = Job.objects.get(uid=job_uid)
+            if not job.provider_tasks.all():
+                raise Error("This job does not have any data sources or formats associated with it, "
+                            "try cloning the job or submitting a new request.")
             invalid_licenses = get_invalid_licenses(job)
             if invalid_licenses:
                 raise InvalidLicense("The user: {0} has not agreed to the following licenses: {1}.\n" \
@@ -252,8 +256,6 @@ def create_task(export_provider_task_uid=None, stage_dir=None, worker=None, sele
 
 def get_zip_task_chain(export_provider_task_uid=None, stage_dir=None, worker=None, job_name=None):
     return chain(
-        #create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
-        #            task=bounds_export_task, job_name=job_name),
         create_task(export_provider_task_uid=export_provider_task_uid, stage_dir=stage_dir, worker=worker,
                     task=zip_export_provider, job_name=job_name)
     )

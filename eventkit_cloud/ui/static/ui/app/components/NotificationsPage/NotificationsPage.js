@@ -6,14 +6,14 @@ import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../DataPackPage/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
-
-const backgroundUrl = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export class NotificationsPage extends React.Component {
     constructor(props) {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
+        this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
         this.itemsPerPage = 12;
         this.state = {
@@ -36,13 +36,26 @@ export class NotificationsPage extends React.Component {
         }
     }
 
+    getGridPadding() {
+        return window.innerWidth >= 768 ? 7 : 2;
+    }
+
+    getRange(notifications) {
+        if (this.props.notifications.range) {
+            const rangeParts = this.props.notifications.range.split('/');
+            if (rangeParts.length !== 2) {
+                return '';
+            }
+
+            return `${notifications.length}/${rangeParts[1]}`;
+        }
+
+        return '';
+    }
+
     refresh() {
         this.props.getNotifications({ pageSize: this.state.pageSize });
         this.setState({ loading: true });
-    }
-    
-    getGridPadding() {
-        return window.innerWidth >= 768 ? 7 : 2;
     }
 
     handleLoadMore() {
@@ -57,12 +70,12 @@ export class NotificationsPage extends React.Component {
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
-        let styles = {
+        const styles = {
             root: {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${backgroundUrl})`,
+                backgroundImage: `url(${background})`,
                 color: 'rgba(0, 0, 0, 0.54)',
             },
             appBar: {
@@ -89,11 +102,11 @@ export class NotificationsPage extends React.Component {
             tableRow: {
                 marginLeft: '12px',
                 paddingRight: '6px',
-                height: '50px'
+                height: '50px',
             },
             clickable: {
                 cursor: 'pointer',
-                width: 'min-content'
+                width: 'min-content',
             },
             gridList: {
                 width: '100%',
@@ -103,7 +116,7 @@ export class NotificationsPage extends React.Component {
                 paddingRight: spacing,
             },
             noData: {
-                margin: `0 ${10 + this.getGridPadding()/2}px`,
+                margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
                 fontSize: '18px',
                 color: 'rgba(0, 0, 0, 0.54)',
@@ -112,18 +125,12 @@ export class NotificationsPage extends React.Component {
 
         const notifications = this.props.notifications.notificationsSorted.slice(0, this.state.pageSize);
 
-        let range = '';
-        if (this.props.notifications.range) {
-            const rangeParts = this.props.notifications.range.split('/');
-            range = (rangeParts.length === 2) ? `${notifications.length}/${rangeParts[1]}` : '';
-        }
-
         return (
             <div style={styles.root}>
                 <AppBar
-                    className={'qa-Notifications-AppBar'}
+                    className="qa-Notifications-AppBar"
                     style={styles.appBar}
-                    title={'Notifications'}
+                    title="Notifications"
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
                 />
@@ -140,7 +147,7 @@ export class NotificationsPage extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 style={{ margin: 'auto', display: 'block' }}
-                                color={'#4598bf'}
+                                color="#4598bf"
                                 size={50}
                             />
                         </div>
@@ -152,18 +159,18 @@ export class NotificationsPage extends React.Component {
                         null
                         :
                         <div
-                            className={'qa-NotificationsPage-Content'}
+                            className="qa-NotificationsPage-Content"
                             style={styles.content}
                         >
                             {(notifications.length === 0) ?
                                 <Paper
-                                    className={'qa-NotificationsPage-Content-NoData'}
+                                    className="qa-NotificationsPage-Content-NoData"
                                     style={styles.noData}
                                 >
                                     {"You don't have any notifications."}
                                 </Paper>
                                 :
-                                <div className={'qa-NotificationsPage-Content-Notifications'}>
+                                <div className="qa-NotificationsPage-Content-Notifications">
                                     {(window.innerWidth > 768) ?
                                         <NotificationsTable
                                             notifications={this.props.notifications}
@@ -172,13 +179,13 @@ export class NotificationsPage extends React.Component {
                                         />
                                         :
                                         <GridList
-                                            className={'qa-NotificationsPage-Content-Notifications-Grid'}
-                                            cellHeight={'auto'}
+                                            className="qa-NotificationsPage-Content-Notifications-Grid"
+                                            cellHeight="auto"
                                             style={styles.gridList}
                                             padding={2}
                                             cols={1}
                                         >
-                                            {notifications.map((notification) => (
+                                            {notifications.map(notification => (
                                                 <NotificationGridItem
                                                     key={`Notification-${notification.id}`}
                                                     notification={notification}
@@ -188,7 +195,7 @@ export class NotificationsPage extends React.Component {
                                         </GridList>
                                     }
                                     <LoadButtons
-                                        range={range}
+                                        range={this.getRange(notifications)}
                                         handleLoadMore={this.handleLoadMore}
                                         loadMoreDisabled={!this.props.notifications.nextPage}
                                     />
@@ -205,6 +212,7 @@ export class NotificationsPage extends React.Component {
 NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,
     notifications: PropTypes.object.isRequired,
+    getNotifications: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -215,7 +223,7 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getNotifications: (args) => dispatch(getNotifications(args)),
+        getNotifications: args => dispatch(getNotifications(args)),
     };
 }
 

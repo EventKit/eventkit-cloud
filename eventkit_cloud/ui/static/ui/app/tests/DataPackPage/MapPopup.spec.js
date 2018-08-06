@@ -1,13 +1,12 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card } from 'material-ui/Card';
 import Clear from 'material-ui/svg-icons/content/clear';
 import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
 import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
 import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
-import moment from 'moment';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {
@@ -57,7 +56,7 @@ describe('LoadButtons component', () => {
     });
 
     it('the moreInfo div should display when user clicks "Show More"', () => {
-        const showSpy = new sinon.spy(MapPopup.prototype, 'showMore');
+        const showSpy = sinon.spy(MapPopup.prototype, 'showMore');
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(showSpy.notCalled).toBe(true);
@@ -92,7 +91,7 @@ describe('LoadButtons component', () => {
 
     it('should call handleZoom when zoom button is clicked', () => {
         const props = getProps();
-        props.handleZoom = new sinon.spy();
+        props.handleZoom = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.handleZoom.notCalled).toBe(true);
         wrapper.find('#zoom-to').simulate('click');
@@ -101,7 +100,7 @@ describe('LoadButtons component', () => {
 
     it('should call handlePopupClose when a user clicks the close icon', () => {
         const props = getProps();
-        props.handlePopupClose = new sinon.spy();
+        props.handlePopupClose = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.handlePopupClose.notCalled).toBe(true);
         wrapper.find(Clear).simulate('click');
@@ -109,7 +108,7 @@ describe('LoadButtons component', () => {
     });
 
     it('showMore should toggle the state', () => {
-        const stateSpy = new sinon.spy(MapPopup.prototype, 'setState');
+        const stateSpy = sinon.spy(MapPopup.prototype, 'setState');
         const props = getProps();
         const wrapper = getWrapper(props);
         const initial = wrapper.state('showMore');

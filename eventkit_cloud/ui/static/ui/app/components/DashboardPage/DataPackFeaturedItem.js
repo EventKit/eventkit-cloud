@@ -21,10 +21,26 @@ export class DataPackFeaturedItem extends Component {
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
+        this.getMapId = this.getMapId.bind(this);
+        this.mapContainerRef = this.mapContainerRef.bind(this);
     }
 
     componentDidMount() {
         this.initMap();
+    }
+
+    getMapId() {
+        let mapId = '';
+        if (!isUndefined(this.props.gridName)) {
+            mapId += `${this.props.gridName}_`;
+        }
+        mapId += `${this.props.run.uid}_`;
+        if (!isUndefined(this.props.index)) {
+            mapId += `${this.props.index}_`;
+        }
+        mapId += 'map';
+
+        return mapId;
     }
 
     initMap() {
@@ -77,20 +93,6 @@ export class DataPackFeaturedItem extends Component {
         map.getView().fit(source.getExtent(), map.getSize());
     }
 
-    getMapId() {
-        let mapId = '';
-        if (!isUndefined(this.props.gridName)) {
-            mapId += `${this.props.gridName}_`;
-        }
-        mapId += `${this.props.run.uid}_`;
-        if (!isUndefined(this.props.index)) {
-            mapId += `${this.props.index}_`;
-        }
-        mapId += 'map';
-
-        return mapId;
-    }
-
     mapContainerRef(element) {
         if (!element) {
             return;
@@ -104,6 +106,10 @@ export class DataPackFeaturedItem extends Component {
 
     render() {
         const cardHeight = this.props.height || 'auto';
+        let cardClamp = 2;
+        if (window.innerWidth > 1024) cardClamp = 6;
+        else if (window.innerWidth > 768) cardClamp = 7;
+
         const styles = {
             card: {
                 backgroundColor: '#f7f8f8',
@@ -135,7 +141,7 @@ export class DataPackFeaturedItem extends Component {
             infoHeader: {
                 paddingBottom: '14px',
                 display: 'flex',
-                flexDirection: (window.innerWidth > 768) ? 'column': 'row',
+                flexDirection: (window.innerWidth > 768) ? 'column' : 'row',
                 maxWidth: '100%',
             },
             cardTitle: {
@@ -180,9 +186,7 @@ export class DataPackFeaturedItem extends Component {
                 zIndex: 2,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                WebkitLineClamp:
-                    (window.innerWidth > 1024) ? 6 :
-                    (window.innerWidth > 768) ? 7 : 2,
+                WebkitLineClamp: cardClamp,
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
                 fontSize: (window.innerWidth > 1024) ? '16px' : '14px',
@@ -208,7 +212,7 @@ export class DataPackFeaturedItem extends Component {
                             titleStyle={styles.cardTitle2}
                             title={
                                 <div>
-                                    <div style={{display: 'inline-block', width: '100%'}}>
+                                    <div style={{ display: 'inline-block', width: '100%' }}>
                                         <Link
                                             to={`/status/${this.props.run.job.uid}`}
                                             href={`/status/${this.props.run.job.uid}`}
@@ -222,12 +226,19 @@ export class DataPackFeaturedItem extends Component {
                             subtitle={
                                 <div style={styles.cardSubtitle}>
                                     <div
+                                        className="qa-DataPackFeaturedItem-Subtitle-Event"
                                         style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                     >
                                         {`Event: ${this.props.run.job.event}`}
                                     </div>
-                                    <span>{`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}</span><br />
-                                    <span>{`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}</span><br />
+                                    <span className="qa-DataPackFeaturedItem-Subtitle-Added">
+                                        {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
+                                    </span>
+                                    <br />
+                                    <span className="qa-DataPackFeaturedItem-Subtitle-Expires">
+                                        {`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}
+                                    </span>
+                                    <br />
                                 </div>
                             }
                         />
@@ -246,7 +257,7 @@ export class DataPackFeaturedItem extends Component {
 }
 
 DataPackFeaturedItem.contextTypes = {
-    config: React.PropTypes.object,
+    config: PropTypes.object,
 };
 
 DataPackFeaturedItem.propTypes = {

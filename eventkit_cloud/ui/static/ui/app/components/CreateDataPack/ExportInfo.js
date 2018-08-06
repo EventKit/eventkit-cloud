@@ -34,7 +34,7 @@ import ol3mapCss from '../../styles/ol3map.css';
 import BaseTooltip from '../BaseTooltip';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
-import background from '../../../images/topoBackground.jpg';
+import background from '../../../images/topoBackground.png';
 
 export class ExportInfo extends React.Component {
     constructor(props) {
@@ -274,7 +274,7 @@ export class ExportInfo extends React.Component {
 
     hasDisallowedSelection(exportInfo) {
         // if any unacceptable providers are selected return true, else return false
-        return exportInfo.providers.some(provider => {
+        return exportInfo.providers.some((provider) => {
             // short-circuiting means that this shouldn't be called until provider.availability
             // is populated, but if it's not, return false
             const providerState = this.state.providers.find(p => p.slug === provider.slug);
@@ -677,7 +677,8 @@ export class ExportInfo extends React.Component {
                                                     {((provider.max_selection == null ||
                                                         provider.max_selection === '' ||
                                                         parseFloat(provider.max_selection) <= 0) ?
-                                                        'unlimited' : `${provider.max_selection} km²`)}
+                                                        'unlimited' : `${provider.max_selection} km²`
+                                                    )}
                                                 </div>
                                             }
                                             disabled
@@ -707,7 +708,7 @@ export class ExportInfo extends React.Component {
                                             leftCheckbox={<Checkbox
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
-                                                style={{ left: '0px', paddingLeft: '5px' }}
+                                                style={{ left: '0px', paddingLeft: '10px' }}
                                                 defaultChecked={
                                                     this.props.exportInfo.providers.map(x => x.name)
                                                         .indexOf(provider.name) !== -1
@@ -716,13 +717,13 @@ export class ExportInfo extends React.Component {
                                                 checkedIcon={
                                                     <ActionCheckCircle
                                                         className="qa-ExportInfo-ActionCheckCircle-provider"
-                                                        style={{ fill: '#55ba63', paddingLeft: '5px' }}
+                                                        style={{ fill: '#55ba63' }}
                                                     />
                                                 }
                                                 uncheckedIcon={
                                                     <UncheckedCircle
                                                         className="qa-ExportInfo-UncheckedCircle-provider"
-                                                        style={{ fill: '#4598bf', paddingLeft: '5px' }}
+                                                        style={{ fill: '#4598bf' }}
                                                     />
                                                 }
                                             />}

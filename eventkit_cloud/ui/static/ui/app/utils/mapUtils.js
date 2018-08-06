@@ -20,6 +20,8 @@ import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 import ZoomSlider from 'ol/control/zoomslider';
 
+const icon = require('../../images/ic_room_black_24px.svg');
+
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
 export const MODE_NORMAL = 'MODE_NORMAL';
 export const MODE_DRAW_FREE = 'MODE_DRAW_FREE';
@@ -203,7 +205,7 @@ export function generateDrawLayer() {
                 width: 3,
             }),
             image: new Icon({
-                src: require("../../images/ic_room_black_24px.svg"),
+                src: icon,
             }),
         }),
     });
@@ -291,8 +293,8 @@ export function deserialize(serialized) {
     return null;
 }
 
-export function serialize(extent) {
-    const bbox = proj.transformExtent(extent, WEB_MERCATOR, WGS84);
+export function serialize(ext) {
+    const bbox = proj.transformExtent(ext, WEB_MERCATOR, WGS84);
     const p1 = unwrapPoint(bbox.slice(0, 2));
     const p2 = unwrapPoint(bbox.slice(2, 4));
     return p1.concat(p2).map(truncate);
@@ -375,7 +377,7 @@ export function unwrapCoordinates(coords, projection) {
             const x = xy[0];
             if (x < projectionExtent[0] || x > projectionExtent[2]) {
                 const worldsAway = Math.ceil((projectionExtent[0] - x) / worldWidth);
-                return [x + worldWidth * worldsAway, xy[1]];
+                return [x + (worldWidth * worldsAway), xy[1]];
             }
             return xy;
         })
@@ -388,12 +390,12 @@ export function unwrapExtent(inExtent, projection) {
     let minX = inExtent[0];
     if (minX < projectionExtent[0] || minX > projectionExtent[2]) {
         const worldsAway = Math.ceil((projectionExtent[0] - minX) / worldWidth);
-        minX = minX + worldWidth * worldsAway;
+        minX += worldWidth * worldsAway;
     }
     let maxX = inExtent[2];
     if (maxX < projectionExtent[0] || maxX > projectionExtent[2]) {
         const worldsAway = Math.ceil((projectionExtent[0] - maxX) / worldWidth);
-        maxX = maxX + worldWidth * worldsAway;
+        maxX += worldWidth * worldsAway;
     }
     return [minX, inExtent[1], maxX, inExtent[3]];
 }
@@ -411,7 +413,7 @@ export function goToValidExtent(view) {
     const worldWidth = extent.getWidth(projectionExtent);
     const center = view.getCenter();
     const worldsAway = Math.ceil((projectionExtent[0] - center[0]) / worldWidth);
-    view.setCenter([center[0] + worldWidth * worldsAway, center[1]]);
+    view.setCenter([center[0] + (worldWidth * worldsAway), center[1]]);
     return view.getCenter();
 }
 
@@ -451,21 +453,26 @@ export function isBox(feature) {
 export function isVertex(pixel, feature, tolarance, map) {
     // check target pixel with pixel for each corner of the box,
     // if within tolerance or equal, we have a vertex
-    tolarance = tolarance || 3;
+    const t = tolarance || 3;
     const geomType = feature.getGeometry().getType();
     let coords = feature.getGeometry().getCoordinates();
-    coords = geomType === 'Point' ? [coords] : geomType === 'Polygon' ? coords[0] : coords;
+    if (geomType === 'Point') {
+        coords = [coords];
+    } else if (geomType === 'Polygon') {
+        [coords] = coords;
+    }
     let vertex = null;
-    coords.some(coord => {
-        const px = map.getPixelFromCoordinate(coord)
-        const xDif = Math.abs(Math.round(pixel[0]) - Math.round(px[0]))
+    coords.some((coord) => {
+        const px = map.getPixelFromCoordinate(coord);
+        const xDif = Math.abs(Math.round(pixel[0]) - Math.round(px[0]));
         const yDif = Math.abs(Math.round(pixel[1]) - Math.round(px[1]));
-        if (xDif <= tolarance && yDif <= tolarance) {
+        if (xDif <= t && yDif <= t) {
             vertex = coord;
             return true;
         }
+        return false;
     });
-    return vertex ? vertex : false;
+    return vertex || false;
 }
 
 /**
@@ -477,7 +484,7 @@ export function allHaveArea(featureCollection) {
     if (!featureCollection.features) {
         return false;
     }
-    
+
     const reader = new GeoJSON();
     const features = reader.readFeatures(featureCollection, {
         dataProjection: WGS84,
@@ -540,6 +547,7 @@ export function zoomSliderCreate(options) {
     zoomSlider.eventkitZoomSliderDrag = (ev) => {
         const rect = zoomSlider.element.getBoundingClientRect();
         if (ev.clientY > rect.top && ev.clientY < rect.bottom) {
+            // eslint-disable-next-line no-underscore-dangle
             zoomSlider.handleDraggerDrag_(ev);
         }
     };
@@ -547,6 +555,7 @@ export function zoomSliderCreate(options) {
     // Fix issue with zoom slider where dragging doesn't end when mouse up occurs outside of slider.
     // https://github.com/openlayers/openlayers/issues/7485
     zoomSlider.eventKitZoomSliderDragEnd = (ev) => {
+        // eslint-disable-next-line no-underscore-dangle
         zoomSlider.handleDraggerEnd_(ev);
     };
 

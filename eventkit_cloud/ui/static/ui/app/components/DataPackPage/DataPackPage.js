@@ -27,8 +27,7 @@ import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { isViewportL } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
-
-const background = require('../../../images/ek_topo_pattern.png');
+import background from '../../../images/ek_topo_pattern.png';
 
 export class DataPackPage extends React.Component {
     constructor(props) {
@@ -695,9 +694,9 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (args) => {
-            dispatch(getRuns(args));
-        },
+        getRuns: args => (
+            dispatch(getRuns(args))
+        ),
         deleteRuns: (uid) => {
             dispatch(deleteRuns(uid));
         },
