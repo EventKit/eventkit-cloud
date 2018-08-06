@@ -199,3 +199,4 @@ class JobPermission(TimeStampedModelMixin):
 
     def __unicode__(self):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
+

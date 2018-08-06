@@ -50,7 +50,6 @@ def expire_runs():
         now = timezone.now()
         # if expired delete the run:
         if expiration <= now:
-            run.delete_notifications()
             run.delete()
 
         # if two days left and most recent notification was at the 7 day mark email user
