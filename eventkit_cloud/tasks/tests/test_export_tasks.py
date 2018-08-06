@@ -33,7 +33,7 @@ from ..export_tasks import (
     shp_export_task, arcgis_feature_service_export_task, update_progress,
     zip_files, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
     bounds_export_task, parse_result, finalize_export_provider_task,
-    FormatTask, wait_for_providers_task, create_zip_task
+    FormatTask, wait_for_providers_task, create_zip_task, default_format_time
 )
 
 
@@ -323,8 +323,8 @@ class TestExportTasks(ExportTaskBase):
             def __enter__(self, *args, **kw):
                 return self
 
-        expected_archived_files = {'data/osm/file1-osm-20180731.txt': 'osm/file1.txt',
-                                   'data/osm/file2-osm-20180731.txt': 'osm/file2.txt'}
+        expected_archived_files = {'data/osm/file1-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file1.txt',
+                                   'data/osm/file2-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file2.txt'}
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
         self.run.job.event = 'test'
