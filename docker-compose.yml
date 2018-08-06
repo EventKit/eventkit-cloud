@@ -49,6 +49,8 @@ services:
     - GEOCODING_AUTH_CERT
     - GEOCODING_AUTH_KEY
     - PROVIDER_CHECK_INTERVAL
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
   celery:
     image: eventkit-base:1.1.0
     volumes:
@@ -79,6 +81,8 @@ services:
     - MAPPROXY_CONCURRENCY=4
     - CONTAINER_CODE_PATH
     - DEV_MACHINE_CODE_PATH
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
     command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
     image: eventkit-base:1.1.0
@@ -110,6 +114,8 @@ services:
     - MAX_EXPORTRUN_EXPIRATION_DAYS
     - CONTAINER_CODE_PATH
     - DEV_MACHINE_CODE_PATH
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
     command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
   postgis:
     image: mdillon/postgis:9.5
