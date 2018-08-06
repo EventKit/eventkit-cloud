@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import PropTypes from 'prop-types';
 import { mount, shallow } from 'enzyme';
 import configureMockStore from 'redux-mock-store';
-import AppBar from 'material-ui/AppBar';
+import AppBar from '@material-ui/core/AppBar';
 import Drawer from 'material-ui/Drawer';
 import MenuItem from 'material-ui/MenuItem';
 import { Link, IndexLink } from 'react-router';

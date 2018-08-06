@@ -57,7 +57,7 @@ export class About extends Component {
             return null;
         }
 
-        let version = '1';
+        let version = '';
         let contactUrl = '';
         if (this.context.config) {
             version = this.context.config.VERSION;

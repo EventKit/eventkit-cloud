@@ -35,25 +35,24 @@ import '../styles/react-joyride-compliled.css';
 require('../fonts/index.css');
 
 const muiThemeV1 = createMuiTheme({
-    datePicker: {
-        selectColor: '#253447',
-    },
-    flatButton: {
-        textColor: '#253447',
-        primaryTextColor: '#253447',
-    },
-    checkbox: {
-        boxColor: '#4598bf',
-        checkedColor: '#4598bf',
-    },
-    tableRow: {
-        selectedColor: 'initial',
-    },
-    svgIcon: {
-        color: '#4598bf',
+    overrides: {
+        MuiCheckbox: {
+            colorPrimary: {
+                color: '#4598bf',
+                '&$checked': { color: '#4598bf' },
+                '&$disabled': { color: 'grey' },
+            },
+        },
+        MuiTableRow: {
+            selectedColor: 'initial',
+        },
     },
     palette: {
-        accent1Color: '#4598bf',
+        primary: {
+            light: '#b3cde0',
+            main: '#4598bf',
+            dark: '#253447',
+        },
     },
 });
 

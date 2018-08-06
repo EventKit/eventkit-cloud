@@ -926,7 +926,7 @@ describe('UserGroupsPage component', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
             text: 'Example text',
-            selector: '.qa-Account-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: {},
             isFixed: true,

@@ -71,7 +71,7 @@ export const joyride = {
                 On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.
                 You will only be required to re-visit this page in the future if new Licenses and
                 Terms of Use are introduced with a new data provider.`,
-            selector: '.qa-Account-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },

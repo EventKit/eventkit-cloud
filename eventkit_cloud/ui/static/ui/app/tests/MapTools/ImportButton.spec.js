@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import FileFileUpload from '@material-ui/icons/FileUpload';
+import FileFileUpload from '@material-ui/icons/CloudUpload';
 import ContentClear from '@material-ui/icons/Clear';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { ImportButton } from '../../components/MapTools/ImportButton';
