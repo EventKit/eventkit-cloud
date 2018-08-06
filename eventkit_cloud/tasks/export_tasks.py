@@ -1064,8 +1064,6 @@ class FinalizeRunBase(UserDetailsBase):
         result = result or {}
 
         run = ExportRun.objects.get(uid=run_uid)
-        if run.job.include_zipfile and not run.zipfile_url:
-            logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
         notification_level = NotificationLevel.SUCCESS.value
         verb = NotificationVerb.RUN_COMPLETED.value
@@ -1148,8 +1146,6 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     result = result or {}
 
     run = ExportRun.objects.get(uid=run_uid)
-    if run.job.include_zipfile and not run.zipfile_url:
-        logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = NotificationLevel.SUCCESS.value
