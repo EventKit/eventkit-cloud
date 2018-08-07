@@ -1,172 +1,207 @@
-version: '2'
+version: '3'
 services:
-  base:
-     volumes:
-       - ./:/var/lib/eventkit/
-     build:
-       context: .
-       dockerfile: config/Dockerfile
-     working_dir: /var/lib/eventkit
-     user: eventkit
-     environment:
-        - TERM=xterm
-        - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-        - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
-        - DEBUG=True
-        - PRODUCTION=True
-        - DJANGO_LOG_LEVEL=ERROR
-        - LOG_LEVEL=INFO
-        - EXPORT_DOWNLOAD_ROOT=/var/lib/eventkit/exports_download
-        - SITE_NAME
-        - PYTHONWARNINGS=ignore
-        - DISABLE_SSL_VERIFICATION=True
-        - USE_S3
-        - AWS_BUCKET_NAME
-        - AWS_ACCESS_KEY
-        - AWS_SECRET_KEY
-#        - MEMCACHED=memcached:11211
-        - CONTAINER_CODE_PATH
-        - DEV_MACHINE_CODE_PATH
-#        - OAUTH_AUTHORIZATION_URL=http://remote.dev/o/authorize
-#        - OAUTH_NAME=EVENTKIT
-#        - OAUTH_CLIENT_ID=ID
-#        - OAUTH_CLIENT_SECRET=SECRET
-#        - OAUTH_TOKEN_URL=http://remote.dev/o/token
-#        - OAUTH_TOKEN_KEY=access_token
-#        - OAUTH_RESPONSE_TYPE=code
-#        - OAUTH_REDIRECT_URI=http://cloud.eventkit.dev/callback
-#        - OAUTH_SCOPE=profile
-#        - 'OAUTH_PROFILE_SCHEMA={"identification": "DN", "username": "username", "email": "email", "first_name": "firstname", "last_name": "lastname}'
-#        - OAUTH_PROFILE_URL=http://remote.dev/o/profile
-        - DJANGO_MODEL_LOGIN=True
-        - LOGIN_DISCLAIMER
-        - BANNER_TEXT
-        - BANNER_TEXT_COLOR
-        - BANNER_BACKGROUND_COLOR
-        - GEOCODING_API_URL
-        - GEOCODING_API_TYPE
-        - MAX_EXPORTRUN_EXPIRATION_DAYS=30
-        - BASEMAP_URL
-        - GEOCODING_AUTH_CERT
-        - GEOCODING_AUTH_KEY
-        - PROVIDER_CHECK_INTERVAL
-     extra_hosts:
-        - "${SITE_NAME}:${SITE_IP}"
-     command: echo 'Base box is not used, exiting now'
   eventkit:
-      extends:
-        service: base
-      depends_on:
-        - postgis
-        - rabbitmq
-      links:
-        - postgis
-        - rabbitmq
-      expose:
-        - "6080"
-      command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
+    build:
+      context: .
+      dockerfile: config/Dockerfile
+    image: eventkit-base:1.1.0
+    volumes:
+    - ./:/var/lib/eventkit/
+    user: eventkit
+    depends_on:
+    - postgis
+    - rabbitmq
+    links:
+    - postgis
+    - rabbitmq
+    expose:
+    - "6080"
+    command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
+    environment:
+    - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - SITE_NAME
+    - SITE_IP
+    - TERM
+    - DEBUG
+    - PRODUCTION
+    - DJANGO_LOG_LEVEL
+    - LOG_LEVEL
+    - EXPORT_DOWNLOAD_ROOT
+    - PYTHONWARNINGS
+    - DISABLE_SSL_VERIFICATION
+    - MAX_EXPORTRUN_EXPIRATION_DAYS
+    - USE_S3
+    - AWS_BUCKET_NAME
+    - AWS_ACCESS_KEY
+    - AWS_SECRET_KEY
+    - CONTAINER_CODE_PATH
+    - DEV_MACHINE_CODE_PATH
+    - DJANGO_MODEL_LOGIN=True
+    - LOGIN_DISCLAIMER
+    - BANNER_TEXT
+    - BANNER_TEXT_COLOR
+    - BANNER_BACKGROUND_COLOR
+    - GEOCODING_API_URL
+    - GEOCODING_API_TYPE
+    - MAX_EXPORTRUN_EXPIRATION_DAYS=30
+    - BASEMAP_URL
+    - GEOCODING_AUTH_CERT
+    - GEOCODING_AUTH_KEY
+    - PROVIDER_CHECK_INTERVAL
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
   celery:
-      extends:
-        service: base
-      depends_on:
-        - postgis
-        - rabbitmq
-        - eventkit
-      links:
-        - postgis
-        - rabbitmq
-      environment:
-        - CONCURRENCY=4
-        - MAPPROXY_CONCURRENCY=4
-      command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
+    image: eventkit-base:1.1.0
+    volumes:
+    - ./:/var/lib/eventkit/
+    user: eventkit
+    depends_on:
+    - postgis
+    - rabbitmq
+    - eventkit
+    links:
+    - postgis
+    - rabbitmq
+    environment:
+    - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - SITE_NAME
+    - SITE_IP
+    - TERM
+    - DEBUG
+    - PRODUCTION
+    - DJANGO_LOG_LEVEL
+    - LOG_LEVEL
+    - EXPORT_DOWNLOAD_ROOT
+    - PYTHONWARNINGS
+    - DISABLE_SSL_VERIFICATION
+    - MAX_EXPORTRUN_EXPIRATION_DAYS
+    - CONCURRENCY=4
+    - MAPPROXY_CONCURRENCY=4
+    - CONTAINER_CODE_PATH
+    - DEV_MACHINE_CODE_PATH
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
+    command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
-      extends:
-        service: base
-      depends_on:
-        - postgis
-        - rabbitmq
-        - celery
-        - eventkit
-      links:
-        - postgis
-        - rabbitmq
-      environment:
-        - CONCURRENCY=1
-      command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
+    image: eventkit-base:1.1.0
+    volumes:
+    - ./:/var/lib/eventkit/
+    user: eventkit
+    depends_on:
+    - postgis
+    - rabbitmq
+    - celery
+    - eventkit
+    links:
+    - postgis
+    - rabbitmq
+    environment:
+    - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - CONCURRENCY=1
+    - SITE_NAME
+    - SITE_IP
+    - TERM
+    - DEBUG
+    - PRODUCTION
+    - DJANGO_LOG_LEVEL
+    - LOG_LEVEL
+    - EXPORT_DOWNLOAD_ROOT
+    - PYTHONWARNINGS
+    - DISABLE_SSL_VERIFICATION
+    - MAX_EXPORTRUN_EXPIRATION_DAYS
+    - CONTAINER_CODE_PATH
+    - DEV_MACHINE_CODE_PATH
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
+    command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
   postgis:
     image: mdillon/postgis:9.5
     environment:
-      - POSTGRES_USER=eventkit
-      - POSTGRES_PASSWORD=eventkit_exports
-      - POSTGRES_DB=eventkit_exports
+    - POSTGRES_USER=eventkit
+    - POSTGRES_PASSWORD=eventkit_exports
+    - POSTGRES_DB=eventkit_exports
     expose:
-      - "5432"
+    - "5432"
     # This is stored up a directory because there will be permissions issues if ran with Vagrant shared directory.
     volumes:
-            - "postgis_database:/var/lib/postgresql/data"
+    - "postgis_database:/var/lib/postgresql/data"
   rabbitmq:
-       image: rabbitmq:3.6.6-management
-       expose:
-        - "5672"
+    image: rabbitmq:3.6.6-management
+    expose:
+    - "5672"
   httpd:
-     build:
-       context: .
-       dockerfile: config/Dockerfile_httpd
-     volumes:
-       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
-       - ./exports_download:/var/lib/eventkit/exports_download
-     image: httpd:2.4.23
-     links:
-       - eventkit
-       - webpack
-     ports:
-       - "80:80"
-       - "9229:9229"
-     environment:
-       - SITE_NAME=${SITE_NAME}
-       - LOG_LEVEL=warn
-#  memcached:
-#       image: memcached:1.4.34
-#       expose:
-#        - "11211"
+    build:
+      context: .
+      dockerfile: config/Dockerfile_httpd
+    volumes:
+    - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
+    - ./exports_download:/var/lib/eventkit/exports_download
+    image: httpd:2.4.23
+    links:
+    - eventkit
+    - webpack
+    ports:
+    - "80:80"
+    - "9229:9229"
+    environment:
+    - SITE_NAME=${SITE_NAME}
+    - LOG_LEVEL=warn
   flower:
-       extends:
-          service: base
-       depends_on:
-          - rabbitmq
-       links:
-          - rabbitmq
-       ports:
-         - "49555:5555"
-       command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
-       extra_hosts:
-         - "${SITE_NAME}:${SITE_IP}"
-       environment:
-         - BROKER_API=http://guest:guest@rabbitmq:15672/api/
-         - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    image: eventkit-base:1.1.0
+    volumes:
+    - ./:/var/lib/eventkit/
+    user: eventkit
+    depends_on:
+    - rabbitmq
+    - eventkit
+    - postgis
+    links:
+    - rabbitmq
+    - postgis
+    ports:
+    - "49555:5555"
+    command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
+    environment:
+    - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
+    - BROKER_API=http://guest:guest@rabbitmq:15672/api/
+    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - SITE_NAME
+    - SITE_IP
+    - TERM
+    - DEBUG
+    - PRODUCTION
+    - DJANGO_LOG_LEVEL
+    - LOG_LEVEL
+    - EXPORT_DOWNLOAD_ROOT
+    - PYTHONWARNINGS
+    - DISABLE_SSL_VERIFICATION
   webpack:
-     build:
-       context: .
-       dockerfile: config/Dockerfile_webpack
-     volumes:
-       - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
-       - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
-       - ./package.json:/var/lib/eventkit/package.json
-       - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
-       - ./.eslintignore:/var/lib/eventkit/.eslintignore
-       - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
-       - ./.git:/var/lib/eventkit/.git
-     ports:
-        - "8080:8080"
-     expose:
-        - "9229"
-#        - "50000-60000"
-     extra_hosts:
-        - "${SITE_NAME}:${SITE_IP}"
-      #if wishing to use the dev server uncomment this or run it via the command line
-      # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
+    build:
+      context: .
+      dockerfile: config/Dockerfile_webpack
+    volumes:
+    - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
+    - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
+    - ./package.json:/var/lib/eventkit/package.json
+    - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
+    - ./.eslintignore:/var/lib/eventkit/.eslintignore
+    - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
+    - ./.git:/var/lib/eventkit/.git
+    ports:
+    - "8080:8080"
+    expose:
+    - "9229"
+    extra_hosts:
+    - "${SITE_NAME}:${SITE_IP}"
+    #if wishing to use the dev server uncomment this or run it via the command line
+    # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
 volumes:
-    postgis_database:
+  postgis_database:
 
 
 
