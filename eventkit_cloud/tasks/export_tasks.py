@@ -1061,7 +1061,8 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 if ext in ['.gpkg', '.tif']:
                     download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
                                                               timezone.now(),
-                                                              ext)
+                                                              ext,
+                                                              additional_descriptors=provider_task.slug)
                     filepath = get_archive_data_path(
                         provider_task.slug,
                         download_filename
