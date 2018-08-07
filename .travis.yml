@@ -8,6 +8,10 @@ language: generic
 services:
   - docker
 
+addons:
+  hosts:
+    - cloud.eventkit.test
+
 before_install:
   - sudo rm /usr/local/bin/docker-compose
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
@@ -20,15 +24,20 @@ before_script:
     - docker-compose build
     - docker-compose up -d
     - sudo chown -R eventkit:eventkit ./
-    - docker-compose exec -T eventkit scripts/wait-for-postgis.sh python manage.py runinitial setup
+#    - docker-compose exec -T eventkit scripts/wait-for-postgis.sh python manage.py runinitial setup
 
 script:
-    - docker-compose exec -T webpack npm run lint
-    - docker-compose exec -T webpack npm test
+#    - docker-compose exec -T webpack npm run lint
+#    - docker-compose exec -T webpack npm test
 # Running coverage is currently currently produces a Javascript out of memory error
 #    - docker-compose -f docker-compose-test.yml run --rm -T webpack npm run coverage
-    - docker-compose exec -T eventkit pytest -n 4
+#    - docker-compose exec -T eventkit pytest -n 4
 #    - docker-compose run --rm -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit python manage.py test eventkit_cloud
+    - docker-compose logs eventkit
+    - echo $SITE_NAME $SITE_IP
+    - ping -c 4 cloud.eventkit.test
+    - docker-compose ps
+    - docker-compose tail eventkit celery
     - docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded
     # Check that finish_worker_tasks finishes active tasks but leaves new tasks on the queue
 #    - docker-compose -f docker-compose-test.yml exec eventkit bash -c 'PYTHONPATH=/var/lib/eventkit/ python /var/lib/eventkit/eventkit_cloud/management/tests/shutdown_celery_workers_test_script.py' &&
