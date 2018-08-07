@@ -24,7 +24,7 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
         logger.info("The directory {0} was deleted.".format(run_dir))
     except OSError:
         logger.warn("The directory {0} was already moved or doesn't exist.".format(run_dir))
-    notification_delete(instance)
+    instance.delete_notifications()
 
 
 @receiver(pre_delete, sender=FileProducingTaskResult)
@@ -42,4 +42,4 @@ def exporttaskresult_delete_exports(sender, instance, *args, **kwargs):
         logger.info("The directory {0} was deleted.".format(full_file_download_path))
     except OSError:
         logger.warn("The file {0} was already removed or does not exist.".format(full_file_download_path))
-    notification_delete(instance)
+    instance.delete_notifications()

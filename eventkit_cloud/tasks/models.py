@@ -9,10 +9,15 @@ from django.utils import timezone
 
 from ..jobs.models import Job, LowerCaseCharField, DataProvider
 from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from ..core.helpers import sendnotification, NotificationLevel, NotificationVerb
 from notifications.models import Notification
 from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger(__name__)
+
+
+def get_all_users_by_permissions(permissions):
+    return User.objects.filter(models.Q(groups__name=permissions['groups']) | models.Q(username__in=permissions['users']))
 
 
 def notification_delete(instance):
@@ -32,13 +37,19 @@ def notification_soft_delete(instance):
 
 class NotificationModelMixin(models.Model):
 
-    def delete(self, *args, **kwargs):
+    def delete_notifications(self, *args, **kwargs):
         notification_delete(self)
-        super(NotificationModelMixin, self).delete(*args, **kwargs)
 
-    def soft_delete(self, *args, **kwargs):
+    def soft_delete_notifications(self, *args, **kwargs):
         notification_soft_delete(self)
-        super(NotificationModelMixin, self).soft_delete(*args, **kwargs)
+        permissions = kwargs.get('permissions')
+        if permissions:
+            users = get_all_users_by_permissions(permissions)
+            logger.error("users: {0}".format(users))
+            for user in users:
+                logger.error("Sending notification to {0}".format(user))
+                sendnotification(self, user, NotificationVerb.RUN_DELETED.value,
+                                 None, None, NotificationLevel.WARNING.value, getattr(self, "status", "DELETED"))
 
     class Meta:
         abstract = True
@@ -131,6 +142,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
+        self.soft_delete_notifications(*args, **kwargs)
 
     @property
     def zipfile_url(self):

@@ -22,6 +22,7 @@ def normalize_unicode_str(self):
 Notification.__str__ = normalize_unicode_str
 
 
+
 class TimeStampedModelMixin(models.Model):
     """
     Mixin for timestamped models.
@@ -199,4 +200,3 @@ class JobPermission(TimeStampedModelMixin):
 
     def __unicode__(self):
         return '{0} - {1}: {2}: {3}'.format(self.content_type, self.object_id, self.job, self.permission)
-

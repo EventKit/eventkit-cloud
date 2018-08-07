@@ -330,8 +330,11 @@ class ExportRunSerializer(serializers.ModelSerializer):
             return obj.status
 
     def get_job(self, obj):
+        data = SimpleJobSerializer(obj.job, context=self.context).data
         if not obj.deleted:
-            return SimpleJobSerializer(obj.job, context=self.context).data
+            return data
+        else:
+            return {'uid': data['uid'], 'name': data['name']}
 
     def get_expiration(self, obj):
         if not obj.deleted:

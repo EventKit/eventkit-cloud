@@ -890,7 +890,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
                             status.HTTP_400_BAD_REQUEST)
 
-        instance.soft_delete(user=request.user)
+        permissions = JobPermission.jobpermissions(job)
+
+        instance.soft_delete(user=request.user, permissions=permissions)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
@@ -1557,7 +1559,6 @@ class GroupViewSet(viewsets.ModelViewSet):
             targetusers = request.data[permissionlabel]
 
             ## Add new users for this permission level
-
             newusers = list(set(targetusers) - set(currentusers))
             users = User.objects.filter(username__in=newusers).all()
             verb = NotificationVerb.ADDED_TO_GROUP.value
