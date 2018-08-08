@@ -79,7 +79,7 @@ export class DropZoneDialog extends Component {
                             labelStyle={{ color: 'whitesmoke' }}
                             backgroundColor="#4598bf"
                             label="Select A File"
-                            icon={<FileFileUpload />}
+                            icon={<FileFileUpload color="secondary" />}
                             onClick={this.onOpenClick}
                             className="qa-DropZoneDialog-RaisedButton-select"
                         />

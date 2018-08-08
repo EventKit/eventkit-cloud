@@ -4,21 +4,15 @@ import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { List, ListItem } from 'material-ui/List';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
-import TextField from 'material-ui/TextField';
-import Checkbox from 'material-ui/Checkbox';
+import List from '@material-ui/core/List';
+import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
-
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import GeoJSON from 'ol/format/geojson';
-
 import BaseDialog from '../../components/Dialog/BaseDialog';
+import MapCard from '../../components/common/MapCard';
+import DataProvider from '../../components/CreateDataPack/DataProvider';
 import { ExportInfo } from '../../components/CreateDataPack/ExportInfo';
 import CustomScrollbar from '../../components/CustomScrollbar';
+import TextField from '../../components/CustomTextField';
 import * as utils from '../../utils/generic';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -102,15 +96,13 @@ describe('ExportInfo component', () => {
         expect(wrapper.find(TextField)).toHaveLength(3);
         expect(wrapper.find('#layersHeader')).toHaveLength(1);
         expect(wrapper.find('#layersHeader').text()).toEqual('Select Data Sources');
-        expect(wrapper.find('#layersSubheader').text()).toEqual('You must choose at least one');
+        expect(wrapper.find('#layersSubheader').text()).toEqual('(You must choose at least one)');
         expect(wrapper.find(List)).toHaveLength(1);
-        expect(wrapper.find(ListItem)).toHaveLength(0);
+        expect(wrapper.find(DataProvider)).toHaveLength(0);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader')).toHaveLength(1);
         expect(wrapper.find('.qa-ExportInfo-projectionHeader').text()).toEqual('Select Projection');
         expect(wrapper.find('.qa-ExportInfo-projections').find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find(Card)).toHaveLength(1);
-        expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(CardText)).toHaveLength(0);
+        expect(wrapper.find(MapCard)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
     });
@@ -139,20 +131,6 @@ describe('ExportInfo component', () => {
         areaSpy.restore();
         hasFieldsSpy.restore();
         joyrideSpy.restore();
-    });
-
-    it('componentDidUpdate should initializeOpenLayers if expanded', () => {
-        const props = getProps();
-        const initSpy = sinon.spy();
-        const updateSpy = sinon.spy(ExportInfo.prototype, 'componentDidUpdate');
-        const wrapper = getWrapper(props);
-        wrapper.instance().initializeOpenLayers = initSpy;
-        expect(wrapper.state().expanded).toBe(false);
-        wrapper.setState({ expanded: true });
-        expect(updateSpy.called).toBe(true);
-        expect(wrapper.state().expanded).toBe(true);
-        expect(initSpy.calledOnce).toBe(true);
-        updateSpy.restore();
     });
 
     it('componentWillReceiveProps should setNextEnabled', () => {
@@ -276,19 +254,6 @@ describe('ExportInfo component', () => {
         checkStub.restore();
     });
 
-    it('expandedChange should setState', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(ExportInfo.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        // dont actually create a map when expanded
-        wrapper.instance().initializeOpenLayers = sinon.spy();
-        wrapper.instance().expandedChange(true);
-        expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ expanded: true })).toBe(true);
-        stateSpy.restore();
-        stateSpy.restore();
-    });
-
     it('handleProjectionsOpen should setState to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -306,26 +271,6 @@ describe('ExportInfo component', () => {
         wrapper.instance().handleProjectionsClose();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ projectionsDialogOpen: false })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleLicenseOpen should setState to true', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleLicenseOpen();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ licenseDialogOpen: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleLicenseClose should setState to false', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleLicenseClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ licenseDialogOpen: false })).toBe(true);
         stateStub.restore();
     });
 
@@ -368,26 +313,6 @@ describe('ExportInfo component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.instance().hasRequiredFields(invalid)).toBe(false);
         expect(wrapper.instance().hasRequiredFields(valid)).toBe(true);
-    });
-
-    it('initializeOpenLayers should create a map and add layer', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const defaultSpy = sinon.spy(interaction, 'defaults');
-        const readSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
-        const addFeatureSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
-        const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
-        const getViewSpy = sinon.spy(Map.prototype, 'getView');
-        const getSizeSpy = sinon.spy(Map.prototype, 'getSize');
-        const fitSpy = sinon.spy(View.prototype, 'fit');
-        wrapper.instance().initializeOpenLayers();
-        expect(defaultSpy.calledOnce).toBe(true);
-        expect(readSpy.calledOnce).toBe(true);
-        expect(addFeatureSpy.calledOnce).toBe(true);
-        expect(addLayerSpy.calledOnce).toBe(true);
-        expect(getViewSpy.calledTwice).toBe(true);
-        expect(fitSpy.calledOnce).toBe(true);
-        expect(getSizeSpy.calledOnce).toBe(true);
     });
 
     it('joyrideAddSteps should set state for steps in tour', () => {

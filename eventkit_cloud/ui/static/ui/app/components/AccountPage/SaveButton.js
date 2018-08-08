@@ -10,19 +10,19 @@ export class SaveButton extends Component {
                 height: '35px',
                 width: '200px',
                 boxShadow: 'none',
-                color: '#fff',
-                backgroundColor: '#4498c0',
-                fontSize: '14px',
                 padding: '0px 5px',
             },
         };
 
         if (this.props.saved) {
             styles.button.backgroundColor = '#55BA63';
+            styles.button.color = '#fff';
             return (
                 <Button
-                    className="qa-SaveButton-RaisedButton-Saved"
+                    className="qa-SaveButton-Button-Saved"
                     style={styles.button}
+                    color="primary"
+                    variant="contained"
                     disabled
                 >
                     Saved
@@ -38,9 +38,11 @@ export class SaveButton extends Component {
 
         return (
             <Button
-                className="qa-SaveButton-RaisedButton-SaveChanges"
+                className="qa-SaveButton-Button-SaveChanges"
                 disabled={this.props.saveDisabled}
                 style={styles.button}
+                color="primary"
+                variant="contained"
                 onClick={this.props.handleSubmit}
             >
                 Save Changes

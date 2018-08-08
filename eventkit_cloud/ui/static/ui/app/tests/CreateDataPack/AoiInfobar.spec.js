@@ -157,92 +157,50 @@ describe('AoiInfobar component', () => {
     it('getIcon should return ImageCropSquare', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <ImageCropSquare
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-box"
-            />
-        );
         const icon = wrapper.instance().getIcon('Polygon', 'Box');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(ImageCropSquare);
     });
 
     it('getIcon should return Extent', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <Extent
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-mapview"
-            />
-        );
         const icon = wrapper.instance().getIcon('Polygon', 'Map View');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(Extent);
     });
 
     it('getIcon should return ActionRoom', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <ActionRoom
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-point"
-            />
-        );
         const icon = wrapper.instance().getIcon('Point', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(ActionRoom);
     });
 
     it('getIcon should return Line', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <Line
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-line"
-            />
-        );
         const icon = wrapper.instance().getIcon('Line', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(Line);
     });
 
     it('getIcon should return IrregularPolygon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <IrregularPolygon
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-polygon"
-            />
-        );
         const icon = wrapper.instance().getIcon('Polygon', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return IrregularPolygon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <IrregularPolygon
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-polygon"
-            />
-        );
         const icon = wrapper.instance().getIcon('Collection', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return AlertWarning', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <AlertWarning
-                style={{ width: '30px', height: '30px' }}
-                className="qa-AoiInfobar-icon-no-selection"
-            />
-        );
         const icon = wrapper.instance().getIcon('', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toEqual(AlertWarning);
     });
 
     it('showAlert should set show to true', () => {

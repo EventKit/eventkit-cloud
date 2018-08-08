@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import numeral from 'numeral';
-import RaisedButton from 'material-ui/RaisedButton';
-import Divider from 'material-ui/Divider';
-import IconMenu from 'material-ui/IconMenu';
-import IconButton from 'material-ui/IconButton';
-import MenuItem from 'material-ui/MenuItem';
+import Button from '@material-ui/core/Button';
+import Divider from '@material-ui/core/Divider';
+import IconButton from '@material-ui/core/IconButton';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 import AlertWarning from '@material-ui/icons/Warning';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ActionRoom from '@material-ui/icons/Room';
@@ -19,6 +19,7 @@ import IrregularPolygon from '../icons/IrregularPolygon';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 import { allHaveArea } from '../../utils/mapUtils';
 
+
 export class AoiInfobar extends Component {
     constructor(props) {
         super(props);
@@ -27,6 +28,7 @@ export class AoiInfobar extends Component {
         this.closeAlert = this.closeAlert.bind(this);
         this.state = {
             showAlert: true,
+            menuAnchor: null,
         };
     }
 
@@ -49,18 +51,26 @@ export class AoiInfobar extends Component {
             height: '30px',
         };
         if (source === 'Box') {
-            return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" />;
+            return <ImageCropSquare style={iconStyle} className="qa-AoiInfobar-icon-box" color="primary" />;
         } else if (source === 'Map View') {
-            return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" />;
+            return <Extent style={iconStyle} className="qa-AoiInfobar-icon-mapview" color="primary" />;
         } else if (type.includes('POINT')) {
-            return <ActionRoom style={iconStyle} className="qa-AoiInfobar-icon-point" />;
+            return <ActionRoom style={iconStyle} className="qa-AoiInfobar-icon-point" color="primary" />;
         } else if (type.includes('LINE')) {
-            return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" />;
+            return <Line style={iconStyle} className="qa-AoiInfobar-icon-line" color="primary" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" />;
+            return <IrregularPolygon style={iconStyle} className="qa-AoiInfobar-icon-polygon" color="primary" />;
         }
-        return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" />;
+        return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary" />;
     }
+
+    handleMenuClose = () => {
+        this.setState({ menuAnchor: null });
+    }
+
+    handleMenuOpen = (e) => {
+        this.setState({ menuAnchor: e.currentTarget });
+    };
 
     update() {
         this.forceUpdate();
@@ -120,7 +130,6 @@ export class AoiInfobar extends Component {
                 paddingBottom: '10px',
             },
             title: {
-                fontSize: '14px',
                 width: '100%',
             },
             content: {
@@ -176,11 +185,19 @@ export class AoiInfobar extends Component {
                 fill: '#4498c0',
                 verticalAlign: 'middle',
             },
-            bufferLabel: {
+            bufferButton: {
+                height: '30px',
+                minHeight: '30px',
+                lineHeight: '30px',
                 fontWeight: 600,
-                fontSize: '14px',
                 textTransform: 'none',
                 padding: '0px 10px',
+            },
+            menuItem: {
+                fontSize: '12px',
+                lineHeight: '30px',
+                minHeight: '30px',
+                padding: '0px 16px',
             },
         };
 
@@ -225,27 +242,34 @@ export class AoiInfobar extends Component {
 
         const mobileSidebar = (
             <div style={styles.mobileSidebar} className="qa-AoiInfobar-sidebar-mobile">
-                <IconMenu
-                    iconButtonElement={
-                        <IconButton style={{ padding: '0px', width: '24px' }}>
-                            <MoreVertIcon />
-                        </IconButton>
-                    }
-                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                <IconButton
+                    color="primary"
+                    onClick={this.handleMenuOpen}
+                >
+                    <MoreVertIcon />
+                </IconButton>
+                <Menu
+                    id="infobar-menu"
+                    anchorEl={this.state.menuAnchor}
+                    open={Boolean(this.state.menuAnchor)}
+                    onClose={this.handleMenuClose}
                 >
                     <MenuItem
-                        primaryText="ZOOM TO"
                         onClick={this.props.clickZoomToSelection}
-                        style={{ fontSize: '12px', lineHeight: '30px', minHeight: '30px' }}
-                    />
+                        style={styles.menuItem}
+                    >
+                        ZOOM TO
+                    </MenuItem>
                     <MenuItem
-                        primaryText="REVERT"
                         onClick={this.props.onRevertClick}
-                        disabled={!this.props.showRevert}
-                        style={{ fontSize: '12px', lineHeight: '30px', minHeight: '30px' }}
-                    />
-                </IconMenu>
+                        style={{
+                            ...styles.menuItem,
+                            ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: 'grey' } : {}),
+                        }}
+                    >
+                        REVERT
+                    </MenuItem>
+                </Menu>
             </div>
         );
 
@@ -440,19 +464,17 @@ export class AoiInfobar extends Component {
                                         </div>
                                     </div>
                                     <div className="qa-AoiInfobar-buffer" style={{ marginTop: '5px' }}>
-                                        <RaisedButton
+                                        <Button
                                             className="qa-AoiInfobar-buffer-button"
                                             onClick={this.props.handleBufferClick}
-                                            labelStyle={styles.bufferLabel}
-                                            overlayStyle={{ height: '30px' }}
-                                            buttonStyle={{ height: '30px', lineHeight: '30px' }}
-                                            label={`Buffer (${numeral(this.props.aoiInfo.buffer).format('0,0')}m)`}
-                                            backgroundColor="#4598bf"
-                                            labelColor="#f5f5f5"
+                                            variant="contained"
+                                            color="primary"
+                                            style={styles.bufferButton}
                                             disabled={!!this.props.aoiInfo.buffer}
-                                            disabledBackgroundColor="#e6e6e6"
-                                            disabledLabelColor="#333"
-                                        />
+
+                                        >
+                                            {`Buffer (${numeral(this.props.aoiInfo.buffer).format('0,0')}m)`}
+                                        </Button>
                                         {bufferWarning}
                                     </div>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />

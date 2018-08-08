@@ -71,6 +71,7 @@ export class UserLicense extends Component {
                                 onClick={this.handleToggle}
                                 color="primary"
                                 style={styles.expand}
+                                className="qa-UserLicense-expand"
                             >
                                 <ExpandMoreIcon />
                             </IconButton>

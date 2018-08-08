@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 import Clear from '@material-ui/icons/Clear';
 import AlertWarning from '@material-ui/icons/Warning';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
@@ -20,17 +19,17 @@ export class RevertDialog extends Component {
             flexShrink: 0,
         };
         if (source === 'Box') {
-            return <ImageCropSquare style={iconStyle} className="qa-RevertDialog-icon-box" />;
+            return <ImageCropSquare style={iconStyle} className="qa-RevertDialog-icon-box" color="primary" />;
         } else if (source === 'Map View') {
-            return <Extent style={iconStyle} className="qa-RevertDialog-icon-mapview" />;
+            return <Extent style={iconStyle} className="qa-RevertDialog-icon-mapview" color="primary" />;
         } else if (type.includes('POINT')) {
-            return <ActionRoom style={iconStyle} className="qa-RevertDialog-icon-point" />;
+            return <ActionRoom style={iconStyle} className="qa-RevertDialog-icon-point" color="primary" />;
         } else if (type.includes('LINE')) {
-            return <Line style={iconStyle} className="qa-RevertDialog-icon-line" />;
+            return <Line style={iconStyle} className="qa-RevertDialog-icon-line" color="primary" />;
         } else if (type.includes('POLYGON') || type.includes('COLLECTION')) {
-            return <IrregularPolygon style={iconStyle} className="qa-RevertDialog-icon-polygon" />;
+            return <IrregularPolygon style={iconStyle} className="qa-RevertDialog-icon-polygon" color="primary" />;
         }
-        return <AlertWarning style={iconStyle} className="qa-RevertDialog-icon-no-selection" />;
+        return <AlertWarning style={iconStyle} className="qa-RevertDialog-icon-no-selection" color="primary" />;
     }
 
     render() {
@@ -71,12 +70,7 @@ export class RevertDialog extends Component {
                 width: '100%',
                 textAlign: 'right',
             },
-            updateButton: {
-                backgroundColor: '#ce4427',
-                height: '30px',
-                lineHeight: '30px',
-            },
-            updateLabel: {
+            revert: {
                 color: 'whitesmoke',
                 fontWeight: 'bold',
             },
@@ -107,25 +101,25 @@ export class RevertDialog extends Component {
         };
 
         const revertActions = [
-            <FlatButton
+            <Button
                 key="RevertDialog-close"
                 className="qa-RevertDialog-FlatButton-close"
-                style={{ float: 'left', height: '30px', lineHeight: '30px' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                disableTouchRipple
-                label="close"
+                variant="flat"
+                style={{ float: 'left', color: '#4598bf', fontWeight: 'bold' }}
                 onClick={this.props.onRevertClose}
-            />,
-            <RaisedButton
+            >
+                close
+            </Button>,
+            <Button
                 key="RevertDialog-revert"
                 className="qa-RevertDialog-RaisedButton-revert"
-                labelStyle={styles.updateLabel}
-                buttonStyle={styles.updateButton}
-                disableTouchRipple
-                label="Revert"
-                primary
+                variant="contained"
+                color="secondary"
+                style={styles.revert}
                 onClick={this.props.onRevertClick}
-            />,
+            >
+                Revert
+            </Button>,
         ];
 
         if (!this.props.show) {

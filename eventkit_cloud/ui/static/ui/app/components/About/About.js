@@ -28,8 +28,6 @@ export class About extends Component {
                 backgroundColor: '#161e2e',
                 height: '35px',
                 lineHeight: '35px',
-                color: 'white',
-                fontSize: '14px',
                 padding: '0px 34px',
                 display: 'flex',
                 justifyContent: 'space-between',

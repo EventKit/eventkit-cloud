@@ -111,8 +111,8 @@ export class ExportAOI extends Component {
 
     componentDidMount() {
         // set up debounce functions for user text input
-        this.bufferFunction = debounce((e, val) => {
-            const valid = this.handleBufferChange(e, val);
+        this.bufferFunction = debounce((val) => {
+            const valid = this.handleBufferChange(val);
             if (valid !== this.state.valid) {
                 this.setState({ validBuffer: valid });
             }
@@ -681,8 +681,8 @@ export class ExportAOI extends Component {
         clearDraw(this.bufferLayer);
     }
 
-    handleBufferChange(e, newValue) {
-        const buffer = Number(newValue);
+    handleBufferChange(value) {
+        const buffer = Number(value);
         if (buffer <= 10000 && buffer >= 0) {
             // this.setState({ buffer });
             this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer });

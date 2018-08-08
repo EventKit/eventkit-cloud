@@ -46,13 +46,34 @@ const muiThemeV1 = createMuiTheme({
         MuiTableRow: {
             selectedColor: 'initial',
         },
+        MuiButton: {
+            root: {
+                fontSize: '14px',
+                minHeight: '30px',
+                padding: '0px 16px',
+                height: '30px',
+                lineHeight: '30px',
+            },
+        },
+        MuiSvgIcon: {
+            colorSecondary: {
+                color: '#fff',
+            },
+        },
     },
     palette: {
         primary: {
-            light: '#b3cde0',
+            light: '#63a8c9',
             main: '#4598bf',
-            dark: '#253447',
+            dark: '#3982a4',
         },
+        secondary: {
+            main: '#ce4427',
+        },
+    },
+    typography: {
+        fontSize: 14,
+        htmlFontSize: 14,
     },
 });
 
