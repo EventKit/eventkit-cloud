@@ -9,11 +9,42 @@ from django.utils import timezone
 
 from ..jobs.models import Job, LowerCaseCharField, DataProvider
 from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from notifications.models import Notification
+from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger(__name__)
 
 
-class FileProducingTaskResult(UIDMixin):
+def notification_delete(instance):
+    for notification in Notification.objects.filter(actor_object_id=instance.id):
+        ct = ContentType.objects.filter(pk=notification.actor_content_type_id).get()
+        if ct == ContentType.objects.get_for_model(type(instance)):
+            notification.delete()
+
+
+def notification_soft_delete(instance):
+    for notification in Notification.objects.filter(actor_object_id=instance.id):
+        ct = ContentType.objects.filter(pk=notification.actor_content_type_id).get()
+        if ct == ContentType.objects.get_for_model(type(instance)):
+            notification.public = False
+            notification.save()
+
+
+class NotificationModelMixin(models.Model):
+
+    def delete(self, *args, **kwargs):
+        notification_delete(self)
+        super(NotificationModelMixin, self).delete(*args, **kwargs)
+
+    def soft_delete(self, *args, **kwargs):
+        notification_soft_delete(self)
+        super(NotificationModelMixin, self).soft_delete(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
     """
     A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
@@ -55,7 +86,7 @@ class FileProducingTaskResult(UIDMixin):
         return 'FileProducingTaskResult ({}), {}'.format(self.uid, self.filename)
 
 
-class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, NotificationModelMixin):
     """
     ExportRun is the main structure for storing export information.
 
