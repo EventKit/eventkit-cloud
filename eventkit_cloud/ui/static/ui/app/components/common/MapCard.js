@@ -24,6 +24,7 @@ import ol3mapCss from '../../styles/ol3map.css';
 export class MapCard extends React.Component {
     constructor(props) {
         super(props);
+        this.handleExpand = this.handleExpand.bind(this);
         this.state = {
             open: false,
         };
@@ -42,7 +43,7 @@ export class MapCard extends React.Component {
         }
     }
 
-    handleExpand = () => {
+    handleExpand() {
         this.setState(state => ({ open: !state.open }));
     }
 

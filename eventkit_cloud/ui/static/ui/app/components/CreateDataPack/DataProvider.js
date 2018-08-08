@@ -15,21 +15,24 @@ import BaseDialog from '../Dialog/BaseDialog';
 export class DataProvider extends React.Component {
     constructor(props) {
         super(props);
+        this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
+        this.handleLicenseClose = this.handleLicenseClose.bind(this);
+        this.handleExpand = this.handleExpand.bind(this);
         this.state = {
             open: false,
             licenseDialogOpen: false,
         };
     }
 
-    handleLicenseOpen = () => {
+    handleLicenseOpen() {
         this.setState({ licenseDialogOpen: true });
     }
 
-    handleLicenseClose = () => {
+    handleLicenseClose() {
         this.setState({ licenseDialogOpen: false });
     }
 
-    handleExpand = () => {
+    handleExpand() {
         this.setState(state => ({ open: !state.open }));
     }
 

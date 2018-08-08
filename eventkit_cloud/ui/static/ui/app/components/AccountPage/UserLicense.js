@@ -10,9 +10,13 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class UserLicense extends Component {
-    state = { expanded: false };
+    constructor(props) {
+        super(props);
+        this.handleToggle = this.handleToggle.bind(this);
+        this.state = { expanded: false };
+    }
 
-    handleToggle = () => {
+    handleToggle() {
         this.setState(state => ({ expanded: !state.expanded }));
     }
 

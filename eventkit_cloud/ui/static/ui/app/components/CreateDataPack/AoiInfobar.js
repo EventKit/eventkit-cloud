@@ -26,6 +26,8 @@ export class AoiInfobar extends Component {
         this.update = this.update.bind(this);
         this.showAlert = this.showAlert.bind(this);
         this.closeAlert = this.closeAlert.bind(this);
+        this.handleMenuClose = this.handleMenuClose.bind(this);
+        this.handleMenuOpen = this.handleMenuOpen.bind(this);
         this.state = {
             showAlert: true,
             menuAnchor: null,
@@ -64,13 +66,13 @@ export class AoiInfobar extends Component {
         return <AlertWarning style={iconStyle} className="qa-AoiInfobar-icon-no-selection" color="primary" />;
     }
 
-    handleMenuClose = () => {
+    handleMenuClose() {
         this.setState({ menuAnchor: null });
     }
 
-    handleMenuOpen = (e) => {
+    handleMenuOpen(e) {
         this.setState({ menuAnchor: e.currentTarget });
-    };
+    }
 
     update() {
         this.forceUpdate();
