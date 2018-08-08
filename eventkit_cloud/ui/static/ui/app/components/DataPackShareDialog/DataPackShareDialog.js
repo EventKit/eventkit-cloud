@@ -19,7 +19,6 @@ export class DataPackShareDialog extends Component {
         this.showPublicWarning = this.showPublicWarning.bind(this);
         this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
-        this.forceUpdate = this.forceUpdate.bind(this);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally

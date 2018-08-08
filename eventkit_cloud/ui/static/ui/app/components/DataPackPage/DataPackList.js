@@ -146,9 +146,11 @@ export class DataPackList extends Component {
                                         user={this.props.user}
                                         key={run.uid}
                                         onRunDelete={this.props.onRunDelete}
+                                        onRunShare={this.props.onRunShare}
                                         providers={this.props.providers}
-                                        openShare={this.props.openShare}
                                         adminPermission={admin}
+                                        users={this.props.users}
+                                        groups={this.props.groups}
                                     />
                                 );
                             })}
@@ -288,9 +290,11 @@ export class DataPackList extends Component {
                                             user={this.props.user}
                                             key={run.uid}
                                             onRunDelete={this.props.onRunDelete}
+                                            onRunShare={this.props.onRunShare}
                                             providers={this.props.providers}
-                                            openShare={this.props.openShare}
                                             adminPermissions={admin}
+                                            users={this.props.users}
+                                            groups={this.props.groups}
                                         />
                                     );
                                 })}
@@ -308,6 +312,7 @@ DataPackList.propTypes = {
     runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     onSort: PropTypes.func.isRequired,
     order: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -316,7 +321,7 @@ DataPackList.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    openShare: PropTypes.func.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
