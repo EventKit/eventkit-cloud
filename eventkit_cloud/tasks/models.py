@@ -41,7 +41,6 @@ class NotificationModelMixin(models.Model):
         notification_delete(self)
 
     def soft_delete_notifications(self, *args, **kwargs):
-        notification_soft_delete(self)
         permissions = kwargs.get('permissions')
         if permissions:
             users = get_all_users_by_permissions(permissions)
