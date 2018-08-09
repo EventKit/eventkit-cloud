@@ -99,7 +99,7 @@ describe('MapCard component', () => {
         expect(updateSpy.calledOnce).toBe(true);
         expect(stub.calledOnce).toBe(true);
         expect(instance.map).toBe(null);
-        
+
         updateSpy.restore();
     });
 

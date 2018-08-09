@@ -148,7 +148,11 @@ export class ExportSummary extends Component {
                                 Please make sure all the information below is correct.
                             </div>
                             <div className="qa-ExportSummary-div" id="Summary">
-                                <div id="export-information-heading" className="qa-ExportSummary-exportHeading" style={styles.exportHeading}>
+                                <div
+                                    id="export-information-heading"
+                                    className="qa-ExportSummary-exportHeading"
+                                    style={styles.exportHeading}
+                                >
                                     Export Information
                                 </div>
                                 <CustomTableRow

@@ -595,8 +595,6 @@ export class Application extends Component {
             })
         ));
 
-        const isLoggedIn = !!this.props.userData;
-
         return (
             <MuiThemeProviderV1 theme={muiThemeV1}>
                 <MuiThemeProviderV0 muiTheme={muiThemeV0}>
@@ -736,7 +734,11 @@ export class Application extends Component {
                                     Members and Groups
                                 </Link>
                             </MenuItem>
-                            <MenuItem className="qa-Application-MenuItem-about" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                            <MenuItem
+                                className="qa-Application-MenuItem-about"
+                                onClick={this.onMenuItemClick}
+                                innerDivStyle={styles.menuItem}
+                            >
                                 <Link
                                     className="qa-Application-Link-about"
                                     style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/about') }}
