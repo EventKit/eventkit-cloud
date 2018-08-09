@@ -116,7 +116,10 @@ describe('DataPackGrid component', () => {
         runs: getRuns(),
         providers,
         user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
         onRunDelete: () => {},
+        onRunShare: () => {},
     };
 
     it('should render a DataPackGridItem for each run passed in', () => {

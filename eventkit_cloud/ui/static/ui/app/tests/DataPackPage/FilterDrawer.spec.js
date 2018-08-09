@@ -47,6 +47,7 @@ describe('FilterDrawer component', () => {
                 { id: 'group2', name: 'group2', members: ['user1', 'user2'] },
                 { id: 'group3', name: 'group3', members: ['user1'] },
             ],
+            members: [],
         }
     );
 

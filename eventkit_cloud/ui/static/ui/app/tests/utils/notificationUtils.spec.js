@@ -174,14 +174,14 @@ describe('notificationUtils', () => {
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been added to"}&nbsp;</span>).text());
-        expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
+        expect(messageWrapper.find(Link).at(0).childAt(0).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
         expect(iconWrapper.find(AddCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
-        expect(viewPath).toBe('/groups');
+        expect(viewPath).toBe(`/groups?groups=${notification.action_object.details.id}`);
     });
 
     it('should correctly handle "removed_from_group" notification', () => {
@@ -197,14 +197,14 @@ describe('notificationUtils', () => {
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been removed from"}&nbsp;</span>).text());
-        expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
+        expect(messageWrapper.find(Link).at(0).childAt(0).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
         expect(iconWrapper.find(RemoveCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
-        expect(viewPath).toBe('/groups');
+        expect(viewPath).toBe(`/groups?groups=${notification.action_object.details.id}`);
     });
 
     it('should correctly handle "set_as_group_admin" notification', () => {
@@ -220,14 +220,14 @@ describe('notificationUtils', () => {
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been set as an admin of"}&nbsp;</span>).text());
-        expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
+        expect(messageWrapper.find(Link).at(0).childAt(0).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
         expect(iconWrapper.find(AddCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
-        expect(viewPath).toBe('/groups');
+        expect(viewPath).toBe(`/groups?groups=${notification.action_object.details.id}`);
     });
 
     it('should correctly handle "removed_as_group_admin" notification', () => {
@@ -243,14 +243,14 @@ describe('notificationUtils', () => {
         const message = utils.getNotificationMessage({ notification });
         const messageWrapper = shallow(<div>{message}</div>);
         expect(messageWrapper.find('span').at(0).text()).toEqual(shallow(<span>{"You've been removed as an admin of"}&nbsp;</span>).text());
-        expect(messageWrapper.find('span').at(1).text()).toBe(notification.action_object.details.name);
+        expect(messageWrapper.find(Link).at(0).childAt(0).text()).toBe(notification.action_object.details.name);
 
         const icon = utils.getNotificationIcon({ notification });
         const iconWrapper = shallow(<div>{icon}</div>);
         expect(iconWrapper.find(RemoveCircleIcon)).toHaveLength(1);
 
         const viewPath = utils.getNotificationViewPath(notification);
-        expect(viewPath).toBe('/groups');
+        expect(viewPath).toBe(`/groups?groups=${notification.action_object.details.id}`);
     });
 
     it('should handle notifications with no details', () => {
