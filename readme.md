@@ -20,11 +20,24 @@ then `SITE_IP` must be set to a different IP available on the system, typically 
 This is usually done by using `export SITE_NAME=cloud.eventkit.test` on mac/linux or `setx SITE_NAME cloud.eventkit.test`. 
 Usually docker-compose will need to be run as sudo.  In which case you want to make sure that the environment variables are made available as sudo won't always use the shell environment.
 
+#### Building the dependencies
+Before you can build the eventkit container you first need to build a local conda repo that will be used in the creation of the eventkit containers. 
 
+This will probably take about an hour or two depending on your system settings and internet speed.
+
+After installing docker open an elevated shell/command prompt and enter:
+<pre>
+cd conda
+docker-compose up  # now grab a warm beverage perhaps a nice technical manual to read through...
+cd ..
+</pre>
+
+In the future it may be nice to host prebuilt artifacts but the ability to build these locally allows us to upgrade dependencies without needing to rely on third-party hosting. 
+
+After conda successfully builds you can now build and start the eventkit application. 
 
 _Note: if running the docker setup with an IP set other than 127.0.0.1, then the application will be made available to other computer that can access the host machine at the `SITE_IP` address._
 
-After installing docker open an elevated shell/command prompt and enter:
 <pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
 docker-compose run --rm eventkit python manage.py runinitial setup
