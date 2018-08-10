@@ -82,6 +82,9 @@ RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
 
 # Adds remote path mapping via env vars to pydevd to support remote debugging.
 COPY ./config/pydevd_path_mapping_snippet.py /var/lib/eventkit/
+
+WORKDIR /var/lib/eventkit
+
 RUN bash -c '\
     export SNIPPET=`cat /var/lib/eventkit/pydevd_path_mapping_snippet.py`;\
     export PYDEVD_FILE_UTILS=/var/lib/.virtualenvs/eventkit/lib/python2.7/site-packages/pydevd_file_utils.py;\
