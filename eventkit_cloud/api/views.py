@@ -886,7 +886,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         job = instance.job
 
-
         perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
@@ -1130,7 +1129,8 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         """
         Cancels an export provider task.
         * param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
-        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
+        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser,
+                  they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
         data_provider_task_record = DataProviderTaskRecord.objects.get(uid=uid)

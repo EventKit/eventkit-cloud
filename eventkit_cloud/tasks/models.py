@@ -6,6 +6,7 @@ import logging
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
+from django.http import HttpRequest
 
 from ..jobs.models import Job, LowerCaseCharField, DataProvider
 from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
@@ -25,27 +26,12 @@ class FileProducingTaskResult(UIDMixin):
     )
     deleted = models.BooleanField(default=False)
 
-    @property
-    def task(self):
-        if hasattr(self, 'finalize_task') and hasattr(self.export_task):
-            raise Exception(
-                'Both an ExportTaskRecord and a FinalizeRunHookTaskRecord are linked to FileProducingTaskResult')
-        elif hasattr(self, 'finalize_task'):
-            ret = self.finalize_task
-        elif hasattr(self, 'export_task'):
-            ret = self.export_task
-        else:
-            ret = None
-        return ret
-
     def soft_delete(self, *args, **kwargs):
         from .signals import exporttaskresult_delete_exports
         exporttaskresult_delete_exports(self.__class__, self)
         self.deleted = True
+        self.export_task.display = False
         self.save()
-        if hasattr(self.task, 'display'):
-            self.task.display = False
-            self.task.save()
 
     class Meta:
         managed = True
@@ -67,7 +53,6 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     job = models.ForeignKey(Job, related_name='runs')
     user = models.ForeignKey(User, related_name="runs", default=0)
     worker = models.CharField(max_length=50, editable=False, default='', null=True)
-    downloadable = models.OneToOneField(FileProducingTaskResult, null=True, on_delete=models.CASCADE, related_name='run')
     status = models.CharField(
         blank=True,
         max_length=20,
@@ -100,32 +85,6 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
-
-    @property
-    def zipfile_url(self):
-        if self.downloadable:
-            return self.downloadable.download_url
-        else:
-            return ""
-
-
-class FinalizeRunHookTaskRecord(UIDMixin, TimeStampedModelMixin):
-    run = models.ForeignKey(ExportRun)
-    celery_uid = models.UUIDField()
-    name = models.CharField(max_length=50)
-    status = models.CharField(blank=True, max_length=20, db_index=True)
-    pid = models.IntegerField(blank=True, default=-1)
-    worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
-    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
-    result = models.OneToOneField(FileProducingTaskResult, null=True, blank=True, related_name='finalize_task')
-
-    class Meta:
-        ordering = ['created_at']
-        managed = True
-        db_table = 'finalize_run_hook_task_record'
-
-    def __str__(self):
-        return 'RunFinishedTaskRecord ({}): {}'.format(self.celery_uid, self.status)
 
 
 class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
