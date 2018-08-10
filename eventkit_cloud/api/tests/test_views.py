@@ -1262,6 +1262,20 @@ class TestUserJobActivityViewSet(APITestCase):
         data = json.loads(response.content)
         self.assertEqual(len(data), len(self.viewed_jobs))
 
+    def test_get_viewed_pagination(self):
+        for i in range(len(self.viewed_jobs), 15):
+            job = self.create_job('ViewedJob%s' % str(i))
+            self.viewed_jobs.append(job)
+            UserJobActivity.objects.create(user=self.user, job=job, type=UserJobActivity.VIEWED)
+
+        url = reverse('api:user_job_activity-list')
+        page_size = 10
+        response = self.client.get(url + '?activity=viewed&page_size=%s' % page_size)
+        self.assertIsNotNone(response)
+        self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
+        data = json.loads(response.content)
+        self.assertEqual(len(data), page_size)
+
     def test_create_viewed(self):
         # Get our current number of viewed jobs to compare against.
         url = reverse('api:user_job_activity-list')

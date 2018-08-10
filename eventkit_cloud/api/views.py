@@ -835,7 +835,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)  ) & Q(deleted=False))\
+        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))\
             .select_related('job', 'user')\
             .prefetch_related(Prefetch('provider_tasks',
                 queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
@@ -862,6 +862,8 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
         from eventkit_cloud.tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
+        if not request.query_params.get('job_uid'):
+            queryset = queryset.filter(deleted=False)
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
@@ -878,13 +880,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         job = instance.job
 
-
         perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
                             status.HTTP_400_BAD_REQUEST)
 
-        instance.soft_delete(user=request.user)
+        permissions = JobPermission.jobpermissions(job)
+
+        instance.soft_delete(user=request.user, permissions=permissions)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
@@ -900,6 +903,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        # This is to display deleted runs on the status and download
+        if not request.query_params.get('job_uid'):
+            queryset = queryset.filter(deleted=False)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={'request': request})
@@ -918,12 +924,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :param kwargs:
         :return: the serialized runs
         """
+
+        deleted = request.data.get('deleted', False)
         queryset = self.filter_queryset(self.get_queryset())
 
         if "permissions" in request.data:
             job_ids = get_job_ids_via_permissions(request.data["permissions"])
             queryset = ExportRun.objects.filter(
-            Q(job_id__in=job_ids) & Q(deleted=False))
+            Q(job_id__in=job_ids))
 
         search_geojson = self.request.data.get('geojson', None)
         if search_geojson is not None:
@@ -962,13 +970,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                     Q(job__event__icontains=search_term)
                 )
             )
-
+        if not request.query_params.get('job_uid'):
+            queryset = queryset.filter(deleted=False)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'no_license': True})
+            serializer = self.get_serializer(page, many=True, context={'request': request, 'no_license': True})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'no_license': True})
+            serializer = self.get_serializer(queryset, many=True, context={'request': request, 'no_license': True})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
@@ -1545,7 +1554,6 @@ class GroupViewSet(viewsets.ModelViewSet):
             targetusers = request.data[permissionlabel]
 
             ## Add new users for this permission level
-
             newusers = list(set(targetusers) - set(currentusers))
             users = User.objects.filter(username__in=newusers).all()
             verb = NotificationVerb.ADDED_TO_GROUP.value

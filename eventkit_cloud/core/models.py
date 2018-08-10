@@ -23,6 +23,7 @@ def normalize_unicode_str(self):
 Notification.__str__ = normalize_unicode_str
 
 
+
 class TimeStampedModelMixin(models.Model):
     """
     Mixin for timestamped models.
