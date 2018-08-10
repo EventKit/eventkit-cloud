@@ -1,0 +1,15 @@
+package:
+  name: berkeleydb
+  version: 6.0.19
+
+source:
+  fn: db-6.0.19.tar.gz
+  url: http://download.oracle.com/berkeley-db/db-6.0.19.tar.gz
+
+build:
+  number: 0
+
+about:
+  home: http://download.oracle.com/berkeley-db
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:

@@ -1,0 +1,15 @@
+package:
+  name: openjpeg
+  version: 2.1
+
+source:
+  fn: openjpeg-version.2.1.tar.gz
+  url: https://github.com/uclouvain/openjpeg/archive/version.2.1.tar.gz
+
+build:
+  number: 0
+
+about:
+  home: https://github.com/uclouvain/openjpeg
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:

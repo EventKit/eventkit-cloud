@@ -1,0 +1,16 @@
+package:
+  name: readosm
+  version: 1.0.0e
+
+source:
+  fn: readosm-1.0.0e.tar.gz
+  url: http://www.gaia-gis.it/gaia-sins/readosm-sources/readosm-1.0.0e.tar.gz
+
+build:
+  number: 1.0.0e
+
+about:
+  home: https://www.gaia-gis.it/fossil/readosm/index
+  license: MPL tri-license
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:
