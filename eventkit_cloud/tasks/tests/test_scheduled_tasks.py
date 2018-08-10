@@ -2,13 +2,13 @@
 import logging
 import mock
 import json
-
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from django.utils import timezone
 from django.conf import settings
 from django.template.loader import get_template
+from notifications.models import Notification
 
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.models import ExportRun
@@ -79,6 +79,7 @@ class TestExpireRunsTask(TestCase):
             send_email.assert_any_call(date=now_time + timezone.timedelta(days=6), url=expected_url,
                                        addr=job.user.email, job_name=job.name)
             self.assertEqual(3, ExportRun.objects.all().count())
+            self.assertEqual(0, Notification.objects.all().count())
 
 
 class TestCheckProviderAvailabilityTask(TestCase):

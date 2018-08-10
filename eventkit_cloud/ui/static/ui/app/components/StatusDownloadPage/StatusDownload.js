@@ -301,26 +301,40 @@ export class StatusDownload extends React.Component {
 
         const errorMessage = this.getErrorMessage();
 
-        const details = this.props.datacartDetails.data.map(cartDetails => (
-            <DataCartDetails
-                key={cartDetails.uid}
-                cartDetails={cartDetails}
-                onRunDelete={this.props.deleteRun}
-                onUpdateExpiration={this.props.updateExpirationDate}
-                onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
-                updatingExpiration={this.props.expirationState.updating}
-                updatingPermission={this.props.permissionState.updating}
-                permissionState={this.props.permissionState}
-                onRunRerun={this.props.rerunExport}
-                onClone={this.props.cloneExport}
-                onProviderCancel={this.props.cancelProviderTask}
-                providers={this.props.providers}
-                maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
-                user={this.props.user}
-                members={this.props.users}
-                groups={this.props.groups}
-            />
-        ));
+        const details = this.props.datacartDetails.data.map((cartDetails) => {
+            if (cartDetails.deleted) {
+                return (
+                    <div
+                        key="no-datapack"
+                        style={{ textAlign: 'center', padding: '30px' }}
+                        className="qa-StatusDownload-DeletedDatapack"
+                    >
+                        <ErrorOutline style={styles.notFoundIcon} />
+                        <span style={styles.notFoundText}>This DataPack has been deleted.</span>
+                    </div>
+                );
+            }
+            return (
+                <DataCartDetails
+                    key={cartDetails.uid}
+                    cartDetails={cartDetails}
+                    onRunDelete={this.props.deleteRun}
+                    onUpdateExpiration={this.props.updateExpirationDate}
+                    onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
+                    updatingExpiration={this.props.expirationState.updating}
+                    updatingPermission={this.props.permissionState.updating}
+                    permissionState={this.props.permissionState}
+                    onRunRerun={this.props.rerunExport}
+                    onClone={this.props.cloneExport}
+                    onProviderCancel={this.props.cancelProviderTask}
+                    providers={this.props.providers}
+                    maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
+                    user={this.props.user}
+                    members={this.props.users}
+                    groups={this.props.groups}
+                />
+            );
+        });
 
         if (!details.length && !this.state.isLoading) {
             details.push((
