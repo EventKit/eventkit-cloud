@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -52,7 +52,7 @@ services:
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -85,7 +85,7 @@ services:
     - "${SITE_NAME}:${SITE_IP}"
     command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
   celery-beat:
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -150,7 +150,7 @@ services:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
   flower:
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -202,7 +202,6 @@ services:
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
 volumes:
   postgis_database:
-
 
 
 
