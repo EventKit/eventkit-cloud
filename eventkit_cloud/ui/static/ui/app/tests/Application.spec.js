@@ -50,7 +50,7 @@ describe('Application component', () => {
         openDrawer: () => {},
         closeDrawer: () => {},
         userActive: () => {},
-        getNotifications: () => {},
+        getNotifications: sinon.spy(),
         getNotificationsUnreadCount: () => {},
     });
 
@@ -153,13 +153,14 @@ describe('Application component', () => {
         spy.restore();
     });
 
-    it('should call getConfig and addEventListener on mount', () => {
+    it('should call getConfig, getNotifications, and addEventListener on mount', () => {
         Application.prototype.componentDidMount = mountFunc;
         const getStub = sinon.stub(Application.prototype, 'getConfig');
         const eventSpy = sinon.spy(window, 'addEventListener');
         const props = getProps();
         const wrapper = getMountedWrapper(props);
         expect(getStub.calledOnce).toBe(true);
+        expect(props.getNotifications.callCount).toBe(1);
         expect(eventSpy.called).toBe(true);
         expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
         getStub.restore();
@@ -196,10 +197,10 @@ describe('Application component', () => {
         props.drawer = 'open';
         const wrapper = getShallowWrapper(props);
         wrapper.instance().handleToggle();
-        expect(props.closeDrawer.calledOnce).toBe(true);
+        expect(props.closeDrawer.callCount).toBe(1);
         wrapper.setProps({ ...props, drawer: 'closed' });
         wrapper.instance().handleToggle();
-        expect(props.openDrawer.calledOnce).toBe(true);
+        expect(props.openDrawer.callCount).toBe(2);
     });
 
     it('onMenuItemClick should call handleToggle if screen size is smaller than 1200', () => {
@@ -351,6 +352,7 @@ describe('Application component', () => {
         const stopListeningForNotificationsSpy = sinon.spy(Application.prototype, 'stopListeningForNotifications');
         const wrapper = getMountedWrapper(getProps());
         const instance = wrapper.instance();
+        instance.loggedIn = true;
         wrapper.setProps({
             userData: null,
         });

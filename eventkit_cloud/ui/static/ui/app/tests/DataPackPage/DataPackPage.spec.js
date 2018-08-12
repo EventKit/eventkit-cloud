@@ -22,7 +22,6 @@ import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
-import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -201,28 +200,6 @@ describe('DataPackPage component', () => {
         expect(changeStub.calledOnce).toBe(true);
         expect(changeStub.calledWith('value')).toBe(true);
         changeStub.restore();
-    });
-
-    it('should show the DataPackShareDialog  and give it the correct run', () => {
-        const runs = [
-            { job: { uid: '123', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
-            { job: { uid: '456', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
-        ];
-        const props = getProps();
-        props.runsList.runs = runs;
-        const wrapper = getWrapper(props);
-        const run = {
-            job: {
-                uid: '12345',
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
-            },
-        };
-        wrapper.setState({ shareOpen: true, targetRun: run });
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
     it('should use order and view from props or just default to map and featured', () => {
@@ -705,6 +682,7 @@ describe('DataPackPage component', () => {
             runs: props.runsList.runs,
             user: props.user,
             onRunDelete: props.deleteRuns,
+            onRunShare: props.updateDataCartPermissions,
             range: props.runsList.range,
             handleLoadLess: wrapper.instance().loadLess,
             handleLoadMore: wrapper.instance().loadMore,
@@ -712,6 +690,7 @@ describe('DataPackPage component', () => {
             loadMoreDisabled: !props.runsList.nextPage,
             providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
+            users: props.users,
             groups: props.groups,
             ref: wrapper.instance().getViewRef,
         };
@@ -744,42 +723,6 @@ describe('DataPackPage component', () => {
             />
         ));
         expect(wrapper.instance().getView('bad case')).toEqual(null);
-    });
-
-    it('handleShareOpen should set open true and the target job uid', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        const run = { job: { uid: '12345' } };
-        wrapper.instance().handleShareOpen(run);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: true, targetRun: run })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleShareClose should set open false and clear the target job uid', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleShareClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: false, targetRun: null })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleShareSave should call shareClose and update permissions', () => {
-        const props = getProps();
-        props.updateDataCartPermissions = sinon.spy();
-        const wrapper = getWrapper(props);
-        const target = { job: { uid: '123' } };
-        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
-        const closeStub = sinon.stub(wrapper.instance(), 'handleShareClose');
-        wrapper.setState({ targetRun: target });
-        wrapper.instance().handleShareSave(permissions);
-        expect(closeStub.calledOnce).toBe(true);
-        expect(props.updateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.updateDataCartPermissions.calledWith(target.job.uid, permissions)).toBe(true);
-        closeStub.restore();
     });
 
     it('getJoyRideSteps should return correct steps based on view', () => {
