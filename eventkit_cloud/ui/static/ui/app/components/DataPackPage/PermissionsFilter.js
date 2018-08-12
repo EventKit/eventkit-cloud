@@ -97,7 +97,6 @@ export class PermissionsFilter extends Component {
 
         const checkIcon = (<CheckCircle style={{ fill: '#4598bf' }} />);
 
-        let dialog = null;
         let sharedButton = null;
         // SHARED and PUBLIC are internal, to the user they are both 'SHARED'
         if (this.props.permissions.value === 'SHARED' || this.props.permissions.value === 'PUBLIC') {
@@ -135,25 +134,6 @@ export class PermissionsFilter extends Component {
                     {memberText} / {groupText}
                 </EnhancedButton>
             );
-
-            if (this.state.open) {
-                dialog = (
-                    <DataPackShareDialog
-                        show={this.state.open}
-                        onClose={this.handleClose}
-                        onSave={this.handleSave}
-                        groups={this.props.groups}
-                        members={this.props.members}
-                        permissions={this.props.permissions}
-                        groupsText="You may filter DataPacks by shared groups exclusively.
-                         Group filtering is managed seperately from member filtering."
-                        membersText="You may filter DataPacks by shared members exclusively.
-                         Member filtering is managed seperately from group filtering."
-                        title="FILTER SHARED DATAPACKS"
-                        submitButtonLabel="SET DATAPACK FILTER"
-                    />
-                );
-            }
         }
 
         return (
@@ -207,7 +187,20 @@ export class PermissionsFilter extends Component {
                     />
                 </RadioButtonGroup>
                 {sharedButton}
-                {dialog}
+                <DataPackShareDialog
+                    show={this.state.open}
+                    onClose={this.handleClose}
+                    onSave={this.handleSave}
+                    groups={this.props.groups}
+                    members={this.props.members}
+                    permissions={this.props.permissions}
+                    groupsText="You may filter DataPacks by shared groups exclusively.
+                     Group filtering is managed seperately from member filtering."
+                    membersText="You may filter DataPacks by shared members exclusively.
+                     Member filtering is managed seperately from group filtering."
+                    title="FILTER SHARED DATAPACKS"
+                    submitButtonLabel="SET DATAPACK FILTER"
+                />
             </div>
         );
     }

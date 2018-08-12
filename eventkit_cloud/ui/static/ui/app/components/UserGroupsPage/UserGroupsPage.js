@@ -108,8 +108,8 @@ export class UserGroupsPage extends Component {
             // Set the current ordering to username so a change wont be detected
             // by componentWillReceiveProps
             this.props.location.query.ordering = 'username';
-            // Push the ordering query to the url
-            browserHistory.push({
+            // Replace the url with the ordering query included
+            browserHistory.replace({
                 ...this.props.location,
                 query: { ...this.props.location.query, ordering: 'username' },
             });
@@ -1013,14 +1013,14 @@ export class UserGroupsPage extends Component {
                     onRenameGroupClick={this.handleRenameOpen}
                     className="qa-UserGroupsPage-drawer"
                 />
-                {this.state.showAddUsers ? <AddMembersDialog
+                <AddMembersDialog
                     show={this.state.showAddUsers}
                     onClose={this.hideAddUsersDialog}
                     onSave={this.handleAddUsersSave}
                     groups={ownedGroups}
                     selectedUsers={this.state.addUsers}
                     className="qa-UserGroupsPage-addMembersDialog"
-                /> : null }
+                />
                 <CreateGroupDialog
                     show={this.state.showCreate}
                     onClose={this.handleCreateClose}

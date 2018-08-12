@@ -107,6 +107,8 @@ describe('DataCartDetails component', () => {
             onClone: () => {},
             onProviderCancel: () => {},
             user: { data: { user: { username: 'admin' } } },
+            members: [],
+            groups: [],
         }
     );
 
