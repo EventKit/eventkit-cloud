@@ -8,7 +8,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY ./environment.yml ./conda/repo /var/lib/eventkit/
+COPY ./environment-dev.yml ./conda/repo /var/lib/eventkit/
 COPY ./conda/repo /var/lib/eventkit/conda/repo
 
 ENV PATH="/home/eventkit/miniconda2/bin:$PATH"
@@ -20,8 +20,10 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.s
     conda config --add channels local && \
     conda config --add channels file://var/lib/eventkit/conda/repo
 
-RUN conda env create --file environment.yml
+RUN conda env create --file environment-dev.yml
 
-ENTRYPOINT "source activate eventkit-cloud"
+COPY ./scripts/wait-for-postgis.sh /var/lib/eventkit/scripts/wait-for-postgis.sh
 
-CMD "echo 'This image has no default run command.'"
+ENTRYPOINT ["bash", "./scripts/wait-for-postgis.sh"]
+
+CMD ["echo", "This image has no default run command."]
