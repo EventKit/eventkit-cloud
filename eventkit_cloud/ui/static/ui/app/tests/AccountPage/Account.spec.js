@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
@@ -48,7 +49,7 @@ describe('Account Component', () => {
 
     const getMountedWrapper = props => mount(<Account {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     });
 
     it('should call joyrideAddSteps when mounted', () => {

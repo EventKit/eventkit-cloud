@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Checkbox from 'material-ui/Checkbox';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import NotificationSync from 'material-ui/svg-icons/notification/sync';

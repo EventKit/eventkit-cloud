@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
 import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';

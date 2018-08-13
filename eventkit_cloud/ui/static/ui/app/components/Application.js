@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import AppBar from 'material-ui/AppBar';
@@ -124,7 +125,6 @@ export class Application extends Component {
             if (isViewportXL()) {
                 this.props.openDrawer();
             }
-            console.log('innerWidth', window.innerWidth);
             this.startCheckingForAutoLogout();
             this.startSendingUserActivePings();
             this.startListeningForNotifications();
@@ -492,6 +492,7 @@ export class Application extends Component {
                 position: 'absolute',
                 width: '100%',
                 height: '100%',
+                pointerEvents: 'none',
             },
             drawer: {
                 width: '200px',
@@ -612,7 +613,6 @@ export class Application extends Component {
                                                 notifications={this.props.notifications}
                                                 router={this.props.router}
                                                 onNavigate={this.handleNotificationsDropdownNavigate}
-                                                store={this.props.store}
                                             />
                                         </div>
                                     </div>
@@ -786,7 +786,6 @@ Application.defaultProps = {
     autoLogoutAt: null,
     autoLogoutWarningAt: null,
     userData: {},
-    store: null,
 };
 
 Application.propTypes = {
@@ -819,7 +818,6 @@ Application.propTypes = {
     notifications: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
-    store: PropTypes.object,
 };
 
 Application.childContextTypes = {

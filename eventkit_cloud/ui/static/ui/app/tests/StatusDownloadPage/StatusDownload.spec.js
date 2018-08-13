@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -161,7 +162,7 @@ describe('StatusDownload component', () => {
         mount(<StatusDownload {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -435,10 +436,12 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         window.resizeTo(600, 700);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         let padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('0px');
         window.resizeTo(800, 900);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('30px');

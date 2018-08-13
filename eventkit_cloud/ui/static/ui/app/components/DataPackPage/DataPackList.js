@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui/Table';
 import { GridList } from 'material-ui/GridList';
 import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';

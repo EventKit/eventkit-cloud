@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
@@ -76,14 +77,14 @@ export class DataPackOptions extends Component {
                 disableTouchRipple
                 label="Cancel"
                 primary={false}
-                onTouchTap={this.handleRerunClose}
+                onClick={this.handleRerunClose}
             />,
             <RaisedButton
                 className="qa-DataPackOptions-RaisedButton-rerun"
                 buttonStyle={{ backgroundColor: '#4598bf' }}
                 label="Rerun"
                 primary
-                onTouchTap={this.handleRerun}
+                onClick={this.handleRerun}
             />,
         ];
         const cloneExportActions = [
@@ -95,14 +96,14 @@ export class DataPackOptions extends Component {
                 disableTouchRipple
                 label="Cancel"
                 primary={false}
-                onTouchTap={this.handleCloneClose}
+                onClick={this.handleCloneClose}
             />,
             <RaisedButton
                 className="qa-DataPackOptions-RaisedButton-clone"
                 buttonStyle={{ backgroundColor: '#4598bf' }}
                 label="Clone"
                 primary
-                onTouchTap={this.handleClone}
+                onClick={this.handleClone}
             />,
         ];
 
@@ -116,7 +117,7 @@ export class DataPackOptions extends Component {
                     disableTouchRipple
                     labelColor="#4598bf"
                     labelStyle={{ fontWeight: 'bold' }}
-                    onTouchTap={this.handleRerunOpen}
+                    onClick={this.handleRerunOpen}
                     label="RUN EXPORT AGAIN"
                 />
                 <BaseDialog
@@ -135,7 +136,7 @@ export class DataPackOptions extends Component {
                     disableTouchRipple
                     labelColor="#4598bf"
                     labelStyle={{ fontWeight: 'bold' }}
-                    onTouchTap={this.handleCloneOpen}
+                    onClick={this.handleCloneOpen}
                     label="CLONE"
                 />
                 <BaseDialog
@@ -155,7 +156,7 @@ export class DataPackOptions extends Component {
                     disableTouchRipple
                     labelColor="#ff0000"
                     labelStyle={{ fontWeight: 'bold' }}
-                    onTouchTap={this.handleDeleteOpen}
+                    onClick={this.handleDeleteOpen}
                     label="DELETE"
                 />
                 <DeleteDataPackDialog

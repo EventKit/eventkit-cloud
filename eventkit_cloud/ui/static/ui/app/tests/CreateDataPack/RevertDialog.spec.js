@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -32,7 +33,7 @@ describe('AlertCallout component', () => {
     const getWrapper = props => (
         mount(<RevertDialog {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 
@@ -47,16 +48,16 @@ describe('AlertCallout component', () => {
         expect(wrapper.find('.qa-RevertDialog-name')).toHaveLength(1);
         expect(wrapper.find('.qa-RevertDialog-description')).toHaveLength(1);
         expect(wrapper.find('.qa-RevertDialog-footer')).toHaveLength(1);
-        expect(wrapper.find('.qa-RevertDialog-FlatButton-close')).toHaveLength(1);
-        expect(wrapper.find('.qa-RevertDialog-RaisedButton-revert')).toHaveLength(1);
+        expect(wrapper.find('.qa-RevertDialog-FlatButton-close').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-RevertDialog-RaisedButton-revert').hostNodes()).toHaveLength(1);
     });
 
     it('should not render anything if show is false', () => {
         const props = getProps();
         props.show = false;
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-RevertDialog-dialog')).toHaveLength(0);
-        expect(wrapper.find('.qa-RevertDialog-background')).toHaveLength(0);
+        expect(wrapper.find('.qa-RevertDialog-dialog').hostNodes()).toHaveLength(0);
+        expect(wrapper.find('.qa-RevertDialog-background').hostNodes()).toHaveLength(0);
     });
 
     it('Close buttons should call onRevertClose', () => {

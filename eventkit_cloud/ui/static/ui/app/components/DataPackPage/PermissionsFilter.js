@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import Lock from 'material-ui/svg-icons/action/lock-outline';

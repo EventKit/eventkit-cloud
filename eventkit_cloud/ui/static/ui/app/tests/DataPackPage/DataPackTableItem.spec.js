@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -108,7 +109,7 @@ describe('DataPackTableItem component', () => {
     const getWrapperMount = (props) => {
         const wrapper = mount(<DataPackTableItem {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         wrapper.instance().iconMenu = { setState: sinon.spy() };
         return wrapper;

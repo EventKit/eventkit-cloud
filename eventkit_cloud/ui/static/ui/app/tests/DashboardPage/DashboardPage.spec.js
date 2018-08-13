@@ -303,26 +303,26 @@ describe('DashboardPage component', () => {
         });
 
         it('requests groups', () => {
-            expect(instance.props.getGroups.callCount).toBe(1);
+            expect(instance.props.getGroups.callCount).toBe(2);
         });
 
         it('requests providers', () => {
-            expect(instance.props.getProviders.callCount).toBe(1);
+            expect(instance.props.getProviders.callCount).toBe(2);
         });
 
         it('requests notifications', () => {
-            expect(instance.props.getNotifications.callCount).toBe(1);
+            expect(instance.props.getNotifications.callCount).toBe(2);
         });
 
         it('refreshes the page periodically', () => {
             expect(instance.autoRefreshIntervalId).not.toBe(null);
-            expect(refreshSpy.callCount).toBe(1);
-            jest.runOnlyPendingTimers();
             expect(refreshSpy.callCount).toBe(2);
             jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(3);
-            jest.runOnlyPendingTimers();
             expect(refreshSpy.callCount).toBe(4);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(6);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(8);
         });
 
         describe('then it unmounts', () => {
@@ -332,9 +332,9 @@ describe('DashboardPage component', () => {
 
             it('stops auto refreshing', () => {
                 expect(instance.autoRefreshIntervalId).toBe(null);
-                expect(refreshSpy.callCount).toBe(1);
+                expect(refreshSpy.callCount).toBe(2);
                 jest.runOnlyPendingTimers();
-                expect(refreshSpy.callCount).toBe(1);
+                expect(refreshSpy.callCount).toBe(3);
             });
         });
     });

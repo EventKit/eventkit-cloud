@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -30,7 +31,7 @@ describe('LoadButtons component', () => {
     const getWrapper = props => mount(<MapPopup {...props} />, {
         context: { muiTheme },
         childContextTypes: {
-            muiTheme: React.PropTypes.object,
+            muiTheme: PropTypes.object,
         },
     });
 
