@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { GridList } from 'material-ui/GridList';
+import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
 
@@ -902,7 +902,7 @@ export class MapView extends Component {
                             className="qa-MapView-GridList"
                             cellHeight="auto"
                             cols={1}
-                            padding={0}
+                            spacing={0}
                             style={{ width: '100%' }}
                         >
                             {this.props.runs.map((run) => {

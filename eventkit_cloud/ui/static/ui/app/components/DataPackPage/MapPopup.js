@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Clear from '@material-ui/icons/Clear';
-import { Card } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import Dot from '@material-ui/icons/FiberManualRecord';
@@ -122,7 +122,7 @@ export class MapPopup extends Component {
         };
 
         return (
-            <Card className="qa-MapPopup-Card" containerStyle={{ padding: '10px', zIndex: 10 }}>
+            <Card className="qa-MapPopup-Card" style={{ padding: '10px', zIndex: 10 }}>
                 <div id="popup-header" style={styles.popupHeader}>
                     <div className="qa-MapPopup-div-name" id="popup-name-container" style={styles.popupNameContainer}>
                         <div id="popup-name" style={styles.popupName}>

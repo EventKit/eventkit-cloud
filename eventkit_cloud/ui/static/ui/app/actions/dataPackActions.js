@@ -44,14 +44,8 @@ export function getRuns(args = {}) {
         }
         if (args.ownerFilter !== 'all') params.user = args.ownerFilter;
         if (status.length) params.status = status.join(',');
-        if (args.minDate) {
-            params.min_date = args.minDate.toISOString().substring(0, 10);
-        }
-        if (args.maxDate) {
-            const maxDate = new Date(args.maxDate.getTime());
-            maxDate.setDate(maxDate.getDate() + 1);
-            params.max_date = maxDate.toISOString().substring(0, 10);
-        }
+        if (args.minDate) params.min_date = args.minDate;
+        if (args.maxDate) params.max_date = args.maxDate;
         if (args.search) params.search_term = args.search.slice(0, 1000);
         if (providers.length) params.providers = providers.join(',');
 
