@@ -12,7 +12,7 @@ from mock import Mock, PropertyMock, patch, MagicMock
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
 from eventkit_cloud.tasks.task_factory import create_run
 from eventkit_cloud.tasks.task_runners import (
-    ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
+    TaskRunner, create_export_task_record
 )
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class TestExportTaskRunner(TestCase):
         self.job.provider_tasks.add(provider_task)
         create_run(job_uid=self.job.uid)
 
-        runner = ExportOSMTaskRunner()
+        runner = TaskRunner()
 
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
@@ -78,7 +78,7 @@ class TestExportTaskRunner(TestCase):
         mock_chain.return_value.apply_async.return_value = Mock()
         self.job.provider_tasks.first().formats.add(self.shp_task)
         create_run(job_uid=self.job.uid)
-        runner = ExportExternalRasterServiceTaskRunner()
+        runner = TaskRunner()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
             runner.run_task(provider_task_uid=provider_task_record.uid, run=self.job.runs.first(),
