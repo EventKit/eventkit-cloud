@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import ContentCreate from 'material-ui/svg-icons/content/create';
 import ContentClear from 'material-ui/svg-icons/content/clear';
 

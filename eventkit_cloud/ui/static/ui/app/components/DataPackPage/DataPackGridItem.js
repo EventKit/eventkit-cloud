@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
 import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
@@ -74,13 +75,13 @@ export class DataPackGridItem extends Component {
     getMapId() {
         let mapId = '';
         if (!isUndefined(this.props.gridName)) {
-            mapId += `${this.props.gridName}_`;
+            mapId += `_${this.props.gridName}`;
         }
-        mapId += `${this.props.run.uid}_`;
+        mapId += `_${this.props.run.uid}`;
         if (!isUndefined(this.props.index)) {
-            mapId += `${this.props.index}_`;
+            mapId += `_${this.props.index}`;
         }
-        mapId += 'map';
+        mapId = `map${mapId}`;
 
         return mapId;
     }
@@ -478,9 +479,8 @@ export class DataPackGridItem extends Component {
                         </div>
                     }
                     subtitle={
-                        <div>
+                        <div className="qa-DataPackGridItem-div-subtitle">
                             <div
-                                className="qa-DataPackGridItem-div-subtitle"
                                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                             >
                                 {`Event: ${this.props.run.job.event}`}
@@ -495,7 +495,7 @@ export class DataPackGridItem extends Component {
                     style={styles.cardTextContainer}
                     onMouseEnter={() => { this.setState({ overflowText: true }); }}
                     onMouseLeave={() => { this.setState({ overflowText: false }); }}
-                    onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
+                    onClick={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
                     <span
                         className="qa-DataPackGridItem-span-description"

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -73,6 +74,7 @@ describe('MembersHeaderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         window.resizeTo(500, 500);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find(Dialog).props().contentStyle.transform).toEqual('translate(0px, 16px)');
     });

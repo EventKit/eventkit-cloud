@@ -1,5 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import { browserHistory } from 'react-router';
 import { mount, shallow } from 'enzyme';
@@ -141,7 +142,7 @@ describe('DataPackPage component', () => {
         mount(<DataPackPage {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -495,6 +496,7 @@ describe('DataPackPage component', () => {
         props.location.query.order = '-job__featured';
         props.location.query.collection = 'test_user';
         const wrapper = shallow(<DataPackPage {...props} />);
+        props.getRuns.reset();
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
@@ -524,6 +526,7 @@ describe('DataPackPage component', () => {
             providers,
             geojson_geometry: geojson,
         });
+        wrapper.update();
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
         expect(props.getRuns.getCall(0).args).toEqual(expectedParams);

@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Card, CardHeader } from 'material-ui/Card';
 import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
 import CheckBox from 'material-ui/svg-icons/toggle/check-box';

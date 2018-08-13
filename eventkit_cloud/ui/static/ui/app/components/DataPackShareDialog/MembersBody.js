@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import InfoIcon from 'material-ui/svg-icons/action/info-outline';
 import CustomTextField from '../CustomTextField';

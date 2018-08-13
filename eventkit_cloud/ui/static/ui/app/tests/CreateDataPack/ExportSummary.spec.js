@@ -1,5 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import Joyride from 'react-joyride';
 import { mount } from 'enzyme';
@@ -71,8 +72,8 @@ describe('Export Summary Component', () => {
         return mount(<ExportSummary {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };

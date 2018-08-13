@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import sinon from 'sinon';
@@ -28,8 +29,8 @@ describe('CreateExport component', () => {
         return mount(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
             context: { muiTheme, store },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                store: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                store: PropTypes.object,
             },
         });
     }

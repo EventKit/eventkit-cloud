@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
@@ -107,12 +108,13 @@ describe('BreadcrumbStepper component', () => {
         clearJobInfo: () => {},
         getNotifications: () => {},
         getNotificationsUnreadCount: () => {},
+        getFormats: () => {},
     });
     const getWrapper = props => (
         shallow(<BreadcrumbStepper {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -149,7 +151,7 @@ describe('BreadcrumbStepper component', () => {
             ],
         };
         wrapper.setProps(nextProps);
-        expect(getMessageSpy.calledTwice).toBe(true);
+        expect(getMessageSpy.called).toBe(true);
     });
 
     it('componentDidMount should set nextDisabled and get providers and formats', () => {
@@ -159,8 +161,7 @@ describe('BreadcrumbStepper component', () => {
         props.getProviders = sinon.spy();
         props.getFormats = sinon.spy();
         props.setNextDisabled = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().componentDidMount();
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
@@ -221,7 +222,7 @@ describe('BreadcrumbStepper component', () => {
         const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(message.find('.BreadcrumbStepper-error-container')).toHaveLength(1);
@@ -291,7 +292,7 @@ describe('BreadcrumbStepper component', () => {
         let content = mount(wrapper.instance().getButtonContent(0), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(FloatingActionButton)).toHaveLength(1);
@@ -300,7 +301,7 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getButtonContent(1), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(FloatingActionButton)).toHaveLength(1);
@@ -309,7 +310,7 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getButtonContent(2), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(FloatingActionButton)).toHaveLength(1);
@@ -326,7 +327,7 @@ describe('BreadcrumbStepper component', () => {
         let content = mount(wrapper.instance().getPreviousButtonContent(0), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
@@ -334,7 +335,7 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getPreviousButtonContent(1), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
@@ -342,7 +343,7 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getPreviousButtonContent(2), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(FloatingActionButton)).toHaveLength(1);

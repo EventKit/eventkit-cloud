@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -124,7 +125,7 @@ describe('DataPackList component', () => {
 
     const getWrapper = props => mount(<DataPackList {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     });
 
     it('should render list items as part of the mobile view', () => {
@@ -133,6 +134,7 @@ describe('DataPackList component', () => {
         // ensure the screen is small
         window.resizeTo(556, 600);
         expect(window.innerWidth).toEqual(556);
+        wrapper.instance().forceUpdate();
         wrapper.update();
 
         expect(wrapper.find(GridList)).toHaveLength(1);
@@ -146,6 +148,7 @@ describe('DataPackList component', () => {
         // ensure the screen is large
         window.resizeTo(1250, 800);
         expect(window.innerWidth).toEqual(1250);
+        wrapper.instance().forceUpdate();
         wrapper.update();
 
         expect(wrapper.find(GridList)).toHaveLength(0);

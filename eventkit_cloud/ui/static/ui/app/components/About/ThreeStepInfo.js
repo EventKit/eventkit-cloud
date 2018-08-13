@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
 export class ThreeStepInfo extends Component {
     render() {
@@ -68,7 +69,7 @@ ThreeStepInfo.defaultProps = {
 };
 
 ThreeStepInfo.propTypes = {
-    steps: PropTypes.arrayOf(React.PropTypes.shape({
+    steps: PropTypes.arrayOf(PropTypes.shape({
         img: PropTypes.obj,
         caption: PropTypes.string,
     })).isRequired,

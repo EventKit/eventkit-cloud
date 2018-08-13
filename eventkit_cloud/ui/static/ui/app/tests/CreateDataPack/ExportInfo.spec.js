@@ -1,5 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -84,8 +85,8 @@ describe('ExportInfo component', () => {
         return mount(<ExportInfo {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };
@@ -96,7 +97,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#root')).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find('#form')).toHaveLength(1);
-        expect(wrapper.find('#paper')).toHaveLength(1);
+        expect(wrapper.find('#paper').hostNodes()).toHaveLength(1);
         expect(wrapper.find('#mainHeading')).toHaveLength(1);
         expect(wrapper.find(TextField)).toHaveLength(3);
         expect(wrapper.find('#layersHeader')).toHaveLength(1);

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -9,8 +10,6 @@ import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/C
 import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
 import SocialGroup from 'material-ui/svg-icons/social/group';
 import Lock from 'material-ui/svg-icons/action/lock-outline';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-dom/test-utils';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
@@ -145,7 +144,7 @@ function getRuns() {
 }
 
 beforeAll(() => {
-    DataPackGridItem.prototype.initMap = sinon.stub();
+    sinon.stub(DataPackGridItem.prototype, 'initMap');
 });
 
 afterAll(() => {
@@ -155,7 +154,7 @@ afterAll(() => {
 const getWrapperMount = props => (
     mount(<DataPackGridItem {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     })
 );
 
@@ -189,7 +188,8 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(IconButton).find(NavigationMoreVert)).toHaveLength(1);
         expect(wrapper.find(MenuItem)).toHaveLength(0);
-        const subtitle = wrapper.find(CardTitle).childAt(1).childAt(0);
+        const subtitle = wrapper.find(CardTitle).find('.qa-DataPackGridItem-div-subtitle').hostNodes();
+        expect(subtitle).toHaveLength(1);
         expect(subtitle.find('div').at(1).text()).toEqual('Event: Test1 event');
         expect(subtitle.find('span').at(0).text()).toEqual('Added: 3/10/17');
         expect(subtitle.find('span').at(1).text()).toEqual('Expires: 3/24/17');
@@ -240,12 +240,12 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapperMount(props);
         const updateSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
-        expect(wrapper.find(`#${uid}_map`)).toHaveLength(1);
+        expect(wrapper.find(`#map_${uid}`).hostNodes()).toHaveLength(1);
         wrapper.setState({ expanded: false });
         expect(wrapper.find(CardMedia)).toHaveLength(0);
         expect(updateSpy.called).toBe(true);
         expect(wrapper.instance().initMap.called).toBe(false);
-        expect(wrapper.find(`#${uid}_map`)).toHaveLength(0);
+        expect(wrapper.find(`#map_${uid}`).hostNodes()).toHaveLength(0);
         updateSpy.restore();
     });
 
@@ -274,10 +274,7 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapperMount(props);
         const expectedBool = !wrapper.state().overflow;
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        const div = TestUtils.findRenderedComponentWithType(wrapper.instance(), CardText);
-        // eslint-disable-next-line react/no-find-dom-node
-        const node = ReactDOM.findDOMNode(div);
-        TestUtils.Simulate.touchTap(node);
+        wrapper.find(CardText).find('div').simulate('click');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ overflowText: expectedBool })).toBe(true);
         stateSpy.restore();
