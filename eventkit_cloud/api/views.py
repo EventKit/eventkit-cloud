@@ -1,55 +1,50 @@
 """Provides classes for handling API requests."""
+import logging
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta, date
+
 from dateutil import parser
-import logging
-import json
 from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
-from django.contrib.gis.geos import GEOSException, GEOSGeometry
-
-
-from django.contrib.auth.models import User, Group
-from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
 from notifications.models import Notification
-from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
-
-
-from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
-    UserJobActivity
-)
-from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
-from ..utils.gdalutils import get_area
-from eventkit_cloud.utils.provider_check import perform_provider_check
-
+from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
+from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.schemas import SchemaGenerator
 from rest_framework.serializers import ValidationError
-from serializers import (
+
+from eventkit_cloud.api.filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
+from eventkit_cloud.api.pagination import LinkHeaderPagination
+from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
+from eventkit_cloud.api.renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, \
+    CustomOpenAPIRenderer
+from eventkit_cloud.api.serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
     UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
 )
-
-from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
-from .pagination import LinkHeaderPagination
-from .permissions import IsOwnerOrReadOnly
-from .renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, CustomOpenAPIRenderer, update_schema
-from .validators import validate_bbox_params, validate_search_bbox
-from rest_framework.permissions import AllowAny
-from rest_framework.schemas import SchemaGenerator
-from rest_framework import exceptions
-
+from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission, JobPermissionLevel
+from eventkit_cloud.jobs.models import (
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
+    UserJobActivity
+)
+from eventkit_cloud.tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
+from eventkit_cloud.utils.gdalutils import get_area
+from eventkit_cloud.utils.provider_check import perform_provider_check
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -282,7 +277,7 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -423,7 +418,7 @@ class JobViewSet(viewsets.ModelViewSet):
         if user_details is None:
             user_details = {'username': 'unknown-JobViewSet.run'}
 
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
         try:
             # run needs to be created so that the UI can be updated with the task list.
@@ -865,7 +860,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             the serialized run data.
         """
 
-        from ..tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
         if not request.query_params.get('job_uid'):
             queryset = queryset.filter(deleted=False)

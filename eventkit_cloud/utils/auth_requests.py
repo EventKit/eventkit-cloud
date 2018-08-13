@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+import httplib
+import logging
 import os
 import re
-import httplib
-from tempfile import NamedTemporaryFile
-import logging
-from functools import wraps
 import urllib2
+from functools import wraps
+from tempfile import NamedTemporaryFile
+
 import requests
-
 from mapproxy.client import http
-
 
 logger = logging.getLogger(__name__)
 

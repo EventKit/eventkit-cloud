@@ -8,8 +8,9 @@
 """
 
 import os
-from pysqlite2 import dbapi2 as sqlite3
 from string import Template
+
+from pysqlite2 import dbapi2 as sqlite3
 
 
 def run(*script_args):

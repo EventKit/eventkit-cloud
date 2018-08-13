@@ -7,14 +7,12 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
+from mock import patch, Mock, MagicMock, ANY
 
 from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
-    get_invalid_licenses)
-from mock import patch, Mock, MagicMock, ANY
-
-from ...core.models import GroupPermission,JobPermission
+                                               get_invalid_licenses)
 
 logger = logging.getLogger(__name__)
 

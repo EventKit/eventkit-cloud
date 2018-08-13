@@ -103,6 +103,8 @@ Specify the service location with the environment variable:
 ### Tests
 To run tests:
 <pre>docker-compose run --rm -e COVERAGE=True eventkit python manage.py test eventkit_cloud</pre>
+or
+<pre>docker-compose run --rm eventkit pytest
 
 ## Export Directories
 If you need to change where export files are staged or downloaded you can add:

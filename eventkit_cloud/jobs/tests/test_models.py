@@ -2,18 +2,17 @@
 import logging
 import os
 
-from django.conf import settings
 from django.contrib.auth.models import Group, User
+from django.contrib.gis.db.models.functions import Area
+from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.contrib.gis.db.models.functions import Intersection
-from django.contrib.gis.db.models.functions import Area
-from django.core.files import File
 from django.test import TestCase
+from mock import patch
+
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderTask
 , DatamodelPreset)
-from mock import patch
 
 logger = logging.getLogger(__name__)
 

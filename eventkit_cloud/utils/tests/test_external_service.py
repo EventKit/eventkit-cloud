@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 import logging
+from uuid import uuid4
+
 import yaml as real_yaml
-from mock import Mock, patch, MagicMock
-from django.core.files.temp import NamedTemporaryFile
 from django.conf import settings
 from django.test import TransactionTestCase
-from ..external_service import ( ExternalRasterServiceToGeopackage,
-                                 check_service, get_cache_template, CustomLogger, check_zoom_levels )
 from mapproxy.config.config import load_default_config
-from uuid import uuid4
-from datetime import datetime
+from mock import Mock, patch, MagicMock
+
+from eventkit_cloud.utils.external_service import (ExternalRasterServiceToGeopackage,
+                                                   check_service, get_cache_template, CustomLogger, check_zoom_levels)
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +126,6 @@ class TestHelpers(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.get_zoom_levels_table')
     @patch('eventkit_cloud.utils.external_service.get_tile_table_names')
     def test_check_zoom_levels(self, mock_get_tables, mock_get_zoom_levels, mock_tile_matrix, mock_sql):
-        from mapproxy.grid import TileGrid
         from mapproxy.config.loader import ProxyConfiguration
         example_geopackage = '/test/example.gpkg'
         grid_name = 'geodetic'

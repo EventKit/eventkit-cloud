@@ -4,14 +4,15 @@ from __future__ import unicode_literals
 import logging
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
-from ..jobs.models import Job, LowerCaseCharField, DataProvider
-from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
-from ..core.helpers import sendnotification, NotificationLevel, NotificationVerb
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
 from notifications.models import Notification
-from django.contrib.contenttypes.models import ContentType
+
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
         return ret
 
     def soft_delete(self, *args, **kwargs):
-        from .signals import exporttaskresult_delete_exports
+        from eventkit_cloud.tasks.signals import exporttaskresult_delete_exports
         exporttaskresult_delete_exports(self.__class__, self)
         self.deleted = True
         self.save()
@@ -130,8 +131,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         return '{0}'.format(self.uid)
 
     def soft_delete(self, user=None, *args, **kwargs):
-        from .export_tasks import cancel_run
-        from .signals import exportrun_delete_exports
+        from eventkit_cloud.tasks.export_tasks import cancel_run
+        from eventkit_cloud.tasks.signals import exportrun_delete_exports
         exportrun_delete_exports(self.__class__, self)
         username = None
         if user:

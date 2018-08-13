@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-
-from mock import Mock, patch, call
 from uuid import uuid4
+
 from django.test import TransactionTestCase
+from mock import Mock, patch, call
 
-from ..geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
-                          get_zoom_levels_table, remove_zoom_level, get_tile_matrix_table_zoom_levels,
-                          remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
-                          add_geojson_to_geopackage, clip_geopackage, create_table_from_existing, get_table_info,
-                          get_table_gpkg_contents_information, set_gpkg_contents_bounds, create_extension_table,
-                          create_metadata_tables, add_file_metadata)
-
+from eventkit_cloud.utils.geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
+                                             get_zoom_levels_table, remove_zoom_level,
+                                             get_tile_matrix_table_zoom_levels,
+                                             remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
+                                             add_geojson_to_geopackage, clip_geopackage, create_table_from_existing,
+                                             get_table_info,
+                                             get_table_gpkg_contents_information, set_gpkg_contents_bounds,
+                                             create_extension_table,
+                                             create_metadata_tables, add_file_metadata)
 
 logger = logging.getLogger(__name__)
 

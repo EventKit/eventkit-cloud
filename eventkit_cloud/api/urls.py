@@ -4,14 +4,12 @@ from __future__ import absolute_import
 
 from rest_framework.routers import DefaultRouter
 
-from .views import (
+from eventkit_cloud.api.views import (
     ExportFormatViewSet, ExportRunViewSet,
-    ExportTaskViewSet, JobViewSet, RegionMaskViewSet,
-    RegionViewSet, DataProviderViewSet, SwaggerSchemaView,
+    ExportTaskViewSet, JobViewSet, RegionViewSet, DataProviderViewSet, SwaggerSchemaView,
     DataProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet,
     UserJobActivityViewSet, NotificationViewSet
 )
-
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'jobs', JobViewSet, base_name='jobs')

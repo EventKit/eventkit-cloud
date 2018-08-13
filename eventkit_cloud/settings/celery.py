@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from celery.schedules import crontab
-
-from .contrib import *  # NOQA
-import os
 import json
+import os
+
+from celery.schedules import crontab
+from eventkit_cloud.settings.contrib import *  # NOQA
 
 # Celery config
 CELERY_TRACK_STARTED = True

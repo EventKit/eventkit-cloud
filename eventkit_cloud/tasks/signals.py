@@ -1,12 +1,14 @@
 from django.conf import settings
-
-from ..utils.s3 import delete_from_s3
 from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
-from .models import ExportRun, FileProducingTaskResult, notification_delete
+
+from eventkit_cloud.tasks.models import ExportRun, FileProducingTaskResult
+from eventkit_cloud.utils.s3 import delete_from_s3
+
 import os
 import shutil
 import logging
+
 
 logger = logging.getLogger(__file__)
 

@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from django.utils.translation import ugettext as _
-from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
-from django.conf import settings
-from enum import Enum
 import json
 import logging
 import re
-import requests
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
 
+import requests
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
+from django.utils.translation import ugettext as _
+from enum import Enum
 
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.jobs.models import DataProvider
 
 logger = logging.getLogger(__name__)
 

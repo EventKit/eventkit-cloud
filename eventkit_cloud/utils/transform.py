@@ -3,10 +3,11 @@ import argparse
 import logging
 import os
 import subprocess
-from ..tasks.task_process import TaskProcess
 from string import Template
 
-from osgeo import gdal, ogr, osr
+from osgeo import gdal, osr
+
+from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 

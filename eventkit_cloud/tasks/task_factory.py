@@ -1,38 +1,35 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from datetime import datetime, timedelta
+import itertools
 import logging
 import os
-import itertools
 
+from celery import chain
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-from ..core.models import JobPermission,JobPermissionLevel
-from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
-from celery import chain
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
+from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
+                                               wait_for_providers_task, TaskStates)
 from eventkit_cloud.tasks.export_tasks import (zip_export_provider, finalize_run_task,
                                                prepare_for_export_zip_task,
                                                zip_file_task,
                                                output_selection_geojson_task)
-
-from ..jobs.models import Job
-from ..ui.helpers import get_style_files
-from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
-                                  wait_for_providers_task, TaskStates)
-
-from ..tasks.models import ExportRun, DataProviderTaskRecord
-from ..tasks.task_runners import create_export_task_record
-from .task_runners import (
+from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_provider_staging_dir
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.task_runners import (
     ExportOSMTaskRunner,
     ExportWFSTaskRunner,
     ExportWCSTaskRunner,
     ExportExternalRasterServiceTaskRunner,
     ExportArcGISFeatureServiceTaskRunner
 )
-from .helpers import get_run_staging_dir, get_provider_staging_dir
+from eventkit_cloud.tasks.task_runners import create_export_task_record
+from eventkit_cloud.ui.helpers import get_style_files
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -267,7 +264,7 @@ def get_invalid_licenses(job, user=None):
     :param job: The job containing the licensed datasets.
     :return: A list of invalid licenses.
     """
-    from ..api.serializers import UserDataSerializer
+    from eventkit_cloud.api.serializers import UserDataSerializer
     user = user or job.user
     licenses = UserDataSerializer.get_accepted_licenses(user)
     invalid_licenses = []

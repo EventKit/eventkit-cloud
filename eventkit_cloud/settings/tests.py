@@ -1,4 +1,5 @@
-from .prod import *  # NOQA
+
+from eventkit_cloud.settings.prod import *  # NOQA
 
 #Override settings here for test purposes.
 

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import json
-import os
-import uuid
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from rest_framework.reverse import reverse
-from rest_framework.test import APITestCase
 
-# from django.test import TestCase as APITestCase
+import os
 
 from django.contrib.auth.models import Group, User
-from ...core.helpers import sendnotification, NotificationVerb,NotificationLevel
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
+
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+
+
+# from django.test import TestCase as APITestCase
 
 
 class TestNotifications(APITestCase):
