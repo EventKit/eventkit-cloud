@@ -43,7 +43,7 @@ def callback(request):
     if user:
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
-        return redirect('exports')
+        return redirect('dashboard')
     else:
         logger.error('User could not be logged in.')
         return HttpResponse('{"error":"User could not be logged in"}',
