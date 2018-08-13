@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
@@ -101,9 +102,8 @@ function getRuns() {
     ];
 }
 
-
 beforeAll(() => {
-    DataPackGridItem.prototype.initMap = sinon.spy();
+    sinon.stub(DataPackGridItem.prototype, 'initMap');
 });
 
 afterAll(() => {
@@ -116,14 +116,17 @@ describe('DataPackGrid component', () => {
         runs: getRuns(),
         providers,
         user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
         onRunDelete: () => {},
+        onRunShare: () => {},
     };
 
     it('should render a DataPackGridItem for each run passed in', () => {
         const getColumnSpy = sinon.spy(DataPackGrid.prototype, 'getColumns');
         const wrapper = mount(<DataPackGrid {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(GridList)).toHaveLength(1);
         expect(wrapper.find(DataPackGridItem)).toHaveLength(3);

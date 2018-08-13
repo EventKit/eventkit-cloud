@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import AppBar from 'material-ui/AppBar';
 import Help from 'material-ui/svg-icons/action/help';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';

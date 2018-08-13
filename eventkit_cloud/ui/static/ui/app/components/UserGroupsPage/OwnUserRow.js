@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import IconButton from 'material-ui/IconButton';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
@@ -127,7 +128,7 @@ export class OwnUserRow extends Component {
                     key="adminMenuItem"
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={this.handleDemoteAdminClick}
+                    onClick={this.handleDemoteAdminClick}
                     className="qa-OwnUserRow-MenuItem-makeAdmin"
                 >
                     <span>Remove Admin Rights</span>
@@ -142,7 +143,7 @@ export class OwnUserRow extends Component {
                 <MenuItem
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={this.handleRemoveUserClick}
+                    onClick={this.handleRemoveUserClick}
                     className="qa-OwnUserRow-MenuItem-remove"
                 >
                     <span>Leave Group</span>

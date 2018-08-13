@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
 from django.contrib.postgres.fields import JSONField
-from ..core.models import JobPermission
+from django.db import models
+
+from eventkit_cloud.core.models import JobPermission
 
 
 class OAuth(models.Model):

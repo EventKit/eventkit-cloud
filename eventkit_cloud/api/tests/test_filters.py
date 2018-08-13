@@ -3,12 +3,10 @@ import logging
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-
+from mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-from mock import patch
-from ...core.models import JobPermission
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask
 

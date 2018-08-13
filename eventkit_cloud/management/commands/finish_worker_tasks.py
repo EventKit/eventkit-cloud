@@ -1,8 +1,10 @@
 from __future__ import print_function
-from django.core.management import BaseCommand
-from logging import getLogger
-from eventkit_cloud.celery import app
 
+from logging import getLogger
+
+from django.core.management import BaseCommand
+
+from eventkit_cloud.celery import app
 
 logger = getLogger(__name__)
 

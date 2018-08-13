@@ -1,10 +1,9 @@
 import os
 
 from django.utils import timezone
-
-from eventkit_cloud.jobs import presets
 from utils.overpass import Overpass
 
+from eventkit_cloud.jobs import presets
 
 """
     Harness to run an Overpass Query outside of test context.

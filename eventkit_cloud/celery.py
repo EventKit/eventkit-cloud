@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
 import os
-from enum import Enum
-from celery import Celery
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.prod')
 
-from django.conf import settings  # noqa
+from celery import Celery
+from enum import Enum
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.prod')
 
 
 class TaskPriority(Enum):

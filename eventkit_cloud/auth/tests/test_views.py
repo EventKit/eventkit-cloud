@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import json
 import logging
+import urllib
 
+from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.core.urlresolvers import reverse
+from django.test import Client, override_settings
 from django.test import TestCase
 from mock import patch, Mock
-from django.contrib.auth.models import User, Group
-from ..views import callback
-from ..models import OAuth
-from django.test import Client, override_settings
-from django.core.urlresolvers import reverse
-from django.conf import settings
-import json
-import urllib
+
+from eventkit_cloud.auth.models import OAuth
+from eventkit_cloud.auth.views import callback
 
 logger = logging.getLogger(__name__)
 

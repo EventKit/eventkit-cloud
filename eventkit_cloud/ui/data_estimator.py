@@ -1,7 +1,8 @@
-from mapproxy import srs as mapproxy_srs
-from mapproxy import grid as mapproxy_grid
-from eventkit_cloud.jobs.models import DataProvider
 from django.core.exceptions import ObjectDoesNotExist
+from mapproxy import grid as mapproxy_grid
+from mapproxy import srs as mapproxy_srs
+
+from eventkit_cloud.jobs.models import DataProvider
 
 
 def get_size_estimate(provider, bbox, srs='3857'):

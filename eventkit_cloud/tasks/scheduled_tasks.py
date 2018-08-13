@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-import json
 import datetime
-
-from django.utils import timezone
-from django.conf import settings
-from django.template.loader import get_template
-from django.core.mail import EmailMultiAlternatives
+import json
 
 from celery.utils.log import get_task_logger
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
+from django.utils import timezone
+
 from eventkit_cloud.celery import app
 
 logger = get_task_logger(__name__)

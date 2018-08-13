@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -20,7 +21,7 @@ describe('DropZoneError component', () => {
 
     const getWrapper = props => mount(<DropZoneError {...props} />, {
         context: { muiTheme },
-        childContextTypes: { muiTheme: React.PropTypes.object },
+        childContextTypes: { muiTheme: PropTypes.object },
     });
 
     it('should render error message when new props are received', () => {
@@ -32,7 +33,7 @@ describe('DropZoneError component', () => {
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         const children = mount(wrapper.find(BaseDialog).props().children, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(children.find('.qa-DropZoneError-error')).toHaveLength(1);
         expect(children.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');

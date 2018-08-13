@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from osgeo import gdal, ogr
-from mock import Mock, patch, call, MagicMock,ANY
 from uuid import uuid4
+
 from django.test import TestCase
+from mock import Mock, patch, call, MagicMock, ANY
+from osgeo import gdal, ogr
 
-
-from ..gdalutils import clip_dataset, is_envelope, convert, get_distance, \
+from eventkit_cloud.utils.gdalutils import clip_dataset, is_envelope, convert, get_distance, \
     get_dimensions, merge_geotiffs, get_meta, get_band_statistics
-
 
 logger = logging.getLogger(__name__)
 

@@ -3,20 +3,17 @@ import logging
 import os
 import uuid
 
-from mock import Mock, PropertyMock, patch, MagicMock
-
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-from django.test import TestCase
 from django.db.utils import DatabaseError
+from django.test import TestCase
+from mock import Mock, PropertyMock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
-
-from ..task_runners import (
+from eventkit_cloud.tasks.task_factory import create_run
+from eventkit_cloud.tasks.task_runners import (
     ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
 )
-from ..task_factory import create_run
-from ...core.models import GroupPermission, JobPermission
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +91,7 @@ class TestExportTaskRunner(TestCase):
 
     @patch('eventkit_cloud.tasks.task_runners.ExportTaskRecord')
     def test_create_export_task_record(self, mock_export_task):
-        from ..export_tasks import TaskStates
+        from eventkit_cloud.tasks.export_tasks import TaskStates
 
         task_name = "TaskName"
         export_provider_task_name = "ExportProviderTaskName"

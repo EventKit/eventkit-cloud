@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import ShareBaseDialog from './ShareBaseDialog';
@@ -18,7 +19,6 @@ export class DataPackShareDialog extends Component {
         this.showPublicWarning = this.showPublicWarning.bind(this);
         this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
-        this.forceUpdate = this.forceUpdate.bind(this);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally

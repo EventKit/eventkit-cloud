@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import AlertWarning from 'material-ui/svg-icons/alert/warning';
 import AlertError from 'material-ui/svg-icons/alert/error';
 import ActionDone from 'material-ui/svg-icons/action/done';
@@ -8,7 +9,7 @@ import BaseTooltip from '../BaseTooltip';
 export class ProviderStatusIcon extends Component {
     constructor(props) {
         super(props);
-        this.onTouchTap = this.onTouchTap.bind(this);
+        this.onClick = this.onClick.bind(this);
         this.handleTooltipClose = this.handleTooltipClose.bind(this);
         this.handleTooltipOpen = this.handleTooltipOpen.bind(this);
         this.state = {
@@ -16,9 +17,9 @@ export class ProviderStatusIcon extends Component {
         };
     }
 
-    onTouchTap(e) {
-        if (typeof this.props.onTouchTap === 'function') {
-            this.props.onTouchTap(e);
+    onClick(e) {
+        if (typeof this.props.onClick === 'function') {
+            this.props.onClick(e);
         }
         this.handleTooltipOpen(e);
     }
@@ -99,11 +100,9 @@ export class ProviderStatusIcon extends Component {
                 <StatusIcon
                     style={style.icon}
                     title={this.props.availability.message}
-                    onTouchTap={this.onTouchTap}
+                    onClick={this.onClick}
                     onMouseOver={this.handleTooltipOpen}
                     onMouseOut={this.handleTooltipClose}
-                    onTouchStart={this.handleTooltipOpen}
-                    onTouchEnd={this.handleTooltipClose}
                     onFocus={this.handleTooltipOpen}
                     onBlur={this.handleTooltipClose}
                     size={20}
@@ -124,7 +123,7 @@ export class ProviderStatusIcon extends Component {
                     }}
                     onMouseOver={this.handleTooltipOpen}
                     onMouseOut={this.handleTooltipClose}
-                    onTouchTap={this.onTouchTap}
+                    onClick={this.onClick}
                     onFocus={this.handleTooltipOpen}
                     onBlur={this.handleTooltipClose}
                 >
@@ -137,7 +136,7 @@ export class ProviderStatusIcon extends Component {
 
 ProviderStatusIcon.defaultProps = {
     availability: {},
-    onTouchTap: undefined,
+    onClick: undefined,
     baseStyle: {},
     iconStyle: {},
     tooltipStyle: {},
@@ -146,7 +145,7 @@ ProviderStatusIcon.defaultProps = {
 
 ProviderStatusIcon.propTypes = {
     availability: PropTypes.object,
-    onTouchTap: PropTypes.func,
+    onClick: PropTypes.func,
     baseStyle: PropTypes.object,
     iconStyle: PropTypes.object,
     tooltipStyle: PropTypes.object,

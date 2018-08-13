@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
@@ -36,7 +37,6 @@ export class ShareBaseDialog extends Component {
                 height: '100%',
                 minWidth: '325px',
                 maxWidth: '650px',
-                transform: `translate(0px, ${this.state.mobile ? 16 : 64}px)`,
             },
             title: {
                 padding: '25px',
@@ -64,6 +64,10 @@ export class ShareBaseDialog extends Component {
                 borderRadius: '0px',
             },
         };
+
+        if (this.state.mobile) {
+            styles.dialog.transform = 'translate(0px, 16px)';
+        }
 
         const actions = [
             <RaisedButton

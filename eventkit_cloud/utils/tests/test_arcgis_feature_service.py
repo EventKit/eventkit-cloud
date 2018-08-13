@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from mock import Mock, patch
+from string import Template
+from uuid import uuid4
+
 from django.conf import settings
 from django.test import TransactionTestCase
-from string import Template
-from ..arcgis_feature_service import ArcGISFeatureServiceToGPKG
-from uuid import uuid4
+from mock import Mock, patch
+
+from eventkit_cloud.utils.arcgis_feature_service import ArcGISFeatureServiceToGPKG
 
 logger = logging.getLogger(__name__)
 

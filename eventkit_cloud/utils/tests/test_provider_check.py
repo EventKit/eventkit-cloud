@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-import os
+
 import requests
 from django.conf import settings
 from django.test import TransactionTestCase
-from mock import Mock, patch, MagicMock
-from ..provider_check import WCSProviderCheck, WFSProviderCheck, WMSProviderCheck, WMTSProviderCheck,\
-    OverpassProviderCheck, CheckResults
+from mock import patch, MagicMock
+
+from eventkit_cloud.utils.provider_check import WCSProviderCheck, WFSProviderCheck, WMSProviderCheck, WMTSProviderCheck, \
+    CheckResults
 
 logger = logging.getLogger(__name__)
 

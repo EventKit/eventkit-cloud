@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Tabs, Tab } from 'material-ui/Tabs';
 import Checked from 'material-ui/svg-icons/toggle/check-box';
 import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
@@ -30,6 +31,7 @@ export class AddMembersDialog extends Component {
         this.handleResize = this.handleResize.bind(this);
         this.toggleSortName = this.toggleSortName.bind(this);
         this.toggleSortSelected = this.toggleSortSelected.bind(this);
+        this.infoPRef = this.infoPRef.bind(this);
         this.state = this.getInitialState();
     }
 
@@ -191,6 +193,15 @@ export class AddMembersDialog extends Component {
         }
     }
 
+    infoPRef(element) {
+        if (this.infoP === element) {
+            return;
+        }
+
+        this.infoP = element;
+        this.setState(this.getInitialState());
+    }
+
     render() {
         const styles = {
             dialog: {
@@ -198,7 +209,6 @@ export class AddMembersDialog extends Component {
                 height: '100%',
                 minWidth: '325px',
                 maxWidth: '650px',
-                transform: `translate(0px, ${this.state.mobile ? 16 : 64}px)`,
             },
             title: {
                 padding: '25px',
@@ -285,6 +295,10 @@ export class AddMembersDialog extends Component {
                 color: '#000',
             },
         };
+
+        if (this.state.mobile) {
+            styles.dialog.transform = 'translate(0px, 16px)';
+        }
 
         let { groups } = this.props;
         if (this.state.search) {
@@ -418,7 +432,7 @@ export class AddMembersDialog extends Component {
                 ref={(input) => { this.dialog = input; }}
             >
                 <p
-                    ref={(input) => { this.infoP = input; }}
+                    ref={this.infoPRef}
                     style={{ marginBottom: '20px' }}
                     className="qa-AddMembersDialog-description"
                 >

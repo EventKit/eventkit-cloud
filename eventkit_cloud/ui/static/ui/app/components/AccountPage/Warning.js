@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
 export class Warning extends Component {
     render() {
@@ -20,7 +21,7 @@ export class Warning extends Component {
 }
 
 Warning.propTypes = {
-    text: React.PropTypes.oneOfType([
+    text: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node,
     ]).isRequired,

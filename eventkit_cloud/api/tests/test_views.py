@@ -1,32 +1,34 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import json
 import logging
 import os
-from datetime import datetime,timedelta
 import uuid
+from datetime import datetime, timedelta
 
+from django.conf import settings
+from django.contrib.auth.models import Group, User
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
+from django.core import serializers
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+from mock import patch, Mock
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-# from django.test import TestCase as APITestCase
 
-from django.conf import settings
-from django.utils.translation import ugettext as _
-from django.utils import timezone
-from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
-from django.core import serializers
-from ..pagination import LinkHeaderPagination
-from ..views import get_models, get_provider_task, ExportRunViewSet
-from ...tasks.task_factory import InvalidLicense
-from ...tasks.export_tasks import TaskStates
-from ...jobs.models import ExportFormat, Job, DataProvider, \
+from eventkit_cloud.api.pagination import LinkHeaderPagination
+from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
+from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
-from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
-from ...core.models import GroupPermission, GroupPermissionLevel
-from mock import patch, Mock
+from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
+from eventkit_cloud.tasks.task_factory import InvalidLicense
+
+# from django.test import TestCase as APITestCase
 
 
 logger = logging.getLogger(__name__)
@@ -756,7 +758,7 @@ class TestExportRunViewSet(APITestCase):
 
     @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
     def test_list_runs_invalid_license(self, mock_validate_licenses):
-        from ...tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.task_factory import InvalidLicense
         expected = '/api/runs'
         url = reverse('api:runs-list')
         mock_validate_licenses.side_effect = (InvalidLicense('no license'),)

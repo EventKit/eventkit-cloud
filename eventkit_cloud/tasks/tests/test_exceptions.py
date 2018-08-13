@@ -1,6 +1,8 @@
 import logging
+
 from django.test import TestCase
-from ..exceptions import CancelException
+
+from eventkit_cloud.tasks.exceptions import CancelException
 
 logger = logging.getLogger(__name__)
 
