@@ -17,7 +17,9 @@ before_install:
   - sudo useradd -u 8800 -g 880 eventkit
 
 before_script:
-    - cd conda && docker-compose up --build && cd ..
+    - cd conda
+    - docker-compose up --build
+    - cd ..
     - docker-compose build
     - docker-compose up -d
     - sudo chown -R eventkit:eventkit ./
