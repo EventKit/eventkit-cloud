@@ -198,7 +198,10 @@ describe('MapView component', () => {
     const getProps = () => ({
         runs: getRuns(),
         user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
         onRunDelete: () => {},
+        onRunShare: () => {},
         range: '12/24',
         handleLoadLess: () => {},
         handleLoadMore: () => {},

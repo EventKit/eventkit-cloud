@@ -30,6 +30,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -37,11 +38,15 @@ export class DataPackGridItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             expanded: true,
             overflowTitle: false,
@@ -49,6 +54,8 @@ export class DataPackGridItem extends Component {
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
+            shareDialogOpen: false,
+            menuOpen: false,
         };
     }
 
@@ -132,6 +139,14 @@ export class DataPackGridItem extends Component {
         this.setState({ expanded });
     }
 
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
+    handleMenuChange(menuOpen) {
+        this.setState({ menuOpen });
+    }
+
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
@@ -144,7 +159,11 @@ export class DataPackGridItem extends Component {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDescs[a.name] = a.service_description;
         });
-        this.setState({ providerDescs, providerDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            providerDescs,
+            providerDialogOpen: true,
+        });
     }
 
     toggleExpanded() {
@@ -152,7 +171,10 @@ export class DataPackGridItem extends Component {
     }
 
     showDeleteDialog() {
-        this.setState({ deleteDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            deleteDialogOpen: true,
+        });
     }
 
     hideDeleteDialog() {
@@ -173,6 +195,23 @@ export class DataPackGridItem extends Component {
         element.addEventListener('touchmove', (e) => {
             e.stopPropagation();
         });
+    }
+
+    handleShareOpen() {
+        this.setState({
+            menuOpen: false,
+            shareDialogOpen: true,
+        });
+    }
+
+    handleShareClose() {
+        this.setState({ shareDialogOpen: false });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.onRunShare(this.props.run.job.uid, permissions);
     }
 
     render() {
@@ -370,15 +409,18 @@ export class DataPackGridItem extends Component {
                             <IconMenu
                                 className="qa-DataPackGridItem-IconMenu"
                                 style={{ float: 'right', width: '24px', height: '36px' }}
+                                open={this.state.menuOpen}
                                 iconButtonElement={
                                     <IconButton
                                         style={styles.iconMenu}
                                         iconStyle={{ color: '#4598bf' }}
+                                        onClick={this.handleMenuButtonClick}
                                     >
                                         <NavigationMoreVert />
                                     </IconButton>}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                onRequestChange={this.handleMenuChange}
                             >
                                 <MenuItem
                                     className="qa-DataPackGridItem-MenuItem-showHideMap"
@@ -389,7 +431,7 @@ export class DataPackGridItem extends Component {
                                 <MenuItem
                                     className="qa-DataPackGridItem-MenuItem-goToStatus"
                                     style={{ fontSize: cardTextFontSize }}
-                                    primaryText="Go to Status & Download"
+                                    primaryText="Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem
@@ -412,7 +454,7 @@ export class DataPackGridItem extends Component {
                                             className="qa-DataPackGridItem-MenuItem-share"
                                             style={{ fontSize: cardTextFontSize }}
                                             primaryText="Share"
-                                            onClick={() => this.props.openShare(this.props.run)}
+                                            onClick={this.handleShareOpen}
                                         />,
                                     ]
                                     :
@@ -443,8 +485,8 @@ export class DataPackGridItem extends Component {
                             >
                                 {`Event: ${this.props.run.job.event}`}
                             </div>
-                            <span>{`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}</span><br />
-                            <span>{`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}</span><br />
+                            <span>{`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}</span><br />
+                            <span>{`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}</span><br />
                         </div>
                     }
                 />
@@ -480,11 +522,25 @@ export class DataPackGridItem extends Component {
                         {this.props.run.job.permissions.value !== 'PRIVATE' ?
                             <SocialGroup style={styles.publishedIcon} />
                             :
-
                             <Lock style={styles.unpublishedIcon} />
                         }
                     </span>
                 </CardActions>
+                <DataPackShareDialog
+                    show={this.state.shareDialogOpen}
+                    onClose={this.handleShareClose}
+                    onSave={this.handleShareSave}
+                    user={this.props.user.data}
+                    groups={this.props.groups}
+                    members={this.props.users}
+                    permissions={this.props.run.job.permissions}
+                    groupsText="You may share view and edit rights with groups exclusively.
+                        Group sharing is managed separately from member sharing."
+                    membersText="You may share view and edit rights with members exclusively.
+                        Member sharing is managed separately from group sharing."
+                    canUpdateAdmin
+                    warnPublic
+                />
             </Card>
         );
     }
@@ -498,12 +554,14 @@ DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     showFeaturedFlag: PropTypes.bool,
-    openShare: PropTypes.func.isRequired,
     adminPermission: PropTypes.bool.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 DataPackGridItem.defaultProps = {
