@@ -11,6 +11,7 @@ build:
 
 requirements:
   build:
+    - automake
     - geos ==3.6.1-0
     - proj ==4.9.3-0
     - libspatialite ==4.3.0a-0
@@ -18,7 +19,6 @@ requirements:
     - libxml2 ==2.9.8
     - readosm ==1.0.0e-0
     - sqlite ==3.24.0
-    - libiconv ==1.15
   run:
     - freexl ==1.0.2-0
     - geos ==3.6.1-0
@@ -26,7 +26,6 @@ requirements:
     - libspatialite ==4.3.0a-0
     - readosm ==1.0.0e-0
     - sqlite ==3.24.0
-    - libiconv ==1.15
 about:
   home: https://www.gaia-gis.it/fossil/spatialite-tools/index
   license: GPLv3

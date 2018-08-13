@@ -18,7 +18,9 @@ requirements:
     - zlib ==1.2.11
     - libxml2 ==2.9.8
   run:
+    - sqlite ==3.24.0
     - freexl ==1.0.2-0
+    - zlib ==1.2.11
     - geos ==3.6.1-0
     - proj ==4.9.3-0
     - libxml2 ==2.9.8

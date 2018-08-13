@@ -51,6 +51,7 @@ fi
             --with-geos=$PREFIX/bin/geos-config \
             --with-geotiff=internal \
             --with-jpeg=internal \
+            --with-libjson-c=$PREFIX \
             --with-libkml=$PREFIX \
             --with-libz=internal \
             --with-libtiff=internal \

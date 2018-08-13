@@ -4,9 +4,27 @@ set -e
 
 cmd="$@"
 
-until psql "${DATABASE_URL}" -c '\q'; do
-  >&2 echo "Postgres is unavailable - sleeping"
-  sleep 1
-done
+echo "Activating the Conda environment..."
+source activate eventkit-cloud
+
+python - << END
+import os
+import django
+from time import sleep
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
+django.setup()
+
+from django.db import connection
+
+while True:
+    try:
+        connection.connect()
+        connection.close()
+        break
+    except Exception:
+        print("Postgres is unavailable - sleeping")
+        sleep(1)
+END
 
 exec $cmd

@@ -3,8 +3,8 @@ package:
   version: 9.5.10
 
 source:
-  fn: postgresql-9.5.10.tar.bz2
-  url: http://ftp.postgresql.org/pub/source/v9.5.10/postgresql-9.5.10.tar.bz2
+  fn: postgresql.10.tar.bz2
+  url: http://ftp.postgresql.org/pub/source/v9.5.10/postgresql-9.5.10.tar.gz
 
 build:
   number: 6
@@ -12,22 +12,22 @@ build:
 requirements:
   build:
     - python
-    - openssl ==1.0.2o-h470a237_1
-    - readline ===7.0-haf1bffa_1
-    - libxml2 ==2.9.8-h422b904_2
+    - openssl ==1.0.2o
+    - readline ==7.0
+    - libxml2 ==2.9.8
     - libxslt
     # 10.9 appears to have an issue with libxml2.
     #- libxml2   [not osx]
     #- libxslt   [not osx]
-    - zlib ==1.2.11-h470a237_3
+    - zlib ==1.2.11
     - system    [linux]
   run:
     - python
-    - openssl ==1.0.2o-h470a237_1
-    - readline ==7.0-haf1bffa_1
-    - libxml2 ==2.9.8-h422b904_2
+    - openssl ==1.0.2o
+    - readline ==7.0
+    - libxml2 ==2.9.8
     - libxslt
-    - zlib ==1.2.11-h470a237_3
+    - zlib ==1.2.11
     - system    [linux]
 
 test:

@@ -22,7 +22,7 @@ requirements:
     - geos ==3.6.1-0
     - proj ==4.9.3-0
     - json-c ==0.11
-    - libxml2 ==2.9.8-h422b904_2
+    - libxml2 ==2.9.8
     - postgresql ==9.5.10
 about:
   home: http://postgis.net

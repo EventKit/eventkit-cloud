@@ -5,6 +5,10 @@ set -e
 export LDFLAGS="-L$PREFIX/lib $LDFLAGS"
 export CFLAGS="-I$PREFIX/include $CFLAGS"
 
+if [ -f ${PREFIX}/${HOST}/lib/libstdc++.la ]; then
+    find ${PREFIX} -name "*.la" -print0 | xargs -0 rm
+fi
+
 ./configure --prefix=$PREFIX \
             --with-geosconfig=$PREFIX/bin/geos-config \
             --with-proj-include=$PREFIX/include \

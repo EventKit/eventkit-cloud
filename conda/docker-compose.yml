@@ -1,15 +1,15 @@
 version: '3'
 services:
   conda:
-    working_dir: /root
+    working_dir: /root/
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
       - ./repo:/root/repo
       - ./recipes:/root/recipes
-      - ./recipe-script.sh:/root/recipe-script.sh
-      - ./build-one.sh:/root/build-one.sh
+      - ./build.sh:/root/build.sh
+      - ./dependencies.txt:/root/dependencies.txt
     environment:
       version:
       branch:

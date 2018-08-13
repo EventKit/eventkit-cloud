@@ -27,9 +27,13 @@ conda index linux-64 noarch
 
 echo "Building recipes"
 cd /root/recipes
-echo "***Building $1...***"
-for i in 1 2 3; do conda build $1 && s=0 && break || sleep 15; done; (exit $s)
-
+if [ -z "$1" ]; then
+    echo "***Building  $(cat /root/dependencies.txt)...***"
+    for i in 1 2 3; do conda build  $(cat /root/dependencies.txt) && s=0 && break || sleep 15; done; (exit $s)
+else
+ echo "***Building $@...***"
+    for i in 1 2 3; do conda build $@ && s=0 && break || sleep 15; done; (exit $s)
+fi
 echo "Move files and create index"
 cp /root/miniconda2/pkgs/*.tar.bz2 /root/repo/linux-64/
 cp /root/miniconda2/conda-bld/linux-64/*.tar.bz2 /root/repo/linux-64/
