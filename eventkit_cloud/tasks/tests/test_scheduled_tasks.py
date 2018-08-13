@@ -17,6 +17,8 @@ import json
 import logging
 from mock import patch, call
 
+from notifications.models import Notification
+
 logger = logging.getLogger(__name__)
 
 

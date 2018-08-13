@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
 from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
 from notifications.models import Notification

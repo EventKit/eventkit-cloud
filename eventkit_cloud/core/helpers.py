@@ -122,7 +122,7 @@ class NotificationVerb(Enum):
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
     try:
-        result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object, target=target,
+        notify.send(actor, recipient=recipient, verb=verb, action_object=action_object, target=target,
                              level=level, description=description)
     except Exception as err:
         logger.debug("notify send error ignored: %s" % err)
