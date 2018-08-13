@@ -10,7 +10,23 @@ import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
 import { login } from './actions/userActions';
 
-const Loading = () => <div>Loading. . .</div>;
+const Loading = (args) => {
+    if (args.pastDelay) {
+        return (
+            <div
+                style={{
+                    color: 'white',
+                    height: '100vh',
+                    background: 'rgb(17, 24, 35)',
+                }}
+            >
+                Loading. . .
+            </div>
+        );
+    }
+
+    return null;
+};
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
@@ -20,10 +36,14 @@ function allTrue(acceptedLicenses) {
     return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
 }
 
-const Loader = Loadable({
-    loader: () =>
-        import('./components/auth/Loading'),
+const loadableDefaults = {
     loading: Loading,
+    delay: 1000,
+};
+
+const Loader = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/auth/Loading'),
 });
 
 const UserIsAuthenticated = UserAuthWrapper({
@@ -62,68 +82,58 @@ function checkAuth(storeObj) {
 }
 
 const Application = Loadable({
+    ...loadableDefaults,
     loader: () => import('./components/Application'),
-    loading: Loading,
 });
 
 const LoginPage = Loadable({
-    loader: () =>
-        import('./components/auth/LoginPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/auth/LoginPage'),
 });
 
 const Logout = Loadable({
-    loader: () =>
-        import('./containers/logoutContainer'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./containers/logoutContainer'),
 });
 
 const About = Loadable({
-    loader: () =>
-        import('./components/About/About'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/About/About'),
 });
 
 const Account = Loadable({
-    loader: () =>
-        import('./components/AccountPage/Account'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/AccountPage/Account'),
 });
 
 const DashboardPage = Loadable({
-    loader: () =>
-        import('./components/DashboardPage/DashboardPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/DashboardPage/DashboardPage'),
 });
 
 const DataPackPage = Loadable({
-    loader: () =>
-        import('./components/DataPackPage/DataPackPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/DataPackPage/DataPackPage'),
 });
 
 const CreateExport = Loadable({
-    loader: () =>
-        import('./components/CreateDataPack/CreateExport'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/CreateDataPack/CreateExport'),
 });
 
 const StatusDownload = Loadable({
-    loader: () =>
-        import('./components/StatusDownloadPage/StatusDownload'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/StatusDownloadPage/StatusDownload'),
 });
 
 const UserGroupsPage = Loadable({
-    loader: () =>
-        import('./components/UserGroupsPage/UserGroupsPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/UserGroupsPage/UserGroupsPage'),
 });
 
 const NotificationsPage = Loadable({
-    loader: () =>
-        import('./components/NotificationsPage/NotificationsPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/NotificationsPage/NotificationsPage'),
 });
 
 render(

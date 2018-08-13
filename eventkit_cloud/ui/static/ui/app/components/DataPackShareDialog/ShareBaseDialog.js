@@ -36,7 +36,6 @@ export class ShareBaseDialog extends Component {
                 height: '100%',
                 minWidth: '325px',
                 maxWidth: '650px',
-                transform: `translate(0px, ${this.state.mobile ? 16 : 64}px)`,
             },
             title: {
                 padding: '25px',
@@ -64,6 +63,10 @@ export class ShareBaseDialog extends Component {
                 borderRadius: '0px',
             },
         };
+
+        if (this.state.mobile) {
+            styles.dialog.transform = 'translate(0px, 16px)';
+        }
 
         const actions = [
             <RaisedButton
