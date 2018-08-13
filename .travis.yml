@@ -18,7 +18,8 @@ before_install:
 
 before_script:
     - cd conda
-    - docker-compose up --build
+    - docker-compose build
+    - docker-compose run --rm conda
     - cd ..
     - docker-compose build
     - docker-compose up -d
