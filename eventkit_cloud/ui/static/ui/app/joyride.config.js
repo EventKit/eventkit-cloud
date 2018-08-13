@@ -566,7 +566,7 @@ export const joyride = {
                 text: `Use the placename search as a spatial filter for DataPacks.
                     If a placename has an associated polygon, EventKit will return all DataPacks that intersect the polygon.
                     If the placename is a point or an MGRS coordinate, then EventKit will return all DataPacks that contain that point.`,
-                selector: '.bootstrap-typeahead-input',
+                selector: '.qa-SearchAOIToolbar-typeahead',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },

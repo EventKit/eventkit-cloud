@@ -609,7 +609,7 @@ export class DataPackPage extends React.Component {
                             this.props.importGeom.processing ?
                                 <div
                                     style={{
-                                        zIndex: 10,
+                                        zIndex: 100,
                                         position: 'absolute',
                                         width: '100%',
                                         height: '100%',

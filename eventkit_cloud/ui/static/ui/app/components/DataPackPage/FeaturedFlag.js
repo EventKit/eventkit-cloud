@@ -9,10 +9,12 @@ export class FeaturedFlag extends Component {
             textAlign: 'center',
             fontSize: '11px',
             position: 'absolute',
-            top: 0,
-            right: 0,
+            top: -15,
+            right: -10,
             width: 100,
-            height: 17,
+            height: 16,
+            lineHeight: '16px',
+            zIndex: 2,
             ...this.props.style,
         };
 

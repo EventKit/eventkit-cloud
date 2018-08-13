@@ -45,8 +45,16 @@ const muiThemeV1 = createMuiTheme({
                 '&$disabled': { color: 'grey' },
             },
         },
-        MuiTableRow: {
-            selectedColor: 'initial',
+        MuiTableCell: {
+            head: {
+                fontSize: '12px',
+            },
+            body: {
+                fontSize: '12px',
+            },
+            footer: {
+                fontSize: '12px',
+            },
         },
         MuiButton: {
             root: {
