@@ -2,11 +2,10 @@
 import importlib
 import logging
 
+from celery import chain  # required for tests
 from django.conf import settings
 from django.db import DatabaseError
-from .helpers import normalize_name
 
-from celery import group, chain  # required for tests
 from eventkit_cloud.jobs.models import DataProviderTask
 from eventkit_cloud.tasks.export_tasks import (
     wcs_export_task,
@@ -15,7 +14,7 @@ from eventkit_cloud.tasks.export_tasks import (
     arcgis_feature_service_export_task,
     osm_data_collection_task,
     TaskStates)
-
+from eventkit_cloud.tasks.helpers import normalize_name
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)

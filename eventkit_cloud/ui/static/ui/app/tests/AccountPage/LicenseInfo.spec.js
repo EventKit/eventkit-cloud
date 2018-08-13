@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
@@ -28,7 +29,7 @@ describe('LicenseInfo component', () => {
     const getMountedWrapper = props => (
         mount(<LicenseInfo {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 

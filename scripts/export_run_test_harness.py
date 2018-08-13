@@ -8,9 +8,9 @@ import os
 
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
+from eventkit_cloud.jobs.presets import PresetParser
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, Tag
-from eventkit_cloud.jobs.presets import PresetParser
 from eventkit_cloud.tasks.task_runners import ExportTaskRunner
 
 

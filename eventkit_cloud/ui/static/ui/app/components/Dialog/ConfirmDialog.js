@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import BaseDialog from './BaseDialog';
 
@@ -45,7 +46,7 @@ ConfirmDialog.propTypes = {
     title: PropTypes.string.isRequired,
     onCancel: PropTypes.func.isRequired,
     onConfirm: PropTypes.func.isRequired,
-    children: PropTypes.oneOf([
+    children: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),

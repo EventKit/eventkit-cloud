@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -35,7 +36,7 @@ describe('AoiInfobar component', () => {
     const getWrapper = props => (
         mount(<AoiInfobar {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 
@@ -78,14 +79,14 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-infoTitle').text()).toEqual('fake title');
         expect(wrapper.find('.qa-AoiInfobar-infoDescription').text()).toEqual('fake description');
-        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(1);
+        expect(wrapper.find('.qa-AoiInfobar-icon-polygon').hostNodes()).toHaveLength(1);
     });
 
     it('should add an event listener on mount', () => {
         const props = getProps();
         const addStub = sinon.stub(window, 'addEventListener');
         const wrapper = getWrapper(props);
-        expect(addStub.calledOnce).toBe(true);
+        expect(addStub.called).toBe(true);
         expect(addStub.calledWith('resize', wrapper.instance().update)).toBe(true);
         addStub.restore();
     });
@@ -96,7 +97,7 @@ describe('AoiInfobar component', () => {
         const wrapper = getWrapper(props);
         const { update } = wrapper.instance();
         wrapper.instance().componentWillUnmount();
-        expect(removeSpy.calledOnce).toBe(true);
+        expect(removeSpy.called).toBe(true);
         expect(removeSpy.calledWith('resize', update)).toBe(true);
         removeSpy.restore();
     });
@@ -147,8 +148,8 @@ describe('AoiInfobar component', () => {
         props.maxVectorAoiSqKm = 0.0000000001;
         const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
-        wrapper.find('.qa-AoiInfobar-alert-icon').simulate('click');
+        expect(wrapper.find('.qa-AoiInfobar-alert-icon').hostNodes()).toHaveLength(1);
+        wrapper.find('.qa-AoiInfobar-alert-icon').hostNodes().simulate('click');
         expect(showSpy.calledOnce).toBe(true);
         showSpy.restore();
     });

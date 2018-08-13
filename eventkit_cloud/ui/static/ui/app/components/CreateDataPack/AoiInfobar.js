@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import numeral from 'numeral';
 import RaisedButton from 'material-ui/RaisedButton';
 import Divider from 'material-ui/Divider';

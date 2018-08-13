@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .celery import *  # NOQA
 import dj_database_url
-import os
-import logging
-import json
-import urllib
+
+from eventkit_cloud.settings.celery import *  # NOQA
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 

@@ -4,11 +4,13 @@ from __future__ import with_statement
 import logging
 import os
 import shutil
-from pysqlite2 import dbapi2 as sqlite3
-from sqlite import execute_spatialite_script
-from .geopackage import create_table_from_existing
-from .sqlite import enable_spatialite
 from string import Template
+
+from pysqlite2 import dbapi2 as sqlite3
+
+from eventkit_cloud.utils.geopackage import create_table_from_existing
+from eventkit_cloud.utils.sqlite import enable_spatialite
+from sqlite import execute_spatialite_script
 
 logger = logging.getLogger(__name__)
 

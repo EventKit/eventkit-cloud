@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 
 import os
-from .base import *  # NOQA
+
+from eventkit_cloud.settings.base import *  # NOQA
 
 # Extra installed apps
 INSTALLED_APPS += (

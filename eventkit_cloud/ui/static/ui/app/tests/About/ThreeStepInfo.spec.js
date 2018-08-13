@@ -49,6 +49,7 @@ describe('ThreeStepInfo component', () => {
         const wrapper = getWrapper(props);
         window.resizeTo(700, 800);
         expect(window.innerWidth).toEqual(700);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find('table').props().style.fontSize).toEqual('14px');
     });
@@ -58,6 +59,7 @@ describe('ThreeStepInfo component', () => {
         const wrapper = getWrapper(props);
         window.resizeTo(1300, 1000);
         expect(window.innerWidth).toEqual(1300);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find('table').props().style.fontSize).toEqual('16px');
     });

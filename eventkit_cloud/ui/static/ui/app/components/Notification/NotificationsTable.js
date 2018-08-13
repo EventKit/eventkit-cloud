@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui';
 import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';

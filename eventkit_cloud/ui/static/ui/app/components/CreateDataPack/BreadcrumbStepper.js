@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { browserHistory } from 'react-router';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
@@ -15,7 +16,6 @@ import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
-import { getDatacartDetails } from '../../actions/statusDownloadActions';
 import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
@@ -486,9 +486,6 @@ function mapDispatchToProps(dispatch) {
         },
         clearJobInfo: () => {
             dispatch(clearJobInfo());
-        },
-        getDatacartDetails: (jobuid) => {
-            dispatch(getDatacartDetails(jobuid));
         },
         getFormats: () => {
             dispatch(getFormats());

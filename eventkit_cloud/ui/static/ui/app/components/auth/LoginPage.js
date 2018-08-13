@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import Paper from 'material-ui/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
@@ -78,6 +79,7 @@ export class LoginPage extends React.Component {
                                             <strong>ATTENTION</strong>
                                         </div>
                                         <div
+                                            className="qa-LoginPage-disclaimer"
                                             style={{ color: '#fff', paddingRight: '10px' }}
                                             // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={

@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
@@ -103,7 +104,7 @@ describe('ProviderRow component', () => {
         mount(<ProviderRow {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -149,7 +150,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
+        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
         menu.setState({ open: true });
         expect(menu.find(MenuItem)).toHaveLength(2);
         menu.find(MenuItem).first().simulate('click');
@@ -161,7 +162,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
+        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
         menu.setState({ open: true });
         expect(menu.find(MenuItem)).toHaveLength(2);
         menu.find(MenuItem).first().simulate('click');
@@ -352,7 +353,7 @@ describe('ProviderRow component', () => {
         const icon = wrapper.instance().getTaskDownloadIcon(task);
         const elem = mount(icon, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(elem.is(CloudDownload)).toBe(true);
         expect(elem.props().onClick).toBe(undefined);
@@ -365,7 +366,7 @@ describe('ProviderRow component', () => {
         const icon = wrapper.instance().getTaskDownloadIcon(task);
         const elem = mount(icon, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(elem.is(CloudDownload)).toBe(true);
         expect(elem.props().onClick).not.toBe(undefined);
@@ -378,6 +379,7 @@ describe('ProviderRow component', () => {
         wrapper.instance().handleProviderOpen();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
+        wrapper.update();
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual('provider description');
         stateSpy.restore();
     });

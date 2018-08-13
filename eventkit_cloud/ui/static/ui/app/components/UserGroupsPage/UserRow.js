@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import IconButton from 'material-ui/IconButton';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
@@ -147,7 +148,7 @@ export class UserRow extends Component {
                     key="makeAdminMenuItem"
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={adminFunction}
+                    onClick={adminFunction}
                     className="qa-UserRow-MenuItem-makeAdmin"
                 >
                     <span>{adminButtonText}</span>
@@ -162,7 +163,7 @@ export class UserRow extends Component {
                 <MenuItem
                     style={{ ...styles.menuItem, color: '#ce4427' }}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={this.handleRemoveUserClick}
+                    onClick={this.handleRemoveUserClick}
                     className="qa-UserRow-MenuItem-remove"
                 >
                     <span>Remove User</span>
@@ -239,7 +240,7 @@ export class UserRow extends Component {
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleAddUserClick}
+                            onClick={this.handleAddUserClick}
                             className="qa-UserRow-MenuItem-editGroups"
                         >
                             <span>Add to Existing Group</span>
@@ -248,7 +249,7 @@ export class UserRow extends Component {
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleNewGroupClick}
+                            onClick={this.handleNewGroupClick}
                             className="qa-UserRow-MenuItem-newGroup"
                         >
                             <span>Add to New Group</span>

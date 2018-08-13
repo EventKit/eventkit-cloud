@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
-# from ...celery import app
-from celery import chain, group, chord, task, Task
+import socket
 from datetime import datetime, timedelta
 from time import sleep
-import socket
+
+# from eventkit_cloud.celery import app
+from celery import task, Task
 
 
 class TestTask(Task):

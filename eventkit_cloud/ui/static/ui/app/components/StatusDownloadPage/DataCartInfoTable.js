@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import moment from 'moment';
 import CustomTableRow from '../CustomTableRow';
 
@@ -16,12 +17,12 @@ export class DataCartInfoTable extends Component {
                 />
                 <CustomTableRow
                     title="Started"
-                    data={moment(this.props.dataPack.started_at).format('h:mm:ss a, MMMM Do YYYY')}
+                    data={moment(this.props.dataPack.started_at).format('M/D/YY h:mma')}
                 />
                 <CustomTableRow
                     title="Finished"
                     data={this.props.dataPack.finished_at === null ?
-                        'Currently Processing...' : moment(this.props.dataPack.finished_at).format('h:mm:ss a, MMMM Do YYYY')
+                        'Currently Processing...' : moment(this.props.dataPack.finished_at).format('M/D/YY h:mma')
                     }
                 />
             </div>

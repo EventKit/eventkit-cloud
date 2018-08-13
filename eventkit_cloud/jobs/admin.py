@@ -1,18 +1,17 @@
-from django.contrib import admin
-from django import forms
-from django.template import RequestContext
-
-from django.utils.html import format_html
-from django.conf.urls import url
-from django.contrib import messages
-from django.shortcuts import render_to_response
-from django.contrib.gis.admin import OSMGeoAdmin
-from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 import logging
 
-from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense, DataProviderStatus
+from django import forms
+from django.conf.urls import url
+from django.contrib import admin
+from django.contrib import messages
+from django.contrib.gis.admin import OSMGeoAdmin
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.utils.html import format_html
+from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
+from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProvider, DataProviderType, \
+    DatamodelPreset, License, DataProviderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +119,7 @@ class DataProviderForm(forms.ModelForm):
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
         if service_type in ['wms', 'wmts', 'tms']:
-            from ..utils.external_service import ExternalRasterServiceToGeopackage, \
+            from eventkit_cloud.utils.external_service import ExternalRasterServiceToGeopackage, \
                                                  ConfigurationError
             service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
@@ -131,7 +130,7 @@ class DataProviderForm(forms.ModelForm):
         elif service_type in ['osm', 'osm-generic']:
             if not config:
                 raise forms.ValidationError("Configuration is required for OSM data providers")
-            from ..feature_selection.feature_selection import FeatureSelection
+            from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
             feature_selection = FeatureSelection(config)
             feature_selection.valid
             if feature_selection.errors:

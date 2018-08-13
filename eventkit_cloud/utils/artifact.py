@@ -1,5 +1,3 @@
-import os
-
 class Artifact(object):
     def __init__(self,parts,format_name,theme=None,basename=None):
         self._parts = parts

@@ -1,55 +1,72 @@
 import 'babel-polyfill';
 import React from 'react';
+import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
 import Loadable from 'react-loadable';
-import injectTapEventPlugin from 'react-tap-event-plugin';
-import { UserAuthWrapper } from 'redux-auth-wrapper';
+import { connectedReduxRedirect } from 'redux-auth-wrapper/history3/redirect';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
 import { login } from './actions/userActions';
 
-const Loading = () => <div>Loading. . .</div>;
+const Loading = (args) => {
+    if (args.pastDelay) {
+        return (
+            <div
+                style={{
+                    color: 'white',
+                    height: '100vh',
+                    background: 'rgb(17, 24, 35)',
+                }}
+            >
+                Loading. . .
+            </div>
+        );
+    }
+
+    return null;
+};
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
-injectTapEventPlugin();
 
 function allTrue(acceptedLicenses) {
     return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
 }
 
-const Loader = Loadable({
-    loader: () =>
-        import('./components/auth/Loading'),
+const loadableDefaults = {
     loading: Loading,
+    delay: 1000,
+};
+
+const Loader = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/auth/Loading'),
 });
 
-const UserIsAuthenticated = UserAuthWrapper({
-    authSelector: state => state.user.data,
+const UserIsAuthenticated = connectedReduxRedirect({
+    authenticatedSelector: state => !!state.user.data,
     authenticatingSelector: state => state.user.isLoading,
-    LoadingComponent: Loader,
+    AuthenticatingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
+    redirectPath: '/login',
 });
 
-const UserIsNotAuthenticated = UserAuthWrapper({
-    authSelector: state => state.user,
+const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
-    // Want to redirect the user when they are done loading and authenticated
-    predicate: user => !user.data && user.isLoading === false,
-    failureRedirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/exports',
+    authenticatedSelector: state => !state.user.data && state.user.isLoading === false,
+    redirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/dashboard',
     allowRedirectBack: false,
 });
 
-const UserHasAgreed = UserAuthWrapper({
-    authSelector: state => state.user.data,
+const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
-    failureRedirectPath: '/account',
+    redirectPath: '/account',
     wrapperDisplayName: 'UserHasAgreed',
-    predicate: userData => allTrue(userData.accepted_licenses),
+    authenticatedSelector: state => allTrue(state.user.data.accepted_licenses),
 });
 
 function checkAuth(storeObj) {
@@ -62,68 +79,58 @@ function checkAuth(storeObj) {
 }
 
 const Application = Loadable({
+    ...loadableDefaults,
     loader: () => import('./components/Application'),
-    loading: Loading,
 });
 
 const LoginPage = Loadable({
-    loader: () =>
-        import('./components/auth/LoginPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/auth/LoginPage'),
 });
 
 const Logout = Loadable({
-    loader: () =>
-        import('./containers/logoutContainer'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./containers/logoutContainer'),
 });
 
 const About = Loadable({
-    loader: () =>
-        import('./components/About/About'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/About/About'),
 });
 
 const Account = Loadable({
-    loader: () =>
-        import('./components/AccountPage/Account'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/AccountPage/Account'),
 });
 
 const DashboardPage = Loadable({
-    loader: () =>
-        import('./components/DashboardPage/DashboardPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/DashboardPage/DashboardPage'),
 });
 
 const DataPackPage = Loadable({
-    loader: () =>
-        import('./components/DataPackPage/DataPackPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/DataPackPage/DataPackPage'),
 });
 
 const CreateExport = Loadable({
-    loader: () =>
-        import('./components/CreateDataPack/CreateExport'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/CreateDataPack/CreateExport'),
 });
 
 const StatusDownload = Loadable({
-    loader: () =>
-        import('./components/StatusDownloadPage/StatusDownload'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/StatusDownloadPage/StatusDownload'),
 });
 
 const UserGroupsPage = Loadable({
-    loader: () =>
-        import('./components/UserGroupsPage/UserGroupsPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/UserGroupsPage/UserGroupsPage'),
 });
 
 const NotificationsPage = Loadable({
-    loader: () =>
-        import('./components/NotificationsPage/NotificationsPage'),
-    loading: Loading,
+    ...loadableDefaults,
+    loader: () => import('./components/NotificationsPage/NotificationsPage'),
 });
 
 render(

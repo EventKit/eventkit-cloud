@@ -1,5 +1,7 @@
 from django.core.management import BaseCommand
-from ...core.helpers import load_land_vectors
+
+from eventkit_cloud.core.helpers import load_land_vectors
+
 
 class Command(BaseCommand):
     help = "Loads land data required for the OSM pipeline."

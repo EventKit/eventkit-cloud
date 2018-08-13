@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
@@ -602,9 +603,7 @@ export class ExportInfo extends React.Component {
                                             onMouseOut={this.handleRefreshTooltipClose}
                                             onFocus={this.handleRefreshTooltipOpen}
                                             onBlur={this.handleRefreshTooltipClose}
-                                            onTouchStart={this.handleRefreshTooltipOpen}
-                                            onTouchEnd={this.handleRefreshTooltipClose}
-                                            onTouchTap={this.onRefresh}
+                                            onClick={this.onRefresh}
                                         />
                                         <BaseTooltip
                                             show={this.state.refreshTooltipOpen}
@@ -617,7 +616,7 @@ export class ExportInfo extends React.Component {
                                             onMouseOut={this.handleRefreshTooltipClose}
                                             onFocus={this.handleRefreshTooltipOpen}
                                             onBlur={this.handleRefreshTooltipClose}
-                                            onTouchTap={this.onRefresh}
+                                            onClick={this.onRefresh}
                                         >
                                             <div>You may try to resolve errors by running the availability check again.</div>
                                         </BaseTooltip>
@@ -709,7 +708,7 @@ export class ExportInfo extends React.Component {
                                                 className="qa-ExportInfo-CheckBox-provider"
                                                 name={provider.name}
                                                 style={{ left: '0px', paddingLeft: '10px' }}
-                                                defaultChecked={
+                                                checked={
                                                     this.props.exportInfo.providers.map(x => x.name)
                                                         .indexOf(provider.name) !== -1
                                                 }
@@ -756,7 +755,7 @@ export class ExportInfo extends React.Component {
                                     />
                                     <Info
                                         className="qa-ExportInfo-Info-projection"
-                                        onTouchTap={this.handleProjectionsOpen}
+                                        onClick={this.handleProjectionsOpen}
                                         style={style.infoIcon}
                                     />
                                     <BaseDialog

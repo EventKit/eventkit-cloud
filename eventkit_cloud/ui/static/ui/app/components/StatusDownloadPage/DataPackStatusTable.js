@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 import DatePicker from 'material-ui/DatePicker';
@@ -125,7 +126,7 @@ export class DataPackStatusTable extends Component {
             membersCheck: this.props.permissions.value !== 'PRIVATE' ? checkIcon : null,
         };
 
-        const expiration = moment(this.props.expiration).format('YYYY-MM-DD');
+        const expiration = moment(this.props.expiration).format('M/D/YY');
 
         let expirationData = expiration;
         let permissionData = <div>{permissionsIcons.members}Shared</div>;
@@ -251,7 +252,7 @@ export class DataPackStatusTable extends Component {
                     }}
                 />
                 <CustomTableRow
-                    title="Expiration"
+                    title="Expires"
                     data={expirationData}
                 />
                 <CustomTableRow
@@ -259,25 +260,21 @@ export class DataPackStatusTable extends Component {
                     dataStyle={{ flexWrap: 'wrap' }}
                     data={permissionData}
                 />
-                {this.state.shareDialogOpen ?
-                    <DataPackShareDialog
-                        show
-                        user={this.props.user}
-                        onClose={this.handleShareDialogClose}
-                        onSave={this.handleShareDialogSave}
-                        groups={this.props.groups}
-                        members={this.props.members}
-                        permissions={this.props.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively.
-                         Group sharing is managed separately from member sharing"
-                        membersText="You may share view and edit rights with members exclusively.
-                         Member sharing is managed separately from group sharing"
-                        canUpdateAdmin
-                        warnPublic
-                    />
-                    :
-                    null
-                }
+                <DataPackShareDialog
+                    show={this.state.shareDialogOpen}
+                    user={this.props.user}
+                    onClose={this.handleShareDialogClose}
+                    onSave={this.handleShareDialogSave}
+                    groups={this.props.groups}
+                    members={this.props.members}
+                    permissions={this.props.permissions}
+                    groupsText="You may share view and edit rights with groups exclusively.
+                     Group sharing is managed separately from member sharing"
+                    membersText="You may share view and edit rights with members exclusively.
+                     Member sharing is managed separately from group sharing"
+                    canUpdateAdmin
+                    warnPublic
+                />
             </div>
         );
     }

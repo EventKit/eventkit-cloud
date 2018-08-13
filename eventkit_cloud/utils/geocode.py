@@ -1,9 +1,10 @@
-from django.conf import settings
 import logging
-from abc import ABCMeta, abstractmethod, abstractproperty
-from geocode_auth import get_auth_headers, authenticate
-import requests
+from abc import ABCMeta, abstractmethod
 
+import requests
+from django.conf import settings
+
+from geocode_auth import get_auth_headers, authenticate
 
 logger = logging.getLogger(__name__)
 

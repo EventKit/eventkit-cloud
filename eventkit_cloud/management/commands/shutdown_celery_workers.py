@@ -1,5 +1,7 @@
 from __future__ import print_function
+
 from django.core.management import BaseCommand
+
 from eventkit_cloud.celery import app
 
 

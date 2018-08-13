@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -107,6 +108,8 @@ describe('DataCartDetails component', () => {
             onClone: () => {},
             onProviderCancel: () => {},
             user: { data: { user: { username: 'admin' } } },
+            members: [],
+            groups: [],
         }
     );
 

@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+import logging
 import os
 import subprocess
-from django.conf import settings
 import sys
-import logging
+
+from django.conf import settings
 
 if __name__ == "__main__":
 

@@ -11,6 +11,7 @@ from eventkit_cloud.utils.s3 import (
     get_presigned_url
 )
 
+
 @override_settings(AWS_BUCKET_NAME='test-bucket')
 @override_settings(AWS_ACCESS_KEY='d3adb33f')
 @override_settings(AWS_SECRET_KEY='d3adb33f')
