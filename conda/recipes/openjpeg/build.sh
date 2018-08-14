@@ -2,6 +2,6 @@
 
 set -e
 
-cmake -DCMAKE_INSTALL_PREFIX:PATH=$PREFIX .
+cmake --no-print-directory -DCMAKE_INSTALL_PREFIX:PATH=$PREFIX .
 
 make install

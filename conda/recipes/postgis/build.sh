@@ -15,5 +15,5 @@ export CPPFLAGS="-I$PREFIX/include -I$PREFIX/lib -L$PREFIX/include -L$PREFIX/lib
     --with-raster \
     --with-topology
 
-make
+make --no-print-directory
 make install

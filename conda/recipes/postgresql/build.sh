@@ -13,6 +13,6 @@ export LDFLAGS_EX="$LDFLAGS -L$PREFIX/lib -lreadline"
         --with-libxml          \
         --with-libxslt
 
-make
+make --no-print-directory
 make install
 make install-world

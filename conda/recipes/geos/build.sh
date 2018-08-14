@@ -4,7 +4,7 @@ set -e
 
 ./configure --prefix=$PREFIX
 
-make
+make --no-print-directory
 make install
 
 ACTIVATE_DIR=$PREFIX/etc/conda/activate.d

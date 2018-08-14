@@ -4,5 +4,5 @@ set -e
 
 ./configure --prefix=$PREFIX
 
-make
+make --no-print-directory
 make install
