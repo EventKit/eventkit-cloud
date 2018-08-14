@@ -65,11 +65,13 @@ END
 def postStatus(status){
   if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
   }
+  def url = getStatusURL()
       sh """
-    curl --header "Content-Type: application/json" \
+      curl --header "Content-Type: application/json" \
       --request POST \
       --data status \
-      getStatusURL
+      ${url}
+      """
 }
 
 
@@ -85,24 +87,21 @@ def getGitSHA(){
 }
 
 
-def failureStatus = '{
-  "state": "failure",
-  "description": "This build has failed.",
-  "context": "continuous-integration/jenkins"
-}
-'
+def failureStatus = '{\
+  "state": "failure",\
+  "description": "This build has failed.",\
+  "context": "continuous-integration/jenkins"\
+}'
 
-def pendingStatus = '{
-  "state": "pending",
-  "description": "This build is pending.",
-  "context": "continuous-integration/jenkins"
-}
-'
+def pendingStatus = '{\
+  "state": "pending",\
+  "description": "This build is pending.",\
+  "context": "continuous-integration/jenkins"\
+}'
 
-def successStatus = '{
-  "state": "success",
-  "description": "This build has succeeded.",
-  "context": "continuous-integration/jenkins"
-}
-'
+def successStatus = '{\
+  "state": "success",\
+  "description": "This build has succeeded.",\
+  "context": "continuous-integration/jenkins"\
+}'
 }
