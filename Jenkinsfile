@@ -85,22 +85,23 @@ def postStatus(status){
   if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
   }
   def url = getStatusURL()
-      sh """
-      curl --header "Content-Type: application/json" \
-      --request POST \
-      --data status \
-      ${url}
-      """
+  sh """
+  curl --header "Content-Type: application/json" \
+  --request POST \
+  --data status \
+  ${url}
+  """
 }
 
 
 def getStatusURL(){
     withCredentials([string(credentialsId: 'githubToken', variable: 'GITHUB_TOKEN')])  {
         def git_sha = getGitSHA()
-        return "${env.GIT_URL}/statuses/${git_sha}\?access_token=${GITHUB_TOKEN}"
+        return "${env.GIT_URL}/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
     }
 }
 
 def getGitSHA(){
-    return sh(script: "git rev-parse HEAD", returnStdout: true)
+    def sha = sh(script: "git rev-parse HEAD", returnStdout: true)
+    return sha.trim()
 }
