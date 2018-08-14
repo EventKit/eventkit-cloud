@@ -23,7 +23,7 @@ from eventkit_cloud.tasks.export_tasks import (finalize_export_provider_task, Ta
                                                arcgis_feature_service_export_task)
 from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_provider_staging_dir
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
-from eventkit_cloud.tasks.task_runners import TaskRunner, create_export_task_record
+from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
 
 from eventkit_cloud.ui.helpers import get_style_files
 
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class TaskFactory:
     """
-    A class create Task Runners based on an Export Run.
+    A class to assemble task chains (using TaskChainBuilders) based on an Export Run.
     """
 
     def __init__(self,):
@@ -98,8 +98,8 @@ class TaskFactory:
             finalized_provider_task_chain_list = []
             for provider_task_record in job.provider_tasks.all():
 
-                # Create an instance of a task runner based on the type name
                 if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
+                    # Each task builder has a primary task which pulls the source data, grab that task here...
                     type_name = provider_task_record.provider.export_provider_type.type_name
 
                     primary_export_task = self.type_task_map.get(type_name)
@@ -118,7 +118,7 @@ class TaskFactory:
                         'user_details': user_details
                     }
 
-                    provider_task_uid, provider_subtask_chain = TaskRunner().run_task(**args)
+                    provider_task_uid, provider_subtask_chain = TaskChainBuilder().build_tasks(**args)
 
                     wait_for_providers_signature = wait_for_providers_task.s(
                         run_uid=run_uid,

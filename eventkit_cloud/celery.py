@@ -14,7 +14,7 @@ class TaskPriority(Enum):
     FINALIZE_RUN = 70           # If a run is finished it should be cleaned up before starting new tasks.
     FINALIZE_PROVIDER = 60      # It is better to finalize a previous task before starting a new one so that the
                                 # processed file is made available to the user.
-    TASK_RUNNER = 50            # Running tasks should be higher than picking up tasks
+    RUN_TASK = 50            # Running tasks should be higher than picking up tasks
     DEFAULT = 0                 # The default task priority in RabbitMQ is zero, so not having a priority is the same as
                                 # the the default, it is here to be explicit. https://www.rabbitmq.com/priority.html
 

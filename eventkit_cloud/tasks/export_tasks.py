@@ -120,7 +120,7 @@ class LockingTask(UserDetailsBase):
         worker = kwargs.get('worker')
         task_settings = {
             'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
-            'priority': TaskPriority.TASK_RUNNER.value}
+            'priority': TaskPriority.RUN_TASK.value}
 
         if lock_key:
             self.lock_expiration = 5

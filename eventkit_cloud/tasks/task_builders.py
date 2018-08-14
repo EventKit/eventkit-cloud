@@ -23,7 +23,7 @@ export_task_registry = {
 }
 
 
-class TaskRunner(object):
+class TaskChainBuilder(object):
     """
     Abstract base class for running tasks
     """
@@ -31,8 +31,8 @@ class TaskRunner(object):
     class Meta:
         abstract = True
 
-    def run_task(self, primary_export_task, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None,
-                 service_type=None, *args, **kwargs):
+    def build_tasks(self, primary_export_task, provider_task_uid=None, user=None, run=None, stage_dir=None, worker=None,
+                    service_type=None, *args, **kwargs):
         """
         Run OSM export tasks. Specifically create a task chain to be picked up by a celery worker later.
 
@@ -48,7 +48,7 @@ class TaskRunner(object):
         # This is just to make it easier to trace when user_details haven't been sent
         user_details = kwargs.get('user_details')
         if user_details is None:
-            user_details = {'username': 'unknown-{0}TaskRunner.run_task'.format(primary_export_task.name)}
+            user_details = {'username': 'unknown-{0}TaskChainBuilder.run_task'.format(primary_export_task.name)}
 
         logger.debug('Running Job with id: {0}'.format(provider_task_uid))
         # pull the provider_task from the database
@@ -74,10 +74,11 @@ class TaskRunner(object):
                 msg = 'Error importing export task: {0}'.format(e)
                 logger.debug(msg)
 
-        # First everything is already in gpkg format, except WCS and we don't want gpkg for that
-        #  so just remove gpkg...
+        # First everything is already in gpkg format by default, except WCS and we don't want gpkg for that
+        #  so just remove gpkg so that it doesn't show twice in the UI (i.e. raster export(.gpkg) and geopackage)...
         if len(export_tasks) > 0:
-            export_tasks.pop('gpkg')
+            if export_tasks.get('gpkg'):
+                export_tasks.pop('gpkg')
 
 
         # run the tasks
