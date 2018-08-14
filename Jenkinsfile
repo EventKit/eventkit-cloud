@@ -3,6 +3,7 @@
 node {
 
     stage("Setup") {
+        postStatus(pendingStatus)
         deleteDir()
         if(env.GIT_CREDS) {
             git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GIT_CREDS}"
@@ -11,10 +12,8 @@ node {
         }
     }
 
-    stage("add repo"){
+    stage("Add Repo"){
 
-        sh "groupadd -g 880 eventkit"
-        sh "useradd -u 8800 -g 880 eventkit"
         sh "ls -al"
         if(env.CONDA_REPO){
             sh """
@@ -33,10 +32,9 @@ END
 """
         }
         sh "cat environment-dev.yml"
-        sh "chown eventkit:eventkit environment-dev.yml"
     }
 
-    stage("Build docker"){
+    stage("Build"){
         sh "docker-compose build"
     }
 
@@ -53,6 +51,60 @@ END
         sh "docker-compose exec -T eventkit pytest -n"
         sh "docker-compose up -d && docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
     }
+
+    post {
+        success {
+            postStatus(successStatus)
+        }
+        failure {
+            postStatus(failureStatus)
+        }
+    }
+
+
+def postStatus(status){
+  if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
+  }
+      sh """
+    curl --header "Content-Type: application/json" \
+      --request POST \
+      --data status \
+      getStatusURL
+  }
+}
+
+def getStatusURL(){
+    withCredentials([string(credentialsId: githubToken, variable: 'GITHUB_TOKEN')])  {
+        def git_sha = getGitSHA()
+        return "${env.GIT_URL}/statuses/${git_sha}?access_token=${GITHUB_TOKEN}
+    }
+}
+
+def getGitSHA(){
+    return sh(script: "git rev-parse HEAD", returnStdout: true)
+}
+
+
+def failureStatus = """{
+  "state": "failure",
+  "description": "This build has failed.",
+  "context": "continuous-integration/jenkins"
+}
+"""
+
+def pendingStatus = """{
+  "state": "pending",
+  "description": "This build is pending.",
+  "context": "continuous-integration/jenkins"
+}
+"""
+
+def successStatus = """{
+  "state": "success",
+  "description": "This build has succeeded.",
+  "context": "continuous-integration/jenkins"
+}
+"""
 
 
 }
