@@ -25,8 +25,8 @@ export class InfoGrid extends Component {
                             key={item.title}
                             style={styles.item}
                         >
-                            <strong>{item.title}:</strong>
-                            &nbsp;{item.body}
+                            <strong>{item.title}:&nbsp;</strong>
+                            <span>{item.body}</span>
                         </GridTile>
                     ))}
                 </GridList>
