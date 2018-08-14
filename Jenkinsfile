@@ -86,7 +86,7 @@ def postStatus(status){
   }
   def url = getStatusURL()
   sh """
-  curl --header "Content-Type: application/json" \
+  curl -b --header "Content-Type: application/json" \
   --request POST \
   --data status \
   ${url}
