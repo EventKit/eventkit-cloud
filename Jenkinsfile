@@ -1,5 +1,6 @@
 node {
     stage("add repo"){
+        sh "ls -al"
         if(env.CONDA_REPO){
             sh """
 python - << END
