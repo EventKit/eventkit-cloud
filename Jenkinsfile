@@ -8,7 +8,7 @@ import yaml
 data = {}
 with open('environment.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
-data['channels'] = ['$env.CONDA_REPO'] += data['channels']
+data['channels'] = ['$env.CONDA_REPO'] + data['channels']
 
 with open('environment.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
