@@ -8,7 +8,6 @@ spatialite
 json-c
 libtiff
 postgresql
-postgis
 libgdal
 gdal
 berkeleydb
