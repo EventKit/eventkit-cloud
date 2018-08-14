@@ -19,17 +19,17 @@ python - << END
 import yaml
 
 data = {}
-with open('environment.yml', 'r') as yaml_file:
+with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
 data['channels'] = ['$env.CONDA_REPO'] + data['channels']
 
-with open('environment.yml', 'w') as outfile:
+with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
 END
 """
         }
-        sh "cat environment.yml"
+        sh "cat environment-dev.yml"
     }
 
     stage("Build docker"){
