@@ -21,9 +21,10 @@ conda config --add channels conda-forge
 conda config --add channels bioconda
 conda config --add channels local
 
-cd /root
-conda config --add channels file://root/repo/
+cd /root/repo
+mkdir -p /root/repo/linux-64 /root/repo/noarch
 conda index linux-64 noarch
+conda config --add channels file://root/repo/
 
 echo "Building recipes"
 cd /root/recipes
