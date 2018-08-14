@@ -32,7 +32,7 @@ if [ -z "$1" ]; then
     echo "***Building all recipes in recipes.txt**"
     while read recipe; do
         echo "***Building  $recipe ...***"
-        for i in 1 2 3; do conda build $recipe && s=0 && break || sleep 15; done; (exit $s)
+        for i in 1 2 3; do conda build $(echo "$recipe" | tr -d '\r') && s=0 && break || sleep 15; done; (exit $s)
     done < /root/recipes.txt
 else
  echo "***Building $@...***"
