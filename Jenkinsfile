@@ -12,6 +12,9 @@ node {
     }
 
     stage("add repo"){
+
+        sh "groupadd -g 880 eventkit"
+        sh "useradd -u 8800 -g 880 eventkit"
         sh "ls -al"
         if(env.CONDA_REPO){
             sh """
@@ -30,6 +33,7 @@ END
 """
         }
         sh "cat environment-dev.yml"
+        sh "chown eventkit:eventkit environment-dev.yml"
     }
 
     stage("Build docker"){
