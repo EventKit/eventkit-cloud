@@ -95,7 +95,7 @@ def postStatus(status){
 
 
 def getStatusURL(){
-    withCredentials([string(credentialsId: githubToken, variable: 'GITHUB_TOKEN')])  {
+    withCredentials([string(credentialsId: 'githubToken', variable: 'GITHUB_TOKEN')])  {
         def git_sha = getGitSHA()
         return "${env.GIT_URL}/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
     }
