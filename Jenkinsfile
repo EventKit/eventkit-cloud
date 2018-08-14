@@ -2,6 +2,24 @@
 
 node {
 
+def failureStatus = '{\
+  "state": "failure",\
+  "description": "This build has failed.",\
+  "context": "continuous-integration/jenkins"\
+}'
+
+def pendingStatus = '{\
+  "state": "pending",\
+  "description": "This build is pending.",\
+  "context": "continuous-integration/jenkins"\
+}'
+
+def successStatus = '{\
+  "state": "success",\
+  "description": "This build has succeeded.",\
+  "context": "continuous-integration/jenkins"\
+}'
+
     stage("Setup") {
         postStatus(pendingStatus)
         deleteDir()
@@ -60,24 +78,6 @@ END
             postStatus(failureStatus)
         }
     }
-
-def failureStatus = '{\
-  "state": "failure",\
-  "description": "This build has failed.",\
-  "context": "continuous-integration/jenkins"\
-}'
-
-def pendingStatus = '{\
-  "state": "pending",\
-  "description": "This build is pending.",\
-  "context": "continuous-integration/jenkins"\
-}'
-
-def successStatus = '{\
-  "state": "success",\
-  "description": "This build has succeeded.",\
-  "context": "continuous-integration/jenkins"\
-}'
 }
 
 
