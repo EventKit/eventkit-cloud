@@ -61,6 +61,25 @@ END
         }
     }
 
+def failureStatus = '{\
+  "state": "failure",\
+  "description": "This build has failed.",\
+  "context": "continuous-integration/jenkins"\
+}'
+
+def pendingStatus = '{\
+  "state": "pending",\
+  "description": "This build is pending.",\
+  "context": "continuous-integration/jenkins"\
+}'
+
+def successStatus = '{\
+  "state": "success",\
+  "description": "This build has succeeded.",\
+  "context": "continuous-integration/jenkins"\
+}'
+}
+
 
 def postStatus(status){
   if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
@@ -84,24 +103,4 @@ def getStatusURL(){
 
 def getGitSHA(){
     return sh(script: "git rev-parse HEAD", returnStdout: true)
-}
-
-
-def failureStatus = '{\
-  "state": "failure",\
-  "description": "This build has failed.",\
-  "context": "continuous-integration/jenkins"\
-}'
-
-def pendingStatus = '{\
-  "state": "pending",\
-  "description": "This build is pending.",\
-  "context": "continuous-integration/jenkins"\
-}'
-
-def successStatus = '{\
-  "state": "success",\
-  "description": "This build has succeeded.",\
-  "context": "continuous-integration/jenkins"\
-}'
 }
