@@ -70,8 +70,8 @@ def postStatus(status){
       --request POST \
       --data status \
       getStatusURL
-  }
 }
+
 
 def getStatusURL(){
     withCredentials([string(credentialsId: githubToken, variable: 'GITHUB_TOKEN')])  {
@@ -105,6 +105,4 @@ def successStatus = '{
   "context": "continuous-integration/jenkins"
 }
 '
-
-
 }
