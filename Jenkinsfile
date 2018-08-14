@@ -1,4 +1,16 @@
+#!/usr/bin/groovy
+
 node {
+
+    stage("Setup") {
+        deleteDir()
+        if(env.GIT_CREDS) {
+            git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GIT_CREDS}"
+        } else {
+            git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+        }
+    }
+
     stage("add repo"){
         sh "ls -al"
         if(env.CONDA_REPO){
