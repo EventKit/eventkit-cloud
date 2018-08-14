@@ -85,26 +85,26 @@ def getGitSHA(){
 }
 
 
-def failureStatus = """{
+def failureStatus = '{
   "state": "failure",
   "description": "This build has failed.",
   "context": "continuous-integration/jenkins"
 }
-"""
+'
 
-def pendingStatus = """{
+def pendingStatus = '{
   "state": "pending",
   "description": "This build is pending.",
   "context": "continuous-integration/jenkins"
 }
-"""
+'
 
-def successStatus = """{
+def successStatus = '{
   "state": "success",
   "description": "This build has succeeded.",
   "context": "continuous-integration/jenkins"
 }
-"""
+'
 
 
 }
