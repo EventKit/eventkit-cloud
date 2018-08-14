@@ -6,5 +6,5 @@ export CPPFLAGS="-I$PREFIX/include"
 export LDFLAGS="-L$PREFIX/lib"
 
 ./configure --prefix=$PREFIX
-make --no-print-directory
+make > /dev/null
 make install

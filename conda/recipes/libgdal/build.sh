@@ -64,9 +64,9 @@ fi
             --verbose \
             $OPTS
 
-make --no-print-directory -j $CPU_COUNT ${VERBOSE_AT}
+make  -j $CPU_COUNT ${VERBOSE_AT} > /dev/null
 
-make --no-print-directory -j $CPU_COUNT
+make  -j $CPU_COUNT > /dev/null
 make install
 
 

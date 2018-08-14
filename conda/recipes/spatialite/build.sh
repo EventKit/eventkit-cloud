@@ -9,5 +9,5 @@ export CFLAGS="-I$PREFIX/include $CFLAGS"
             --with-geosconfig=$PREFIX/bin/geos-config \
             --with-spatialite-lib=$PREFIX/lib
 
-make --no-print-directory
+make > /dev/null
 make install

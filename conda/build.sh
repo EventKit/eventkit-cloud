@@ -29,8 +29,11 @@ conda config --add channels file://root/repo/
 echo "Building recipes"
 cd /root/recipes
 if [ -z "$1" ]; then
-    echo "***Building  $(cat /root/dependencies.txt)...***"
-    for i in 1 2 3; do conda build  $(cat /root/dependencies.txt) && s=0 && break || sleep 15; done; (exit $s)
+    echo "***Building all recipes in recipes.txt**"
+    while read recipe; do
+        echo "***Building  $recipe ...***"
+        for i in 1 2 3; do conda build $recipe && s=0 && break || sleep 15; done; (exit $s)
+    done < /root/recipes.txt
 else
  echo "***Building $@...***"
     for i in 1 2 3; do conda build $@ && s=0 && break || sleep 15; done; (exit $s)

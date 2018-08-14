@@ -16,7 +16,12 @@ To build the conda dependencies simply run:
 docker-compose run --rm conda
 ```
 This builds a container with miniconda and loads the scripts and recipes.  By default it will try to build all of the
-dependencies listed in dependencies.txt.  During the build process numerous dependenies (listed in the meta.yaml) files
+dependencies listed in recipes.txt.  
+
+The reason the recipes are listed in recipes.txt is so that conda will build them in order, and each previous
+recipe can be made available to the next one.
+
+During the build process numerous dependencies (listed in the meta.yaml) files
 will be installed in the virtual environment in the docker container.  At the end of the build script, ALL of the
 dependencies and their related dependencies will be moved to a volume mapped folder called `repo`, this will appear on your local host.
 
@@ -29,3 +34,8 @@ To build a single dependency the build script can be called with a recipe name. 
 script will attempt to load the existing repository and use those built dependencies if they already exist.  Then 
 it will try to build the single recipe.  If the build succeeds those new dependencies will be moved to the repo, 
 and the repo metadata will be updated. 
+
+For example:
+```
+docker-compose run --rm conda ./build.sh openjpeg
+```

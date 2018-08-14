@@ -9,7 +9,7 @@ services:
       - ./repo:/root/repo
       - ./recipes:/root/recipes
       - ./build.sh:/root/build.sh
-      - ./dependencies.txt:/root/dependencies.txt
+      - ./recipes.txt:/root/recipes.txt
     environment:
       version:
       branch:

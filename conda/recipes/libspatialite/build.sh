@@ -16,5 +16,5 @@ fi
             --with-geos-include=$PREFIX/include \
             --with-geos-lib=$PREFIX/lib
 
-make --no-print-directory
+make > /dev/null
 make install
