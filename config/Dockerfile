@@ -8,7 +8,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY ./environment-dev.yml ./conda/repo /var/lib/eventkit/
+COPY ./environment-dev.yml /var/lib/eventkit/
 COPY ./conda /var/lib/eventkit/conda
 
 ENV PATH="/home/eventkit/miniconda2/bin:$PATH"
