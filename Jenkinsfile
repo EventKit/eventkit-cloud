@@ -2,11 +2,11 @@
 
 node {
 
-def failureStatus = '{"state":"failure","description":"This build has failed.","context":"continuous-integration/jenkins"}'
+String failureStatus = '{"state":"failure","description":"This build has failed.","context":"continuous-integration/jenkins"}'
 
-def pendingStatus = '{"state":"pending","description":"This build is pending.","context":"continuous-integration/jenkins"}'
+String pendingStatus = '{"state":"pending","description":"This build is pending.","context":"continuous-integration/jenkins"}'
 
-def successStatus = '{"state":"success","description":"This build has succeeded.","context":"continuous-integration/jenkins"}'
+String successStatus = '{"state":"success","description":"This build has succeeded.","context":"continuous-integration/jenkins"}'
 
     stage("Setup") {
         deleteDir()
