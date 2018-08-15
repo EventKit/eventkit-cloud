@@ -27,10 +27,33 @@ END
         }
     }
 
+    stage("Remove volumes"){
+    // have to remove the volumes from docker because they mount stuff in jenkins
+
+        sh """
+python - << END
+import yaml
+
+data = {}
+with open('docker-compose.yml', 'r') as yaml_file:
+    data = yaml.load(yaml_file)
+data['channels'] = ['$CONDA_REPO']
+for service in data.get('services')
+    if service.get('volumes'):
+        service.pop('volumes')
+with open('docker-compose.yml', 'w') as outfile:
+    yaml.dump(data, outfile, default_flow_style=False)
+
+END
+"""
+        sh "cat docker-compose.yml"
+    }
+
     stage("Build"){
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose build"
+            sh "docker-compose up -d"
         }catch(Exception e) {
             postStatus(getFailureStatus("Failed to build docker containers."))
             throw e
@@ -63,7 +86,7 @@ END
     stage("Run integration tests"){
         try{
             postStatus(getPendingStatus("Running the integration tests..."))
-            sh "docker-compose up -d && docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
+            sh "docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
             postStatus(getFailureStatus("Integration tests failed."))
