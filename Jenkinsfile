@@ -105,13 +105,13 @@ return sh(script:"echo ${env.BUILD_URL} | sed 's/https:\\/\\/[^\\/]*//'", return
 }
 
 def getPendingStatus(message){
-  return "{\"state\":\"pending\",\"target_url\":\"${getURLPath()}\",\"description\":\"${message}\",\"context\":\"ci/jenkins\"}"
+  return "{\"state\":\"pending\",\"description\":\"${message}\",\"context\":\"ci/jenkins/${env.BUILD_NUMBER}\"}"
 }
 
 def getSuccessStatus(message){
-  return "{\"state\":\"success\",\"target_url\":\"${getURLPath()}\",\"description\":\"${message}\",\"context\":\"ci/jenkins\"}"
+  return "{\"state\":\"success\",\"description\":\"${message}\",\"context\":\"ci/jenkins/${env.BUILD_NUMBER}\"}"
 }
 
 def getFailureStatus(message){
-  return "{\"state\":\"failure\",\"target_url\":\"${getURLPath()}\",\"description\":\"${message}\",\"context\":\"ci/jenkins\"}"
+  return "{\"state\":\"failure\",\"description\":\"${message}\",\"context\":\"ci/jenkins/${env.BUILD_NUMBER}\"}"
 }
