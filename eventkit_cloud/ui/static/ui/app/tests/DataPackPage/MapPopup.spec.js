@@ -1,9 +1,7 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Card } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
 import Clear from '@material-ui/icons/Clear';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
@@ -11,7 +9,6 @@ import Dot from '@material-ui/icons/FiberManualRecord';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         featureInfo: {
             name: 'test name',
@@ -28,12 +25,7 @@ describe('LoadButtons component', () => {
         handleZoom: () => {},
         handlePopupClose: () => {},
     });
-    const getWrapper = props => mount(<MapPopup {...props} />, {
-        context: { muiTheme },
-        childContextTypes: {
-            muiTheme: PropTypes.object,
-        },
-    });
+    const getWrapper = props => mount(<MapPopup {...props} />);
 
     it('should render all the basic components', () => {
         const props = getProps();

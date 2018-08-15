@@ -65,6 +65,12 @@ export class DataPackList extends Component {
                 marginRight: spacing,
                 paddingBottom: spacing,
             },
+            headerTable: {
+                backgroundColor: '#fff',
+                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                fontSize: '12px',
+                tableLayout: 'fixed',
+            },
             clickable: {
                 cursor: 'pointer',
             },
@@ -165,7 +171,7 @@ export class DataPackList extends Component {
                 <div style={styles.root} className="qa-DataPackList-root">
                     <Table
                         className="qa-DataPackList-Table-list"
-                        style={{ backgroundColor: '#fff', borderBottom: '1px solid rgba(224, 224, 224, 1)', fontSize: '12px', tableLayout: 'fixed' }}
+                        style={styles.headerTable}
                     >
                         <TableBody
                             className="qa-DataPackList-TableHeader"
@@ -280,7 +286,10 @@ export class DataPackList extends Component {
                         ref={(instance) => { this.scrollbar = instance; }}
                         style={{ height: window.innerHeight - 287 }}
                     >
-                        <Table className="qa-DataPackList-Table-item" style={{ backgroundColor: '#fff', fontSize: '12px', tableLayout: 'fixed' }}>
+                        <Table
+                            className="qa-DataPackList-Table-item"
+                            style={{ backgroundColor: '#fff', fontSize: '12px', tableLayout: 'fixed' }}
+                        >
                             <TableBody>
                                 {this.props.runs.map((run) => {
                                     const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);

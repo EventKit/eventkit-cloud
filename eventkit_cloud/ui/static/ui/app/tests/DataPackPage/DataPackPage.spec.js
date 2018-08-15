@@ -6,10 +6,10 @@ import { browserHistory } from 'react-router';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Joyride from 'react-joyride';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Help from '@material-ui/icons/Help';
-import AppBar from 'material-ui/AppBar';
-import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
-import CircularProgress from 'material-ui/CircularProgress';
+import Toolbar from '@material-ui/core/Toolbar';
+import PageHeader from '../../components/common/PageHeader';
 import { DataPackPage } from '../../components/DataPackPage/DataPackPage';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
@@ -158,11 +158,10 @@ describe('DataPackPage component', () => {
     it('should render all the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).find('div').at(2).text()).toEqual('DataPack Library');
+        expect(wrapper.find(PageHeader)).toHaveLength(1);
+        expect(wrapper.find(PageHeader).find('div').at(2).text()).toEqual('DataPack Library');
         expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
         expect(wrapper.find(Toolbar)).toHaveLength(2);
-        expect(wrapper.find(ToolbarGroup)).toHaveLength(1);
         expect(wrapper.find(DataPackSearchbar)).toHaveLength(1);
         expect(wrapper.find(DataPackOwnerSort)).toHaveLength(1);
         expect(wrapper.find(DataPackFilterButton)).toHaveLength(1);
@@ -197,7 +196,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const changeStub = sinon.stub(DataPackPage.prototype, 'handleSortChange');
         const wrapper = getWrapper(props);
-        wrapper.find(DataPackSortDropDown).props().handleChange({}, 0, 'value');
+        wrapper.find(DataPackSortDropDown).props().handleChange('value');
         expect(changeStub.calledOnce).toBe(true);
         expect(changeStub.calledWith('value')).toBe(true);
         changeStub.restore();
@@ -534,10 +533,9 @@ describe('DataPackPage component', () => {
 
     it('handleOwnerFilter call updateLocationQuery', () => {
         const props = getProps();
-        const event = { persist: () => {} };
         const wrapper = shallow(<DataPackPage {...props} />);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
-        wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
+        wrapper.instance().handleOwnerFilter('test_value');
         expect(updateStub.calledOnce).toBe(true);
         expect(updateStub.calledWith({ collection: 'test_value' })).toBe(true);
     });

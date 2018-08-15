@@ -59,7 +59,10 @@ export class StatusFilter extends Component {
                             checked={this.props.completed}
                             checkedIcon={checkedIcon}
                         />
-                        <div style={{ display: 'flex', flex: '1 1 auto' }}>
+                        <div
+                            className="qa-StatusFilter-title-complete"
+                            style={{ display: 'flex', flex: '1 1 auto' }}
+                        >
                             <div style={{ flex: '1 1 auto' }}>
                                 Complete
                             </div>
@@ -74,7 +77,10 @@ export class StatusFilter extends Component {
                             checked={this.props.submitted}
                             checkedIcon={checkedIcon}
                         />
-                        <div style={{ display: 'flex', flex: '1 1 auto' }}>
+                        <div
+                            className="qa-StatusFilter-title-running"
+                            style={{ display: 'flex', flex: '1 1 auto' }}
+                        >
                             <div style={{ flex: '1 1 auto' }}>
                                 Running
                             </div>
@@ -89,7 +95,10 @@ export class StatusFilter extends Component {
                             checked={this.props.incomplete}
                             checkedIcon={checkedIcon}
                         />
-                        <div style={{ display: 'flex', flex: '1 1 auto' }}>
+                        <div
+                            className="qa-StatusFilter-title-error"
+                            style={{ display: 'flex', flex: '1 1 auto' }}
+                        >
                             <div style={{ flex: '1 1 auto' }}>
                                 Error
                             </div>

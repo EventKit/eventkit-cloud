@@ -18,7 +18,7 @@ export class DataPackDrawer extends Component {
         return (
             <div className="qa-FilterHeader-div" style={styles.drawerHeader}>
                 <Button
-                    className="qa-FilterHeader-RaisedButton-apply"
+                    className="qa-FilterHeader-Button-apply"
                     style={{ minWidth: 'none', borderRadius: '0px', textTransform: 'none' }}
                     color="primary"
                     variant="contained"
@@ -27,7 +27,7 @@ export class DataPackDrawer extends Component {
                     Apply
                 </Button>
                 <Button
-                    className="qa-FilterHeader-FlatButton-clear"
+                    className="qa-FilterHeader-Button-clear"
                     style={{ minWidth: 'none', textTransform: 'none' }}
                     color="primary"
                     variant="flat"

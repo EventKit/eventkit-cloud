@@ -4,15 +4,15 @@ import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Link } from 'react-router';
-import { Card, CardTitle } from 'material-ui/Card';
-import IconButton from 'material-ui/IconButton';
-import IconMenu from 'material-ui/IconMenu';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
 import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import SocialGroup from '@material-ui/icons/Group';
 import Lock from '@material-ui/icons/LockOutlined';
 import NotificationSync from '@material-ui/icons/Sync';
 import NavigationCheck from '@material-ui/icons/Check';
 import AlertError from '@material-ui/icons/Error';
+import IconMenu from '../../components/common/IconMenu';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
@@ -125,14 +125,13 @@ describe('DataPackListItem component', () => {
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual(`/status/${props.run.job.uid}`);
-        expect(wrapper.find(CardTitle)).toHaveLength(1);
-        const cardText = wrapper.find(CardTitle).text();
+        expect(wrapper.find(CardHeader)).toHaveLength(1);
+        const cardText = wrapper.find(CardHeader).text();
         expect(cardText).toContain('Test1');
         expect(cardText).toContain('Event: Test1 event');
         expect(cardText).toContain('Added: 3/10/17');
         expect(cardText).toContain('My DataPack');
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);
         expect(wrapper.find(NavigationCheck)).toHaveLength(1);
         expect(wrapper.find(Lock)).toHaveLength(1);
@@ -144,17 +143,17 @@ describe('DataPackListItem component', () => {
         const wrapper = getWrapperMount(props);
         props.run.started_at = '2017-04-11T15:52:35.637331Z';
         wrapper.setProps(props);
-        expect(wrapper.find(CardTitle).text()).toContain('Added: 4/11/17');
+        expect(wrapper.find(CardHeader).text()).toContain('Added: 4/11/17');
         props.run.job.name = 'jobby job';
         wrapper.setProps(props);
-        expect(wrapper.find(CardTitle).text()).toContain('jobby job');
+        expect(wrapper.find(CardHeader).text()).toContain('jobby job');
         props.run.job.event = 'new event here';
         wrapper.setProps(props);
-        expect(wrapper.find(CardTitle).text()).toContain('Event: new event here');
+        expect(wrapper.find(CardHeader).text()).toContain('Event: new event here');
         props.run.user = 'not admin';
         wrapper.setProps(props);
-        expect(wrapper.find(CardTitle).text()).not.toContain('My DataPack');
-        expect(wrapper.find(CardTitle).text()).toContain('not admin');
+        expect(wrapper.find(CardHeader).text()).not.toContain('My DataPack');
+        expect(wrapper.find(CardHeader).text()).toContain('not admin');
         props.run.status = 'SUBMITTED';
         wrapper.setProps(props);
         expect(wrapper.find(NotificationSync)).toHaveLength(1);
@@ -185,7 +184,6 @@ describe('DataPackListItem component', () => {
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWithExactly({
-            menuOpen: false,
             providerDescs: {
                 'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
             },
@@ -202,7 +200,6 @@ describe('DataPackListItem component', () => {
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWithExactly({
-            menuOpen: false,
             deleteDialogOpen: true,
         }));
         stateSpy.restore();
@@ -238,7 +235,6 @@ describe('DataPackListItem component', () => {
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
         expect(stateSpy.calledWithExactly({
-            menuOpen: false,
             shareDialogOpen: true,
         }));
         stateSpy.restore();
@@ -262,14 +258,6 @@ describe('DataPackListItem component', () => {
         expect(instance.handleShareClose.callCount).toBe(1);
         expect(instance.props.onRunShare.callCount).toBe(1);
         expect(instance.props.onRunShare.calledWithExactly(instance.props.run.job.uid, permissions));
-    });
-
-    it('should set menu open prop with menuOpen value', () => {
-        const wrapper = getWrapperMount(getProps());
-        expect(wrapper.state().menuOpen).toBe(false);
-        expect(wrapper.find(IconMenu).props().open).toBe(false);
-        wrapper.setState({ menuOpen: true });
-        expect(wrapper.find(IconMenu).props().open).toBe(true);
     });
 
     it('should set share dialog open prop with shareDialogOpen value', () => {

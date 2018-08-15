@@ -58,7 +58,12 @@ export class ProvidersFilter extends Component {
                                 this.props.onChange(provider.slug, v);
                             }}
                         />
-                        <span style={{ display: 'flex', flex: '1 1 auto' }}>{provider.name}</span>
+                        <span
+                            className="qa-ProvidersFilter-name"
+                            style={{ display: 'flex', flex: '1 1 auto' }}
+                        >
+                            {provider.name}
+                        </span>
                     </div>
                 ))}
             </div>
