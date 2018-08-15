@@ -11,14 +11,16 @@ from mock import Mock, PropertyMock, patch, MagicMock
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProviderTask, DataProvider
 from eventkit_cloud.tasks.task_factory import create_run
-from eventkit_cloud.tasks.task_runners import (
-    ExportOSMTaskRunner, ExportExternalRasterServiceTaskRunner, create_export_task_record
+from eventkit_cloud.tasks.task_builders import (
+    TaskChainBuilder, create_export_task_record
 )
+from eventkit_cloud.tasks.export_tasks import osm_data_collection_task, external_raster_service_export_task, \
+    wcs_export_task
 
 logger = logging.getLogger(__name__)
 
 
-class TestExportTaskRunner(TestCase):
+class TestTaskBuilder(TestCase):
     fixtures = ('insert_provider_types', 'osm_provider', 'test_providers')
 
     def setUp(self, ):
@@ -40,7 +42,7 @@ class TestExportTaskRunner(TestCase):
         self.job.region = self.region
         self.job.save()
 
-    @patch('eventkit_cloud.tasks.task_runners.chain')
+    @patch('eventkit_cloud.tasks.task_builders.chain')
     def test_run_osm_task(self, mock_chain):
         provider = DataProvider.objects.get(slug='osm')
         provider_task = DataProviderTask.objects.create(provider=provider)
@@ -49,47 +51,69 @@ class TestExportTaskRunner(TestCase):
         self.job.provider_tasks.add(provider_task)
         create_run(job_uid=self.job.uid)
 
-        runner = ExportOSMTaskRunner()
+        task_chain_builder = TaskChainBuilder()
 
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
-            runner.run_task(provider_task_uid=provider_task.uid, run=self.job.runs.first(),
-                            worker="some_worker")
+            task_chain_builder.build_tasks(osm_data_collection_task,
+                                           provider_task_uid=provider_task.uid, run=self.job.runs.first(),
+                                           worker="some_worker")
         except TypeError:
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
-        tasks = run.provider_tasks.first().tasks.all()
+        tasks = run.provider_tasks.first().tasks.filter(name='OSM(.gpkg)')
         self.assertIsNotNone(tasks)
-        self.assertEquals(len(tasks), 2)
 
-    @patch('eventkit_cloud.tasks.task_runners.chain')
-    @patch('eventkit_cloud.tasks.export_tasks.shp_export_task')
-    def test_run_wms_task(self, mock_shp, mock_chain):
+    @patch('eventkit_cloud.tasks.task_builders.chain')
+    def test_run_wms_task(self, mock_chain):
 
         celery_uid = str(uuid.uuid4())
         provider = DataProvider.objects.get(slug='wms')
         provider_task_record = DataProviderTask.objects.create(provider=provider)
         self.job.provider_tasks.add(provider_task_record)
-        # shp export task mock
-        mock_shp.run.return_value = Mock(state='PENDING', id=celery_uid)
-        type(mock_shp).name = PropertyMock(return_value='Geopackage Export')
         # celery chain mock
         mock_chain.return_value.apply_async.return_value = Mock()
-        self.job.provider_tasks.first().formats.add(self.shp_task)
         create_run(job_uid=self.job.uid)
-        runner = ExportExternalRasterServiceTaskRunner()
+        task_chain_builder = TaskChainBuilder()
         # Even though code using pipes seems to be supported here it is throwing an error.
         try:
-            runner.run_task(provider_task_uid=provider_task_record.uid, run=self.job.runs.first(),
-                            service_type='wms',
-                            worker="some_worker")
+            task_chain_builder.build_tasks(external_raster_service_export_task,
+                                           provider_task_uid=provider_task_record.uid, run=self.job.runs.first(),
+                                           service_type='wms',
+                                           worker="some_worker")
         except TypeError:
             pass
         run = self.job.runs.first()
         self.assertIsNotNone(run)
+        tasks = run.provider_tasks.first().tasks.filter(name='Raster export (.gpkg)')
+        self.assertIsNotNone(tasks)
 
-    @patch('eventkit_cloud.tasks.task_runners.ExportTaskRecord')
+    @patch('eventkit_cloud.tasks.task_builders.chain')
+    def test_run_wcs_task(self, mock_chain):
+
+        celery_uid = str(uuid.uuid4())
+        provider = DataProvider.objects.get(slug='wms')
+        provider_task_record = DataProviderTask.objects.create(provider=provider)
+        self.job.provider_tasks.add(provider_task_record)
+        # celery chain mock
+        mock_chain.return_value.apply_async.return_value = Mock()
+        create_run(job_uid=self.job.uid)
+        task_chain_builder = TaskChainBuilder()
+        # Even though code using pipes seems to be supported here it is throwing an error.
+        try:
+            task_chain_builder.build_tasks(wcs_export_task,
+                                           provider_task_uid=provider_task_record.uid, run=self.job.runs.first(),
+                                           service_type='wcs',
+                                           worker="some_worker")
+        except TypeError:
+            pass
+        run = self.job.runs.first()
+        self.assertIsNotNone(run)
+        tasks = run.provider_tasks.first().tasks.filter(name='Geotiff Format (.tif)')
+        self.assertIsNotNone(tasks)
+
+    @patch('eventkit_cloud.tasks.task_builders.ExportTaskRecord')
     def test_create_export_task_record(self, mock_export_task):
         from eventkit_cloud.tasks.export_tasks import TaskStates
 
