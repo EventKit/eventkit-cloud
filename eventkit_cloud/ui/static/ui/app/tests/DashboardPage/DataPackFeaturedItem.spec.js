@@ -66,10 +66,10 @@ describe('DataPackFeaturedItem component', () => {
             `Event: ${instance.props.run.job.event}`,
         );
         expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Added').text()).toBe(
-            `Added: ${moment(instance.props.run.started_at).format('YYYY-MM-DD')}`,
+            `Added: ${moment(instance.props.run.started_at).format('M/D/YY')}`,
         );
         expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Expires').text()).toBe(
-            `Expires: ${moment(instance.props.run.expiration).format('YYYY-MM-DD')}`,
+            `Expires: ${moment(instance.props.run.expiration).format('M/D/YY')}`,
         );
     });
 

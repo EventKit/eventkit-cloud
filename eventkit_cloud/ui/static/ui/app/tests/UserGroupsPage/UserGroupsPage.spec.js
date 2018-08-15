@@ -1,9 +1,10 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
@@ -127,10 +128,10 @@ describe('UserGroupsPage component', () => {
     it('should render its basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-UserGroupsPage-AppBar')).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-RaisedButton-create')).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar')).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-search')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-AppBar').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-RaisedButton-create').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-search').hostNodes()).toHaveLength(1);
         expect(wrapper.find(UserHeader)).toHaveLength(1);
         expect(wrapper.find(OwnUserRow)).toHaveLength(1);
         expect(wrapper.find(UserRow)).toHaveLength(2);
@@ -925,7 +926,7 @@ describe('UserGroupsPage component', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
             text: 'Example text',
-            selector: '.qa-Account-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: {},
             isFixed: true,

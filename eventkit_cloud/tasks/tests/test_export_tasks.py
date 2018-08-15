@@ -1,33 +1,23 @@
 # -*- coding: utf-8 -*-
 # test cases for Export Tasks
 import cPickle
-import datetime
 import logging
 import os
-import signal
 import sys
 import uuid
 
+import celery
+from billiard.einfo import ExceptionInfo
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
-from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
+from mock import Mock, PropertyMock, patch, MagicMock
 
-from billiard.einfo import ExceptionInfo
-import celery
-from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider
-from eventkit_cloud.tasks.models import (
-    ExportRun,
-    ExportTaskRecord,
-    FileProducingTaskResult,
-    DataProviderTaskRecord
-)
-
-from ...celery import TaskPriority, app
-from ...jobs.models import Job
-from ..export_tasks import (
+from eventkit_cloud.celery import TaskPriority, app
+from eventkit_cloud.jobs.models import DatamodelPreset, Job
+from eventkit_cloud.tasks.export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
@@ -35,7 +25,12 @@ from ..export_tasks import (
     bounds_export_task, parse_result, finalize_export_provider_task,
     FormatTask, wait_for_providers_task, create_zip_task, default_format_time
 )
-
+from eventkit_cloud.tasks.models import (
+    ExportRun,
+    ExportTaskRecord,
+    FileProducingTaskResult,
+    DataProviderTaskRecord
+)
 
 logger = logging.getLogger(__name__)
 

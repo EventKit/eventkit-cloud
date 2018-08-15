@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import FlatButton from 'material-ui/FlatButton';
 
 export class DataPackFilterButton extends React.Component {

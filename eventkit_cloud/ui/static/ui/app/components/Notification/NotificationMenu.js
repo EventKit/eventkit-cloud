@@ -1,10 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { IconButton, IconMenu, MenuItem } from 'material-ui';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import {
     markNotificationsAsRead,
@@ -15,37 +16,33 @@ import {
 export class NotificationMenu extends React.Component {
     constructor(props) {
         super(props);
-        this.onMount = this.onMount.bind(this);
         this.handleMenuItemClick = this.handleMenuItemClick.bind(this);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.handleMarkAsRead = this.handleMarkAsRead.bind(this);
         this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
         this.handleRemove = this.handleRemove.bind(this);
         this.handleView = this.handleView.bind(this);
         this.state = {
-            // This is a slight hack to prevent some glitchy behavior in the notifications dropdown. Without it, clicking
-            // the "View" menu item will cause the dropdown to immediately close as the menu item stays for a moment to
-            // show its ripple effect. This trick also just makes the menu feel a little more responsive.
-            forceClose: false,
+            open: false,
         };
     }
 
-    componentDidUpdate() {
-        this.onMount();
-    }
-
-    onMount() {
-        if (this.state.forceClose) {
-            this.setState({ forceClose: false });
-        }
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
     }
 
     handleMenuItemClick(e) {
         e.stopPropagation();
-        this.setState({ forceClose: true });
+        this.setState({ open: false });
+    }
+
+    handleMenuChange(open) {
+        this.setState({ open });
     }
 
     handleMarkAsRead(e) {
         this.handleMenuItemClick(e);
+
         if (this.props.onMarkAsRead(this.props.notification)) {
             this.props.markNotificationsAsRead([this.props.notification]);
         }
@@ -53,6 +50,7 @@ export class NotificationMenu extends React.Component {
 
     handleMarkAsUnread(e) {
         this.handleMenuItemClick(e);
+
         if (this.props.onMarkAsUnread(this.props.notification)) {
             this.props.markNotificationsAsUnread([this.props.notification]);
         }
@@ -60,6 +58,7 @@ export class NotificationMenu extends React.Component {
 
     handleRemove(e) {
         this.handleMenuItemClick(e);
+
         if (this.props.onRemove(this.props.notification)) {
             this.props.removeNotifications([this.props.notification]);
         }
@@ -67,6 +66,7 @@ export class NotificationMenu extends React.Component {
 
     handleView(e) {
         this.handleMenuItemClick(e);
+
         const path = getNotificationViewPath(this.props.notification);
         if (this.props.onView(this.props.notification, path)) {
             this.props.router.push(path);
@@ -92,17 +92,19 @@ export class NotificationMenu extends React.Component {
         return (
             <IconMenu
                 style={this.props.style}
+                open={this.state.open}
                 iconButtonElement={
                     <IconButton
                         style={styles.menuButton}
                         iconStyle={styles.menuButtonIcon}
+                        onClick={this.handleMenuButtonClick}
                     >
                         <MoreVertIcon />
                     </IconButton>
                 }
                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                open={this.state.forceClose ? false : undefined}
+                onRequestChange={this.handleMenuChange}
             >
                 {viewPath ?
                     <MenuItem

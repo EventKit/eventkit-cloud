@@ -1,8 +1,9 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import { AppBar, CircularProgress, Paper } from 'material-ui';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
@@ -17,7 +18,6 @@ import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { getGroups } from '../../actions/userGroupsActions';
-import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getUsers } from '../../actions/userActions';
 import { joyride } from '../../joyride.config';
 import background from '../../../images/ek_topo_pattern.png';
@@ -38,16 +38,11 @@ export class DashboardPage extends React.Component {
         this.handleNotificationsViewAll = this.handleNotificationsViewAll.bind(this);
         this.handleFeaturedViewAll = this.handleFeaturedViewAll.bind(this);
         this.handleMyDataPacksViewAll = this.handleMyDataPacksViewAll.bind(this);
-        this.handleShareOpen = this.handleShareOpen.bind(this);
-        this.handleShareClose = this.handleShareClose.bind(this);
-        this.handleShareSave = this.handleShareSave.bind(this);
         this.isLoading = this.isLoading.bind(this);
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.callback = this.callback.bind(this);
         this.state = {
             loadingPage: true,
-            shareOpen: false,
-            targetRun: null,
             steps: [],
             isRunning: false,
         };
@@ -182,21 +177,7 @@ export class DashboardPage extends React.Component {
     }
 
     handleMyDataPacksViewAll() {
-        browserHistory.push('/exports?collection=myDataPacks');
-    }
-
-    handleShareOpen(run) {
-        this.setState({ shareOpen: true, targetRun: run });
-    }
-
-    handleShareClose() {
-        this.setState({ shareOpen: false, targetRun: null });
-    }
-
-    handleShareSave(perms) {
-        this.handleShareClose();
-        const permissions = { ...perms };
-        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
+        browserHistory.push(`/exports?collection=${this.props.user.data.user.username}`);
     }
 
     isLoading() {
@@ -460,15 +441,17 @@ export class DashboardPage extends React.Component {
                                             user={this.props.user}
                                             key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
                                             onRunDelete={this.props.deleteRuns}
+                                            onRunShare={this.props.updateDataCartPermissions}
                                             providers={this.props.providers}
                                             adminPermission={userIsDataPackAdmin(
                                                 this.props.user.data.user,
                                                 run.job.permissions, this.props.groups.groups,
                                             )}
-                                            openShare={this.handleShareOpen}
                                             gridName="RecentlyViewed"
                                             index={index}
                                             showFeaturedFlag={false}
+                                            users={this.props.users.users}
+                                            groups={this.props.groups.groups}
                                         />
                                     );
                                 })}
@@ -533,40 +516,23 @@ export class DashboardPage extends React.Component {
                                         user={this.props.user}
                                         key={`MyDataPacksDataPack-${run.created_at}`}
                                         onRunDelete={this.props.deleteRuns}
+                                        onRunShare={this.props.updateDataCartPermissions}
                                         providers={this.props.providers}
                                         adminPermission={userIsDataPackAdmin(
                                             this.props.user.data.user,
                                             run.job.permissions, this.props.groups.groups,
                                         )}
-                                        openShare={this.handleShareOpen}
                                         gridName="MyDataPacks"
                                         index={index}
                                         showFeaturedFlag={false}
+                                        users={this.props.users.users}
+                                        groups={this.props.groups.groups}
                                     />
                                 ))}
                             </DashboardSection>
                         </div>
                     }
                 </CustomScrollbar>
-                {this.state.shareOpen && this.state.targetRun ?
-                    <DataPackShareDialog
-                        show
-                        onClose={this.handleShareClose}
-                        onSave={this.handleShareSave}
-                        user={this.props.user.data}
-                        groups={this.props.groups.groups}
-                        members={this.props.users.users}
-                        permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively.
-                            Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively.
-                            Member sharing is managed separately from group sharing."
-                        canUpdateAdmin
-                        warnPublic
-                    />
-                    :
-                    null
-                }
             </div>
         );
     }

@@ -1,7 +1,8 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ActionRoom from 'material-ui/svg-icons/action/room';
+import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 
@@ -36,7 +37,7 @@ describe('TypeaheadMenuItem component', () => {
         });
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(6);
-        expect(wrapper.find('.menuItem')).toHaveLength(1);
+        expect(wrapper.find('.menuItem').hostNodes()).toHaveLength(1);
         expect(wrapper.find('.qa-TypeaheadMenuItem-icon-div')).toHaveLength(1);
         expect(wrapper.find(ActionRoom)).toHaveLength(0);
         expect(wrapper.find('.qa-TypeaheadMenuItem-name')).toHaveLength(1);

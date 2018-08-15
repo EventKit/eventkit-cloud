@@ -1,5 +1,5 @@
 import React from 'react';
-import CircularProgress from 'material-ui/CircularProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import background from '../../../images/ek_topo_pattern.png';
 
 export default function Loading() {
@@ -16,7 +16,7 @@ export default function Loading() {
         >
             <CircularProgress
                 style={{ margin: 'auto', display: 'block' }}
-                color="#4598bf"
+                color="primary"
                 size={50}
             />
         </div>

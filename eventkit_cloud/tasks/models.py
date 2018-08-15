@@ -4,17 +4,59 @@ from __future__ import unicode_literals
 import logging
 
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
 from django.http import HttpRequest
 
-from ..jobs.models import Job, LowerCaseCharField, DataProvider
-from ..core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
+from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
+from notifications.models import Notification
+
 
 logger = logging.getLogger(__name__)
 
 
-class FileProducingTaskResult(UIDMixin):
+def get_all_users_by_permissions(permissions):
+    return User.objects.filter(models.Q(groups__name=permissions['groups']) | models.Q(username__in=permissions['users']))
+
+
+def notification_delete(instance):
+    for notification in Notification.objects.filter(actor_object_id=instance.id):
+        ct = ContentType.objects.filter(pk=notification.actor_content_type_id).get()
+        if ct == ContentType.objects.get_for_model(type(instance)):
+            notification.delete()
+
+
+def notification_soft_delete(instance):
+    for notification in Notification.objects.filter(actor_object_id=instance.id):
+        ct = ContentType.objects.filter(pk=notification.actor_content_type_id).get()
+        if ct == ContentType.objects.get_for_model(type(instance)):
+            notification.public = False
+            notification.save()
+
+
+class NotificationModelMixin(models.Model):
+
+    def delete_notifications(self, *args, **kwargs):
+        notification_delete(self)
+
+    def soft_delete_notifications(self, *args, **kwargs):
+        permissions = kwargs.get('permissions')
+        if permissions:
+            users = get_all_users_by_permissions(permissions)
+            logger.error("users: {0}".format(users))
+            for user in users:
+                logger.error("Sending notification to {0}".format(user))
+                sendnotification(self, user, NotificationVerb.RUN_DELETED.value,
+                                 None, None, NotificationLevel.WARNING.value, getattr(self, "status", "DELETED"))
+
+    class Meta:
+        abstract = True
+
+
+class FileProducingTaskResult(UIDMixin, NotificationModelMixin):
     """
     A FileProducingTaskResult holds the information from the task, i.e. the reason for executing the task.
     """
@@ -27,7 +69,7 @@ class FileProducingTaskResult(UIDMixin):
     deleted = models.BooleanField(default=False)
 
     def soft_delete(self, *args, **kwargs):
-        from .signals import exporttaskresult_delete_exports
+        from eventkit_cloud.tasks.signals import exporttaskresult_delete_exports
         exporttaskresult_delete_exports(self.__class__, self)
         self.deleted = True
         self.export_task.display = False
@@ -41,7 +83,7 @@ class FileProducingTaskResult(UIDMixin):
         return 'FileProducingTaskResult ({}), {}'.format(self.uid, self.filename)
 
 
-class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
+class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, NotificationModelMixin):
     """
     ExportRun is the main structure for storing export information.
 
@@ -74,8 +116,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         return '{0}'.format(self.uid)
 
     def soft_delete(self, user=None, *args, **kwargs):
-        from .export_tasks import cancel_run
-        from .signals import exportrun_delete_exports
+        from eventkit_cloud.tasks.export_tasks import cancel_run
+        from eventkit_cloud.tasks.signals import exportrun_delete_exports
         exportrun_delete_exports(self.__class__, self)
         username = None
         if user:
@@ -85,6 +127,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         logger.info("Deleting run {0} by user {1}".format(self.uid, user))
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
+        self.soft_delete_notifications(*args, **kwargs)
 
 
 class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):

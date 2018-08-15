@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -15,7 +16,7 @@ describe('DataPackSearchbar component', () => {
     const getWrapper = props => mount(<DataPackSearchbar {...props} />, {
         context: { muiTheme },
         childContextTypes: {
-            muiTheme: React.PropTypes.object,
+            muiTheme: PropTypes.object,
         },
     });
 
@@ -23,8 +24,8 @@ describe('DataPackSearchbar component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(TextField)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackSearchBar-TextField')).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackSearchBar-TextField').children().first().text()).toEqual('Search DataPacks');
+        expect(wrapper.find('.qa-DataPackSearchBar-TextField').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-DataPackSearchBar-TextField').hostNodes().text()).toEqual('Search DataPacks');
     });
 
     it('should call handleChange', () => {

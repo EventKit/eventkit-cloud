@@ -1,5 +1,6 @@
 import os
 import re
+
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -10,9 +11,9 @@ from eventkit_cloud.ui.helpers import logger, cd
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 import logging
-import errno
 from time import sleep
 import signal
+
 
 logger = logging.getLogger()
 
@@ -145,8 +146,8 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     Task to create QGIS project file with styles for osm.
     """
     from eventkit_cloud.tasks.models import ExportRun
-    from ..tasks.export_tasks import TaskStates
-    from ..tasks.task_runners import normalize_name
+    from eventkit_cloud.tasks.export_tasks import TaskStates
+    from eventkit_cloud.tasks.helpers import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
@@ -223,7 +224,7 @@ def get_human_readable_metadata_document(run_uid):
     """
     from eventkit_cloud.tasks.models import ExportRun
     from eventkit_cloud.jobs.models import DataProvider
-    from ..tasks.task_runners import normalize_name
+    from eventkit_cloud.tasks.helpers import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 

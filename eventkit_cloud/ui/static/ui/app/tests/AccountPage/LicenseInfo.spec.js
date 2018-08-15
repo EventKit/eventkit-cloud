@@ -1,8 +1,9 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Checkbox from 'material-ui/Checkbox';
+import Checkbox from '@material-ui/core/Checkbox';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
 import UserLicense from '../../components/AccountPage/UserLicense';
@@ -28,7 +29,7 @@ describe('LicenseInfo component', () => {
     const getMountedWrapper = props => (
         mount(<LicenseInfo {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 
@@ -44,7 +45,7 @@ describe('LicenseInfo component', () => {
         expect(wrapper.find(Checkbox).at(0).props().checked).toBe(false);
         expect(wrapper.find(Checkbox).at(1).props().checked).toBe(false);
         expect(wrapper.find(Checkbox).at(2).props().checked).toBe(false);
-        expect(wrapper.find('span').at(0).text()).toEqual('ALL');
+        expect(wrapper.find('.qa-LicenseInof-All').text()).toEqual('ALL');
         expect(wrapper.find(UserLicense)).toHaveLength(2);
     });
 

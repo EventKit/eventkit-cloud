@@ -1,5 +1,6 @@
-import React, { PropTypes } from 'react';
-import Paper from 'material-ui/Paper';
+import PropTypes from 'prop-types';
+import React from 'react';
+import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
 import backgroundImage from '../../../images/topoBackground.png';
@@ -65,19 +66,20 @@ export class LoginPage extends React.Component {
                 <CustomScrollbar style={{ height: window.innerHeight - 95 }}>
                     <div style={styles.container} className="qa-LoginPage-container">
                         <div style={styles.paperContainer}>
-                            <Paper className="qa-LoginPage-Paper" style={styles.paper} zDepth={2}>
+                            <Paper className="qa-LoginPage-Paper" style={styles.paper}>
                                 <LoginForm {...this.props} />
                             </Paper>
                         </div>
 
                         {this.context.config.LOGIN_DISCLAIMER ?
                             <div style={styles.paperContainer}>
-                                <Paper style={{ ...styles.paper, backgroundColor: '#1D2B3C', backgroundImage: '' }} zDepth={2}>
+                                <Paper style={{ ...styles.paper, backgroundColor: '#1D2B3C', backgroundImage: '' }}>
                                     <CustomScrollbar style={{ height: 330 }}>
                                         <div style={styles.disclaimerHeading}>
                                             <strong>ATTENTION</strong>
                                         </div>
                                         <div
+                                            className="qa-LoginPage-disclaimer"
                                             style={{ color: '#fff', paddingRight: '10px' }}
                                             // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={

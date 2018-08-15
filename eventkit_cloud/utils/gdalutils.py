@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-from osgeo import gdal, ogr, osr
 import json
 import logging
 import math
-import time
 import os
 import subprocess
+import time
 from string import Template
 from tempfile import NamedTemporaryFile
-from ..tasks.task_process import TaskProcess
+
+from osgeo import gdal, ogr, osr
+
+from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,8 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
-import { GridList, GridTile } from 'material-ui';
+import GridList from '@material-ui/core/GridList';
+import GridTile from '@material-ui/core/GridListTile';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import InfoGrid from '../../components/About/InfoGrid';
 

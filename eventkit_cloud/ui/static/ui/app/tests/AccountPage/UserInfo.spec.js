@@ -37,9 +37,9 @@ describe('UserInfo component', () => {
         expect(trs.at(3).props().title).toEqual('Email');
         expect(trs.at(3).props().data).toEqual(props.user.email);
         expect(trs.at(4).props().title).toEqual('Date Joined');
-        expect(trs.at(4).props().data).toEqual('2017-05-10');
+        expect(trs.at(4).props().data).toEqual('5/10/17');
         expect(trs.at(5).props().title).toEqual('Last Login');
-        expect(trs.at(5).props().data).toEqual('2017-05-10, 11:28 am');
+        expect(trs.at(5).props().data).toEqual('5/10/17 11:28am');
     });
 
     it('should not display the update link', () => {

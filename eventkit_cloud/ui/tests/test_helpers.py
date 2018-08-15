@@ -4,8 +4,9 @@ import logging
 from django.test import TestCase
 
 import os
+
 from mock import Mock, patch, mock_open
-from ..helpers import cd, file_to_geojson, \
+from eventkit_cloud.ui.helpers import cd, file_to_geojson, \
     read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon
 
 

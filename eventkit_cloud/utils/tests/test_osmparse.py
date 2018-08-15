@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-from mock import MagicMock, Mock, patch, call
+from uuid import uuid4
 
 from django.test import TestCase
+from mock import MagicMock, Mock, patch, call
 
-from ..osmparse import OSMParser
-from uuid import uuid4
+from eventkit_cloud.utils.osmparse import OSMParser
 
 
 class TestOSMParser(TestCase):

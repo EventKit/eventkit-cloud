@@ -1,9 +1,12 @@
-import React, { PropTypes, Component } from 'react';
-import Clear from 'material-ui/svg-icons/content/clear';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Clear from '@material-ui/icons/Clear';
 import { Card } from 'material-ui/Card';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import Dot from '@material-ui/icons/FiberManualRecord';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import ActionZoomInIcon from '@material-ui/icons/ZoomIn';
 import moment from 'moment';
 
 export class MapPopup extends Component {
@@ -62,6 +65,7 @@ export class MapPopup extends Component {
                 height: '20px',
                 width: '20px',
                 verticalAlign: 'middle',
+                marginRight: '6px',
             },
             buttonStyle: {
                 height: '25px',
@@ -81,9 +85,17 @@ export class MapPopup extends Component {
             },
             actions: {
                 width: '100%',
-                height: '100%',
-                padding: '5px 10px 0px',
+                padding: '5px 10px 0',
                 color: 'grey',
+                display: 'flex',
+                flexWrap: 'wrap',
+            },
+            actionButton: {
+                display: 'inline-block',
+                color: '#4598bf',
+                whiteSpace: 'nowrap',
+                marginBottom: '10px',
+                cursor: 'pointer',
             },
             showMoreIcon: {
                 width: '18px',
@@ -104,7 +116,7 @@ export class MapPopup extends Component {
             moreInfo: {
                 width: '100%',
                 height: '100%',
-                padding: '10px 10px 10px',
+                padding: '0 10px 5px',
                 color: 'grey',
             },
         };
@@ -132,46 +144,62 @@ export class MapPopup extends Component {
                     Event: {this.props.featureInfo.job.event}
                 </div>
                 <div id="popup-actions" style={styles.actions}>
-                    <div style={{ display: 'inline-block', margin: 'auto', width: '100%' }}>
-                        <div
-                            className="qa-MapPopup-div-detailsUrl"
+                    <div
+                        className="qa-MapPopup-div-detailsUrl"
+                    >
+                        <a
+                            id="details-url"
+                            href={this.props.detailUrl}
                             style={{
-                                display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right',
+                                ...styles.actionButton,
+                                marginRight: '15px',
                             }}
                         >
-                            <a id="details-url" href={this.props.detailUrl} style={{ color: '#4598bf' }}>
-                                Go To Status and Download
-                            </a>
-                        </div>
-                        <div
-                            className="qa-MapPopup-div-zoomTo"
-                            style={{
-                                display: 'inline-block', height: '22px', marginLeft: '15px', float: 'right',
-                            }}
-                        >
-                            <span
-                                id="zoom-to"
-                                role="button"
-                                tabIndex={0}
-                                onKeyPress={this.props.handleZoom}
-                                onClick={this.props.handleZoom}
-                                style={{ textDecoration: 'none', cursor: 'pointer', color: '#4598bf' }}
-                            >
-                                Zoom To Selection
+                            <OpenInNewIcon style={styles.buttonIcon} />
+                            <span style={{ verticalAlign: 'middle' }}>
+                                Status & Download
                             </span>
-                        </div>
-                        <div className="qa-MapPopup-div-showMore" style={{ display: 'inline-block', height: '22px', float: 'left' }}>
-                            <div
-                                id="show-more"
-                                role="button"
-                                tabIndex={0}
-                                onKeyPress={this.showMore}
-                                onClick={this.showMore}
-                                style={{ textDecoration: 'none', cursor: 'pointer', color: '#4598bf' }}
-                            >
-                                {this.state.showMore ? 'Show Less' : 'Show More' }
-                                {this.state.showMore ? <ArrowUp style={styles.showMoreIcon} /> : <ArrowDown style={styles.showMoreIcon} />}
-                            </div>
+                        </a>
+                    </div>
+                    <div
+                        className="qa-MapPopup-div-zoomTo"
+                        style={{ flex: '1' }}
+                    >
+                        <span
+                            id="zoom-to"
+                            role="button"
+                            tabIndex={0}
+                            onKeyPress={this.props.handleZoom}
+                            onClick={this.props.handleZoom}
+                            style={{
+                                ...styles.actionButton,
+                                marginRight: '15px',
+                                textDecoration: 'none',
+                            }}
+                        >
+                            <ActionZoomInIcon style={{ ...styles.buttonIcon, marginRight: '4px' }} />
+                            <span style={{ verticalAlign: 'middle' }}>
+                                Zoom To
+                            </span>
+                        </span>
+                    </div>
+                    <div className="qa-MapPopup-div-showMore">
+                        <div
+                            id="show-more"
+                            role="button"
+                            tabIndex={0}
+                            onKeyPress={this.showMore}
+                            onClick={this.showMore}
+                            style={{
+                                ...styles.actionButton,
+                                textDecoration: 'none',
+                            }}
+                        >
+                            {this.state.showMore ?
+                                <span style={{ verticalAlign: 'middle' }}>Show Less</span> :
+                                <span style={{ verticalAlign: 'middle' }}>Show More</span>
+                            }
+                            {this.state.showMore ? <ArrowUp style={styles.showMoreIcon} /> : <ArrowDown style={styles.showMoreIcon} />}
                         </div>
                     </div>
                 </div>
@@ -184,12 +212,12 @@ export class MapPopup extends Component {
                         }
                         {this.props.featureInfo.created_at ?
                             <div style={{ margin: '5px 0px' }}>
-                                Created at: {moment(this.props.featureInfo.created_at).format('YYYY-MM-DD')}
+                                Created: {moment(this.props.featureInfo.created_at).format('M/D/YY')}
                             </div>
                             : null}
                         {this.props.featureInfo.expiration ?
                             <div style={{ margin: '5px 0px' }}>
-                                Expiration: {moment(this.props.featureInfo.expiration).format('YYYY-MM-DD')}
+                                Expires: {moment(this.props.featureInfo.expiration).format('M/D/YY')}
                             </div>
                             : null}
                         {this.props.featureInfo.user ?

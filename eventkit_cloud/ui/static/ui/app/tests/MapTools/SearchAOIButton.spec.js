@@ -1,9 +1,10 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ActionSearch from 'material-ui/svg-icons/action/search';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ActionSearch from '@material-ui/icons/Search';
+import ContentClear from '@material-ui/icons/Clear';
 import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
 
 describe('SearchAOIButton component', () => {
@@ -18,7 +19,7 @@ describe('SearchAOIButton component', () => {
         const props = getProps();
         const wrapper = mount(<SearchAOIButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ActionSearch)).toHaveLength(1);
@@ -30,7 +31,7 @@ describe('SearchAOIButton component', () => {
         const props = getProps();
         const wrapper = mount(<SearchAOIButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const nextProps = getProps();
         nextProps.buttonState = 'INACTIVE';
@@ -45,7 +46,7 @@ describe('SearchAOIButton component', () => {
         const props = getProps();
         const wrapper = mount(<SearchAOIButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const nextProps = getProps();
         nextProps.buttonState = 'SELECTED';
@@ -60,7 +61,7 @@ describe('SearchAOIButton component', () => {
         const props = getProps();
         const wrapper = mount(<SearchAOIButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const nextProps = getProps();
         nextProps.buttonState = 'SELECTED';
@@ -76,7 +77,7 @@ describe('SearchAOIButton component', () => {
         const props = getProps();
         const wrapper = mount(<SearchAOIButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const nextProps = getProps();
         nextProps.buttonState = 'INACTIVE';

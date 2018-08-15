@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import logging
-import uuid
 import os
+import uuid
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from mock import patch
 
-from ..export_tasks import TaskStates
-from ...jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
-from ..models import ExportRun, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
+from eventkit_cloud.jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
+from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import logging
+import signal
 
 from django.test import TestCase
 from mock import patch, call
@@ -8,7 +10,6 @@ import os
 import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
     get_osm_last_update
-
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 

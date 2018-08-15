@@ -1,34 +1,28 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from datetime import datetime, timedelta
+import itertools
 import logging
 import os
-import itertools
 
+from celery import chain
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.utils import timezone
-from ..core.models import JobPermission,JobPermissionLevel
-from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
 
-from celery import chain
-from eventkit_cloud.tasks.export_tasks import (finalize_run_task, create_zip_task, output_selection_geojson_task)
-
-from ..jobs.models import Job
-from ..tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
-                                  wait_for_providers_task, TaskStates)
-
-from ..tasks.models import ExportRun, DataProviderTaskRecord
-from ..tasks.task_runners import create_export_task_record
-from .task_runners import (
-    ExportOSMTaskRunner,
-    ExportWFSTaskRunner,
-    ExportWCSTaskRunner,
-    ExportExternalRasterServiceTaskRunner,
-    ExportArcGISFeatureServiceTaskRunner
-)
-from .helpers import get_run_staging_dir, get_provider_staging_dir
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
+from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
+                                               wait_for_providers_task, TaskStates,
+                                               create_zip_task, finalize_run_task,
+                                               output_selection_geojson_task,
+                                               osm_data_collection_task, wfs_export_task,
+                                               external_raster_service_export_task, wcs_export_task,
+                                               arcgis_feature_service_export_task)
+from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_provider_staging_dir, get_style_files
+from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
+from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -36,18 +30,18 @@ logger = logging.getLogger(__name__)
 
 class TaskFactory:
     """
-    A class create Task Runners based on an Export Run.
+    A class to assemble task chains (using TaskChainBuilders) based on an Export Run.
     """
 
     def __init__(self,):
-        self.type_task_map = {'osm': ExportOSMTaskRunner,
-                              'wfs': ExportWFSTaskRunner,
-                              'wms': ExportExternalRasterServiceTaskRunner,
-                              'wcs': ExportWCSTaskRunner,
-                              'wmts': ExportExternalRasterServiceTaskRunner,
-                              'tms': ExportExternalRasterServiceTaskRunner,
-                              'arcgis-raster': ExportExternalRasterServiceTaskRunner,
-                              'arcgis-feature': ExportArcGISFeatureServiceTaskRunner}
+        self.type_task_map = {'osm': osm_data_collection_task,
+                              'wfs': wfs_export_task,
+                              'wms': external_raster_service_export_task,
+                              'wcs': wcs_export_task,
+                              'wmts': external_raster_service_export_task,
+                              'tms': external_raster_service_export_task,
+                              'arcgis-raster': external_raster_service_export_task,
+                              'arcgis-feature': arcgis_feature_service_export_task}
 
     def parse_tasks(self, worker=None, run_uid=None, user_details=None):
         """
@@ -112,15 +106,17 @@ class TaskFactory:
                                                     stage_dir=get_run_staging_dir(run_uid), worker=worker)
             for provider_task_record in job.provider_tasks.all():
 
-                # Create an instance of a task runner based on the type name
                 if self.type_task_map.get(provider_task_record.provider.export_provider_type.type_name):
+                    # Each task builder has a primary task which pulls the source data, grab that task here...
                     type_name = provider_task_record.provider.export_provider_type.type_name
-                    task_runner = self.type_task_map.get(type_name)()
+
+                    primary_export_task = self.type_task_map.get(type_name)
 
                     stage_dir = get_provider_staging_dir(run_dir, provider_task_record.provider.slug)
                     os.makedirs(stage_dir, 6600)
 
                     args = {
+                        'primary_export_task': primary_export_task,
                         'user': job.user,
                         'provider_task_uid': provider_task_record.uid,
                         'run': run,
@@ -130,7 +126,7 @@ class TaskFactory:
                         'user_details': user_details
                     }
 
-                    provider_task_uid, provider_subtask_chain = task_runner.run_task(**args)
+                    provider_task_uid, provider_subtask_chain = TaskChainBuilder().build_tasks(**args)
 
 
                     wait_for_providers_signature = wait_for_providers_task.s(
@@ -273,7 +269,7 @@ def get_invalid_licenses(job, user=None):
     :param job: The job containing the licensed datasets.
     :return: A list of invalid licenses.
     """
-    from ..api.serializers import UserDataSerializer
+    from eventkit_cloud.api.serializers import UserDataSerializer
     user = user or job.user
     licenses = UserDataSerializer.get_accepted_licenses(user)
     invalid_licenses = []

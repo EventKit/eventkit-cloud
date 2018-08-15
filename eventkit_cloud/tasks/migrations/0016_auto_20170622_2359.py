@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
+
 def populate_new_fields(apps, schema_editor):
     """ Populates the fields added in migration #14; ExportTask.new_result & FileProducingTaskResult.id
     """

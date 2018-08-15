@@ -3,7 +3,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { TableHeaderColumn } from 'material-ui';
-import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
+import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../../components/icons/IndeterminateIcon';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
 import NotificationsTableMenu from '../../components/Notification/NotificationsTableMenu';
@@ -124,7 +124,7 @@ describe('NotificationsTable component', () => {
             },
         });
         const tableItem = wrapper.find(NotificationsTableItem).at(0);
-        expect(Object.keys(tableItem).length).toBe(8);
+        expect(Object.keys(tableItem.props()).length).toBe(8);
         expect(tableItem.props().notification).toBe(instance.props.notificationsArray[0]);
         expect(tableItem.props().router).toBe(instance.props.router);
         expect(tableItem.props().isSelected).toBe(true);
@@ -231,6 +231,7 @@ describe('NotificationsTable component', () => {
             });
 
             it('deselects all notifications', () => {
+                wrapper.update();
                 instance.props.notificationsArray.forEach((notification, i) => {
                     const tableItem = wrapper.find(NotificationsTableItem).at(i);
                     expect(tableItem.props().isSelected).toBe(false);
@@ -269,6 +270,7 @@ describe('NotificationsTable component', () => {
             });
 
             it('deselects all notifications', () => {
+                wrapper.update();
                 instance.props.notificationsArray.forEach((notification, i) => {
                     const tableItem = wrapper.find(NotificationsTableItem).at(i);
                     expect(tableItem.props().isSelected).toBe(false);

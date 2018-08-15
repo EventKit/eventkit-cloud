@@ -9,19 +9,17 @@ See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled re
 import cPickle
 import json
 import logging
-import os
-from urlparse import urlparse, urlunparse
-
-from django.conf import settings
-from django.contrib.gis.geos import GEOSGeometry
-from django.utils.translation import ugettext as _
 
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.gis.geos import GEOSGeometry
+from django.utils.translation import ugettext as _
 from notifications.models import Notification
+from rest_framework import serializers
+from rest_framework_gis import serializers as geo_serializers
 
-from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission
-
+import validators
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     DatamodelPreset,
@@ -40,9 +38,6 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord
 )
-from rest_framework import serializers
-from rest_framework_gis import serializers as geo_serializers
-import validators
 
 try:
     from collections import OrderedDict
@@ -267,17 +262,26 @@ class LicenseSerializer(serializers.ModelSerializer):
         )
 
 
+
+
 class ExportRunSerializer(serializers.ModelSerializer):
     """Serialize ExportRun."""
     url = serializers.HyperlinkedIdentityField(
         view_name='api:runs-detail',
         lookup_field='uid'
     )
-    job = SimpleJobSerializer()  # nest the job details
+    job = serializers.SerializerMethodField()  # nest the job details
     provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
-    expiration = serializers.SerializerMethodField
+    expiration = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    started_at = serializers.SerializerMethodField()
+    finished_at = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
@@ -289,10 +293,12 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_user(obj):
-        return obj.user.username
+        if not obj.deleted:
+            return obj.user.username
 
     def get_provider_tasks(self, obj):
-        return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
+        if not obj.deleted:
+            return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
         request = self.context['request']
@@ -301,6 +307,37 @@ class ExportRunSerializer(serializers.ModelSerializer):
             if task_downloadable:
                 return request.build_absolute_uri('/download?uid={}'.format(task_downloadable.uid))
         return ""
+
+    def get_created_at(self, obj):
+        if not obj.deleted:
+            return obj.created_at
+
+    def get_started_at(self, obj):
+        if not obj.deleted:
+            return obj.started_at
+
+    def get_finished_at(self, obj):
+        if not obj.deleted:
+            return obj.finished_at
+
+    def get_duration(self, obj):
+        if not obj.deleted:
+            return obj.duration
+
+    def get_status(self, obj):
+        if not obj.deleted:
+            return obj.status
+
+    def get_job(self, obj):
+        data = SimpleJobSerializer(obj.job, context=self.context).data
+        if not obj.deleted:
+            return data
+        else:
+            return {'uid': data['uid'], 'name': data['name']}
+
+    def get_expiration(self, obj):
+        if not obj.deleted:
+            return obj.expiration
 
 
 class GroupPermissionSerializer(serializers.ModelSerializer):

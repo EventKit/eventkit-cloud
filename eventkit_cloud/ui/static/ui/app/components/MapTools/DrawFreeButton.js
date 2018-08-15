@@ -1,6 +1,7 @@
-import React, { Component, PropTypes } from 'react';
-import ContentCreate from 'material-ui/svg-icons/content/create';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import ContentCreate from '@material-ui/icons/Create';
+import ContentClear from '@material-ui/icons/Clear';
 
 export class DrawFreeButton extends Component {
     constructor(props) {

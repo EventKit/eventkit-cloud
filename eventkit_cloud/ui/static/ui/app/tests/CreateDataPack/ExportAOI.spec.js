@@ -1,6 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import axios from 'axios';
@@ -99,8 +100,8 @@ describe('ExportAOI component', () => {
         return mount(<ExportAOI {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };
@@ -132,6 +133,7 @@ describe('ExportAOI component', () => {
         const wrapper = getWrapper(props);
         window.resizeTo(1300, 800);
         expect(window.innerWidth).toBe(1300);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find('#map').props().style.left).toEqual('200px');
         const nextProps = getProps();
@@ -234,6 +236,7 @@ describe('ExportAOI component', () => {
         const updateSpy = sinon.spy(wrapper.instance(), 'componentDidUpdate');
         expect(updateSpy.called).toBe(false);
         expect(updateMapSpy.called).toBe(false);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(updateSpy.calledOnce).toBe(true);
         expect(updateMapSpy.calledOnce).toBe(true);

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.admin.models import LogEntry
 from django.contrib.sites.models import Site
 
-from .models import GroupPermission, JobPermission
+from eventkit_cloud.core.models import GroupPermission, JobPermission
 
 
 # http://djangoweekly.com/blog/post/viewbrowse-all-django-admin-edits-recent-actions-listing

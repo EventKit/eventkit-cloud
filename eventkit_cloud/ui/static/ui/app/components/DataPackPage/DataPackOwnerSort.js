@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 
@@ -62,7 +63,7 @@ export class DataPackOwnerSort extends React.Component {
                 <MenuItem
                     className="qa-DataPackOwnerSort-MenuItem-allDatapacks"
                     style={styles.item}
-                    value=""
+                    value="all"
                     primaryText="All DataPacks"
                 />
                 <MenuItem

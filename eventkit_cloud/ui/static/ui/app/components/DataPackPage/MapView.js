@@ -1,6 +1,7 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { GridList } from 'material-ui/GridList';
-import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
+import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
 
 import Map from 'ol/map';
@@ -912,11 +913,13 @@ export class MapView extends Component {
                                         user={this.props.user}
                                         key={run.uid}
                                         onRunDelete={this.props.onRunDelete}
+                                        onRunShare={this.props.onRunShare}
                                         onClick={this.handleClick}
                                         backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
                                         providers={this.props.providers}
-                                        openShare={this.props.openShare}
                                         adminPermission={admin}
+                                        users={this.props.users}
+                                        groups={this.props.groups}
                                     />
                                 );
                             })}
@@ -1024,6 +1027,7 @@ MapView.propTypes = {
     runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     range: PropTypes.string.isRequired,
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,
@@ -1036,7 +1040,7 @@ MapView.propTypes = {
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
     onMapFilter: PropTypes.func.isRequired,
-    openShare: PropTypes.func.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,

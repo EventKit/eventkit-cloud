@@ -1,5 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -198,7 +199,10 @@ describe('MapView component', () => {
     const getProps = () => ({
         runs: getRuns(),
         user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
         onRunDelete: () => {},
+        onRunShare: () => {},
         range: '12/24',
         handleLoadLess: () => {},
         handleLoadMore: () => {},
@@ -218,8 +222,8 @@ describe('MapView component', () => {
         return mount(<MapView {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };
@@ -561,6 +565,7 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const updates = updateSpy.args.length;
         const mapUpdate = mapUpdateSpy.args.length;
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(updateSpy.args.length).toEqual(updates + 1);
         expect(mapUpdateSpy.args.length).toEqual(mapUpdate + 1);

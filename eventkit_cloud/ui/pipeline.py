@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from social import utils
-from social.exceptions import InvalidEmail
-from social.pipeline.partial import partial
-
 from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core import signing
@@ -14,6 +10,9 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
+from social import utils
+from social.exceptions import InvalidEmail
+from social.pipeline.partial import partial
 
 logger = logging.getLogger(__name__)
 

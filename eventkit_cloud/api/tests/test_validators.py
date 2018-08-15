@@ -4,13 +4,12 @@ import logging
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
-from rest_framework.serializers import ValidationError
 from mock import patch, Mock
+from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox, \
     validate_selection, validate_bbox_params, validate_original_selection
 from eventkit_cloud.jobs.models import bbox_to_geojson
-import json
 
 logger = logging.getLogger(__name__)
 

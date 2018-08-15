@@ -1,6 +1,7 @@
-import React, { Component, PropTypes } from 'react';
-import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import FileFileUpload from '@material-ui/icons/CloudUpload';
+import ContentClear from '@material-ui/icons/Clear';
 
 export class ImportButton extends Component {
     constructor(props) {

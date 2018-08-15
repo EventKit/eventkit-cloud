@@ -1,13 +1,14 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
-import Person from 'material-ui/svg-icons/social/person';
-import Sort from 'material-ui/svg-icons/content/sort';
-import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import Person from '@material-ui/icons/Person';
+import Sort from '@material-ui/icons/Sort';
+import DropDown from '@material-ui/icons/ArrowDropDown';
+import Checked from '@material-ui/icons/CheckBox';
+import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 
@@ -120,7 +121,7 @@ export class UserHeader extends Component {
                 <MenuItem
                     style={{ ...styles.menuItem, color: '#ce4427' }}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={this.handleRemoveUsersClick}
+                    onClick={this.handleRemoveUsersClick}
                     className="qa-UserHeader-MenuItem-remove"
                 >
                     <span>Remove User(s)</span>
@@ -152,7 +153,7 @@ export class UserHeader extends Component {
                     key="makeAdminMenuItem"
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={this.handleOpenAdminConfirm}
+                    onClick={this.handleOpenAdminConfirm}
                     className="qa-UserHeader-MenuItem-makeAdmin"
                 >
                     <span>{adminLabel}</span>
@@ -206,7 +207,7 @@ export class UserHeader extends Component {
                             <MenuItem
                                 style={styles.menuItem}
                                 innerDivStyle={styles.menuItemInner}
-                                onTouchTap={this.handleAddUsersClick}
+                                onClick={this.handleAddUsersClick}
                                 className="qa-UserHeader-MenuItem-editGroups"
                             >
                                 <span>Add to Existing Group</span>
@@ -215,7 +216,7 @@ export class UserHeader extends Component {
                             <MenuItem
                                 style={styles.menuItem}
                                 innerDivStyle={styles.menuItemInner}
-                                onTouchTap={this.handleNewGroupClick}
+                                onClick={this.handleNewGroupClick}
                                 className="qa-UserHeader-MenuItem-newGroup"
                             >
                                 <span>Add to New Group</span>

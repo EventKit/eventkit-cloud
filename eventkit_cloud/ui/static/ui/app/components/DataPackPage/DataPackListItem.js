@@ -1,34 +1,50 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
 import { Card, CardTitle } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import AlertError from 'material-ui/svg-icons/alert/error';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import SocialGroup from '@material-ui/icons/Group';
+import Lock from '@material-ui/icons/LockOutlined';
+import NotificationSync from '@material-ui/icons/Sync';
+import NavigationCheck from '@material-ui/icons/Check';
+import AlertError from '@material-ui/icons/Error';
 import { List, ListItem } from 'material-ui/List';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackListItem extends Component {
     constructor(props) {
         super(props);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
+            shareDialogOpen: false,
+            menuOpen: false,
         };
+    }
+
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
+    handleMenuChange(menuOpen) {
+        this.setState({ menuOpen });
     }
 
     handleProviderClose() {
@@ -41,15 +57,18 @@ export class DataPackListItem extends Component {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDesc[a.name] = a.service_description;
         });
-        this.setState({ providerDescs: providerDesc, providerDialogOpen: true });
-    }
-
-    handleMenuButtonClick(e) {
-        e.stopPropagation();
+        this.setState({
+            menuOpen: false,
+            providerDescs: providerDesc,
+            providerDialogOpen: true,
+        });
     }
 
     showDeleteDialog() {
-        this.setState({ deleteDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            deleteDialogOpen: true,
+        });
     }
 
     hideDeleteDialog() {
@@ -59,6 +78,23 @@ export class DataPackListItem extends Component {
     handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
+    }
+
+    handleShareOpen() {
+        this.setState({
+            menuOpen: false,
+            shareDialogOpen: true,
+        });
+    }
+
+    handleShareClose() {
+        this.setState({ shareDialogOpen: false });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.onRunShare(this.props.run.job.uid, permissions);
     }
 
     render() {
@@ -200,6 +236,7 @@ export class DataPackListItem extends Component {
                             <IconMenu
                                 className="qa-DataPackListItem-IconMenu tour-datapack-options"
                                 style={{ float: 'right', width: '24px', height: '100%' }}
+                                open={this.state.menuOpen}
                                 iconButtonElement={
                                     <IconButton
                                         className="qa-DataPackListItem-IconButton"
@@ -213,11 +250,12 @@ export class DataPackListItem extends Component {
                                     </IconButton>}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                onRequestChange={this.handleMenuChange}
                             >
                                 <MenuItem
                                     className="qa-DataPackListItem-MenuItem-statusDownloadLink"
                                     style={{ fontSize: subtitleFontSize }}
-                                    primaryText="Go to Status & Download"
+                                    primaryText="Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem
@@ -241,7 +279,7 @@ export class DataPackListItem extends Component {
                                             className="qa-DataPackListItem-MenuItem-share"
                                             style={{ fontSize: subtitleFontSize }}
                                             primaryText="Share"
-                                            onClick={() => this.props.openShare(this.props.run)}
+                                            onClick={this.handleShareOpen}
                                         />,
                                     ]
                                     :
@@ -273,7 +311,7 @@ export class DataPackListItem extends Component {
                                 className="qa-DataPackListItem-subtitle-date"
                                 style={{ lineHeight: '18px', display: 'inline-block', width: '100%' }}
                             >
-                                {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
+                                {`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}
                                 {this.props.run.user === this.props.user.data.user.username ?
                                     <div style={styles.ownerLabel}>My DataPack</div>
                                     :
@@ -295,6 +333,21 @@ export class DataPackListItem extends Component {
                         </div>
                     }
                 />
+                <DataPackShareDialog
+                    show={this.state.shareDialogOpen}
+                    onClose={this.handleShareClose}
+                    onSave={this.handleShareSave}
+                    user={this.props.user.data}
+                    groups={this.props.groups}
+                    members={this.props.users}
+                    permissions={this.props.run.job.permissions}
+                    groupsText="You may share view and edit rights with groups exclusively.
+                        Group sharing is managed separately from member sharing."
+                    membersText="You may share view and edit rights with members exclusively.
+                        Member sharing is managed separately from group sharing."
+                    canUpdateAdmin
+                    warnPublic
+                />
             </Card>
         );
     }
@@ -311,13 +364,15 @@ DataPackListItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     onHoverStart: PropTypes.func,
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
-    openShare: PropTypes.func.isRequired,
     adminPermission: PropTypes.bool.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 export default DataPackListItem;

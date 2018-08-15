@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
@@ -46,13 +47,14 @@ describe('FilterDrawer component', () => {
                 { id: 'group2', name: 'group2', members: ['user1', 'user2'] },
                 { id: 'group3', name: 'group3', members: ['user1'] },
             ],
+            members: [],
         }
     );
 
     const getWrapper = props => (
         mount(<FilterDrawer {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 

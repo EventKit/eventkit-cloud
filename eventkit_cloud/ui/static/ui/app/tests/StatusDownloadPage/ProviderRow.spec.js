@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
@@ -13,11 +14,11 @@ import {
     TableRow,
     TableRowColumn,
 } from 'material-ui/Table';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import Check from 'material-ui/svg-icons/navigation/check';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import Warning from '@material-ui/icons/Warning';
+import Check from '@material-ui/icons/Check';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import LinearProgress from 'material-ui/LinearProgress';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
@@ -103,7 +104,7 @@ describe('ProviderRow component', () => {
         mount(<ProviderRow {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -149,7 +150,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
+        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
         menu.setState({ open: true });
         expect(menu.find(MenuItem)).toHaveLength(2);
         menu.find(MenuItem).first().simulate('click');
@@ -161,7 +162,7 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
+        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
         menu.setState({ open: true });
         expect(menu.find(MenuItem)).toHaveLength(2);
         menu.find(MenuItem).first().simulate('click');
@@ -352,7 +353,7 @@ describe('ProviderRow component', () => {
         const icon = wrapper.instance().getTaskDownloadIcon(task);
         const elem = mount(icon, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(elem.is(CloudDownload)).toBe(true);
         expect(elem.props().onClick).toBe(undefined);
@@ -365,7 +366,7 @@ describe('ProviderRow component', () => {
         const icon = wrapper.instance().getTaskDownloadIcon(task);
         const elem = mount(icon, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(elem.is(CloudDownload)).toBe(true);
         expect(elem.props().onClick).not.toBe(undefined);
@@ -378,6 +379,7 @@ describe('ProviderRow component', () => {
         wrapper.instance().handleProviderOpen();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
+        wrapper.update();
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual('provider description');
         stateSpy.restore();
     });

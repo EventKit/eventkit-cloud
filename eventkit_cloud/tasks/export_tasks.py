@@ -2,46 +2,43 @@
 from __future__ import absolute_import
 
 import cPickle
-from collections import Sequence
 import json
 import logging
 import os
 import shutil
 import socket
 import traceback
+from collections import Sequence
 from zipfile import ZipFile, ZIP_DEFLATED
 
+from audit_logging.celery_support import UserDetailsBase
+from celery import signature
+from celery.result import AsyncResult
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
-
 from django.core.cache import caches
-from django.core.mail import EmailMultiAlternatives
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-from celery import signature
-from celery.result import AsyncResult
-from celery.utils.log import get_task_logger
 from enum import Enum
-from audit_logging.celery_support import UserDetailsBase
 
-from ..feature_selection.feature_selection import FeatureSelection
-from eventkit_cloud.tasks.helpers import get_style_files, create_license_file, generate_qgs_style, \
+from eventkit_cloud.celery import app, TaskPriority
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
+    get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
+    default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document
-from ..celery import app, TaskPriority
-from ..utils import (
+from eventkit_cloud.utils import (
     kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
 )
-from ..utils.hotosm_geopackage import Geopackage
-from ..utils.geopackage import add_file_metadata
-from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
-
-
-from .exceptions import CancelException, DeleteException
-from .helpers import normalize_name, get_archive_data_path, get_run_download_url, get_download_filename, get_run_staging_dir, \
-    get_provider_staging_dir, get_run_download_dir, Directory, default_format_time, progressive_kill
+from eventkit_cloud.utils.geopackage import add_file_metadata
+from eventkit_cloud.utils.hotosm_geopackage import Geopackage
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -122,7 +119,7 @@ class LockingTask(UserDetailsBase):
         worker = kwargs.get('worker')
         task_settings = {
             'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
-            'priority': TaskPriority.TASK_RUNNER.value}
+            'priority': TaskPriority.RUN_TASK.value}
 
         if lock_key:
             self.lock_expiration = 5
@@ -201,7 +198,7 @@ class ExportTask(UserDetailsBase):
 
     def __call__(self, *args, **kwargs):
 
-        from ..tasks.models import FileProducingTaskResult, ExportTaskRecord
+        from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportTaskRecord
         task_uid = kwargs.get('task_uid')
 
         try:
@@ -306,8 +303,8 @@ class ExportTask(UserDetailsBase):
             5. run export_task_error_handler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from ..tasks.models import ExportTaskRecord
-        from ..tasks.models import ExportTaskException, DataProviderTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskException, DataProviderTaskRecord
         try:
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
@@ -344,7 +341,7 @@ class ExportTask(UserDetailsBase):
         """
         result = result or {}
         started = timezone.now()
-        from ..tasks.models import ExportTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskRecord
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
             celery_uid = self.request.id
@@ -445,7 +442,7 @@ def osm_data_collection_task(
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from .models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     logger.debug("enter run for {0}".format(self.name))
 
@@ -480,7 +477,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     """
     Task to create styles for osm.
     """
-    from ..jobs.models import Job, DataProvider
+    from eventkit_cloud.jobs.models import Job, DataProvider
 
     job = Job.objects.get(uid=job_uid)
 
@@ -605,7 +602,7 @@ def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun, ExportTaskRecord
+    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -631,7 +628,6 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun
     result = result or {}
 
     gtiff = parse_result(result, 'result')
@@ -701,7 +697,7 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining export for WCS services
     """
-    from ..tasks.models import ExportTaskRecord
+    from eventkit_cloud.tasks.models import ExportTaskRecord
 
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
@@ -756,7 +752,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     if user_details is None:
         user_details = {'username': 'unknown-bounds_export_task'}
 
-    from .models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -781,7 +777,7 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     Class defining geopackage export for external raster service.
     """
 
-    from .models import ExportRun, ExportTaskRecord
+    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -816,8 +812,8 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     if user_details is None:
         user_details = {'username': 'unknown-pick_up_run_task'}
 
-    from .models import ExportRun
-    from .task_factory import TaskFactory
+    from eventkit_cloud.tasks.models import ExportRun
+    from eventkit_cloud.tasks.task_factory import TaskFactory
     run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
@@ -834,7 +830,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 # This could be improved by using Redis or Memcached to help manage state.
 @app.task(name='Wait For Providers', base=UserDetailsBase)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
-    from .models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     if isinstance(callback_task, dict):
         callback_task = signature(callback_task)
@@ -892,7 +888,8 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
                 if ext in ['.gpkg', '.tif']:
                     download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
                                                               timezone.now(),
-                                                              ext)
+                                                              ext,
+                                                              additional_descriptors=provider_task.slug)
                     filepath = get_archive_data_path(
                         provider_task.slug,
                         download_filename
@@ -1234,7 +1231,7 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
 
 
 def cancel_synchronous_task_chain(data_provider_task_uid=None):
-    from ..tasks.models import DataProviderTaskRecord
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
     data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
     for export_task in data_provider_task_record.tasks.all():
@@ -1259,8 +1256,8 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
     # There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
     # the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
     # manage the task state (i.e. the task should be FAILED or CANCELED).
-    from ..tasks.models import DataProviderTaskRecord, ExportTaskException
-    from ..tasks.exceptions import CancelException
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskException
+    from eventkit_cloud.tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from django.contrib.auth.models import User
 
@@ -1319,7 +1316,7 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
 
 @app.task(name='Cancel Run', base=UserDetailsBase)
 def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs):
-    from ..tasks.models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     result = result or {}
 
@@ -1369,7 +1366,7 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if task_uid is None:
         return
 
-    from ..tasks.models import ExportTaskRecord
+    from eventkit_cloud.tasks.models import ExportTaskRecord
     from django.db import connection
 
     if not estimated_finish and not progress:
@@ -1420,7 +1417,7 @@ def get_function(function):
 
 
 def get_data_type_from_provider(provider_slug):
-    from ..jobs.models import DataProvider
+    from eventkit_cloud.jobs.models import DataProvider
     # NOTE TIF here is a place holder until we figure out how to support other formats.
     data_types = {'wms': 'raster',
                   'tms': 'raster',

@@ -4,18 +4,17 @@ from __future__ import unicode_literals, absolute_import
 import json
 import logging
 import uuid
-from enum import Enum
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
+from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.db.models.fields import CharField
-from django.contrib.postgres.fields.jsonb import JSONField
 from django.utils import timezone
+from enum import Enum
 
-from ..core.models import TimeStampedModelMixin, UIDMixin
-
+from eventkit_cloud.core.models import TimeStampedModelMixin, UIDMixin
 
 logger = logging.getLogger(__name__)
 

@@ -1,48 +1,34 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
 import Joyride from 'react-joyride';
 
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import ScaleLine from 'ol/control/scaleline';
-import Attribution from 'ol/control/attribution';
-import Zoom from 'ol/control/zoom';
-
-import Info from 'material-ui/svg-icons/action/info';
-import NavigationRefresh from 'material-ui/svg-icons/navigation/refresh';
-import { List, ListItem } from 'material-ui/List';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
-import ActionCheckCircle from 'material-ui/svg-icons/action/check-circle';
-import UncheckedCircle from 'material-ui/svg-icons/toggle/radio-button-unchecked';
-import Paper from 'material-ui/Paper';
-import Checkbox from 'material-ui/Checkbox';
-import CustomScrollbar from '../../components/CustomScrollbar';
-import ProviderStatusIcon from './ProviderStatusIcon';
+import List from '@material-ui/core/List';
+import Paper from '@material-ui/core/Paper';
+import Checkbox from '@material-ui/core/Checkbox';
+import ActionCheckCircle from '@material-ui/icons/CheckCircle';
+import Info from '@material-ui/icons/Info';
+import NavigationRefresh from '@material-ui/icons/Refresh';
+import CustomScrollbar from '../CustomScrollbar';
+import DataProvider from './DataProvider';
+import MapCard from '../common/MapCard';
 import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
-import ol3mapCss from '../../styles/ol3map.css';
 import BaseTooltip from '../BaseTooltip';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
 import background from '../../../images/topoBackground.png';
 
+
 export class ExportInfo extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            expanded: false,
             projectionsDialogOpen: false,
-            licenseDialogOpen: false,
             steps: [],
             isRunning: false,
             // we make a local copy of providers for editing
@@ -54,15 +40,11 @@ export class ExportInfo extends React.Component {
         this.onProjectChange = this.onProjectChange.bind(this);
         this.hasRequiredFields = this.hasRequiredFields.bind(this);
         this.hasDisallowedSelection = this.hasDisallowedSelection.bind(this);
-        this.initializeOpenLayers = this.initializeOpenLayers.bind(this);
-        this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
         this.callback = this.callback.bind(this);
-        this.handleLicenseClose = this.handleLicenseClose.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.handleRefreshTooltipOpen = this.handleRefreshTooltipOpen.bind(this);
         this.handleRefreshTooltipClose = this.handleRefreshTooltipClose.bind(this);
-        this.expandedChange = this.expandedChange.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
     }
@@ -110,15 +92,6 @@ export class ExportInfo extends React.Component {
         if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
             this.joyride.reset(true);
             this.setState({ isRunning: true });
-        }
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        // if the user expaned the AOI section mount the map
-        if (prevState.expanded !== this.state.expanded) {
-            if (this.state.expanded) {
-                this.initializeOpenLayers();
-            }
         }
     }
 
@@ -242,14 +215,6 @@ export class ExportInfo extends React.Component {
         this.setState({ projectionsDialogOpen: true });
     }
 
-    handleLicenseOpen() {
-        this.setState({ licenseDialogOpen: true });
-    }
-
-    handleLicenseClose() {
-        this.setState({ licenseDialogOpen: false });
-    }
-
     handleRefreshTooltipOpen() {
         this.setState({ refreshTooltipOpen: true });
         return false;
@@ -258,10 +223,6 @@ export class ExportInfo extends React.Component {
     handleRefreshTooltipClose() {
         this.setState({ refreshTooltipOpen: false });
         return false;
-    }
-
-    expandedChange(expanded) {
-        this.setState({ expanded });
     }
 
     hasRequiredFields(exportInfo) {
@@ -281,60 +242,6 @@ export class ExportInfo extends React.Component {
             if (!providerState) return false;
             return providerState.availability && providerState.availability.status.toUpperCase() === 'FATAL';
         });
-    }
-
-    initializeOpenLayers() {
-        const base = new Tile({
-            source: new XYZ({
-                url: this.context.config.BASEMAP_URL,
-                wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
-            }),
-        });
-
-        this.map = new Map({
-            interactions: interaction.defaults({
-                keyboard: false,
-                altShiftDragRotate: false,
-                pinchRotate: false,
-                mouseWheelZoom: false,
-            }),
-            layers: [base],
-            target: 'infoMap',
-            view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
-                zoom: 2,
-                minZoom: 2,
-                maxZoom: 22,
-            }),
-            controls: [
-                new ScaleLine({
-                    className: ol3mapCss.olScaleLine,
-                }),
-                new Attribution({
-                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
-                }),
-            ],
-        });
-        const source = new VectorSource();
-        const geojson = new GeoJSON();
-        const features = geojson.readFeatures(this.props.geojson, {
-            featureProjection: 'EPSG:3857',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeatures(features);
-        const layer = new VectorLayer({
-            source,
-        });
-
-        this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
     joyrideAddSteps(steps) {
@@ -374,7 +281,6 @@ export class ExportInfo extends React.Component {
 
 
     render() {
-        const formWidth = window.innerWidth < 800 ? '90%' : '60%';
         const { steps, isRunning } = this.state;
 
         const style = {
@@ -396,7 +302,7 @@ export class ExportInfo extends React.Component {
             },
             form: {
                 margin: '0 auto',
-                width: formWidth,
+                width: '90%',
                 height: window.innerHeight - 180,
             },
             paper: {
@@ -410,17 +316,10 @@ export class ExportInfo extends React.Component {
             heading: {
                 fontSize: '18px',
                 fontWeight: 'bold',
-                color: 'black',
-                alignContent: 'flex-start',
                 paddingBottom: '10px',
-                display: 'inline-block',
-            },
-            subHeading: {
-                fontSize: '16px',
-                color: 'black',
-                alignContent: 'flex-start',
-                display: 'inline-block',
-                marginLeft: '20px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                lineHeight: '25px',
             },
             textField: {
                 backgroundColor: 'whitesmoke',
@@ -428,59 +327,29 @@ export class ExportInfo extends React.Component {
                 marginTop: '15px',
             },
             listHeading: {
-                height: '20px',
                 fontSize: '16px',
                 fontWeight: 300,
-            },
-            providerListHeading: {
-                position: 'absolute',
-                marginLeft: '10px',
+                display: 'flex',
+                padding: '0px 10px',
             },
             refreshIcon: {
-                marginBottom: '-4px',
-                height: '18px',
+                height: '22px',
                 marginLeft: '5px',
-                color: '#4999BD',
                 cursor: 'pointer',
-            },
-            listItem: {
-                fontWeight: 'normal',
-                padding: '16px 16px 16px 45px',
-                fontSize: '16px',
-                marginBottom: '0',
-            },
-            providerLicense: {
-                fontSize: '13px',
-                borderTop: '1px solid rgb(224, 224, 224)',
-                paddingLeft: '66px',
-                marginLeft: '0',
-            },
-            serviceDescription: {
-                fontSize: '13px',
-                borderTop: '1px solid rgb(224, 224, 224)',
-                paddingLeft: '44px',
-                marginLeft: '0',
+                verticalAlign: 'bottom',
             },
             sectionBottom: {
                 paddingBottom: '30px',
             },
-            checkboxLabel: {
-                display: 'inline-flex',
+            projections: {
+                padding: '0px 10px',
+                display: 'flex',
+                lineHeight: '24px',
             },
             infoIcon: {
-                marginLeft: '10px',
                 height: '24px',
                 width: '24px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
-                fill: '#4598bf',
-                verticalAlign: 'middle',
-            },
-            mapCard: {
-                padding: '15px 0px 20px',
-            },
-            map: {
-                width: '100%',
             },
             editAoi: {
                 fontSize: '15px',
@@ -488,12 +357,6 @@ export class ExportInfo extends React.Component {
                 verticalAlign: 'top',
                 cursor: 'pointer',
                 color: '#4598bf',
-            },
-            maxArea: {
-                fontSize: '13px',
-                borderTop: '1px solid rgb(224, 224, 224)',
-                paddingLeft: '44px',
-                marginLeft: '0',
             },
         };
 
@@ -524,8 +387,7 @@ export class ExportInfo extends React.Component {
                             id="paper"
                             className="qa-ExportInfo-Paper"
                             style={style.paper}
-                            zDepth={2}
-                            rounded
+                            elevation={2}
                         >
                             <div className="qa-ExportInfo-general-info" id="GeneralInfo">
                                 <div
@@ -581,30 +443,35 @@ export class ExportInfo extends React.Component {
                                     />
                                 </div>
                             </div>
-                            <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={style.heading}>Select Data Sources</div>
-                            <div id="layersSubheader" style={style.subHeading}>You must choose <strong>at least one</strong></div>
+                            <div style={style.heading}>
+                                <div id="layersHeader" className="qa-ExportInfo-layersHeader" style={{ marginRight: '5px' }}>
+                                    Select Data Sources
+                                </div>
+                                <div id="layersSubheader" style={{ fontWeight: 'normal', fontSize: '12px', fontStyle: 'italic' }}>
+                                    (You must choose <strong>at least one</strong>)
+                                </div>
+                            </div>
                             <div style={style.sectionBottom}>
                                 <div className="qa-ExportInfo-ListHeader" style={style.listHeading}>
-                                    <span
+                                    <div
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={style.providerListHeading}
+                                        style={{ flex: '1 1 auto' }}
                                     >
                                         DATA PROVIDERS
-                                    </span>
-                                    <span
+                                    </div>
+                                    <div
                                         className="qa-ExportInfo-ListHeaderItem"
-                                        style={{ marginLeft: '75%', position: 'relative' }}
+                                        style={{ display: 'flex', justifyContent: 'flex-end', position: 'relative' }}
                                     >
-                                        AVAILABILITY
+                                        <span>AVAILABILITY</span>
                                         <NavigationRefresh
                                             style={style.refreshIcon}
                                             onMouseOver={this.handleRefreshTooltipOpen}
                                             onMouseOut={this.handleRefreshTooltipClose}
                                             onFocus={this.handleRefreshTooltipOpen}
                                             onBlur={this.handleRefreshTooltipClose}
-                                            onTouchStart={this.handleRefreshTooltipOpen}
-                                            onTouchEnd={this.handleRefreshTooltipClose}
-                                            onTouchTap={this.onRefresh}
+                                            onClick={this.onRefresh}
+                                            color="primary"
                                         />
                                         <BaseTooltip
                                             show={this.state.refreshTooltipOpen}
@@ -617,121 +484,27 @@ export class ExportInfo extends React.Component {
                                             onMouseOut={this.handleRefreshTooltipClose}
                                             onFocus={this.handleRefreshTooltipOpen}
                                             onBlur={this.handleRefreshTooltipClose}
-                                            onTouchTap={this.onRefresh}
+                                            onClick={this.onRefresh}
                                         >
                                             <div>You may try to resolve errors by running the availability check again.</div>
                                         </BaseTooltip>
-                                    </span>
+                                    </div>
                                 </div>
                                 <List
                                     id="ProviderList"
                                     className="qa-ExportInfo-List"
                                     style={{ width: '100%', fontSize: '16px' }}
                                 >
-                                    {providers.map((provider, ix) => {
-                                        // Show license if one exists.
-                                        const nestedItems = [];
-                                        if (provider.license) {
-                                            nestedItems.push(<ListItem
-                                                key={nestedItems.length}
-                                                disabled
-                                                primaryText={
-                                                    <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                        <i>
-                                                            Use of this data is governed by&nbsp;
-                                                            <span
-                                                                role="button"
-                                                                tabIndex={0}
-                                                                onClick={this.handleLicenseOpen}
-                                                                onKeyPress={this.handleLicenseOpen}
-                                                                style={{ cursor: 'pointer', color: '#4598bf' }}
-                                                            >
-                                                                {provider.license.name}
-                                                            </span>
-                                                        </i>
-                                                        <BaseDialog
-                                                            show={this.state.licenseDialogOpen}
-                                                            title={provider.license.name}
-                                                            onClose={this.handleLicenseClose}
-                                                        >
-                                                            <div style={{ whiteSpace: 'pre-wrap' }}>{provider.license.text}</div>
-                                                        </BaseDialog>
-                                                    </div>
-                                                }
-                                                style={style.providerLicense}
-                                            />);
-                                        }
-                                        nestedItems.push(<ListItem
-                                            className="qa-ExportInfo-ListItem-provServDesc"
-                                            key={nestedItems.length}
-                                            primaryText={<div style={{ whiteSpace: 'pre-wrap' }}>{provider.service_description}</div>}
-                                            disabled
-                                            style={style.serviceDescription}
-                                        />);
-                                        nestedItems.push(<ListItem
-                                            className="qa-ExportInfo-ListItem-provMaxAoi"
-                                            key={nestedItems.length}
-                                            primaryText={
-                                                <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                    <span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>
-                                                    {((provider.max_selection == null ||
-                                                        provider.max_selection === '' ||
-                                                        parseFloat(provider.max_selection) <= 0) ?
-                                                        'unlimited' : `${provider.max_selection} km²`
-                                                    )}
-                                                </div>
-                                            }
-                                            disabled
-                                            style={style.maxArea}
-                                        />);
-
-                                        const backgroundColor = (ix % 2 === 0) ? 'whitesmoke' : 'white';
-
-                                        return (<ListItem
-                                            className="qa-ExportInfo-ListItem"
-                                            key={provider.uid}
-                                            style={{ ...style.listItem, backgroundColor }}
-                                            nestedListStyle={{ padding: '0px', backgroundColor }}
-                                            primaryText={
-                                                <div>
-                                                    <span className="qa-ExportInfo-ListItemName" style={{ paddingRight: '10px' }}>
-                                                        {provider.name}
-                                                    </span>
-                                                    <ProviderStatusIcon
-                                                        id="ProviderStatus"
-                                                        baseStyle={{ left: '80%' }}
-                                                        tooltipStyle={{ zIndex: '1' }}
-                                                        availability={provider.availability}
-                                                    />
-                                                </div>
-                                            }
-                                            leftCheckbox={<Checkbox
-                                                className="qa-ExportInfo-CheckBox-provider"
-                                                name={provider.name}
-                                                style={{ left: '0px', paddingLeft: '10px' }}
-                                                defaultChecked={
-                                                    this.props.exportInfo.providers.map(x => x.name)
-                                                        .indexOf(provider.name) !== -1
-                                                }
-                                                onCheck={this.onChangeCheck}
-                                                checkedIcon={
-                                                    <ActionCheckCircle
-                                                        className="qa-ExportInfo-ActionCheckCircle-provider"
-                                                        style={{ fill: '#55ba63' }}
-                                                    />
-                                                }
-                                                uncheckedIcon={
-                                                    <UncheckedCircle
-                                                        className="qa-ExportInfo-UncheckedCircle-provider"
-                                                        style={{ fill: '#4598bf' }}
-                                                    />
-                                                }
-                                            />}
-                                            initiallyOpen={false}
-                                            primaryTogglesNestedList={false}
-                                            nestedItems={nestedItems}
-                                        />);
-                                    })}
+                                    {providers.map((provider, ix) => (
+                                        <DataProvider
+                                            key={provider.slug}
+                                            provider={provider}
+                                            onChange={this.onChangeCheck}
+                                            checked={this.props.exportInfo.providers.map(x => x.name)
+                                                .indexOf(provider.name) !== -1}
+                                            alt={ix % 2 === 0}
+                                        />
+                                    ))}
                                 </List>
                             </div>
 
@@ -743,21 +516,23 @@ export class ExportInfo extends React.Component {
                                 Select Projection
                             </div>
                             <div style={style.sectionBottom}>
-                                <div id="Projections" className="qa-ExportInfo-projections" style={style.checkboxLabel}>
+                                <div id="Projections" className="qa-ExportInfo-projections" style={style.projections}>
                                     <Checkbox
                                         className="qa-ExportInfo-CheckBox-projection"
-                                        label="EPSG:4326 - World Geodetic System 1984 (WGS84)"
                                         name="EPSG:4326"
                                         checked
-                                        labelStyle={{ fontWeight: 'normal', fontSize: '16px', width: '90%' }}
-                                        style={{ display: 'inlineBlock' }}
+                                        style={{ width: '24px', height: '24px' }}
                                         disabled
                                         checkedIcon={<ActionCheckCircle className="qa-ExportInfo-ActionCheckCircle-projection" />}
                                     />
+                                    <span style={{ padding: '0px 15px', display: 'flex', flexWrap: 'wrap' }}>
+                                        EPSG:4326 - World Geodetic System 1984 (WGS84)
+                                    </span>
                                     <Info
                                         className="qa-ExportInfo-Info-projection"
-                                        onTouchTap={this.handleProjectionsOpen}
+                                        onClick={this.handleProjectionsOpen}
                                         style={style.infoIcon}
+                                        color="primary"
                                     />
                                     <BaseDialog
                                         show={this.state.projectionsDialogOpen}
@@ -786,39 +561,19 @@ export class ExportInfo extends React.Component {
                                     data={this.props.exportInfo.areaStr}
                                     containerStyle={{ fontSize: '16px' }}
                                 />
-                                <div style={style.mapCard}>
-                                    <Card
-                                        expandable
-                                        id="Map"
-                                        className="qa-ExportInfo-Card-map"
-                                        onExpandChange={this.expandedChange}
-                                    >
-                                        <CardHeader
-                                            className="qa-ExportInfo-CardHeader-map"
-                                            title="Selected Area of Interest"
-                                            actAsExpander={false}
-                                            showExpandableButton
-                                            style={{ padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)' }}
-                                            textStyle={{ paddingRight: '6px', fontWeight: 'bold', fontSize: '18px' }}
+                                <div style={{ padding: '15px 0px 20px' }}>
+                                    <MapCard geojson={this.props.geojson}>
+                                        <span style={{ marginRight: '10px' }}>Selected Area of Interest</span>
+                                        <span
+                                            role="button"
+                                            tabIndex={0}
+                                            onClick={this.props.handlePrev}
+                                            onKeyPress={this.props.handlePrev}
+                                            style={style.editAoi}
                                         >
-                                            <span
-                                                role="button"
-                                                tabIndex={0}
-                                                onClick={this.props.handlePrev}
-                                                onKeyPress={this.props.handlePrev}
-                                                style={style.editAoi}
-                                            >
-                                                Edit
-                                            </span>
-                                        </CardHeader>
-                                        <CardText
-                                            className="qa-ExportInfo-CardText-map"
-                                            expandable
-                                            style={{ padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)' }}
-                                        >
-                                            <div id="infoMap" style={style.map} />
-                                        </CardText>
-                                    </Card>
+                                            Edit
+                                        </span>
+                                    </MapCard>
                                 </div>
                             </div>
                         </Paper>

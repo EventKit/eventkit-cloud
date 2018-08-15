@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
-
-from mock import Mock, patch
+from uuid import uuid4
 
 from django.test import TransactionTestCase
+from mock import Mock, patch
 
-from ..pbf import OSMToPBF
-from uuid import uuid4
-import os
+from eventkit_cloud.utils.pbf import OSMToPBF
 
 logger = logging.getLogger(__name__)
 

@@ -237,7 +237,7 @@ describe('DashboardPage component', () => {
 
     beforeEach(setup);
 
-    it('joyrideAddSteps sets state for steps in tour', () => {
+    it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [
             {
                 text: 'im the step',
@@ -303,26 +303,26 @@ describe('DashboardPage component', () => {
         });
 
         it('requests groups', () => {
-            expect(instance.props.getGroups.callCount).toBe(1);
+            expect(instance.props.getGroups.callCount).toBe(2);
         });
 
         it('requests providers', () => {
-            expect(instance.props.getProviders.callCount).toBe(1);
+            expect(instance.props.getProviders.callCount).toBe(2);
         });
 
         it('requests notifications', () => {
-            expect(instance.props.getNotifications.callCount).toBe(1);
+            expect(instance.props.getNotifications.callCount).toBe(2);
         });
 
         it('refreshes the page periodically', () => {
             expect(instance.autoRefreshIntervalId).not.toBe(null);
-            expect(refreshSpy.callCount).toBe(1);
-            jest.runOnlyPendingTimers();
             expect(refreshSpy.callCount).toBe(2);
             jest.runOnlyPendingTimers();
-            expect(refreshSpy.callCount).toBe(3);
-            jest.runOnlyPendingTimers();
             expect(refreshSpy.callCount).toBe(4);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(6);
+            jest.runOnlyPendingTimers();
+            expect(refreshSpy.callCount).toBe(8);
         });
 
         describe('then it unmounts', () => {
@@ -332,9 +332,9 @@ describe('DashboardPage component', () => {
 
             it('stops auto refreshing', () => {
                 expect(instance.autoRefreshIntervalId).toBe(null);
-                expect(refreshSpy.callCount).toBe(1);
+                expect(refreshSpy.callCount).toBe(2);
                 jest.runOnlyPendingTimers();
-                expect(refreshSpy.callCount).toBe(1);
+                expect(refreshSpy.callCount).toBe(3);
             });
         });
     });
@@ -536,7 +536,7 @@ describe('DashboardPage component', () => {
 
         it('navigates to "/exports?collection=myDataPacks"', () => {
             expect(browserHistoryPushStub.callCount).toBe(1);
-            expect(browserHistoryPushStub.calledWith('/exports?collection=myDataPacks')).toBe(true);
+            expect(browserHistoryPushStub.calledWith('/exports?collection=admin')).toBe(true);
         });
     });
 
@@ -598,73 +598,6 @@ describe('DashboardPage component', () => {
 
         it('renders loading spinner', () => {
             expect(wrapper.find(CircularProgress)).toHaveLength(1);
-        });
-    });
-
-    describe('when share dialog is opened', () => {
-        let targetRun;
-
-        beforeEach(() => {
-            loadData();
-            targetRun = {
-                job: {
-                    uid: 1,
-                    permissions: {},
-                },
-            };
-            instance.handleShareOpen(targetRun);
-        });
-
-        it('opens the share dialog', () => {
-            expect(wrapper.state().shareOpen).toBe(true);
-            expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-        });
-
-        it('passes the share dialog the target run permissions', () => {
-            expect(wrapper.find(DataPackShareDialog).props().permissions).toBe(targetRun.job.permissions);
-        });
-
-        it('sets the target run', () => {
-            expect(wrapper.state().targetRun).toEqual(targetRun);
-        });
-
-        describe('then datapack is shared', () => {
-            let permissions;
-
-            beforeEach(() => {
-                instance.handleShareClose = sinon.spy();
-                permissions = { some: 'permissions' };
-                instance.handleShareSave(permissions);
-            });
-
-            it('closes the share dialog', () => {
-                expect(instance.handleShareClose.callCount).toBe(1);
-            });
-
-            it('updates datacart permissions', () => {
-                expect(instance.props.updateDataCartPermissions.callCount).toBe(1);
-                expect(instance.props.updateDataCartPermissions.calledWith(targetRun.job.uid, permissions)).toBe(true);
-            });
-        });
-    });
-
-    describe('when share dialog is closed', () => {
-        beforeEach(() => {
-            loadData();
-            wrapper.setState({
-                shareOpen: true,
-                run: 'test',
-            });
-            instance.handleShareClose();
-        });
-
-        it('closes the share dialog', () => {
-            expect(wrapper.state().shareOpen).toBe(false);
-            expect(wrapper.find(DataPackShareDialog)).toHaveLength(0);
-        });
-
-        it('nullifies the target run', () => {
-            expect(wrapper.state().targetRun).toBe(null);
         });
     });
 });

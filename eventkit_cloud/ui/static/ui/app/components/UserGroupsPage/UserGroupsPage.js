@@ -1,14 +1,15 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import AppBar from 'material-ui/AppBar';
 import RaisedButton from 'material-ui/RaisedButton';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import TextField from 'material-ui/TextField';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import AddCircle from 'material-ui/svg-icons/content/add-circle';
+import Warning from '@material-ui/icons/Warning';
+import AddCircle from '@material-ui/icons/AddCircle';
 import CircularProgress from 'material-ui/CircularProgress';
 import CustomScrollbar from '../CustomScrollbar';
 import UserRow from './UserRow';
@@ -108,8 +109,8 @@ export class UserGroupsPage extends Component {
             // Set the current ordering to username so a change wont be detected
             // by componentWillReceiveProps
             this.props.location.query.ordering = 'username';
-            // Push the ordering query to the url
-            browserHistory.push({
+            // Replace the url with the ordering query included
+            browserHistory.replace({
                 ...this.props.location,
                 query: { ...this.props.location.query, ordering: 'username' },
             });
@@ -1013,14 +1014,14 @@ export class UserGroupsPage extends Component {
                     onRenameGroupClick={this.handleRenameOpen}
                     className="qa-UserGroupsPage-drawer"
                 />
-                {this.state.showAddUsers ? <AddMembersDialog
+                <AddMembersDialog
                     show={this.state.showAddUsers}
                     onClose={this.hideAddUsersDialog}
                     onSave={this.handleAddUsersSave}
                     groups={ownedGroups}
                     selectedUsers={this.state.addUsers}
                     className="qa-UserGroupsPage-addMembersDialog"
-                /> : null }
+                />
                 <CreateGroupDialog
                     show={this.state.showCreate}
                     onClose={this.handleCreateClose}

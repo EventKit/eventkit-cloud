@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Drawer from 'material-ui/Drawer';
 import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';

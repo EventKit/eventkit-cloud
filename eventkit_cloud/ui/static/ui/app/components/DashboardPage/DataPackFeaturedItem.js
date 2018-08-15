@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Link } from 'react-router';
 import { Card, CardTitle, CardText } from 'material-ui/Card';
 import moment from 'moment';
@@ -232,11 +233,11 @@ export class DataPackFeaturedItem extends Component {
                                         {`Event: ${this.props.run.job.event}`}
                                     </div>
                                     <span className="qa-DataPackFeaturedItem-Subtitle-Added">
-                                        {`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}
+                                        {`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}
                                     </span>
                                     <br />
                                     <span className="qa-DataPackFeaturedItem-Subtitle-Expires">
-                                        {`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}
+                                        {`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}
                                     </span>
                                     <br />
                                 </div>

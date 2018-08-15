@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -26,7 +27,7 @@ describe('DrawAOIToolbar component', () => {
 
         const wrapper = mount(<DrawAOIToolbar {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find('#container')).toHaveLength(1);
         expect(wrapper.find('.qa-DrawAOIToolbar-div-title')).toHaveLength(1);

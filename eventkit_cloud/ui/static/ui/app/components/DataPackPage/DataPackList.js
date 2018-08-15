@@ -1,8 +1,9 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui/Table';
 import { GridList } from 'material-ui/GridList';
-import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
+import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
@@ -145,9 +146,11 @@ export class DataPackList extends Component {
                                         user={this.props.user}
                                         key={run.uid}
                                         onRunDelete={this.props.onRunDelete}
+                                        onRunShare={this.props.onRunShare}
                                         providers={this.props.providers}
-                                        openShare={this.props.openShare}
                                         adminPermission={admin}
+                                        users={this.props.users}
+                                        groups={this.props.groups}
                                     />
                                 );
                             })}
@@ -287,9 +290,11 @@ export class DataPackList extends Component {
                                             user={this.props.user}
                                             key={run.uid}
                                             onRunDelete={this.props.onRunDelete}
+                                            onRunShare={this.props.onRunShare}
                                             providers={this.props.providers}
-                                            openShare={this.props.openShare}
                                             adminPermissions={admin}
+                                            users={this.props.users}
+                                            groups={this.props.groups}
                                         />
                                     );
                                 })}
@@ -307,6 +312,7 @@ DataPackList.propTypes = {
     runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
+    onRunShare: PropTypes.func.isRequired,
     onSort: PropTypes.func.isRequired,
     order: PropTypes.string.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -315,7 +321,7 @@ DataPackList.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    openShare: PropTypes.func.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,

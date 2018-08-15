@@ -1,33 +1,19 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Joyride from 'react-joyride';
 
-import Map from 'ol/map';
-import View from 'ol/view';
-import interaction from 'ol/interaction';
-import VectorSource from 'ol/source/vector';
-import XYZ from 'ol/source/xyz';
-import GeoJSON from 'ol/format/geojson';
-import VectorLayer from 'ol/layer/vector';
-import Tile from 'ol/layer/tile';
-import ScaleLine from 'ol/control/scaleline';
-import Attribution from 'ol/control/attribution';
-import Zoom from 'ol/control/zoom';
-
-import Paper from 'material-ui/Paper';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
+import Paper from '@material-ui/core/Paper';
+import MapCard from '../common/MapCard';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
-import ol3mapCss from '../../styles/ol3map.css';
 import { joyride } from '../../joyride.config';
 import background from '../../../images/topoBackground.png';
 
 export class ExportSummary extends Component {
     constructor(props) {
         super(props);
-        this.expandedChange = this.expandedChange.bind(this);
         this.state = {
-            expanded: false,
             steps: [],
             isRunning: false,
         };
@@ -44,72 +30,6 @@ export class ExportSummary extends Component {
             this.joyride.reset(true);
             this.setState({ isRunning: true });
         }
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        if (prevState.expanded !== this.state.expanded) {
-            if (this.state.expanded) {
-                this.initializeOpenLayers();
-            }
-        }
-    }
-
-    expandedChange(expanded) {
-        this.setState({ expanded });
-    }
-
-    initializeOpenLayers() {
-        const base = new Tile({
-            source: new XYZ({
-                url: this.context.config.BASEMAP_URL,
-                wrapX: true,
-                attributions: this.context.config.BASEMAP_COPYRIGHT,
-            }),
-        });
-
-        this.map = new Map({
-            interactions: interaction.defaults({
-                keyboard: false,
-                altShiftDragRotate: false,
-                pinchRotate: false,
-                mouseWheelZoom: false,
-            }),
-            layers: [base],
-            target: 'summaryMap',
-            view: new View({
-                projection: 'EPSG:3857',
-                center: [110, 0],
-                zoom: 2,
-                minZoom: 2,
-                maxZoom: 22,
-            }),
-            controls: [
-                new ScaleLine({
-                    className: ol3mapCss.olScaleLine,
-                }),
-                new Attribution({
-                    className: ['ol-attribution', ol3mapCss['ol-attribution']].join(' '),
-                    collapsible: false,
-                    collapsed: false,
-                }),
-                new Zoom({
-                    className: [ol3mapCss.olZoom, ol3mapCss.olControlTopLeft].join(' '),
-                }),
-            ],
-        });
-        const source = new VectorSource({ wrapX: true });
-        const geojson = new GeoJSON();
-        const feature = geojson.readFeatures(this.props.geojson, {
-            featureProjection: 'EPSG:3857',
-            dataProjection: 'EPSG:4326',
-        });
-        source.addFeatures(feature);
-        const layer = new VectorLayer({
-            source,
-        });
-
-        this.map.addLayer(layer);
-        this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
     joyrideAddSteps(steps) {
@@ -145,7 +65,7 @@ export class ExportSummary extends Component {
     render() {
         const { steps, isRunning } = this.state;
 
-        const style = {
+        const styles = {
             root: {
                 width: '100%',
                 backgroundImage: `url(${background})`,
@@ -157,7 +77,7 @@ export class ExportSummary extends Component {
             },
             form: {
                 margin: '0 auto',
-                width: window.innerWidth < 800 ? '90%' : '60%',
+                width: '90%',
             },
             paper: {
                 margin: '0 auto',
@@ -200,7 +120,7 @@ export class ExportSummary extends Component {
 
         const providers = this.props.providers.filter(provider => (provider.display !== false));
         return (
-            <div id="root" style={style.root}>
+            <div id="root" style={styles.root}>
                 <Joyride
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
@@ -219,16 +139,20 @@ export class ExportSummary extends Component {
                     run={isRunning}
                 />
                 <CustomScrollbar>
-                    <form id="form" style={style.form} className="qa-ExportSummary-form">
-                        <Paper className="qa-ExportSummary-Paper" style={style.paper} zDepth={2} rounded>
-                            <div id="mainHeading" className="qa-ExportSummary-mainHeading" style={style.heading}>
+                    <form id="form" style={styles.form} className="qa-ExportSummary-form">
+                        <Paper className="qa-ExportSummary-Paper" style={styles.paper} elevation={2}>
+                            <div id="mainHeading" className="qa-ExportSummary-mainHeading" style={styles.heading}>
                                 Preview and Run Export
                             </div>
-                            <div id="subHeading" style={style.subHeading} className="qa-ExportSummary-subHeading">
+                            <div id="subHeading" style={styles.subHeading} className="qa-ExportSummary-subHeading">
                                 Please make sure all the information below is correct.
                             </div>
                             <div className="qa-ExportSummary-div" id="Summary">
-                                <div id="export-information-heading" className="qa-ExportSummary-exportHeading" style={style.exportHeading}>
+                                <div
+                                    id="export-information-heading"
+                                    className="qa-ExportSummary-exportHeading"
+                                    style={styles.exportHeading}
+                                >
                                     Export Information
                                 </div>
                                 <CustomTableRow
@@ -251,7 +175,7 @@ export class ExportSummary extends Component {
                                     title="Data Sources"
                                     data={providers.map(provider => <p style={{ width: '100%' }} key={provider.uid}>{provider.name}</p>)}
                                 />
-                                <div id="aoi-heading" className="qa-ExportSummary-aoiHeading" style={style.exportHeading}>
+                                <div id="aoi-heading" className="qa-ExportSummary-aoiHeading" style={styles.exportHeading}>
                                     Area of Interest (AOI)
                                 </div>
                                 <CustomTableRow
@@ -260,28 +184,10 @@ export class ExportSummary extends Component {
                                     data={this.props.areaStr}
                                 />
                             </div>
-                            <div id="aoi-map" className="qa-ExportSummary-map" style={style.mapCard}>
-                                <Card
-                                    className="qa-ExportSummary-Card"
-                                    expandable
-                                    onExpandChange={this.expandedChange}
-                                >
-                                    <CardHeader
-                                        className="qa-ExportSummary-CardHeader"
-                                        title="Selected Area of Interest"
-                                        actAsExpander
-                                        showExpandableButton
-                                        style={{ padding: '12px 10px 10px', backgroundColor: 'rgba(179, 205, 224, .2)' }}
-                                        textStyle={{ paddingRight: '6px', fontWeight: 'bold', fontSize: '18px' }}
-                                    />
-                                    <CardText
-                                        className="qa-ExportSummary-CardText"
-                                        expandable
-                                        style={{ padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)' }}
-                                    >
-                                        <div id="summaryMap" style={style.map} />
-                                    </CardText>
-                                </Card>
+                            <div id="aoi-map" className="qa-ExportSummary-map" style={styles.mapCard}>
+                                <MapCard geojson={this.props.geojson}>
+                                    Selected Area of Interest
+                                </MapCard>
                             </div>
                         </Paper>
                     </form>

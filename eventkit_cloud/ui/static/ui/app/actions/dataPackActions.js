@@ -33,7 +33,7 @@ export function getRuns(args = {}) {
         const providers = (args.providers) ? Object.keys(args.providers) : [];
 
         const params = {};
-        params.page_size = args.pageSize;
+        params.page_size = args.page_size;
         if (args.ordering) {
             params.ordering = args.ordering.includes('featured') ?
                 `${args.ordering},-started_at`
@@ -42,7 +42,7 @@ export function getRuns(args = {}) {
         } else {
             params.ordering = '-job__featured';
         }
-        if (args.ownerFilter) params.user = args.ownerFilter;
+        if (args.ownerFilter !== 'all') params.user = args.ownerFilter;
         if (status.length) params.status = status.join(',');
         if (args.minDate) {
             params.min_date = args.minDate.toISOString().substring(0, 10);

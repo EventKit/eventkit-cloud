@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from mock import Mock, patch, MagicMock
-import requests
+from string import Template
+from uuid import uuid4
+
 from django.conf import settings
 from django.test import TransactionTestCase
-from string import Template
-from ..wfs import WFSToGPKG
-from uuid import uuid4
+from mock import Mock, patch
+
+from eventkit_cloud.utils.wfs import WFSToGPKG
 
 logger = logging.getLogger(__name__)
 

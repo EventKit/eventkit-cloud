@@ -1,9 +1,10 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import ActionViewModule from 'material-ui/svg-icons/action/view-module';
-import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
-import MapsMap from 'material-ui/svg-icons/maps/map';
+import ActionViewModule from '@material-ui/icons/ViewModule';
+import ActionViewStream from '@material-ui/icons/ViewStream';
+import MapsMap from '@material-ui/icons/Map';
 import IconButton from 'material-ui/IconButton';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
@@ -19,7 +20,7 @@ describe('DataPackViewButtons component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackViewButtons {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(IconButton)).toHaveLength(3);
         expect(wrapper.find(ActionViewModule)).toHaveLength(1);
@@ -32,7 +33,7 @@ describe('DataPackViewButtons component', () => {
         props.handleViewChange = sinon.spy();
         const wrapper = mount(<DataPackViewButtons {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(props.handleViewChange.notCalled).toBe(true);
         wrapper.find(IconButton).at(1).simulate('click');
@@ -47,7 +48,7 @@ describe('DataPackViewButtons component', () => {
         const props = getProps();
         const wrapper = mount(<DataPackViewButtons {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
 
         const styles = {

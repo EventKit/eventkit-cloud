@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -143,8 +144,8 @@ describe('DataPackPage component', () => {
                 muiTheme: PropTypes.object,
             },
         });
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').text()).toEqual('GROUPS (0)');
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').text()).toEqual('MEMBERS (0)');
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').hostNodes().text()).toEqual('GROUPS (0)');
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').hostNodes().text()).toEqual('MEMBERS (0)');
     });
 
     it('should display "ALL" as the selected count on the header buttons', () => {
@@ -159,8 +160,8 @@ describe('DataPackPage component', () => {
                 muiTheme: PropTypes.object,
             },
         });
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').text()).toEqual('GROUPS (ALL)');
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').text()).toEqual('MEMBERS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').hostNodes().text()).toEqual('GROUPS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').hostNodes().text()).toEqual('MEMBERS (ALL)');
     });
 
     it('getAdjustedPermissions should move the user out of the members list', () => {

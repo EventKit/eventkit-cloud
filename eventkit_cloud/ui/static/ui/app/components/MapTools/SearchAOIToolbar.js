@@ -1,4 +1,6 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 import debounce from 'lodash/debounce';
 import CircularProgress from 'material-ui/CircularProgress';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
@@ -162,6 +164,7 @@ export class SearchAOIToolbar extends Component {
                         emptyLabel=""
                         minLength={2}
                         renderMenu={renderer}
+                        className="qa-SearchAOIToolbar-typeahead"
                     />
                     {(this.props.geocode.fetching) ?
                         <CircularProgress

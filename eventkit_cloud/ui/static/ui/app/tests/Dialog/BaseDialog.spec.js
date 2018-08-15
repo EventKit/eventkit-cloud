@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -16,7 +17,7 @@ describe('BaseDialog component', () => {
     const getWrapper = props => mount(<BaseDialog {...props} />, {
         context: { muiTheme },
         childContextTypes: {
-            muiTheme: React.PropTypes.object,
+            muiTheme: PropTypes.object,
         },
     });
 

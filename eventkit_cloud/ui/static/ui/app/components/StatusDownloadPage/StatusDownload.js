@@ -1,14 +1,15 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import Paper from 'material-ui/Paper';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import ErrorOutline from 'material-ui/svg-icons/alert/error-outline';
+import Warning from '@material-ui/icons/Warning';
+import ErrorOutline from '@material-ui/icons/ErrorOutlined';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataCartDetails from './DataCartDetails';
 import {
@@ -300,26 +301,40 @@ export class StatusDownload extends React.Component {
 
         const errorMessage = this.getErrorMessage();
 
-        const details = this.props.datacartDetails.data.map(cartDetails => (
-            <DataCartDetails
-                key={cartDetails.uid}
-                cartDetails={cartDetails}
-                onRunDelete={this.props.deleteRun}
-                onUpdateExpiration={this.props.updateExpirationDate}
-                onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
-                updatingExpiration={this.props.expirationState.updating}
-                updatingPermission={this.props.permissionState.updating}
-                permissionState={this.props.permissionState}
-                onRunRerun={this.props.rerunExport}
-                onClone={this.props.cloneExport}
-                onProviderCancel={this.props.cancelProviderTask}
-                providers={this.props.providers}
-                maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
-                user={this.props.user}
-                members={this.props.users}
-                groups={this.props.groups}
-            />
-        ));
+        const details = this.props.datacartDetails.data.map((cartDetails) => {
+            if (cartDetails.deleted) {
+                return (
+                    <div
+                        key="no-datapack"
+                        style={{ textAlign: 'center', padding: '30px' }}
+                        className="qa-StatusDownload-DeletedDatapack"
+                    >
+                        <ErrorOutline style={styles.notFoundIcon} />
+                        <span style={styles.notFoundText}>This DataPack has been deleted.</span>
+                    </div>
+                );
+            }
+            return (
+                <DataCartDetails
+                    key={cartDetails.uid}
+                    cartDetails={cartDetails}
+                    onRunDelete={this.props.deleteRun}
+                    onUpdateExpiration={this.props.updateExpirationDate}
+                    onUpdateDataCartPermissions={this.props.updateDataCartPermissions}
+                    updatingExpiration={this.props.expirationState.updating}
+                    updatingPermission={this.props.permissionState.updating}
+                    permissionState={this.props.permissionState}
+                    onRunRerun={this.props.rerunExport}
+                    onClone={this.props.cloneExport}
+                    onProviderCancel={this.props.cancelProviderTask}
+                    providers={this.props.providers}
+                    maxResetExpirationDays={this.context.config.MAX_DATAPACK_EXPIRATION_DAYS}
+                    user={this.props.user}
+                    members={this.props.users}
+                    groups={this.props.groups}
+                />
+            );
+        });
 
         if (!details.length && !this.state.isLoading) {
             details.push((

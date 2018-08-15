@@ -1,10 +1,10 @@
 import React from 'react';
-import InfoIcon from 'material-ui/svg-icons/action/info';
-import CheckCircleIcon from 'material-ui/svg-icons/action/check-circle';
-import WarningIcon from 'material-ui/svg-icons/alert/warning';
-import ErrorIcon from 'material-ui/svg-icons/alert/error';
-import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
-import RemoveCircleIcon from 'material-ui/svg-icons/content/remove-circle';
+import InfoIcon from '@material-ui/icons/Info';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import WarningIcon from '@material-ui/icons/Warning';
+import ErrorIcon from '@material-ui/icons/Error';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 import { Link } from 'react-router';
 
 const verbs = {
@@ -18,6 +18,37 @@ const verbs = {
     setAsGroupAdmin: 'set_as_group_admin',
     removedAsGroupAdmin: 'removed_as_group_admin',
 };
+
+export function getNotificationViewPath(notification) {
+    const verb = notification.verb.toLowerCase();
+    switch (verb) {
+        case verbs.runStarted:
+        case verbs.runCanceled:
+        case verbs.runCompleted:
+        case verbs.runDeleted:
+        case verbs.runFailed: {
+            const run = notification.actor.details;
+            if (!run) {
+                return '';
+            }
+
+            return `/status/${notification.actor.details.job.uid}`;
+        }
+        case verbs.addedToGroup:
+        case verbs.removedFromGroup:
+        case verbs.setAsGroupAdmin:
+        case verbs.removedAsGroupAdmin: {
+            const group = notification.action_object.details;
+            if (!group) {
+                return '';
+            }
+
+            return `/groups?groups=${group.id}`;
+        }
+        default:
+            return null;
+    }
+}
 
 // NOTE: This should ideally be a NotificationMessage component, but we need to return the bare elements without
 // a wrapper to solve the middle text truncation problem. With React 16 we'll be able to do this from a component
@@ -73,19 +104,22 @@ export function getNotificationMessage({
         ];
     }
 
+    const viewPath = getNotificationViewPath(notification);
+
     switch (verb) {
-        case verbs.runStarted:
+        case verbs.runStarted: {
+            const run = notification.actor.details;
             return [
                 <Link
                     key={`${notification.id}-Link`}
                     className="qa-NotificationMessage-Link"
-                    to={`/status/${notification.actor.details.job.uid}`}
-                    href={`/status/${notification.actor.details.job.uid}`}
+                    to={viewPath}
+                    href={viewPath}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.job.name}
+                    title={run.job.name}
                 >
-                    {notification.actor.details.job.name}
+                    {run.job.name}
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
@@ -95,18 +129,20 @@ export function getNotificationMessage({
                     &nbsp;has started processing.
                 </span>,
             ];
-        case verbs.runCanceled:
+        }
+        case verbs.runCanceled: {
+            const run = notification.actor.details;
             return [
                 <Link
                     key={`${notification.id}-Link`}
                     className="qa-NotificationMessage-Link"
-                    to={`/status/${notification.actor.details.job.uid}`}
-                    href={`/status/${notification.actor.details.job.uid}`}
+                    to={viewPath}
+                    href={viewPath}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.job.name}
+                    title={run.job.name}
                 >
-                    {notification.actor.details.job.name}
+                    {run.job.name}
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
@@ -116,18 +152,20 @@ export function getNotificationMessage({
                     &nbsp;has been canceled.
                 </span>,
             ];
-        case verbs.runCompleted:
+        }
+        case verbs.runCompleted: {
+            const run = notification.actor.details;
             return [
                 <Link
                     key={`${notification.id}-Link`}
                     className="qa-NotificationMessage-Link"
-                    to={`/status/${notification.actor.details.job.uid}`}
-                    href={`/status/${notification.actor.details.job.uid}`}
+                    to={viewPath}
+                    href={viewPath}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.job.name}
+                    title={run.job.name}
                 >
-                    {notification.actor.details.job.name}
+                    {run.job.name}
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
@@ -137,18 +175,20 @@ export function getNotificationMessage({
                     &nbsp;is complete.
                 </span>,
             ];
-        case verbs.runFailed:
+        }
+        case verbs.runFailed: {
+            const run = notification.actor.details;
             return [
                 <Link
                     key={`${notification.id}-Link`}
                     className="qa-NotificationMessage-Link"
-                    to={`/status/${notification.actor.details.job.uid}`}
-                    href={`/status/${notification.actor.details.job.uid}`}
+                    to={viewPath}
+                    href={viewPath}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.job.name}
+                    title={run.job.name}
                 >
-                    {notification.actor.details.job.name}
+                    {run.job.name}
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
@@ -158,18 +198,20 @@ export function getNotificationMessage({
                     &nbsp;failed to complete.
                 </span>,
             ];
-        case verbs.runDeleted:
+        }
+        case verbs.runDeleted: {
+            const run = notification.actor.details;
             return [
                 <Link
                     key={`${notification.id}-Link`}
                     className="qa-NotificationMessage-Link"
-                    to={`/status/${notification.actor.details.job.uid}`}
-                    href={`/status/${notification.actor.details.job.uid}`}
+                    to={viewPath}
+                    href={viewPath}
                     style={styles.link}
                     onClick={handleLinkClick}
-                    title={notification.actor.details.job.name}
+                    title={run.job.name}
                 >
-                    {notification.actor.details.job.name}
+                    {run.job.name}
                 </Link>,
                 <span
                     key={`${notification.id}-span1`}
@@ -179,7 +221,9 @@ export function getNotificationMessage({
                     &nbsp;has been deleted.
                 </span>,
             ];
-        case verbs.addedToGroup:
+        }
+        case verbs.addedToGroup: {
+            const group = notification.action_object.details;
             return [
                 <span
                     key={`${notification.id}-span0`}
@@ -188,16 +232,21 @@ export function getNotificationMessage({
                 >
                     {"You've been added to"}&nbsp;
                 </span>,
-                <span
+                <Link
                     key={`${notification.id}-span1`}
                     className="qa-NotificationMessage-Text"
-                    style={styles.name}
-                    title={notification.action_object.details.name}
+                    to={viewPath}
+                    href={viewPath}
+                    style={styles.link}
+                    onClick={handleLinkClick}
+                    title={group.name}
                 >
-                    {notification.action_object.details.name}
-                </span>,
+                    {group.name}
+                </Link>,
             ];
-        case verbs.removedFromGroup:
+        }
+        case verbs.removedFromGroup: {
+            const group = notification.action_object.details;
             return [
                 <span
                     key={`${notification.id}-span0`}
@@ -206,16 +255,21 @@ export function getNotificationMessage({
                 >
                     {"You've been removed from"}&nbsp;
                 </span>,
-                <span
+                <Link
                     key={`${notification.id}-span1`}
                     className="qa-NotificationMessage-Text"
-                    style={styles.name}
-                    title={notification.action_object.details.name}
+                    to={viewPath}
+                    href={viewPath}
+                    style={styles.link}
+                    onClick={handleLinkClick}
+                    title={group.name}
                 >
-                    {notification.action_object.details.name}
-                </span>,
+                    {group.name}
+                </Link>,
             ];
-        case verbs.setAsGroupAdmin:
+        }
+        case verbs.setAsGroupAdmin: {
+            const group = notification.action_object.details;
             return [
                 <span
                     key={`${notification.id}-span0`}
@@ -224,16 +278,21 @@ export function getNotificationMessage({
                 >
                     {"You've been set as an admin of"}&nbsp;
                 </span>,
-                <span
+                <Link
                     key={`${notification.id}-span1`}
                     className="qa-NotificationMessage-Text"
-                    style={styles.name}
-                    title={notification.action_object.details.name}
+                    to={viewPath}
+                    href={viewPath}
+                    style={styles.link}
+                    onClick={handleLinkClick}
+                    title={group.name}
                 >
-                    {notification.action_object.details.name}
-                </span>,
+                    {group.name}
+                </Link>,
             ];
-        case verbs.removedAsGroupAdmin:
+        }
+        case verbs.removedAsGroupAdmin: {
+            const group = notification.action_object.details;
             return [
                 <span
                     key={`${notification.id}-span0`}
@@ -242,15 +301,19 @@ export function getNotificationMessage({
                 >
                     {"You've been removed as an admin of"}&nbsp;
                 </span>,
-                <span
+                <Link
                     key={`${notification.id}-span1`}
                     className="qa-NotificationMessage-Text"
-                    style={styles.name}
-                    title={notification.action_object.details.name}
+                    to={viewPath}
+                    href={viewPath}
+                    style={styles.link}
+                    onClick={handleLinkClick}
+                    title={group.name}
                 >
-                    {notification.action_object.details.name}
-                </span>,
+                    {group.name}
+                </Link>,
             ];
+        }
         default:
             console.error(`Unsupported notification verb '${verb}'`, notification);
             return null;
@@ -332,26 +395,6 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     }}
                 />
             );
-        default:
-            return null;
-    }
-}
-
-export function getNotificationViewPath(notification) {
-    const verb = notification.verb.toLowerCase();
-    switch (verb) {
-        case verbs.runStarted:
-        case verbs.runCanceled:
-        case verbs.runCompleted:
-        case verbs.runDeleted:
-        case verbs.runFailed:
-            if (!notification.actor.details) return '';
-            return `/status/${notification.actor.details.job.uid}`;
-        case verbs.addedToGroup:
-        case verbs.removedFromGroup:
-        case verbs.setAsGroupAdmin:
-        case verbs.removedAsGroupAdmin:
-            return '/groups';
         default:
             return null;
     }

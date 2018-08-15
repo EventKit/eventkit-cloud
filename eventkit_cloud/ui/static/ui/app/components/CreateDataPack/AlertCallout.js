@@ -1,5 +1,6 @@
-import React, { Component, PropTypes } from 'react';
-import Clear from 'material-ui/svg-icons/content/clear';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Clear from '@material-ui/icons/Clear';
 import css from '../../styles/popup.css';
 
 export class AlertCallout extends Component {

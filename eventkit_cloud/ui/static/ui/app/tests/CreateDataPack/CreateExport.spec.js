@@ -1,14 +1,15 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import AppBar from 'material-ui/AppBar';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import initialState from '../../reducers/initialState';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';
 import { BreadcrumbStepper } from '../../components/CreateDataPack/BreadcrumbStepper';
 import { ConfirmDialog } from '../../components/Dialog/ConfirmDialog';
+import PageHeader from '../../components/common/PageHeader';
 
 describe('CreateExport component', () => {
     const muiTheme = getMuiTheme();
@@ -28,8 +29,8 @@ describe('CreateExport component', () => {
         return mount(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
             context: { muiTheme, store },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                store: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                store: PropTypes.object,
             },
         });
     }
@@ -40,7 +41,7 @@ describe('CreateExport component', () => {
         BreadcrumbStepper.prototype.getStepContent = () => <div />;
 
         const wrapper = getMountedWrapper();
-        expect(wrapper.find(AppBar)).toHaveLength(1);
+        expect(wrapper.find(PageHeader)).toHaveLength(1);
         expect(wrapper.find(BreadcrumbStepper)).toHaveLength(1);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);

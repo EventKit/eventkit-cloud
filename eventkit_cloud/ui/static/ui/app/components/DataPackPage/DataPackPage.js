@@ -1,9 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
+import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataPackGrid from './DataPackGrid';
@@ -16,7 +18,6 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
 import { getProviders } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
@@ -47,14 +48,10 @@ export class DataPackPage extends React.Component {
         this.getView = this.getView.bind(this);
         this.callback = this.callback.bind(this);
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
-        this.handleShareOpen = this.handleShareOpen.bind(this);
-        this.handleShareClose = this.handleShareClose.bind(this);
-        this.handleShareSave = this.handleShareSave.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
             open: window.innerWidth >= 1200,
-            search: '',
             permissions: {
                 value: '',
                 groups: {},
@@ -68,22 +65,27 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            view: props.runsList.view || 'map',
             pageLoading: true,
-            order: props.runsList.order || '-job__featured',
-            ownerFilter: '',
-            pageSize: 12,
             loading: false,
             geojson_geometry: null,
             steps: [],
             isRunning: false,
-            shareOpen: false,
-            targetRun: null,
         };
 
-        if (props.location.query.collection === 'myDataPacks') {
-            this.state.ownerFilter = props.user.data.user.username;
-        }
+        this.defaultQuery = {
+            collection: 'all',
+            order: this.props.runsList.order || '-job__featured',
+            view: this.props.runsList.view || 'map',
+            page_size: '12',
+        };
+    }
+
+    componentWillMount() {
+        const query = {
+            ...this.defaultQuery,
+            ...this.props.location.query,
+        };
+        this.updateLocationQuery(query);
     }
 
     componentDidMount() {
@@ -94,6 +96,12 @@ export class DataPackPage extends React.Component {
         this.fetch = setInterval(this.autoRunRequest, 10000);
         // make sure no geojson upload is in the state
         this.props.resetGeoJSONFile();
+        browserHistory.listen((location) => {
+            // do not allow the page to navigate to itself without url parameters
+            if (location.search === '' && location.pathname === '/exports') {
+                browserHistory.push(this.getCurrentLocation());
+            }
+        });
     }
 
     componentWillReceiveProps(nextProps) {
@@ -113,27 +121,57 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    componentDidUpdate(prevProps) {
+        let changedQuery = false;
+        if (Object.keys(this.props.location.query).length
+                !== Object.keys(prevProps.location.query).length) {
+            changedQuery = true;
+        } else {
+            const keys = Object.keys(this.props.location.query);
+            if (!keys.every(key => this.props.location.query[key] === prevProps.location.query[key])) {
+                changedQuery = true;
+            }
+        }
+        if (changedQuery) {
+            // setState is permitted in componentDidUpdate, but you
+            // must wrap it in a conditional and be cautious
+            // https://reactjs.org/docs/react-component.html#componentdidupdate
+            // eslint-disable-next-line react/no-did-update-set-state
+            this.setState({ pageLoading: true });
+            this.makeRunRequest();
+        }
+
+        if (prevProps.location.query.view !== this.props.location.query.view) {
+            const steps = this.getJoyRideSteps();
+            this.joyrideAddSteps(steps);
+        }
+    }
+
     componentWillUnmount() {
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
-        if (this.props.runsList.order !== this.state.order) {
-            this.props.setOrder(this.state.order);
+        if (this.props.runsList.order !== this.props.location.query.order) {
+            this.props.setOrder(this.props.location.query.order);
         }
-        if (this.props.runsList.view !== this.state.view) {
-            this.props.setView(this.state.view);
+        if (this.props.runsList.view !== this.props.location.query.view) {
+            this.props.setView(this.props.location.query.view);
         }
     }
 
     onSearch(searchText) {
-        this.setState({ search: searchText, loading: true }, this.makeRunRequest);
+        this.updateLocationQuery({ search: searchText });
     }
 
     getViewRef(instance) {
         this.view = instance;
     }
 
+    getCurrentLocation() {
+        return this.props.location;
+    }
+
     getJoyRideSteps() {
-        switch (this.state.view) {
+        switch (this.props.location.query.view) {
             case 'map':
                 return joyride.DataPackPage.map;
             case 'grid':
@@ -149,13 +187,14 @@ export class DataPackPage extends React.Component {
             runs: this.props.runsList.runs,
             user: this.props.user,
             onRunDelete: this.props.deleteRuns,
+            onRunShare: this.props.updateDataCartPermissions,
             range: this.props.runsList.range,
             handleLoadLess: this.loadLess,
             handleLoadMore: this.loadMore,
             loadLessDisabled: this.props.runsList.runs.length <= 12,
             loadMoreDisabled: !this.props.runsList.nextPage,
             providers: this.props.providers,
-            openShare: this.handleShareOpen,
+            users: this.props.users,
             groups: this.props.groups,
             ref: this.getViewRef,
         };
@@ -165,7 +204,7 @@ export class DataPackPage extends React.Component {
                     <DataPackList
                         {...commonProps}
                         onSort={this.handleSortChange}
-                        order={this.state.order}
+                        order={this.props.location.query.order}
                     />
                 );
             case 'grid':
@@ -191,14 +230,26 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    updateLocationQuery(query) {
+        browserHistory.push({
+            ...this.props.location,
+            query: {
+                ...this.props.location.query,
+                ...query,
+            },
+        });
+    }
+
     checkForEmptySearch(searchText) {
-        if (searchText === '' && this.state.search) {
-            this.setState({ search: '', loading: true }, this.makeRunRequest);
+        if (searchText === '' && this.props.location.query.search) {
+            const query = { ...this.props.location.query };
+            query.search = undefined;
+            this.updateLocationQuery(query);
         }
     }
 
     handleSortChange(value) {
-        this.setState({ order: value, loading: true }, this.makeRunRequest);
+        this.updateLocationQuery({ order: value });
     }
 
     autoRunRequest() {
@@ -209,13 +260,13 @@ export class DataPackPage extends React.Component {
 
     makeRunRequest(isAuto = false) {
         return this.props.getRuns({
-            pageSize: this.state.pageSize,
-            ordering: this.state.order,
-            ownerFilter: this.state.ownerFilter,
+            page_size: Number(this.props.location.query.page_size),
+            ordering: this.props.location.query.order,
+            ownerFilter: this.props.location.query.collection,
+            search: this.props.location.query.search,
             status: this.state.status,
             minDate: this.state.minDate,
             maxDate: this.state.maxDate,
-            search: this.state.search,
             providers: this.state.providers,
             geojson: this.state.geojson_geometry,
             permissions: this.state.permissions,
@@ -224,7 +275,7 @@ export class DataPackPage extends React.Component {
     }
 
     handleOwnerFilter(event, index, value) {
-        this.setState({ ownerFilter: value, loading: true }, this.makeRunRequest);
+        this.updateLocationQuery({ collection: value });
     }
 
     handleFilterApply(state) {
@@ -266,19 +317,10 @@ export class DataPackPage extends React.Component {
 
     changeView(view) {
         const sharedViewOrders = ['started_at', '-started_at', 'job__name', '-job__name', '-job__featured', 'job__featured'];
-        if (sharedViewOrders.indexOf(this.state.order) < 0) {
-            this.setState({ order: '-started_at', loading: true }, () => {
-                const promise = this.makeRunRequest();
-                promise.then(() => this.setState({ view }));
-            });
+        if (sharedViewOrders.indexOf(this.props.location.query.order) < 0) {
+            this.updateLocationQuery({ view, order: '-started_at' });
         } else {
-            this.setState(
-                { view },
-                () => {
-                    const steps = this.getJoyRideSteps();
-                    this.joyrideAddSteps(steps);
-                },
-            );
+            this.updateLocationQuery({ view });
         }
     }
 
@@ -288,19 +330,13 @@ export class DataPackPage extends React.Component {
 
     loadMore() {
         if (this.props.runsList.nextPage) {
-            this.setState(
-                { pageSize: this.state.pageSize + 12, loading: true },
-                this.makeRunRequest,
-            );
+            this.updateLocationQuery({ page_size: Number(this.props.location.query.page_size) + 12 });
         }
     }
 
     loadLess() {
-        if (this.state.pageSize > 12) {
-            this.setState(
-                { pageSize: this.state.pageSize - 12, loading: true },
-                this.makeRunRequest,
-            );
+        if (Number(this.props.location.query.page_size) > 12) {
+            this.updateLocationQuery({ page_size: Number(this.props.location.query.page_size) - 12 });
         }
     }
 
@@ -336,7 +372,7 @@ export class DataPackPage extends React.Component {
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
-                && this.state.view === 'list'
+                && this.props.location.query.view === 'list'
                 && isViewportL()
             ) {
                 this.setState({ open: false });
@@ -399,19 +435,7 @@ export class DataPackPage extends React.Component {
             this.joyrideAddSteps(steps);
         }
     }
-    handleShareOpen(run) {
-        this.setState({ shareOpen: true, targetRun: run });
-    }
 
-    handleShareClose() {
-        this.setState({ shareOpen: false, targetRun: null });
-    }
-
-    handleShareSave(perms) {
-        this.handleShareClose();
-        const permissions = { ...perms };
-        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
-    }
     render() {
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>;
@@ -530,6 +554,7 @@ export class DataPackPage extends React.Component {
                         <DataPackSearchbar
                             onSearchChange={this.checkForEmptySearch}
                             onSearchSubmit={this.onSearch}
+                            defaultValue={this.props.location.query.search}
                         />
                     </ToolbarGroup>
                 </Toolbar>
@@ -537,24 +562,24 @@ export class DataPackPage extends React.Component {
                 <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
                     <DataPackOwnerSort
                         handleChange={this.handleOwnerFilter}
-                        value={this.state.ownerFilter}
+                        value={this.props.location.query.collection || 'all'}
                         owner={this.props.user.data.user.username}
                     />
                     <DataPackFilterButton
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {this.state.view === 'list' && window.innerWidth >= 768 ?
+                    {this.props.location.query.view === 'list' && window.innerWidth >= 768 ?
                         null
                         :
                         <DataPackSortDropDown
                             handleChange={(e, i, v) => { this.handleSortChange(v); }}
-                            value={this.state.order}
+                            value={this.props.location.query.order || '-job__featured'}
                         />
                     }
                     <DataPackViewButtons
                         handleViewChange={this.changeView}
-                        view={this.state.view}
+                        view={this.props.location.query.view}
                     />
                 </Toolbar>
 
@@ -601,29 +626,10 @@ export class DataPackPage extends React.Component {
                                 </div>
                                 : null
                             }
-                            {this.getView(this.state.view)}
+                            {this.getView(this.props.location.query.view)}
                         </div>
                     }
                 </div>
-                {this.state.shareOpen && this.state.targetRun ?
-                    <DataPackShareDialog
-                        show
-                        onClose={this.handleShareClose}
-                        onSave={this.handleShareSave}
-                        user={this.props.user.data}
-                        groups={this.props.groups}
-                        members={this.props.users}
-                        permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively.
-                            Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively.
-                            Member sharing is managed separately from group sharing."
-                        canUpdateAdmin
-                        warnPublic
-                    />
-                    :
-                    null
-                }
             </div>
         );
     }
@@ -672,7 +678,11 @@ DataPackPage.propTypes = {
     }).isRequired,
     location: PropTypes.shape({
         query: PropTypes.shape({
+            search: PropTypes.string,
             collection: PropTypes.string,
+            order: PropTypes.string,
+            view: PropTypes.string,
+            page_size: PropTypes.string,
         }),
     }).isRequired,
 };

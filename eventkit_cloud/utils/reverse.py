@@ -1,10 +1,11 @@
-from django.conf import settings
 import logging
-from geocode_auth import get_auth_headers, authenticate
 from abc import ABCMeta, abstractmethod
-import requests
-from .geocode import AuthenticationError
 
+import requests
+from django.conf import settings
+
+from eventkit_cloud.utils.geocode import AuthenticationError
+from geocode_auth import get_auth_headers, authenticate
 
 logger = logging.getLogger(__name__)
 

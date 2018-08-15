@@ -1,9 +1,10 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
-import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
 import moment from 'moment';
 import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';

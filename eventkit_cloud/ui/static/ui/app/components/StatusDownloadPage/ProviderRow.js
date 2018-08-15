@@ -1,15 +1,16 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Table, TableBody, TableHeader,
     TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
 import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import Check from 'material-ui/svg-icons/navigation/check';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import Warning from '@material-ui/icons/Warning';
+import Check from '@material-ui/icons/Check';
 import IconButton from 'material-ui/IconButton';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import LinearProgress from 'material-ui/LinearProgress';
 import TaskError from './TaskError';
 import ProviderError from './ProviderError';
@@ -454,7 +455,7 @@ export class ProviderRow extends Component {
                         >
                             <IconButton
                                 disableTouchRipple
-                                onTouchTap={this.handleToggle}
+                                onClick={this.handleToggle}
                                 iconStyle={{ fill: '4598bf' }}
                             >
                                 {this.state.openTable ?

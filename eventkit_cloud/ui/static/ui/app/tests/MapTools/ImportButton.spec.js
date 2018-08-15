@@ -1,8 +1,9 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import FileFileUpload from '@material-ui/icons/CloudUpload';
+import ContentClear from '@material-ui/icons/Clear';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { ImportButton } from '../../components/MapTools/ImportButton';
 
@@ -19,7 +20,7 @@ describe('ImportButton component', () => {
         const props = getProps();
         const wrapper = mount(<ImportButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
@@ -31,7 +32,7 @@ describe('ImportButton component', () => {
         const props = getProps();
         const wrapper = mount(<ImportButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const newProps = getProps();
         newProps.buttonState = 'INACTIVE';
@@ -46,7 +47,7 @@ describe('ImportButton component', () => {
         const props = getProps();
         const wrapper = mount(<ImportButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const newProps = getProps();
         newProps.buttonState = 'SELECTED';
@@ -61,7 +62,7 @@ describe('ImportButton component', () => {
         const props = getProps();
         const wrapper = mount(<ImportButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const newProps = getProps();
         newProps.buttonState = 'SELECTED';
@@ -81,7 +82,7 @@ describe('ImportButton component', () => {
         props.setImportModalState = sinon.spy();
         const wrapper = mount(<ImportButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         wrapper.find('button').simulate('click');
         expect(props.setImportButtonSelected.calledOnce).toEqual(true);
@@ -92,7 +93,7 @@ describe('ImportButton component', () => {
         const props = getProps();
         const wrapper = mount(<ImportButton {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         const newProps = getProps();
         newProps.buttonState = 'INACTIVE';

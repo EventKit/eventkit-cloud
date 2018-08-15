@@ -1,21 +1,21 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { browserHistory } from 'react-router';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
-import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import CircularProgress from 'material-ui/CircularProgress';
-import FloatingActionButton from 'material-ui/FloatingActionButton';
-import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import Divider from '@material-ui/core/Divider';
+import Warning from '@material-ui/icons/Warning';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Button from '@material-ui/core/Button';
+import NavigationArrowBack from '@material-ui/icons/ArrowBack';
+import NavigationArrowForward from '@material-ui/icons/ArrowForward';
+import NavigationCheck from '@material-ui/icons/Check';
 import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { getProviders, stepperNextDisabled,
     submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
-import { getDatacartDetails } from '../../actions/statusDownloadActions';
 import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
@@ -202,18 +202,19 @@ export class BreadcrumbStepper extends React.Component {
                 );
             case 2:
                 return (
-                    <FloatingActionButton
+                    <Button
                         mini
                         id="Previous"
-                        className="qa-BreadcrumbStepper-FloatingActionButton-previous"
+                        variant="fab"
+                        color="primary"
+                        className="qa-BreadcrumbStepper-Button-previous"
                         onClick={this.handlePrev}
                         style={styles.arrowBack}
-                        backgroundColor="#4598bf"
                     >
                         <NavigationArrowBack
                             className="qa-BreadcrumbStepper-NavigationArrowBack-previous-case2"
                         />
-                    </FloatingActionButton>
+                    </Button>
                 );
             default:
                 return <div />;
@@ -221,51 +222,45 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     getButtonContent(stepIndex) {
-        const btnStyles = {
-            submit: {
-                color: 'black',
-                marginRight: '12px',
-                verticalAlign: 'middle',
-                boxShadow: 'none',
-                transition: 'none',
-            },
-            forward: {
-                marginRight: '12px',
-                verticalAlign: 'middle',
-                boxShadow: 'none',
-                transition: 'none',
-            },
+        const btnStyle = {
+            marginRight: '12px',
+            verticalAlign: 'middle',
+            boxShadow: 'none',
+            transition: 'none',
+            fill: '#55ba63',
+            backgroundColor: this.props.stepperNextEnabled ? '#55ba63' : 'whitesmoke',
         };
 
         switch (stepIndex) {
             case 0:
             case 1:
                 return (
-                    <FloatingActionButton
+                    <Button
                         mini
                         id="Next"
-                        className="qa-BreadcrumbStepper-FloatingActionButton-next"
+                        variant="fab"
+                        color="primary"
+                        className="qa-BreadcrumbStepper-Button-next"
                         disabled={!this.props.stepperNextEnabled}
-                        backgroundColor="#55ba63"
                         onClick={this.handleNext}
-                        style={btnStyles.forward}
+                        style={btnStyle}
                     >
                         <NavigationArrowForward />
-                    </FloatingActionButton>
+                    </Button>
                 );
             case 2:
                 return (
-                    <FloatingActionButton
+                    <Button
                         id="Next"
-                        className="qa-BreadcrumbStepper-FloatingActionButton-next"
-                        mini={false}
+                        variant="fab"
+                        color="primary"
+                        className="qa-BreadcrumbStepper-Button-next"
                         disabled={!this.props.stepperNextEnabled}
-                        backgroundColor="#55ba63"
                         onClick={this.submitDatapack}
-                        style={btnStyles.submit}
+                        style={btnStyle}
                     >
                         <NavigationCheck className="qa-BreadcrumbStepper-NavigationCheck" />
-                    </FloatingActionButton>
+                    </Button>
                 );
             default:
                 return <div />;
@@ -486,9 +481,6 @@ function mapDispatchToProps(dispatch) {
         },
         clearJobInfo: () => {
             dispatch(clearJobInfo());
-        },
-        getDatacartDetails: (jobuid) => {
-            dispatch(getDatacartDetails(jobuid));
         },
         getFormats: () => {
             dispatch(getFormats());

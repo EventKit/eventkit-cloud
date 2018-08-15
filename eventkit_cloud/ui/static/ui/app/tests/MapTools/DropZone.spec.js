@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -18,7 +19,7 @@ describe('DropZone component', () => {
     it('should render a div containing the dialog and error components', () => {
         const wrapper = mount(<DropZone {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(DropZoneDialog)).toHaveLength(1);
         expect(wrapper.find(DropZoneError)).toHaveLength(1);

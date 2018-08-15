@@ -3,10 +3,10 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { IconMenu } from 'material-ui';
-import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 
@@ -82,8 +82,8 @@ describe('NotificationMenu component', () => {
     });
 
     describe('initial state', () => {
-        it('does not set IconMenu "open" prop', () => {
-            expect(wrapper.find(IconMenu).props().open).toBe(null);
+        it('does not open menu', () => {
+            expect(wrapper.find(IconMenu).props().open).toBe(false);
         });
     });
 
@@ -151,8 +151,8 @@ describe('NotificationMenu component', () => {
             setupA();
         });
 
-        it('force closes menu', () => {
-            expect(wrapper.state().forceClose).toBe(true);
+        it('closes menu', () => {
+            expect(wrapper.state().open).toBe(false);
         });
 
         it('calls onMarkAsRead() with notification', () => {
@@ -204,8 +204,8 @@ describe('NotificationMenu component', () => {
             setupA();
         });
 
-        it('force closes menu', () => {
-            expect(wrapper.state().forceClose).toBe(true);
+        it('closes menu', () => {
+            expect(wrapper.state().open).toBe(false);
         });
 
         it('calls onMarkAsUnread() with notification', () => {
@@ -251,8 +251,8 @@ describe('NotificationMenu component', () => {
             setupA();
         });
 
-        it('force closes menu', () => {
-            expect(wrapper.state().forceClose).toBe(true);
+        it('closes menu', () => {
+            expect(wrapper.state().open).toBe(false);
         });
 
         it('calls onView() with notification and view path', () => {
@@ -309,8 +309,8 @@ describe('NotificationMenu component', () => {
             setupA();
         });
 
-        it('force closes menu', () => {
-            expect(wrapper.state().forceClose).toBe(true);
+        it('closes menu', () => {
+            expect(wrapper.state().open).toBe(false);
         });
 
         it('calls onRemove() with notification', () => {
@@ -372,42 +372,27 @@ describe('NotificationMenu component', () => {
         });
     });
 
-    describe('when forceClose is set to true', () => {
-        let componentDidUpdateStub;
-
+    describe('when "open" is set to true', () => {
         beforeEach(() => {
-            componentDidUpdateStub = sinon.stub(NotificationMenu.prototype, 'componentDidUpdate');
             wrapper.setState({
-                forceClose: true,
+                open: true,
             });
         });
 
-        afterEach(() => {
-            if (componentDidUpdateStub.restore) {
-                componentDidUpdateStub.restore();
-            }
+        it('sets IconMenu "open" prop to true', () => {
+            expect(wrapper.find(IconMenu).props().open).toBe(true);
+        });
+    });
+
+    describe('when "open" is set to false', () => {
+        beforeEach(() => {
+            wrapper.setState({
+                open: false,
+            });
         });
 
         it('sets IconMenu "open" prop to false', () => {
             expect(wrapper.find(IconMenu).props().open).toBe(false);
-        });
-
-        it('resets forceClose to false in componentDidUpdate()', () => {
-            componentDidUpdateStub.restore();
-            instance.componentDidUpdate();
-            expect(wrapper.state().forceClose).toBe(false);
-        });
-    });
-
-    describe('when forceClose is set to false', () => {
-        beforeEach(() => {
-            wrapper.setState({
-                forceClose: false,
-            });
-        });
-
-        it('does not set menu "open" prop', () => {
-            expect(wrapper.find(IconMenu).props().open).toBe(null);
         });
     });
 });

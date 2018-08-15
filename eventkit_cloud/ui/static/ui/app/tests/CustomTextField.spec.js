@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -22,35 +23,31 @@ describe('CustomTextField component', () => {
 
     it('should show remaining characters when maxLength is present and input is focused', () => {
         const wrapper = getWrapper({ maxLength: 100 });
-        const input = wrapper.find('input');
-        const charsRemaining = wrapper.find(TextField).parent().last('div');
-
-        input.simulate('focus');
-        expect(charsRemaining.text()).toEqual('100');
-        input.simulate('change', { target: { value: 'abc' } });
-        expect(charsRemaining.text()).toEqual('97');
-        input.simulate('blur');
-        expect(charsRemaining.text()).toEqual('');
+        wrapper.find('input').simulate('focus');
+        expect(wrapper.find('.qa-CustomTextField-div-charsRemaining').text()).toEqual('100');
+        wrapper.find('input').simulate('change', { target: { value: 'abc' } });
+        expect(wrapper.find('.qa-CustomTextField-div-charsRemaining').text()).toEqual('97');
+        wrapper.find('input').simulate('blur');
+        expect(wrapper.find('.qa-CustomTextField-div-charsRemaining')).toHaveLength(0);
     });
 
     it('should show remaining characters in a warning color', () => {
         const wrapper = getWrapper({ maxLength: 11 });
-        const input = wrapper.find('input');
-        input.simulate('focus');
-        const charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
+        wrapper.find('input').simulate('focus');
+        let charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
         expect(charsRemaining).toHaveLength(1);
         expect(charsRemaining.props().style.color).toEqual('#B4B7B8');
-        input.simulate('change', { target: { value: 'something' } });
+        wrapper.find('input').simulate('change', { target: { value: 'something' } });
+        charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
         expect(charsRemaining.props().style.color).toEqual('#CE4427');
     });
 
     it('should not show remaining characters when showRemaining is false', () => {
         const wrapper = getWrapper({ maxLength: 100, showRemaining: false });
         const input = wrapper.find('input');
-        const charsRemaining = wrapper.find(TextField).parent().last('div');
-
+        const charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
         input.simulate('focus');
-        expect(charsRemaining.text()).toEqual('');
+        expect(charsRemaining).toHaveLength(0);
     });
 
     it('onChange should call props.onChange and setState', () => {

@@ -71,14 +71,14 @@ export const joyride = {
                 On your initial login, you must agree to these Licenses and Terms of Use to use EventKit.
                 You will only be required to re-visit this page in the future if new Licenses and
                 Terms of Use are introduced with a new data provider.`,
-            selector: '.qa-Account-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
         {
             title: 'License Agreement Info',
             text: 'You can expand the license text and scroll down to review.  You can download the license text if you so choose.',
-            selector: '.qa-UserLicense-ArrowDown',
+            selector: '.qa-UserLicense-expand',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
 
@@ -101,7 +101,7 @@ export const joyride = {
         {
             title: 'Save Agreements',
             text: 'Once you have agreed to the licenses, click Save Changes.',
-            selector: '.qa-SaveButton-RaisedButton-SaveChanges',
+            selector: '.qa-SaveButton-Button-SaveChanges',
             position: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -137,7 +137,7 @@ export const joyride = {
                 If the result is a polygon, it will display in the map and automatically become the AOI.
                 If the result is a point, the map will zoom to that location and an AOI will have to be drawn.
                 </br>MGRS coordinates can also be used.`,
-            selector: '.bootstrap-typeahead-input',
+            selector: '.qa-SearchAOIToolbar-typeahead',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -184,7 +184,7 @@ export const joyride = {
             text: `Once the area of interest is set,
                 move to the next step in the Create DataPack process by clicking the green arrow button.
                 This will take you to the Select Data and Formats page`,
-            selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
+            selector: '.qa-BreadcrumbStepper-Button-next',
             position: 'left',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -249,7 +249,7 @@ export const joyride = {
         {
             title: 'Review Selected AOI',
             text: 'Expand the map to review the AOI that was selected on the previous screen.',
-            selector: '.qa-ExportInfo-CardHeader-map',
+            selector: '.qa-MapCard-Card-map',
             position: 'left',
             scrollToId: 'Map',
             style: JoyRideStyles.tooltipStyle,
@@ -259,7 +259,7 @@ export const joyride = {
             text: `Once all the text is entered and data sources selected,
                 move to the next step in the Create DataPack process by clicking the green arrow button.
                 This will take you to the Review & Submit page.`,
-            selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
+            selector: '.qa-BreadcrumbStepper-Button-next',
             position: 'left',
             scrollToId: 'Next',
             style: JoyRideStyles.tooltipStyle,
@@ -285,7 +285,7 @@ export const joyride = {
             title: 'Edit Previous Steps',
             text: `Once ready, click the large green button to complete the Create DataPack process.
                 You will automatically be taken to the Status & Download page, where you can monitor the progress of the DataPack export.`,
-            selector: '.qa-BreadcrumbStepper-FloatingActionButton-previous',
+            selector: '.qa-BreadcrumbStepper-Button-previous',
             position: 'bottom',
             scrollToId: 'Previous',
             style: JoyRideStyles.tooltipStyle,
@@ -293,8 +293,8 @@ export const joyride = {
         {
             title: 'Submit DataPack',
             text: `Once ready, click the large green button to kick off the DataPack submission process.
-                You will be redirected to the Status and Download page.`,
-            selector: '.qa-BreadcrumbStepper-FloatingActionButton-next',
+                You will be redirected to the Status & Download page.`,
+            selector: '.qa-BreadcrumbStepper-Button-next',
             position: 'bottom',
             scrollToId: 'Next',
             style: JoyRideStyles.tooltipStyle,
@@ -745,7 +745,7 @@ export const joyride = {
             title: 'My DataPacks',
             text: `Finally, you can view the DataPacks that you’ve created.
                 Keep in mind that by default DataPacks expire after two weeks,
-                though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expiration field.`,
+                though you can reset the expiration as often as you need to by clicking on the DataPack and hitting the Expires field.`,
             selector: '.qa-DashboardSection-My.DataPacks',
             position: 'top',
             scrollToId: 'DashboardSectionMy DataPacks',

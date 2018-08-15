@@ -2,9 +2,7 @@
 import logging
 
 from django.test import TestCase
-
-import os
-from mock import MagicMock, Mock, patch, call, mock_open, ANY
+from mock import MagicMock, Mock, patch, ANY
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,7 @@ class TestSupport(TestCase):
         self.patcher.stop()
 
     def test_create_mxd(self):
-        from ..arcgis.create_mxd import create_mxd
+        from eventkit_cloud.tasks.arcgis.create_mxd import create_mxd
 
         with patch('__builtin__.open') as mock_open, patch(
                 'eventkit_cloud.tasks.arcgis.create_mxd.shutil') as mock_shutil, patch(
@@ -43,7 +41,7 @@ class TestSupport(TestCase):
             mock_shutil.copy.assert_called_once_with(ANY, test_mxd)
 
     def test_create_mxd_process(self):
-        from ..arcgis.create_mxd import create_mxd_process
+        from eventkit_cloud.tasks.arcgis.create_mxd import create_mxd_process
 
         with patch('eventkit_cloud.tasks.arcgis.create_mxd.create_mxd') as mock_create_mxd, patch(
                 'eventkit_cloud.tasks.arcgis.create_mxd.Pool') as mock_pool:
@@ -58,7 +56,7 @@ class TestSupport(TestCase):
                                                                       'verify': True})
 
     def test_get_version(self):
-        from ..arcgis.create_mxd import get_version
+        from eventkit_cloud.tasks.arcgis.create_mxd import get_version
 
         test_version = '10.5.1'
         self.arcpy.GetInstallInfo.return_value.get.return_value = test_version
@@ -66,7 +64,7 @@ class TestSupport(TestCase):
         self.assertEqual(test_version, version)
 
     def test_get_layer_file(self):
-        from ..arcgis.create_mxd import get_layer_file
+        from eventkit_cloud.tasks.arcgis.create_mxd import get_layer_file
 
         example_layer = "arcpy_layer"
         layer_type = "raster"
@@ -85,7 +83,7 @@ class TestSupport(TestCase):
             self.assertIsNone(get_layer_file(layer_type, arc_version))
 
     def test_update_layers(self):
-        from ..arcgis.create_mxd import update_layer
+        from eventkit_cloud.tasks.arcgis.create_mxd import update_layer
 
         # layer is actually an arc layer object, but string is used here for tests.
         example_layer = "layer"
