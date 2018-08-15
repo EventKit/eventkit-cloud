@@ -88,6 +88,11 @@ const muiThemeV1 = createMuiTheme({
                 color: '#fff',
             },
         },
+        MuiTypography: {
+            root: {
+                width: '100%',
+            },
+        },
     },
     palette: {
         primary: {

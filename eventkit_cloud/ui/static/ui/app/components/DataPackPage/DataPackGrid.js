@@ -49,8 +49,7 @@ export class DataPackGrid extends Component {
                         className="qa-DataPackGrid-GridList"
                         cellHeight="auto"
                         style={styles.gridList}
-                        // spacing={window.innerWidth >= 768 ? 7 : 2}
-                        spacing={7}
+                        spacing={window.innerWidth >= 768 ? 7 : 2}
                         cols={this.getColumns()}
                     >
                         {this.props.runs.map((run, index) => {
