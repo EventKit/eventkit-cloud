@@ -25,6 +25,7 @@ export class DropDownListItem extends Component {
         return ([
             <ListItem
                 key="list-item-title"
+                className="qa-DropDownListItem-title"
                 style={{ backgroundColor, paddingTop: '6px', paddingBottom: '6px' }}
             >
                 <div style={{ flex: '1 1 auto', fontWeight: 'bold', color: '#000' }}>
