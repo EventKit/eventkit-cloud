@@ -103,7 +103,11 @@ def getGitSHA(){
 }
 
 def getURLPath(){
-    def url = env.BUILD_URL
-    return url.replaceAll(~/http(s?):\/\/.+?\//,"").trim()
+return sh(script:  """
+python - << END
+import re
+print(re.sub(r'http(s?):\/\/.+?/','', $env.BUILD_URL)
+END
+""", returnStdout: true)
 }
 
