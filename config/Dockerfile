@@ -22,7 +22,7 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.s
 
 RUN conda env create --file environment-dev.yml
 
-COPY ./scripts/wait-for-postgis.sh /var/lib/eventkit/scripts/wait-for-postgis.sh
+COPY --chown=eventkit ./scripts/wait-for-postgis.sh /var/lib/eventkit/scripts/wait-for-postgis.sh
 
 ENTRYPOINT ["bash", "./scripts/wait-for-postgis.sh"]
 
