@@ -5,14 +5,14 @@ node {
     stage("Setup") {
         deleteDir()
         if(env.GIT_CREDS) {
-            git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GIT_CREDS}"
+            git url: "${env.GIT_URL}", branch: "${env.BRANCH_NAME}", credentialsId: "${env.GIT_CREDS}"
         } else {
-            git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
+            git url: "${env.GIT_URL}", branch: "${env.BRANCH_NAME}"
         }
-        postStatus(getPendingStatus("The build is starting..."))
     }
 
     stage("Add Repo"){
+        postStatus(getPendingStatus("The build is starting..."))
         def urlPath = getURLPath()
         sh "echo build path is: $urlPath"
         sh "ls -al"
