@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-
-from mock import Mock, patch
+from uuid import uuid4
 
 from django.conf import settings
 from django.test import TestCase
-from uuid import uuid4
+from mock import Mock, patch
 
-from ..shp import GPKGToShp
+from eventkit_cloud.utils.shp import GPKGToShp
 
 logger = logging.getLogger(__name__)
 

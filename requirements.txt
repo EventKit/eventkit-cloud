@@ -1,13 +1,13 @@
-amqp==2.1.4
-billiard==3.5.0.3
+amqp==2.3.2
+billiard==3.5.0.4
 boto3==1.7.48
-celery==4.0.2
+celery==4.2.1
 certifi==2018.1.18
 dj-database-url==0.4.2
 Django==1.10.8
 git+https://github.com/venicegeo/django-audit-logging.git@v0.1.8#egg=django-audit-logging
 django-auth-ldap==1.2.12
-django-celery-beat==1.0.1
+django-celery-beat==1.1.1
 django-celery-results==1.0.1
 django-extensions==1.7.7
 django-filter==1.0.1
@@ -19,7 +19,7 @@ eventlet==0.20.1
 GDAL==2.2.2
 gunicorn==19.7.1
 # Kombu declared explicitly because of incompatibility with celery requirements.
-kombu==4.0.2
+kombu==4.2.1
 lxml==3.7.3
 MapProxy==1.11.0
 Markdown==2.6.8

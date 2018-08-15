@@ -7,14 +7,12 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.db import DatabaseError
 from django.test import TestCase
+from mock import patch, Mock, MagicMock, ANY
 
 from eventkit_cloud.jobs.models import Job, Region, DataProviderTask, DataProvider, License, UserLicense
 from eventkit_cloud.tasks.models import ExportRun
 from eventkit_cloud.tasks.task_factory import (TaskFactory, create_run, create_finalize_run_task_collection,
-    get_invalid_licenses)
-from mock import patch, Mock, MagicMock, ANY
-
-from ...core.models import GroupPermission,JobPermission
+                                               get_invalid_licenses)
 
 logger = logging.getLogger(__name__)
 
@@ -63,23 +61,24 @@ class TestExportTaskFactory(TestCase):
     @patch('eventkit_cloud.tasks.task_factory.os')
     @patch('eventkit_cloud.tasks.task_factory.get_invalid_licenses')
     @patch('eventkit_cloud.tasks.task_factory.create_task')
+    @patch('eventkit_cloud.tasks.task_factory.TaskChainBuilder')
     @patch('eventkit_cloud.tasks.task_factory.finalize_export_provider_task')
     @patch('eventkit_cloud.tasks.task_factory.chain')
-    def test_task_factory(self, task_factory_chain, finalize_task, create_task, mock_invalid_licenses, mock_os):
+    def test_task_factory(self, task_factory_chain, finalize_task, mock_task_chain_builder, create_task, mock_invalid_licenses, mock_os):
         mock_invalid_licenses.return_value = []
         run_uid = create_run(job_uid=self.job.uid)
         self.assertIsNotNone(run_uid)
         self.assertIsNotNone(ExportRun.objects.get(uid=run_uid))
         worker = "some_worker"
+        mock_osm_task = 'osm-task'
         provider_uuid = uuid.uuid4()
-        task_runner = MagicMock()
         task = Mock()
-        task_runner().run_task.return_value = (provider_uuid, task)
+        mock_task_chain_builder().build_tasks.return_value = (provider_uuid, task)
 
         del task.tasks
 
         task_factory = TaskFactory()
-        task_factory.type_task_map = {'osm-generic': task_runner, 'osm': task_runner}
+        task_factory.type_task_map = {'osm-generic': mock_osm_task, 'osm': mock_osm_task}
 
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()
@@ -96,7 +95,7 @@ class TestExportTaskFactory(TestCase):
 
         task.tasks = [task]
         task_factory = TaskFactory()
-        task_factory.type_task_map = {'osm': task_runner}
+        task_factory.type_task_map = {'osm': mock_osm_task}
 
         task_factory.parse_tasks(run_uid=run_uid, worker=worker)
         task_factory_chain.assert_called()

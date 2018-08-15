@@ -1,14 +1,16 @@
 from __future__ import print_function
-# from django.test import TestCase
-from time import sleep
-import sys
+
 import os
+# from django.test import TestCase
+import sys
+
 import django
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 django.setup()
 
 from django.core.management import call_command
-from eventkit_cloud.tasks import test_chain, test_task
+from eventkit_cloud.tasks import test_chain
 from eventkit_cloud.celery import app
 
 

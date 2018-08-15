@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
-import argparse
 import logging
 import os
 import subprocess
 from string import Template
-from artifact import Artifact
 
-from osgeo import gdal, ogr, osr
-
+from osgeo import gdal, osr
 from pysqlite2 import dbapi2 as sqlite3
 
+from artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
 
 LOG = logging.getLogger(__name__)

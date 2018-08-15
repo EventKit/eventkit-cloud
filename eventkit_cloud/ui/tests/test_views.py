@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-import logging
 import json
+import logging
 import tempfile
+
 from django.contrib.auth.models import User, Group
-from django.test import TestCase, override_settings
 from django.test import Client
+from django.test import TestCase, override_settings
 from mock import Mock, patch
-from django.core.urlresolvers import reverse
 
 logger = logging.getLogger(__name__)
 

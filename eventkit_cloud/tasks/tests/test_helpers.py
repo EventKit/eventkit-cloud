@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import logging
+import signal
 
 from django.test import TestCase
 from mock import patch, call
-import errno
-import signal
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 

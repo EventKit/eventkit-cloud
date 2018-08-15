@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import argparse
 import logging
+import os
 from datetime import datetime
 from string import Template
-import os
+
+from django.conf import settings
 from requests import exceptions
 
 import auth_requests
-
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class Overpass(object):
         if user_details is None:
             user_details = {'username': 'unknown-run_query'}
 
-        from ..tasks.export_tasks import update_progress
+        from eventkit_cloud.tasks.export_tasks import update_progress
 
         q = self.get_query()
         logger.debug(q)

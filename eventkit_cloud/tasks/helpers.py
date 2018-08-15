@@ -1,11 +1,11 @@
+import logging
 import os
 import re
+import signal
+from time import sleep
+
 from django.conf import settings
 from enum import Enum
-import logging
-import errno
-from time import sleep
-import signal
 
 logger = logging.getLogger()
 

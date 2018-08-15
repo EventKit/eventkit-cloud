@@ -1,10 +1,11 @@
-import os
 import re
-import yaml
 import unicodedata
+
+import yaml
 from yaml.constructor import ConstructorError
-from yaml.scanner import ScannerError
 from yaml.parser import ParserError
+from yaml.scanner import ScannerError
+
 from sql import SQLValidator
 
 CREATE_TEMPLATE = """CREATE TABLE {0}(

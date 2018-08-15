@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-import getpass
-import os
-import json
 import argparse
+import getpass
+import json
+import logging
+import os
 
 from eventkit_cloud.utils.client import EventKitClient
-
-import logging
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=os.getenv("LOG_LEVEL", "WARNING"))
 

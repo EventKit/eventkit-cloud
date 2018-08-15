@@ -1,12 +1,11 @@
-from mock import Mock, patch, call
-from uuid import uuid4
-from django.test import TestCase, override_settings
+import json
 import logging
+
 import requests_mock
 from django.conf import settings
-import json
+from django.test import TestCase
 
-from ..convert import Convert
+from eventkit_cloud.utils.convert import Convert
 
 logger = logging.getLogger(__name__)
 mockURL = "http://192.168.20.1"
