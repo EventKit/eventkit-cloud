@@ -80,10 +80,10 @@ END
 
 def postStatus(status){
 
-  def url = sh(returnStdout: true, script: 'git config remote.origin.url').trim()
-  if(url.contains('github')){
-      def url = getStatusURL()
-      sh "curl -b --header 'Content-Type: application/json' --request POST --data '${status}' ${url}"
+  def git_url = sh(returnStdout: true, script: 'git config remote.origin.url').trim()
+  if(git_url.contains('github')){
+      def status_url = getStatusURL()
+      sh "curl -b --header 'Content-Type: application/json' --request POST --data '${status}' ${status_url}"
   }
 }
 
