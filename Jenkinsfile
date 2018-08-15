@@ -19,7 +19,8 @@ String successStatus = '{"state":"success","description":"This build has succeed
     }
 
     stage("Add Repo"){
-        sh "echo build path is: ${getURLPath()}"
+        def urlPath = getURLPath()
+        sh "echo build path is: ${urlPath}"
         sh "ls -al"
         if(env.CONDA_REPO){
             sh """
