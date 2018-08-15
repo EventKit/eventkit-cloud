@@ -12,7 +12,7 @@ RUN npm install --quiet
 RUN gem install coveralls-lcov
 
 COPY ./webpack.config.js /var/lib/eventkit/
-COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud:rw
+COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
 COPY ./.eslintrc.json /var/lib/eventkit/.eslintrc.json
 COPY ./.eslintignore /var/lib/eventkit/.eslintignore
 COPY ./webpack.config.js /var/lib/eventkit/webpack.config.js
