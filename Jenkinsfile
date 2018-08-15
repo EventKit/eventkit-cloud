@@ -53,6 +53,7 @@ END
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
             sh "docker-compose build"
+            sh "docker-compose run --rm eventkit python manage.py runinitial setup || exit 0"
             sh "docker-compose up -d"
         }catch(Exception e) {
             postStatus(getFailureStatus("Failed to build docker containers."))
