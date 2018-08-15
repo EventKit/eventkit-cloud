@@ -40,8 +40,8 @@ END
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose build"
         }catch(Exception e) {
-             postStatus(getFailureStatus("Failed to build docker containers."))
-             throw e
+            postStatus(getFailureStatus("Failed to build docker containers."))
+            throw e
         }
     }
 
@@ -51,6 +51,7 @@ END
             sh "docker-compose run --rm -T webpack npm run lint"
         }catch(Exception e) {
             postStatus(getFailureStatus("Lint checks failed."))
+            sh "docker-compose logs --tail=50 webpack"
             throw e
         }
     }
@@ -62,6 +63,7 @@ END
             sh "docker-compose run --rm -T webpack npm test"
         }catch(Exception e) {
              postStatus(getFailureStatus("Unit tests failed."))
+             sh "docker-compose logs --tail=50 eventkit webpack"
              throw e
         }
     }
@@ -74,6 +76,7 @@ END
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
             postStatus(getFailureStatus("Integration tests failed."))
+            sh "docker-compose logs --tail=50"
             throw e
         }
     }
