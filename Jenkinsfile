@@ -51,10 +51,12 @@ END
     stage("Build"){
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
+            sh "docker-compose down || exit 0"
             sh "docker-compose build"
             sh "docker-compose up -d"
         }catch(Exception e) {
             postStatus(getFailureStatus("Failed to build docker containers."))
+            sh "docker-compose down"
             throw e
         }
     }
@@ -65,7 +67,8 @@ END
             sh "docker-compose run --rm -T  webpack npm run lint"
         }catch(Exception e) {
             postStatus(getFailureStatus("Lint checks failed."))
-            sh "docker-compose logs --tail=50 webpack > output.log"
+            sh "docker-compose logs --tail=50 webpack"
+            sh "docker-compose down"
             throw e
         }
     }
@@ -78,6 +81,7 @@ END
         }catch(Exception e) {
              postStatus(getFailureStatus("Unit tests failed."))
              sh "docker-compose logs --tail=50 eventkit webpack"
+             sh "docker-compose down"
              throw e
         }
     }
@@ -90,6 +94,7 @@ END
         }catch(Exception e) {
             postStatus(getFailureStatus("Integration tests failed."))
             sh "docker-compose logs --tail=50"
+            sh "docker-compose down"
             throw e
         }
     }
