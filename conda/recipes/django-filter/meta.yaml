@@ -1,0 +1,55 @@
+{% set name = "django-filter" %}
+{% set version = "1.0.1" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "03ab2895e086aa579110a8945d7d9c5d28c4b57060cfc697cb5c74a18021fec4" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python
+    - setuptools
+  run:
+    - python
+
+test:
+  imports:
+    - django_filters
+
+about:
+  home: http://github.com/carltongibson/django-filter/tree/master
+  license: BSD License
+  license_family: BSD
+  license_file: ''
+  summary: Django-filter is a reusable Django application for allowing users to filter querysets dynamically.
+  description: "Django Filter\n=============\n\nDjango-filter is a reusable Django application allowing users to declaratively\nadd dynamic ``QuerySet`` filtering from URL parameters.\n\nFull documentation\
+    \ on `read the docs`_.\n\n.. image:: https://travis-ci.org/carltongibson/django-filter.svg?branch=master\n    :target: https://travis-ci.org/carltongibson/django-filter\n\n.. image:: https://codecov.io/gh/carltongibson/django-filter/branch/develop/graph/badge.svg\n\
+    \    :target: https://codecov.io/gh/carltongibson/django-filter\n\n.. image:: https://badge.fury.io/py/django-filter.svg\n    :target: http://badge.fury.io/py/django-filter\n\n\nRequirements\n------------\n\
+    \n* **Python**: 3.4, 3.5, 3.6, 3.7\n* **Django**: 1.11, 2.0\n* **DRF**: 3.8+\n\nFrom Version 2.0 Django Filter is Python 3 only.\nIf you need to support Python 2.7 use the version 1.1 release.\n\n\n\
+    Installation\n------------\n\nInstall using pip:\n\n.. code-block:: sh\n\n    pip install django-filter\n\nThen add ``'django_filters'`` to your ``INSTALLED_APPS``.\n\n.. code-block:: python\n\n   \
+    \ INSTALLED_APPS = [\n        ...\n        'django_filters',\n    ]\n\n\nUsage\n-----\n\nDjango-filter can be used for generating interfaces similar to the Django\nadmin's ``list_filter`` interface.\
+    \  It has an API very similar to Django's\n``ModelForms``.  For example, if you had a Product model you could have a\nfilterset for it with the code:\n\n.. code-block:: python\n\n    import django_filters\n\
+    \n    class ProductFilter(django_filters.FilterSet):\n        class Meta:\n            model = Product\n            fields = ['name', 'price', 'manufacturer']\n\n\nAnd then in your view you could do:\n\
+    \n.. code-block:: python\n\n    def product_list(request):\n        filter = ProductFilter(request.GET, queryset=Product.objects.all())\n        return render(request, 'my_app/template.html', {'filter':\
+    \ filter})\n\n\nUsage with Django REST Framework\n--------------------------------\n\nDjango-filter provides a custom ``FilterSet`` and filter backend for use with\nDjango REST Framework.\n\nTo use\
+    \ this adjust your import to use\n``django_filters.rest_framework.FilterSet``.\n\n.. code-block:: python\n\n    from django_filters import rest_framework as filters\n\n    class ProductFilter(filters.FilterSet):\n\
+    \        class Meta:\n            model = Product\n            fields = ('category', 'in_stock')\n\n\nFor more details see the `DRF integration docs`_.\n\n\nSupport\n-------\n\nIf you have questions\
+    \ about usage or development you can join the\n`mailing list`_.\n\n.. _`read the docs`: https://django-filter.readthedocs.io/en/master/\n.. _`mailing list`: http://groups.google.com/group/django-filter\n\
+    .. _`DRF integration docs`: https://django-filter.readthedocs.io/en/master/guide/rest_framework.html\n\n\n"
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''
