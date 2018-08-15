@@ -2,37 +2,29 @@
 
 node {
 
-    stage("Setup") {
-        deleteDir()
-        if(env.GIT_CREDS) {
-            git url: "${env.GIT_URL}", branch: "${env.BRANCH_NAME}", credentialsId: "${env.GIT_CREDS}"
-        } else {
-            git url: "${env.GIT_URL}", branch: "${env.BRANCH_NAME}"
-        }
-    }
-
     stage("Add Repo"){
+        checkout scm
         postStatus(getPendingStatus("The build is starting..."))
-        def urlPath = getURLPath()
-        sh "echo build path is: $urlPath"
-        sh "ls -al"
-        if(env.CONDA_REPO){
-            sh """
+        withCredentials([string(credentialsId: 'condaRepo', variable: 'CONDA_REPO')]){
+            sh "ls -al"
+            if(CONDA_REPO){
+                sh """
 python - << END
 import yaml
 
 data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
-data['channels'] = ['$env.CONDA_REPO']
+data['channels'] = ['$CONDA_REPO']
 
 with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
 END
 """
+            }
+            sh "cat environment-dev.yml"
         }
-        sh "cat environment-dev.yml"
     }
 
     stage("Build"){
@@ -87,7 +79,9 @@ END
 
 
 def postStatus(status){
-  if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
+
+  def url = sh(returnStdout: true, script: 'git config remote.origin.url').trim()
+  if(url.contains('github')){
       def url = getStatusURL()
       sh "curl -b --header 'Content-Type: application/json' --request POST --data '${status}' ${url}"
   }
@@ -97,7 +91,7 @@ def postStatus(status){
 def getStatusURL(){
     withCredentials([string(credentialsId: 'githubToken', variable: 'GITHUB_TOKEN')])  {
         def git_sha = getGitSHA()
-        return "${env.GIT_API}/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
+        return "https://api.github.com/repos/venicegeo/eventkit-cloud/statuses/${git_sha}?access_token=${GITHUB_TOKEN}"
     }
 }
 
