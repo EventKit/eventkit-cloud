@@ -37,8 +37,7 @@ import yaml
 data = {}
 with open('docker-compose.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
-data['channels'] = ['$CONDA_REPO']
-for service in data.get('services')
+for service in data.get('services'):
     if service.get('volumes'):
         service.pop('volumes')
 with open('docker-compose.yml', 'w') as outfile:
