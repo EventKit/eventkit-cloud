@@ -97,6 +97,9 @@ export class FilterDrawer extends Component {
                 anchor="right"
                 open={this.props.open}
                 PaperProps={{ style: styles.containerStyle }}
+                SlideProps={{
+                    unmountOnExit: true,
+                }}
             >
                 <CustomScrollbar>
                     <FilterHeader
