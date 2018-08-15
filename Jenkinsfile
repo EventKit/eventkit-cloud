@@ -102,7 +102,7 @@ def getGitSHA(){
     return sha.trim()
 }
 
-def getURLPath(status){
+def getURLPath(){
     return (env.BUILD_URL - ~/^https:\/\/.+?\// )
 }
 
