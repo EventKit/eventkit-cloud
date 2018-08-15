@@ -16,6 +16,5 @@ COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud:rw
 COPY ./.eslintrc.json /var/lib/eventkit/.eslintrc.json
 COPY ./.eslintignore /var/lib/eventkit/.eslintignore
 COPY ./webpack.config.js /var/lib/eventkit/webpack.config.js
-COPY ./.git /var/lib/eventkit/.git
 
 CMD ["npm", "start"]
