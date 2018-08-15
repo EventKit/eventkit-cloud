@@ -52,7 +52,7 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T eventkit pytest -n"
+            sh "docker-compose run --rm -T eventkit pytest -n 4"
             sh "docker-compose run --rm -T webpack npm test"
         }catch(Exception e) {
              postStatus(getFailureStatus("Unit tests failed."))
@@ -65,7 +65,6 @@ END
     stage("Run integration tests"){
         try{
             postStatus(getPendingStatus("Running the integration tests..."))
-            sh "docker-compose exec -T eventkit pytest -n 4"
             sh "docker-compose up -d && docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
