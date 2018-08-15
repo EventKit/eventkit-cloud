@@ -1,0 +1,16 @@
+package:
+  name: json-c
+  version: 0.11
+
+source:
+  fn: json-c-0.11.tar.gz
+  url: https://s3.amazonaws.com/json-c_releases/releases/json-c-0.11.tar.gz
+
+build:
+  number: 0
+
+about:
+  home: https://github.com/json-c/json-c
+  license: MIT
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:

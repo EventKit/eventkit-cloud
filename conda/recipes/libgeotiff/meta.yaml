@@ -1,0 +1,20 @@
+package:
+  name: libgeotiff
+  version: 1.4.2
+
+source:
+  fn: libgeotiff-1.4.2.tar.gz
+  url: http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.4.2.tar.gz
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - libtiff ==4.0.8
+    - proj ==4.9.3-0
+
+about:
+  home: http://trac.osgeo.org/geotiff/
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:
