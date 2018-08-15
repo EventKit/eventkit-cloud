@@ -62,10 +62,10 @@ END
     stage("Run linter"){
         try{
             postStatus(getPendingStatus("Running the linters..."))
-            sh "docker-compose run --rm -T webpack npm run lint"
+            sh "docker-compose exec -T  webpack npm run lint"
         }catch(Exception e) {
             postStatus(getFailureStatus("Lint checks failed."))
-            sh "stdbuf -i0 -e0 -o0 docker-compose logs --tail=50 webpack > output.log"
+            sh "docker-compose logs --tail=50 webpack > output.log"
             throw e
         }
     }
@@ -73,11 +73,11 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T eventkit pytest -n 4"
-            sh "docker-compose run --rm -T webpack npm test"
+            sh "docker-compose exec -T  eventkit pytest -n 4"
+            sh "docker-compose exec -T  webpack npm test"
         }catch(Exception e) {
              postStatus(getFailureStatus("Unit tests failed."))
-             sh "stdbuf -i0 -e0 -o0 docker-compose logs --tail=50 eventkit webpack"
+             sh "docker-compose logs --tail=50 eventkit webpack"
              throw e
         }
     }
@@ -85,11 +85,11 @@ END
     stage("Run integration tests"){
         try{
             postStatus(getPendingStatus("Running the integration tests..."))
-            sh "docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
+            sh "docker-compose exec -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
             postStatus(getFailureStatus("Integration tests failed."))
-            sh "stdbuf -i0 -e0 -o0 docker-compose logs --tail=50"
+            sh "docker-compose logs --tail=50"
             throw e
         }
     }
