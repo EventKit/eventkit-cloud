@@ -2,10 +2,10 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { IconButton, IconMenu, MenuItem } from 'material-ui';
-import MoreVertIcon from 'material-ui/svg-icons/navigation/more-vert';
-import OpenInNewIcon from 'material-ui/svg-icons/action/open-in-new';
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+import OpenInNewIcon from '@material-ui/icons/OpenInNew';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import {
     markNotificationsAsRead,

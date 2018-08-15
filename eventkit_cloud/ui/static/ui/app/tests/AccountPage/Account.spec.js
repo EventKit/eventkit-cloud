@@ -2,10 +2,10 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import AppBar from 'material-ui/AppBar';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
+import PageHeader from '../../components/common/PageHeader';
 import UserInfo from '../../components/AccountPage/UserInfo';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import SaveButton from '../../components/AccountPage/SaveButton';
@@ -45,6 +45,7 @@ describe('Account Component', () => {
         },
         getLicenses: () => {},
         patchUser: () => {},
+        classes: { root: {} },
     });
 
     const getMountedWrapper = props => mount(<Account {...props} />, {
@@ -66,7 +67,7 @@ describe('Account Component', () => {
         const steps = [{
             title: 'Welcome to the Account Settings Page',
             text: ' example text',
-            selector: '.qa-Account-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: {},
             isFixed: true,
@@ -112,13 +113,13 @@ describe('Account Component', () => {
         stateSpy.restore();
     });
 
-    it('should render an appbar with save button, and body with license info and user info', () => {
+    it('should render an header with save button, and body with license info and user info', () => {
         const props = getProps();
         const wrapper = getMountedWrapper(props);
-        expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).text()).toEqual('AccountPage TourSave Changes');
+        expect(wrapper.find(PageHeader)).toHaveLength(1);
+        expect(wrapper.find(PageHeader).text()).toEqual('AccountPage TourSave Changes');
         expect(wrapper.find(SaveButton)).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(3);
         expect(wrapper.find(LicenseInfo)).toHaveLength(1);
         expect(wrapper.find(UserInfo)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);

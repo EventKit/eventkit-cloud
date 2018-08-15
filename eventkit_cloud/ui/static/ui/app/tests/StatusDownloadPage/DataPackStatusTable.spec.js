@@ -5,7 +5,7 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import DatePicker from 'material-ui/DatePicker';
-import Edit from 'material-ui/svg-icons/image/edit';
+import Edit from '@material-ui/icons/Edit';
 import CustomTableRow from '../../components/CustomTableRow';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';

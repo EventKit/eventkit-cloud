@@ -4,11 +4,11 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
 import IconButton from 'material-ui/IconButton';
-import Person from 'material-ui/svg-icons/social/person';
-import Sort from 'material-ui/svg-icons/content/sort';
-import DropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import Person from '@material-ui/icons/Person';
+import Sort from '@material-ui/icons/Sort';
+import DropDown from '@material-ui/icons/ArrowDropDown';
+import Checked from '@material-ui/icons/CheckBox';
+import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 

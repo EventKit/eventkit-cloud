@@ -1,8 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import Checkbox from 'material-ui/Checkbox';
-import ToggleCheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import Checkbox from '@material-ui/core/Checkbox';
 import Warning from './Warning';
 import UserLicense from './UserLicense';
 
@@ -19,7 +17,7 @@ export class LicenseInfo extends Component {
         const styles = {
             checkbox: {
                 width: '24px',
-                display: 'inline-block',
+                height: '24px',
                 verticalAlign: 'middle',
                 marginRight: '10px',
             },
@@ -44,24 +42,13 @@ export class LicenseInfo extends Component {
                 <div style={styles.checkboxContainer}>
                     <Checkbox
                         className="qa-LicenseInfo-Checkbox"
+                        color="primary"
                         style={styles.checkbox}
                         disabled={allAgreedSaved}
                         checked={allAgreedUnsaved}
-                        onCheck={this.props.onAllCheck}
-                        checkedIcon={(
-                            <ToggleCheckBox
-                                className="qa-LicenseInfo-ToggleCheckBox"
-                                style={{ fill: allAgreedSaved ? 'grey' : '#4498c0' }}
-                            />
-                        )}
-                        uncheckedIcon={(
-                            <ToggleCheckBoxOutlineBlank
-                                className="qa-LicenseInfo-ToggleCheckBoxOutlineBlank"
-                                style={{ fill: '#4498c0' }}
-                            />
-                        )}
+                        onChange={this.props.onAllCheck}
                     />
-                    <span>ALL</span>
+                    <span className="qa-LicenseInof-All">ALL</span>
                 </div>
                 {this.props.licenses.licenses.map(license => (
                     <UserLicense

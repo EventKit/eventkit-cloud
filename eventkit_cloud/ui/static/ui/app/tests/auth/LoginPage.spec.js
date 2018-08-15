@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import Paper from 'material-ui/Paper';
+import Paper from '@material-ui/core/Paper';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { LoginPage } from '../../components/auth/LoginPage';

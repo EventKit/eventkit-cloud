@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import ActionViewModule from 'material-ui/svg-icons/action/view-module';
-import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
-import MapsMap from 'material-ui/svg-icons/maps/map';
+import ActionViewModule from '@material-ui/icons/ViewModule';
+import ActionViewStream from '@material-ui/icons/ViewStream';
+import MapsMap from '@material-ui/icons/Map';
 import IconButton from 'material-ui/IconButton';
 
 export class DataPackViewButtons extends React.Component {

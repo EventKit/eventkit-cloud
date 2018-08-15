@@ -1,10 +1,10 @@
 import React from 'react';
-import InfoIcon from 'material-ui/svg-icons/action/info';
-import CheckCircleIcon from 'material-ui/svg-icons/action/check-circle';
-import WarningIcon from 'material-ui/svg-icons/alert/warning';
-import ErrorIcon from 'material-ui/svg-icons/alert/error';
-import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
-import RemoveCircleIcon from 'material-ui/svg-icons/content/remove-circle';
+import InfoIcon from '@material-ui/icons/Info';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import WarningIcon from '@material-ui/icons/Warning';
+import ErrorIcon from '@material-ui/icons/Error';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
+import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 import { Link } from 'react-router';
 
 const verbs = {

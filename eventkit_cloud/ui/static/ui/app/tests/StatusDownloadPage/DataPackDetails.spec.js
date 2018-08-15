@@ -4,8 +4,8 @@ import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Table, TableHeader, TableHeaderColumn, TableRow }
     from 'material-ui/Table';
-import RaisedButton from 'material-ui/RaisedButton';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import Button from '@material-ui/core/Button';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 import ProviderRow from '../../components/StatusDownloadPage/ProviderRow';
 
@@ -72,6 +72,7 @@ describe('DataPackDetails component', () => {
         providers,
         zipFileProp: null,
         onProviderCancel: () => {},
+        classes: { root: {} },
     });
 
     const getWrapper = props => mount(<DataPackDetails {...props} />, {
@@ -90,7 +91,7 @@ describe('DataPackDetails component', () => {
         expect(table.find(TableRow)).toHaveLength(1);
         expect(table.find(TableHeaderColumn)).toHaveLength(4);
         expect(table.find(TableHeaderColumn).at(0).text()).toEqual('CREATING DATAPACK ZIP');
-        expect(table.find(TableHeaderColumn).at(0).find(RaisedButton)).toHaveLength(1);
+        expect(table.find(TableHeaderColumn).at(0).find(Button)).toHaveLength(1);
         expect(table.find(TableHeaderColumn).at(1).text()).toEqual('FILE SIZE');
         expect(table.find(TableHeaderColumn).at(2).text()).toEqual('PROGRESS');
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
@@ -160,14 +161,20 @@ describe('DataPackDetails component', () => {
         props.zipFileProp = null;
         wrapper.instance().getCloudDownloadIcon();
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
-            <CloudDownload className="qa-DataPackDetails-CloudDownload-disabled" style={{ fill: 'grey', verticalAlign: 'middle' }} />
+            <CloudDownload
+                className="qa-DataPackDetails-CloudDownload-disabled"
+                style={{ fill: 'grey', marginRight: '5px', verticalAlign: 'middle' }}
+            />
         ));
         const nextProps = { ...props };
         nextProps.zipFileProp = 'TESTING.zip';
         wrapper.setProps(nextProps);
         wrapper.instance().getCloudDownloadIcon();
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
-            <CloudDownload className="qa-DataPackDetails-CloudDownload-enabled" style={{ fill: '#4598bf', verticalAlign: 'middle' }} />
+            <CloudDownload
+                className="qa-DataPackDetails-CloudDownload-enabled"
+                style={{ fill: '#4598bf', marginRight: '5px', verticalAlign: 'middle' }}
+            />
         ));
     });
 });

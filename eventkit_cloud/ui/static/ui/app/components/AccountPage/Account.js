@@ -2,16 +2,15 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
-import AppBar from 'material-ui/AppBar';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import Help from '@material-ui/icons/Help';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import PageHeader from '../common/PageHeader';
 import UserInfo from './UserInfo';
 import LicenseInfo from './LicenseInfo';
 import SaveButton from './SaveButton';
 import getLicenses from '../../actions/licenseActions';
 import { patchUser } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
-
 import { DrawerTimeout } from '../../actions/exportsActions';
 import { joyride } from '../../joyride.config';
 
@@ -131,18 +130,6 @@ export class Account extends Component {
     render() {
         const { steps, isRunning } = this.state;
         const styles = {
-            header: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
-                padding: '0px 34px',
-            },
-            headerTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                height: '35px',
-            },
             body: {
                 height: window.innerHeight - 130,
                 width: '100%',
@@ -172,7 +159,7 @@ export class Account extends Component {
         };
 
         const iconElementRight = (
-            <EnhancedButton
+            <ButtonBase
                 onClick={this.handleJoyride}
                 style={styles.tourButton}
             >
@@ -180,7 +167,7 @@ export class Account extends Component {
                     style={styles.tourIcon}
                 />
                 Page Tour
-            </EnhancedButton>
+            </ButtonBase>
         );
 
         const equal = Object.keys(this.state.acceptedLicenses).every((key) => {
@@ -209,20 +196,17 @@ export class Account extends Component {
                     }}
                     run={isRunning}
                 />
-                <AppBar
-                    className="qa-Account-AppBar"
+                <PageHeader
+                    className="qa-Account-PageHeader"
                     title="Account"
-                    style={styles.header}
-                    titleStyle={styles.headerTitle}
-                    showMenuIconButton={false}
-                    iconElementRight={iconElementRight}
                 >
+                    {iconElementRight}
                     <SaveButton
                         saved={this.state.showSavedMessage}
                         saveDisabled={equal}
                         handleSubmit={this.handleSubmit}
                     />
-                </AppBar>
+                </PageHeader>
                 <div style={styles.body}>
                     <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
                         <div style={styles.bodyContent} className="qa-Account-body">
