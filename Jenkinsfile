@@ -51,7 +51,8 @@ END
             sh "docker-compose run --rm -T webpack npm run lint"
         }catch(Exception e) {
             postStatus(getFailureStatus("Lint checks failed."))
-            sh "docker-compose logs --tail=50 webpack"
+            sh "docker-compose logs --tail=50 webpack > output.log"
+            sh "cat output.log"
             throw e
         }
     }
@@ -63,7 +64,8 @@ END
             sh "docker-compose run --rm -T webpack npm test"
         }catch(Exception e) {
              postStatus(getFailureStatus("Unit tests failed."))
-             sh "docker-compose logs --tail=50 eventkit webpack"
+             sh "docker-compose logs --tail=50 eventkit webpack > output.log"
+             sh "cat output.log"
              throw e
         }
     }
@@ -76,7 +78,8 @@ END
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
             postStatus(getFailureStatus("Integration tests failed."))
-            sh "docker-compose logs --tail=50"
+            sh "docker-compose logs --tail=50 > output.log"
+            sh "cat output.log"
             throw e
         }
     }
