@@ -1,6 +1,6 @@
 from django.core.management import BaseCommand
 from django.core.management import call_command
-from ...core.helpers import load_land_vectors
+
 
 class Command(BaseCommand):
     help = "Runs initial administrative tasks required to run the application. Optionally 'setup' loads data."

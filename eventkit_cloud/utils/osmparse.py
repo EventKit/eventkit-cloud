@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import argparse
 import logging
-from os.path import exists
 import os
 import subprocess
+from os.path import exists
 from string import Template
-from ..tasks.task_process import TaskProcess
-from sqlite import execute_spatialite_script
 
 from osgeo import gdal, ogr, osr
+
+from eventkit_cloud.tasks.task_process import TaskProcess
+from sqlite import execute_spatialite_script
 
 logger = logging.getLogger(__name__)
 

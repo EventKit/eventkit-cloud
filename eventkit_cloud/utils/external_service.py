@@ -1,20 +1,21 @@
 from __future__ import absolute_import
 
-from ..utils import auth_requests
-from mapproxy.seed.seeder import seed
-from mapproxy.seed.config import SeedingConfiguration
-from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
-
-from mapproxy.config.config import load_config, load_default_config
-from mapproxy.seed import seeder
-from mapproxy.seed.util import ProgressLog
-from django.conf import settings
-import yaml
 import logging
+
+import yaml
+from django.conf import settings
 from django.db import connections
+from mapproxy.config.config import load_config, load_default_config
+from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
+from mapproxy.seed import seeder
+from mapproxy.seed.config import SeedingConfiguration
+from mapproxy.seed.seeder import seed
+from mapproxy.seed.util import ProgressLog
 from pysqlite2 import dbapi2 as sqlite3
-from .geopackage import (get_tile_table_names, get_zoom_levels_table,
-                         get_table_tile_matrix_information, set_gpkg_contents_bounds)
+
+from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.geopackage import (get_tile_table_names, get_zoom_levels_table,
+                                             get_table_tile_matrix_information, set_gpkg_contents_bounds)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class CustomLogger(ProgressLog):
         self.log_step_counter = self.log_step_step
 
     def log_step(self, progress):
-        from ..tasks.export_tasks import update_progress
+        from eventkit_cloud.tasks.export_tasks import update_progress
         if self.task_uid:
             if self.log_step_counter == 0:
                 update_progress(self.task_uid, progress=progress.progress * 100)
@@ -146,8 +147,8 @@ class ExternalRasterServiceToGeopackage(object):
         Convert external service to gpkg.
         """
 
-        from ..tasks.task_process import TaskProcess
-        from .geopackage import remove_empty_zoom_levels
+        from eventkit_cloud.tasks.task_process import TaskProcess
+        from eventkit_cloud.utils.geopackage import remove_empty_zoom_levels
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
 

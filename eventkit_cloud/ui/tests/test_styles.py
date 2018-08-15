@@ -1,22 +1,13 @@
 # -*- coding: utf-8 -*-
-import logging
 import datetime
 import os
 
-from django.test import TestCase
 from django.conf import settings
-
-from mock import Mock, patch, MagicMock
-from ..data_estimator import get_size_estimate, get_gb_estimate
-from ..helpers import generate_qgs_style
-from eventkit_cloud.tasks.models import (
-    ExportRun,
-    ExportTaskRecord,
-    FileProducingTaskResult,
-    DataProviderTaskRecord
-)
+from django.test import TestCase
+from mock import patch, MagicMock
 
 from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.ui.helpers import generate_qgs_style
 
 
 class TestStyles(TestCase):

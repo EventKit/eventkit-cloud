@@ -1,25 +1,26 @@
 from __future__ import absolute_import
 
-from contextlib import contextmanager
+import json
+import math
 import os
+import re
+import shutil
 import subprocess
 import zipfile
-import shutil
-import json
-import re
-import math
-
-from django.conf import settings
-from django.utils import timezone
-from django.template.loader import render_to_string
-from celery.utils.log import get_task_logger
-from ..utils.gdalutils import get_meta, get_band_statistics
-from ..utils import auth_requests
-from uuid import uuid4
-from string import Template
+from contextlib import contextmanager
 from datetime import datetime
+from string import Template
+from uuid import uuid4
+
 import pytz
+from celery.utils.log import get_task_logger
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils import timezone
 from numpy import linspace
+
+from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.gdalutils import get_meta, get_band_statistics
 
 logger = get_task_logger(__name__)
 
@@ -49,7 +50,7 @@ def get_style_files():
 def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
     from eventkit_cloud.jobs.models import DataProvider
-    from eventkit_cloud.tasks.task_runners import normalize_name
+    from eventkit_cloud.tasks.task_builders import normalize_name
     data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
 
     # DataProviders are not required to have a license
@@ -70,8 +71,8 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     Task to create QGIS project file with styles for osm.
     """
     from eventkit_cloud.tasks.models import ExportRun
-    from ..tasks.export_tasks import TaskStates
-    from ..tasks.task_runners import normalize_name
+    from eventkit_cloud.tasks.export_tasks import TaskStates
+    from eventkit_cloud.tasks.task_builders import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
@@ -148,7 +149,7 @@ def get_human_readable_metadata_document(run_uid):
     """
     from eventkit_cloud.tasks.models import ExportRun
     from eventkit_cloud.jobs.models import DataProvider
-    from ..tasks.task_runners import normalize_name
+    from eventkit_cloud.tasks.task_builders import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 

@@ -1,10 +1,6 @@
 from django.contrib import admin
 
-
-from django.utils.html import format_html
-from .models import ExportRun, UserDownload
-from eventkit_cloud.utils.s3 import get_presigned_url
-from django.conf import settings
+from eventkit_cloud.tasks.models import ExportRun, UserDownload
 
 
 class ExportRunAdmin(admin.ModelAdmin):

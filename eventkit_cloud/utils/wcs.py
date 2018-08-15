@@ -2,15 +2,17 @@ from __future__ import absolute_import
 
 import logging
 import os
-from string import Template
+import shutil
 import subprocess
 import tempfile
-from ..tasks.task_process import TaskProcess
+from string import Template
+
 import yaml
-from ..utils import auth_requests
-from .gdalutils import get_dimensions, merge_geotiffs
 from django.conf import settings
-import shutil
+
+from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.utils import auth_requests
+from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs
 
 logger = logging.getLogger(__name__)
 

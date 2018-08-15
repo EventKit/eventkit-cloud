@@ -1,9 +1,10 @@
-from django.conf import settings
-from geocode_auth import get_auth_headers, authenticate
 import logging
-import requests
-from .geocode import AuthenticationError
 
+import requests
+from django.conf import settings
+
+from eventkit_cloud.utils.geocode import AuthenticationError
+from geocode_auth import get_auth_headers, authenticate
 
 logger = logging.getLogger(__name__)
 

@@ -3,15 +3,12 @@
 import logging
 
 import django_filters
-
+from django.contrib.auth.models import User, Group
 from django.db.models import Q
 
+from eventkit_cloud.core.models import GroupPermission
 from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
-
-from django.contrib.auth.models import User, Group
-from ..core.models import GroupPermission, JobPermission
-
 
 logger = logging.getLogger(__name__)
 

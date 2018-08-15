@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-from django.conf import settings
 from django.conf.urls import url
 from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
-from django.views.decorators.csrf import ensure_csrf_cookie
-
-from .views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson, user_active, reverse_geocode, convert, search
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.generic import TemplateView
+
+from eventkit_cloud.ui.views import logout, data_estimator, auth, geocode, get_config, convert_to_geojson, user_active, \
+    reverse_geocode, \
+    convert, search
 
 urlpatterns = [
     url(r'^login', never_cache(ensure_csrf_cookie(TemplateView.as_view(template_name='ui/index.html'))), name='login'),

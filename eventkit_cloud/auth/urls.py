@@ -2,11 +2,11 @@
 
 from __future__ import absolute_import
 
-from .views import oauth, callback, logout
-from django.views.decorators.csrf import ensure_csrf_cookie
 from django.conf.urls import url
 from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import ensure_csrf_cookie
 
+from eventkit_cloud.auth.views import oauth, callback, logout
 
 urlpatterns = [
     url(r'^oauth$', ensure_csrf_cookie(oauth), name='oauth'),

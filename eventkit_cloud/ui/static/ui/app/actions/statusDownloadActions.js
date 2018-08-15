@@ -16,11 +16,13 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         const data = [];
         if (response.data.length) {
             data.push({ ...response.data[0] });
-            data[0].job.permissions = {
-                value: data[0].job.visibility,
-                groups: data[0].job.permissions.groups,
-                members: data[0].job.permissions.users,
-            };
+            if (!data[0].deleted) {
+                data[0].job.permissions = {
+                    value: data[0].job.visibility,
+                    groups: data[0].job.permissions.groups,
+                    members: data[0].job.permissions.users,
+                };
+            }
         }
 
         dispatch({

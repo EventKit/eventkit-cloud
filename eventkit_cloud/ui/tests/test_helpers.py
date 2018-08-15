@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
 
 from django.test import TestCase
+from mock import Mock, patch, mock_open
 
-import os
-from mock import Mock, patch, mock_open, MagicMock
-from ..helpers import cd, get_style_files, get_file_paths, file_to_geojson, \
-    read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon, get_human_readable_metadata_document,\
-    get_last_update, get_osm_last_update, get_metadata_url
+from eventkit_cloud.ui.helpers import cd, get_style_files, get_file_paths, file_to_geojson, \
+    read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon, get_last_update, get_osm_last_update, \
+    get_metadata_url
 
 logger = logging.getLogger(__name__)
 

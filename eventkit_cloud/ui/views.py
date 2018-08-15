@@ -1,28 +1,26 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 import json
+from datetime import timedelta
+from logging import getLogger
+
 from django.conf import settings
+from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
 from django.core.urlresolvers import reverse
-from django.template import RequestContext
+from django.http import HttpResponse
 from django.shortcuts import redirect, render_to_response
+from django.template import RequestContext
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponse
-
-from .data_estimator import get_size_estimate
-from django.contrib.auth import authenticate, login
-from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
-from logging import getLogger
-from ..utils.geocode import Geocode
-from ..utils.reverse import ReverseGeocode
-from ..utils.convert import Convert
-from .helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
-from datetime import datetime, timedelta
-import pytz
 
-
+from eventkit_cloud.api.serializers import UserDataSerializer
+from eventkit_cloud.ui.data_estimator import get_size_estimate
+from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
+from eventkit_cloud.utils.convert import Convert
+from eventkit_cloud.utils.geocode import Geocode
+from eventkit_cloud.utils.reverse import ReverseGeocode
 
 logger = getLogger(__file__)
 

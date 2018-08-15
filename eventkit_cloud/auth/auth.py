@@ -1,16 +1,18 @@
 from __future__ import absolute_import
 
-import requests
-import logging
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.contrib.auth import logout as auth_logout
-from django.shortcuts import redirect
-from .models import OAuth
 import json
+import logging
 from datetime import datetime, timedelta
+
 import dateutil.parser
 import pytz
+import requests
+from django.conf import settings
+from django.contrib.auth import logout as auth_logout
+from django.contrib.auth.models import User
+from django.shortcuts import redirect
+
+from eventkit_cloud.auth.models import OAuth
 
 logger = logging.getLogger(__name__)
 

@@ -3,11 +3,10 @@ import logging
 import os
 from uuid import uuid4
 
+from django.test import TransactionTestCase
 from mock import Mock, patch
 
-from django.test import TransactionTestCase
-
-from ..kml import GPKGToKml
+from eventkit_cloud.utils.kml import GPKGToKml
 
 logger = logging.getLogger(__name__)
 
