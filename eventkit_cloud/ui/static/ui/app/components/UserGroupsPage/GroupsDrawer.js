@@ -7,9 +7,9 @@ import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
 import Divider from 'material-ui/Divider';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Vert from 'material-ui/svg-icons/navigation/more-vert';
-import InfoIcon from 'material-ui/svg-icons/action/info-outline';
-import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
+import Vert from '@material-ui/icons/MoreVert';
+import InfoIcon from '@material-ui/icons/InfoOutlined';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 import CustomScrollbar from '../CustomScrollbar';
 
 

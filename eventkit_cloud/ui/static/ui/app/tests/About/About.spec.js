@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import AppBar from 'material-ui/AppBar';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import About from '../../components/About/About';
 import { about } from '../../about.config';
+import PageHeader from '../../components/common/PageHeader';
 import InfoParagraph from '../../components/About/InfoParagraph';
 import ThreeStepInfo from '../../components/About/ThreeStepInfo';
 import InfoGrid from '../../components/About/InfoGrid';
@@ -24,8 +24,8 @@ describe('About component', () => {
         const mapping = { InfoParagraph: 0, ThreeStepInfo: 0, InfoGrid: 0 };
         about.forEach((item) => { mapping[item.type] += 1; });
         const wrapper = getWrapper();
-        expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).text()).toEqual('About EventKit');
+        expect(wrapper.find(PageHeader)).toHaveLength(1);
+        expect(wrapper.find(PageHeader).text()).toEqual('About EventKit');
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(InfoParagraph)).toHaveLength(mapping.InfoParagraph);
         expect(wrapper.find(ThreeStepInfo)).toHaveLength(mapping.ThreeStepInfo);
@@ -34,7 +34,7 @@ describe('About component', () => {
 
     it('should not show the version tag if no version in context', () => {
         const wrapper = getWrapper();
-        expect(wrapper.find('.qa-About-version')).toHaveLength(0);
+        expect(wrapper.find(PageHeader).props().children).toEqual('');
     });
 
     it('should not show the contact link if no contact url in context', () => {
@@ -51,8 +51,7 @@ describe('About component', () => {
                 config: PropTypes.object,
             },
         });
-        expect(wrapper.find('.qa-About-version')).toHaveLength(1);
-        expect(wrapper.find('.qa-About-version').text()).toEqual('Version 1.2.3');
+        expect(wrapper.find(PageHeader).props().children).toEqual('1.2.3');
     });
 
     it('should render the contact url', () => {

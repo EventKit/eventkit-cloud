@@ -3,7 +3,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import { AppBar, CircularProgress, Paper } from 'material-ui';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';

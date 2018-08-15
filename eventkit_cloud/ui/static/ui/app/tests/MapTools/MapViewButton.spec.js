@@ -3,8 +3,8 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ActionSettingsOverscan from 'material-ui/svg-icons/action/settings-overscan';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ActionSettingsOverscan from '@material-ui/icons/SettingsOverscan';
+import ContentClear from '@material-ui/icons/Clear';
 import { MapViewButton } from '../../components/MapTools/MapViewButton';
 
 describe('MapViewButton component', () => {

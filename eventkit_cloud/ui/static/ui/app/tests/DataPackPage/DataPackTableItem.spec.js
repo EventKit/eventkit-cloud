@@ -7,12 +7,12 @@ import { Link } from 'react-router';
 import { TableRow, TableRowColumn } from 'material-ui/Table';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
-import AlertError from 'material-ui/svg-icons/alert/error';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
+import AlertError from '@material-ui/icons/Error';
+import Lock from '@material-ui/icons/LockOutlined';
+import SocialGroup from '@material-ui/icons/Group';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import NavigationCheck from '@material-ui/icons/Check';
+import NotificationSync from '@material-ui/icons/Sync';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

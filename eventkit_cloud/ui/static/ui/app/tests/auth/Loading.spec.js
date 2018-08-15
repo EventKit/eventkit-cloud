@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import CircularProgress from 'material-ui/CircularProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Loading from '../../components/auth/Loading';
 
 describe('Loading component', () => {

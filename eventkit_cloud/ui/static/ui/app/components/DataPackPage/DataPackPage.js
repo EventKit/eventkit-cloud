@@ -5,7 +5,7 @@ import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import AppBar from 'material-ui/AppBar';
 import CircularProgress from 'material-ui/CircularProgress';
-import Help from 'material-ui/svg-icons/action/help';
+import Help from '@material-ui/icons/Help';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import DataPackGrid from './DataPackGrid';

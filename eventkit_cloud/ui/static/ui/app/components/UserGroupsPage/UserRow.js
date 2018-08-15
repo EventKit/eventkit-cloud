@@ -3,10 +3,10 @@ import React, { Component } from 'react';
 import IconButton from 'material-ui/IconButton';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
-import Person from 'material-ui/svg-icons/social/person';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import Person from '@material-ui/icons/Person';
+import ArrowDown from '@material-ui/icons/ArrowDropDown';
+import Checked from '@material-ui/icons/CheckBox';
+import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 
 export class UserRow extends Component {

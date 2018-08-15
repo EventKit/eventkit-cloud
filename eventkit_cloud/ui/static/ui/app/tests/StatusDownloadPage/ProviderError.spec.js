@@ -4,7 +4,7 @@ import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
+import Warning from '@material-ui/icons/Warning';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
