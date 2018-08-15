@@ -20,8 +20,8 @@ before_script:
     - docker-compose build webpack
 
 script:
-    - docker-compose exec -T webpack npm run lint
-    - docker-compose exec -T webpack npm test
+    - docker-compose run --rm -T webpack npm run lint
+    - docker-compose run --rm -T webpack npm test
     # The backend tests take too long to build and run here.
 
 env:
