@@ -20,7 +20,7 @@ String successStatus = '{"state":"success","description":"This build has succeed
 
     stage("Add Repo"){
         def urlPath = getURLPath()
-        sh "echo build path is: ${urlPath}"
+        sh "echo build path is: $urlPath"
         sh "ls -al"
         if(env.CONDA_REPO){
             sh """
@@ -103,11 +103,6 @@ def getGitSHA(){
 }
 
 def getURLPath(){
-return sh(script:  """
-python - << END
-import re
-print(re.sub(r'http(s?):\/\/.+?/','', $env.BUILD_URL)
-END
-""", returnStdout: true)
+return sh(script:"echo \${$env.BUILD_URL#https://*/}", returnStdout: true).trim()
 }
 
