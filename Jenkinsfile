@@ -41,7 +41,7 @@ import yaml
 data = {}
 with open('environment-dev.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
-data['channels'] = ['$env.CONDA_REPO'] + data['channels']
+data['channels'] = ['$env.CONDA_REPO']
 
 with open('environment-dev.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
@@ -88,7 +88,7 @@ def postStatus(status){
   sh """
   curl -b --header "Content-Type: application/json" \
   --request POST \
-  --data status \
+  --data $status \
   ${url}
   """
 }
