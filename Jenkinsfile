@@ -38,8 +38,8 @@ data = {}
 with open('docker-compose.yml', 'r') as yaml_file:
     data = yaml.load(yaml_file)
 for service in data.get('services'):
-    if service.get('volumes'):
-        service.pop('volumes')
+    if data['services'][service].get('volumes'):
+        data['services'][service].pop('volumes')
 with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
