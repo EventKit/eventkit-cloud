@@ -102,7 +102,6 @@ def getGitSHA(){
 }
 
 def getURLPath(status){
-    def path = sh(script: "${env.BUILD_URL#https://*/}", returnStdout: true)
-    return path.trim()
+    return (env.BUILD_URL - ~/^https:\/\/.+?\// )
 }
 
