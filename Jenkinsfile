@@ -73,12 +73,12 @@ def postStatus(status){
   if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
   }
   def url = getStatusURL()
-  sh """
-  curl -b --header "Content-Type: application/json" \
+  sh "
+  curl -b --header 'Content-Type: application/json' \
   --request POST \
-  --data $status \
+  --data ${status} \
   ${url}
-  """
+  "
 }
 
 
