@@ -43,8 +43,7 @@ END
             sh "docker-compose run --rm -T webpack npm run lint"
         }catch(Exception e) {
             postStatus(getFailureStatus("Lint checks failed."))
-            sh "docker-compose logs --tail=50 webpack > output.log"
-            sh "cat output.log"
+            sh "stdbuf -i0 -e0 -o0 docker-compose logs --tail=50 webpack > output.log"
             throw e
         }
     }
@@ -56,8 +55,7 @@ END
             sh "docker-compose run --rm -T webpack npm test"
         }catch(Exception e) {
              postStatus(getFailureStatus("Unit tests failed."))
-             sh "docker-compose logs --tail=50 eventkit webpack > output.log"
-             sh "cat output.log"
+             sh "stdbuf -i0 -e0 -o0 docker-compose logs --tail=50 eventkit webpack"
              throw e
         }
     }
@@ -69,8 +67,7 @@ END
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
             postStatus(getFailureStatus("Integration tests failed."))
-            sh "docker-compose logs --tail=50 > output.log"
-            sh "cat output.log"
+            sh "stdbuf -i0 -e0 -o0 docker-compose logs --tail=50"
             throw e
         }
     }
@@ -104,13 +101,13 @@ return sh(script:"echo ${env.BUILD_URL} | sed 's/https:\\/\\/[^\\/]*//'", return
 }
 
 def getPendingStatus(message){
-  return "{\"state\":\"pending\",\"description\":\"${message}\",\"context\":\"ci/jenkins/${env.BUILD_NUMBER}\"}"
+  return "{\"state\":\"pending\",\"description\":\"${env.BUILD_NUMBER}-${message}\",\"context\":\"ci/jenkins\"}"
 }
 
 def getSuccessStatus(message){
-  return "{\"state\":\"success\",\"description\":\"${message}\",\"context\":\"ci/jenkins/${env.BUILD_NUMBER}\"}"
+  return "{\"state\":\"success\",\"description\":\"${env.BUILD_NUMBER}-${message}\",\"context\":\"ci/jenkins\"}"
 }
 
 def getFailureStatus(message){
-  return "{\"state\":\"failure\",\"description\":\"${message}\",\"context\":\"ci/jenkins/${env.BUILD_NUMBER}\"}"
+  return "{\"state\":\"failure\",\"description\":\"${env.BUILD_NUMBER}-${message}\",\"context\":\"ci/jenkins\"}"
 }
