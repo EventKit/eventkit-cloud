@@ -19,7 +19,7 @@ String successStatus = '{"state":"success","description":"This build has succeed
     }
 
     stage("Add Repo"){
-
+        sh "echo build path is: ${getURLPath()}"
         sh "ls -al"
         if(env.CONDA_REPO){
             sh """
@@ -41,37 +41,41 @@ END
     }
 
     stage("Build"){
-        catchError{
+        try{
             sh "docker-compose build"
+        }catch(Exception e) {
+             postStatus(failureStatus)
+             throw e
         }
     }
 
     stage("Run linter"){
-        catchError{
+        try{
             sh "docker-compose run --rm -T webpack npm run lint"
+        }catch(Exception e) {
+             postStatus(failureStatus)
+             throw e
         }
     }
 
     stage("Run unit tests"){
-        catchError{
+        try{
             sh "docker-compose run --rm -T eventkit pytest -n"
             sh "docker-compose run --rm -T webpack npm test"
+        }catch(Exception e) {
+             postStatus(failureStatus)
+             throw e
         }
     }
 
     stage("Run integration tests"){
-        catchError{
+        try{
             sh "docker-compose exec -T eventkit pytest -n"
             sh "docker-compose up -d && docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
-        }
-    }
-
-    post {
-        success {
             postStatus(successStatus)
-        }
-        failure {
+        }catch(Exception e) {
             postStatus(failureStatus)
+            throw e
         }
     }
 }
@@ -79,9 +83,9 @@ END
 
 def postStatus(status){
   if(env.GIT_URL.contains('github') && env.SET_STATUS.toBoolean()){
+      def url = getStatusURL()
+      sh "curl -b --header 'Content-Type: application/json' --request POST --data '${status}' ${url}"
   }
-  def url = getStatusURL()
-  sh "curl -b --header 'Content-Type: application/json' --request POST --data '${status}' ${url}"
 }
 
 
@@ -96,3 +100,9 @@ def getGitSHA(){
     def sha = sh(script: "git rev-parse HEAD", returnStdout: true)
     return sha.trim()
 }
+
+def getURLPath(status){
+    def path = sh(script: "${env.BUILD_URL#https://*/}", returnStdout: true)
+    return path.trim()
+}
+
