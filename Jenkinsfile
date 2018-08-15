@@ -21,13 +21,13 @@ def successStatus = '{\
 }'
 
     stage("Setup") {
-        postStatus(pendingStatus)
         deleteDir()
         if(env.GIT_CREDS) {
             git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}", credentialsId: "${env.GIT_CREDS}"
         } else {
             git url: "${env.GIT_URL}", branch: "${env.GIT_BRANCH}"
         }
+        postStatus(pendingStatus)
     }
 
     stage("Add Repo"){
