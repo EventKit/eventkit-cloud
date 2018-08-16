@@ -133,7 +133,7 @@ def getFailureStatus(message){
 }
 
 def handleErrors(message){
-    postStatus(getFailureStatus(message)
+    postStatus(getFailureStatus(message))
     sh "docker-compose down"
     error(message)
 }
