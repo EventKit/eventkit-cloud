@@ -12,6 +12,8 @@ COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.ym
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 COPY --chown=eventkit ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
 COPY --chown=eventkit ./scripts /var/lib/eventkit/scripts
+COPY --chown=eventkit ./manage.py /var/lib/eventkit/manage.py
+COPY --chown=eventkit ./pytest.ini /var/lib/eventkit/pytest.ini
 
 ENV PATH="/home/eventkit/miniconda2/bin:$PATH"
 
