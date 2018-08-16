@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -16,7 +16,7 @@ services:
     - rabbitmq
     expose:
     - "6080"
-    command: sh /var/lib/eventkit/scripts/eventkit-entrypoint.sh
+    command: sh /var/lib/eventkit/scripts/eventkit-start.sh
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -52,7 +52,7 @@ services:
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -83,9 +83,9 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: sh /var/lib/eventkit/scripts/celery-entrypoint.sh
+    command: sh /var/lib/eventkit/scripts/celery-start.sh
   celery-beat:
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -116,7 +116,7 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: sh /var/lib/eventkit/scripts/celery-beat-entrypoint.sh
+    command: sh /var/lib/eventkit/scripts/celery-beat-start.sh
   postgis:
     image: mdillon/postgis:9.5
     environment:
@@ -150,7 +150,7 @@ services:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
   flower:
-    image: eventkit-base:1.1.0
+    image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -163,7 +163,7 @@ services:
     - postgis
     ports:
     - "49555:5555"
-    command: sh /var/lib/eventkit/scripts/flower-entrypoint.sh
+    command: sh /var/lib/eventkit/scripts/flower-start.sh
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
     environment:
@@ -202,7 +202,6 @@ services:
     # command: node --debug-brk --inspect=${SITE_NAME}:9229 ./node_modules/.bin/jest --runInBand
 volumes:
   postgis_database:
-
 
 
 

@@ -109,3 +109,6 @@ e2e_reports/
 screenshots/*
 !screenshots/baseline
 
+conda/repo
+*_jb_*
+
