@@ -1,0 +1,17 @@
+openjpeg
+proj
+geos
+freexl
+readosm
+libspatialite
+spatialite
+json-c
+libtiff
+postgresql
+libgdal
+gdal
+berkeleydb
+openldap
+python-ldap
+osmctools
+django-audit-logging

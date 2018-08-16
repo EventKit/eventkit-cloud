@@ -1,0 +1,43 @@
+{% set name = "build" %}
+{% set version = "1.0.2" %}
+{% set file_ext = "zip" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "0c182be692427d4ab45b154209ef46bd7e682f5317e6b3a74d1c3a0ad254e6b7" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python
+    - setuptools
+  run:
+    - python
+    - setuptools
+
+test:
+  imports:
+    - build
+
+about:
+  home: https://github.com/benjamin-hodgson/build
+  license: MIT License
+  license_family: MIT
+  license_file: ''
+  summary: A tiny base class for fluent builders
+  description: UNKNOWN
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''
