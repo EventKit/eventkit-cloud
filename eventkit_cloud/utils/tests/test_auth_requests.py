@@ -27,7 +27,7 @@ class TestAuthResult(TransactionTestCase):
 
         # Test: normal response without cert
         response = MagicMock()
-        response.content = "test"
+        response.content = "test response content"
         req_patch.side_effect = None
         req_patch.return_value = response
 
@@ -36,7 +36,7 @@ class TestAuthResult(TransactionTestCase):
         getenv.assert_any_call("TEST_SLUG_CERT")
         getenv.assert_any_call("TEST_SLUG_CRED")
         req_patch.assert_called_with(self.url, data=42)
-        self.assertEqual("test", result.content)
+        self.assertEqual("test response content", result.content)
 
         # Test: normal response with cert
         getenv.return_value = "test cert content"
@@ -56,7 +56,17 @@ class TestAuthResult(TransactionTestCase):
         cert_tempfile.write.assert_called_once_with("test cert content")
         cert_tempfile.flush.assert_called()
         req_patch.assert_called_with(self.url, data=42, cert="temp filename")
-        self.assertEqual("test", result.content)
+        self.assertEqual("test response content", result.content)
+
+        # Test: with credentials
+        getenv.return_value = 'user.name@example.com:pass/.1!_-? &.%$word'
+        with patch('eventkit_cloud.utils.auth_requests.find_cert_var', return_value=None):
+            result = req(self.url, slug="test_slug", data=42)
+        getenv.assert_any_call("test_slug_CRED")
+        req_patch.assert_called_with(self.url, data=42, auth=('user.name%40example.com', 'pass%2F.1%21_-%3F%20%26.'
+                                                                                         '%25%24word'))
+        self.assertEqual("test response content", result.content)
+
 
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
     @patch('eventkit_cloud.utils.auth_requests.requests.get')
