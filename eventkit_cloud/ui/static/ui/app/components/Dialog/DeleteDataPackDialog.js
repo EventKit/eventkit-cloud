@@ -1,11 +1,8 @@
-import React, {PropTypes, Component} from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
 export class DeleteDialog extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         return (
             <ConfirmDialog
@@ -15,11 +12,11 @@ export class DeleteDialog extends Component {
                 confirmLabel="Delete"
                 onCancel={this.props.onCancel}
                 onConfirm={this.props.onDelete}
-                isDestructive={true}
+                isDestructive
             >
                 <strong>Are you sure you want to delete this DataPack?</strong>
             </ConfirmDialog>
-        )
+        );
     }
 }
 

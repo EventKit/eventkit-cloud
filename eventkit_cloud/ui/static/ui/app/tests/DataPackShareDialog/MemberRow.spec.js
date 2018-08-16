@@ -1,9 +1,10 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader } from 'material-ui/Card';
-import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import MemberRow from '../../components/DataPackShareDialog/MemberRow';
 
 describe('GroupRow component', () => {

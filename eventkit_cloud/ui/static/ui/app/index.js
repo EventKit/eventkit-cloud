@@ -1,73 +1,137 @@
 import 'babel-polyfill';
 import React from 'react';
+import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
-import injectTapEventPlugin from 'react-tap-event-plugin';
-import { UserAuthWrapper } from 'redux-auth-wrapper';
+import Loadable from 'react-loadable';
+import { connectedReduxRedirect } from 'redux-auth-wrapper/history3/redirect';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
-import Application from './components/Application';
-import LoginPage from './components/auth/LoginPage';
-import Loading from './components/auth/Loading';
-import Logout from './containers/logoutContainer';
-import About from './components/About/About';
-import Account from './components/AccountPage/Account';
-import DashboardPage from './components/DashboardPage/DashboardPage';
-import DataPackPage from './components/DataPackPage/DataPackPage';
-import CreateExport from './components/CreateDataPack/CreateExport';
-import StatusDownload from './components/StatusDownloadPage/StatusDownload';
-import UserGroupsPage from './components/UserGroupsPage/UserGroupsPage';
-import NotificationsPage from './components/NotificationsPage/NotificationsPage';
-import { login, userActive } from './actions/userActions';
+import { login } from './actions/userActions';
 
+const Loading = (args) => {
+    if (args.pastDelay) {
+        return (
+            <div
+                style={{
+                    color: 'white',
+                    height: '100vh',
+                    background: 'rgb(17, 24, 35)',
+                }}
+            >
+                Loading. . .
+            </div>
+        );
+    }
+
+    return null;
+};
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
-injectTapEventPlugin();
 
 function allTrue(acceptedLicenses) {
-    for (const l in acceptedLicenses) {
-        if (acceptedLicenses[l]) {continue;}
-        else {return false;}
-    }
-    return true;
+    return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
 }
 
-const UserIsAuthenticated = UserAuthWrapper({
-    authSelector: state => state.user.data,
-    authenticatingSelector: state => state.user.isLoading,
-    LoadingComponent: Loading,
-    redirectAction: routerActions.replace,
-    wrapperDisplayName: 'UserIsAuthenticated',
+const loadableDefaults = {
+    loading: Loading,
+    delay: 1000,
+};
+
+const Loader = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/auth/Loading'),
 });
 
-const UserIsNotAuthenticated = UserAuthWrapper({
-    authSelector: state => state.user,
+const UserIsAuthenticated = connectedReduxRedirect({
+    authenticatedSelector: state => !!state.user.data,
+    authenticatingSelector: state => state.user.isLoading,
+    AuthenticatingComponent: Loader,
+    redirectAction: routerActions.replace,
+    wrapperDisplayName: 'UserIsAuthenticated',
+    redirectPath: '/login',
+});
+
+const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
-    // Want to redirect the user when they are done loading and authenticated
-    predicate: user => !user.data && user.isLoading === false,
-    failureRedirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/exports',
+    authenticatedSelector: state => !state.user.data && state.user.isLoading === false,
+    redirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/dashboard',
     allowRedirectBack: false,
 });
 
-const UserHasAgreed = UserAuthWrapper({
-    authSelector: state => state.user.data,
+const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
-    failureRedirectPath: '/account',
+    redirectPath: '/account',
     wrapperDisplayName: 'UserHasAgreed',
-    predicate: userData => allTrue(userData.accepted_licenses),
+    authenticatedSelector: state => allTrue(state.user.data.accepted_licenses),
 });
 
-function checkAuth(store) {
-    return (nextState, replace) => {
-        const { user } = store.getState();
+function checkAuth(storeObj) {
+    return (nextState) => {
+        const { user } = storeObj.getState();
         if (!user.data) {
-            store.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
+            storeObj.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
         }
     };
 }
+
+const Application = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/Application'),
+});
+
+const LoginPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/auth/LoginPage'),
+});
+
+const Logout = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./containers/logoutContainer'),
+});
+
+const About = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/About/About'),
+});
+
+const Account = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/AccountPage/Account'),
+});
+
+const DashboardPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/DashboardPage/DashboardPage'),
+});
+
+const DataPackPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/DataPackPage/DataPackPage'),
+});
+
+const CreateExport = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/CreateDataPack/CreateExport'),
+});
+
+const StatusDownload = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/StatusDownloadPage/StatusDownload'),
+});
+
+const UserGroupsPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/UserGroupsPage/UserGroupsPage'),
+});
+
+const NotificationsPage = Loadable({
+    ...loadableDefaults,
+    loader: () => import('./components/NotificationsPage/NotificationsPage'),
+});
 
 render(
     <Provider store={store}>

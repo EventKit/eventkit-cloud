@@ -1,6 +1,7 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
+import Warning from '@material-ui/icons/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class TaskError extends Component {
@@ -46,12 +47,16 @@ export class TaskError extends Component {
 
         return (
             <span className="qa-TaskError-errorLink">
-                <a 
-                    onClick={() => {this.handleTaskErrorOpen()}} 
+                <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={this.handleTaskErrorOpen}
+                    onKeyPress={this.handleTaskErrorOpen}
                     style={styles.errorText}
+                    className="qa-TaskError-error-text"
                 >
                     ERROR
-                </a>
+                </span>
 
                 <BaseDialog
                     className="qa-TaskError-BaseDialog"
@@ -82,7 +87,6 @@ export class TaskError extends Component {
                         </div>
                     ))}
                 </BaseDialog>
-
             </span>
         );
     }

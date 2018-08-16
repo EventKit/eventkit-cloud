@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import moment from 'moment';
 import UserInfoTableRow from './UserInfoTableRow';
 
@@ -18,7 +19,9 @@ export class UserInfo extends Component {
                 <h4><strong>Personal Information</strong></h4>
                 {this.props.updateLink ?
                     <div className="qa-UserInfo-personalDetails" style={{ color: 'grey' }}>
-                        <strong style={{ color: '#000' }}>To update</strong> your personal details, please <strong style={{ color: '#000' }}>visit</strong>
+                        <strong style={{ color: '#000' }}>To update </strong>
+                        your personal details, please
+                        <strong style={{ color: '#000' }}> visit</strong>
                         <a href={this.props.updateLink}> here</a>
                     </div>
                     :
@@ -30,8 +33,8 @@ export class UserInfo extends Component {
                         <UserInfoTableRow title="First name" data={this.props.user.first_name} />
                         <UserInfoTableRow title="Last name" data={this.props.user.last_name} />
                         <UserInfoTableRow title="Email" data={this.props.user.email} />
-                        <UserInfoTableRow title="Date Joined" data={moment(this.props.user.date_joined).format('YYYY-MM-DD')} />
-                        <UserInfoTableRow title="Last Login" data={moment(this.props.user.last_login).format('YYYY-MM-DD, h:mm a')} />
+                        <UserInfoTableRow title="Date Joined" data={moment(this.props.user.date_joined).format('M/D/YY')} />
+                        <UserInfoTableRow title="Last Login" data={moment(this.props.user.last_login).format('M/D/YY h:mma')} />
                     </tbody>
                 </table>
             </div>

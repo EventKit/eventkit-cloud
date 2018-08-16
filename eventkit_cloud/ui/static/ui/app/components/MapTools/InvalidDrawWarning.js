@@ -1,10 +1,7 @@
-import React, {Component, PropTypes} from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
 export class InvalidDrawWarning extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         const style = {
             display: this.props.show ? 'initial' : 'none',
@@ -18,15 +15,15 @@ export class InvalidDrawWarning extends Component {
             borderColor: '#d43f3a',
             color: '#fff',
             zIndex: 2,
-            opacity: .7,
-            fontSize: '12px'
-        }
+            opacity: 0.7,
+            fontSize: '12px',
+        };
 
         return (
-            <div style={style} className={'qa-InvalidDrawWardning-div'} >
+            <div style={style} className="qa-InvalidDrawWardning-div" >
                 <span>You drew an invalid bounding box, please redraw.</span>
             </div>
-        )
+        );
     }
 }
 

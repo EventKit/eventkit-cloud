@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-import requests
-import os
-from django.conf import settings
-import subprocess
-import dj_database_url
-import zipfile
-import shutil
 import logging
-from notifications.signals import notify
-from enum import Enum
+import os
+import shutil
+import subprocess
+import zipfile
 
+import dj_database_url
+import requests
+from django.conf import settings
+from enum import Enum
+from notifications.signals import notify
 
 logger = logging.getLogger(__name__)
 
@@ -100,11 +100,13 @@ def load_land_vectors(db_conn=None, url=None):
     finally:
         logger.info("Finished loading land data.")
 
+
 class NotificationLevel(Enum):
     SUCCESS = "success"
     INFO = "info"
     WARNING = "warning"
-    ERROR  = "ERROR"
+    ERROR = "ERROR"
+
 
 class NotificationVerb(Enum):
     RUN_STARTED = "run_started"
@@ -120,7 +122,7 @@ class NotificationVerb(Enum):
 
 def sendnotification(actor, recipient, verb, action_object, target, level, description):
     try:
-        result = notify.send(actor, recipient=recipient, verb=verb, action_object=action_object,target=target,
-                             level=level,description=description)
+        notify.send(actor, recipient=recipient, verb=verb, action_object=action_object, target=target,
+                             level=level, description=description)
     except Exception as err:
-        logger.debug( "notify send error ignored: %s" % err)
+        logger.debug("notify send error ignored: %s" % err)

@@ -1,11 +1,12 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Table, TableBody, TableHeader, TableHeaderColumn } from 'material-ui/Table';
-import { GridList } from 'material-ui/GridList'
-import NavigationArrowDropDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import NavigationArrowDropUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import { GridList } from 'material-ui/GridList';
+import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
+import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import DataPackList from '../../components/DataPackPage/DataPackList';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
@@ -26,7 +27,7 @@ describe('DataPackList component', () => {
             slug: 'osm',
             preview_url: '',
             service_copyright: '',
-            service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+            service_description: 'OpenStreetMap vector data.',
             layer: null,
             level_from: 0,
             level_to: 10,
@@ -36,23 +37,96 @@ describe('DataPackList component', () => {
         },
     ];
 
-    const getProps = () => {
-        return {
-            runs: getRuns(),
-            user: { data: { user: { username: 'admin' } } },
-            onRunDelete: () => {},
-            onSort: () => {},
-            order: '-started_at',
-            providers,
-        };
-    };
-
-    const getWrapper = (props) => {
-        return mount(<DataPackList {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object }
-        });
+    function getRuns() {
+        return [
+            {
+                uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+                url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+                started_at: '2017-03-10T15:52:35.637331Z',
+                finished_at: '2017-03-10T15:52:39.837Z',
+                user: 'admin',
+                status: 'COMPLETED',
+                job: {
+                    uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                    name: 'Test1',
+                    event: 'Test1 event',
+                    description: 'Test1 description',
+                    url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+                    extent: {},
+                    permissions: {
+                        value: 'PRIVATE',
+                        groups: {},
+                        members: {},
+                    },
+                },
+                provider_tasks: [],
+                expiration: '2017-03-24T15:52:35.637258Z',
+            },
+            {
+                uid: 'c7466114-8c0c-4160-8383-351414b11e37',
+                url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
+                started_at: '2017-03-10T15:52:29.311523Z',
+                finished_at: '2017-03-10T15:52:33.612Z',
+                user: 'notAdmin',
+                status: 'COMPLETED',
+                job: {
+                    uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
+                    name: 'Test2',
+                    event: 'Test2 event',
+                    description: 'Test2 description',
+                    url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
+                    extent: {},
+                    permissions: {
+                        value: 'PRIVATE',
+                        groups: {},
+                        members: {},
+                    },
+                },
+                provider_tasks: [],
+                expiration: '2017-03-24T15:52:29.311458Z',
+            },
+            {
+                uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
+                url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
+                started_at: '2017-03-10T15:52:18.796929Z',
+                finished_at: '2017-03-10T15:52:27.500Z',
+                user: 'admin',
+                status: 'COMPLETED',
+                job: {
+                    uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                    name: 'Test3',
+                    event: 'Test3 event',
+                    description: 'Test3 description',
+                    url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                    extent: {},
+                    permissions: {
+                        value: 'PRIVATE',
+                        groups: {},
+                        members: {},
+                    },
+                },
+                provider_tasks: [],
+                expiration: '2017-03-24T15:52:18.796854Z',
+            },
+        ];
     }
+
+    const getProps = () => ({
+        runs: getRuns(),
+        user: { data: { user: { username: 'admin' } } },
+        onRunDelete: () => {},
+        onRunShare: () => {},
+        onSort: () => {},
+        order: '-started_at',
+        users: [],
+        groups: [],
+        providers,
+    });
+
+    const getWrapper = props => mount(<DataPackList {...props} />, {
+        context: { muiTheme },
+        childContextTypes: { muiTheme: PropTypes.object },
+    });
 
     it('should render list items as part of the mobile view', () => {
         const props = getProps();
@@ -60,6 +134,7 @@ describe('DataPackList component', () => {
         // ensure the screen is small
         window.resizeTo(556, 600);
         expect(window.innerWidth).toEqual(556);
+        wrapper.instance().forceUpdate();
         wrapper.update();
 
         expect(wrapper.find(GridList)).toHaveLength(1);
@@ -73,6 +148,7 @@ describe('DataPackList component', () => {
         // ensure the screen is large
         window.resizeTo(1250, 800);
         expect(window.innerWidth).toEqual(1250);
+        wrapper.instance().forceUpdate();
         wrapper.update();
 
         expect(wrapper.find(GridList)).toHaveLength(0);
@@ -218,9 +294,19 @@ describe('DataPackList component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackList {...props} />);
         let icon = wrapper.instance().getIcon('started_at');
-        expect(icon).toEqual(<NavigationArrowDropDown className="qa-DataPackList-NavigationArrowDropDown" style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }} />);
+        expect(icon).toEqual((
+            <NavigationArrowDropDown
+                className="qa-DataPackList-NavigationArrowDropDown"
+                style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }}
+            />
+        ));
         icon = wrapper.instance().getIcon('-started_at');
-        expect(icon).toEqual(<NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }} />);
+        expect(icon).toEqual((
+            <NavigationArrowDropUp
+                className="qa-DataPackList-NavigationArrowDropUp"
+                style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }}
+            />
+        ));
     });
 
     it('getHeaderStyle should return bold black style if true or inherit style if false', () => {
@@ -232,77 +318,3 @@ describe('DataPackList component', () => {
         expect(style).toEqual({ color: 'inherit' });
     });
 });
-
-function getRuns() {
-    return [
-        {
-            uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-            url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-            started_at: '2017-03-10T15:52:35.637331Z',
-            finished_at: '2017-03-10T15:52:39.837Z',
-            user: 'admin',
-            status: 'COMPLETED',
-            job: {
-                uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                name: 'Test1',
-                event: 'Test1 event',
-                description: 'Test1 description',
-                url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-                extent: {},
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: [],
-            expiration: '2017-03-24T15:52:35.637258Z',
-        },
-        {
-            uid: 'c7466114-8c0c-4160-8383-351414b11e37',
-            url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
-            started_at: '2017-03-10T15:52:29.311523Z',
-            finished_at: '2017-03-10T15:52:33.612Z',
-            user: 'notAdmin',
-            status: 'COMPLETED',
-            job: {
-                uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
-                name: 'Test2',
-                event: 'Test2 event',
-                description: 'Test2 description',
-                url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
-                extent: {},
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: [],
-            expiration: '2017-03-24T15:52:29.311458Z',
-        },
-        {
-            uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
-            url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
-            started_at: '2017-03-10T15:52:18.796929Z',
-            finished_at: '2017-03-10T15:52:27.500Z',
-            user: 'admin',
-            status: 'COMPLETED',
-            job: {
-                uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-                name: 'Test3',
-                event: 'Test3 event',
-                description: 'Test3 description',
-                url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-                extent: {},
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: [],
-            expiration: '2017-03-24T15:52:18.796854Z',
-        },
-    ];
-}

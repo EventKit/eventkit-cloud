@@ -1,5 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -46,7 +47,7 @@ const providers = [{
     slug: 'osm',
     preview_url: '',
     service_copyright: '',
-    service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+    service_description: 'OpenStreetMap vector data.',
     layer: null,
     level_from: 0,
     level_to: 10,
@@ -55,45 +56,184 @@ const providers = [{
     export_provider_type: 2,
 }];
 
+function getRuns() {
+    return [{
+        uid: '6870234f-d876-467c-a332-65fdf0399a0d',
+        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
+        started_at: '2017-03-10T15:52:35.637331Z',
+        finished_at: '2017-03-10T15:52:39.837Z',
+        duration: '0:00:04.199825',
+        user: 'admin',
+        status: 'COMPLETED',
+        job: {
+            uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+            name: 'Test1',
+            event: 'Test1 event',
+            featured: false,
+            description: 'Test1 description',
+            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
+            extent: {
+                type: 'Feature',
+                properties: {
+                    uid: '7643f806-1484-4446-b498-7ddaa65d011a',
+                    name: 'Test1',
+                },
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [-0.077419, 50.778155],
+                            [-0.077419, 50.818517],
+                            [-0.037251, 50.818517],
+                            [-0.037251, 50.778155],
+                            [-0.077419, 50.778155],
+                        ],
+                    ],
+                },
+            },
+            selection: '',
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+        },
+        provider_tasks: [],
+        zipfile_url: 'http://cloud.eventkit.test/downloads/68/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
+        expiration: '2017-03-24T15:52:35.637258Z',
+    },
+    {
+        uid: 'c7466114-8c0c-4160-8383-351414b11e37',
+        url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
+        started_at: '2017-03-10T15:52:29.311523Z',
+        finished_at: '2017-03-10T15:52:33.612Z',
+        duration: '0:00:04.301278',
+        user: 'notAdmin',
+        status: 'COMPLETED',
+        job: {
+            uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
+            name: 'Test2',
+            event: 'Test2 event',
+            featured: true,
+            description: 'Test2 description',
+            url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
+            extent: {
+                type: 'Feature',
+                properties: {
+                    uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
+                    name: 'Test2',
+                },
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [-0.077419, 50.778155],
+                            [-0.077419, 50.818517],
+                            [-0.037251, 50.818517],
+                            [-0.037251, 50.778155],
+                            [-0.077419, 50.778155],
+                        ],
+                    ],
+                },
+            },
+            selection: '',
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+        },
+        provider_tasks: [],
+        zipfile_url: 'http://cloud.eventkit.test/downloads/c7/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
+        expiration: '2017-03-24T15:52:29.311458Z',
+    },
+    {
+        uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
+        url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
+        started_at: '2017-03-10T15:52:18.796929Z',
+        finished_at: '2017-03-10T15:52:27.500Z',
+        duration: '0:00:08.703092',
+        user: 'admin',
+        status: 'COMPLETED',
+        job: {
+            uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+            name: 'Test3',
+            event: 'Test3 event',
+            featured: false,
+            description: 'Test3 description',
+            url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+            extent: {
+                type: 'Feature',
+                properties: {
+                    uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
+                    name: 'Test3',
+                },
+                geometry: {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [-0.077419, 50.778155],
+                            [-0.077419, 50.818517],
+                            [-0.037251, 50.818517],
+                            [-0.037251, 50.778155],
+                            [-0.077419, 50.778155],
+                        ],
+                    ],
+                },
+            },
+            selection: '',
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+        },
+        provider_tasks: [],
+        zipfile_url: 'http://cloud.eventkit.test/downloads/28/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',
+        expiration: '2017-03-24T15:52:18.796854Z',
+    }];
+}
+
 describe('MapView component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            runs: getRuns(),
-            user: { data: { user: { username: 'admin' } } },
-            onRunDelete: () => {},
-            range: '12/24',
-            handleLoadLess: () => {},
-            handleLoadMore: () => {},
-            loadLessDisabled: true,
-            loadMoreDisabled: false,
-            geocode: {},
-            getGeocode: () => {},
-            importGeom: { processed: false, featureCollection: null },
-            processGeoJSONFile: () => {},
-            resetGeoJSONFile: () => {},
-            onMapFilter: () => {},
-            providers,
-        }
-    };
+    const getProps = () => ({
+        runs: getRuns(),
+        user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
+        onRunDelete: () => {},
+        onRunShare: () => {},
+        range: '12/24',
+        handleLoadLess: () => {},
+        handleLoadMore: () => {},
+        loadLessDisabled: true,
+        loadMoreDisabled: false,
+        geocode: {},
+        getGeocode: () => {},
+        importGeom: { processed: false, featureCollection: null },
+        processGeoJSONFile: () => {},
+        resetGeoJSONFile: () => {},
+        onMapFilter: () => {},
+        providers,
+    });
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
         return mount(<MapView {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };
 
-    const initOverlay = MapView.prototype.initOverlay;
+    const { initOverlay } = MapView.prototype;
     beforeEach(() => {
         MapView.prototype.initOverlay = sinon.spy();
-        const stub1 = sinon.stub(utils, 'generateDrawBoxInteraction')
+        sinon.stub(utils, 'generateDrawBoxInteraction')
             .callsFake(() => ({ on: () => {}, setActive: () => {} }));
-        const stub2 = sinon.stub(utils, 'generateDrawFreeInteraction')
+        sinon.stub(utils, 'generateDrawFreeInteraction')
             .callsFake(() => ({ on: () => {}, setActive: () => {} }));
         Map.prototype.addInteraction = sinon.spy();
         sinon.stub(MapView.prototype, 'updateZoomLevel');
@@ -106,7 +246,7 @@ describe('MapView component', () => {
         MapView.prototype.updateZoomLevel.restore();
     });
 
-    it('should render all the basic components', () => {        
+    it('should render all the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(2);
@@ -138,10 +278,10 @@ describe('MapView component', () => {
         wrapper.instance().closer = { onclick: sinon.spy() };
         expect(wrapper.find('#popup')).toHaveLength(1);
         expect(wrapper.find('#popup-content')).toHaveLength(1);
-        expect(wrapper.find('#popup-content').find('a')).toHaveLength(2);
-        expect(wrapper.find('#popup-content').find('a').first().text()).toEqual(' 1');
-        expect(wrapper.find('#popup-content').find('a').last().text()).toEqual(' 2');
-        wrapper.find('#popup-content').find('a').first().simulate('click');
+        expect(wrapper.find('#popup-content').find('span')).toHaveLength(2);
+        expect(wrapper.find('#popup-content').find('span').first().text()).toEqual(' 1');
+        expect(wrapper.find('#popup-content').find('span').last().text()).toEqual(' 2');
+        wrapper.find('#popup-content').find('span').first().simulate('click');
         expect(wrapper.instance().handleClick.calledOnce).toBe(true);
         expect(wrapper.instance().handleClick.calledWith('1')).toBe(true);
         expect(wrapper.instance().closer.onclick.calledOnce).toBe(true);
@@ -177,7 +317,7 @@ describe('MapView component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(MapPopup)).toHaveLength(0);
-        wrapper.setState({showPopup: true, selectedFeature: props.runs[0].uid});
+        wrapper.setState({ showPopup: true, selectedFeature: props.runs[0].uid });
         expect(wrapper.find(MapPopup)).toHaveLength(1);
     });
 
@@ -190,13 +330,13 @@ describe('MapView component', () => {
         // ol.source.Vector.prototype.getExtent = () => {return }
         // const layerSpy = sinon.spy(ol.layer, 'Vector');
         const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
-        const addRunFeatures = MapView.prototype.addRunFeatures;
+        const { addRunFeatures } = MapView.prototype;
         MapView.prototype.addRunFeatures = sinon.stub().returns(true);
         const getViewSpy = sinon.spy(Map.prototype, 'getView');
         const fitSpy = sinon.spy(View.prototype, 'fit');
         const onSpy = sinon.spy(Map.prototype, 'on');
         const generateSpy = sinon.spy(utils, 'generateDrawLayer');
-        
+
         // check that expected function calls were made
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -215,7 +355,7 @@ describe('MapView component', () => {
         expect(fitSpy.calledWith(wrapper.instance().source.getExtent(), wrapper.instance().map.getSize())).toBe(true);
         expect(onSpy.calledOnce).toBe(true);
         expect(onSpy.calledWith('singleclick', wrapper.instance().onMapClick)).toBe(true);
-        
+
         // restore all the spys
         mountSpy.restore();
         mapSpy.restore();
@@ -270,10 +410,10 @@ describe('MapView component', () => {
         fitSpy.restore();
     });
 
-    it('componentWillReceiveProps should clear the source, re-add features, and fit drawlayer extent when new features are received', () => {
+    it('componentWillReceiveProps should clear the source, re-add features, and fit drawlayer extent', () => {
         const props = getProps();
         const receiveSpy = sinon.spy(MapView.prototype, 'componentWillReceiveProps');
-        const newSpy = sinon.spy(MapView.prototype, 'hasNewRuns');        
+        const newSpy = sinon.spy(MapView.prototype, 'hasNewRuns');
         const wrapper = getWrapper(props);
         const clearSpy = sinon.spy(VectorSource.prototype, 'clear');
         const addRunSpy = sinon.spy(wrapper.instance(), 'addRunFeatures');
@@ -425,6 +565,7 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const updates = updateSpy.args.length;
         const mapUpdate = mapUpdateSpy.args.length;
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(updateSpy.args.length).toEqual(updates + 1);
         expect(mapUpdateSpy.args.length).toEqual(mapUpdate + 1);
@@ -524,15 +665,13 @@ describe('MapView component', () => {
         stub.restore();
     });
 
-    it('handleOlPopupClose should call setPosition on overlay, add scroll zoom, blur on closer, and setTimeout to update state', () => {
+    it('handleOlPopupClose should call setPosition on overlay, add scroll zoom, and setTimeout to update state', () => {
         jest.useFakeTimers();
         const props = getProps();
         const stateSpy = sinon.spy(MapView.prototype, 'setState');
         const wrapper = getWrapper(props);
         const setSpy = sinon.spy();
-        const blurSpy = sinon.spy();
         wrapper.instance().overlay = { setPosition: setSpy };
-        wrapper.instance().closer = { blur: blurSpy };
         const addCount = Map.prototype.addInteraction.callCount;
         wrapper.instance().handleOlPopupClose();
         expect(stateSpy.calledWith({ disableMapClick: false })).toBe(false);
@@ -541,7 +680,6 @@ describe('MapView component', () => {
         expect(Map.prototype.addInteraction.callCount).toEqual(addCount + 1);
         expect(setSpy.calledOnce).toBe(true);
         expect(setSpy.calledWith(undefined)).toBe(true);
-        expect(blurSpy.calledOnce).toBe(true);
         stateSpy.restore();
     });
 
@@ -788,7 +926,7 @@ describe('MapView component', () => {
     });
 
     it('onMapClick should check for features, if multiple it should display in map popup', () => {
-        const forEachFeatureAtPixel = Map.prototype.forEachFeatureAtPixel;
+        const { forEachFeatureAtPixel } = Map.prototype;
         MapView.prototype.overlay = { setPosition: sinon.spy() };
         // create a mock function to replace map.forEachFeatureAtPixel
 
@@ -798,7 +936,7 @@ describe('MapView component', () => {
         const feature2 = new Feature(new Polygon([[0, 0, 1, 1]]));
         feature2.setId('2');
         feature2.setProperties({ name: 'number 2', uid: '2' });
-        const forEachMock = (pixel, func, options) => {
+        const forEachMock = (pixel, func) => {
             [feature1, feature2].forEach((feature) => {
                 func(feature);
             });
@@ -826,9 +964,9 @@ describe('MapView component', () => {
 
     it('onMapClick should check for features, if single feature it should call handle click', () => {
         const handleClickSpy = sinon.spy(MapView.prototype, 'handleClick');
-        const forEachFeatureAtPixel = Map.prototype.forEachFeatureAtPixel;
+        const { forEachFeatureAtPixel } = Map.prototype;
         // create a mock function to replace map.forEachFeatureAtPixel
-        const forEachMock = (pixel, func, options) => {
+        const forEachMock = (pixel, func) => {
             const feature1 = new Feature(new Polygon([[-1, -1, 1, 1]]));
             feature1.setId('1');
             feature1.setProperties({ name: 'number 1', uid: '1' });
@@ -910,13 +1048,14 @@ describe('MapView component', () => {
         expect(setStyleSpy.called).toBe(true);
         expect(setStyleSpy.calledWith(wrapper.instance().selectedStyleFunction)).toBe(true);
         setStyleSpy.restore();
+        getStyleSpy.restore();
+        setIndexSpy.restore();
     });
 
     it('displayAsPoint should return true if both px coordinates can not be found', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
-        const bbox = [-15, -14, 14, 12];
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
@@ -943,7 +1082,6 @@ describe('MapView component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
-        const bbox = [-15, -14, 14, 12];
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
@@ -960,7 +1098,6 @@ describe('MapView component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
-        const bbox = [-15, -14, 14, 12];
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
@@ -981,7 +1118,6 @@ describe('MapView component', () => {
 
     it('default style function should return either a point style or BLUE_STYLE', () => {
         const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
-        const bbox = [-15, -14, 14, 12];
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
@@ -1013,7 +1149,6 @@ describe('MapView component', () => {
 
     it('selected style function should return either a point style or RED_STYLE', () => {
         const coords = [[[-15, -14], [14, -14], [14, 12], [-15, 12], [-15, -14]]];
-        const bbox = [-15, -14, 14, 12];
         const feature = new Feature({
             geometry: new Polygon(coords),
         });
@@ -1089,7 +1224,7 @@ describe('MapView component', () => {
         handleSearchStub.restore();
     });
 
-    it('handleSearch should clearDraw, hide warning, create and add a feature, zoom to feature, and call onMapFitler if its a polygon', () => {
+    it('handleSearch should clearDraw, hide warning, create + add + zoom to a feature, and call onMapFitler if its a polygon', () => {
         const result = {
             geometry: {
                 type: 'Polygon',
@@ -1377,7 +1512,7 @@ describe('MapView component', () => {
         const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const validSpy = sinon.stub(utils, 'isGeoJSONValid')
             .callsFake(() => (false));
-        wrapper.setState({ mode: 'MODE_DRAW_BOX' });
+        wrapper.setState({ mode: 'MODE_DRAW_BBOX' });
         wrapper.instance().onDrawEnd(event);
         expect(geomSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
@@ -1418,9 +1553,9 @@ describe('MapView component', () => {
         expect(calculateSpy.calledOnce).toBe(true);
         expect(calculateSpy.calledWith(wrapper.instance().map.getSize())).toBe(true);
         expect(extentSpy.calledOnce).toBe(true);
-        const extent = wrapper.instance().map.getView()
+        const ext = wrapper.instance().map.getView()
             .calculateExtent(wrapper.instance().map.getSize());
-        expect(extentSpy.calledWith(extent)).toBe(true);
+        expect(extentSpy.calledWith(ext)).toBe(true);
         // expect(featureSpy.calledOnce).toBe(true);
         expect(addSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
@@ -1516,7 +1651,7 @@ describe('MapView component', () => {
         addSpy.restore();
         readSpy.restore();
     });
-    
+
     it('handleUp should return false if there is no feature', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -1739,7 +1874,7 @@ describe('MapView component', () => {
         const addStub = sinon.stub(VectorSource.prototype, 'addFeature');
 
         const wrapper = getWrapper(props);
-        const evt = { pixel: [1, 1], map: wrapper.instance().map }
+        const evt = { pixel: [1, 1], map: wrapper.instance().map };
         wrapper.instance().handleMove(evt);
         expect(hasFeatureStub.calledOnce).toBe(true);
         expect(getFeaturesStub.calledOnce).toBe(true);
@@ -1888,7 +2023,7 @@ describe('MapView component', () => {
             .returns([feature]);
         const vertexStub = sinon.stub(utils, 'isVertex')
             .returns([100.0, 0.0]);
-        
+
         const wrapper = getWrapper(props);
         const evt = { pixel: [1, 1], map: wrapper.instance().map };
         const ret = wrapper.instance().handleDown(evt);
@@ -1954,186 +2089,3 @@ describe('MapView component', () => {
         vertexStub.restore();
     });
 });
-
-function getRuns() {
-    return [{
-        uid: '6870234f-d876-467c-a332-65fdf0399a0d',
-        url: 'http://cloud.eventkit.test/api/runs/6870234f-d876-467c-a332-65fdf0399a0d',
-        started_at: '2017-03-10T15:52:35.637331Z',
-        finished_at: '2017-03-10T15:52:39.837Z',
-        duration: '0:00:04.199825',
-        user: 'admin',
-        status: 'COMPLETED',
-        job: {
-            uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-            name: 'Test1',
-            event: 'Test1 event',
-            featured: false,
-            description: 'Test1 description',
-            url: 'http://cloud.eventkit.test/api/jobs/7643f806-1484-4446-b498-7ddaa65d011a',
-            extent: {
-                type: 'Feature',
-                properties: {
-                    uid: '7643f806-1484-4446-b498-7ddaa65d011a',
-                    name: 'Test1',
-                },
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [
-                        [
-                            [
-                                -0.077419,
-                                50.778155,
-                            ],
-                            [
-                                -0.077419,
-                                50.818517,
-                            ],
-                            [
-                                -0.037251,
-                                50.818517,
-                            ],
-                            [
-                                -0.037251,
-                                50.778155,
-                            ],
-                            [
-                                -0.077419,
-                                50.778155,
-                            ],
-                        ],
-                    ],
-                },
-            },
-            selection: '',
-            permissions: {
-                value: 'PRIVATE',
-                groups: {},
-                members: {},
-            },
-        },
-        provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.test/downloads/6870234f-d876-467c-a332-65fdf0399a0d/TestGPKG-WMTS-TestProject-eventkit-20170310.zip',
-        expiration: '2017-03-24T15:52:35.637258Z',
-    },
-    {
-        uid: 'c7466114-8c0c-4160-8383-351414b11e37',
-        url: 'http://cloud.eventkit.test/api/runs/c7466114-8c0c-4160-8383-351414b11e37',
-        started_at: '2017-03-10T15:52:29.311523Z',
-        finished_at: '2017-03-10T15:52:33.612Z',
-        duration: '0:00:04.301278',
-        user: 'notAdmin',
-        status: 'COMPLETED',
-        job: {
-            uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
-            name: 'Test2',
-            event: 'Test2 event',
-            featured: true,
-            description: 'Test2 description',
-            url: 'http://cloud.eventkit.test/api/jobs/5488a864-89f2-4e9c-8370-18291ecdae4a',
-            extent: {
-                type: 'Feature',
-                properties: {
-                    uid: '5488a864-89f2-4e9c-8370-18291ecdae4a',
-                    name: 'Test2',
-                },
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [
-                        [
-                            [
-                                -0.077419,
-                                50.778155,
-                            ],
-                            [
-                                -0.077419,
-                                50.818517,
-                            ],
-                            [
-                                -0.037251,
-                                50.818517,
-                            ],
-                            [
-                                -0.037251,
-                                50.778155,
-                            ],
-                            [
-                                -0.077419,
-                                50.778155,
-                            ],
-                        ],
-                    ],
-                },
-            },
-            selection: '',
-            permissions: {
-                value: 'PRIVATE',
-                groups: {},
-                members: {},
-            },
-        },
-        provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.test/downloads/c7466114-8c0c-4160-8383-351414b11e37/TestGPKG-WMS-TestProject-eventkit-20170310.zip',
-        expiration: '2017-03-24T15:52:29.311458Z',
-    },
-    {
-        uid: '282816a6-7d16-4f59-a1a9-18764c6339d6',
-        url: 'http://cloud.eventkit.test/api/runs/282816a6-7d16-4f59-a1a9-18764c6339d6',
-        started_at: '2017-03-10T15:52:18.796929Z',
-        finished_at: '2017-03-10T15:52:27.500Z',
-        duration: '0:00:08.703092',
-        user: 'admin',
-        status: 'COMPLETED',
-        job: {
-            uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-            name: 'Test3',
-            event: 'Test3 event',
-            featured: false,
-            description: 'Test3 description',
-            url: 'http://cloud.eventkit.test/api/jobs/78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-            extent: {
-                type: 'Feature',
-                properties: {
-                    uid: '78bbd59a-4066-4e30-8460-c7b0093a0d7a',
-                    name: 'Test3',
-                },
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [
-                        [
-                            [
-                                -0.077419,
-                                50.778155,
-                            ],
-                            [
-                                -0.077419,
-                                50.818517,
-                            ],
-                            [
-                                -0.037251,
-                                50.818517,
-                            ],
-                            [
-                                -0.037251,
-                                50.778155,
-                            ],
-                            [
-                                -0.077419,
-                                50.778155,
-                            ],
-                        ],
-                    ],
-                },
-            },
-            selection: '',
-            permissions: {
-                value: 'PRIVATE',
-                groups: {},
-                members: {},
-            },
-        },
-        provider_tasks: [],
-        zipfile_url: 'http://cloud.eventkit.test/downloads/282816a6-7d16-4f59-a1a9-18764c6339d6/TestGPKG-OSM-CLIP-TestProject-eventkit-20170310.zip',
-        expiration: '2017-03-24T15:52:18.796854Z',
-    }];
-}

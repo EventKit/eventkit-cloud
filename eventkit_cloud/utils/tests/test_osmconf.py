@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 
-from mock import patch
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
+from mock import patch
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DatamodelPreset
-
-from ..osmconf import OSMConfig
+from eventkit_cloud.utils.osmconf import OSMConfig
 
 
 class TestOSMConf(TestCase):

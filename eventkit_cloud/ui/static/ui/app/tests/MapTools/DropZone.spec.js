@@ -1,24 +1,25 @@
-import {DropZone} from '../../components/MapTools/DropZone';
-import {DropZoneDialog} from '../../components/MapTools/DropZoneDialog';
-import {DropZoneError} from '../../components/MapTools/DropZoneError';
+import PropTypes from 'prop-types';
 import React from 'react';
-import {mount} from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { DropZone } from '../../components/MapTools/DropZone';
+import { DropZoneDialog } from '../../components/MapTools/DropZoneDialog';
+import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
 describe('DropZone component', () => {
     const muiTheme = getMuiTheme();
     const props = {
-        importGeom : {},
+        importGeom: {},
         showImportModal: false,
         setAllButtonsDefault: () => {},
         setImportModalState: () => {},
         processGeoJSONFile: () => {},
-        resetGeoJSONFile: () => {}
-    }
+        resetGeoJSONFile: () => {},
+    };
     it('should render a div containing the dialog and error components', () => {
-        const wrapper = mount(<DropZone/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
+        const wrapper = mount(<DropZone {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(wrapper.find(DropZoneDialog)).toHaveLength(1);
         expect(wrapper.find(DropZoneError)).toHaveLength(1);

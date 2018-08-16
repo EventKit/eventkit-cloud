@@ -1,13 +1,53 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
+import Warning from '@material-ui/icons/Warning';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('ProviderError component', () => {
+    const tasks = [
+        {
+            name: 'OSM Data (.gpkg)',
+            status: 'INCOMPLETE',
+            errors: [
+                {
+                    exception: 'OSM should show',
+                },
+            ],
+            display: true,
+        },
+        {
+            name: 'QGIS Project file (.qgs)',
+            status: 'INCOMPLETE',
+            errors: [
+                {
+                    exception: 'QGIS should show',
+                },
+            ],
+            display: true,
+        },
+        {
+            name: 'Area of Interest (.geojson)',
+            status: 'INCOMPLETE',
+            errors: [],
+            display: true,
+        },
+        {
+            name: 'Area of Interest (.gpkg)',
+            status: 'INCOMPLETE',
+            errors: [
+                {
+                    exception: 'AOI should not show',
+                },
+            ],
+            display: false,
+        },
+    ];
+
     const getProps = () => (
         {
             provider: {
@@ -26,7 +66,7 @@ describe('ProviderError component', () => {
         mount(<ProviderError {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -35,7 +75,7 @@ describe('ProviderError component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
+        expect(wrapper.find('.qa-ProviderError-error-text').text()).toEqual('ERROR');
         expect(wrapper.find(Warning)).toHaveLength(1);
     });
 
@@ -71,7 +111,7 @@ describe('ProviderError component', () => {
         const errorSpy = sinon.spy(ProviderError.prototype, 'handleProviderErrorOpen');
         const wrapper = getWrapper(props);
         expect(errorSpy.notCalled).toBe(true);
-        wrapper.find('a').simulate('click');
+        wrapper.find('.qa-ProviderError-error-text').simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ providerErrorDialogOpen: true })).toBe(true);
         stateSpy.restore();
@@ -91,42 +131,3 @@ describe('ProviderError component', () => {
         stateSpy.restore();
     });
 });
-
-const tasks = [
-    {
-        name: 'OSM Data (.gpkg)',
-        status: 'INCOMPLETE',
-        errors: [
-            {
-                exception: 'OSM should show',
-            },
-        ],
-        display: true,
-    },
-    {
-        name: 'QGIS Project file (.qgs)',
-        status: 'INCOMPLETE',
-        errors: [
-            {
-                exception: 'QGIS should show',
-            },
-        ],
-        display: true,
-    },
-    {
-        name: 'Area of Interest (.geojson)',
-        status: 'INCOMPLETE',
-        errors: [],
-        display: true,
-    },
-    {
-        name: 'Area of Interest (.gpkg)',
-        status: 'INCOMPLETE',
-        errors: [
-            {
-                exception: 'AOI should not show',
-            },
-        ],
-        display: false,
-    },
-];

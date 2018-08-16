@@ -1,13 +1,12 @@
-from mock import Mock, patch, call, MagicMock
-from uuid import uuid4
-from django.test import TestCase, override_settings
+import json
 import logging
+
 import requests_mock
 from django.conf import settings
-import json
 from django.core.cache import cache
-from ..geocode_auth import get_auth_headers
+from django.test import TestCase, override_settings
 
+from eventkit_cloud.utils.geocode_auth import get_auth_headers
 
 logger = logging.getLogger(__name__)
 

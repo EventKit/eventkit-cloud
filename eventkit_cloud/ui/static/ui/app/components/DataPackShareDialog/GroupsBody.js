@@ -1,6 +1,7 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import InfoIcon from 'material-ui/svg-icons/action/info-outline';
+import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
 import GroupsHeaderRow from './GroupsHeaderRow';
@@ -283,7 +284,11 @@ export class GroupsBody extends Component {
                     className="qa-GroupsBody-GroupBodyTooltip"
                     target={this.state.tooltip.target}
                     body={this.body}
-                    text={this.state.tooltip.admin ? 'Remove administrative rights from group administrators' : 'Share administrative rights with group administrators'}
+                    text={this.state.tooltip.admin ?
+                        'Remove administrative rights from group administrators'
+                        :
+                        'Share administrative rights with group administrators'
+                    }
                 />
             );
         }

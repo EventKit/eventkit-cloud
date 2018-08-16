@@ -82,6 +82,7 @@ celerybeat-schedule
 
 # PyCharm
 .idea
+*_jb_tmp_*
 
 # IntelliJ
 *.iml
@@ -107,3 +108,7 @@ eventkit_cloud/ui/static/ui/build
 e2e_reports/
 screenshots/*
 !screenshots/baseline
+
+conda/repo
+*_jb_*
+

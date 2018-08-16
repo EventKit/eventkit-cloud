@@ -1,12 +1,13 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Card, CardHeader } from 'material-ui/Card';
 import Popover from 'material-ui/Popover';
 import Menu from 'material-ui/Menu';
 import MenuItem from 'material-ui/MenuItem';
-import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import CheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import ArrowUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBox from '@material-ui/icons/CheckBox';
+import ArrowDown from '@material-ui/icons/ArrowDropDown';
+import ArrowUp from '@material-ui/icons/ArrowDropUp';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 
@@ -158,7 +159,11 @@ export class GroupsHeaderRow extends Component {
                             <div style={styles.share} className="qa-GroupsHeaderRow-CardHeader-icons">
                                 <EnhancedButton
                                     onClick={this.handleClick}
-                                    style={{ marginRight: '10px', color: !this.props.activeOrder.includes('group') ? '#4598bf' : '#707274' }}
+                                    style={{
+                                        marginRight: '10px',
+                                        color: !this.props.activeOrder.includes('group') ?
+                                            '#4598bf' : '#707274',
+                                    }}
                                     disableTouchRipple
                                 >
                                     {sharedSort}

@@ -5,9 +5,11 @@ import argparse
 import logging
 import os
 import subprocess
-from ..tasks.task_process import TaskProcess
 from string import Template
+
 from pysqlite2 import dbapi2 as sqlite3
+
+from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 

@@ -1,123 +1,200 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import DashboardSection from '../../components/DashboardPage/DashboardSection';
+import sinon from 'sinon';
 import { Tab, Tabs } from 'material-ui';
 import SwipeableViews from 'react-swipeable-views';
+import DashboardSection from '../../components/DashboardPage/DashboardSection';
 
 describe('DashboardSection component', () => {
-    function getProps() {
+    let wrapper;
+    let instance;
+
+    function defaultProps() {
         return {
             title: 'Test',
             name: 'test',
             columns: 3,
             providers: [],
-        }
+            noDataElement: <div className="qa-DashboardSection-NoDataElement" />,
+        };
     }
 
-    function getShallowWrapper(props = getProps(), children = []) {
-        return shallow(
+    function setup(propsOverride = {}, options = { children: [] }) {
+        const props = {
+            ...defaultProps(),
+            ...propsOverride,
+        };
+        wrapper = shallow((
             <DashboardSection {...props}>
-                {children}
+                {options.children}
             </DashboardSection>
-        );
+        ));
+        instance = wrapper.instance();
     }
 
-    function generateChildren(columns, rows) {
+    function generateChildren(count) {
         const children = [];
-        for (let i = 0; i < columns * rows; i++) {
-            children.push(<div className={'qa-DashboardSection-Child'} />);
+        for (let i = 0; i < count; i += 1) {
+            children.push(<div className="qa-DashboardSection-Child" />);
         }
 
         return children;
     }
 
-    it('should have the correct initial state', () => {
-        const wrapper = getShallowWrapper();
-        expect(wrapper.state().pageIndex).toBe(0);
+    beforeEach(setup);
+
+    it('renders header title', () => {
+        expect(wrapper.find('.qa-DashboardSection-Header-Title').text()).toBe(instance.props.title);
     });
 
-    it('should render the basic elements', () => {
-        const props = {
-            ...getProps(),
-            onViewAll: () => {},
-        };
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns, 1));
-        expect(wrapper.find('.qa-DashboardSection-Header')).toHaveLength(1);
-        expect(wrapper.find('.qa-DashboardSection-Header-Title')).toHaveLength(1);
-        expect(wrapper.find('.qa-DashboardSection-Header-Title').text()).toBe(props.title);
-        expect(wrapper.find('.qa-DashboardSection-Page')).toHaveLength(1);
-        expect(wrapper.find('.qa-DashboardSection-ViewAll')).toHaveLength(1);
-        expect(wrapper.find('.qa-DashboardSection-ViewAll').text()).toBe('View All');
-        expect(wrapper.find(Tabs)).toHaveLength(1);
-        expect(wrapper.find(Tab)).toHaveLength(3);
-        expect(wrapper.find(SwipeableViews)).toHaveLength(1);
+    it('limits the number of pages to maxPages', () => {
+        setup({
+            columns: 1,
+            rows: 1,
+        }, {
+            children: generateChildren(10),
+        });
+        expect(wrapper.find('.qa-DashboardSection-Page-Item')).toHaveLength(instance.itemsPerPage * instance.maxPages);
     });
 
-    it('should show "noDataElement" if no children are provided', () => {
-        const props = {
-            ...getProps(),
-            noDataElement: <div className={'qa-DashboardSection-NoDataElement'} />,
-        };
-        const wrapper = getShallowWrapper(props, []);
-        expect(wrapper.find('.qa-DashboardSection-NoDataElement')).toHaveLength(1);
+    it('constructs the correct number of pages, each with the correct number of children', () => {
+        setup({
+            columns: 3,
+            rows: 2,
+        }, {
+            children: generateChildren(8),
+        });
+        expect(instance.maxPages).toBe(3);
+        const pages = instance.getPages();
+        expect(pages).toHaveLength(2);
+        expect(pages[0]).toHaveLength(6);
+        expect(pages[1]).toHaveLength(2);
     });
 
-    it('should update the page index on a page change', () => {
-        const wrapper = getShallowWrapper();
-        wrapper.instance().handlePageChange(1);
+    it('updates the page index on a page change', () => {
+        expect(wrapper.state().pageIndex).not.toBe(1);
+        instance.handlePageChange(1);
         expect(wrapper.state().pageIndex).toBe(1);
     });
 
-    it('should display child elements', () => {
-        const props = getProps();
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns, 1));
-        expect(wrapper.find('.qa-DashboardSection-Child')).toHaveLength(props.columns);
+    describe('no children', () => {
+        it('renders "no data" element', () => {
+            expect(wrapper.find('.qa-DashboardSection-NoDataElement')).toHaveLength(1);
+        });
     });
 
-    it('should break children into pages', () => {
-        const pages = 3;
-        const props = getProps();
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns * pages, 1));
-        expect(wrapper.find('.qa-DashboardSection-Page')).toHaveLength(pages);
+    describe('3 columns, 3 children (1 page)', () => {
+        beforeEach(() => {
+            setup({
+                columns: 3,
+            }, {
+                children: generateChildren(3),
+            });
+        });
+
+        it('renders a single page', () => {
+            expect(wrapper.find('.qa-DashboardSection-Page')).toHaveLength(1);
+        });
+
+        it('constructs a single page of items', () => {
+            expect(instance.getPages().length).toBe(1);
+        });
+
+        it('renders a tab group', () => {
+            expect(wrapper.find(Tabs)).toHaveLength(1);
+        });
+
+        it('renders 3 tab buttons (maxPages = 3)', () => {
+            expect(wrapper.find(Tab)).toHaveLength(3);
+        });
+
+        it('enables the first tab button', () => {
+            const tabButton = wrapper.find(Tab).at(0);
+            expect(tabButton.props().style.pointerEvents).not.toBe('none');
+            expect(tabButton.props().buttonStyle.backgroundColor).toBe('white');
+        });
+
+        it('disables the second tab button', () => {
+            const tabButton = wrapper.find(Tab).at(1);
+            expect(tabButton.props().style.pointerEvents).toBe('none');
+            expect(tabButton.props().buttonStyle.backgroundColor).not.toBe('white');
+        });
+
+        it('disables the third tab button', () => {
+            const tabButton = wrapper.find(Tab).at(2);
+            expect(wrapper.find(Tab).at(2).props().style.pointerEvents).toBe('none');
+            expect(tabButton.props().buttonStyle.backgroundColor).not.toBe('white');
+        });
+
+        it('renders SwipeableViews component', () => {
+            expect(wrapper.find(SwipeableViews)).toHaveLength(1);
+        });
+
+        it('syncs page index with SwipeableViews component', () => {
+            const swipeableViews = wrapper.find(SwipeableViews);
+            expect(swipeableViews.props().index).toBe(instance.state.pageIndex);
+            expect(swipeableViews.props().onChangeIndex).toBe(instance.handlePageChange);
+        });
+
+        it('renders children', () => {
+            expect(wrapper.find('.qa-DashboardSection-Child')).toHaveLength(3);
+        });
     });
 
-    it('should display children in a row-major grid', () => {
-        const props = {
-            ...getProps(),
-            rowMajor: true,
-            rows: 3,
-        };
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns, props.rows));
-        expect(wrapper.find('.qa-DashboardSection-Page-Column')).toHaveLength(0);
+    describe('when rowMajor is true', () => {
+        beforeEach(() => {
+            setup({
+                rowMajor: true,
+                columns: 3,
+                rows: 3,
+            }, {
+                children: generateChildren(9),
+            });
+        });
+
+        it('renders children in a row-major grid', () => {
+            expect(wrapper.find('.qa-DashboardSection-Page-Column')).toHaveLength(0);
+        });
     });
 
-    it('should display children in a column-major grid', () => {
-        const props = {
-            ...getProps(),
-            rowMajor: false,
-            rows: 3,
-        };
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns, props.rows));
-        expect(wrapper.find('.qa-DashboardSection-Page-Column')).toHaveLength(props.columns);
+    describe('when rowMajor is false', () => {
+        beforeEach(() => {
+            setup({
+                rowMajor: false,
+                columns: 3,
+                rows: 3,
+            }, {
+                children: generateChildren(9),
+            });
+        });
+
+        it('renders children in a column-major grid', () => {
+            expect(wrapper.find('.qa-DashboardSection-Page-Column')).toHaveLength(3);
+        });
     });
 
-    it('should disable tab buttons for empty pages', () => {
-        const props = getProps();
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns, 1));
-        expect(wrapper.find('.qa-DashboardSection-Tab').get(1).props.style).toHaveProperty('pointerEvents', 'none');
-        expect(wrapper.find('.qa-DashboardSection-Tab').get(2).props.style).toHaveProperty('pointerEvents', 'none');
+    describe('when onViewAll handler is not passed in', () => {
+        it('does not render "View All" button', () => {
+            expect(wrapper.find('.qa-DashboardSection-ViewAll')).toHaveLength(0);
+        });
     });
 
-    it('should enable tab buttons for pages with content', () => {
-        const props = getProps();
-        const wrapper = getShallowWrapper(props, generateChildren(props.columns * 3, 1));
-        expect(wrapper.find('.qa-DashboardSection-Tab').get(0).props.style).not.toHaveProperty('pointerEvents', 'none');
-        expect(wrapper.find('.qa-DashboardSection-Tab').get(1).props.style).not.toHaveProperty('pointerEvents', 'none');
-        expect(wrapper.find('.qa-DashboardSection-Tab').get(2).props.style).not.toHaveProperty('pointerEvents', 'none');
-    });
+    describe('when onViewAll handler is passed in', () => {
+        beforeEach(() => {
+            setup({
+                onViewAll: sinon.spy(),
+            }, {
+                children: generateChildren(1),
+            });
+        });
 
-    it('should not display "View All" button when a handler is not provided', () => {
-        const wrapper = getShallowWrapper(getProps(), generateChildren(1, 1));
-        expect(wrapper.find('.qa-DashboardSection-ViewAll')).toHaveLength(0);
+        it('renders "View All" button', () => {
+            expect(wrapper.find('.qa-DashboardSection-ViewAll')).toHaveLength(1);
+        });
+
+        it('calls onViewAll() when "View All" button is clicked', () => {
+            wrapper.find('.qa-DashboardSection-ViewAll').simulate('click');
+            expect(instance.props.onViewAll.callCount).toBe(1);
+        });
     });
 });

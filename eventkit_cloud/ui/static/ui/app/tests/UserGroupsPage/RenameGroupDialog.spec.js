@@ -1,7 +1,7 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import CustomTextField from '../../components/CustomTextField';
 import RenameGroupDialog from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';

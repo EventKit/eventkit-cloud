@@ -5,15 +5,25 @@
         "node": true,
         "jest": true
     },
+    "parser": "babel-eslint",
     "rules": {
         "class-methods-use-this": "off",
-        "max-len": [2, 120, 4],
+        "max-len": [2, 140, 4],
         "no-console": "off",
         "import/no-named-as-default": "off",
         "import/prefer-default-export": "off",
-        "indent": [2, 4],
-        "linebreak-style": ["error", "windows"],
+        "indent": [2, 4, { "SwitchCase": 1 }],
+        "linebreak-style": 0,
 
+        // Allow for-of loops.
+        "no-restricted-syntax": [
+            "error",
+            "ForInStatement",
+            "LabeledStatement",
+            "WithStatement"
+        ],
+
+        "react/jsx-curly-brace-presence": ["error", { "props": "never", "children": "ignore" }],
         "react/jsx-filename-extension": 0,
         "react/jsx-indent": [2, 4],
         "react/jsx-indent-props": [2, 4],

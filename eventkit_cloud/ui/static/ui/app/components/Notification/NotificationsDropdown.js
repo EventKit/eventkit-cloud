@@ -1,9 +1,9 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
 import { CircularProgress, GridList, Paper } from 'material-ui';
 import NotificationGridItem from './NotificationGridItem';
-import { markAllNotificationsAsRead, } from '../../actions/notificationsActions';
+import { markAllNotificationsAsRead } from '../../actions/notificationsActions';
 
 export class NotificationsDropdown extends React.Component {
     constructor(props) {
@@ -84,7 +84,7 @@ export class NotificationsDropdown extends React.Component {
             },
             viewAllContainer: {
                 marginTop: (window.innerWidth > 768) ? '24px' : '18px',
-                textAlign: 'center'
+                textAlign: 'center',
             },
             viewAll: {
                 color: '#337ab7',
@@ -97,76 +97,88 @@ export class NotificationsDropdown extends React.Component {
         const maxNotifications = (window.innerHeight > 768) ? 10 : 8;
         const notifications = this.props.notifications.notificationsSorted.slice(0, maxNotifications);
 
+        let body = (
+            <div
+                className="qa-NotificationsDropdown-NoData"
+                style={styles.noData}
+            >
+                {"You don't have any notifications."}
+            </div>
+        );
+        if (this.state.showLoading) {
+            body = (
+                <div style={{ textAlign: 'center' }}>
+                    <CircularProgress
+                        color="#4598bf"
+                        size={35}
+                    />
+                </div>
+            );
+        } else if (notifications.length > 0) {
+            body = (
+                <GridList
+                    className="qa-NotificationsDropdown-Grid"
+                    cellHeight="auto"
+                    style={styles.gridList}
+                    padding={0}
+                    cols={1}
+                >
+                    {notifications.map((notification, index) => (
+                        <NotificationGridItem
+                            key={`Notification-${notification.id}`}
+                            style={{
+                                ...styles.gridItem,
+                                borderTop: (index === 0) ? '1px solid rgb(224, 224, 224)' : '',
+                            }}
+                            notification={notification}
+                            onView={this.props.onNavigate}
+                            router={this.props.router}
+                        />
+                    ))}
+                </GridList>
+            );
+        }
+
         return (
             <div style={styles.root}>
                 <div
-                    className={'qa-NotificationsDropdown-Pointer'}
+                    className="qa-NotificationsDropdown-Pointer"
                     style={styles.pointer}
                 />
                 <Paper style={styles.paper}>
                     <div
-                        className={'qa-NotificationsDropdown-Header'}
+                        className="qa-NotificationsDropdown-Header"
                         style={styles.header}
                     >
                         <span
-                            className={'qa-NotificationsDropdown-Header-Title'}
+                            className="qa-NotificationsDropdown-Header-Title"
                             style={styles.headerTitle}
                         >
                             Notifications
                         </span>
-                        <a
-                            className={'qa-NotificationsDropdown-Header-MarkAllAsRead'}
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            className="qa-NotificationsDropdown-Header-MarkAllAsRead"
                             style={styles.headerLink}
                             onClick={this.props.markAllNotificationsAsRead}
+                            onKeyPress={this.props.markAllNotificationsAsRead}
                         >
                             Mark All As Read
-                        </a>
+                        </span>
                     </div>
-                    {this.state.showLoading ?
-                        <div style={{ textAlign: 'center' }}>
-                            <CircularProgress
-                                color="#4598bf"
-                                size={35}
-                            />
-                        </div>
-                        :
-                        (notifications.length === 0) ?
-                            <div
-                                className="qa-NotificationsDropdown-NoData"
-                                style={styles.noData}
-                            >
-                                {"You don't have any notifications."}
-                            </div>
-                            :
-                            <GridList
-                                className="qa-NotificationsDropdown-Grid"
-                                cellHeight="auto"
-                                style={styles.gridList}
-                                padding={0}
-                                cols={1}
-                            >
-                                {notifications.map((notification, index) => (
-                                    <NotificationGridItem
-                                        key={`Notification-${notification.id}`}
-                                        style={{
-                                            ...styles.gridItem,
-                                            borderTop: (index === 0) ? '1px solid rgb(224, 224, 224)' : '',
-                                        }}
-                                        notification={notification}
-                                        onView={this.props.onNavigate}
-                                        router={this.props.router}
-                                    />
-                                ))}
-                            </GridList>
-                    }
+                    {body}
                     <div style={styles.viewAllContainer}>
-                        <Link
-                            className={'qa-NotificationsDropdown-ViewAll'}
+                        <span
+                            role="button"
+                            tabIndex={0}
+                            className="qa-NotificationsDropdown-ViewAll"
                             style={styles.viewAll}
                             onClick={this.handleViewAll}
+                            onKeyPress={this.handleViewAll}
                         >
                             View All
-                        </Link>
+                        </span>
                     </div>
                 </Paper>
             </div>
@@ -179,11 +191,12 @@ NotificationsDropdown.propTypes = {
     notifications: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onNavigate: PropTypes.func,
+    markAllNotificationsAsRead: PropTypes.func.isRequired,
 };
 
 NotificationsDropdown.defaultProps = {
     style: {},
-    onNavigate: () => { return true; },
+    onNavigate: () => true,
 };
 
 function mapDispatchToProps(dispatch) {

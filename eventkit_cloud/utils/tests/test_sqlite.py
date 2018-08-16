@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
-
-from mock import MagicMock, Mock, patch
-from ..sqlite import execute_spatialite_script, enable_spatialite
 from django.test import TestCase
+from mock import MagicMock, patch
 from pysqlite2 import dbapi2 as sqlite3
+
+from eventkit_cloud.utils.sqlite import execute_spatialite_script, enable_spatialite
+
 
 class TestSQLite(TestCase):
 

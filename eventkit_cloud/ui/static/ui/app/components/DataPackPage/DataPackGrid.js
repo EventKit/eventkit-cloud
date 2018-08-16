@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { GridList } from 'material-ui/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
@@ -13,6 +14,10 @@ export class DataPackGrid extends Component {
             return 4;
         }
         return 3;
+    }
+
+    getScrollbar() {
+        return this.scrollbar;
     }
 
     render() {
@@ -35,8 +40,11 @@ export class DataPackGrid extends Component {
         };
 
         return (
-            <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
-                <div style={styles.root}>
+            <CustomScrollbar
+                ref={(instance) => { this.scrollbar = instance; }}
+                style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}
+            >
+                <div style={styles.root} className="qa-div-root">
                     <GridList
                         className="qa-DataPackGrid-GridList"
                         cellHeight="auto"
@@ -53,11 +61,13 @@ export class DataPackGrid extends Component {
                                     user={this.props.user}
                                     key={run.uid}
                                     onRunDelete={this.props.onRunDelete}
+                                    onRunShare={this.props.onRunShare}
                                     providers={this.props.providers}
-                                    openShare={this.props.openShare}
                                     adminPermission={admin}
                                     gridName={this.props.name}
                                     index={index}
+                                    users={this.props.users}
+                                    groups={this.props.groups}
                                 />
                             );
                         })}
@@ -76,16 +86,17 @@ export class DataPackGrid extends Component {
 }
 
 DataPackGrid.propTypes = {
-    runs: PropTypes.array.isRequired,
+    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    onRunShare: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     range: PropTypes.string.isRequired,
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    openShare: PropTypes.func.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,

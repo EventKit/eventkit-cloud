@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
@@ -19,7 +20,8 @@ const providers = [
         slug: 'osm',
         preview_url: '',
         service_copyright: '',
-        service_description: 'OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).',
+        service_description: `OpenStreetMap vector data provided in a custom thematic schema. \n\n
+            Data is grouped into separate tables (e.g. water, roads...).`,
         layer: null,
         level_from: 0,
         level_to: 10,
@@ -28,54 +30,6 @@ const providers = [
         export_provider_type: 2,
     },
 ];
-
-beforeAll(() => {
-    DataPackGridItem.prototype.initMap = sinon.spy();
-});
-
-afterAll(() => {
-    DataPackGridItem.prototype.initMap.restore();
-});
-
-describe('DataPackGrid component', () => {
-    const muiTheme = getMuiTheme();
-    const props = {
-        runs: getRuns(),
-        providers,
-        user: { data: { user: { username: 'admin' } } },
-        onRunDelete: () => {},
-    };
-
-    it('should render a DataPackGridItem for each run passed in', () => {
-        const getColumnSpy = sinon.spy(DataPackGrid.prototype, 'getColumns');
-        const wrapper = mount(<DataPackGrid {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        });
-        expect(wrapper.find(GridList)).toHaveLength(1);
-        expect(wrapper.find(DataPackGridItem)).toHaveLength(3);
-        expect(getColumnSpy.calledOnce).toBe(true);
-        getColumnSpy.restore();
-    });
-
-    it('getColumns should return 2, 3, or 4 depending on screensize', () => {
-        const wrapper = shallow(<DataPackGrid {...props}/>);
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        let cols = wrapper.instance().getColumns();
-        expect(cols).toEqual(2);
-
-        window.resizeTo(1000, 1100);
-        expect(window.innerWidth).toEqual(1000);
-        cols = wrapper.instance().getColumns();
-        expect(cols).toEqual(3);
-
-        window.resizeTo(1300, 1400);
-        expect(window.innerWidth).toEqual(1300);
-        cols = wrapper.instance().getColumns();
-        expect(cols).toEqual(4);
-    });
-});
 
 function getRuns() {
     return [
@@ -147,3 +101,54 @@ function getRuns() {
         },
     ];
 }
+
+beforeAll(() => {
+    sinon.stub(DataPackGridItem.prototype, 'initMap');
+});
+
+afterAll(() => {
+    DataPackGridItem.prototype.initMap.restore();
+});
+
+describe('DataPackGrid component', () => {
+    const muiTheme = getMuiTheme();
+    const props = {
+        runs: getRuns(),
+        providers,
+        user: { data: { user: { username: 'admin' } } },
+        users: [],
+        groups: [],
+        onRunDelete: () => {},
+        onRunShare: () => {},
+    };
+
+    it('should render a DataPackGridItem for each run passed in', () => {
+        const getColumnSpy = sinon.spy(DataPackGrid.prototype, 'getColumns');
+        const wrapper = mount(<DataPackGrid {...props} />, {
+            context: { muiTheme },
+            childContextTypes: { muiTheme: PropTypes.object },
+        });
+        expect(wrapper.find(GridList)).toHaveLength(1);
+        expect(wrapper.find(DataPackGridItem)).toHaveLength(3);
+        expect(getColumnSpy.calledOnce).toBe(true);
+        getColumnSpy.restore();
+    });
+
+    it('getColumns should return 2, 3, or 4 depending on screensize', () => {
+        const wrapper = shallow(<DataPackGrid {...props} />);
+        window.resizeTo(700, 800);
+        expect(window.innerWidth).toEqual(700);
+        let cols = wrapper.instance().getColumns();
+        expect(cols).toEqual(2);
+
+        window.resizeTo(1000, 1100);
+        expect(window.innerWidth).toEqual(1000);
+        cols = wrapper.instance().getColumns();
+        expect(cols).toEqual(3);
+
+        window.resizeTo(1300, 1400);
+        expect(window.innerWidth).toEqual(1300);
+        cols = wrapper.instance().getColumns();
+        expect(cols).toEqual(4);
+    });
+});

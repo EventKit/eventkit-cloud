@@ -8,7 +8,10 @@ import NotificationMenu from '../../components/Notification/NotificationMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 
 describe('NotificationGridItem component', () => {
-    function getProps() {
+    let wrapper;
+    let instance;
+
+    function defaultProps() {
         return {
             notification: {
                 id: '1',
@@ -26,116 +29,147 @@ describe('NotificationGridItem component', () => {
             router: {
                 push: sinon.spy(),
             },
-            markNotificationsAsRead: () => {},
-            markNotificationsAsUnread: () => {},
-            removeNotifications: () => {},
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
+            removeNotifications: sinon.spy(),
+            onMarkAsRead: sinon.spy(),
+            onMarkAsUnread: sinon.spy(),
+            onRemove: sinon.spy(),
+            onView: sinon.spy(),
         };
     }
 
-    function getShallowWrapper(props = getProps()) {
-        return shallow(<NotificationGridItem {...props} />);
+    function setup(propsOverride = {}) {
+        const props = {
+            ...defaultProps(),
+            ...propsOverride,
+        };
+        wrapper = shallow(<NotificationGridItem {...props} />);
+        instance = wrapper.instance();
     }
 
-    it('should render the basic elements', () => {
-        const props = getProps();
-        const wrapper = getShallowWrapper(props);
+    beforeEach(setup);
+
+    it('renders a Paper component', () => {
         expect(wrapper.find(Paper)).toHaveLength(1);
-        expect(wrapper.find(Paper).find('.qa-NotificationIcon')).toHaveLength(1);
-        expect(wrapper.find(Paper).find('.qa-NotificationMessage-Text')).toHaveLength(1);
-        expect(wrapper.find(Paper).find('.qa-NotificationMessage-Link')).toHaveLength(1);
+    });
+
+    it('renders an icon', () => {
+        expect(wrapper.find('.qa-NotificationIcon')).toHaveLength(1);
+    });
+
+    it('renders message text', () => {
+        expect(wrapper.find('.qa-NotificationMessage-Text')).toHaveLength(1);
+    });
+
+    it('renders message link', () => {
+        expect(wrapper.find('.qa-NotificationMessage-Link')).toHaveLength(1);
+    });
+
+    it('renders a date', () => {
         expect(wrapper.find('.qa-NotificationGridItem-Date')).toHaveLength(1);
-        expect(wrapper.find('.qa-NotificationGridItem-Date').text()).toBe(moment(props.notification.timestamp).fromNow());
+    });
+
+    it('formats date correctly', () => {
+        const date = wrapper.find('.qa-NotificationGridItem-Date');
+        expect(date.text()).toBe(moment(instance.props.notification.timestamp).fromNow());
+    });
+
+    it('renders a NotificationMenu component', () => {
         expect(wrapper.find(NotificationMenu)).toHaveLength(1);
     });
 
-    it('should push view path and mark notification as read in handleView()', () => {
-        const props = {
-            ...getProps(),
-            router: {
-                push: sinon.spy(),
-            },
-            markNotificationsAsRead: sinon.spy(),
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        const viewPath = getNotificationViewPath(instance.props.notification);
-        instance.handleView();
-        expect(instance.props.router.push.callCount).toBe(1);
-        expect(instance.props.router.push.calledWith(viewPath)).toBe(true);
-        expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
-        expect(instance.props.markNotificationsAsRead.calledWith([instance.props.notification])).toBe(true);
+    it('passes correct props to NotificationMenu', () => {
+        const notificationMenu = wrapper.find(NotificationMenu);
+        expect(Object.keys(notificationMenu.props())).toHaveLength(6);
+        expect(notificationMenu.props().notification).toBe(instance.props.notification);
+        expect(notificationMenu.props().router).toBe(instance.props.router);
+        expect(notificationMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(notificationMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(notificationMenu.props().onRemove).toBe(instance.props.onRemove);
+        expect(notificationMenu.props().onView).toBe(instance.handleView);
     });
 
-    it('should call onView() with notification and view path in handleView()', () => {
-        const props = {
-            ...getProps(),
-            onView: sinon.spy(),
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        const viewPath = getNotificationViewPath(instance.props.notification);
-        instance.handleView();
-        expect(instance.props.onView.callCount).toBe(1);
-        expect(instance.props.onView.calledWith(props.notification, viewPath)).toBe(true);
+    describe('when notification is unread', () => {
+        beforeEach(() => {
+            wrapper.setProps({
+                notification: {
+                    ...instance.props.notification,
+                    unread: true,
+                },
+            });
+        });
+
+        it('shows a non-white background color', () => {
+            expect(wrapper.find(Paper).props().style.backgroundColor).not.toBe('white');
+        });
     });
 
-    it('should abort its own handleView() func if parent returns false in onView', () => {
-        const props = {
-            ...getProps(),
-            onView: () => { return false; },
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleView();
-        expect(instance.props.router.push.callCount).toBe(0);
+    describe('when notification is not unread', () => {
+        beforeEach(() => {
+            wrapper.setProps({
+                notification: {
+                    ...instance.props.notification,
+                    unread: false,
+                },
+            });
+        });
+
+        it('shows a white background color', () => {
+            expect(wrapper.find(Paper).props().style.backgroundColor).toBe('white');
+        });
     });
 
-    it('should continue its own handleView() func if parent returns true in onView', () => {
-        const props = {
-            ...getProps(),
-            onView: () => { return true; },
-            router: {
-                push: sinon.spy(),
-            },
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        instance.handleView();
-        expect(instance.props.router.push.callCount).toBe(1);
-    });
+    describe('when handleView() is called', () => {
+        let setupA;
+        let viewPath;
 
-    it('should pass correct props to NotificationMenu', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsRead: () => {},
-            onMarkAsUnread: () => {},
-            onRemove: () => {},
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        const notificationMenu = wrapper.find(NotificationMenu).get(0);
-        expect(notificationMenu.props.notification).toBe(instance.props.notification);
-        expect(notificationMenu.props.router).toBe(instance.props.router);
-        expect(notificationMenu.props.onMarkAsRead).toBe(instance.props.onMarkAsRead);
-        expect(notificationMenu.props.onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
-        expect(notificationMenu.props.onRemove).toBe(instance.props.onRemove);
-    });
+        beforeEach(() => {
+            setupA = (props) => {
+                setup(props);
+                viewPath = getNotificationViewPath(instance.props.notification);
+                instance.handleView();
+            };
+            setupA();
+        });
 
-    it('should show a non-white background color for unread notifications', () => {
-        const wrapper = getShallowWrapper();
-        expect(wrapper.find(Paper).get(0).props.style.backgroundColor).not.toBe('white');
-    });
+        it('calls onView() with notification and view path', () => {
+            expect(instance.props.onView.callCount).toBe(1);
+            expect(instance.props.onView.calledWith(instance.props.notification, viewPath)).toBe(true);
+        });
 
-    it('should show a white background color for read notifications', () => {
-        const props = getProps();
-        props.notification = {
-            ...props.notification,
-            unread: false,
-        };
-        const wrapper = getShallowWrapper(props);
-        expect(wrapper.find(Paper).get(0).props.style.backgroundColor).toBe('white');
+        describe('when onView() returns true', () => {
+            beforeEach(() => {
+                setupA({
+                    onView: () => true,
+                });
+            });
+
+            it('navigates to view path', () => {
+                expect(instance.props.router.push.callCount).toBe(1);
+                expect(instance.props.router.push.calledWith(viewPath)).toBe(true);
+            });
+
+            it('marks notification as read', () => {
+                expect(instance.props.markNotificationsAsRead.callCount).toBe(1);
+                expect(instance.props.markNotificationsAsRead.calledWith([instance.props.notification])).toBe(true);
+            });
+        });
+
+        describe('when onView() returns false', () => {
+            beforeEach(() => {
+                setupA({
+                    onView: () => false,
+                });
+            });
+
+            it('does not navigate anywhere', () => {
+                expect(instance.props.router.push.callCount).toBe(0);
+            });
+
+            it('does not mark notification as read', () => {
+                expect(instance.props.markNotificationsAsRead.callCount).toBe(0);
+            });
+        });
     });
 });

@@ -1,15 +1,16 @@
+/* eslint prefer-destructuring: 0 */
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui';
-import CheckboxIcon from 'material-ui/svg-icons/toggle/check-box';
+import { TableHeaderColumn } from 'material-ui';
+import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../../components/icons/IndeterminateIcon';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
 import NotificationsTableMenu from '../../components/Notification/NotificationsTableMenu';
 import NotificationsTableItem from '../../components/Notification/NotificationsTableItem';
 
 const mockNotifications = {
-    '1': {
+    1: {
         id: '1',
         verb: 'run_started',
         actor: {
@@ -22,7 +23,7 @@ const mockNotifications = {
         timestamp: '2018-05-04T17:32:04.716806Z',
         unread: false,
     },
-    '2': {
+    2: {
         id: '2',
         verb: 'run_completed',
         actor: {
@@ -38,7 +39,10 @@ const mockNotifications = {
 };
 
 describe('NotificationsTable component', () => {
-    function getProps() {
+    let wrapper;
+    let instance;
+
+    function defaultProps() {
         return {
             notifications: {
                 fetched: false,
@@ -55,202 +59,248 @@ describe('NotificationsTable component', () => {
             router: {
                 push: sinon.spy(),
             },
-            markNotificationsAsRead: () => {},
-            markNotificationsAsUnread: () => {},
-            removeNotifications: () => {},
+            onView: sinon.spy(),
+            onMarkAsRead: sinon.spy(),
+            onMarkAsUnread: sinon.spy(),
+            onRemove: sinon.spy(),
+            onMarkAllAsRead: sinon.spy(),
+            markNotificationsAsRead: sinon.spy(),
+            markNotificationsAsUnread: sinon.spy(),
+            removeNotifications: sinon.spy(),
         };
     }
 
-    function getShallowWrapper(props = getProps()) {
-        return shallow(<NotificationsTable {...props} />);
-    }
-
-    function elementType(element) {
-        return shallow(<div>{element}</div>).childAt(0).type();
-    }
-
-    it('should have the correct initial state', () => {
-        const wrapper = getShallowWrapper();
-        expect(wrapper.state().selected).toEqual({});
-    });
-
-    it('should render the basic elements', () => {
-        const props = getProps();
-        const wrapper = getShallowWrapper(props);
-        expect(wrapper.find(Table)).toHaveLength(1);
-        expect(wrapper.find(Table).get(0).props.selectable).toBe(false);
-        expect(wrapper.find(TableHeader)).toHaveLength(1);
-        expect(wrapper.find(TableHeader).get(0).props.displaySelectAll).toBe(false);
-        expect(wrapper.find(TableHeader).get(0).props.adjustForCheckbox).toBe(false);
-        expect(wrapper.find(TableHeader).find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableHeader).find(TableRow).find(TableHeaderColumn)).toHaveLength(4);
-        expect(wrapper.find(TableHeaderColumn).at(0).find(Checkbox)).toHaveLength(1);
-        expect(wrapper.find(TableHeaderColumn).at(1).find('span').text()).toBe('0 Selected');
-        expect(wrapper.find(TableHeaderColumn).at(1).find(NotificationsTableMenu)).toHaveLength(1);
-        expect(wrapper.find(TableHeaderColumn).at(2).childAt(0).text()).toBe('Date');
-        expect(wrapper.find(TableHeaderColumn).at(3).childAt(0).text()).toBe('Options');
-        expect(wrapper.find(TableBody)).toHaveLength(1);
-        expect(wrapper.find(TableBody).get(0).props.displayRowCheckbox).toBe(false);
-        expect(wrapper.find(TableBody).find(NotificationsTableItem)).toHaveLength(props.notificationsArray.length);
-    });
-
-    it('should correctly update state when setSelected() is called', () => {
-        const wrapper = getShallowWrapper();
-        const instance = wrapper.instance();
-        expect(instance.state.selected).toEqual({});
-        instance.setSelected(mockNotifications['1'], true);
-        expect(instance.state.selected).toEqual({
-            '1': mockNotifications['1'],
-        });
-        instance.setSelected(mockNotifications['1'], false);
-        expect(instance.state.selected).toEqual({});
-    });
-
-    it('should correctly update state when handleSelectAllCheck() is called', () => {
-        const wrapper = getShallowWrapper();
-        const instance = wrapper.instance();
-        expect(instance.state.selected).toEqual({});
-        instance.handleSelectAllCheck();
-        expect(instance.state.selected).toEqual({
-            '1': mockNotifications['1'],
-            '2': mockNotifications['2'],
-        });
-        instance.handleSelectAllCheck();
-        expect(instance.state.selected).toEqual({});
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-            },
-        });
-        instance.handleSelectAllCheck();
-        expect(instance.state.selected).toEqual({});
-    });
-
-    it('should return the correct select all checkbox checked icon', () => {
-        const wrapper = getShallowWrapper();
-        const instance = wrapper.instance();
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
-            },
-        });
-        expect(elementType(instance.getSelectAllCheckedIcon())).toBe(CheckboxIcon);
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-            },
-        });
-        expect(elementType(instance.getSelectAllCheckedIcon())).toBe(IndeterminateCheckboxIcon);
-    });
-
-    it('should pass correct props to the select all checkbox', () => {
-        const wrapper = getShallowWrapper();
-        let checkbox = wrapper.find(TableHeaderColumn).at(0).find(Checkbox).get(0);
-        expect(checkbox.props.checked).toBe(false);
-        expect(checkbox.props.onCheck).toBe(wrapper.instance().handleSelectAllCheck);
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
-            },
-        });
-        checkbox = wrapper.find(TableHeaderColumn).at(0).find(Checkbox).get(0);
-        expect(checkbox.props.checked).toBe(true);
-        expect(elementType(checkbox.props.checkedIcon)).toBe(CheckboxIcon);
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-            },
-        });
-        checkbox = wrapper.find(TableHeaderColumn).at(0).find(Checkbox).get(0);
-        expect(checkbox.props.checked).toBe(true);
-        expect(elementType(checkbox.props.checkedIcon)).toBe(IndeterminateCheckboxIcon);
-    });
-
-    it('should pass correct props to NotificationsTableMenu', () => {
+    function setup(propsOverride = {}) {
         const props = {
-            ...getProps(),
-            onMarkAsRead: () => {},
-            onMarkAsUnread: () => {},
-            onRemove: () => {},
-            onMarkAllAsRead: () => {},
+            ...defaultProps(),
+            ...propsOverride,
         };
-        const wrapper = getShallowWrapper(props);
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
-            },
-        });
-        const menu = wrapper.find(NotificationsTableMenu).get(0);
-        expect(menu.props.selectedNotifications).toBe(wrapper.state().selected);
-        expect(menu.props.onMarkAsRead).toBe(props.onMarkAsRead);
-        expect(menu.props.onMarkAsUnread).toBe(props.onMarkAsUnread);
-        expect(menu.props.onRemove).toBe(props.onRemove);
-        expect(menu.props.onMarkAllAsRead).toBe(props.onMarkAllAsRead);
-    });
+        wrapper = shallow(<NotificationsTable {...props} />);
+        instance = wrapper.instance();
+    }
 
-    it('should pass correct props to NotificationsTableItem', () => {
-        const props = {
-            ...getProps(),
-            onMarkAsRead: () => {},
-            onMarkAsUnread: () => {},
-            onRemove: () => {},
-            onView: () => {},
-        };
-        const wrapper = getShallowWrapper(props);
-        const instance = wrapper.instance();
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-            },
-        });
-        const item = wrapper.find(NotificationsTableItem).get(0);
-        expect(item.props.notification).toBe(props.notificationsArray[0]);
-        expect(item.props.router).toBe(props.router);
-        expect(item.props.isSelected).toBe(true);
-        expect(item.props.setSelected).toBe(instance.setSelected);
-        expect(item.props.onMarkAsRead).toBe(props.onMarkAsRead);
-        expect(item.props.onMarkAsUnread).toBe(props.onMarkAsUnread);
-        expect(item.props.onRemove).toBe(props.onRemove);
-        expect(item.props.onView).toBe(props.onView);
-    });
+    beforeEach(setup);
 
-    it('should remove selected notifications when they disappear from the store', () => {
-        const props = getProps();
-        const wrapper = getShallowWrapper(props);
-        wrapper.setState({
-            selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
-            },
-        });
-        expect(wrapper.state().selected).toEqual({
-            '1': mockNotifications['1'],
-            '2': mockNotifications['2'],
-        });
-        wrapper.setProps({
-            notifications: {
-                ...props.notifications,
-                notifications: {
-                    '1': mockNotifications['1'],
-                },
-            },
-        });
-        expect(wrapper.state().selected).toEqual({
-            '1': mockNotifications['1'],
+    it('renders notifications', () => {
+        const tableItems = wrapper.find(NotificationsTableItem);
+        expect(tableItems).not.toHaveLength(0);
+        expect(tableItems).toHaveLength(instance.props.notificationsArray.length);
+        instance.props.notificationsArray.forEach((notification, i) => {
+            expect(tableItems.at(i).props().notification).toBe(notification);
         });
     });
 
-    it('should show the correct selected count', () => {
-        const wrapper = getShallowWrapper();
+    it('shows the current selected count', () => {
         wrapper.setState({
             selected: {
-                '1': mockNotifications['1'],
-                '2': mockNotifications['2'],
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
             },
         });
+
         expect(wrapper.find(TableHeaderColumn).at(1).find('span').text()).toBe('2 Selected');
+    });
+
+    it('passes correct props to NotificationsTableMenu', () => {
+        wrapper.setState({
+            selected: {
+                1: mockNotifications['1'],
+                2: mockNotifications['2'],
+            },
+        });
+        const tableMenu = wrapper.find(NotificationsTableMenu);
+        expect(Object.keys(tableMenu.props()).length).toBe(6);
+        expect(tableMenu.props().selectedNotifications).toBe(wrapper.state().selected);
+        expect(tableMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(tableMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(tableMenu.props().onRemove).toBe(instance.props.onRemove);
+        expect(tableMenu.props().onMarkAllAsRead).toBe(instance.props.onMarkAllAsRead);
+    });
+
+    it('passes correct props to NotificationsTableItem', () => {
+        wrapper.setState({
+            selected: {
+                1: mockNotifications['1'],
+            },
+        });
+        const tableItem = wrapper.find(NotificationsTableItem).at(0);
+        expect(Object.keys(tableItem.props()).length).toBe(8);
+        expect(tableItem.props().notification).toBe(instance.props.notificationsArray[0]);
+        expect(tableItem.props().router).toBe(instance.props.router);
+        expect(tableItem.props().isSelected).toBe(true);
+        expect(tableItem.props().setSelected).toBe(instance.setSelected);
+        expect(tableItem.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
+        expect(tableItem.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
+        expect(tableItem.props().onRemove).toBe(instance.props.onRemove);
+        expect(tableItem.props().onView).toBe(instance.props.onView);
+    });
+
+    describe('when notification checkbox is clicked', () => {
+        let notification;
+        let wasSelected;
+
+        beforeEach(() => {
+            notification = instance.props.notificationsArray[0];
+            wasSelected = instance.isSelected(notification);
+            wrapper.find(NotificationsTableItem).at(0).props().setSelected(notification, !wasSelected);
+        });
+
+        it('updates selected state', () => {
+            expect(instance.isSelected(notification)).toBe(!wasSelected);
+        });
+    });
+
+    describe('when no notifications are selected', () => {
+        let selectAllCheckbox;
+
+        beforeEach(() => {
+            wrapper.setState({
+                selected: {},
+            });
+            selectAllCheckbox = wrapper.find('.qa-NotificationsTable-SelectAllCheckbox');
+        });
+
+        it('sets "Select All" checked prop to false', () => {
+            expect(selectAllCheckbox.props().checked).toBe(false);
+        });
+
+        it('unselects all notifications', () => {
+            instance.props.notificationsArray.forEach((notification, i) => {
+                const tableItem = wrapper.find(NotificationsTableItem).at(i);
+                expect(tableItem.props().isSelected).toBe(false);
+            });
+        });
+
+        describe('then "Select All" checkbox is clicked', () => {
+            beforeEach(() => {
+                selectAllCheckbox.props().onCheck();
+            });
+
+            it('updates "selected" state', () => {
+                const selected = {};
+                instance.props.notificationsArray.forEach((notification) => {
+                    selected[notification.id] = notification;
+                });
+                expect(instance.state.selected).toEqual(selected);
+            });
+
+            it('selects all notifications', () => {
+                instance.props.notificationsArray.forEach((notification) => {
+                    expect(instance.isSelected(notification)).toBe(true);
+                });
+            });
+        });
+    });
+
+    describe('when all notifications are selected', () => {
+        let selectAllCheckbox;
+
+        beforeEach(() => {
+            const selected = {};
+            instance.props.notificationsArray.forEach((notification) => {
+                selected[notification.id] = notification;
+            });
+            wrapper.setState({
+                selected,
+            });
+            selectAllCheckbox = wrapper.find('.qa-NotificationsTable-SelectAllCheckbox');
+        });
+
+        it('sets "Select All" checked prop to true', () => {
+            expect(selectAllCheckbox.props().checked).toBe(true);
+        });
+
+        it('sets "Select All" checkedIcon prop to CheckboxIcon', () => {
+            expect(selectAllCheckbox.props().checkedIcon).toEqual(<CheckboxIcon />);
+        });
+
+        it('selects all notification table items', () => {
+            instance.props.notificationsArray.forEach((notification, i) => {
+                const tableItem = wrapper.find(NotificationsTableItem).at(i);
+                expect(tableItem.props().isSelected).toBe(true);
+            });
+        });
+
+        describe('then "Select All" checkbox is clicked', () => {
+            beforeEach(() => {
+                selectAllCheckbox.props().onCheck();
+            });
+
+            it('updates "selected" state', () => {
+                expect(instance.state.selected).toEqual({});
+            });
+
+            it('deselects all notifications', () => {
+                wrapper.update();
+                instance.props.notificationsArray.forEach((notification, i) => {
+                    const tableItem = wrapper.find(NotificationsTableItem).at(i);
+                    expect(tableItem.props().isSelected).toBe(false);
+                });
+            });
+        });
+    });
+
+    describe('when some (but not all) notifications are selected', () => {
+        let selectAllCheckbox;
+
+        beforeEach(() => {
+            wrapper.setState({
+                selected: {
+                    1: mockNotifications['1'],
+                },
+            });
+            selectAllCheckbox = wrapper.find('.qa-NotificationsTable-SelectAllCheckbox');
+        });
+
+        it('sets "Select All" checked prop to true', () => {
+            expect(selectAllCheckbox.props().checked).toBe(true);
+        });
+
+        it('sets "Select All" checkedIcon prop to IndeterminateCheckboxIcon', () => {
+            expect(selectAllCheckbox.props().checkedIcon).toEqual(<IndeterminateCheckboxIcon />);
+        });
+
+        describe('then "Select All" checkbox is clicked', () => {
+            beforeEach(() => {
+                selectAllCheckbox.props().onCheck();
+            });
+
+            it('updates "selected" state', () => {
+                expect(instance.state.selected).toEqual({});
+            });
+
+            it('deselects all notifications', () => {
+                wrapper.update();
+                instance.props.notificationsArray.forEach((notification, i) => {
+                    const tableItem = wrapper.find(NotificationsTableItem).at(i);
+                    expect(tableItem.props().isSelected).toBe(false);
+                });
+            });
+        });
+    });
+
+    describe('when notifications disappear from the store', () => {
+        beforeEach(() => {
+            wrapper.setState({
+                selected: {
+                    1: mockNotifications['1'],
+                    2: mockNotifications['2'],
+                },
+            });
+            wrapper.setProps({
+                notifications: {
+                    ...instance.props.notifications,
+                    notifications: {
+                        1: mockNotifications['1'],
+                    },
+                },
+            });
+        });
+
+        it('updates "selected" state', () => {
+            expect(wrapper.state().selected).toEqual({
+                1: mockNotifications['1'],
+            });
+        });
     });
 });

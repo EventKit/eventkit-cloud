@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -57,7 +58,7 @@ describe('UserHeader component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-UserHeader-IconButton-options')).toHaveLength(0);
         wrapper.setProps({ selectedUsers: getProps().selectedUsers });
-        expect(wrapper.find('.qa-UserHeader-IconButton-options')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserHeader-IconButton-options').hostNodes()).toHaveLength(1);
     });
 
     it('should render the admin and remove buttons', () => {

@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-from osgeo import gdal, ogr, osr
 import json
 import logging
 import math
-import time
 import os
 import subprocess
+import time
 from string import Template
 from tempfile import NamedTemporaryFile
-from ..tasks.task_process import TaskProcess
+
+from osgeo import gdal, ogr, osr
+
+from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
@@ -439,3 +441,19 @@ def merge_geotiffs(in_files, out_file, task_uid=None):
         raise Exception("GeoTIFF merge process failed with return code {0}".format(task_process.exitcode))
 
     return out_file
+
+
+def get_band_statistics(file_path, band=1):
+    """
+    Returns the band statistics for a specific raster file and band
+    :param file_path: The path to the file.
+    :param band: A specific raster band (defaults to 1).
+    :return: A list [min, max, mean, std_dev]
+    """
+    try:
+        geotiff = gdal.Open(file_path)
+        band = geotiff.GetRasterBand(1)
+        return band.GetStatistics(True, True)
+    except Exception as e:
+        logger.error(e)
+        logger.error("Could not get statistics for {0}:{1}".format(file_path, band))

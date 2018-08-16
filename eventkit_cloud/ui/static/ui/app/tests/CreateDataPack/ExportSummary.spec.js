@@ -1,14 +1,11 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
+import Joyride from 'react-joyride';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
-
-import Map from 'ol/map';
-import VectorSource from 'ol/source/vector';
-import GeoJSON from 'ol/format/geojson';
-
+import MapCard from '../../components/common/MapCard';
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import CustomTableRow from '../../components/CustomTableRow';
@@ -19,6 +16,7 @@ raf.polyfill();
 
 describe('Export Summary Component', () => {
     const muiTheme = getMuiTheme();
+
     const getProps = () => ({
         geojson: {
             type: 'FeatureCollection',
@@ -60,6 +58,8 @@ describe('Export Summary Component', () => {
                 description: 'GeoPackage',
             },
         ],
+        walkthroughClicked: false,
+        onWalkthroughReset: () => {},
     });
 
     const getWrapper = (props) => {
@@ -67,8 +67,8 @@ describe('Export Summary Component', () => {
         return mount(<ExportSummary {...props} />, {
             context: { muiTheme, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     };
@@ -84,50 +84,58 @@ describe('Export Summary Component', () => {
         expect(wrapper.find('#export-information-heading').text()).toEqual('Export Information');
         expect(wrapper.find('#aoi-heading').text()).toEqual('Area of Interest (AOI)');
         expect(wrapper.find('#aoi-map')).toHaveLength(1);
-        expect(wrapper.find(Card)).toHaveLength(1);
-        expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(CardHeader).text()).toEqual('Selected Area of Interest');
-        expect(wrapper.find(CardText)).toHaveLength(0);
+        expect(wrapper.find(MapCard)).toHaveLength(1);
         expect(wrapper.find('#summaryMap')).toHaveLength(0);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
     });
 
-    it('should call initializeOpenLayers  when card is expanded', () => {
+    it('componentDidMount should setJoyRideSteps', () => {
         const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.instance().initializeOpenLayers = sinon.spy();
-        expect(wrapper.instance().initializeOpenLayers.called).toBe(false);
-        wrapper.setState({ expanded: true });
-        expect(wrapper.instance().initializeOpenLayers.calledOnce).toBe(true);
-        wrapper.setState({ expanded: false });
-        expect(wrapper.instance().initializeOpenLayers.calledOnce).toBe(true);
+        const mountSpy = sinon.spy(ExportSummary.prototype, 'componentDidMount');
+        const joyrideSpy = sinon.stub(ExportSummary.prototype, 'joyrideAddSteps');
+        getWrapper(props);
+        expect(mountSpy.calledOnce).toBe(true);
+        expect(joyrideSpy.calledOnce).toBe(true);
+        mountSpy.restore();
+        joyrideSpy.restore();
     });
 
-    it('expandedChange should call setState', () => {
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{
+            title: 'Verify Information',
+            text: 'Verify the information entered is correct before proceeding.',
+            selector: '.qa-ExportSummary-div',
+            position: 'bottom',
+            style: {},
+        }];
         const props = getProps();
-        const stateSpy = sinon.spy(ExportSummary.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(stateSpy.called).toBe(false);
-        wrapper.instance().expandedChange(true);
+        const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
+        wrapper.update();
+        wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ expanded: true })).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
         stateSpy.restore();
     });
 
-    it('initializeOpenLayers should read a geojson and display it on the map', () => {
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
         const props = getProps();
         const wrapper = getWrapper(props);
-        const readerSpy = sinon.spy(GeoJSON.prototype, 'readFeatures');
-        const addFeatSpy = sinon.spy(VectorSource.prototype, 'addFeatures');
-        const addLayerSpy = sinon.spy(Map.prototype, 'addLayer');
-        const getViewSpy = sinon.spy(Map.prototype, 'getView');
-        const getExtentSpy = sinon.spy(VectorSource.prototype, 'getExtent');
-        const getSizeSpy = sinon.spy(Map.prototype, 'getSize');
-        wrapper.instance().initializeOpenLayers();
-        expect(readerSpy.calledOnce).toBe(true);
-        expect(addFeatSpy.calledOnce).toBe(true);
-        expect(addLayerSpy.calledOnce).toBe(true);
-        expect(getViewSpy.calledTwice).toBe(true);
-        expect(getExtentSpy.calledOnce).toBe(true);
-        expect(getSizeSpy.calledOnce).toBe(true);
+        const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
     });
 });

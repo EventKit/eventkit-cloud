@@ -11,12 +11,12 @@ const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
 const mockNotifications = {
-    "1": {
+    1: {
         id: 1,
         unread: true,
         timestamp: '2018-05-04T17:32:04.716806Z',
     },
-    "2": {
+    2: {
         id: 2,
         unread: false,
         timestamp: '2018-05-04T17:33:04.716806Z',
@@ -41,7 +41,12 @@ describe('notificationsActions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
-            { type: types.RECEIVED_NOTIFICATIONS, notifications: mockNotificationsArray, nextPage: true, range: '12/24' }
+            {
+                type: types.RECEIVED_NOTIFICATIONS,
+                notifications: mockNotificationsArray,
+                nextPage: true,
+                range: '12/24',
+            },
         ];
 
         const store = mockStore(initialState);
@@ -63,7 +68,9 @@ describe('notificationsActions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
-            { type: types.RECEIVED_NOTIFICATIONS, notifications: mockNotificationsArray, nextPage: false, range: '' }
+            {
+                type: types.RECEIVED_NOTIFICATIONS, notifications: mockNotificationsArray, nextPage: false, range: '',
+            },
         ];
 
         const store = mockStore(initialState);
@@ -172,7 +179,7 @@ describe('notificationsActions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource },
-            { type: types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT, unreadCount: 1 }
+            { type: types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT, unreadCount: 1 },
         ];
 
         const store = mockStore(initialState);

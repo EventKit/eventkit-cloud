@@ -21,7 +21,7 @@ export function logout() {
     );
 }
 
-export function login(data, query) {
+export function login(data) {
     return (dispatch) => {
         const csrftoken = cookie.load('csrftoken');
 
@@ -29,18 +29,18 @@ export function login(data, query) {
             type: actions.USER_LOGGING_IN,
         });
 
-        const form_data = new FormData();
+        const formData = new FormData();
         let method = 'get';
         if (data && (data.username && data.password)) {
-            form_data.append('username', data.username);
-            form_data.append('password', data.password);
+            formData.append('username', data.username);
+            formData.append('password', data.password);
             method = 'post';
         }
 
         return axios({
             url: '/auth',
             method,
-            data: form_data,
+            data: formData,
             headers: { 'X-CSRFToken': csrftoken },
         }).then((response) => {
             if (response.data) {

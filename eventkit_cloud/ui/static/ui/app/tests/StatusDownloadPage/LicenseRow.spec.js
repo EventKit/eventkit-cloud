@@ -1,38 +1,35 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
+import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {TableRow, TableRowColumn} from 'material-ui/Table';
+import { TableRow, TableRowColumn } from 'material-ui/Table';
 import BaseDialog from '../../components/Dialog/BaseDialog';
+import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 
 describe('LicenseRow component', () => {
     const muiTheme = getMuiTheme();
 
-    const getProps = () => {
-        return  {
-           name: 'test name',
-           text: 'test text'
-        }
-    };
+    const getProps = () => ({
+        name: 'test name',
+        text: 'test text',
+    });
 
-    const getWrapper = (props) => {
-        return mount(<LicenseRow {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-    };
+    const getWrapper = props => mount(<LicenseRow {...props} />, {
+        context: { muiTheme },
+        childContextTypes: {
+            muiTheme: PropTypes.object,
+        },
+    });
 
     it('should render elements', () => {
-        let props = getProps();
+        const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableRowColumn)).toHaveLength(6);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find('i')).toHaveLength(1);
-        expect(wrapper.find('i').text()).toEqual('Use of this data is governed by test name');
+        expect(wrapper.find('i').text()).toEqual('Use of this data is governed by\u00a0test name');
     });
 
     it('getTextFontSize should return the font string for table text based on window width', () => {
@@ -83,23 +80,23 @@ describe('LicenseRow component', () => {
 
     it('setLicenseOpen should set license dialog to open', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(LicenseRow.prototype, 'setState');
-        const wrapper = shallow(<LicenseRow {...props}/>);
+        const stateSpy = sinon.spy(LicenseRow.prototype, 'setState');
+        const wrapper = shallow(<LicenseRow {...props} />);
         expect(stateSpy.called).toBe(false);
-        wrapper.instance().setLicenseOpen()
+        wrapper.instance().setLicenseOpen();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({licenseDialogOpen: true})).toBe(true);
+        expect(stateSpy.calledWith({ licenseDialogOpen: true })).toBe(true);
         stateSpy.restore();
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
-        const stateSpy = new sinon.spy(LicenseRow.prototype, 'setState');
-        const wrapper = shallow(<LicenseRow {...props}/>);
+        const stateSpy = sinon.spy(LicenseRow.prototype, 'setState');
+        const wrapper = shallow(<LicenseRow {...props} />);
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleLicenseClose();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({licenseDialogOpen: false})).toBe(true);
+        expect(stateSpy.calledWith({ licenseDialogOpen: false })).toBe(true);
         stateSpy.restore();
     });
 });

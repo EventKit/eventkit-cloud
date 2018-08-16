@@ -6,11 +6,15 @@ COPY ./package.json /var/lib/eventkit/
 COPY ./config/setupFile.js /var/lib/eventkit/
 COPY ./nightwatch.json /var/lib/eventkit/
 RUN apt-get update && apt-get install -y ruby git libcairo2-dev libjpeg62-turbo-dev libpango1.0-dev libgif-dev build-essential g++
-RUN npm install npm@4.0.2 --quiet
+RUN npm install npm@6.1.0 --quiet
 RUN npm install --quiet
 #RUN npm install webpack webpack-dev-server -g --quiet
 RUN gem install coveralls-lcov
 
 COPY ./webpack.config.js /var/lib/eventkit/
+COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
+COPY ./.eslintrc.json /var/lib/eventkit/.eslintrc.json
+COPY ./.eslintignore /var/lib/eventkit/.eslintignore
+COPY ./webpack.config.js /var/lib/eventkit/webpack.config.js
 
 CMD ["npm", "start"]

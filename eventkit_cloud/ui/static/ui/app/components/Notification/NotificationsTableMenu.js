@@ -1,15 +1,16 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { Divider, IconButton, IconMenu, MenuItem } from 'material-ui';
-import MoreHorizIcon from 'material-ui/svg-icons/navigation/more-horiz'
-import FlagIcon from 'material-ui/svg-icons/content/flag';
-import CloseIcon from 'material-ui/svg-icons/navigation/close';
+import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
+import FlagIcon from '@material-ui/icons/Flag';
+import CloseIcon from '@material-ui/icons/Close';
 import values from 'lodash/values';
 import {
     markAllNotificationsAsRead,
     markNotificationsAsRead,
     markNotificationsAsUnread,
-    removeNotifications
+    removeNotifications,
 } from '../../actions/notificationsActions';
 
 export class NotificationsTableMenu extends React.Component {
@@ -59,13 +60,13 @@ export class NotificationsTableMenu extends React.Component {
             markAllAsRead: {
                 color: '#337ab7',
                 textAlign: 'center',
-            }
+            },
         };
 
         let showMarkAsRead = false;
         let showMarkAsUnread = false;
         const selectedNotificationsKeys = Object.keys(this.props.selectedNotifications);
-        for (let uid of selectedNotificationsKeys) {
+        selectedNotificationsKeys.every((uid) => {
             const notification = this.props.selectedNotifications[uid];
             if (notification.unread) {
                 showMarkAsRead = true;
@@ -74,9 +75,10 @@ export class NotificationsTableMenu extends React.Component {
             }
 
             if (showMarkAsUnread && showMarkAsRead) {
-                break;
+                return false;
             }
-        }
+            return true;
+        });
 
         return (
             <IconMenu
@@ -93,7 +95,7 @@ export class NotificationsTableMenu extends React.Component {
             >
                 {showMarkAsRead ?
                     <MenuItem
-                        className={'qa-NotificationsTableMenu-MarkAsRead'}
+                        className="qa-NotificationsTableMenu-MarkAsRead"
                         primaryText="Mark As Read"
                         leftIcon={<FlagIcon />}
                         onClick={this.handleMarkAsRead}
@@ -103,9 +105,9 @@ export class NotificationsTableMenu extends React.Component {
                 }
                 {showMarkAsUnread ?
                     <MenuItem
-                        className={'qa-NotificationsTableMenu-MarkAsUnread'}
+                        className="qa-NotificationsTableMenu-MarkAsUnread"
                         primaryText="Mark As Unread"
-                        leftIcon={<FlagIcon/>}
+                        leftIcon={<FlagIcon />}
                         onClick={this.handleMarkAsUnread}
                     />
                     :
@@ -113,7 +115,7 @@ export class NotificationsTableMenu extends React.Component {
                 }
                 {(selectedNotificationsKeys.length > 0) ?
                     <MenuItem
-                        className={'qa-NotificationsTableMenu-Remove'}
+                        className="qa-NotificationsTableMenu-Remove"
                         primaryText="Remove"
                         leftIcon={<CloseIcon />}
                         onClick={this.handleRemove}
@@ -127,7 +129,7 @@ export class NotificationsTableMenu extends React.Component {
                     null
                 }
                 <MenuItem
-                    className={'qa-NotificationsTableMenu-MarkAllAsRead'}
+                    className="qa-NotificationsTableMenu-MarkAllAsRead"
                     style={styles.markAllAsRead}
                     primaryText="Mark All As Read"
                     onClick={this.handleMarkAllAsRead}
@@ -144,21 +146,25 @@ NotificationsTableMenu.propTypes = {
     onMarkAsUnread: PropTypes.func,
     onRemove: PropTypes.func,
     onMarkAllAsRead: PropTypes.func,
+    markNotificationsAsRead: PropTypes.func.isRequired,
+    markNotificationsAsUnread: PropTypes.func.isRequired,
+    removeNotifications: PropTypes.func.isRequired,
+    markAllNotificationsAsRead: PropTypes.func.isRequired,
 };
 
 NotificationsTableMenu.defaultProps = {
     style: {},
-    onMarkAsRead: () => { return true; },
-    onMarkAsUnread: () => { return true; },
-    onRemove: () => { return true; },
-    onMarkAllAsRead: () => { return true; },
+    onMarkAsRead: () => true,
+    onMarkAsUnread: () => true,
+    onRemove: () => true,
+    onMarkAllAsRead: () => true,
 };
 
 function mapDispatchToProps(dispatch) {
     return {
-        markNotificationsAsRead: (notifications) => dispatch(markNotificationsAsRead(notifications)),
-        markNotificationsAsUnread: (notifications) => dispatch(markNotificationsAsUnread(notifications)),
-        removeNotifications: (notifications) => dispatch(removeNotifications(notifications)),
+        markNotificationsAsRead: notifications => dispatch(markNotificationsAsRead(notifications)),
+        markNotificationsAsUnread: notifications => dispatch(markNotificationsAsUnread(notifications)),
+        removeNotifications: notifications => dispatch(removeNotifications(notifications)),
         markAllNotificationsAsRead: () => dispatch(markAllNotificationsAsRead()),
     };
 }

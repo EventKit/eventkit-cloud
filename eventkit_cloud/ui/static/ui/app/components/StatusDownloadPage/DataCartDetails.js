@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
 import CustomTableRow from '../CustomTableRow';
@@ -80,7 +81,7 @@ export class DataCartDetails extends Component {
 
         return (
             <div>
-                <div className="qa-DataCartDetails-div-name">
+                <div className="qa-DataCartDetails-div-name" id="Name">
                     <CustomTableRow
                         className="qa-DataCartDetails-name"
                         title="Name"
@@ -88,7 +89,7 @@ export class DataCartDetails extends Component {
                         dataStyle={{ wordBreak: 'break-all' }}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-StatusContainer" id="Status">
                     <div className="qa-DataCartDetails-div-status" style={styles.subHeading}>
                         Status
                     </div>
@@ -111,7 +112,7 @@ export class DataCartDetails extends Component {
                         adminPermissions={adminUser}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-downloadOptionsContainer" id="DownloadOptions">
                     <DataPackDetails
                         providerTasks={this.props.cartDetails.provider_tasks}
                         onProviderCancel={this.props.onProviderCancel}
@@ -119,7 +120,7 @@ export class DataCartDetails extends Component {
                         zipFileProp={this.props.cartDetails.zipfile_url}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-otherOptionsContainer" id="OtherOptions">
                     <div className="qa-DataCartDetails-div-otherOptions" style={styles.subHeading}>
                         Other Options
                     </div>
@@ -131,7 +132,7 @@ export class DataCartDetails extends Component {
                         adminPermissions={adminUser}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-generalInfoContainer" id="GeneralInfo">
                     <div className="qa-DataCartDetails-div-generalInfo" style={styles.subHeading}>
                         General Information
                     </div>
@@ -140,13 +141,13 @@ export class DataCartDetails extends Component {
                         providers={this.props.providers}
                     />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} id="Map">
                     <div className="qa-DataCartDetails-div-aoi" style={styles.subHeading}>
                         Selected Area of Interest (AOI)
                     </div>
                     <DataPackAoiInfo extent={this.props.cartDetails.job.extent} />
                 </div>
-                <div style={styles.container}>
+                <div style={styles.container} className="qa-DataCartDetails-div-exportInfoContainer" id="ExportInfo">
                     <div className="qa-DataCartDetails-div-exportInfo" style={styles.subHeading}>
                         Export Information
                     </div>

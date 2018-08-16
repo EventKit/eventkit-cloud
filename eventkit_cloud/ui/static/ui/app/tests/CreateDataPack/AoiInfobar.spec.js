@@ -1,24 +1,22 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
-import AlertWarning from 'material-ui/svg-icons/alert/warning';
-import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
-import ActionRoom from 'material-ui/svg-icons/action/room';
-import ActionZoomIn from 'material-ui/svg-icons/action/zoom-in';
-import ActionRestore from 'material-ui/svg-icons/action/restore';
-import Triangle from 'material-ui/svg-icons/image/details';
-import Line from 'material-ui/svg-icons/action/timeline';
-import Extent from 'material-ui/svg-icons/action/settings-overscan';
+import AlertWarning from '@material-ui/icons/Warning';
+import ImageCropSquare from '@material-ui/icons/CropSquare';
+import ActionRoom from '@material-ui/icons/Room';
+import ActionZoomIn from '@material-ui/icons/ZoomIn';
+import Line from '@material-ui/icons/Timeline';
+import Extent from '@material-ui/icons/SettingsOverscan';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
 
 describe('AoiInfobar component', () => {
     const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
+    const getProps = () => (
+        {
             aoiInfo: {
                 geojson: {},
                 originalGeojson: {},
@@ -33,12 +31,12 @@ describe('AoiInfobar component', () => {
             clickZoomToSelection: () => {},
             handleBufferClick: () => {},
         }
-    };
+    );
 
     const getWrapper = props => (
         mount(<AoiInfobar {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 
@@ -75,13 +73,33 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.title = 'fake title';
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AoiInfobar')).toHaveLength(1);
-        expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST');
+        expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST (AOI)');
         expect(wrapper.find('.qa-AoiInfobar-button-zoom')).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toEqual(' ZOOM TO');
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
-        expect(wrapper.find('.qa-AoiInfobar-name').text()).toEqual('0 sq km fake title');
-        expect(wrapper.find('.qa-AoiInfobar-description').text()).toEqual('fake description');
-        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(1);
+        expect(wrapper.find('.qa-AoiInfobar-infoTitle').text()).toEqual('fake title');
+        expect(wrapper.find('.qa-AoiInfobar-infoDescription').text()).toEqual('fake description');
+        expect(wrapper.find('.qa-AoiInfobar-icon-polygon').hostNodes()).toHaveLength(1);
+    });
+
+    it('should add an event listener on mount', () => {
+        const props = getProps();
+        const addStub = sinon.stub(window, 'addEventListener');
+        const wrapper = getWrapper(props);
+        expect(addStub.called).toBe(true);
+        expect(addStub.calledWith('resize', wrapper.instance().update)).toBe(true);
+        addStub.restore();
+    });
+
+    it('should remove an event listener on unmount', () => {
+        const props = getProps();
+        const removeSpy = sinon.spy(window, 'addEventListener');
+        const wrapper = getWrapper(props);
+        const { update } = wrapper.instance();
+        wrapper.instance().componentWillUnmount();
+        expect(removeSpy.called).toBe(true);
+        expect(removeSpy.calledWith('resize', update)).toBe(true);
+        removeSpy.restore();
     });
 
     it('clicking on zoom button should call clickZoomToSelection', () => {
@@ -127,11 +145,11 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.maxAoiSqKm = 0.0000000001;
+        props.maxVectorAoiSqKm = 0.0000000001;
         const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
-        wrapper.find('.qa-AoiInfobar-alert-icon').simulate('click');
+        expect(wrapper.find('.qa-AoiInfobar-alert-icon').hostNodes()).toHaveLength(1);
+        wrapper.find('.qa-AoiInfobar-alert-icon').hostNodes().simulate('click');
         expect(showSpy.calledOnce).toBe(true);
         showSpy.restore();
     });
@@ -139,92 +157,50 @@ describe('AoiInfobar component', () => {
     it('getIcon should return ImageCropSquare', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <ImageCropSquare
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-box"
-            />
-        );
         const icon = wrapper.instance().getIcon('Polygon', 'Box');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(ImageCropSquare);
     });
 
     it('getIcon should return Extent', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <Extent
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-mapview"
-            />
-        );
         const icon = wrapper.instance().getIcon('Polygon', 'Map View');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(Extent);
     });
 
     it('getIcon should return ActionRoom', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <ActionRoom
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-point"
-            />
-        );
         const icon = wrapper.instance().getIcon('Point', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(ActionRoom);
     });
 
     it('getIcon should return Line', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <Line
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-line"
-            />
-        );
         const icon = wrapper.instance().getIcon('Line', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(Line);
     });
 
     it('getIcon should return IrregularPolygon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <IrregularPolygon
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-polygon"
-            />
-        );
         const icon = wrapper.instance().getIcon('Polygon', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return IrregularPolygon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <IrregularPolygon
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-polygon"
-            />
-        );
         const icon = wrapper.instance().getIcon('Collection', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toBe(IrregularPolygon);
     });
 
     it('getIcon should return AlertWarning', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const expected = (
-            <AlertWarning
-                style={{ width: '35px', height: '35px' }}
-                className="qa-AoiInfobar-icon-no-selection"
-            />
-        );
         const icon = wrapper.instance().getIcon('', '');
-        expect(icon).toEqual(expected);
+        expect(icon.type).toEqual(AlertWarning);
     });
 
     it('showAlert should set show to true', () => {
@@ -253,7 +229,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.description = 'fake description';
         props.aoiInfo.geomType = 'Polygon';
         props.aoiInfo.title = 'fake title';
-        props.maxAoiSqKm = 500;
+        props.maxVectorAoiSqKm = 500;
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });

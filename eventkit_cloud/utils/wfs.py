@@ -2,12 +2,13 @@ from __future__ import absolute_import
 
 import logging
 import os
+import re
 import subprocess
 from string import Template
-import re
-from ..tasks.task_process import TaskProcess
-from ..utils.geopackage import check_content_exists
-from ..utils.auth_requests import get_cred
+
+from eventkit_cloud.tasks.task_process import TaskProcess
+from eventkit_cloud.utils.auth_requests import get_cred
+from eventkit_cloud.utils.geopackage import check_content_exists
 
 logger = logging.getLogger(__name__)
 

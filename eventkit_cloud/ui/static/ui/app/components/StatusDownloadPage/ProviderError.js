@@ -1,6 +1,7 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
+import Warning from '@material-ui/icons/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class ProviderError extends Component {
@@ -86,12 +87,16 @@ export class ProviderError extends Component {
 
         return (
             <span className="qa-ProviderError-span-errorText">
-                <a 
+                <span
+                    role="button"
+                    tabIndex={0}
+                    onKeyPress={this.handleProviderErrorOpen}
                     onClick={this.handleProviderErrorOpen}
                     style={styles.errorText}
+                    className="qa-ProviderError-error-text"
                 >
                     ERROR
-                </a>
+                </span>
                 <Warning
                     className="qa-ProviderError-Warning"
                     onClick={this.handleProviderErrorOpen}

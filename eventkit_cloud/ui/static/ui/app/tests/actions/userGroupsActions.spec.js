@@ -157,7 +157,7 @@ describe('userGroups actions', () => {
 
     it('createGroup should handle create success', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        
+
         mock.onPost('/api/groups').reply(200);
 
         const expectedActions = [

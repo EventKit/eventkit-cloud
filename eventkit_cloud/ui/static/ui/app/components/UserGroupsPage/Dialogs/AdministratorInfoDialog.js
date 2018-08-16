@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import BaseDialog from '../../Dialog/BaseDialog';
 
 export class AdministratorInfoDialog extends Component {
@@ -23,10 +24,13 @@ export class AdministratorInfoDialog extends Component {
                         <ul style={{ paddingLeft: '20px' }}>
                             <li>You can add and remove group members</li>
                             <li>You can promote and demote other group administrators</li>
-                            <li>You'll receive all notifications</li>
+                            <li>You&apos;ll receive all notifications</li>
                             <li>You may have administrative rights for data shared with group administrators</li>
                         </ul>
-                        <span>You may leave any administrator group. By doing so, you opt out of notifications, data, and your admin rights. If there are no other administrators you must appoint one before leaving</span>
+                        <span>
+                            You may leave any administrator group. By doing so, you opt out of notifications, data, and your admin rights.
+                            If there are no other administrators you must appoint one before leaving
+                        </span>
                     </div>
                 </div>
             </BaseDialog>

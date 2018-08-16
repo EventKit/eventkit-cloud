@@ -1,8 +1,12 @@
 import React from 'react';
 import sinon from 'sinon';
+import PropTypes from 'prop-types';
 import raf from 'raf';
+import { browserHistory } from 'react-router';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Joyride from 'react-joyride';
+import Help from '@material-ui/icons/Help';
 import AppBar from 'material-ui/AppBar';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 import CircularProgress from 'material-ui/CircularProgress';
@@ -18,7 +22,7 @@ import DataPackFilterButton from '../../components/DataPackPage/DataPackFilterBu
 import DataPackOwnerSort from '../../components/DataPackPage/DataPackOwnerSort';
 import DataPackLinkButton from '../../components/DataPackPage/DataPackLinkButton';
 import * as utils from '../../utils/mapUtils';
-import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
+import { joyride } from '../../joyride.config';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -26,129 +30,136 @@ jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
     const muiTheme = getMuiTheme();
-    const providers = [
+    const testProviders = [
         {
-            "id": 2,
-            "model_url": "http://cloud.eventkit.test/api/providers/osm",
-            "type": "osm",
-            "license": null,
-            "created_at": "2017-08-15T19:25:10.844911Z",
-            "updated_at": "2017-08-15T19:25:10.844919Z",
-            "uid": "bc9a834a-727a-4779-8679-2500880a8526",
-            "name": "OpenStreetMap Data (Themes)",
-            "slug": "osm",
-            "preview_url": "",
-            "service_copyright": "",
-            "service_description": "OpenStreetMap vector data provided in a custom thematic schema. \n\nData is grouped into separate tables (e.g. water, roads...).",
-            "layer": null,
-            "level_from": 0,
-            "level_to": 10,
-            "zip": false,
-            "display": true,
-            "export_provider_type": 2
+            id: 2,
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
+            type: 'osm',
+            license: null,
+            created_at: '2017-08-15T19:25:10.844911Z',
+            updated_at: '2017-08-15T19:25:10.844919Z',
+            uid: 'bc9a834a-727a-4779-8679-2500880a8526',
+            name: 'OpenStreetMap Data (Themes)',
+            slug: 'osm',
+            preview_url: '',
+            service_copyright: '',
+            service_description: 'OpenStreetMap vector data.',
+            layer: null,
+            level_from: 0,
+            level_to: 10,
+            zip: false,
+            display: true,
+            export_provider_type: 2,
         },
     ];
 
-    const getProps = () => {
-        return {
-            runsList: {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '12/24',
-                order: '',
-                view: '',
+    const getProps = () => ({
+        runsList: {
+            fetching: false,
+            fetched: false,
+            runs: [],
+            error: null,
+            nextPage: false,
+            range: '12/24',
+            order: '',
+            view: '',
+        },
+        user: { data: { user: { username: 'admin' } } },
+        getRuns: () => {},
+        deleteRuns: () => {},
+        getProviders: () => {},
+        runsDeletion: {
+            deleting: false,
+            deleted: false,
+            error: null,
+        },
+        drawer: 'open',
+        providers: testProviders,
+        importGeom: {},
+        geocode: {},
+        getGeocode: () => {},
+        processGeoJSONFile: () => {},
+        resetGeoJSONFile: () => {},
+        setOrder: () => {},
+        setView: () => {},
+        groups: [
+            {
+                id: 1,
+                name: 'group_one',
+                members: ['user_one'],
+                administrators: ['user_three'],
             },
-            user: { data: { user: { username: 'admin' } } },
-            getRuns: () => {},
-            deleteRuns: () => {},
-            getProviders: () => {},
-            runsDeletion: {
-                deleting: false,
-                deleted: false,
-                error: null,
+            {
+                id: 2,
+                name: 'group_two',
+                members: ['user_two'],
+                administrators: ['user_three'],
             },
-            drawer: 'open',
-            providers,
-            importGeom: {},
-            geocode: {},
-            getGeocode: () => {},
-            processGeoJSONFile: () => {},
-            resetGeoJSONFile: () => {},
-            setOrder: () => {},
-            setView: () => {},
-            groups: [
-                {
-                    id: 1,
-                    name: 'group_one',
-                    members: ['user_one'],
-                    administrators: ['user_three'],
-                },
-                {
-                    id: 2,
-                    name: 'group_two',
-                    members: ['user_two'],
-                    administrators: ['user_three'],
-                },
-                {
-                    id: 3,
-                    name: 'group_three',
-                    members: ['user_one', 'user_two'],
-                    administrators: ['user_one'],
-                },
-            ],
-            users: [
-                {
-                    user: {
-                        first_name: 'user',
-                        last_name: 'one',
-                        username: 'user_one',
-                        email: 'user.one@email.com',
-                    },
-                    groups: [1, 3],
-                },
-                {
-                    user: {
-                        first_name: 'user',
-                        last_name: 'two',
-                        username: 'user_two',
-                        email: 'user.two@email.com',
-                    },
-                    groups: [2, 3],
-                },
-            ],
-            getGroups: () => {},
-            getUsers: () => {},
-            updateDataCartPermissions: () => {},
-            updatePermissions: {
-                updating: false,
-                updated: false,
-                error: null,
+            {
+                id: 3,
+                name: 'group_three',
+                members: ['user_one', 'user_two'],
+                administrators: ['user_one'],
             },
-            location: {
-                query: {
-                    collection: '',
+        ],
+        users: [
+            {
+                user: {
+                    first_name: 'user',
+                    last_name: 'one',
+                    username: 'user_one',
+                    email: 'user.one@email.com',
                 },
+                groups: [1, 3],
             },
-        };
-    };
+            {
+                user: {
+                    first_name: 'user',
+                    last_name: 'two',
+                    username: 'user_two',
+                    email: 'user.two@email.com',
+                },
+                groups: [2, 3],
+            },
+        ],
+        getGroups: () => {},
+        getUsers: () => {},
+        updateDataCartPermissions: () => {},
+        updatePermissions: {
+            updating: false,
+            updated: false,
+            error: null,
+        },
+        location: {
+            query: {
+                collection: '',
+                page_size: '12',
+            },
+        },
+    });
 
     const getWrapper = props => (
         mount(<DataPackPage {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
+
+    beforeAll(() => {
+        sinon.stub(browserHistory, 'push');
+    });
+
+    afterAll(() => {
+        browserHistory.push.restore();
+    });
 
     it('should render all the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find(AppBar).find('h1').text()).toEqual('DataPack Library');
+        expect(wrapper.find(AppBar).find('div').at(2).text()).toEqual('DataPack Library');
         expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
         expect(wrapper.find(Toolbar)).toHaveLength(2);
         expect(wrapper.find(ToolbarGroup)).toHaveLength(1);
@@ -158,10 +169,28 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(DataPackSortDropDown)).toHaveLength(1);
         expect(wrapper.find(DataPackViewButtons)).toHaveLength(1);
         expect(wrapper.find(FilterDrawer)).toHaveLength(1);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
         // Should show loading before datapacks have been fetched
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
         expect(wrapper.find(DataPackList)).toHaveLength(0);
+    });
+
+    it('componentWillMount should call updateLocationQuery with default query', () => {
+        const props = getProps();
+        props.location.query = {};
+        const expectedDefault = {
+            collection: 'all',
+            order: '-job__featured',
+            view: 'map',
+            page_size: '12',
+        };
+        const updateStub = sinon.stub(DataPackPage.prototype, 'updateLocationQuery');
+        getWrapper(props);
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith(expectedDefault)).toBe(true);
+        updateStub.restore();
     });
 
     it('DataPackSortDropDown handleChange should call handleSortChange', () => {
@@ -174,40 +203,35 @@ describe('DataPackPage component', () => {
         changeStub.restore();
     });
 
-    it('should show the DataPackShareDialog  and give it the correct run', () => {
-        const runs = [
-            { job: { uid: '123', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
-            { job: { uid: '456', permissions: { value: 'PRIVATE', groups: {}, members: {} } } },
-        ];
-        const props = getProps();
-        props.runsList.runs = runs;
-        const wrapper = getWrapper(props);
-        const run = {
-            job: {
-                uid: '12345',
-                permissions: {
-                    value: 'PRIVATE',
-                    groups: {},
-                    members: {},
-                },
-            },
-        };
-        wrapper.setState({ shareOpen: true, targetRun: run });
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-    });
-
     it('should use order and view from props or just default to map and featured', () => {
         const props = getProps();
         props.runsList.order = 'job__featured';
         props.runsList.view = 'grid';
+        browserHistory.push.reset();
         const wrapper = getWrapper(props);
-        expect(wrapper.state().order).toEqual('job__featured');
-        expect(wrapper.state().view).toEqual('grid');
+        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.calledWith({
+            ...props.location,
+            query: {
+                ...props.location.query,
+                order: 'job__featured',
+                view: 'grid',
+            },
+        })).toBe(true);
         wrapper.unmount();
+        browserHistory.push.reset();
         const nextProps = getProps();
         const nextWrapper = getWrapper(nextProps);
-        expect(nextWrapper.state().order).toEqual('-job__featured');
-        expect(nextWrapper.state().view).toEqual('map');
+        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.calledWith({
+            ...nextProps.location,
+            query: {
+                ...nextProps.location.query,
+                order: '-job__featured',
+                view: 'map',
+            },
+        })).toBe(true);
+        nextWrapper.unmount();
     });
 
     it('componentWillReceiveProps should set PageLoading false when runs are fetched', () => {
@@ -267,7 +291,42 @@ describe('DataPackPage component', () => {
         intervalStub.restore();
     });
 
-    it('componentWillUnmout should clear interval', () => {
+    it('componentDidUpdate should make run request when query has changed', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const requestStub = sinon.stub(wrapper.instance(), 'makeRunRequest');
+        expect(requestStub.called).toBe(false);
+        expect(stateStub.called).toBe(false);
+        let nextProps = getProps();
+        wrapper.setProps(nextProps);
+        expect(requestStub.called).toBe(false);
+        expect(stateStub.called).toBe(false);
+        nextProps = getProps();
+        nextProps.location.query.newKey = 'new query thing';
+        wrapper.setProps(nextProps);
+        expect(requestStub.calledOnce).toBe(true);
+        expect(stateStub.calledOnce).toBe(true);
+        nextProps = getProps();
+        nextProps.location.query.newKey = 'a changed value';
+        wrapper.setProps(nextProps);
+        expect(requestStub.calledTwice).toBe(true);
+        expect(stateStub.calledTwice).toBe(true);
+    });
+
+    it('componentDidUpdate should update joyride steps', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const getStub = sinon.stub(wrapper.instance(), 'getJoyRideSteps');
+        const addStub = sinon.stub(wrapper.instance(), 'joyrideAddSteps');
+        const nextProps = getProps();
+        nextProps.location.query.view = 'grid';
+        wrapper.setProps(nextProps);
+        expect(getStub.calledOnce).toBe(true);
+        expect(addStub.calledOnce).toBe(true);
+    });
+
+    it('componentWillUnmount should clear interval', () => {
         const props = getProps();
         const mountSpy = sinon.spy(DataPackPage.prototype, 'componentWillUnmount');
         const intervalSpy = sinon.spy(global, 'clearInterval');
@@ -282,25 +341,25 @@ describe('DataPackPage component', () => {
 
     it('should setOrder and setView if props are different from state', () => {
         const props = getProps();
+        props.location.query.order = '-job__featured';
+        props.location.query.view = 'list';
         props.setOrder = sinon.spy();
         props.setView = sinon.spy();
         const wrapper = getWrapper(props);
         expect(wrapper.props().runsList.order).toEqual('');
         expect(wrapper.props().runsList.view).toEqual('');
-        expect(wrapper.state().order).toEqual('-job__featured');
-        expect(wrapper.state().view).toEqual('map');
         wrapper.unmount();
         expect(props.setOrder.calledOnce).toBe(true);
         expect(props.setOrder.calledWith('-job__featured')).toBe(true);
         expect(props.setView.calledOnce).toBe(true);
-        expect(props.setView.calledWith('map')).toBe(true);
+        expect(props.setView.calledWith('list')).toBe(true);
     });
 
     it('should run getRuns at intervals', () => {
         jest.useFakeTimers();
-        let props = getProps();
+        const props = getProps();
         props.getRuns = sinon.spy();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getRuns.calledOnce).toBe(true);
         expect(setInterval.mock.calls.length).toEqual(1);
         expect(setInterval.mock.calls[0][1]).toEqual(10000);
@@ -312,10 +371,10 @@ describe('DataPackPage component', () => {
 
     it('should remove the fetch interval on unmount', () => {
         jest.useFakeTimers();
-        let props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
         expect(clearInterval.mock.calls.length).toEqual(0);
-        const fetch = wrapper.instance().fetch;
+        const { fetch } = wrapper.instance();
         wrapper.unmount();
         expect(clearInterval.mock.calls.length).toEqual(1);
         expect(clearInterval.mock.calls[0][0]).toEqual(fetch);
@@ -323,39 +382,77 @@ describe('DataPackPage component', () => {
 
     it('should handle fetched runs', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        let nextProps = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const nextProps = getProps();
         nextProps.runsList.fetched = true;
-        nextProps.runsList.runs = [{user: 'admin2', uid: '2'}, {user: 'admin', uid: '1'}, {user: 'admin3', uid: '3'}];
+        nextProps.runsList.runs = [{
+            user: 'admin2',
+            uid: '2',
+        }, {
+            user: 'admin',
+            uid: '1',
+        }, {
+            user: 'admin3',
+            uid: '3',
+        }];
         const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({showLoading: false}));
+        expect(stateSpy.calledWith({ showLoading: false }));
         DataPackPage.prototype.setState.restore();
         DataPackPage.prototype.componentWillReceiveProps.restore();
     });
 
-    it('onSearch should update the state and call makeRunRequest', () => {
+    it('onSearch should call updateLocationQuery with search text', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().onSearch('test_search', 0);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({search: 'test_search', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        stateSpy.restore();
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ search: 'test_search' })).toBe(true);
     });
 
-    it('checkForEmptySearch should update state and call makeRunRequest', () => {
+    it('getViewRef should set the view instance', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({search: 'some search term'});
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = getWrapper(props);
+        const inst = { data: 'my instance ' };
+        wrapper.instance().getViewRef(inst);
+        expect(wrapper.instance().view).toEqual(inst);
+    });
+
+    it('getCurrentLocation should return the location prop', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().getCurrentLocation()).toEqual(props.location);
+    });
+
+    it('updateLocationQuery should call push with updated query', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        browserHistory.push.reset();
+        const query = { somekey: 'this is a new query key' };
+        const expected = {
+            ...props.location,
+            query: {
+                ...props.location.query,
+                ...query,
+            },
+        };
+        wrapper.instance().updateLocationQuery(query);
+        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.calledWith(expected)).toBe(true);
+    });
+
+    it('checkForEmptySearch should call updateLocationQuery with search undefined', () => {
+        const props = getProps();
+        props.location.query.search = 'test_search';
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().checkForEmptySearch('');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({search: '', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        stateSpy.restore();
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ ...props.location.query, search: undefined })).toBe(true);
     });
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
@@ -364,23 +461,22 @@ describe('DataPackPage component', () => {
         const makeRequestSpy = sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const wrapper = getWrapper(props);
         expect(makeRequestSpy.calledOnce).toBe(true);
-        let nextProps = getProps();
+        const nextProps = getProps();
         nextProps.runsDeletion.deleted = true;
         wrapper.setProps(nextProps);
-        expect(stateSpy.calledWith({loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
+        expect(stateSpy.calledWith({ loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(makeRequestSpy.calledTwice).toBe(true);
         makeRequestSpy.restore();
         stateSpy.restore();
     });
 
-    it('handleSortChange should set state and call makeRunRequest', () => {
-        let props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+    it('handleSortChange should call updateLocationQuery with new order', () => {
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().handleSortChange('job__name');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ order: 'job__name', loading: true }, wrapper.instance().makeRunRequest))
-        stateSpy.restore();
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ order: 'job__name' })).toBe(true);
     });
 
     it('autoRunRequest should call makeRunRequest with true', () => {
@@ -396,19 +492,23 @@ describe('DataPackPage component', () => {
     it('makeRunRequest should build a params object and pass it to props.getRuns', () => {
         const props = getProps();
         props.getRuns = sinon.spy();
+        props.location.query.search = 'search_text';
+        props.location.query.order = '-job__featured';
+        props.location.query.collection = 'test_user';
         const wrapper = shallow(<DataPackPage {...props} />);
+        props.getRuns.reset();
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
         const maxDate = new Date(2017, 7, 1, 3, 0, 0);
-        const ownerFilter = 'test_user';
+        const collection = 'test_user';
         const search = 'search_text';
         const providers = ['test_provider'];
-        const geojson = {data: {}};
+        const geojson = { data: {} };
         const permissions = { value: 'SHARED', groups: {}, members: {} };
         const expectedParams = [{
-            pageSize: 12,
+            page_size: 12,
             ordering: '-job__featured',
-            ownerFilter,
+            ownerFilter: collection,
             status,
             minDate,
             maxDate,
@@ -422,48 +522,53 @@ describe('DataPackPage component', () => {
             status,
             minDate,
             maxDate,
-            ownerFilter,
             permissions,
-            search,
             providers,
             geojson_geometry: geojson,
         });
+        wrapper.update();
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
         expect(props.getRuns.getCall(0).args).toEqual(expectedParams);
     });
 
-    it('handleOwnerFilter should set state and call makeRunRequest', () => {
+    it('handleOwnerFilter call updateLocationQuery', () => {
         const props = getProps();
-        const event = {persist: () => {}};
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const event = { persist: () => {} };
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().handleOwnerFilter(event, 0, 'test_value');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ownerFilter: 'test_value', loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        stateSpy.restore();
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ collection: 'test_value' })).toBe(true);
     });
-    
+
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const currentState = {...wrapper.state()};
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const currentState = { ...wrapper.state() };
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const newState = {
-            minDate: new Date(), 
-            maxDate: new Date(), 
+            minDate: new Date(),
+            maxDate: new Date(),
             status: {
                 completed: true,
                 submitted: false,
-                incomplete: false
-            }
-        }
+                incomplete: false,
+            },
+        };
         window.resizeTo(800, 900);
         expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
-        expect(stateSpy.calledWith({...currentState, ...newState, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        expect(stateSpy.calledWith({open: false})).toBe(true);
+        expect(stateSpy.calledWith(
+            {
+                ...currentState,
+                ...newState,
+                loading: true,
+            },
+            wrapper.instance().makeRunRequest,
+        )).toBe(true);
+        expect(stateSpy.calledWith({ open: false })).toBe(true);
         stateSpy.restore();
     });
 
@@ -525,53 +630,51 @@ describe('DataPackPage component', () => {
         stateSpy.restore();
     });
 
-    it('changeView should makeRunRequest if its not a shared order, otherwise just set view state', () => {
-        let props = getProps();
-        const promise = {then: (func) => {func()}};
-        props.getRuns = (params) => {return promise};
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+    it('changeView updateLocationQuery with new order if its not a shared order, otherwise just update with view', () => {
+        const props = getProps();
+        props.location.query.order = 'started_at';
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().changeView('list');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({view: 'list'})).toBe(true);
-        wrapper.setState({order: 'some_other_order'});
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ view: 'list' })).toBe(true);
+
+        const nextProps = getProps();
+        nextProps.location.query.order = 'not_shared_order';
+        wrapper.setProps(nextProps);
         wrapper.instance().changeView('map');
-        expect(stateSpy.callCount).toEqual(4);
-        expect(stateSpy.calledWith({order: 'some_other_order', loading: true}, Function));
-        expect(stateSpy.calledWith({view: 'map'})).toBe(true);
-        stateSpy.restore();
+        expect(updateStub.calledTwice).toBe(true);
+        expect(updateStub.calledWith({ view: 'map', order: '-started_at' })).toBe(true);
     });
 
     it('handleToggle should set state', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
+        const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.instance().handleToggle();
         expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({open: false}));
+        expect(stateSpy.calledWith({ open: false }));
         stateSpy.restore();
     });
 
-    it('if nextPage is true, loadMore should increase page size and makeRunRequest', () => {
-        let props = getProps();
+    it('if nextPage is true, loadMore should increase page size query', () => {
+        const props = getProps();
         props.runsList.nextPage = true;
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().loadMore();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({pageSize: 24, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        stateSpy.restore();
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ page_size: 24 })).toBe(true);
     });
 
     it('if pageSize is greater than 12  is should decrease pageSize and makeRunRequest', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props}/>);
-        wrapper.setState({pageSize: 24});
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        props.location.query.page_size = '24';
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().loadLess();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({pageSize: 12, loading: true}, wrapper.instance().makeRunRequest)).toBe(true);
-        stateSpy.restore();
+        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.calledWith({ page_size: 12 })).toBe(true);
     });
 
     it('getView should return null, list, grid, or map component', () => {
@@ -582,23 +685,27 @@ describe('DataPackPage component', () => {
             runs: props.runsList.runs,
             user: props.user,
             onRunDelete: props.deleteRuns,
+            onRunShare: props.updateDataCartPermissions,
             range: props.runsList.range,
             handleLoadLess: wrapper.instance().loadLess,
             handleLoadMore: wrapper.instance().loadMore,
             loadLessDisabled: props.runsList.runs.length <= 12,
             loadMoreDisabled: !props.runsList.nextPage,
-            providers,
+            providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
+            users: props.users,
             groups: props.groups,
+            ref: wrapper.instance().getViewRef,
         };
 
-        expect(wrapper.instance().getView('list')).toEqual((
-            <DataPackList
+        expect(wrapper.instance().getView('list')).toEqual(
+            (<DataPackList
                 {...commonProps}
                 onSort={wrapper.instance().handleSortChange}
                 order={wrapper.state().order}
-            />
-        ));
+            />),
+            sinon.match({ ref: commonProps.ref }),
+        );
 
         expect(wrapper.instance().getView('grid')).toEqual((
             <DataPackGrid
@@ -621,53 +728,78 @@ describe('DataPackPage component', () => {
         expect(wrapper.instance().getView('bad case')).toEqual(null);
     });
 
-    it('handleShareOpen should set open true and the target job uid', () => {
+    it('getJoyRideSteps should return correct steps based on view', () => {
         const props = getProps();
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        const run = { job: { uid: '12345' } };
-        wrapper.instance().handleShareOpen(run);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: true, targetRun: run })).toBe(true);
-        stateStub.restore();
+        props.location.query.view = 'map';
+        const wrapper = shallow(<DataPackPage {...props} />);
+        expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.map);
+        props.location.query.view = 'grid';
+        expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.grid);
+        props.location.query.view = 'list';
+        expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.list);
     });
 
-    it('handleShareClose should set open false and clear the target job uid', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleShareClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ shareOpen: false, targetRun: null })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleShareSave should call shareClose and update permissions', () => {
-        const props = getProps();
-        props.updateDataCartPermissions = sinon.spy();
-        const wrapper = getWrapper(props);
-        const target = { job: { uid: '123' } };
-        const permissions = { value: 'PRIVATE', groups: {}, members: {} };
-        const closeStub = sinon.stub(wrapper.instance(), 'handleShareClose');
-        wrapper.setState({ targetRun: target });
-        wrapper.instance().handleShareSave(permissions);
-        expect(closeStub.calledOnce).toBe(true);
-        expect(props.updateDataCartPermissions.calledOnce).toBe(true);
-        expect(props.updateDataCartPermissions.calledWith(target.job.uid, permissions)).toBe(true);
-        closeStub.restore();
-    });
-
-    it('should set ownerFilter to the current user if passed "myDataPacks" as the collection in the querystring', () => {
-        const props = {
-            ...getProps(),
-            location: {
-                query: {
-                    collection: 'myDataPacks',
-                },
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [
+            {
+                title: 'Create DataPack',
+                text: 'Click here to Navigate to Create a DataPack.',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                position: 'bottom',
+                style: {},
             },
+        ];
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
+    });
+
+    it('callback function should open drawer if it is closed', () => {
+        const callbackData = {
+            action: 'next',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Filters',
+            },
+            type: 'step:before',
         };
+        const props = getProps();
+        const wrapper = shallow(<DataPackPage {...props} />);
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        wrapper.setState({ open: false });
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledWith({ open: true }));
+        stateSpy.restore();
+    });
+
+    it('callback should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-DataPackLinkButton-RaisedButton',
+                style: {},
+                text: 'Click here to Navigate to Create a DataPack.',
+                title: 'Create DataPack',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const wrapper = getWrapper(props);
-        expect(wrapper.state().ownerFilter).toEqual(props.user.data.user.username);
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
     });
 });
 

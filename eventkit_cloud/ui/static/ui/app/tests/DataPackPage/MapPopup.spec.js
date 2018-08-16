@@ -1,13 +1,13 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card } from 'material-ui/Card';
-import Clear from 'material-ui/svg-icons/content/clear';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
-import moment from 'moment';
+import Clear from '@material-ui/icons/Clear';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import Dot from '@material-ui/icons/FiberManualRecord';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {
@@ -31,7 +31,7 @@ describe('LoadButtons component', () => {
     const getWrapper = props => mount(<MapPopup {...props} />, {
         context: { muiTheme },
         childContextTypes: {
-            muiTheme: React.PropTypes.object,
+            muiTheme: PropTypes.object,
         },
     });
 
@@ -49,15 +49,15 @@ describe('LoadButtons component', () => {
         expect(wrapper.find('#popup-event')).toHaveLength(1);
         expect(wrapper.find('#popup-event').text()).toEqual('Event: test event');
         expect(wrapper.find('#popup-actions')).toHaveLength(1);
-        expect(wrapper.find('#details-url').text()).toEqual('Go To Status and Download');
-        expect(wrapper.find('#zoom-to').text()).toEqual('Zoom To Selection');
+        expect(wrapper.find('#details-url').text()).toEqual('Status & Download');
+        expect(wrapper.find('#zoom-to').text()).toEqual('Zoom To');
         expect(wrapper.find('#show-more').text()).toEqual('Show More');
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find('#moreInfo')).toHaveLength(0);
     });
 
     it('the moreInfo div should display when user clicks "Show More"', () => {
-        const showSpy = new sinon.spy(MapPopup.prototype, 'showMore');
+        const showSpy = sinon.spy(MapPopup.prototype, 'showMore');
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(showSpy.notCalled).toBe(true);
@@ -66,8 +66,8 @@ describe('LoadButtons component', () => {
         expect(wrapper.find(ArrowUp)).toHaveLength(1);
         expect(wrapper.find('#moreInfo')).toHaveLength(1);
         expect(wrapper.find('#moreInfo').find('div').at(1).text()).toEqual('Description: test description');
-        expect(wrapper.find('#moreInfo').find('div').at(2).text()).toEqual('Created at: 2017-03-10');
-        expect(wrapper.find('#moreInfo').find('div').at(3).text()).toEqual('Expiration: 2017-03-10');
+        expect(wrapper.find('#moreInfo').find('div').at(2).text()).toEqual('Created: 3/10/17');
+        expect(wrapper.find('#moreInfo').find('div').at(3).text()).toEqual('Expires: 3/10/17');
         expect(wrapper.find('#moreInfo').find('div').at(4).text()).toEqual('Owner: test user');
         expect(wrapper.find('#show-more').text()).toEqual('Show Less');
         showSpy.restore();
@@ -92,7 +92,7 @@ describe('LoadButtons component', () => {
 
     it('should call handleZoom when zoom button is clicked', () => {
         const props = getProps();
-        props.handleZoom = new sinon.spy();
+        props.handleZoom = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.handleZoom.notCalled).toBe(true);
         wrapper.find('#zoom-to').simulate('click');
@@ -101,7 +101,7 @@ describe('LoadButtons component', () => {
 
     it('should call handlePopupClose when a user clicks the close icon', () => {
         const props = getProps();
-        props.handlePopupClose = new sinon.spy();
+        props.handlePopupClose = sinon.spy();
         const wrapper = getWrapper(props);
         expect(props.handlePopupClose.notCalled).toBe(true);
         wrapper.find(Clear).simulate('click');
@@ -109,7 +109,7 @@ describe('LoadButtons component', () => {
     });
 
     it('showMore should toggle the state', () => {
-        const stateSpy = new sinon.spy(MapPopup.prototype, 'setState');
+        const stateSpy = sinon.spy(MapPopup.prototype, 'setState');
         const props = getProps();
         const wrapper = getWrapper(props);
         const initial = wrapper.state('showMore');

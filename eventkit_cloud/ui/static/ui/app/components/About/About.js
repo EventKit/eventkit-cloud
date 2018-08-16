@@ -1,17 +1,25 @@
-import React, { Component, PropTypes } from 'react';
-import AppBar from 'material-ui/AppBar';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
 import ThreeStepInfo from './ThreeStepInfo';
-import QuickTour from './QuickTour';
-import { Config } from '../../config';
+import InfoGrid from './InfoGrid';
+import { about } from '../../about.config';
 
+const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
 export class About extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            pageInfo: Config.ABOUT_PAGE,
+            pageInfo: about,
         };
+    }
+
+    getComponent(obj) {
+        if (!obj.type) return null;
+        const InfoComponent = COMPONENT_MAPPING[obj.type];
+        return <InfoComponent {...obj} key={`${obj.type}_${obj.title}`} />;
     }
 
     render() {
@@ -19,14 +27,10 @@ export class About extends Component {
             header: {
                 backgroundColor: '#161e2e',
                 height: '35px',
-                color: 'white',
-                fontSize: '14px',
-                padding: '0px 34px',
-            },
-            headerTitle: {
-                fontSize: '18px',
                 lineHeight: '35px',
-                height: '35px',
+                padding: '0px 34px',
+                display: 'flex',
+                justifyContent: 'space-between',
             },
             body: {
                 height: window.innerHeight - 130,
@@ -34,17 +38,16 @@ export class About extends Component {
                 margin: 'auto',
                 overflowY: 'hidden',
             },
-            bodyContent: {
-                padding: '30px 34px 60px',
+            contact: {
+                padding: '10px 34px',
                 maxWidth: '1000px',
                 margin: 'auto',
+                textAlign: 'right',
             },
-            threeStepCaption: {
-                backgroundColor: '#4598bf',
-                padding: '5px',
-                color: '#fff',
-                minHeight: '50px',
-                width: '95%',
+            bodyContent: {
+                padding: '10px 34px 30px',
+                maxWidth: '1000px',
+                margin: 'auto',
             },
         };
 
@@ -52,45 +55,36 @@ export class About extends Component {
             return null;
         }
 
+        let version = '';
+        let contactUrl = '';
+        if (this.context.config) {
+            version = this.context.config.VERSION;
+            contactUrl = this.context.config.CONTACT_URL;
+        }
+
         return (
             <div style={{ backgroundColor: 'white' }}>
-                <AppBar
-                    className="qa-About-AppBar"
+                <PageHeader
+                    className="qa-About-PageHeader"
                     title="About EventKit"
-                    style={styles.header}
-                    titleStyle={styles.headerTitle}
-                    showMenuIconButton={false}
                 >
-                    {this.context.config && this.context.config.VERSION ?
-                        <span
-                            style={{ height: '35px', lineHeight: '35px' }}
-                            className="qa-About-version"
-                        >
-                            Version {this.context.config.VERSION}
-                        </span>
-                        :
-                        null
-                    }
-                </AppBar>
+                    {version}
+                </PageHeader>
                 <div style={styles.body}>
                     <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
+                        {contactUrl ?
+                            <div style={styles.contact} className="qa-About-contact">
+                                <i>Have an issue or suggestion?</i>
+                                <br />
+                                <a href={contactUrl}>Contact Us</a>
+                            </div>
+                            :
+                            null
+                        }
                         <div style={styles.bodyContent} className="qa-About-bodyContent">
-                            {this.state.pageInfo.textParagraphs.map((paragraph, ix) => {
-                                return (
-                                    <InfoParagraph key={ix} header={paragraph.header} body={paragraph.body} bodyStyle={{ marginBottom: '30px' }} />
-                                );
-                            })}
-                            <ThreeStepInfo steps={this.state.pageInfo.threeStep} />
-                            {this.state.pageInfo.quickTour.length > 0 ?
-                                <h3 style={{ marginTop: '60px' }}><strong>Quick Tour</strong></h3>
-                                :
-                                null
-                            }
-                            {this.state.pageInfo.quickTour.map((tour, ix) => {
-                                return (
-                                    <QuickTour key={ix} header={tour.header} tourSections={tour.tourSections} containerStyle={{ marginTop: '30px' }} />
-                                );
-                            })}
+                            {this.state.pageInfo.map(obj => (
+                                this.getComponent(obj)
+                            ))}
                         </div>
                     </CustomScrollbar>
                 </div>

@@ -1,7 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { connect } from 'react-redux';
 import { Link, browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from '@material-ui/icons/Help';
 import { AppBar, CircularProgress, Paper } from 'material-ui';
+import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
@@ -14,10 +18,9 @@ import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { getGroups } from '../../actions/userGroupsActions';
-import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { getUsers } from '../../actions/userActions';
-
-const backgroundUrl = require('../../../images/ek_topo_pattern.png');
+import { joyride } from '../../joyride.config';
+import background from '../../../images/ek_topo_pattern.png';
 
 export class DashboardPage extends React.Component {
     constructor(props) {
@@ -35,14 +38,13 @@ export class DashboardPage extends React.Component {
         this.handleNotificationsViewAll = this.handleNotificationsViewAll.bind(this);
         this.handleFeaturedViewAll = this.handleFeaturedViewAll.bind(this);
         this.handleMyDataPacksViewAll = this.handleMyDataPacksViewAll.bind(this);
-        this.handleShareOpen = this.handleShareOpen.bind(this);
-        this.handleShareClose = this.handleShareClose.bind(this);
-        this.handleShareSave = this.handleShareSave.bind(this);
         this.isLoading = this.isLoading.bind(this);
+        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
+        this.callback = this.callback.bind(this);
         this.state = {
             loadingPage: true,
-            shareOpen: false,
-            targetRun: null,
+            steps: [],
+            isRunning: false,
         };
         this.autoRefreshIntervalId = null;
         this.autoRefreshInterval = 10000;
@@ -57,16 +59,13 @@ export class DashboardPage extends React.Component {
         });
         this.refresh();
         this.autoRefreshIntervalId = setInterval(this.autoRefresh, this.autoRefreshInterval);
-    }
-
-    componentWillUnmount() {
-        clearInterval(this.autoRefreshIntervalId);
-        this.autoRefreshIntervalId = null;
+        const steps = joyride.DashboardPage;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
         // Only show page loading once, before all sections have initially loaded.
-        let loadingPage = this.state.loadingPage;
+        const { loadingPage } = this.state;
         if (loadingPage) {
             this.setState({
                 loadingPage: (
@@ -76,7 +75,7 @@ export class DashboardPage extends React.Component {
                     !nextProps.userActivity.viewedJobs.fetched ||
                     !nextProps.users.fetched ||
                     !nextProps.groups.fetched
-                )
+                ),
             });
         }
 
@@ -89,6 +88,11 @@ export class DashboardPage extends React.Component {
         if (nextProps.updatePermission.updated && !this.props.updatePermission.updated) {
             this.refresh();
         }
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.autoRefreshIntervalId);
+        this.autoRefreshIntervalId = null;
     }
 
     getGridPadding() {
@@ -173,21 +177,7 @@ export class DashboardPage extends React.Component {
     }
 
     handleMyDataPacksViewAll() {
-        browserHistory.push('/exports?collection=myDataPacks');
-    }
-
-    handleShareOpen(run) {
-        this.setState({ shareOpen: true, targetRun: run });
-    }
-
-    handleShareClose() {
-        this.setState({ shareOpen: false, targetRun: null });
-    }
-
-    handleShareSave(perms) {
-        this.handleShareClose();
-        const permissions = { ...perms };
-        this.props.updateDataCartPermissions(this.state.targetRun.job.uid, permissions);
+        browserHistory.push(`/exports?collection=${this.props.user.data.user.username}`);
     }
 
     isLoading() {
@@ -198,15 +188,61 @@ export class DashboardPage extends React.Component {
         );
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
+    }
+
+    callback(data) {
+        const { action, step, type } = data;
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+            window.location.hash = '';
+        }
+
+        if (step && step.scrollToId) {
+            window.location.hash = step.scrollToId;
+        }
+    }
+
+    handleWalkthroughClick() {
+        if (this.state.isRunning) {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+        } else {
+            const [...steps] = joyride.DashboardPage;
+            this.setState({ isRunning: true, steps: [] });
+            if (this.props.featuredRunsList.runs.length === 0) {
+                const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
+                if (ix > -1) {
+                    steps.splice(ix, 1);
+                }
+            }
+            this.joyrideAddSteps(steps);
+        }
+    }
+
     render() {
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        let styles = {
+        const styles = {
             root: {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${backgroundUrl})`,
+                backgroundImage: `url(${background})`,
                 color: 'white',
             },
             appBar: {
@@ -244,24 +280,52 @@ export class DashboardPage extends React.Component {
                 margin: 'auto',
             },
             noData: {
-                margin: `0 ${10 + this.getGridPadding()/2}px`,
+                margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
                 fontSize: '18px',
                 color: 'rgba(0, 0, 0, 0.54)',
             },
             link: {
                 color: '#337ab7',
-            }
+            },
+            tourButton: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                display: 'inline-block',
+                marginLeft: '10px',
+                fontSize: '16px',
+            },
+            tourIcon: {
+                color: '#4598bf',
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+                marginBottom: '5px',
+            },
         };
+
+        const iconElementRight = (
+            <EnhancedButton
+                onClick={this.handleWalkthroughClick}
+                style={styles.tourButton}
+            >
+                <Help style={styles.tourIcon} />
+                Page Tour
+            </EnhancedButton>
+        );
 
         return (
             <div style={styles.root}>
                 <AppBar
+                    id="Dashboard"
                     className="qa-Dashboard-AppBar"
                     style={styles.appBar}
                     title="Dashboard"
                     titleStyle={styles.pageTitle}
                     iconElementLeft={<p />}
+                    iconElementRight={iconElementRight}
                 />
                 {this.isLoading() ?
                     <div
@@ -283,7 +347,34 @@ export class DashboardPage extends React.Component {
                     </div>
                     : null
                 }
-                <CustomScrollbar style={styles.customScrollbar}>
+                <CustomScrollbar
+                    style={styles.customScrollbar}
+                    ref={(instance) => { this.scrollbar = instance; }}
+                >
+                    <Joyride
+                        callback={this.callback}
+                        ref={(instance) => { this.joyride = instance; }}
+                        steps={this.state.steps}
+                        autoStart
+                        type="continuous"
+                        showSkipButton
+                        showStepsProgress
+                        locale={{
+                            back: (<span>Back</span>),
+                            close: (<span>Close</span>),
+                            last: (<span>Done</span>),
+                            next: (<span>Next</span>),
+                            skip: (<span>Skip</span>),
+                        }}
+                        run={this.state.isRunning}
+                        styles={{
+                            options: {
+                                overlayColor: '#4598bf',
+                                backgroundColor: '#4598bf',
+                                primaryColor: '#fff',
+                            },
+                        }}
+                    />
                     {this.state.loadingPage ?
                         null
                         :
@@ -299,13 +390,16 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 onViewAll={this.handleNotificationsViewAll}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any notifications."}
+                                    <Paper
+                                        className="qa-DashboardSection-Notifications-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any notifications."}</span>
                                     </Paper>
                                 }
                                 rowMajor={false}
                             >
-                                {this.props.notifications.notificationsSorted.map((notification) => (
+                                {this.props.notifications.notificationsSorted.map(notification => (
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
@@ -323,8 +417,11 @@ export class DashboardPage extends React.Component {
                                 gridPadding={this.getGridPadding()}
                                 providers={this.props.providers}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any recently viewed DataPacks."}&nbsp;
+                                    <Paper
+                                        className="qa-DashboardSection-RecentlyViewed-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any recently viewed DataPacks."}&nbsp;</span>
                                         <Link
                                             to="/exports"
                                             href="/exports"
@@ -344,14 +441,19 @@ export class DashboardPage extends React.Component {
                                             user={this.props.user}
                                             key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
                                             onRunDelete={this.props.deleteRuns}
+                                            onRunShare={this.props.updateDataCartPermissions}
                                             providers={this.props.providers}
-                                            adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups.groups)}
-                                            openShare={this.handleShareOpen}
+                                            adminPermission={userIsDataPackAdmin(
+                                                this.props.user.data.user,
+                                                run.job.permissions, this.props.groups.groups,
+                                            )}
                                             gridName="RecentlyViewed"
                                             index={index}
                                             showFeaturedFlag={false}
+                                            users={this.props.users.users}
+                                            groups={this.props.groups.groups}
                                         />
-                                    )
+                                    );
                                 })}
                             </DashboardSection>
 
@@ -392,14 +494,17 @@ export class DashboardPage extends React.Component {
                                 providers={this.props.providers}
                                 onViewAll={this.handleMyDataPacksViewAll}
                                 noDataElement={
-                                    <Paper style={styles.noData}>
-                                        {"You don't have any DataPacks."}&nbsp;
+                                    <Paper
+                                        className="qa-DashboardSection-MyDataPacks-NoData"
+                                        style={styles.noData}
+                                    >
+                                        <span>{"You don't have any DataPacks."}&nbsp;</span>
                                         <Link
-                                            to="/exports"
-                                            href="/exports"
+                                            to="/create"
+                                            href="/create"
                                             style={styles.link}
                                         >
-                                            View DataPack Library
+                                            Create DataPack
                                         </Link>
                                     </Paper>
                                 }
@@ -411,35 +516,23 @@ export class DashboardPage extends React.Component {
                                         user={this.props.user}
                                         key={`MyDataPacksDataPack-${run.created_at}`}
                                         onRunDelete={this.props.deleteRuns}
+                                        onRunShare={this.props.updateDataCartPermissions}
                                         providers={this.props.providers}
-                                        adminPermission={userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups.groups)}
-                                        openShare={this.handleShareOpen}
+                                        adminPermission={userIsDataPackAdmin(
+                                            this.props.user.data.user,
+                                            run.job.permissions, this.props.groups.groups,
+                                        )}
                                         gridName="MyDataPacks"
                                         index={index}
                                         showFeaturedFlag={false}
+                                        users={this.props.users.users}
+                                        groups={this.props.groups.groups}
                                     />
                                 ))}
                             </DashboardSection>
                         </div>
                     }
                 </CustomScrollbar>
-                {this.state.shareOpen && this.state.targetRun ?
-                    <DataPackShareDialog
-                        show
-                        onClose={this.handleShareClose}
-                        onSave={this.handleShareSave}
-                        user={this.props.user.data}
-                        groups={this.props.groups.groups}
-                        members={this.props.users.users}
-                        permissions={this.state.targetRun.job.permissions}
-                        groupsText="You may share view and edit rights with groups exclusively. Group sharing is managed separately from member sharing."
-                        membersText="You may share view and edit rights with members exclusively. Member sharing is managed separately from group sharing."
-                        canUpdateAdmin
-                        warnPublic
-                    />
-                    :
-                    null
-                }
             </div>
         );
     }
@@ -448,6 +541,12 @@ export class DashboardPage extends React.Component {
 DashboardPage.propTypes = {
     router: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
+    userActivity: PropTypes.shape({
+        viewedJobs: PropTypes.shape({
+            fetched: PropTypes.bool,
+            viewedJobs: PropTypes.arrayOf(PropTypes.object),
+        }),
+    }).isRequired,
     notifications: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     runsDeletion: PropTypes.object.isRequired,
@@ -484,6 +583,9 @@ DashboardPage.propTypes = {
     }).isRequired,
     users: PropTypes.object.isRequired,
     groups: PropTypes.object.isRequired,
+    updateDataCartPermissions: PropTypes.func.isRequired,
+    getGroups: PropTypes.func.isRequired,
+    getUsers: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -503,12 +605,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        getRuns: (args) => dispatch(getRuns(args)),
-        getFeaturedRuns: (args) => dispatch(getFeaturedRuns(args)),
-        getViewedJobs: (args) => dispatch(getViewedJobs(args)),
+        getRuns: args => dispatch(getRuns(args)),
+        getFeaturedRuns: args => dispatch(getFeaturedRuns(args)),
+        getViewedJobs: args => dispatch(getViewedJobs(args)),
         getProviders: () => dispatch(getProviders()),
-        deleteRuns: (uid) => dispatch(deleteRuns(uid)),
-        getNotifications: (args) => dispatch(getNotifications(args)),
+        deleteRuns: uid => dispatch(deleteRuns(uid)),
+        getNotifications: args => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
         getUsers: () => dispatch(getUsers()),
         getGroups: () => dispatch(getGroups()),

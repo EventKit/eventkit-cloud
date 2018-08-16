@@ -1,14 +1,15 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import Checked from '@material-ui/icons/CheckBox';
+import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import Dialog from 'material-ui/Dialog';
-import Clear from 'material-ui/svg-icons/content/clear';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import ArrowUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
+import Clear from '@material-ui/icons/Clear';
+import ArrowDown from '@material-ui/icons/ArrowDropDown';
+import ArrowUp from '@material-ui/icons/ArrowDropUp';
 import Indeterminate from '../../icons/IndeterminateIcon';
 import { isViewportS } from '../../../utils/viewport';
 import CustomTextField from '../../CustomTextField';
@@ -30,6 +31,7 @@ export class AddMembersDialog extends Component {
         this.handleResize = this.handleResize.bind(this);
         this.toggleSortName = this.toggleSortName.bind(this);
         this.toggleSortSelected = this.toggleSortSelected.bind(this);
+        this.infoPRef = this.infoPRef.bind(this);
         this.state = this.getInitialState();
     }
 
@@ -191,6 +193,15 @@ export class AddMembersDialog extends Component {
         }
     }
 
+    infoPRef(element) {
+        if (this.infoP === element) {
+            return;
+        }
+
+        this.infoP = element;
+        this.setState(this.getInitialState());
+    }
+
     render() {
         const styles = {
             dialog: {
@@ -198,7 +209,6 @@ export class AddMembersDialog extends Component {
                 height: '100%',
                 minWidth: '325px',
                 maxWidth: '650px',
-                transform: `translate(0px, ${this.state.mobile ? 16 : 64}px)`,
             },
             title: {
                 padding: '25px',
@@ -285,6 +295,10 @@ export class AddMembersDialog extends Component {
                 color: '#000',
             },
         };
+
+        if (this.state.mobile) {
+            styles.dialog.transform = 'translate(0px, 16px)';
+        }
 
         let { groups } = this.props;
         if (this.state.search) {
@@ -418,12 +432,13 @@ export class AddMembersDialog extends Component {
                 ref={(input) => { this.dialog = input; }}
             >
                 <p
-                    ref={(input) => { this.infoP = input; }}
+                    ref={this.infoPRef}
                     style={{ marginBottom: '20px' }}
                     className="qa-AddMembersDialog-description"
                 >
                     <strong>You can add selected members to the groups listed in the &apos;AVAILABLE GROUPS&apos; tab.</strong>
-                    &nbsp;For additional reference, groups that already contain those selected members are listed in the &apos;ALREADY IN GROUPS&apos; tab.
+                    &nbsp;For additional reference, groups that already contain those selected members are listed in
+                    the &apos;ALREADY IN GROUPS&apos; tab.
                     &nbsp;To make further edits, go to the individual group on the Members and Groups page.
                 </p>
                 <Tabs

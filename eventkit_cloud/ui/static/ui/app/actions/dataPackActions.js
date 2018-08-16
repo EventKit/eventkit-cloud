@@ -33,16 +33,16 @@ export function getRuns(args = {}) {
         const providers = (args.providers) ? Object.keys(args.providers) : [];
 
         const params = {};
-        params.page_size = args.pageSize;
+        params.page_size = args.page_size;
         if (args.ordering) {
             params.ordering = args.ordering.includes('featured') ?
-            `${args.ordering},-started_at`
-            :
-            args.ordering;
+                `${args.ordering},-started_at`
+                :
+                args.ordering;
         } else {
             params.ordering = '-job__featured';
         }
-        if (args.ownerFilter) params.user = args.ownerFilter;
+        if (args.ownerFilter !== 'all') params.user = args.ownerFilter;
         if (status.length) params.status = status.join(',');
         if (args.minDate) {
             params.min_date = args.minDate.toISOString().substring(0, 10);
@@ -97,7 +97,7 @@ export function getRuns(args = {}) {
 
             let range = '';
             if (response.headers['content-range']) {
-                range = response.headers['content-range'].split('-')[1]; 
+                [, range] = response.headers['content-range'].split('-');
             }
 
             const runs = response.data.map((run) => {
@@ -146,7 +146,7 @@ export function getFeaturedRuns(args) {
 
         const params = {};
         params.page_size = args.pageSize;
-        params.ordering = 'featured,-started_at';
+        params.featured = true;
 
         const url = '/api/runs/filter';
         const csrfmiddlewaretoken = cookie.load('csrftoken');
@@ -165,26 +165,26 @@ export function getFeaturedRuns(args) {
             if (response.headers.link) {
                 links = response.headers.link.split(',');
             }
-            for (const i in links) {
-                if (links[i].includes('rel="next"')) {
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
                     nextPage = true;
                 }
-            }
+            });
+
             let range = '';
             if (response.headers['content-range']) {
-                range = response.headers['content-range'].split('-')[1];
+                [, range] = response.headers['content-range'].split('-');
             }
 
-            const runs = [];
-            for (const run of Object.values(response.data)) {
-                if (run.job.featured) {
-                    runs.push(run);
-                } else {
-                    nextPage = false;
-                }
-            }
+            const runs = [...response.data];
 
-            dispatch({ type: types.RECEIVED_FEATURED_RUNS, runs: runs, nextPage, range });
+            dispatch({
+                type: types.RECEIVED_FEATURED_RUNS,
+                runs,
+                nextPage,
+                range,
+            });
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -201,13 +201,13 @@ export function deleteRuns(uid) {
 
         const csrftoken = cookie.load('csrftoken');
 
-        const form_data = new FormData();
-        form_data.append('csrfmiddlewaretoken', csrftoken);
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', csrftoken);
 
         return axios({
             url: `/api/runs/${uid}`,
             method: 'DELETE',
-            data: form_data,
+            data: formData,
             headers: { 'X-CSRFToken': csrftoken },
         }).then(() => {
             dispatch({ type: types.DELETED_RUN });

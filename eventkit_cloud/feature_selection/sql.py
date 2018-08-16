@@ -1,5 +1,4 @@
-from pyparsing import Word, delimitedList, Optional, \
-    Group, alphas, nums, alphanums, ParseException, Forward, oneOf, quotedString, \
+from pyparsing import Word, delimitedList, Group, alphas, nums, alphanums, ParseException, Forward, oneOf, quotedString, \
     ZeroOrMore, Keyword
 
 

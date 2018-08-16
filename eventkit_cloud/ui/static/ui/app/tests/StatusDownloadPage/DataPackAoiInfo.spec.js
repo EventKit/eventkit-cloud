@@ -1,6 +1,7 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
+import PropTypes from 'prop-types';
 import raf from 'raf';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import View from 'ol/view';
@@ -55,7 +56,7 @@ describe('DataPackAoiInfo component', () => {
         const props = getProps();
         const initStub = sinon.stub(DataPackAoiInfo.prototype, 'initializeOpenLayers');
         DataPackAoiInfo.prototype.componentDidMount = didMount;
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(initStub.calledOnce).toBe(true);
         initStub.restore();
         DataPackAoiInfo.prototype.componentDidMount = sinon.spy();

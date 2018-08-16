@@ -18,9 +18,9 @@ const mockViewedJobs = [
                 permissions: {
                     groups: [],
                     users: [],
-                }
-            }
-        }
+                },
+            },
+        },
     },
     {
         last_export_run: {
@@ -29,9 +29,9 @@ const mockViewedJobs = [
                 permissions: {
                     groups: [],
                     users: [],
-                }
-            }
-        }
+                },
+            },
+        },
     },
 ];
 
@@ -59,7 +59,9 @@ describe('userActivityActions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
-            { type: types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: true, range: '12/24' }
+            {
+                type: types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: true, range: '12/24',
+            },
         ];
 
         const store = mockStore(initialState);
@@ -81,7 +83,9 @@ describe('userActivityActions', () => {
 
         const expectedActions = [
             { type: types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
-            { type: types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: false, range: '' }
+            {
+                type: types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: false, range: '',
+            },
         ];
 
         const store = mockStore(initialState);

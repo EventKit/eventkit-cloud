@@ -1,7 +1,8 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import Dialog from 'material-ui/Dialog';
-import Clear from 'material-ui/svg-icons/content/clear';
+import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class BaseDialog extends Component {
@@ -99,10 +100,31 @@ export class BaseDialog extends Component {
     }
 }
 
+BaseDialog.defaultProps = {
+    onClose: undefined,
+    title: undefined,
+    actions: undefined,
+    buttonText: undefined,
+    children: undefined,
+    dialogStyle: {},
+    titleStyle: {},
+    bodyStyle: {},
+    actionsStyle: {},
+    labelStyle: {},
+    buttonStyle: {},
+    overlayStyle: {},
+};
+
 BaseDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onClose: PropTypes.func,
     title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    actions: PropTypes.arrayOf(PropTypes.node),
+    children: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node,
+        PropTypes.arrayOf(PropTypes.node),
+    ]),
     buttonText: PropTypes.string,
     dialogStyle: PropTypes.object,
     titleStyle: PropTypes.object,

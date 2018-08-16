@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 
 import os
-from .base import *  # NOQA
+
+from eventkit_cloud.settings.base import *  # NOQA
 
 # Extra installed apps
 INSTALLED_APPS += (
@@ -10,7 +11,7 @@ INSTALLED_APPS += (
     'rest_framework',
     'rest_framework_gis',
     'rest_framework.authtoken',
-    'rest_framework_swagger',
+    # 'rest_framework_swagger',
     # 'social.apps.django_app.default'
 )
 

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import logging
-import requests
 import httplib
+import logging
 import urllib2
+
+import requests
 from django.test import TransactionTestCase
-from mock import Mock, patch, MagicMock, ANY
 from mapproxy.client.http import VerifiedHTTPSConnection, _URLOpenerCache
+from mock import patch, MagicMock, ANY
 
-from .. import auth_requests
-
+from eventkit_cloud.utils import auth_requests
 
 logger = logging.getLogger(__name__)
 

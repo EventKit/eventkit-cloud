@@ -1,12 +1,11 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
-import TextField from 'material-ui/TextField';
+import TextField from '@material-ui/core/TextField';
 import Slider from 'material-ui/Slider';
-import Clear from 'material-ui/svg-icons/content/clear';
+import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import BufferDialog from '../../components/CreateDataPack/BufferDialog';
 
@@ -27,7 +26,7 @@ describe('AlertCallout component', () => {
     const getWrapper = props => (
         mount(<BufferDialog {...props} />, {
             context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
+            childContextTypes: { muiTheme: PropTypes.object },
         })
     );
 
@@ -43,31 +42,29 @@ describe('AlertCallout component', () => {
         expect(wrapper.find(Slider)).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footnote')).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footer')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-FlatButton-close')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-RaisedButton-buffer')).toHaveLength(1);
-        expect(wrapper.find(RaisedButton).props().labelStyle.color).toEqual('whitesmoke');
-        expect(wrapper.find(RaisedButton).props().buttonStyle.backgroundColor).toEqual('#4598bf');
-        expect(wrapper.find(TextField).props().inputStyle.color).toEqual('grey');
+        expect(wrapper.find('.qa-BufferDialog-Button-close').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-BufferDialog-Button-buffer').hostNodes()).toHaveLength(1);
+        expect(wrapper.find(TextField).props().style.color).toEqual('grey');
     });
 
     it('should not render anything if show is false', () => {
         const props = getProps();
         props.show = false;
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-BufferDialog-main')).toHaveLength(0);
-        expect(wrapper.find('.qa-BufferDialog-background')).toHaveLength(0);
+        expect(wrapper.find('.qa-BufferDialog-main').hostNodes()).toHaveLength(0);
+        expect(wrapper.find('.qa-BufferDialog-background').hostNodes()).toHaveLength(0);
     });
 
     it('should render a warning if the area exceeds the aoi limit', () => {
         const props = getProps();
-        props.maxAoiSqKm = -200;
+        props.maxVectorAoiSqKm = -200;
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
     });
 
     it('should render the alert popup', () => {
         const props = getProps();
-        props.maxAoiSqKm = -200;
+        props.maxVectorAoiSqKm = -200;
         const wrapper = getWrapper(props);
         expect(wrapper.find(AlertCallout)).toHaveLength(0);
         wrapper.setState({ showAlert: true });
@@ -78,7 +75,7 @@ describe('AlertCallout component', () => {
         const props = getProps();
         props.closeBufferDialog = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.find(FlatButton).simulate('click');
+        wrapper.find('.qa-BufferDialog-Button-close').hostNodes().simulate('click');
         expect(props.closeBufferDialog.calledOnce).toBe(true);
     });
 
@@ -86,7 +83,7 @@ describe('AlertCallout component', () => {
         const props = getProps();
         props.handleBufferClick = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.find(RaisedButton).find('button').simulate('click');
+        wrapper.find('.qa-BufferDialog-Button-buffer').hostNodes().simulate('click');
         expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 

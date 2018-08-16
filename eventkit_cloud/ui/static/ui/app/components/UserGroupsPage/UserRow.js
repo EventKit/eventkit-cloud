@@ -1,11 +1,12 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import IconButton from 'material-ui/IconButton';
 import MenuItem from 'material-ui/MenuItem';
 import Divider from 'material-ui/Divider';
-import Person from 'material-ui/svg-icons/social/person';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
+import Person from '@material-ui/icons/Person';
+import ArrowDown from '@material-ui/icons/ArrowDropDown';
+import Checked from '@material-ui/icons/CheckBox';
+import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import GroupsDropDownMenu from './GroupsDropDownMenu';
 
 export class UserRow extends Component {
@@ -147,7 +148,7 @@ export class UserRow extends Component {
                     key="makeAdminMenuItem"
                     style={styles.menuItem}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={adminFunction}
+                    onClick={adminFunction}
                     className="qa-UserRow-MenuItem-makeAdmin"
                 >
                     <span>{adminButtonText}</span>
@@ -162,7 +163,7 @@ export class UserRow extends Component {
                 <MenuItem
                     style={{ ...styles.menuItem, color: '#ce4427' }}
                     innerDivStyle={styles.menuItemInner}
-                    onTouchTap={this.handleRemoveUserClick}
+                    onClick={this.handleRemoveUserClick}
                     className="qa-UserRow-MenuItem-remove"
                 >
                     <span>Remove User</span>
@@ -186,9 +187,9 @@ export class UserRow extends Component {
         }
 
         const checkbox = this.props.selected ?
-            <Checked onClick={this.onSelect} />
+            <Checked onClick={this.onSelect} className="qa-UserRow-checkbox" />
             :
-            <Unchecked onClick={this.onSelect} />;
+            <Unchecked onClick={this.onSelect} className="qa-UserRow-checkbox" />;
 
         return (
             <div
@@ -239,7 +240,7 @@ export class UserRow extends Component {
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleAddUserClick}
+                            onClick={this.handleAddUserClick}
                             className="qa-UserRow-MenuItem-editGroups"
                         >
                             <span>Add to Existing Group</span>
@@ -248,7 +249,7 @@ export class UserRow extends Component {
                         <MenuItem
                             style={styles.menuItem}
                             innerDivStyle={styles.menuItemInner}
-                            onTouchTap={this.handleNewGroupClick}
+                            onClick={this.handleNewGroupClick}
                             className="qa-UserRow-MenuItem-newGroup"
                         >
                             <span>Add to New Group</span>

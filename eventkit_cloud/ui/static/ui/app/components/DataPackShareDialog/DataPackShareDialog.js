@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import RaisedButton from 'material-ui/RaisedButton';
 import FlatButton from 'material-ui/FlatButton';
 import ShareBaseDialog from './ShareBaseDialog';
@@ -18,7 +19,6 @@ export class DataPackShareDialog extends Component {
         this.showPublicWarning = this.showPublicWarning.bind(this);
         this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
-        this.forceUpdate = this.forceUpdate.bind(this);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
@@ -89,9 +89,10 @@ export class DataPackShareDialog extends Component {
 
     handleMemberUpdate(members) {
         const permissions = { ...this.state.permissions };
+        const stateLength = Object.keys(permissions.members).length;
         if (this.props.warnPublic) {
             const { length } = Object.keys(members);
-            if (length === this.props.members.length) {
+            if (length === this.props.members.length && length !== stateLength) {
                 this.showPublicWarning();
             }
         }
@@ -283,7 +284,8 @@ export class DataPackShareDialog extends Component {
                             />,
                         ]}
                     >
-                        Sharing with all members will make this DataPack visible to everyone with an EventKit account. Are you sure you want to share it with everyone?
+                        Sharing with all members will make this DataPack visible to everyone with an EventKit account.
+                        Are you sure you want to share it with everyone?
                     </BaseDialog>
                     :
                     null

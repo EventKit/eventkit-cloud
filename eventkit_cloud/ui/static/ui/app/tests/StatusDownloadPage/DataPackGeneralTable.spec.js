@@ -1,12 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Info from 'material-ui/svg-icons/action/info';
 import CustomTableRow from '../../components/CustomTableRow';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
-import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
 
 describe('DataPackGeneralTable component', () => {
     const muiTheme = getMuiTheme();

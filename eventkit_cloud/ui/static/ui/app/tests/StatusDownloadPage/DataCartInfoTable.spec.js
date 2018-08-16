@@ -1,6 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
 import { mount } from 'enzyme';
-import moment from 'moment';
 import CustomTableRow from '../../components/CustomTableRow';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
 

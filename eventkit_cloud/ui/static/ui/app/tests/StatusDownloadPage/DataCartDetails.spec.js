@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -12,6 +13,72 @@ import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
 
 describe('DataCartDetails component', () => {
+    const run = {
+        uid: '12345',
+        url: 'http://cloud.eventkit.test/api/runs/123455',
+        started_at: '2017-05-22T18:35:01.400756Z',
+        finished_at: '2017-05-22T18:35:22.292006Z',
+        duration: '0:00:20.891250',
+        user: 'admin',
+        status: 'COMPLETED',
+        job: {
+            uid: '67890',
+            name: 'test',
+            event: 'test',
+            description: 'test',
+            url: 'http://cloud.eventkit.test/api/jobs/67890',
+            formats: [
+                'Geopackage',
+            ],
+            permissions: {
+                value: 'PRIVATE',
+                groups: {},
+                members: {},
+            },
+        },
+        provider_tasks: [
+            {
+                display: true,
+                slug: '1',
+                uid: '1',
+                name: '1',
+                tasks: [
+                    {
+                        uid: '1',
+                        name: 'task 1',
+                        status: 'SUCCESS',
+                        display: true,
+                        errors: [],
+                    },
+                    {
+                        uid: '2',
+                        name: 'task 2',
+                        status: 'SUCCESS',
+                        display: false,
+                        errors: [],
+                    },
+                ],
+                status: 'COMPLETED',
+            },
+        ],
+        zipfile_url: null,
+        expiration: '2017-08-01T00:00:00Z',
+        members: [],
+    };
+
+    const providers = [
+        {
+            id: 1,
+            type: '1',
+            uid: '1',
+            name: '1',
+            slug: '1',
+            service_description: 'provider 1',
+            display: true,
+            export_provider_type: 2,
+        },
+    ];
+
     const muiTheme = getMuiTheme();
 
     const didMount = DataCartDetails.prototype.componentDidMount;
@@ -41,6 +108,8 @@ describe('DataCartDetails component', () => {
             onClone: () => {},
             onProviderCancel: () => {},
             user: { data: { user: { username: 'admin' } } },
+            members: [],
+            groups: [],
         }
     );
 
@@ -93,7 +162,7 @@ describe('DataCartDetails component', () => {
         const props = getProps();
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
         DataCartDetails.prototype.componentDidMount = didMount;
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(dateStub.calledOnce).toBe(true);
         dateStub.restore();
         DataCartDetails.prototype.componentDidMount = sinon.spy();
@@ -140,69 +209,3 @@ describe('DataCartDetails component', () => {
         expect(props.onUpdateExpiration.calledWith(props.cartDetails.uid, 'today')).toBe(true);
     });
 });
-
-const run = {
-    uid: '12345',
-    url: 'http://cloud.eventkit.test/api/runs/123455',
-    started_at: '2017-05-22T18:35:01.400756Z',
-    finished_at: '2017-05-22T18:35:22.292006Z',
-    duration: '0:00:20.891250',
-    user: 'admin',
-    status: 'COMPLETED',
-    job: {
-        uid: '67890',
-        name: 'test',
-        event: 'test',
-        description: 'test',
-        url: 'http://cloud.eventkit.test/api/jobs/67890',
-        formats: [
-            'Geopackage',
-        ],
-        permissions: {
-            value: 'PRIVATE',
-            groups: {},
-            members: {},
-        },
-    },
-    provider_tasks: [
-        {
-            display: true,
-            slug: '1',
-            uid: '1',
-            name: '1',
-            tasks: [
-                {
-                    uid: '1',
-                    name: 'task 1',
-                    status: 'SUCCESS',
-                    display: true,
-                    errors: [],
-                },
-                {
-                    uid: '2',
-                    name: 'task 2',
-                    status: 'SUCCESS',
-                    display: false,
-                    errors: [],
-                },
-            ],
-            status: 'COMPLETED',
-        },
-    ],
-    zipfile_url: null,
-    expiration: '2017-08-01T00:00:00Z',
-    members: [],
-};
-
-const providers = [
-    {
-        id: 1,
-        type: '1',
-        uid: '1',
-        name: '1',
-        slug: '1',
-        service_description: 'provider 1',
-        display: true,
-        export_provider_type: 2,
-    },
-];

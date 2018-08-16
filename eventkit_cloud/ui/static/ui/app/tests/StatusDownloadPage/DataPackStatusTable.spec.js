@@ -1,10 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import DatePicker from 'material-ui/DatePicker';
-import Edit from 'material-ui/svg-icons/image/edit';
+import Edit from '@material-ui/icons/Edit';
 import CustomTableRow from '../../components/CustomTableRow';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
@@ -53,7 +54,7 @@ describe('DataPackStatusTable component', () => {
 
     it('should render the share dialog', () => {
         const props = getProps();
-        const stub = sinon.stub(DataPackShareDialog.prototype, 'render').returns(null);        
+        const stub = sinon.stub(DataPackShareDialog.prototype, 'render').returns(null);
         const wrapper = getWrapper(props);
         wrapper.setState({ shareDialogOpen: true });
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
@@ -65,7 +66,7 @@ describe('DataPackStatusTable component', () => {
         const props = getProps();
         props.permissions.value = 'SHARED';
         const wrapper = getWrapper(props);
-        let button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        let button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button).toHaveLength(1);
         expect(button.text()).toEqual('No Members / No Groups');
 
@@ -76,7 +77,7 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ', user_two: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('All Members / All Groups');
 
         nextProps = getProps();
@@ -86,7 +87,7 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('1 Member / 1 Group');
 
 
@@ -97,7 +98,7 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ', user_two: 'READ', user_three: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
         expect(button.text()).toEqual('3 Members / 3 Groups');
     });
 

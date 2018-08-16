@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -7,23 +8,19 @@ import DeleteDataPackDialog from '../../components/Dialog/DeleteDataPackDialog';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
 
 describe('DeleteDataPackDialog component', () => {
-    const getProps = () => {
-        return {
-            show: true,
-            onCancel: () => {},
-            onDelete: () => {},
-        }
-    };
+    const getProps = () => ({
+        show: true,
+        onCancel: () => {},
+        onDelete: () => {},
+    });
     const muiTheme = getMuiTheme();
 
-    const getWrapper = (props) => {
-        return mount(<DeleteDataPackDialog {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {
-                muiTheme: React.PropTypes.object
-            }
-        });
-    };
+    const getWrapper = props => mount(<DeleteDataPackDialog {...props} />, {
+        context: { muiTheme },
+        childContextTypes: {
+            muiTheme: PropTypes.object,
+        },
+    });
 
     it('should render a Dialog inside a BaseDialog inside a ConfirmDialog', () => {
         const props = getProps();

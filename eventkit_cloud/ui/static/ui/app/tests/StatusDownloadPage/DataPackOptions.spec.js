@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -135,7 +136,7 @@ describe('DataPackOptions component', () => {
         expect(stateStub.calledWith({ showRerunDialog: false })).toBe(true);
         stateStub.restore();
     });
-    
+
     it('handleClone should clone a job with the correct data', () => {
         const props = getProps();
         props.onClone = sinon.stub();

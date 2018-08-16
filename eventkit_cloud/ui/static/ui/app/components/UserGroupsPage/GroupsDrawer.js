@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import Drawer from 'material-ui/Drawer';
 import Menu from 'material-ui/Menu';
 import IconMenu from 'material-ui/IconMenu';
@@ -6,9 +7,9 @@ import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
 import Divider from 'material-ui/Divider';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Vert from 'material-ui/svg-icons/navigation/more-vert';
-import InfoIcon from 'material-ui/svg-icons/action/info-outline';
-import AddCircleIcon from 'material-ui/svg-icons/content/add-circle';
+import Vert from '@material-ui/icons/MoreVert';
+import InfoIcon from '@material-ui/icons/InfoOutlined';
+import AddCircleIcon from '@material-ui/icons/AddCircle';
 import CustomScrollbar from '../CustomScrollbar';
 
 
@@ -119,6 +120,7 @@ export class GroupsDrawer extends Component {
                     <EnhancedButton
                         style={styles.newGroupBtn}
                         onClick={this.props.onNewGroupClick}
+                        className="qa-GroupsDrawer-addGroup"
                     >
                         <AddCircleIcon
                             style={styles.newGroupIcon}
@@ -176,6 +178,8 @@ export class GroupsDrawer extends Component {
                                         listStyle={styles.groupActionList}
                                         menuItemStyle={styles.groupActionItem}
                                         className="qa-GroupsDrawer-groupOptions"
+                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     >
                                         <MenuItem
                                             className="qa-GroupsDrawer-group-rename"
@@ -238,6 +242,8 @@ export class GroupsDrawer extends Component {
                                         listStyle={styles.groupActionList}
                                         menuItemStyle={styles.groupActionItem}
                                         className="qa-GroupsDrawer-groupOptions"
+                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
                                     >
                                         <MenuItem
                                             className="qa-GroupsDrawer-group-leave"

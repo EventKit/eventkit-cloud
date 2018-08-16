@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
 import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
@@ -6,12 +7,12 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import AlertError from 'material-ui/svg-icons/alert/error';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import SocialGroup from '@material-ui/icons/Group';
+import Lock from '@material-ui/icons/LockOutlined';
+import NotificationSync from '@material-ui/icons/Sync';
+import NavigationCheck from '@material-ui/icons/Check';
+import AlertError from '@material-ui/icons/Error';
 import isUndefined from 'lodash/isUndefined';
 
 import Map from 'ol/map';
@@ -30,6 +31,7 @@ import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
+import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -37,11 +39,15 @@ export class DataPackGridItem extends Component {
         this.initMap = this.initMap.bind(this);
         this.toggleExpanded = this.toggleExpanded.bind(this);
         this.handleExpandChange = this.handleExpandChange.bind(this);
+        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
         this.hideDeleteDialog = this.hideDeleteDialog.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
+        this.handleShareOpen = this.handleShareOpen.bind(this);
+        this.handleShareClose = this.handleShareClose.bind(this);
+        this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             expanded: true,
             overflowTitle: false,
@@ -49,6 +55,8 @@ export class DataPackGridItem extends Component {
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
+            shareDialogOpen: false,
+            menuOpen: false,
         };
     }
 
@@ -62,6 +70,20 @@ export class DataPackGridItem extends Component {
                 this.initMap();
             }
         }
+    }
+
+    getMapId() {
+        let mapId = '';
+        if (!isUndefined(this.props.gridName)) {
+            mapId += `_${this.props.gridName}`;
+        }
+        mapId += `_${this.props.run.uid}`;
+        if (!isUndefined(this.props.index)) {
+            mapId += `_${this.props.index}`;
+        }
+        mapId = `map${mapId}`;
+
+        return mapId;
     }
 
     initMap() {
@@ -118,6 +140,14 @@ export class DataPackGridItem extends Component {
         this.setState({ expanded });
     }
 
+    handleMenuButtonClick(e) {
+        e.stopPropagation();
+    }
+
+    handleMenuChange(menuOpen) {
+        this.setState({ menuOpen });
+    }
+
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
@@ -130,7 +160,11 @@ export class DataPackGridItem extends Component {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDescs[a.name] = a.service_description;
         });
-        this.setState({ providerDescs, providerDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            providerDescs,
+            providerDialogOpen: true,
+        });
     }
 
     toggleExpanded() {
@@ -138,7 +172,10 @@ export class DataPackGridItem extends Component {
     }
 
     showDeleteDialog() {
-        this.setState({ deleteDialogOpen: true });
+        this.setState({
+            menuOpen: false,
+            deleteDialogOpen: true,
+        });
     }
 
     hideDeleteDialog() {
@@ -148,20 +185,6 @@ export class DataPackGridItem extends Component {
     handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
-    }
-
-    getMapId() {
-        let mapId = '';
-        if (!isUndefined(this.props.gridName)) {
-            mapId += `${this.props.gridName}_`;
-        }
-        mapId += `${this.props.run.uid}_`;
-        if (!isUndefined(this.props.index)) {
-            mapId += `${this.props.index}_`;
-        }
-        mapId += 'map';
-
-        return mapId;
     }
 
     mapContainerRef(element) {
@@ -175,37 +198,51 @@ export class DataPackGridItem extends Component {
         });
     }
 
-    render() {
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => {
-            return (
-                <ListItem
-                    key={key}
-                    style={{
-                        backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                        fontWeight: 'bold',
-                        width: '100%',
-                        zIndex: 0,
-                    }}
-                    nestedListStyle={{ padding: '0px' }}
-                    primaryText={key}
-                    initiallyOpen={false}
-                    primaryTogglesNestedList={false}
-                    nestedItems={[
-                        <ListItem
-                            key={1}
-                            primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                            style={{
-                                backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
-                                fontSize: '14px',
-                                width: '100%',
-                                zIndex: 0,
-                            }}
-                        />,
-                    ]}
-                />
-
-            );
+    handleShareOpen() {
+        this.setState({
+            menuOpen: false,
+            shareDialogOpen: true,
         });
+    }
+
+    handleShareClose() {
+        this.setState({ shareDialogOpen: false });
+    }
+
+    handleShareSave(perms) {
+        this.handleShareClose();
+        const permissions = { ...perms };
+        this.props.onRunShare(this.props.run.job.uid, permissions);
+    }
+
+    render() {
+        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
+            <ListItem
+                key={key}
+                style={{
+                    backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                    fontWeight: 'bold',
+                    width: '100%',
+                    zIndex: 0,
+                }}
+                nestedListStyle={{ padding: '0px' }}
+                primaryText={key}
+                initiallyOpen={false}
+                primaryTogglesNestedList={false}
+                nestedItems={[
+                    <ListItem
+                        key={1}
+                        primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
+                        style={{
+                            backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white',
+                            fontSize: '14px',
+                            width: '100%',
+                            zIndex: 0,
+                        }}
+                    />,
+                ]}
+            />
+        ));
 
         const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
         const titleFontSize = 22;
@@ -239,11 +276,11 @@ export class DataPackGridItem extends Component {
                 color: 'inherit',
                 display: 'block',
                 width: '100%',
-                height: '28px',
+                height: '36px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                margin: '0px 0px 8px',
+                margin: '0px',
             },
             titleLinkExpanded: {
                 color: 'inherit',
@@ -331,8 +368,16 @@ export class DataPackGridItem extends Component {
             },
         };
 
+        let status = <NavigationCheck style={styles.completeIcon} />;
+        if (this.props.run.status === 'SUBMITTED') {
+            status = <NotificationSync style={styles.runningIcon} />;
+        } else if (this.props.run.status === 'INCOMPLETE') {
+            status = <AlertError style={styles.errorIcon} />;
+        }
+
         return (
             <Card
+                className="qa-DataPackGridItem-Card"
                 style={styles.card}
                 key={this.props.run.uid}
                 expanded={this.state.expanded}
@@ -340,6 +385,7 @@ export class DataPackGridItem extends Component {
             >
                 <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                 <CardTitle
+                    className="qa-DataPackGridItem-CardTitle"
                     titleColor="#4598bf"
                     style={styles.cardTitle}
                     titleStyle={styles.title}
@@ -353,6 +399,7 @@ export class DataPackGridItem extends Component {
                                 onMouseLeave={() => { this.setState({ overflowTitle: false }); }}
                             >
                                 <Link
+                                    className="qa-DataPackGridItem-Link"
                                     to={`/status/${this.props.run.job.uid}`}
                                     href={`/status/${this.props.run.job.uid}`}
                                     style={this.state.overflowTitle ? styles.titleLinkExpanded : styles.titleLink}
@@ -361,28 +408,35 @@ export class DataPackGridItem extends Component {
                                 </Link>
                             </div>
                             <IconMenu
+                                className="qa-DataPackGridItem-IconMenu"
                                 style={{ float: 'right', width: '24px', height: '36px' }}
+                                open={this.state.menuOpen}
                                 iconButtonElement={
                                     <IconButton
                                         style={styles.iconMenu}
                                         iconStyle={{ color: '#4598bf' }}
+                                        onClick={this.handleMenuButtonClick}
                                     >
                                         <NavigationMoreVert />
                                     </IconButton>}
                                 anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
                                 targetOrigin={{ horizontal: 'right', vertical: 'top' }}
+                                onRequestChange={this.handleMenuChange}
                             >
                                 <MenuItem
+                                    className="qa-DataPackGridItem-MenuItem-showHideMap"
                                     style={{ fontSize: cardTextFontSize }}
                                     primaryText={this.state.expanded ? 'Hide Map' : 'Show Map'}
                                     onClick={this.toggleExpanded}
                                 />
                                 <MenuItem
+                                    className="qa-DataPackGridItem-MenuItem-goToStatus"
                                     style={{ fontSize: cardTextFontSize }}
-                                    primaryText="Go to Status & Download"
+                                    primaryText="Status & Download"
                                     onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
                                 />
                                 <MenuItem
+                                    className="qa-DataPackGridItem-MenuItem-viewProviders"
                                     style={{ fontSize: cardTextFontSize }}
                                     primaryText="View Data Sources"
                                     onClick={this.handleProviderOpen}
@@ -401,7 +455,7 @@ export class DataPackGridItem extends Component {
                                             className="qa-DataPackGridItem-MenuItem-share"
                                             style={{ fontSize: cardTextFontSize }}
                                             primaryText="Share"
-                                            onClick={() => this.props.openShare(this.props.run)}
+                                            onClick={this.handleShareOpen}
                                         />,
                                     ]
                                     :
@@ -409,6 +463,7 @@ export class DataPackGridItem extends Component {
                                 }
                             </IconMenu>
                             <BaseDialog
+                                className="qa-DataPackGridItem-BaseDialog"
                                 show={this.state.providerDialogOpen}
                                 title="DATA SOURCES"
                                 onClose={this.handleProviderClose}
@@ -416,6 +471,7 @@ export class DataPackGridItem extends Component {
                                 <List>{providersList}</List>
                             </BaseDialog>
                             <DeleteDataPackDialog
+                                className="qa-DataPackGridItem-DeleteDialog"
                                 show={this.state.deleteDialogOpen}
                                 onCancel={this.hideDeleteDialog}
                                 onDelete={this.handleDelete}
@@ -423,44 +479,41 @@ export class DataPackGridItem extends Component {
                         </div>
                     }
                     subtitle={
-                        <div>
+                        <div className="qa-DataPackGridItem-div-subtitle">
                             <div
                                 style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                             >
                                 {`Event: ${this.props.run.job.event}`}
                             </div>
-                            <span>{`Added: ${moment(this.props.run.started_at).format('YYYY-MM-DD')}`}</span><br />
-                            <span>{`Expires: ${moment(this.props.run.expiration).format('YYYY-MM-DD')}`}</span><br />
+                            <span>{`Added: ${moment(this.props.run.started_at).format('M/D/YY')}`}</span><br />
+                            <span>{`Expires: ${moment(this.props.run.expiration).format('M/D/YY')}`}</span><br />
                         </div>
                     }
                 />
                 <CardText
+                    className="qa-DataPackGridItem-CardText"
                     style={styles.cardTextContainer}
                     onMouseEnter={() => { this.setState({ overflowText: true }); }}
                     onMouseLeave={() => { this.setState({ overflowText: false }); }}
-                    onTouchTap={() => { this.setState({ overflowText: !this.state.overflowText }); }}
+                    onClick={() => { this.setState({ overflowText: !this.state.overflowText }); }}
                 >
-                    <span style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}>
+                    <span
+                        className="qa-DataPackGridItem-span-description"
+                        style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}
+                    >
                         {this.props.run.job.description}
                     </span>
                 </CardText>
-                <CardMedia expandable>
+                <CardMedia className="qa-DataPackGridItem-CardMedia" expandable>
                     <div
                         id={this.getMapId()}
                         style={{ padding: '0px 2px', backgroundColor: 'none', maxHeight: '200px' }}
                         ref={this.mapContainerRef}
                     />
                 </CardMedia>
-                <CardActions style={{ height: '45px' }}>
+                <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px' }}>
                     <span>
-                        {this.props.run.status == "SUBMITTED" ?
-                            <NotificationSync style={styles.runningIcon} />
-                            :
-                            this.props.run.status == "INCOMPLETE" ?
-                                <AlertError style={styles.errorIcon} />
-                                :
-                                <NavigationCheck style={styles.completeIcon} />
-                        }
+                        {status}
                         {this.props.run.user === this.props.user.data.user.username ?
                             <p style={styles.ownerLabel}>My DataPack</p>
                             :
@@ -469,30 +522,46 @@ export class DataPackGridItem extends Component {
                         {this.props.run.job.permissions.value !== 'PRIVATE' ?
                             <SocialGroup style={styles.publishedIcon} />
                             :
-
                             <Lock style={styles.unpublishedIcon} />
                         }
                     </span>
                 </CardActions>
+                <DataPackShareDialog
+                    show={this.state.shareDialogOpen}
+                    onClose={this.handleShareClose}
+                    onSave={this.handleShareSave}
+                    user={this.props.user.data}
+                    groups={this.props.groups}
+                    members={this.props.users}
+                    permissions={this.props.run.job.permissions}
+                    groupsText="You may share view and edit rights with groups exclusively.
+                        Group sharing is managed separately from member sharing."
+                    membersText="You may share view and edit rights with members exclusively.
+                        Member sharing is managed separately from group sharing."
+                    canUpdateAdmin
+                    warnPublic
+                />
             </Card>
         );
     }
 }
 
 DataPackGridItem.contextTypes = {
-    config: React.PropTypes.object,
+    config: PropTypes.object,
 };
 
 DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    onRunShare: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     showFeaturedFlag: PropTypes.bool,
-    openShare: PropTypes.func.isRequired,
     adminPermission: PropTypes.bool.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 DataPackGridItem.defaultProps = {

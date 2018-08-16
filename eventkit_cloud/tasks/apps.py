@@ -8,4 +8,4 @@ class EventKitTasks(AppConfig):
     verbose_name = "Eventkit-Cloud Tasks"
 
     def ready(self):
-        from .signals import *
+        from .signals import *  # noqa

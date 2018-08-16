@@ -1,5 +1,6 @@
-import React, { PropTypes, Component } from 'react';
-import Info from 'material-ui/svg-icons/action/info';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Info from '@material-ui/icons/Info';
 import CustomTableRow from '../CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 

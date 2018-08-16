@@ -1,10 +1,11 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { Card, CardHeader, CardText } from 'material-ui/Card';
-import CheckBoxOutline from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import CheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import Eye from 'material-ui/svg-icons/image/remove-red-eye';
+import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBox from '@material-ui/icons/CheckBox';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import Eye from '@material-ui/icons/RemoveRedEye';
 import AdminShare from '../icons/AdminShareIcon';
 import GroupMemberRow from './GroupMemberRow';
 

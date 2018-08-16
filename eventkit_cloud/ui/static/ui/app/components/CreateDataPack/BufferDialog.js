@@ -1,10 +1,11 @@
-import React, { Component, PropTypes } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
-import TextField from 'material-ui/TextField';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import numeral from 'numeral';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
 import Slider from 'material-ui/Slider';
-import AlertWarning from 'material-ui/svg-icons/alert/warning';
-import Clear from 'material-ui/svg-icons/content/clear';
+import AlertWarning from '@material-ui/icons/Warning';
+import Clear from '@material-ui/icons/Clear';
 import AlertCallout from './AlertCallout';
 import { getSqKm, getSqKmString } from '../../utils/generic';
 
@@ -56,7 +57,6 @@ export class BufferDialog extends Component {
                 lineHeight: '32px',
             },
             body: {
-                fontSize: '14px',
                 color: 'rgba(0,0,0,0.6)',
                 padding: '0px 15px',
                 boxSizing: 'border-box',
@@ -65,7 +65,6 @@ export class BufferDialog extends Component {
                 padding: '15px 15px 10px',
                 textAlign: 'right',
                 color: 'rgba(0,0,0,0.6)',
-                fontSize: '14px',
             },
             footer: {
                 boxSizing: 'border-box',
@@ -73,32 +72,15 @@ export class BufferDialog extends Component {
                 width: '100%',
                 textAlign: 'right',
             },
-            underline: {
-                borderBottom: '1px solid grey',
-                bottom: '0px',
-            },
-            underlineFocus: {
-                borderBottom: '2px solid #4498c0',
-                bottom: '0px',
-            },
             tableData: {
                 width: '50%',
                 height: '22px',
             },
-            updateButton: {
-                backgroundColor: this.props.valid ? '#4598bf' : '#e5e5e5',
-                height: '30px',
-                lineHeight: '30px',
-            },
-            updateLabel: {
-                color: this.props.valid ? 'whitesmoke' : '#0000004d',
-                fontWeight: 'bold',
-            },
             textField: {
-                fontSize: '14px',
                 width: '65px',
                 height: '24px',
                 fontWeight: 'normal',
+                color: this.props.valid ? 'grey' : '#d32f2f',
             },
             clear: {
                 float: 'right',
@@ -123,26 +105,31 @@ export class BufferDialog extends Component {
         };
 
         const bufferActions = [
-            <FlatButton
+            <Button
                 key="BufferDialog-close"
-                className="qa-BufferDialog-FlatButton-close"
-                style={{ float: 'left', height: '30px', lineHeight: '30px' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                disableTouchRipple
-                label="close"
+                className="qa-BufferDialog-Button-close"
+                style={{ float: 'left', fontWeight: 'bold' }}
                 onClick={this.props.closeBufferDialog}
-            />,
-            <RaisedButton
+                variant="flat"
+                color="primary"
+            >
+                close
+            </Button>,
+            <Button
                 key="BufferDialog-buffer"
-                className="qa-BufferDialog-RaisedButton-buffer"
-                labelStyle={styles.updateLabel}
-                buttonStyle={styles.updateButton}
-                disableTouchRipple
-                label="Update AOI"
-                primary
+                className="qa-BufferDialog-Button-buffer"
+                style={{
+                    backgroundColor: this.props.valid ? '#initial' : '#e5e5e5',
+                    color: this.props.valid ? 'whitesmoke' : '#0000004d',
+                    fontWeight: 'bold',
+                }}
+                variant="contained"
+                color="primary"
                 onClick={this.props.handleBufferClick}
                 disabled={!this.props.valid}
-            />,
+            >
+                Update AOI
+            </Button>,
         ];
 
         if (!this.props.show) {
@@ -153,7 +140,7 @@ export class BufferDialog extends Component {
         this.context.muiTheme.slider.selectionColor = sliderColor;
 
         let over = false;
-        const maxAoi = this.props.maxAoiSqKm;
+        const maxAoi = this.props.maxVectorAoiSqKm;
         const totalArea = getSqKmString(this.props.aoi);
         const size = getSqKm(this.props.aoi);
         if (maxAoi && maxAoi < size) {
@@ -178,7 +165,7 @@ export class BufferDialog extends Component {
                             title="Your AOI is too large!"
                             body={
                                 <p>
-                                    The max size allowed for the AOI is {maxAoi} sq km and yours is {totalArea}.
+                                    The max size allowed for the AOI is {numeral(maxAoi).format('0,0')} sq km and yours is {totalArea}.
                                     Please reduce the size of your buffer and/or polygon
                                 </p>
                             }
@@ -211,11 +198,12 @@ export class BufferDialog extends Component {
                                 type="number"
                                 name="buffer-value"
                                 value={this.props.value}
-                                onChange={this.props.handleBufferChange}
+                                onChange={e => this.props.handleBufferChange(e.target.value)}
                                 style={styles.textField}
-                                inputStyle={{ color: this.props.valid ? 'grey' : '#d32f2f' }}
-                                underlineStyle={styles.underline}
-                                underlineFocusStyle={styles.underlineFocus}
+                                InputProps={{ style: { fontSize: '14px', lineHeight: '24px' } }}
+                                // MUI uses the case of the i to distinguish between Input component and input html element
+                                // eslint-disable-next-line react/jsx-no-duplicate-props
+                                inputProps={{ style: { textAlign: 'center' } }}
                             />
                             <span style={{ fontSize: '16px', color: 'grey' }}>m</span>
                             <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? '#ce4427' : 'initial' }}>
@@ -245,7 +233,7 @@ export class BufferDialog extends Component {
                                                 max={10000}
                                                 min={0}
                                                 value={this.props.value}
-                                                onChange={this.props.handleBufferChange}
+                                                onChange={(e, v) => this.props.handleBufferChange(v)}
                                             />
                                         </td>
                                         <td style={{ ...styles.tableData, borderRight: '1px solid #ccc' }} />
@@ -259,7 +247,7 @@ export class BufferDialog extends Component {
                         </div>
                     </div>
                     <div className="qa-BufferDialog-footnote" style={styles.footnote}>
-                        Once updated, you must <strong>'Revert' to set again.</strong>
+                        Once updated, you must <strong>&apos;Revert&apos; to set again.</strong>
                     </div>
                     <div className="qa-BufferDialog-footer" style={styles.footer}>
                         {bufferActions}
@@ -271,7 +259,7 @@ export class BufferDialog extends Component {
 }
 
 BufferDialog.defaultProps = {
-    maxAoiSqKm: null,
+    maxVectorAoiSqKm: null,
 };
 
 BufferDialog.contextTypes = {
@@ -286,7 +274,7 @@ BufferDialog.propTypes = {
     handleBufferChange: PropTypes.func.isRequired,
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
-    maxAoiSqKm: PropTypes.number,
+    maxVectorAoiSqKm: PropTypes.number,
 };
 
 export default BufferDialog;

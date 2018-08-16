@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import logging
-from django.test import TestCase
-from ..client import EventKitClient
 import json
+import logging
+
 import requests_mock
-from django.conf import settings
+from django.test import TestCase
+
+from eventkit_cloud.utils.client import EventKitClient
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,10 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
+import Joyride from 'react-joyride';
+import Help from '@material-ui/icons/Help';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
@@ -12,6 +15,7 @@ import UserRow from '../../components/UserGroupsPage/UserRow';
 import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
+import * as viewport from '../../utils/viewport';
 
 describe('UserGroupsPage component', () => {
     const muiTheme = getMuiTheme();
@@ -124,10 +128,10 @@ describe('UserGroupsPage component', () => {
     it('should render its basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-UserGroupsPage-AppBar')).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-RaisedButton-create')).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar')).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-search')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-AppBar').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-RaisedButton-create').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-search').hostNodes()).toHaveLength(1);
         expect(wrapper.find(UserHeader)).toHaveLength(1);
         expect(wrapper.find(OwnUserRow)).toHaveLength(1);
         expect(wrapper.find(UserRow)).toHaveLength(2);
@@ -135,19 +139,24 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(CreateGroupDialog)).toHaveLength(1);
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(7);
+        expect(wrapper.find(BaseDialog)).toHaveLength(6);
+        expect(wrapper.find(Joyride)).toHaveLength(1);
+        expect(wrapper.find(Help)).toHaveLength(1);
     });
 
-    it('componentDidMount should call makeUserRequest and getGroups', () => {
+    it('componentDidMount should call makeUserRequest, getGroups and joyrideAddSteps', () => {
         const props = getProps();
         props.getGroups = sinon.spy();
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
+        const joyrideStub = sinon.stub(UserGroupsPage.prototype, 'joyrideAddSteps');
         // we stub componentDidMount before all tests, so temporarily undo it
         UserGroupsPage.prototype.componentDidMount.restore();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(props.getGroups.calledOnce).toBe(true);
         expect(makeRequestStub.calledOnce).toBe(true);
+        expect(joyrideStub.calledOnce).toBe(true);
         makeRequestStub.restore();
+        joyrideStub.restore();
         // re-stub it since afterAll will restore it when tests are finished
         sinon.stub(UserGroupsPage.prototype, 'componentDidMount');
     });
@@ -168,7 +177,6 @@ describe('UserGroupsPage component', () => {
         expect(requestStub.calledTwice).toBe(true);
         expect(requestStub.calledWith(lastProps.location.query)).toBe(true);
         requestStub.restore();
-
     });
 
     it('componentWillReceiveProps should handle users fetched', () => {
@@ -365,7 +373,7 @@ describe('UserGroupsPage component', () => {
         wrapper.setState({ selectedUsers: selection });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleUserSelect(props.users.users[0]);
-        const [removedUser, ...expectedUsers] = props.users.users;
+        const [, ...expectedUsers] = props.users.users;
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ selectedUsers: expectedUsers })).toBe(true);
         stateStub.restore();
@@ -914,23 +922,146 @@ describe('UserGroupsPage component', () => {
         stateStub.restore();
     });
 
-    it('showPageInfoDialog should set show to true', () => {
+    it('joyrideAddSteps should set state for steps in tour', () => {
+        const steps = [{
+            title: 'Welcome to the Account Settings Page',
+            text: 'Example text',
+            selector: '.qa-PageHeader',
+            position: 'top',
+            style: {},
+            isFixed: true,
+        }];
         const props = getProps();
-        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
         const wrapper = getWrapper(props);
-        wrapper.instance().showPageInfoDialog();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showPageInfo: true })).toBe(true);
-        stateStub.restore();
+        const stateSpy = sinon.stub(UserGroupsPage.prototype, 'setState');
+        wrapper.instance().joyrideAddSteps(steps);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ steps }));
+        stateSpy.restore();
     });
 
-    it('hidePageInfoDialog should set show to false', () => {
+    it('handleJoyride should set state', () => {
         const props = getProps();
-        const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
         const wrapper = getWrapper(props);
-        wrapper.instance().hidePageInfoDialog();
+        const stateSpy = sinon.stub(UserGroupsPage.prototype, 'setState');
+        wrapper.instance().handleJoyride();
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
+    it('callback function should stop tour if close is clicked', () => {
+        const callbackData = {
+            action: 'close',
+            index: 2,
+            step: {
+                position: 'bottom',
+                selector: '.qa-Application-MenuItem-create',
+                style: {},
+                text: 'Or to create your own DataPack.',
+                title: 'Navigate Application',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateSpy = sinon.stub(UserGroupsPage.prototype, 'setState');
+        wrapper.instance().callback(callbackData);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(stateSpy.calledWith({ isRunning: false }));
+        stateSpy.restore();
+    });
+
+    it('callback function should toggle drawer', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-GroupsDrawer-addGroup',
+            },
+            type: 'step:fake',
+        };
+        const viewStub = sinon.stub(viewport, 'isViewportS').returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.setState({ drawerOpen: false });
+        const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer').returns(Promise.resolve(true));
+        wrapper.instance().callback(data);
+        expect(viewStub.called).toBe(true);
+        expect(toggleStub.calledOnce).toBe(true);
+        viewStub.restore();
+        toggleStub.restore();
+    });
+
+    it('callback should scroll to top', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-GroupsDrawer-groupsHeading',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const scrollStub = sinon.stub(wrapper.instance().scrollbar, 'scrollToTop');
+        wrapper.instance().callback(data);
+        expect(scrollStub.calledOnce).toBe(true);
+    });
+
+    it('callback should toggleDrawer and setState', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-GroupsDrawer-groupsHeading',
+            },
+            type: 'step:after',
+        };
+        const viewStub = sinon.stub(viewport, 'isViewportS').returns(true);
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().callback(data);
+        expect(viewStub.called).toBe(true);
+        expect(toggleStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ showPageInfo: false })).toBe(true);
-        stateStub.restore();
+        expect(stateStub.calledWith({ stepIndex: 3 }));
+        viewStub.restore();
+    });
+
+    it('callback should selectAll', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-UserHeader-checkbox',
+            },
+            type: 'tooltip:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const selectStub = sinon.stub(wrapper.instance(), 'handleSelectAll');
+        wrapper.instance().callback(data);
+        expect(selectStub.calledOnce).toBe(true);
+        expect(selectStub.calledWith(true)).toBe(true);
+    });
+
+    it('callback should toggle drawer again', () => {
+        const data = {
+            action: 'next',
+            index: 2,
+            step: {
+                selector: '.qa-UserHeader-IconButton-options',
+            },
+            type: 'step:after',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer').returns(Promise.resolve(true));
+        wrapper.instance().callback(data);
+        expect(toggleStub.calledOnce).toBe(true);
+        toggleStub.restore();
     });
 });

@@ -1,61 +1,50 @@
 """Provides classes for handling API requests."""
+import logging
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta, date
+
 from dateutil import parser
-import logging
-import json
 from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils.translation import ugettext as _
-from django.contrib.gis.geos import GEOSException, GEOSGeometry
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-
-
-from django.contrib.auth.models import User, Group
-from django.contrib.contenttypes.models import ContentType
-from ..core.models import GroupPermission, GroupPermissionLevel, JobPermission,JobPermissionLevel
 from notifications.models import Notification
-from ..core.helpers import sendnotification, NotificationVerb, NotificationLevel
-
-
-from eventkit_cloud.jobs.models import (
-    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
-    UserJobActivity
-)
-from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ..tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense
-from ..utils.gdalutils import get_area
-from eventkit_cloud.utils.provider_check import perform_provider_check
-
+from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.parsers import JSONParser
+from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.schemas import SchemaGenerator
 from rest_framework.serializers import ValidationError
-from serializers import (
+
+from eventkit_cloud.api.filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
+from eventkit_cloud.api.pagination import LinkHeaderPagination
+from eventkit_cloud.api.permissions import IsOwnerOrReadOnly
+from eventkit_cloud.api.renderers import HOTExportApiRenderer, PlainTextRenderer, CustomSwaggerUIRenderer, \
+    CustomOpenAPIRenderer
+from eventkit_cloud.api.serializers import (
     ExportFormatSerializer, ExportRunSerializer,
     ExportTaskRecordSerializer, JobSerializer, RegionMaskSerializer, DataProviderTaskRecordSerializer,
     RegionSerializer, ListJobSerializer, ProviderTaskSerializer, DataProviderSerializer, LicenseSerializer,
     UserDataSerializer, GroupSerializer, UserJobActivitySerializer, NotificationSerializer
 )
-
-from ..tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from .filters import ExportRunFilter, JobFilter, UserFilter, GroupFilter, UserJobActivityFilter
-from .pagination import LinkHeaderPagination
-from .permissions import IsOwnerOrReadOnly
-from .renderers import HOTExportApiRenderer
-from .renderers import PlainTextRenderer
-from .validators import validate_bbox_params, validate_search_bbox
-from rest_framework.permissions import AllowAny
-from rest_framework.schemas import SchemaGenerator
-from rest_framework_swagger import renderers
-from rest_framework.renderers import CoreJSONRenderer
-from rest_framework import exceptions
-import coreapi
+from eventkit_cloud.api.validators import validate_bbox_params, validate_search_bbox
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission, JobPermissionLevel
+from eventkit_cloud.jobs.models import (
+    ExportFormat, Job, Region, RegionMask, DataProvider, DataProviderTask, DatamodelPreset, License, VisibilityState,
+    UserJobActivity
+)
+from eventkit_cloud.tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
+from eventkit_cloud.utils.gdalutils import get_area
+from eventkit_cloud.utils.provider_check import perform_provider_check
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -288,7 +277,7 @@ class JobViewSet(viewsets.ModelViewSet):
         * Raises: ValidationError: in case of validation errors.
         ** returns: Not 202
         """
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             """Get the required data from the validated request."""
@@ -319,6 +308,8 @@ class JobViewSet(viewsets.ModelViewSet):
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
+                            job.provider_tasks = provider_serializer.save()
+                            job.save()
                         except ValidationError:
                             status_code = status.HTTP_400_BAD_REQUEST
                             error_data = {"errors": [{"status": status_code,
@@ -326,8 +317,6 @@ class JobViewSet(viewsets.ModelViewSet):
                                                       "detail": _('A provider and an export format must be selected.')
                                                       }]}
                             return Response(error_data, status=status_code)
-                        job.provider_tasks = provider_serializer.save()
-
                         # Check max area (skip for superusers)
                         if not self.request.user.is_superuser:
                             for provider_task in job.provider_tasks.all():
@@ -429,15 +418,15 @@ class JobViewSet(viewsets.ModelViewSet):
         if user_details is None:
             user_details = {'username': 'unknown-JobViewSet.run'}
 
-        from ..tasks.task_factory import InvalidLicense, Unauthorized
+        from eventkit_cloud.tasks.task_factory import InvalidLicense, Unauthorized
 
         try:
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=uid, user=request.user)
-        except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        except (InvalidLicense, Error) as err:
+            return Response([{'detail': _(err.message)}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
-        except Unauthorized as ua:
+        except Unauthorized:
             return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
         run = ExportRun.objects.get(uid=run_uid)
         if run:
@@ -598,7 +587,7 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response([{'detail': "missing permissions attribute"}], status.HTTP_400_BAD_REQUEST)
 
         job_list = get_job_ids_via_permissions(request.data["permissions"])
-        jobs =  Job.objects.filter(id__in=job_list)
+        jobs = Job.objects.filter(id__in=job_list)
         serializer = ListJobSerializer(jobs, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -846,7 +835,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         perms, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)  ) & Q(deleted=False))\
+        prefetched_queryset = ExportRun.objects.filter((Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))\
             .select_related('job', 'user')\
             .prefetch_related(Prefetch('provider_tasks',
                 queryset=DataProviderTaskRecord.objects.prefetch_related(Prefetch('tasks',
@@ -871,8 +860,10 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             the serialized run data.
         """
 
-        from ..tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.task_factory import InvalidLicense
         queryset = self.get_queryset().filter(uid=uid)
+        if not request.query_params.get('job_uid'):
+            queryset = queryset.filter(deleted=False)
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
@@ -889,13 +880,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         job = instance.job
 
-
         perms, job_ids = JobPermission.userjobs(request.user, JobPermissionLevel.ADMIN.value)
         if not job.id in job_ids:
                return Response([{'detail': 'ADMIN permission is required to delete this DataPack.'}],
                             status.HTTP_400_BAD_REQUEST)
 
-        instance.soft_delete(user=request.user)
+        permissions = JobPermission.jobpermissions(job)
+
+        instance.soft_delete(user=request.user, permissions=permissions)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def list(self, request, *args, **kwargs):
@@ -911,6 +903,9 @@ class ExportRunViewSet(viewsets.ModelViewSet):
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
             return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+        # This is to display deleted runs on the status and download
+        if not request.query_params.get('job_uid'):
+            queryset = queryset.filter(deleted=False)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={'request': request})
@@ -929,12 +924,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         :param kwargs:
         :return: the serialized runs
         """
+
+        deleted = request.data.get('deleted', False)
         queryset = self.filter_queryset(self.get_queryset())
 
         if "permissions" in request.data:
             job_ids = get_job_ids_via_permissions(request.data["permissions"])
             queryset = ExportRun.objects.filter(
-            Q(job_id__in=job_ids) & Q(deleted=False))
+            Q(job_id__in=job_ids))
 
         search_geojson = self.request.data.get('geojson', None)
         if search_geojson is not None:
@@ -973,13 +970,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
                     Q(job__event__icontains=search_term)
                 )
             )
-
+        if not request.query_params.get('job_uid'):
+            queryset = queryset.filter(deleted=False)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ExportRunSerializer(page, many=True, context={'request': request, 'no_license': True})
+            serializer = self.get_serializer(page, many=True, context={'request': request, 'no_license': True})
             return self.get_paginated_response(serializer.data)
         else:
-            serializer = ExportRunSerializer(queryset, many=True, context={'request': request, 'no_license': True})
+            serializer = self.get_serializer(queryset, many=True, context={'request': request, 'no_license': True})
             return Response(serializer.data, status=status.HTTP_200_OK)
 
     @transaction.atomic
@@ -1136,12 +1134,12 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=uid)
+        data_provider_task_record = DataProviderTaskRecord.objects.get(uid=uid)
 
-        if export_provider_task.run.user != request.user and not request.user.is_superuser:
+        if data_provider_task_record.run.user != request.user and not request.user.is_superuser:
             return Response({'success': False}, status=status.HTTP_403_FORBIDDEN)
 
-        cancel_export_provider_task.run(export_provider_task_uid=uid, canceling_username=request.user.username)
+        cancel_export_provider_task.run(data_provider_task_uid=data_provider_task_record.uid, canceling_username=request.user.username)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
@@ -1556,7 +1554,6 @@ class GroupViewSet(viewsets.ModelViewSet):
             targetusers = request.data[permissionlabel]
 
             ## Add new users for this permission level
-
             newusers = list(set(targetusers) - set(currentusers))
             users = User.objects.filter(username__in=newusers).all()
             verb = NotificationVerb.ADDED_TO_GROUP.value
@@ -1789,64 +1786,73 @@ def get_job_ids_via_permissions(permissions):
 
     return master_job_list
 
+
 class SwaggerSchemaView(views.APIView):
+
     _ignore_model_permissions = True
     exclude_from_schema = True
     permission_classes = [AllowAny]
     renderer_classes = [
-        CoreJSONRenderer,
-        renderers.OpenAPIRenderer,
-        renderers.SwaggerUIRenderer
+        # CoreJSONRenderer,
+        CustomOpenAPIRenderer,
+        CustomSwaggerUIRenderer
     ]
 
     def get(self, request):
-        generator = SchemaGenerator()
-        generator.get_schema(request=request)
-        links = generator.get_links(request=request)
-        # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
-        partial_update_link = links.get('users', {}).get('partial_update')
-        if partial_update_link:
-            links['users']['partial_update'] = coreapi.Link(
-                url=partial_update_link.url,
-                action=partial_update_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='username',
-                        required=True,
-                        location='path')),
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=partial_update_link.description
+
+        try:
+            import coreapi
+            generator = SchemaGenerator()
+            generator.get_schema(request=request)
+            links = generator.get_links(request=request)
+            # This obviously shouldn't go here.  Need to implment better way to inject CoreAPI customizations.
+            partial_update_link = links.get('users', {}).get('partial_update')
+            if partial_update_link:
+                links['users']['partial_update'] = coreapi.Link(
+                    url=partial_update_link.url,
+                    action=partial_update_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='username',
+                            required=True,
+                            location='path')),
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=partial_update_link.description
+                )
+
+            members_link = links.get('users', {}).get('members')['create']
+            if members_link:
+                links['users']['members'] = coreapi.Link(
+                    url=members_link.url,
+                    action=members_link.action,
+                    fields=[
+                        (coreapi.Field(
+                            name='data',
+                            required=True,
+                            location='form',
+                        )),
+                    ],
+                    description=members_link.description
+                )
+
+            schema = coreapi.Document(
+                title='EventKit API',
+                url='/api/docs',
+                content=links
             )
 
-        members_link = links.get('users', {}).get('members')['create']
-        if members_link:
-            links['users']['members'] = coreapi.Link(
-                url=members_link.url,
-                action=members_link.action,
-                fields=[
-                    (coreapi.Field(
-                        name='data',
-                        required=True,
-                        location='form',
-                    )),
-                ],
-                description=members_link.description
-            )
+            if not schema:
+                raise exceptions.ValidationError(
+                    'A schema could not be generated, please ensure that you are logged in.'
+                )
 
-        schema = coreapi.Document(
-            title='EventKit API',
-            url='/api/docs',
-            content=links
-        )
-
-        if not schema:
-            raise exceptions.ValidationError(
-                'A schema could not be generated, please ensure that you are logged in.'
-            )
-        return Response(schema)
+            return Response(schema)
+        except ImportError:
+            # CoreAPI couldn't be imported, falling back to static schema
+            return Response()
 

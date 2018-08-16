@@ -3,12 +3,10 @@ import logging
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
-
+from mock import patch
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-from mock import patch
-from ...core.models import JobPermission
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, DataProviderTask
 
@@ -41,7 +39,7 @@ class TestJobFilter(APITestCase):
         self.job1 = Job.objects.create(name='TestJob1', description='Test description', user=self.user1,
                                        the_geom=the_geom)
         self.job2 = Job.objects.create(name='TestJob2', description='Test description', user=self.user2,
-                                       the_geom=the_geom)
+                                       the_geom=the_geom, featured=True)
         export_format = ExportFormat.objects.get(slug='shp')
         export_provider = DataProvider.objects.get(slug='osm-generic')
         provider_task = DataProviderTask.objects.create(provider=export_provider)
@@ -54,7 +52,6 @@ class TestJobFilter(APITestCase):
                                 HTTP_ACCEPT_LANGUAGE='en',
                                 HTTP_HOST='testserver')
 
-
     def test_filterset_no_user(self, ):
         url = reverse('api:jobs-list')
         url += '?start=2015-01-01&end=2030-08-01'
@@ -66,3 +63,9 @@ class TestJobFilter(APITestCase):
         url += '?start=2015-01-01&end=2030-08-01&user=demo1'
         response = self.client.get(url)
         self.assertEquals(1, len(response.data))
+
+    def test_filterset_featured(self, ):
+        url = reverse('api:jobs-list')
+        url += '?featured=true'
+        response = self.client.get(url)
+        self.assertEquals(0, len(response.data))

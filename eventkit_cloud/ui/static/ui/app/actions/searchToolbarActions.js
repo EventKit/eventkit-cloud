@@ -13,11 +13,12 @@ export function getGeocode(query) {
                 const data = [];
                 features.forEach((feature) => {
                     if (feature.geometry) {
+                        const featureCopy = { ...feature };
                         // prep data for TypeAhead https://github.com/ericgio/react-bootstrap-typeahead/blob/master/docs/Data.md
-                        Object.keys(feature.properties).forEach((k) => {
-                            feature[k] = feature.properties[k];
+                        Object.keys(featureCopy.properties).forEach((k) => {
+                            featureCopy[k] = featureCopy.properties[k];
                         });
-                        data.push(feature);
+                        data.push(featureCopy);
                     }
                 });
                 dispatch({ type: 'RECEIVED_GEOCODE', data });

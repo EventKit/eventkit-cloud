@@ -1,18 +1,78 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import { browserHistory } from 'react-router';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import FloatingActionButton from 'material-ui/FloatingActionButton';
-import NavigationArrowBack from 'material-ui/svg-icons/navigation/arrow-back';
-import NavigationArrowForward from 'material-ui/svg-icons/navigation/arrow-forward';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
+import Warning from '@material-ui/icons/Warning';
+import Button from '@material-ui/core/Button';
+import NavigationArrowBack from '@material-ui/icons/ArrowBack';
+import NavigationArrowForward from '@material-ui/icons/ArrowForward';
+import NavigationCheck from '@material-ui/icons/Check';
 import { BreadcrumbStepper } from '../../components/CreateDataPack/BreadcrumbStepper';
 import ExportAOI from '../../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../../components/CreateDataPack/ExportInfo';
 import ExportSummary from '../../components/CreateDataPack/ExportSummary';
 import * as utils from '../../utils/mapUtils';
+
+const providers = [
+    {
+        display: true,
+        id: 1,
+        model_url: 'http://cloud.eventkit.test/api/providers/1',
+        type: 'osm-generic',
+        created_at: '2017-03-24T17:44:22.940611Z',
+        updated_at: '2017-03-24T17:44:22.940629Z',
+        uid: 'be401b02-63d3-4080-943a-0093c1b5a914',
+        name: 'OpenStreetMap Data (Themes)',
+        slug: 'osm-generic',
+        preview_url: '',
+        service_copyright: '',
+        service_description: '',
+        layer: null,
+        level_from: 0,
+        level_to: 10,
+        export_provider_type: 1,
+    },
+];
+
+const formats = [
+    {
+        uid: 'fa94240a-14d1-469f-8b31-335cab6b682a',
+        url: 'http://cloud.eventkit.test/api/formats/shp',
+        slug: 'shp',
+        name: 'ESRI Shapefile Format',
+        description: 'Esri Shapefile (OSM Schema)',
+    },
+    {
+        uid: '381e8529-b6d8-46f4-b6d1-854549ae652c',
+        url: 'http://cloud.eventkit.test/api/formats/gpkg',
+        slug: 'gpkg',
+        name: 'Geopackage',
+        description: 'GeoPackage',
+    },
+    {
+        uid: 'db36b559-bbca-4322-b059-048dabeceb67',
+        url: 'http://cloud.eventkit.test/api/formats/gtiff',
+        slug: 'gtiff',
+        name: 'GeoTIFF Format',
+        description: 'GeoTIFF Raster',
+    },
+    {
+        uid: '79f1d574-ca37-4011-a99c-0484dd331dc3',
+        url: 'http://cloud.eventkit.test/api/formats/kml',
+        slug: 'kml',
+        name: 'KML Format',
+        description: 'Google Earth KMZ',
+    },
+    {
+        uid: '20a6ba89-e03d-4610-b61f-158a74f963c4',
+        url: 'http://cloud.eventkit.test/api/formats/sqlite',
+        slug: 'sqlite',
+        name: 'SQLITE Format',
+        description: 'SQlite SQL',
+    },
+];
 
 describe('BreadcrumbStepper component', () => {
     const muiTheme = getMuiTheme();
@@ -35,6 +95,8 @@ describe('BreadcrumbStepper component', () => {
         },
         routes: [],
         formats,
+        walkthroughClicked: false,
+        createExportRequest: () => {},
         submitJob: () => {},
         getProviders: () => {},
         setNextDisabled: () => {},
@@ -42,15 +104,17 @@ describe('BreadcrumbStepper component', () => {
         setExportInfoDone: () => {},
         clearAoiInfo: () => {},
         clearExportInfo: () => {},
+        onWalkthroughReset: () => {},
         clearJobInfo: () => {},
         getNotifications: () => {},
         getNotificationsUnreadCount: () => {},
+        getFormats: () => {},
     });
     const getWrapper = props => (
         shallow(<BreadcrumbStepper {...props} />, {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         })
     );
@@ -61,8 +125,8 @@ describe('BreadcrumbStepper component', () => {
         expect(wrapper.find(NavigationArrowBack)).toHaveLength(1);
         expect(wrapper.find(ExportAOI)).toHaveLength(1);
         expect(wrapper.childAt(0).childAt(0).childAt(0).text()).toEqual('STEP 1 OF 3:  Define Area of Interest');
-        expect(wrapper.find(FloatingActionButton)).toHaveLength(1);
-        expect(wrapper.find(FloatingActionButton).props().disabled).toEqual(true);
+        expect(wrapper.find(Button)).toHaveLength(1);
+        expect(wrapper.find(Button).props().disabled).toEqual(true);
         expect(wrapper.find(NavigationArrowForward)).toHaveLength(1);
     });
 
@@ -87,7 +151,7 @@ describe('BreadcrumbStepper component', () => {
             ],
         };
         wrapper.setProps(nextProps);
-        expect(getMessageSpy.calledTwice).toBe(true);
+        expect(getMessageSpy.called).toBe(true);
     });
 
     it('componentDidMount should set nextDisabled and get providers and formats', () => {
@@ -97,8 +161,7 @@ describe('BreadcrumbStepper component', () => {
         props.getProviders = sinon.spy();
         props.getFormats = sinon.spy();
         props.setNextDisabled = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().componentDidMount();
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(props.setNextDisabled.calledOnce).toBe(true);
         expect(props.getProviders.calledOnce).toBe(true);
@@ -159,7 +222,7 @@ describe('BreadcrumbStepper component', () => {
         const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(message.find('.BreadcrumbStepper-error-container')).toHaveLength(1);
@@ -192,11 +255,16 @@ describe('BreadcrumbStepper component', () => {
         const wrapper = getWrapper(props);
 
         let content = wrapper.instance().getStepContent(0);
-        expect(content).toEqual(<ExportAOI />);
+        expect(content).toEqual(<ExportAOI
+            onWalkthroughReset={props.onWalkthroughReset}
+            walkthroughClicked={props.walkthroughClicked}
+        />);
 
         content = wrapper.instance().getStepContent(1);
         expect(content).toEqual((
             <ExportInfo
+                onWalkthroughReset={props.onWalkthroughReset}
+                walkthroughClicked={props.walkthroughClicked}
                 providers={props.providers}
                 formats={props.formats}
                 handlePrev={wrapper.instance().handlePrev}
@@ -204,10 +272,17 @@ describe('BreadcrumbStepper component', () => {
         ));
 
         content = wrapper.instance().getStepContent(2);
-        expect(content).toEqual(<ExportSummary allFormats={props.formats} />);
+        expect(content).toEqual(<ExportSummary
+            onWalkthroughReset={props.onWalkthroughReset}
+            walkthroughClicked={props.walkthroughClicked}
+            allFormats={props.formats}
+        />);
 
         content = wrapper.instance().getStepContent(3);
-        expect(content).toEqual(<ExportAOI />);
+        expect(content).toEqual(<ExportAOI
+            onWalkthroughReset={props.onWalkthroughReset}
+            walkthroughClicked={props.walkthroughClicked}
+        />);
     });
 
     it('getButtonContent should return the correct content for each stepIndex', () => {
@@ -217,28 +292,28 @@ describe('BreadcrumbStepper component', () => {
         let content = mount(wrapper.instance().getButtonContent(0), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getButtonContent(1),{
+        content = mount(wrapper.instance().getButtonContent(1), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getButtonContent(2),{
+        content = mount(wrapper.instance().getButtonContent(2), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationCheck)).toHaveLength(1);
 
         content = mount(wrapper.instance().getButtonContent(3));
@@ -252,7 +327,7 @@ describe('BreadcrumbStepper component', () => {
         let content = mount(wrapper.instance().getPreviousButtonContent(0), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
@@ -260,7 +335,7 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getPreviousButtonContent(1), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
@@ -268,10 +343,10 @@ describe('BreadcrumbStepper component', () => {
         content = mount(wrapper.instance().getPreviousButtonContent(2), {
             context: { muiTheme },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
+                muiTheme: PropTypes.object,
             },
         });
-        expect(content.find(FloatingActionButton)).toHaveLength(1);
+        expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 
         content = mount(wrapper.instance().getPreviousButtonContent(3));
@@ -436,63 +511,3 @@ describe('BreadcrumbStepper component', () => {
         expect(instance.props.router.push.getCall(0).args[0]).toBe('/someRoute');
     });
 });
-
-const providers = [
-    {
-        "display":true,
-        "id": 1,
-        "model_url": "http://cloud.eventkit.test/api/providers/1",
-        "type": "osm-generic",
-        "created_at": "2017-03-24T17:44:22.940611Z",
-        "updated_at": "2017-03-24T17:44:22.940629Z",
-        "uid": "be401b02-63d3-4080-943a-0093c1b5a914",
-        "name": "OpenStreetMap Data (Themes)",
-        "slug": "osm-generic",
-        "preview_url": "",
-        "service_copyright": "",
-        "service_description": "",
-        "layer": null,
-        "level_from": 0,
-        "level_to": 10,
-        "export_provider_type": 1
-    }
-]
-
-const formats = [
-    {
-        "uid": "fa94240a-14d1-469f-8b31-335cab6b682a",
-        "url": "http://cloud.eventkit.test/api/formats/shp",
-        "slug": "shp",
-        "name": "ESRI Shapefile Format",
-        "description": "Esri Shapefile (OSM Schema)"
-    },
-    {
-        "uid": "381e8529-b6d8-46f4-b6d1-854549ae652c",
-        "url": "http://cloud.eventkit.test/api/formats/gpkg",
-        "slug": "gpkg",
-        "name": "Geopackage",
-        "description": "GeoPackage"
-    },
-    {
-        "uid": "db36b559-bbca-4322-b059-048dabeceb67",
-        "url": "http://cloud.eventkit.test/api/formats/gtiff",
-        "slug": "gtiff",
-        "name": "GeoTIFF Format",
-        "description": "GeoTIFF Raster"
-    },
-    {
-        "uid": "79f1d574-ca37-4011-a99c-0484dd331dc3",
-        "url": "http://cloud.eventkit.test/api/formats/kml",
-        "slug": "kml",
-        "name": "KML Format",
-        "description": "Google Earth KMZ"
-    },
-    {
-        "uid": "20a6ba89-e03d-4610-b61f-158a74f963c4",
-        "url": "http://cloud.eventkit.test/api/formats/sqlite",
-        "slug": "sqlite",
-        "name": "SQLITE Format",
-        "description": "SQlite SQL"
-    }
-]
-

@@ -1,10 +1,11 @@
-import os
 import re
-import yaml
 import unicodedata
+
+import yaml
 from yaml.constructor import ConstructorError
-from yaml.scanner import ScannerError
 from yaml.parser import ParserError
+from yaml.scanner import ScannerError
+
 from sql import SQLValidator
 
 CREATE_TEMPLATE = """CREATE TABLE {0}(
@@ -146,14 +147,10 @@ class FeatureSelection(object):
             if validate_schema(loaded_doc):
                 self._doc = loaded_doc
                 return self._doc
-        except (ConstructorError,ScannerError,ParserError) as e:
+        except (ConstructorError, ScannerError, ParserError) as e:
             line = e.problem_mark.line
             column = e.problem_mark.column
-            #print e.problem_mark.buffer
-            #print e.problem
             self._errors.append(e.problem)
-            # add exceptions
-            #self._valid = (self._yaml != None)
 
     @property
     def valid(self):
@@ -200,10 +197,10 @@ class FeatureSelection(object):
     def __str__(self):
         return str(self.doc)
 
-    def key_union(self,geom_type=None):
+    def key_union(self, geom_type=None):
         s = set()
         for t in self.themes:
-            if geom_type == None or (geom_type in self.geom_types(t)):
+            if geom_type is None or (geom_type in self.geom_types(t)):
                 for key in self.key_selections(t):
                     s.add(key)
                 for key in self.keys_from_sql[t]:
@@ -223,7 +220,7 @@ class FeatureSelection(object):
             return ' INTEGER(4) DEFAULT 0'
         return ' TEXT'
 
-    def create_sql(self,theme,geom_type):
+    def create_sql(self, theme, geom_type):
         key_selections = ['"{0}"'.format(key) for key in self.key_selections(theme)]
         cols = OSM_ID_TAGS[geom_type] + key_selections
         table_name = slugify(theme) + "_" + geom_type

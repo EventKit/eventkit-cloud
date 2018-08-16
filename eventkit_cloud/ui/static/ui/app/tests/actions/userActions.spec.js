@@ -18,8 +18,16 @@ describe('userActions actions', () => {
             ],
         });
 
-        const expectedActions = [{ type: types.USER_LOGGED_OUT },
-            { payload: { args: [{ pathname: '/login', search: undefined }], method: 'push' }, type: '@@router/CALL_HISTORY_METHOD' }];
+        const expectedActions = [
+            { type: types.USER_LOGGED_OUT },
+            {
+                payload: {
+                    args: [{ pathname: '/login', search: undefined }],
+                    method: 'push',
+                },
+                type: '@@router/CALL_HISTORY_METHOD',
+            },
+        ];
         const store = mockStore({ user: { username: 'ExampleUser' } });
 
         return store.dispatch(userActions.logout())

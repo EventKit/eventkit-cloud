@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
@@ -62,7 +63,7 @@ describe('GroupBody component', () => {
     it('should sort members by name', () => {
         const props = getProps();
         const sortSpy = sinon.spy(MembersBody.prototype, 'sortByMember');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(sortSpy.calledOnce).toBe(true);
         sortSpy.restore();
     });
@@ -250,7 +251,7 @@ describe('GroupBody component', () => {
         const e = { target: { value: 'search text' } };
         wrapper.instance().handleSearchInput(e);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ search: 'search text'}));
+        expect(stateStub.calledWith({ search: 'search text' }));
         stateStub.restore();
     });
 

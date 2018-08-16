@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-import os
-import re
 import httplib
-from tempfile import NamedTemporaryFile
 import logging
 from functools import wraps
 from urllib import quote
+import os
+import re
 import urllib2
+from tempfile import NamedTemporaryFile
+
 import requests
-
 from mapproxy.client import http
-
 
 logger = logging.getLogger(__name__)
 
@@ -194,14 +193,11 @@ def patch_mapproxy_opener_cache(slug=None):
     Monkey-patches MapProxy's urllib opener constructor to include support for http cookies.
     :return:
     """
-    # Source: https://github.com/mapproxy/mapproxy/blob/a24cb41d3b3abcbb8a31460f4d1a0eee5312570a/mapproxy/client/http.py#L81
+    # Source: https://github.com/mapproxy/mapproxy/blob/1.11.0/mapproxy/client/http.py#L133
 
-    def _new_call(self, ssl_ca_certs, url, username, password):
+    def _new_call(self, ssl_ca_certs, url, username, password, insecure=False):
         if ssl_ca_certs not in self._opener or slug not in self._opener:
-            https_handler = urllib2.BaseHandler()
-            if ssl_ca_certs:
-                connection_class = http.verified_https_connection_with_ca_certs(ssl_ca_certs)
-                https_handler = http.VerifiedHTTPSConnection(connection_class=connection_class)
+            https_handler = http.build_https_handler(ssl_ca_certs, insecure)
             passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
             handlers = [urllib2.HTTPCookieProcessor,
                         urllib2.HTTPRedirectHandler(),

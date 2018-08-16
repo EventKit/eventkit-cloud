@@ -1,8 +1,8 @@
+import logging
 import os
 
 import boto3
 from django.conf import settings
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +23,13 @@ def upload_to_s3(run_uuid, source_path, destination_filename, client=None, user_
     if not client:
         client = get_s3_client()
 
-    asset_path = os.path.join(
-        settings.EXPORT_STAGING_ROOT,
-        run_uuid,
-        source_path
-    )
-
-    if not os.path.isfile(asset_path):
-        raise Exception("The file path given to upload to S3: {0}\n Does not exist.".format(asset_path))
+    if not os.path.isfile(source_path):
+        raise Exception("The file path given to upload to S3:\n {0} \n Does not exist.".format(source_path))
 
     asset_remote_path = os.path.join(run_uuid, destination_filename)
 
     from audit_logging.file_logging import logging_open
-    with logging_open(asset_path, 'rb', user_details=user_details) as asset_file:
+    with logging_open(source_path, 'rb', user_details=user_details) as asset_file:
         client.upload_fileobj(
             Bucket=settings.AWS_BUCKET_NAME,
             Key=asset_remote_path,
@@ -73,8 +67,8 @@ def delete_from_s3(run_uid=None, download_url=None, client=None):
 
     for item in items:
         _key = item['Key']
-        response = client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
-        if not response.get("DeleteMarker"):
+        client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=_key)
+        if 'Contents' in client.list_objects(Bucket=settings.AWS_BUCKET_NAME, Prefix=_key):
             logger.warn("Could not delete {0} from S3.".format(_key))
 
 

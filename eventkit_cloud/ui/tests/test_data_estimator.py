@@ -2,9 +2,9 @@
 import logging
 
 from django.test import TestCase
-
-from ..data_estimator import get_size_estimate, get_gb_estimate
 from mock import Mock, patch
+
+from eventkit_cloud.ui.data_estimator import get_size_estimate, get_gb_estimate
 
 logger = logging.getLogger(__name__)
 

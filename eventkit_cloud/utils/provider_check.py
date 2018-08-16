@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from django.utils.translation import ugettext as _
-from django.conf import settings
-from enum import Enum
 import json
 import logging
-from osgeo import ogr
 import re
-import requests
 import xml.etree.ElementTree as ET
 from StringIO import StringIO
 
+import requests
 from django.conf import settings
+from django.contrib.gis.geos import GEOSGeometry, Polygon, GeometryCollection
+from django.utils.translation import ugettext as _
+from enum import Enum
 
-from eventkit_cloud.utils import auth_requests, gdalutils
-from eventkit_cloud.jobs.models import DataProvider
+from eventkit_cloud.utils import auth_requests
 
 logger = logging.getLogger(__name__)
 
@@ -121,9 +119,14 @@ class ProviderCheck(object):
             if isinstance(aoi_geojson, str):
                 aoi_geojson = json.loads(aoi_geojson)
 
-            aoi_geom = aoi_geojson['features'][0]['geometry']
-            logger.debug("AOI Geometry: {}".format(json.dumps(aoi_geom)))
-            self.aoi = ogr.CreateGeometryFromJson(json.dumps(aoi_geom))
+            geoms = tuple([GEOSGeometry(json.dumps(feature.get('geometry')), srid=4326)
+                           for feature in aoi_geojson.get('features')])
+
+            geom_collection = GeometryCollection(geoms, srid=4326)
+
+            logger.debug("AOI: {}".format(json.dumps(aoi_geojson)))
+
+            self.aoi = geom_collection
         else:
             self.aoi = None
             logger.debug("AOI was not given")
@@ -135,16 +138,16 @@ class ProviderCheck(object):
         Return True if the AOI selection's area is lower than the maximum for this provider, otherwise False.
         :return: True if AOI is lower than area limit
         """
+
         if self.aoi is None or self.max_area <= 0:
             return True
 
-        gj = self.aoi.ExportToJson()
+        geom = self.aoi.transform(3857, clone=True)
+        area = geom.area
 
-        # Can't use self.aoi.GetArea() here, since it treats coordinates as cartesian, not spherical,
-        # and would try to give an answer in square degrees.
-        # Coordinate transformation doesn't work either, so it's up to an estimation function in gdalutils.
-        area = gdalutils.get_area(gj)
-        return area < self.max_area
+        area_sq_km = area / 1000000
+
+        return area_sq_km < self.max_area
 
     def get_check_response(self):
         """
@@ -303,17 +306,9 @@ class OWSProviderCheck(ProviderCheck):
         """
         logger.debug("Data provider bbox: [minx, miny, maxx, maxy] = {}".format(str(bbox)))
         minx, miny, maxx, maxy = bbox
+        bbox = Polygon.from_bbox((minx, miny, maxx, maxy))
 
-        bbox_ring = ogr.Geometry(ogr.wkbLinearRing)
-        bbox_ring.AddPoint(minx, miny)
-        bbox_ring.AddPoint(maxx, miny)
-        bbox_ring.AddPoint(maxx, maxy)
-        bbox_ring.AddPoint(minx, maxy)
-        bbox_ring.AddPoint(minx, miny)
-        bbox = ogr.Geometry(ogr.wkbPolygon)
-        bbox.AddGeometry(bbox_ring)
-
-        if self.aoi is not None and not self.aoi.Intersects(bbox):
+        if self.aoi is not None and not self.aoi.intersects(bbox):
             self.result = CheckResults.NO_INTERSECT
 
     def validate_response(self, response):

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from osgeo import gdal, ogr
-from mock import Mock, patch, call, MagicMock,ANY
 from uuid import uuid4
+
 from django.test import TestCase
+from mock import Mock, patch, call, MagicMock, ANY
+from osgeo import gdal, ogr
 
-
-from ..gdalutils import open_ds, cleanup_ds, clip_dataset, is_envelope, convert, get_transform, get_distance, \
-    get_dimensions, get_line, merge_geotiffs, get_meta
-
+from eventkit_cloud.utils.gdalutils import clip_dataset, is_envelope, convert, get_distance, \
+    get_dimensions, merge_geotiffs, get_meta, get_band_statistics
 
 logger = logging.getLogger(__name__)
 
@@ -266,4 +265,11 @@ class TestGdalUtils(TestCase):
             mock_tp.exitcode = 1
             merge_geotiffs(in_files, out_file, task_uid=task_uid)
 
-
+    @patch('eventkit_cloud.utils.gdalutils.gdal')
+    def test_get_band_statistics(self, mock_gdal):
+        in_file = "test.tif"
+        example_stats = [0, 10, 5, 2]
+        mock_gdal.Open.return_value.GetRasterBand.return_value.GetStatistics.return_value = example_stats
+        returned_stats = get_band_statistics(in_file)
+        self.assertEqual(example_stats, returned_stats)
+        mock_gdal.Open.assert_called_once_with(in_file)

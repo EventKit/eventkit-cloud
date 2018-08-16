@@ -1,13 +1,13 @@
-import React, {PropTypes} from 'react'
-import {connect} from 'react-redux'
-import {login} from '../actions/userActions'
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme'
+import PropTypes from 'prop-types';
+import React from 'react';
+import { connect } from 'react-redux';
+import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import axios from 'axios';
 import RaisedButton from 'material-ui/RaisedButton';
+import { login } from '../actions/userActions';
 
 export class Form extends React.Component {
-
     constructor(props) {
         super(props);
         this.onChange = this.onChange.bind(this);
@@ -16,38 +16,13 @@ export class Form extends React.Component {
             username: '',
             password: '',
             buttonDisabled: true,
-            login_form: false,
-            oauth_name: "",
+            loginForm: false,
+            oauthName: '',
         };
     }
 
-    onChange(event) {
-        this.setState({[event.target.name]: event.target.value}, function () {
-            if (!this.state.username || !this.state.password) {
-                if(!this.state.buttonDisabled) {
-                    this.setState({buttonDisabled: true});
-                }
-            }
-            else {
-                if(this.state.buttonDisabled) {
-                    this.setState({buttonDisabled: false});
-                }
-            }
-        });
-    }
-
-    checkAuthEndpoint() {
-        return axios.get('/auth').then(function (response) {
-            this.setState({login_form: true});
-        }.bind(this)).catch(function (response) {
-        });
-    }
-
-    checkOAuthEndpoint() {
-        return axios.get('/oauth', {params: {query: "name"}}).then(function (response) {
-            this.setState({oauth_name: response.data.name});
-        }.bind(this)).catch(function (response) {
-        });
+    getChildContext() {
+        return { muiTheme: getMuiTheme(baseTheme) };
     }
 
     componentDidMount() {
@@ -55,18 +30,40 @@ export class Form extends React.Component {
         this.checkOAuthEndpoint();
     }
 
+    onChange(event) {
+        this.setState({ [event.target.name]: event.target.value }, () => {
+            if (!this.state.username || !this.state.password) {
+                if (!this.state.buttonDisabled) {
+                    this.setState({ buttonDisabled: true });
+                }
+            } else if (this.state.buttonDisabled) {
+                this.setState({ buttonDisabled: false });
+            }
+        });
+    }
+
+    checkAuthEndpoint() {
+        return axios.get('/auth').then(() => {
+            this.setState({ loginForm: true });
+        }).catch(() => {
+        });
+    }
+
+    checkOAuthEndpoint() {
+        return axios.get('/oauth', { params: { query: 'name' } }).then((response) => {
+            this.setState({ oauthName: response.data.name });
+        }).catch(() => {
+        });
+    }
+
     handleSubmit(event) {
         event.preventDefault();
-        this.props.handleLogin(this.state, (this.props.location ? this.props.location.query : ""));
+        this.props.handleLogin(this.state, (this.props.location ? this.props.location.query : ''));
     }
 
     handleOAuth(event) {
         event.preventDefault();
         window.location.assign('/oauth');
-    }
-
-    getChildContext() {
-        return {muiTheme: getMuiTheme(baseTheme)};
     }
 
     render() {
@@ -94,75 +91,95 @@ export class Form extends React.Component {
                 color: '#e2e2e2',
                 margin: '15px auto 0px auto',
                 padding: '10px',
-            }
-        }
-        let login_form = ''
-        let oauth_button = ''
-        if (this.state.login_form) {
-            login_form = <form onSubmit={this.handleSubmit} onChange={this.onChange} style={styles.form}>
-                <div style={styles.heading}>Enter Login Information</div>
-                <input 
-                    id="username"
-                    name="username"
-                    placeholder="Username"
-                    style={styles.input}
-                    type="text"
-                    maxLength="150"
-                />
-                <input 
-                    id="password"
-                    name="password"
-                    placeholder="Password"
-                    onChange={this.onChange}
-                    style={styles.input}
-                    type="password"
-                    maxLength="256"
-                />
-                <RaisedButton 
-                    style={{margin: '30px auto', width: '150px'}}
-                    backgroundColor={'#4598bf'}
-                    label={'Login'}
-                    labelColor={'#fff'}
-                    type={'submit'}
-                    name={'submit'}
-                    disabled={this.state.buttonDisabled}
-                />
-            </form>
-        }
-        if (this.state.oauth_name) {
-            if (!this.state.login_form) {
-                
-                oauth_button = <div>
-                    <div style={{margin: '40px auto', fontSize: '24px', color: '#fff'}}>
-                        <strong>Welcome to EventKit</strong>
-                    </div>
-                    <RaisedButton 
-                        style={{margin: '40px auto', minWidth: '150px'}}
-                        labelStyle={{textTransform: 'none'}}
-                        backgroundColor={'#4598bf'}
-                        label={`Login with ${this.state.oauth_name}`}
-                        labelColor={'#fff'}
-                        onClick={this.handleOAuth}
+            },
+        };
+        let loginForm = '';
+        let oauthButton = '';
+        if (this.state.loginForm) {
+            loginForm = (
+                <form onSubmit={this.handleSubmit} onChange={this.onChange} style={styles.form}>
+                    <div style={styles.heading}>Enter Login Information</div>
+                    <input
+                        id="username"
+                        name="username"
+                        placeholder="Username"
+                        style={styles.input}
+                        type="text"
+                        maxLength="150"
                     />
-                </div>
-            }
-            else {
-                oauth_button = <a style={{color: '#4598bf', margin: '15px auto'}} onClick={this.handleOAuth}><strong>Or, login with {this.state.oauth_name}</strong></a>
+                    <input
+                        id="password"
+                        name="password"
+                        placeholder="Password"
+                        onChange={this.onChange}
+                        style={styles.input}
+                        type="password"
+                        maxLength="256"
+                    />
+                    <RaisedButton
+                        style={{ margin: '30px auto', width: '150px' }}
+                        backgroundColor="#4598bf"
+                        label="Login"
+                        labelColor="#fff"
+                        type="submit"
+                        name="submit"
+                        disabled={this.state.buttonDisabled}
+                    />
+                </form>
+            );
+        }
+        if (this.state.oauthName) {
+            if (!this.state.loginForm) {
+                oauthButton = (
+                    <div className="qa-LoginForm-oauth">
+                        <div style={{ margin: '40px auto', fontSize: '24px', color: '#fff' }}>
+                            <strong>Welcome to EventKit</strong>
+                        </div>
+                        <RaisedButton
+                            style={{ margin: '40px auto', minWidth: '150px' }}
+                            labelStyle={{ textTransform: 'none' }}
+                            backgroundColor="#4598bf"
+                            label={`Login with ${this.state.oauthName}`}
+                            labelColor="#fff"
+                            onClick={this.handleOAuth}
+                        />
+                    </div>
+                );
+            } else {
+                oauthButton = (
+                    <span
+                        role="button"
+                        tabIndex={0}
+                        style={{ color: '#4598bf', cursor: 'pointer', margin: '15px auto' }}
+                        onClick={this.handleOAuth}
+                        onKeyPress={this.handleOAuth}
+                        className="qa-LoginForm-oauth"
+                    >
+                        <strong>Or, login with {this.state.oauthName}</strong>
+                    </span>
+                );
             }
         }
         return (
-            <div style={{verticalAlign: 'middle', textAlign: 'center', marginTop: '30px'}}>
-                {login_form}
-                {oauth_button}
-                {!login_form && !oauth_button ? 
-                    <div style={{color: '#fff', marginTop: '150px'}}>
+            <div style={{ verticalAlign: 'middle', textAlign: 'center', marginTop: '30px' }}>
+                {loginForm}
+                {oauthButton}
+                {!loginForm && !oauthButton ?
+                    <div style={{ color: '#fff', marginTop: '150px' }}>
                         No login methods available, please contact an administrator
                     </div>
-                : null}
+                    : null}
             </div>
         );
     }
 }
+
+Form.propTypes = {
+    handleLogin: PropTypes.func.isRequired,
+    location: PropTypes.shape({
+        query: PropTypes.object,
+    }).isRequired,
+};
 
 function mapDispatchToProps(dispatch) {
     return {
@@ -173,7 +190,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 Form.childContextTypes = {
-    muiTheme: React.PropTypes.object.isRequired,
-}
+    muiTheme: PropTypes.object.isRequired,
+};
 
 export default connect(null, mapDispatchToProps)(Form);

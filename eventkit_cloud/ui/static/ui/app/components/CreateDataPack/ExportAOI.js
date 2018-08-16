@@ -1,7 +1,9 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
+import Joyride from 'react-joyride';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -33,7 +35,7 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
 import DropZone from '../MapTools/DropZone';
 import BufferDialog from './BufferDialog';
 import RevertDialog from './RevertDialog';
-import { updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled } from '../../actions/exportsActions';
+import { updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled, clearExportInfo } from '../../actions/exportsActions';
 import { getGeocode } from '../../actions/searchToolbarActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
 import {
@@ -42,9 +44,12 @@ import {
     MODE_DRAW_BBOX, MODE_NORMAL, MODE_DRAW_FREE, zoomToFeature, unwrapCoordinates,
     isViewOutsideValidExtent, goToValidExtent, isBox, isVertex, bufferGeojson, allHaveArea,
     getDominantGeometry } from '../../utils/mapUtils';
+
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import background from '../../../images/topoBackground.jpg';
+import background from '../../../images/topoBackground.png';
+import globe from '../../../images/globe-americas.svg';
+import { joyride } from '../../joyride.config';
 
 export const WGS84 = 'EPSG:4326';
 export const WEB_MERCATOR = 'EPSG:3857';
@@ -66,6 +71,7 @@ export class ExportAOI extends Component {
         this.handleGeoJSONUpload = this.handleGeoJSONUpload.bind(this);
         this.updateMode = this.updateMode.bind(this);
         this.handleZoomToSelection = this.handleZoomToSelection.bind(this);
+        this.callback = this.callback.bind(this);
         this.bufferMapFeature = this.bufferMapFeature.bind(this);
         this.downEvent = this.downEvent.bind(this);
         this.moveEvent = this.moveEvent.bind(this);
@@ -94,6 +100,10 @@ export class ExportAOI extends Component {
             showBuffer: false,
             validBuffer: true,
             mode: MODE_NORMAL,
+            steps: [],
+            stepIndex: 0,
+            isRunning: false,
+            fakeData: false,
             showReset: false,
             zoomLevel: 2,
         };
@@ -101,8 +111,8 @@ export class ExportAOI extends Component {
 
     componentDidMount() {
         // set up debounce functions for user text input
-        this.bufferFunction = debounce((e, val) => {
-            const valid = this.handleBufferChange(e, val);
+        this.bufferFunction = debounce((val) => {
+            const valid = this.handleBufferChange(val);
             if (valid !== this.state.valid) {
                 this.setState({ validBuffer: valid });
             }
@@ -123,11 +133,19 @@ export class ExportAOI extends Component {
             }
             this.setButtonSelected(this.props.aoiInfo.selectionType);
         }
+
+        const steps = joyride.ExportAOI;
+        this.joyrideAddSteps(steps);
     }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.importGeom.processed && !this.props.importGeom.processed) {
             this.handleGeoJSONUpload(nextProps.importGeom);
+        }
+
+        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && this.state.isRunning === false) {
+            this.joyride.reset(true);
+            this.setState({ isRunning: true });
         }
     }
 
@@ -158,7 +176,7 @@ export class ExportAOI extends Component {
     setMapView() {
         clearDraw(this.drawLayer);
         const ext = this.map.getView().calculateExtent(this.map.getSize());
-        const geom = new Polygon.fromExtent(ext);
+        const geom = Polygon.fromExtent(ext);
         const coords = geom.getCoordinates();
         const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
         geom.setCoordinates(unwrappedCoords);
@@ -403,8 +421,11 @@ export class ExportAOI extends Component {
         this.drawFreeInteraction.on('drawstart', this.handleDrawStart);
         this.drawFreeInteraction.on('drawend', this.handleDrawEnd);
 
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-globe';
+        const img = document.createElement('img');
+        img.src = globe;
+        img.alt = 'globe';
+        img.height = '16';
+        img.width = '16';
         this.map = new Map({
             controls: [
                 new ScaleLine({
@@ -420,7 +441,7 @@ export class ExportAOI extends Component {
                 }),
                 new ZoomToExtent({
                     className: css.olZoomToExtent,
-                    label: icon,
+                    label: img,
                     extent: [
                         -14251567.50789682,
                         -10584983.780136958,
@@ -483,7 +504,8 @@ export class ExportAOI extends Component {
             const coords = geom.getCoordinates();
             const unwrappedCoords = unwrapCoordinates(coords, this.map.getView().getProjection());
             geom.setCoordinates(unwrappedCoords);
-            const geojson = new GeoJSON().writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
+            const geo = new GeoJSON();
+            const geojson = geo.writeFeaturesObject(this.drawLayer.getSource().getFeatures(), {
                 dataProjection: WGS84,
                 featureProjection: WEB_MERCATOR,
             });
@@ -517,10 +539,10 @@ export class ExportAOI extends Component {
             coords = coords.map((coord) => {
                 const newCoord = [...coord];
                 if (coord[0] === this.coordinate[0]) {
-                    newCoord[0] = evt.coordinate[0];
+                    [newCoord[0]] = evt.coordinate;
                 }
                 if (coord[1] === this.coordinate[1]) {
-                    newCoord[1] = evt.coordinate[1];
+                    [, newCoord[1]] = evt.coordinate;
                 }
                 return newCoord;
             });
@@ -644,7 +666,12 @@ export class ExportAOI extends Component {
     }
 
     openBufferDialog() {
-        this.setState({ showBuffer: true });
+        // this still executes the call to setState immediately
+        // but it gives you the option to await the state change to be complete
+        return new Promise(async (resolve) => {
+            // resolve only when setState is completed
+            this.setState({ showBuffer: true }, resolve);
+        });
     }
 
     closeBufferDialog() {
@@ -654,8 +681,8 @@ export class ExportAOI extends Component {
         clearDraw(this.bufferLayer);
     }
 
-    handleBufferChange(e, newValue) {
-        const buffer = Number(newValue);
+    handleBufferChange(value) {
+        const buffer = Number(value);
         if (buffer <= 10000 && buffer >= 0) {
             // this.setState({ buffer });
             this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer });
@@ -713,12 +740,147 @@ export class ExportAOI extends Component {
 
     shouldEnableNext(geojson) {
         const area = allHaveArea(geojson);
-        const max = this.context.config.MAX_DATAPACK_AOI_SQ_KM;
+        const vectorMax = this.context.config.MAX_VECTOR_AOI_SQ_KM;
+        const rasterMax = this.context.config.MAX_RASTER_AOI_SQ_KM;
+        const max = Math.max(vectorMax, rasterMax);
         if (!max || !area) return area;
         return getSqKm(geojson) <= max;
     }
 
+    joyrideAddSteps(steps) {
+        let newSteps = steps;
+
+        if (!Array.isArray(newSteps)) {
+            newSteps = [newSteps];
+        }
+
+        if (!newSteps.length) return;
+
+        this.setState((currentState) => {
+            const nextState = { ...currentState };
+            nextState.steps = nextState.steps.concat(newSteps);
+            return nextState;
+        });
+    }
+
+    async callback(data) {
+        const {
+            action,
+            index,
+            type,
+            step,
+        } = data;
+
+        if (this.bounceBack) {
+            // if "bounceBack" that means this callback is being fired as
+            // part of an attempt to re-render a step and we want to immediately go forward again.
+            // ** See the very long comment at end of function for more details **
+            this.bounceBack = false;
+            this.setState({ stepIndex: index + 1 });
+            return;
+        }
+
+        if (!action) return;
+
+        if (action === 'close' || action === 'skip' || type === 'finished') {
+            if (this.state.fakeData === true) {
+                // if we loaded fake data we need to clean it all up
+                this.handleCancel();
+                this.props.clearExportInfo();
+                this.setAllButtonsDefault();
+                if (this.state.showBuffer) {
+                    this.setState({ showBuffer: false });
+                }
+                this.handleResetMap();
+                this.setState({ fakeData: false });
+            }
+
+            this.setState({ isRunning: false, stepIndex: 0 });
+            this.props.onWalkthroughReset();
+            this.joyride.reset(true);
+        } else {
+            if (index === 2 && type === 'step:before') {
+                //  if there is no aoi we load some fake data
+                if (this.props.aoiInfo.description === null) {
+                    this.drawFakeBbox();
+                    this.setState({ fakeData: true });
+                } else { // otherwise just zoom to whats already there
+                    this.handleZoomToSelection();
+                }
+            }
+            // if the buffer dialog is open we need to close it so its not hiding the AOI info
+            if (step.selector === '.qa-AoiInfobar-body' && type === 'tooltip:before' && this.state.showBuffer) {
+                this.closeBufferDialog();
+            }
+            // if we are done highlighting the buffer dialog we need to close it again
+            if (step.selector === '.qa-BufferDialog-main' && type === 'step:after') {
+                this.closeBufferDialog();
+            }
+            // if step:after or error we will want to advance to the next step
+            if (type === 'step:after' || type === 'error:target_not_found') {
+                if (type === 'error:target_not_found' && step.selector === '.qa-BufferDialog-main') {
+                    // Okay, we can probably all agree that this is a very janky solution, but it
+                    // was the best fix I could come up with of given the serious limitations of react-joyride at this time (v1.11.4).
+                    // We cannot open the buffer dialog prior to the buffer step because it will be too soon
+                    // and cover the AOI Infobar while that is being highlighted.
+                    // We also cannot open the buffer dialog in the buffer step because the "before:step" type happens
+                    // at the same time that react-joyride checks if an element exists.
+                    // The solution here is to accept that the buffer will not be open before react-joyride checks for its existance.
+                    // With that in mind we can check for the not_found error related to the buffer dialog.
+                    // When that error happens we open and wait for the dialog
+                    // then do a weird back and forth to get the tour to re-render the buffer step.
+
+                    // this lets the callback know that the nextime it is call it needs to simple go forward to the next step and exit
+                    this.bounceBack = true;
+                    // open the buffer dialog and wait for it to complete
+                    await this.openBufferDialog();
+                    // once the dialog is open we go back to the previous step which will then forward to this step again,
+                    // causing the tour step to render correctly this time
+                    this.setState({ stepIndex: index - 1 });
+                } else {
+                    // If we are not accounting for the stupid buffer issue, just go the the proper step index
+                    this.setState({ stepIndex: index + (action === 'back' ? -1 : 1) });
+                }
+            }
+        }
+    }
+
+    drawFakeBbox() {
+        //  generate fake coordinates and have the map zoom to them.
+        clearDraw(this.drawLayer);
+        const coords = [
+            [
+                [55.25307655334473, 25.256418028713934],
+                [55.32946586608887, 25.256418028713934],
+                [55.32946586608887, 25.296621588996263],
+                [55.25307655334473, 25.296621588996263],
+                [55.25307655334473, 25.256418028713934],
+            ],
+        ];
+        const polygon = new Polygon(coords);
+        polygon.transform('EPSG:4326', 'EPSG:3857');
+        const feature = new Feature({
+            geometry: polygon,
+        });
+        const geojson = createGeoJSON(polygon);
+        this.drawLayer.getSource().addFeature(feature);
+        this.props.updateAoiInfo({
+            ...this.props.aoiInfo,
+            geojson,
+            originalGeojson: geojson,
+            geomType: 'Polygon',
+            title: 'Custom Polygon',
+            description: 'Box',
+            selectionType: 'box',
+        });
+        this.props.setNextEnabled();
+        this.setButtonSelected('box');
+        zoomToFeature(feature, this.map);
+    }
+
     render() {
+        const { steps, isRunning } = this.state;
+
         const mapStyle = {
             right: '0px',
             backgroundImage: `url(${background})`,
@@ -737,14 +899,33 @@ export class ExportAOI extends Component {
 
         return (
             <div>
-                <div id="map" className={css.map} style={mapStyle} ref="olmap">
+                <Joyride
+                    callback={this.callback}
+                    ref={(instance) => { this.joyride = instance; }}
+                    steps={steps}
+                    stepIndex={this.state.stepIndex}
+                    autoStart
+                    type="continuous"
+                    showSkipButton
+                    showStepsProgress
+                    locale={{
+                        back: (<span>Back</span>),
+                        close: (<span>Close</span>),
+                        last: (<span>Done</span>),
+                        next: (<span>Next</span>),
+                        skip: (<span>Skip</span>),
+                    }}
+                    run={isRunning}
+                />
+                <div id="map" className={css.map} style={mapStyle}>
                     <AoiInfobar
                         aoiInfo={this.props.aoiInfo}
                         showRevert={!!this.props.aoiInfo.buffer}
                         onRevertClick={this.openResetDialog}
                         clickZoomToSelection={this.handleZoomToSelection}
                         handleBufferClick={this.openBufferDialog}
-                        maxAoiSqKm={this.context.config.MAX_DATAPACK_AOI_SQ_KM}
+                        maxVectorAoiSqKm={this.context.config.MAX_VECTOR_AOI_SQ_KM}
+                        maxRasterAoiSqKm={this.context.config.MAX_RASTER_AOI_SQ_KM}
                     />
                     <SearchAOIToolbar
                         handleSearch={this.checkForSearchUpdate}
@@ -773,7 +954,8 @@ export class ExportAOI extends Component {
                     <BufferDialog
                         show={this.state.showBuffer}
                         aoi={aoi}
-                        maxAoiSqKm={this.context.config.MAX_DATAPACK_AOI_SQ_KM}
+                        maxVectorAoiSqKm={this.context.config.MAX_VECTOR_AOI_SQ_KM}
+                        maxRasterAoiSqKm={this.context.config.MAX_RASTER_AOI_SQ_KM}
                         value={this.props.aoiInfo.buffer}
                         valid={this.state.validBuffer}
                         handleBufferClick={this.handleBufferClick}
@@ -827,6 +1009,9 @@ ExportAOI.propTypes = {
     getGeocode: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
     resetGeoJSONFile: PropTypes.func.isRequired,
+    clearExportInfo: PropTypes.func.isRequired,
+    walkthroughClicked: PropTypes.bool.isRequired,
+    onWalkthroughReset: PropTypes.func.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -860,6 +1045,9 @@ function mapDispatchToProps(dispatch) {
         },
         resetGeoJSONFile: () => {
             dispatch(resetGeoJSONFile());
+        },
+        clearExportInfo: () => {
+            dispatch(clearExportInfo());
         },
     };
 }

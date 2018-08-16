@@ -1,10 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardHeader } from 'material-ui/Card';
 import Popover from 'material-ui/Popover';
-import CheckBox from 'material-ui/svg-icons/toggle/check-box';
+import CheckBox from '@material-ui/icons/CheckBox';
 import EnhancedButton from 'material-ui/internal/EnhancedButton';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
@@ -62,6 +63,7 @@ describe('MembersHeaderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         window.resizeTo(500, 500);
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.find('.qa-MembersHeaderRow-countText')).toHaveLength(1);
         expect(wrapper.find('.qa-MembersHeaderRow-countText').text()).toEqual('(0/2)');

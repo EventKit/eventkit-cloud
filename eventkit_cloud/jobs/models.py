@@ -4,18 +4,17 @@ from __future__ import unicode_literals, absolute_import
 import json
 import logging
 import uuid
-from enum import Enum
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
+from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
 from django.db.models.fields import CharField
-from django.contrib.postgres.fields.jsonb import JSONField
 from django.utils import timezone
+from enum import Enum
 
-from ..core.models import TimeStampedModelMixin, UIDMixin
-
+from eventkit_cloud.core.models import TimeStampedModelMixin, UIDMixin
 
 logger = logging.getLogger(__name__)
 
@@ -255,19 +254,22 @@ class VisibilityState(Enum):
     PUBLIC  = "PUBLIC"
     SHARED  = "SHARED"
 
+
 class Job(UIDMixin, TimeStampedModelMixin):
     """
     Model for a Job.
     """
 
+    # the "choices" setting for the django admin page drop down list requires a type that can be indexed
+    visibility_choices = []
+    for value in VisibilityState:
+        visibility_choices.append((value.value, value.value))
 
     def __init__(self, *args, **kwargs):
         kwargs['the_geom'] = convert_polygon(kwargs.get('the_geom')) or ''
         kwargs['the_geom_webmercator'] = convert_polygon(kwargs.get('the_geom_webmercator')) or ''
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
-
-
 
     user = models.ForeignKey(User, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
@@ -277,7 +279,7 @@ class Job(UIDMixin, TimeStampedModelMixin):
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
     preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
-    visibility = models.CharField(max_length=10,default=VisibilityState.PRIVATE.value)
+    visibility = models.CharField(max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value)
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
     the_geom = models.MultiPolygonField(verbose_name='Extent for export', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
@@ -400,6 +402,19 @@ class UserJobActivity(models.Model):
     job = models.ForeignKey(Job)
     type = models.CharField(max_length=100, blank=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+#
+# class Downloadable(UIDMixin, TimeStampedModelMixin):
+#     """
+#     Model that stores each DataPack or DataPack component that can be downloaded.
+#     """
+#     creator = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='+', null=True)
+#     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='+', null=True)
+#     job = models.ForeignKey(Job, related_name='downloads')
+#     url = models.URLField(verbose_name='URL to download result', max_length=254)
+#     size = models.DecimalField(verbose_name="Download size (MB)", default=0, max_digits=12, decimal_places=3,
+#                                editable=False, null=True)
+
 
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):

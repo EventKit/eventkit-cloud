@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { TextField } from 'material-ui';
 import * as ReactDOM from 'react-dom';
 
@@ -8,8 +9,9 @@ export class CustomTextField extends Component {
         this.onChange = this.onChange.bind(this);
         this.onFocus = this.onFocus.bind(this);
         this.onBlur = this.onBlur.bind(this);
+        this.getTextLength = this.getTextLength.bind(this);
         this.state = {
-            charsRemaining: this.props.maxLength,
+            charsRemaining: this.props.maxLength - this.getTextLength(),
             focused: false,
         };
 
@@ -49,6 +51,24 @@ export class CustomTextField extends Component {
         this.setState({ focused: false });
     }
 
+    getTextLength() {
+        // If we list value or defaultValue as a prop we need to include a default value for them.
+        // Setting the default values as undefined somehow messes up the MUI component ¯\_(ツ)_/¯
+        // For that reason we just wont list it, so turning of the eslint warning in this case only.
+        //
+        // eslint-disable-next-line react/prop-types
+        const { value } = this.props;
+        // eslint-disable-next-line react/prop-types
+        const { defaultValue } = this.props;
+
+        if (value) {
+            return value.length;
+        } else if (defaultValue) {
+            return defaultValue.length;
+        }
+        return 0;
+    }
+
     render() {
         const {
             charsRemainingStyle,
@@ -72,6 +92,7 @@ export class CustomTextField extends Component {
                         }
 
                         if (this.props.maxLength && this.props.showRemaining) {
+                            // eslint-disable-next-line react/no-find-dom-node
                             ReactDOM.findDOMNode(textField).style.paddingRight = '55px';
                         }
                     }}

@@ -65,16 +65,30 @@ export function isLatLon(c) {
     return false;
 }
 
+export function getFeaturesFromGeojson(json) {
+    // json can be either a feature collection or a single feature in EPSG:4326
+    // returns an array of features in EPSG:3857
+    const Geojson = new GeoJSON();
+    if (json.type === 'FeatureCollection') {
+        return Geojson.readFeatures(json, {
+            featureProjection: 'EPSG:3857',
+            dataProjection: 'EPSG:4326',
+        });
+    } else if (json.type === 'Feature') {
+        return [Geojson.readFeature(json, {
+            featureProjection: 'EPSG:3857',
+            dataProjection: 'EPSG:4326',
+        })];
+    }
+    return [];
+}
+
 export function getSqKm(geojson) {
     let area = 0;
-    if (!geojson.features) {
+    const features = getFeaturesFromGeojson(geojson);
+    if (!features.length) {
         return area;
     }
-    const Geojson = new GeoJSON();
-    const features = Geojson.readFeatures(geojson, {
-        featureProjection: 'EPSG:3857',
-        dataProjection: 'EPSG:4326',
-    });
 
     features.forEach((feature) => {
         try {

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-from .celery import *  # NOQA
 import dj_database_url
-import os
-import logging
-import json
-import urllib
+
+from eventkit_cloud.settings.celery import *  # NOQA
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -76,6 +73,7 @@ Maximum extent of a Job
 max of (latmax-latmin) * (lonmax-lonmin)
 """
 JOB_MAX_EXTENT = int(os.getenv('JOB_MAX_EXTENT', '10000'))  # default export max extent in sq km
+JOB_MAX_RASTER_EXTENT = int(os.getenv('JOB_MAX_RASTER_EXTENT', '250'))  # default raster max extent in sq km
 
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
@@ -292,6 +290,7 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 UI_CONFIG = {
     'VERSION': os.environ.get('VERSION', ''),
+    'CONTACT_URL': os.environ.get('CONTACT_URL', 'mailto:eventkit.team@gmail.com'),
     'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
     'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
     'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
@@ -299,7 +298,8 @@ UI_CONFIG = {
     'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
     'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', '© OpenStreetMap'),
     'MAX_DATAPACK_EXPIRATION_DAYS': os.environ.get('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
-    'MAX_DATAPACK_AOI_SQ_KM': JOB_MAX_EXTENT,
+    'MAX_VECTOR_AOI_SQ_KM': JOB_MAX_EXTENT,
+    'MAX_RASTER_AOI_SQ_KM': JOB_MAX_RASTER_EXTENT,
 }
 
 if os.environ.get('USE_S3'):

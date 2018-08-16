@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { mount } from 'enzyme';
 import SvgIcon from 'material-ui/SvgIcon';

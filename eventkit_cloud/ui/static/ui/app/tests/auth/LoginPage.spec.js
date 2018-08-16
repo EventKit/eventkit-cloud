@@ -1,7 +1,8 @@
-import React, { isValidElement } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import Paper from 'material-ui/Paper';
+import Paper from '@material-ui/core/Paper';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { LoginPage } from '../../components/auth/LoginPage';
@@ -19,9 +20,9 @@ describe('LoginPage component', () => {
         return mount(<LoginPage />, {
             context: { muiTheme, store, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                store: React.PropTypes.object,
-                config: React.PropTypes.object,
+                muiTheme: PropTypes.object,
+                store: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     }
@@ -62,7 +63,7 @@ describe('LoginPage component', () => {
         expect(wrapper.find(Paper)).toHaveLength(2);
         expect(wrapper.find(LoginForm)).toHaveLength(1);
         expect(wrapper.find(Paper).last().find('strong').text()).toEqual('ATTENTION');
-        expect(wrapper.find(CustomScrollbar).last().childAt(0).childAt(1)
+        expect(wrapper.find(CustomScrollbar).find('.qa-LoginPage-disclaimer')
             .text()).toEqual('This is a disclaimer');
         isValidStub.restore();
     });

@@ -1,8 +1,9 @@
-from eventkit_cloud.celery import app
-from logging import getLogger
-import celery
 import time
+from logging import getLogger
 
+import celery
+
+from eventkit_cloud.celery import app
 
 logger = getLogger(__name__)
 

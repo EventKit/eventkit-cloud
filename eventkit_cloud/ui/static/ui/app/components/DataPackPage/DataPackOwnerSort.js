@@ -1,19 +1,15 @@
-import React, {PropTypes} from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 
 export class DataPackOwnerSort extends React.Component {
-
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         const styles = {
             dropDown: {
                 height: '30px',
                 lineHeight: '35px',
-                marginRight: '10px'
+                marginRight: '10px',
             },
             item: {
                 fontSize: window.innerWidth > 575 ? '12px' : '11px',
@@ -27,44 +23,55 @@ export class DataPackOwnerSort extends React.Component {
                 right: 0,
                 width: 20,
                 height: 24,
-                margin: 3
+                margin: 3,
             },
             label: {
-                lineHeight: '30px', 
-                color: '#4498c0', 
+                lineHeight: '30px',
+                color: '#4498c0',
                 paddingLeft: 0,
                 paddingRight: 32,
                 height: '30px',
                 display: 'inline-block',
                 padding: 0,
-                fontSize: window.innerWidth > 575 ? '14px' : '12px'
+                fontSize: window.innerWidth > 575 ? '14px' : '12px',
             },
             list: {
-                paddingTop: '5px', 
-                paddingBottom: '0px'
+                paddingTop: '5px',
+                paddingBottom: '0px',
             },
             selectedItem: {
-                color: '#4498c0'
+                color: '#4498c0',
             },
             underline: {
-                borderTopColor: '#4498c0', 
+                borderTopColor: '#4498c0',
                 margin: '0px',
             },
         };
 
         return (
             <DropDownMenu
-                className={'qa-DataPackOwnerSort-DropDownMenu'}
+                className="qa-DataPackOwnerSort-DropDownMenu"
                 style={styles.dropDown}
-                labelStyle={styles.label} 
+                labelStyle={styles.label}
                 iconStyle={styles.icon}
                 listStyle={styles.list}
-                selectedMenuItemStyle={styles.selectedItem} 
-                underlineStyle={styles.underline}            
+                selectedMenuItemStyle={styles.selectedItem}
+                underlineStyle={styles.underline}
                 value={this.props.value}
-                onChange={this.props.handleChange}>
-                <MenuItem className={'qa-DataPackOwnerSort-MenuItem-allDatapacks'} style={styles.item} value={''} primaryText={"All DataPacks"} />
-                <MenuItem className={'qa-DataPackOwnerSort-Menuitem-myDatapacks'} style={styles.item} value={this.props.owner} primaryText={"My DataPacks"} />
+                onChange={this.props.handleChange}
+            >
+                <MenuItem
+                    className="qa-DataPackOwnerSort-MenuItem-allDatapacks"
+                    style={styles.item}
+                    value="all"
+                    primaryText="All DataPacks"
+                />
+                <MenuItem
+                    className="qa-DataPackOwnerSort-Menuitem-myDatapacks"
+                    style={styles.item}
+                    value={this.props.owner}
+                    primaryText="My DataPacks"
+                />
             </DropDownMenu>
         );
     }
@@ -74,7 +81,7 @@ export class DataPackOwnerSort extends React.Component {
 DataPackOwnerSort.propTypes = {
     value: PropTypes.string.isRequired,
     handleChange: PropTypes.func.isRequired,
-    owner: PropTypes.string.isRequired
+    owner: PropTypes.string.isRequired,
 };
 
 export default DataPackOwnerSort;

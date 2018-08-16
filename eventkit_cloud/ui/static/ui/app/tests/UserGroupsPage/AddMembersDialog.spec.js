@@ -1,20 +1,14 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Tabs, Tab } from 'material-ui/Tabs';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
-import Unchecked from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Checked from '@material-ui/icons/CheckBox';
+import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
 import Dialog from 'material-ui/Dialog';
-import Clear from 'material-ui/svg-icons/content/clear';
-import ArrowDown from 'material-ui/svg-icons/navigation/arrow-drop-down';
-import ArrowUp from 'material-ui/svg-icons/navigation/arrow-drop-up';
 import Indeterminate from '../../components/icons/IndeterminateIcon';
 import * as viewport from '../../utils/viewport';
-import CustomTextField from '../../components/CustomTextField';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import AddMembersDialog from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
 

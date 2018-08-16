@@ -1,32 +1,34 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import json
 import logging
 import os
-from datetime import datetime,timedelta
 import uuid
+from datetime import datetime, timedelta
 
+from django.conf import settings
+from django.contrib.auth.models import Group, User
+from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
+from django.core import serializers
+from django.utils import timezone
+from django.utils.translation import ugettext as _
+from mock import patch, Mock
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
-# from django.test import TestCase as APITestCase
 
-from django.conf import settings
-from django.utils.translation import ugettext as _
-from django.utils import timezone
-from django.contrib.auth.models import Group, User
-from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, Point, LineString
-from django.core import serializers
-from ..pagination import LinkHeaderPagination
-from ..views import get_models, get_provider_task, ExportRunViewSet
-from ...tasks.task_factory import InvalidLicense
-from ...tasks.export_tasks import TaskStates
-from ...jobs.models import ExportFormat, Job, DataProvider, \
+from eventkit_cloud.api.pagination import LinkHeaderPagination
+from eventkit_cloud.api.views import get_models, get_provider_task, ExportRunViewSet
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel
+from eventkit_cloud.jobs.models import ExportFormat, Job, DataProvider, \
     DataProviderType, DataProviderTask, bbox_to_geojson, DatamodelPreset, License, VisibilityState, UserJobActivity
-from ...tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
-from ...core.models import GroupPermission,GroupPermissionLevel
-from mock import patch, Mock
+from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
+from eventkit_cloud.tasks.task_factory import InvalidLicense
+
+# from django.test import TestCase as APITestCase
 
 
 logger = logging.getLogger(__name__)
@@ -671,7 +673,6 @@ class TestExportRunViewSet(APITestCase):
         run = ExportRun.objects.get(uid=self.export_run.uid)
         self.assertEquals(ok_expiration,run.expiration.replace(tzinfo=None))
 
-
     def test_delete_run(self,):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
         response = self.client.delete(url)
@@ -680,11 +681,14 @@ class TestExportRunViewSet(APITestCase):
         self.assertEquals(response['Content-Length'], '0')
         self.assertEquals(response['Content-Language'], 'en')
 
-    @patch('eventkit_cloud.api.serializers.get_presigned_url')
-    def test_zipfile_url_s3(self, get_url):
-        self.export_run.zipfile_url = 'http://cool.s3.url.com/foo.zip'
+    def test_zipfile_url_s3(self):
+
+        example_url = "/downloads/{0}/file.zip".format(self.run_uid)
+        file_result = FileProducingTaskResult.objects.create(download_url=example_url)
+        self.export_run.downloadable = file_result
         self.export_run.save()
-        get_url.return_value = self.export_run.zipfile_url
+        download_url = 'http://testserver/download?uid={0}'.format(file_result.uid)
+
         url = reverse('api:runs-detail', args=[self.run_uid])
 
         with self.settings(USE_S3=False):
@@ -692,20 +696,18 @@ class TestExportRunViewSet(APITestCase):
             result = response.data
 
             self.assertEquals(
-                self.export_run.zipfile_url,
+                download_url,
                 result[0]['zipfile_url']
             )
-            get_url.assert_not_called()
 
         with self.settings(USE_S3=True):
             response = self.client.get(url)
             result = response.data
 
             self.assertEquals(
-                self.export_run.zipfile_url,
+                download_url,
                 result[0]['zipfile_url']
             )
-            get_url.assert_called_with(download_url=self.export_run.zipfile_url)
 
     def test_retrieve_run(self,):
         expected = '/api/runs/{0}'.format(self.run_uid)
@@ -756,7 +758,7 @@ class TestExportRunViewSet(APITestCase):
 
     @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
     def test_list_runs_invalid_license(self, mock_validate_licenses):
-        from ...tasks.task_factory import InvalidLicense
+        from eventkit_cloud.tasks.task_factory import InvalidLicense
         expected = '/api/runs'
         url = reverse('api:runs-list')
         mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
@@ -1259,6 +1261,20 @@ class TestUserJobActivityViewSet(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         data = json.loads(response.content)
         self.assertEqual(len(data), len(self.viewed_jobs))
+
+    def test_get_viewed_pagination(self):
+        for i in range(len(self.viewed_jobs), 15):
+            job = self.create_job('ViewedJob%s' % str(i))
+            self.viewed_jobs.append(job)
+            UserJobActivity.objects.create(user=self.user, job=job, type=UserJobActivity.VIEWED)
+
+        url = reverse('api:user_job_activity-list')
+        page_size = 10
+        response = self.client.get(url + '?activity=viewed&page_size=%s' % page_size)
+        self.assertIsNotNone(response)
+        self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
+        data = json.loads(response.content)
+        self.assertEqual(len(data), page_size)
 
     def test_create_viewed(self):
         # Get our current number of viewed jobs to compare against.

@@ -1,70 +1,41 @@
 <!DOCTYPE HTML>
-<html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
     <title>EventKit</title>
-    <meta id="meta" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/static/ui/images/favicon.ico">
-    <link rel="stylesheet" href="app/styles/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="app/fonts/materialIcons.css">
-    <link rel="stylesheet" href="app/styles/font-awesome/css/font-awesome.min.css">
-    <link rel="stylesheet" href="app/styles/openlayers/ol.css">
-    <link rel="stylesheet" href="app/styles/flexboxgrid.css">
+    <link rel="stylesheet" href="build/bundle.css">
 
     <style>
-      body {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        min-width: 370px;
-        min-height: 430px;
-      }
+        html {
+            font-size: 14px;
+        }
+        
+        body {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            min-width: 370px;
+            min-height: 430px;
+            background-color: rgb(17, 24, 35);
+        }
 
-      .no-ie {
-        background-color: #111823;
-        position: absolute;
-        height: 100%;
-        width: 100%;
-        top: 0px;
-        bottom: 0px;
-        left: 0px;
-        right: 0px;
-        color: #fff;
-        padding: 40px;
-        text-align: center;
-      }
-
-      .ol-scale-line {
-        background: rgba(0,0,0,0);
-      }
-
-      .ol-attribution.ol-uncollapsible {
-        bottom: 10px;
-        left: 10px;
-        right: auto;
-        border-radius: 4px 0 0;
-        height: 1.1em;
-        line-height: 1em;
-      }
-
-      .ol-attribution:not(.ol-collapsed) {
-        background: rgba(255,255,255,.0);
-      }
-
-      .form-control:focus {
-        box-shadow: none
-      }
-
-      .dropdown-menu > .active > a,
-      .dropdown-menu > .active > a:hover,
-      .dropdown-menu > .active > a:focus {
-        color: #fff;
-        text-decoration: none;
-        background-color: #cecece;
-        outline: 0;
-      }
-
+        .no-ie {
+            background-color: #111823;
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0px;
+            bottom: 0px;
+            left: 0px;
+            right: 0px;
+            color: #fff;
+            padding: 40px;
+            text-align: center;
+        }
     </style>
   </head>
   <body>
@@ -74,18 +45,20 @@
       var body = document.getElementsByTagName('body')[0];
       try {
           CSS.supports('transform', 'translateY(-50%)');
-          var node_modules = document.createElement("script");
           var bundle = document.createElement("script");
-          node_modules.type = "text/javascript";
+          var metrics = document.createElement("script");
           bundle.type = "text/javascript";
-          node_modules.async = '';
+          metrics.type = "text/javascript";
           bundle.async = '';
-          node_modules.src = "build/node-modules.js";
+          metrics.async = '';
           bundle.src = "build/bundle.js";
-          body.appendChild(node_modules);
+          metrics.src = "build/metrics.js"
           body.appendChild(bundle);
+          body.appendChild(metrics);
       } catch (error) {
-          console.error('Browser is not supported by EventKit');
+          if (window.console) {
+            console.error('Browser is not supported by EventKit');
+          }
           body.innerHTML = "<div class='no-ie'>\
             <p>The browser you are using is not supported by EventKit.</p>\
             <p>EventKit does not support any versions of Internet Explorer or other legacy browsers.</p>\

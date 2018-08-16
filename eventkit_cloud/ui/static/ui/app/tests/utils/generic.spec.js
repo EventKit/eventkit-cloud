@@ -46,6 +46,32 @@ describe('test generic utils', () => {
         expect(ret).toBe(false);
     });
 
+    it('getFeaturesFromGeojson should return an array of features from a feature collection input', () => {
+        const geojson = { type: 'FeatureCollection', features: [] };
+        const feature = new Feature();
+        const readStub = sinon.stub(GeoJSON.prototype, 'readFeatures').returns([feature]);
+        const features = utils.getFeaturesFromGeojson(geojson);
+        expect(features.length).toBe(1);
+        expect(readStub.calledWith(geojson)).toBe(true);
+        readStub.restore();
+    });
+
+    it('getFeaturesFromGeojson should return an array of features from a single feature input', () => {
+        const geojson = { type: 'Feature', geometry: {} };
+        const feature = new Feature();
+        const readStub = sinon.stub(GeoJSON.prototype, 'readFeature').returns(feature);
+        const features = utils.getFeaturesFromGeojson(geojson);
+        expect(features.length).toBe(1);
+        expect(readStub.calledWith(geojson)).toBe(true);
+        readStub.restore();
+    });
+
+    it('getFeaturesFromGeojson should return empty array if input is not Feature or FeatureCollection', () => {
+        const geojson = { type: 'This is not correct' };
+        const features = utils.getFeaturesFromGeojson(geojson);
+        expect(features.length).toBe(0);
+    });
+
     it('getSqKm should reading geojson and calculate total area', () => {
         const geojson = { type: 'FeatureCollection', features: [] };
         const feature = new Feature();

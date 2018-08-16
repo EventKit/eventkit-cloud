@@ -1,4 +1,6 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 import debounce from 'lodash/debounce';
 import CircularProgress from 'material-ui/CircularProgress';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
@@ -120,7 +122,11 @@ export class SearchAOIToolbar extends Component {
             } else if (this.props.geocode.fetched) {
                 if (results.length) {
                     content = results.map((result, index) => (
-                        <TypeaheadMenuItem result={result} index={index} key={index} />
+                        <TypeaheadMenuItem
+                            result={result}
+                            index={index}
+                            key={`${result.name}${result.province}${result.region}${result.country}`}
+                        />
                     ));
                 } else {
                     content = (
@@ -158,6 +164,7 @@ export class SearchAOIToolbar extends Component {
                         emptyLabel=""
                         minLength={2}
                         renderMenu={renderer}
+                        className="qa-SearchAOIToolbar-typeahead"
                     />
                     {(this.props.geocode.fetching) ?
                         <CircularProgress

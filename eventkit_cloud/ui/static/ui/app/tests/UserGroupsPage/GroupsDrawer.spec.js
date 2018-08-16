@@ -1,11 +1,11 @@
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Drawer from 'material-ui/Drawer';
 import IconMenu from 'material-ui/IconMenu';
 import IconButton from 'material-ui/IconButton';
-import Vert from 'material-ui/svg-icons/navigation/more-vert';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 
 
@@ -60,8 +60,8 @@ describe('GroupsDrawer component', () => {
     it('should show both MY GROUPS and SHARED GROUPS', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem')).toHaveLength(1);
-        expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupsDrawer-groupItem').hostNodes()).toHaveLength(1);
     });
 
     it('Change Group Name should call onRenameGroupClick', () => {

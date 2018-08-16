@@ -3,15 +3,12 @@
 import logging
 
 import django_filters
-
+from django.contrib.auth.models import User, Group
 from django.db.models import Q
 
+from eventkit_cloud.core.models import GroupPermission
 from eventkit_cloud.jobs.models import Job, VisibilityState, UserJobActivity
 from eventkit_cloud.tasks.models import ExportRun
-
-from django.contrib.auth.models import User, Group
-from ..core.models import GroupPermission, JobPermission
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +30,7 @@ class JobFilter(django_filters.FilterSet):
     user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
     feature = django_filters.CharFilter(name="tags__name", lookup_expr="icontains")
     visibility = django_filters.CharFilter(name="visibility", lookup_expr="exact")
+    featured = django_filters.BooleanFilter(name="featured", widget=django_filters.widgets.BooleanWidget())
 
     user_private = django_filters.CharFilter(method='user_private_filter')
 
@@ -65,6 +63,7 @@ class ExportRunFilter(django_filters.FilterSet):
     max_date = django_filters.DateFilter(name="started_at", lookup_expr="lte")
     started_at = django_filters.DateTimeFilter(name="started_at", lookup_expr="exact")
     visibility = django_filters.CharFilter(name="job__visibility", lookup_expr="exact")
+    featured = django_filters.BooleanFilter(name="job__featured", widget=django_filters.widgets.BooleanWidget())
     providers = ListFilter(name="job__provider_tasks__provider__slug")
 
     class Meta:

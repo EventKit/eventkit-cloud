@@ -1,7 +1,14 @@
-import initialState from './initialState';
-import types from '../actions/actionTypes';
 import values from 'lodash/values';
 import moment from 'moment';
+import initialState from './initialState';
+import types from '../actions/actionTypes';
+
+
+export function getSortedNotifications(notificationsObj) {
+    const notificationsSorted = values(notificationsObj);
+    notificationsSorted.sort((a, b) => moment(b.timestamp) - moment(a.timestamp));
+    return notificationsSorted;
+}
 
 export function notificationsReducer(state = initialState.notifications, action) {
     switch (action.type) {
@@ -15,15 +22,15 @@ export function notificationsReducer(state = initialState.notifications, action)
             };
         case types.RECEIVED_NOTIFICATIONS: {
             const notifications = { ...state.notifications };
-            for (let notification of action.notifications) {
+            action.notifications.forEach((notification) => {
                 notifications[notification.id] = notification;
-            }
+            });
 
             return {
                 ...state,
                 fetching: false,
                 fetched: true,
-                notifications: notifications,
+                notifications,
                 notificationsSorted: getSortedNotifications(notifications),
                 nextPage: action.nextPage,
                 range: action.range,
@@ -41,17 +48,16 @@ export function notificationsReducer(state = initialState.notifications, action)
             };
         case types.MARKING_NOTIFICATIONS_AS_READ: {
             const notifications = { ...state.notifications };
-            let unreadCount = state.unreadCount.unreadCount;
-            for (let notification of action.notifications) {
-                const id = notification.id;
-                if (notifications[id].unread) {
-                    unreadCount--;
+            let { unreadCount } = state.unreadCount;
+            action.notifications.forEach((notification) => {
+                if (notifications[notification.id].unread) {
+                    unreadCount -= 1;
                 }
-                notifications[id] = {
-                    ...notifications[id],
+                notifications[notification.id] = {
+                    ...notifications[notification.id],
                     unread: false,
-                }
-            }
+                };
+            });
             return {
                 ...state,
                 notifications,
@@ -69,17 +75,17 @@ export function notificationsReducer(state = initialState.notifications, action)
             };
         case types.MARKING_NOTIFICATIONS_AS_UNREAD: {
             const notifications = { ...state.notifications };
-            let unreadCount = state.unreadCount.unreadCount;
-            for (let notification of action.notifications) {
-                const id = notification.id;
-                if (!notifications[id].unread) {
-                    unreadCount++;
+            let { unreadCount } = state.unreadCount;
+            action.notifications.forEach((notification) => {
+                if (!notifications[notification.id].unread) {
+                    unreadCount += 1;
                 }
-                notifications[id] = {
-                    ...notifications[id],
+                notifications[notification.id] = {
+                    ...notifications[notification.id],
                     unread: true,
-                }
-            }
+                };
+            });
+
             return {
                 ...state,
                 notifications,
@@ -95,14 +101,15 @@ export function notificationsReducer(state = initialState.notifications, action)
                 ...state,
                 error: action.error,
             };
-        case types.MARKING_ALL_NOTIFICATIONS_AS_READ:
+        case types.MARKING_ALL_NOTIFICATIONS_AS_READ: {
             const notifications = { ...state.notifications };
-            for (let id of Object.keys(notifications)) {
+            Object.keys(notifications).forEach((id) => {
                 notifications[id] = {
                     ...notifications[id],
                     unread: false,
-                }
-            }
+                };
+            });
+
             return {
                 ...state,
                 notifications,
@@ -110,23 +117,23 @@ export function notificationsReducer(state = initialState.notifications, action)
                 unreadCount: {
                     ...state.unreadCount,
                     unreadCount: 0,
-                }
+                },
             };
+        }
         case types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR:
             return {
                 ...state,
                 error: action.error,
             };
         case types.REMOVING_NOTIFICATIONS: {
-            let notifications = { ...state.notifications };
-            let unreadCount = state.unreadCount.unreadCount;
-            for (let notification of action.notifications) {
-                const id = notification.id;
-                if (notifications[id].unread) {
-                    unreadCount--;
+            const notifications = { ...state.notifications };
+            let { unreadCount } = state.unreadCount;
+            action.notifications.forEach((notification) => {
+                if (notifications[notification.id].unread) {
+                    unreadCount -= 1;
                 }
-                delete notifications[id];
-            }
+                delete notifications[notification.id];
+            });
             return {
                 ...state,
                 notifications,
@@ -134,7 +141,7 @@ export function notificationsReducer(state = initialState.notifications, action)
                 unreadCount: {
                     ...state.unreadCount,
                     unreadCount,
-                }
+                },
             };
         }
         case types.REMOVE_NOTIFICATIONS_ERROR:
@@ -180,10 +187,4 @@ export function notificationsReducer(state = initialState.notifications, action)
         default:
             return state;
     }
-}
-
-export function getSortedNotifications(notificationsObj) {
-    const notificationsSorted = values(notificationsObj);
-    notificationsSorted.sort((a, b) => moment(b.timestamp) - moment(a.timestamp));
-    return notificationsSorted;
 }

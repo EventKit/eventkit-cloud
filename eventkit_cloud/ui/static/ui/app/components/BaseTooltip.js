@@ -1,7 +1,13 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
 export class BaseTooltip extends Component {
-
+    constructor(props) {
+        super(props);
+        this.onMouseOver = this.onMouseOver.bind(this);
+        this.onMouseOut = this.onMouseOut.bind(this);
+        this.onClick = this.onClick.bind(this);
+    }
     onMouseOver(e) {
         if (typeof this.props.onMouseOver === 'function') {
             this.props.onMouseOver(e);
@@ -14,9 +20,9 @@ export class BaseTooltip extends Component {
         }
     }
 
-    onTouchTap(e) {
-        if (typeof this.props.onTouchTap === 'function') {
-            this.props.onTouchTap(e);
+    onClick(e) {
+        if (typeof this.props.onClick === 'function') {
+            this.props.onClick(e);
         }
     }
 
@@ -46,7 +52,6 @@ export class BaseTooltip extends Component {
                 top: '100%',
                 left: '50%',
                 border: '10px solid',
-                content: ' ',
                 height: '0',
                 width: '0',
                 position: 'absolute',
@@ -57,7 +62,6 @@ export class BaseTooltip extends Component {
                 top: '100%',
                 left: '50%',
                 border: '14px solid',
-                content: ' ',
                 height: '0',
                 width: '0',
                 position: 'absolute',
@@ -72,7 +76,7 @@ export class BaseTooltip extends Component {
                 textTransform: 'uppercase',
                 marginBottom: '10px',
                 ...this.props.titleStyle,
-            }
+            },
         };
 
         if (this.props.show) {
@@ -83,11 +87,16 @@ export class BaseTooltip extends Component {
 
         return (
             <div
+                role="button"
+                tabIndex={0}
                 className="qa-BaseTooltip"
                 style={styles.tooltip}
-                onMouseOver={this.onMouseOver.bind(this)}
-                onMouseOut={this.onMouseOut.bind(this)}
-                onTouchTap={this.onTouchTap.bind(this)}
+                onMouseOver={this.onMouseOver}
+                onMouseOut={this.onMouseOut}
+                onKeyPress={this.onClick}
+                onFocus={this.onMouseOver}
+                onBlur={this.onMouseOut}
+                onClick={this.onClick}
             >
                 <div className="qa-BaseTooltip-title" style={styles.title}>
                     <strong>{this.props.title ? this.props.title : ''}</strong>
@@ -95,15 +104,34 @@ export class BaseTooltip extends Component {
                 <div>
                     {this.props.children}
                 </div>
-                <div className="qa-BaseTooltip-arrow" style={styles.arrow} ></div>
-                <div className="qa-BaseTooltip-arrow-block" style={styles.arrowBlock} ></div>
+                <div className="qa-BaseTooltip-arrow" style={styles.arrow} />
+                <div className="qa-BaseTooltip-arrow-block" style={styles.arrowBlock} />
             </div>
         );
     }
 }
 
+BaseTooltip.defaultProps = {
+    title: '',
+    children: undefined,
+    onMouseOut: undefined,
+    onMouseOver: undefined,
+    onClick: undefined,
+    tooltipStyle: {},
+    arrowStyle: {},
+    titleStyle: {},
+};
+
 BaseTooltip.propTypes = {
     show: PropTypes.bool.isRequired,
+    children: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+        PropTypes.string,
+    ]),
+    onMouseOut: PropTypes.func,
+    onMouseOver: PropTypes.func,
+    onClick: PropTypes.func,
     title: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
     tooltipStyle: PropTypes.object,
     arrowStyle: PropTypes.object,

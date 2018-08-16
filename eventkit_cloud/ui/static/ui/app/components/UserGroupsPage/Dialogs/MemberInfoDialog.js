@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import BaseDialog from '../../Dialog/BaseDialog';
 
 export class MemberInfoDialog extends Component {
@@ -24,7 +25,9 @@ export class MemberInfoDialog extends Component {
                             <li>You will receive all notifications</li>
                             <li>You have limited rights for all data shared with each group</li>
                         </ul>
-                        <span>You may leave any group you are a member of. By doing so, you opt out of notifications and your data rights.</span>
+                        <span>
+                            You may leave any group you are a member of. By doing so, you opt out of notifications and your data rights.
+                        </span>
                     </div>
                 </div>
             </BaseDialog>
