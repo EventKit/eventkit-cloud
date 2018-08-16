@@ -56,9 +56,7 @@ END
             sh "docker-compose run --rm eventkit python manage.py runinitial setup || exit 0"
             sh "docker-compose up -d"
         }catch(Exception e) {
-            postStatus(getFailureStatus("Failed to build docker containers."))
-            sh "docker-compose down"
-            throw e
+           handleErrors("Failed to build the docker containers.")
         }
     }
 
@@ -67,10 +65,8 @@ END
             postStatus(getPendingStatus("Running the linters..."))
             sh "docker-compose run --rm -T  webpack npm run lint"
         }catch(Exception e) {
-            postStatus(getFailureStatus("Lint checks failed."))
             sh "docker-compose logs --tail=50 webpack"
-            sh "docker-compose down"
-            throw e
+            handleErrors("Lint checks failed.")
         }
     }
 
@@ -80,10 +76,8 @@ END
             sh "docker-compose run --rm -T  eventkit pytest -n 4"
             sh "docker-compose run --rm -T  webpack npm test"
         }catch(Exception e) {
-             postStatus(getFailureStatus("Unit tests failed."))
              sh "docker-compose logs --tail=50 eventkit webpack"
-             sh "docker-compose down"
-             throw e
+             handleErrors("Unit tests failed.")
         }
     }
 
@@ -93,10 +87,8 @@ END
             sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
-            postStatus(getFailureStatus("Integration tests failed."))
             sh "docker-compose logs --tail=50"
-            sh "docker-compose down"
-            throw e
+            handleErrors("Integration tests failed.")
         }
     }
 }
@@ -138,4 +130,10 @@ def getSuccessStatus(message){
 
 def getFailureStatus(message){
   return "{\"state\":\"failure\",\"description\":\"${env.BUILD_NUMBER}-${message}\",\"context\":\"ci/jenkins\"}"
+}
+
+def handleErrors(message){
+    postStatus(getFailureStatus(message)
+    sh "docker-compose down"
+    error(message)
 }
