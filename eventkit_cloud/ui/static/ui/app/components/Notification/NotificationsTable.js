@@ -1,6 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Checkbox, Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui';
+import Checkbox from '@material-ui/core/Checkbox';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../icons/IndeterminateIcon';
 import NotificationsTableItem from './NotificationsTableItem';
@@ -86,20 +90,17 @@ export class NotificationsTable extends React.Component {
             },
             tableHeader: {
                 height: '50px',
+                backgroundColor: '#fff',
             },
-            tableHeaderColumn: {
+            cell: {
                 padding: '0 15px',
                 textAlign: 'left',
+                color: '#9e9e9e',
             },
             contentHeaderColumnWrapper: {
                 display: 'flex',
                 alignItems: 'center',
                 height: '100%',
-            },
-            multiMenu: {
-                marginLeft: '6px',
-                position: 'relative',
-                top: '1px',
             },
         };
 
@@ -110,20 +111,20 @@ export class NotificationsTable extends React.Component {
         styles = {
             ...styles,
             checkboxHeaderColumn: {
-                ...styles.tableHeaderColumn,
-                width: '45px',
+                ...styles.cell,
+                width: '54px',
             },
             contentHeaderColumn: {
-                ...styles.tableHeaderColumn,
+                ...styles.cell,
                 fontWeight: 'bold',
             },
             dateHeaderColumn: {
-                ...styles.tableHeaderColumn,
+                ...styles.cell,
                 textAlign: 'center',
                 width: (window.innerWidth > 768) ? '200px' : '150px',
             },
             optionsHeaderColumn: {
-                ...styles.tableHeaderColumn,
+                ...styles.cell,
                 textAlign: (window.innerWidth > 1280) ? 'center' : 'right',
                 width: optionsWidth,
                 padding: '0 15px 0 0',
@@ -132,33 +133,33 @@ export class NotificationsTable extends React.Component {
 
         return (
             <div style={styles.root}>
-                <Table selectable={false}>
-                    <TableHeader
+                <Table selectable={false} style={{ tableLayout: 'fixed' }}>
+                    <TableBody
                         style={styles.tableHeader}
                         displaySelectAll={false}
                         adjustForCheckbox={false}
                     >
                         <TableRow>
-                            <TableHeaderColumn
-                                className="qa-NotificationsTable-TableHeaderColumn-Checkbox"
+                            <TableCell
+                                className="qa-NotificationsTable-TableCell-Checkbox"
                                 style={styles.checkboxHeaderColumn}
                             >
                                 <Checkbox
+                                    style={{ width: '24px', height: '24px' }}
+                                    color="primary"
                                     className="qa-NotificationsTable-SelectAllCheckbox"
                                     checked={this.getSelectedCount() > 0}
                                     checkedIcon={this.getSelectAllCheckedIcon()}
-                                    onCheck={this.handleSelectAllCheck}
-                                    disableTouchRipple
+                                    onChange={this.handleSelectAllCheck}
                                 />
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-NotificationsTable-TableHeaderColumn-Content"
+                            </TableCell>
+                            <TableCell
+                                className="qa-NotificationsTable-TableCell-Content"
                                 style={styles.contentHeaderColumn}
                             >
                                 <div style={styles.contentHeaderColumnWrapper}>
                                     <span>{this.getSelectedCount()} Selected</span>
                                     <NotificationsTableMenu
-                                        style={styles.multiMenu}
                                         selectedNotifications={this.state.selected}
                                         onMarkAsRead={this.props.onMarkAsRead}
                                         onMarkAsUnread={this.props.onMarkAsUnread}
@@ -166,21 +167,21 @@ export class NotificationsTable extends React.Component {
                                         onMarkAllAsRead={this.props.onMarkAllAsRead}
                                     />
                                 </div>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-NotificationsTable-TableHeaderColumn-Date"
+                            </TableCell>
+                            <TableCell
+                                className="qa-NotificationsTable-TableCell-Date"
                                 style={styles.dateHeaderColumn}
                             >
                                 Date
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-NotificationsTable-TableHeaderColumn-Options"
+                            </TableCell>
+                            <TableCell
+                                className="qa-NotificationsTable-TableCell-Options"
                                 style={styles.optionsHeaderColumn}
                             >
                                 Options
-                            </TableHeaderColumn>
+                            </TableCell>
                         </TableRow>
-                    </TableHeader>
+                    </TableBody>
                     <TableBody displayRowCheckbox={false}>
                         {this.props.notificationsArray.map(notification => (
                             <NotificationsTableItem
@@ -193,6 +194,7 @@ export class NotificationsTable extends React.Component {
                                 onMarkAsUnread={this.props.onMarkAsUnread}
                                 onRemove={this.props.onRemove}
                                 onView={this.props.onView}
+                                fullSize={window.innerWidth > 1280} // trigger component update on resize
                             />
                         ))}
                     </TableBody>

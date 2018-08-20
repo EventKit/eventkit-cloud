@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
-import { CircularProgress, GridList, Paper } from 'material-ui';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import GridList from '@material-ui/core/GridList';
+import Paper from '@material-ui/core/Paper';
 import NotificationGridItem from './NotificationGridItem';
 import { markAllNotificationsAsRead } from '../../actions/notificationsActions';
 
@@ -51,6 +53,7 @@ export class NotificationsDropdown extends React.Component {
             paper: {
                 width: (window.innerWidth > 768) ? '633px' : '100%',
                 paddingBottom: (window.innerWidth > 768) ? '24px' : '18px',
+                color: '#000',
             },
             header: {
                 display: 'flex',
@@ -109,7 +112,7 @@ export class NotificationsDropdown extends React.Component {
             body = (
                 <div style={{ textAlign: 'center' }}>
                     <CircularProgress
-                        color="#4598bf"
+                        color="primary"
                         size={35}
                     />
                 </div>
@@ -120,7 +123,7 @@ export class NotificationsDropdown extends React.Component {
                     className="qa-NotificationsDropdown-Grid"
                     cellHeight="auto"
                     style={styles.gridList}
-                    padding={0}
+                    spacing={0}
                     cols={1}
                 >
                     {notifications.map((notification, index) => (

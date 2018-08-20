@@ -2,7 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import moment from 'moment';
-import { TableRow } from 'material-ui';
+import TableRow from '@material-ui/core/TableRow';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { NotificationsTableItem } from '../../components/Notification/NotificationsTableItem';
 
@@ -60,7 +60,7 @@ describe('NotificationsTableItem component', () => {
     });
 
     it('formats date correctly', () => {
-        const date = wrapper.find('.qa-NotificationsTableItem-TableRowColumn-Date');
+        const date = wrapper.find('.qa-NotificationsTableItem-TableCell-Date');
         expect(date.childAt(0).text()).toBe(moment(instance.props.notification.timestamp).format('M/D/YY'));
         expect(date.childAt(1).text()).toBe(moment(instance.props.notification.timestamp).format('h:mma'));
     });
@@ -72,7 +72,7 @@ describe('NotificationsTableItem component', () => {
             const checkbox = wrapper.find('.qa-NotificationsTableItem-Checkbox');
             isChecked = !checkbox.props().checked;
             const e = { stopPropagation: () => {} };
-            checkbox.props().onCheck(e, isChecked);
+            checkbox.props().onChange(e, isChecked);
         });
 
         it('calls setSelected() with notification and isChecked', () => {
