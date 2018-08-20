@@ -3,13 +3,13 @@ import logging
 import requests
 from django.conf import settings
 
-from eventkit_cloud.utils.geocode import AuthenticationError
-from geocode_auth import get_auth_headers, authenticate
+from eventkit_cloud.utils.geocoding.geocode import AuthenticationError
+from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, authenticate
 
 logger = logging.getLogger(__name__)
 
 
-class Convert(object):
+class CoordinateConverter(object):
 
     def __init__(self):
         self.converter = self.get_converter()

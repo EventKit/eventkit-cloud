@@ -6,15 +6,12 @@ from uuid import uuid4
 from django.test import TransactionTestCase
 from mock import Mock, patch, call
 
-from eventkit_cloud.utils.geopackage import (SQliteToGeopackage, get_table_count, get_tile_table_names, get_table_names,
-                                             get_zoom_levels_table, remove_zoom_level,
-                                             get_tile_matrix_table_zoom_levels,
-                                             remove_empty_zoom_levels, check_content_exists, check_zoom_levels,
-                                             add_geojson_to_geopackage, clip_geopackage, create_table_from_existing,
-                                             get_table_info,
-                                             get_table_gpkg_contents_information, set_gpkg_contents_bounds,
-                                             create_extension_table,
-                                             create_metadata_tables, add_file_metadata)
+from eventkit_cloud.utils.geopackage import (SQliteToGeopackage)
+from eventkit_cloud.utils.geopackage import add_geojson_to_geopackage, clip_geopackage, get_table_count, \
+    get_table_names, get_tile_table_names, get_table_gpkg_contents_information, set_gpkg_contents_bounds, \
+    get_zoom_levels_table, remove_empty_zoom_levels, remove_zoom_level, get_tile_matrix_table_zoom_levels, \
+    check_content_exists, check_zoom_levels, get_table_info, create_table_from_existing, create_metadata_tables, \
+    create_extension_table, add_file_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +31,7 @@ class TestGeopackage(TransactionTestCase):
         cmd = "ogr2ogr -f 'GPKG' {0} {1}".format(gpkgfile, sqlite)
         isfile.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
-        s2g = SQliteToGeopackage(sqlite=sqlite, gpkgfile=gpkgfile, debug=False, task_uid=self.task_uid)
+        s2g = SQliteToGeopackage(gpkgfile=gpkgfile, debug=False, task_uid=self.task_uid)
         isfile.assert_called_once_with(sqlite)
         out = s2g.convert()
         self.task_process.assert_called_once_with(task_uid=self.task_uid)

@@ -5,6 +5,7 @@ import cPickle
 import json
 import logging
 import os
+import re
 import shutil
 import socket
 import traceback
@@ -35,11 +36,12 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_provider_staging_dir, get_run_download_dir, Directory, default_format_time, progressive_kill
 from eventkit_cloud.ui.helpers import get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document
+from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
-    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
+    overpass, pbf, s3, external_service, wfs, wcs, arcgis_feature_service, geopackage, gdalutils
 )
-from eventkit_cloud.utils.geopackage import add_file_metadata
-from eventkit_cloud.utils.hotosm_geopackage import Geopackage
+from eventkit_cloud.utils.ogr import OGR
+
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -404,7 +406,7 @@ def osm_data_collection_pipeline(
     feature_selection = FeatureSelection.example(config)
     update_progress(export_task_record_uid, progress=25)
     geom = Polygon.from_bbox(bbox)
-    g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
+    g = geopackage.Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
                    export_task_record_uid=export_task_record_uid)
     g.run()
     update_progress(export_task_record_uid, progress=75)
@@ -497,7 +499,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     metadata = render_to_string('data/geopackage_metadata.xml', context=metadata_values)
 
-    add_file_metadata(input_gpkg, metadata)
+    geopackage.add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
     result['geopackage'] = input_gpkg
@@ -515,8 +517,9 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
 
     try:
-        s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile, task_uid=task_uid)
-        out = s2s.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile, lco="ENCODING=UTF-8",
+                         overwrite=True)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -536,8 +539,8 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
     try:
-        s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
-        out = s2k.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -557,8 +560,8 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
     try:
-        s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, task_uid=task_uid)
-        out = s2g.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='SQLite', in_file=gpkg, out_file=sqlitefile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -672,12 +675,34 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     result = result or {}
 
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+
+    # Strip out query string parameters that might conflict
+    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "",
+                              service_url)
+    query_str = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(self.layer)
+    if "?" in service_url:
+        if "&" != service_url[-1]:
+            service_url += "&"
+        service_url += query_str
+    else:
+        service_url += "?" + query_str
+
+    url = service_url
+    cred = get_cred(slug=name, url=url)
+    if cred:
+        user, pw = cred
+        if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
+            url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
+
     try:
-        w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                            config=config, service_type=service_type, task_uid=task_uid)
-        out = w2g.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='GPKG', in_file="WFS:'{}'".format(url), out_file=gpkg, bbox=bbox,
+                            skipfailures=True)
         result['result'] = out
         result['geopackage'] = out
+        # Check for geopackage contents; gdal wfs driver fails silently
+        if not geopackage.check_content_exists(gpkg):
+            raise Exception, "Empty response: Unknown layer name '{}' or invalid AOI bounds".format(self.layer)
         return result
     except Exception as e:
         logger.error('Raised exception in wfs export, %s', str(e))
