@@ -1,0 +1,15 @@
+package:
+  name: osmctools
+  version: 0.7.0
+
+source:
+  fn: osmctools-master-be1eb365932d1664f45868a0c97b89d4e315877f.tar.gz
+  url: https://gitlab.com/osm-c-tools/osmctools/repository/archive.tar.gz?ref=master
+
+build:
+  number: 0
+
+about:
+  home: https://gitlab.com/osm-c-tools/osmctools
+
+# vim:set ts=8 sw=2 sts=2 tw=78 et:

@@ -1,0 +1,45 @@
+{% set name = "python-ldap" %}
+{% set version = "2.4.39" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "3fb75108d27e8091de80dffa2ba3bf45c7a3bdc357e2959006aed52fa58bb2f3" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.{{ file_ext }}
+  '{{ hash_type }}': '{{ hash_value }}'
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - openldap ==2.4.45-0
+    - cyrus-sasl ==2.1.26
+  run:
+    - python
+    - openldap ==2.4.45-0
+    - cyrus-sasl ==2.1.26
+test:
+  imports:
+    - ldap
+
+about:
+  home: https://www.python-ldap.org/
+  license: Python Software Foundation License
+  license_family: OTHER
+  license_file: ''
+  summary: Python modules for implementing LDAP clients
+  description: "python-ldap:\n  python-ldap provides an object-oriented API to access LDAP directory servers\n  from Python programs. Mainly it wraps the OpenLDAP 2.x libs for that purpose.\n  Additionally\
+    \ the package contains modules for other LDAP-related stuff\n  (e.g. processing LDIF, LDAPURLs, LDAPv3 schema, LDAPv3 extended operations\n  and controls, etc.)."
+  doc_url: ''
+  dev_url: ''
+
+extra:
+  recipe-maintainers: ''
