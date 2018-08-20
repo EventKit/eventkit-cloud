@@ -1,7 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
-import { AppBar, CircularProgress, GridList, Paper } from 'material-ui';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import GridList from '@material-ui/core/GridList';
+import Paper from '@material-ui/core/Paper';
+import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
@@ -79,21 +82,8 @@ export class NotificationsPage extends React.Component {
                 backgroundImage: `url(${background})`,
                 color: 'rgba(0, 0, 0, 0.54)',
             },
-            appBar: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
-                zIndex: '0',
-            },
             customScrollbar: {
                 height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
-            },
-            pageTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                paddingLeft: '10px',
-                height: '35px',
             },
             content: {
                 marginBottom: '12px',
@@ -128,12 +118,9 @@ export class NotificationsPage extends React.Component {
 
         return (
             <div style={styles.root}>
-                <AppBar
-                    className="qa-Notifications-AppBar"
-                    style={styles.appBar}
+                <PageHeader
+                    className="qa-Notifications-PageHeader"
                     title="Notifications"
-                    titleStyle={styles.pageTitle}
-                    iconElementLeft={<p />}
                 />
                 {this.state.loading ?
                     <div
@@ -148,7 +135,7 @@ export class NotificationsPage extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 style={{ margin: 'auto', display: 'block' }}
-                                color="#4598bf"
+                                color="primary"
                                 size={50}
                             />
                         </div>
@@ -183,7 +170,7 @@ export class NotificationsPage extends React.Component {
                                             className="qa-NotificationsPage-Content-Notifications-Grid"
                                             cellHeight="auto"
                                             style={styles.gridList}
-                                            padding={2}
+                                            spacing={2}
                                             cols={1}
                                         >
                                             {notifications.map(notification => (
