@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import ActionSearch from 'material-ui/svg-icons/action/search';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import ActionSearch from '@material-ui/icons/Search';
+import ContentClear from '@material-ui/icons/Clear';
 
 export class SearchAOIButton extends Component {
     constructor(props) {

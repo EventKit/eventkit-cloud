@@ -4,9 +4,6 @@ import React, { Component } from 'react';
 class Banner extends Component {
     render() {
         const style = {
-            position: 'absolute',
-            left: 0,
-            right: 0,
             lineHeight: '25px',
             backgroundColor: this.context.config.BANNER_BACKGROUND_COLOR ?
                 this.context.config.BANNER_BACKGROUND_COLOR : '#000',

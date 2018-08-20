@@ -4,10 +4,10 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card } from 'material-ui/Card';
-import Clear from 'material-ui/svg-icons/content/clear';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import ArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import Dot from 'material-ui/svg-icons/av/fiber-manual-record';
+import Clear from '@material-ui/icons/Clear';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import Dot from '@material-ui/icons/FiberManualRecord';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 
 describe('LoadButtons component', () => {

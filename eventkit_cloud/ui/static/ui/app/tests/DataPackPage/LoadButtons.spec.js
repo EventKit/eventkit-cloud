@@ -3,11 +3,11 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import ReactDOM from 'react-dom';
-import KeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import KeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
-import LoadButtons from '../../components/DataPackPage/LoadButtons';
+import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
+import { LoadButtons } from '../../components/DataPackPage/LoadButtons';
 
 describe('LoadButtons component', () => {
     const muiTheme = getMuiTheme();
@@ -17,6 +17,7 @@ describe('LoadButtons component', () => {
         handleLoadMore: () => {},
         loadLessDisabled: true,
         loadMoreDisabled: false,
+        classes: { root: {} },
     });
     const getWrapper = props => mount(<LoadButtons {...props} />, {
         context: { muiTheme },
@@ -28,9 +29,9 @@ describe('LoadButtons component', () => {
     it('should render all the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(RaisedButton)).toHaveLength(2);
-        expect(wrapper.find(RaisedButton).first().text()).toEqual('Show Less');
-        expect(wrapper.find(RaisedButton).last().text()).toEqual('Show More');
+        expect(wrapper.find(Button)).toHaveLength(2);
+        expect(wrapper.find(Button).first().text()).toEqual('Show Less');
+        expect(wrapper.find(Button).last().text()).toEqual('Show More');
         expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
         expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
         expect(wrapper.find('#range')).toHaveLength(1);
@@ -40,8 +41,8 @@ describe('LoadButtons component', () => {
     it('should enable or disable buttons based on props', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(RaisedButton).first().props().disabled).toEqual(true);
-        expect(wrapper.find(RaisedButton).last().props().disabled).toEqual(false);
+        expect(wrapper.find(Button).first().props().disabled).toEqual(true);
+        expect(wrapper.find(Button).last().props().disabled).toEqual(false);
     });
 
     it('Load less should call handleLoadLess', () => {
@@ -49,7 +50,7 @@ describe('LoadButtons component', () => {
         props.loadLessDisabled = false;
         props.handleLoadLess = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.find(RaisedButton).first().find('button').simulate('click');
+        wrapper.find(Button).first().find('button').simulate('click');
         expect(props.handleLoadLess.calledOnce).toBe(true);
     });
 
@@ -58,21 +59,21 @@ describe('LoadButtons component', () => {
         props.loadMoreDisabled = false;
         props.handleLoadMore = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.find(RaisedButton).last().find('button').simulate('click');
+        wrapper.find(Button).last().find('button').simulate('click');
         expect(props.handleLoadMore.calledOnce).toBe(true);
     });
 
     it('should set width in state on mount', () => {
         const mountSpy = sinon.spy(LoadButtons.prototype, 'componentDidMount');
-        const stateSpy = sinon.spy(LoadButtons.prototype, 'setState');
+        const updateStub = sinon.stub(LoadButtons.prototype, 'componentDidUpdate');
+        const widthSpy = sinon.spy(LoadButtons.prototype, 'setWidth');
         const props = getProps();
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        // eslint-disable-next-line react/no-find-dom-node
-        expect(stateSpy.calledWith({ width: ReactDOM.findDOMNode(wrapper.instance()).offsetWidth })).toBe(true);
+        expect(widthSpy.calledOnce).toBe(true);
         mountSpy.restore();
-        stateSpy.restore();
+        updateStub.restore();
+        widthSpy.restore();
     });
 
     it('should update width in state if component updates with new width', () => {
@@ -80,11 +81,10 @@ describe('LoadButtons component', () => {
         const stateSpy = sinon.spy(LoadButtons.prototype, 'setState');
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(stateSpy.calledOnce).toBe(true);
+        stateSpy.reset();
         ReactDOM.findDOMNode = () => ({ offsetWidth: 12 });
         wrapper.instance().forceUpdate();
         wrapper.update();
-        expect(stateSpy.calledTwice);
         expect(stateSpy.calledWith({ width: 12 })).toBe(true);
         updateSpy.restore();
         stateSpy.restore();

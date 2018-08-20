@@ -122,7 +122,7 @@ class LockingTask(UserDetailsBase):
         worker = kwargs.get('worker')
         task_settings = {
             'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
-            'priority': TaskPriority.TASK_RUNNER.value}
+            'priority': TaskPriority.RUN_TASK.value}
 
         if lock_key:
             self.lock_expiration = 5
@@ -909,9 +909,11 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
-    except Exception:
+    except Exception as e:
+        logger.error(e)
         run.status = TaskStates.FAILED.value
         run.save()
+        raise
 
 
 # This could be improved by using Redis or Memcached to help manage state.

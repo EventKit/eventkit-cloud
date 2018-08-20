@@ -7,12 +7,12 @@ import IconMenu from 'material-ui/IconMenu';
 import MenuItem from 'material-ui/MenuItem';
 import moment from 'moment';
 import { List, ListItem } from 'material-ui/List';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import AlertError from 'material-ui/svg-icons/alert/error';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import SocialGroup from '@material-ui/icons/Group';
+import Lock from '@material-ui/icons/LockOutlined';
+import NotificationSync from '@material-ui/icons/Sync';
+import NavigationCheck from '@material-ui/icons/Check';
+import AlertError from '@material-ui/icons/Error';
 import isUndefined from 'lodash/isUndefined';
 
 import Map from 'ol/map';

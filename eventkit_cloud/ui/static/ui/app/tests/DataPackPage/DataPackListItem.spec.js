@@ -7,12 +7,12 @@ import { Link } from 'react-router';
 import { Card, CardTitle } from 'material-ui/Card';
 import IconButton from 'material-ui/IconButton';
 import IconMenu from 'material-ui/IconMenu';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
-import NotificationSync from 'material-ui/svg-icons/notification/sync';
-import NavigationCheck from 'material-ui/svg-icons/navigation/check';
-import AlertError from 'material-ui/svg-icons/alert/error';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import SocialGroup from '@material-ui/icons/Group';
+import Lock from '@material-ui/icons/LockOutlined';
+import NotificationSync from '@material-ui/icons/Sync';
+import NavigationCheck from '@material-ui/icons/Check';
+import AlertError from '@material-ui/icons/Error';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

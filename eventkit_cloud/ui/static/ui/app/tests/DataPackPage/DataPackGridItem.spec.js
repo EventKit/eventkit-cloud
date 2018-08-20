@@ -7,9 +7,9 @@ import MenuItem from 'material-ui/MenuItem';
 import IconButton from 'material-ui/IconButton';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Card, CardActions, CardMedia, CardTitle, CardText } from 'material-ui/Card';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import SocialGroup from 'material-ui/svg-icons/social/group';
-import Lock from 'material-ui/svg-icons/action/lock-outline';
+import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import SocialGroup from '@material-ui/icons/Group';
+import Lock from '@material-ui/icons/LockOutlined';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

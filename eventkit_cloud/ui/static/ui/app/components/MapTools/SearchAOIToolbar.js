@@ -164,6 +164,7 @@ export class SearchAOIToolbar extends Component {
                         emptyLabel=""
                         minLength={2}
                         renderMenu={renderer}
+                        className="qa-SearchAOIToolbar-typeahead"
                     />
                     {(this.props.geocode.fetching) ?
                         <CircularProgress
