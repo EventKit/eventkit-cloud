@@ -1,7 +1,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { CircularProgress } from 'material-ui';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
 
 const mockNotifications = {

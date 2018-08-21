@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import moment from 'moment';
-import { Paper } from 'material-ui';
+import Paper from '@material-ui/core/Paper';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
 import NotificationMenu from './NotificationMenu';
@@ -32,7 +32,8 @@ export class NotificationGridItem extends Component {
                 fontSize: (window.innerWidth > 575) ? '18px' : '14px',
                 color: 'rgba(0, 0, 0, 0.54)',
                 transition: 'background-color 0.25s',
-                ...this.props.style,
+                backgroundColor: (this.props.notification.unread) ? '#d5e6f1' : 'white',
+                ...this.props.paperStyle,
             },
             content: {
                 whiteSpace: 'nowrap',
@@ -68,36 +69,34 @@ export class NotificationGridItem extends Component {
         });
 
         return (
-            <Paper
-                style={{
-                    ...styles.root,
-                    backgroundColor: (this.props.notification.unread) ? '#d5e6f1' : 'white',
-                }}
-            >
-                {icon}
-                {message}
-                <div style={{ flex: '1' }} />
-                <div
-                    className="qa-NotificationGridItem-Date"
-                    style={styles.date}
-                >
-                    {moment(this.props.notification.timestamp).fromNow()}
-                </div>
-                <NotificationMenu
-                    notification={this.props.notification}
-                    router={this.props.router}
-                    onMarkAsRead={this.props.onMarkAsRead}
-                    onMarkAsUnread={this.props.onMarkAsUnread}
-                    onRemove={this.props.onRemove}
-                    onView={this.handleView}
-                />
-            </Paper>
+            <div style={this.props.style}>
+                <Paper style={styles.root}>
+                    {icon}
+                    {message}
+                    <div style={{ flex: '1' }} />
+                    <div
+                        className="qa-NotificationGridItem-Date"
+                        style={styles.date}
+                    >
+                        {moment(this.props.notification.timestamp).fromNow()}
+                    </div>
+                    <NotificationMenu
+                        notification={this.props.notification}
+                        router={this.props.router}
+                        onMarkAsRead={this.props.onMarkAsRead}
+                        onMarkAsUnread={this.props.onMarkAsUnread}
+                        onRemove={this.props.onRemove}
+                        onView={this.handleView}
+                    />
+                </Paper>
+            </div>
         );
     }
 }
 
 NotificationGridItem.propTypes = {
     style: PropTypes.object,
+    paperStyle: PropTypes.object,
     notification: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
@@ -109,6 +108,7 @@ NotificationGridItem.propTypes = {
 
 NotificationGridItem.defaultProps = {
     style: {},
+    paperStyle: {},
     onMarkAsRead: undefined,
     onMarkAsUnread: undefined,
     onRemove: undefined,

@@ -43,6 +43,7 @@ export class IconMenu extends Component {
                 anchorEl={this.state.anchor}
                 open={Boolean(this.state.anchor)}
                 onClose={this.handleClose}
+                getContentAnchorEl={undefined}
                 anchorOrigin={{
                     vertical: 'top',
                     horizontal: 'right',
@@ -57,6 +58,7 @@ export class IconMenu extends Component {
                     style: { padding: '0px' },
                     ...this.props.MenuListProps,
                 }}
+                style={this.props.menuStyle}
             >
                 {this.props.children.map((child, ix) => {
                     // we need to add in our handle close function for every child onClick
@@ -64,9 +66,10 @@ export class IconMenu extends Component {
                     if (!React.isValidElement(child)) { return null; }
 
                     return React.cloneElement(child, {
-                        onClick: (...args) => {
+                        onClick: (e, ...args) => {
+                            e.stopPropagation();
                             this.handleClose();
-                            child.props.onClick(args);
+                            child.props.onClick(e, ...args);
                         },
                         key: child.props.key || `${child.type}-${ix}`,
                     });
@@ -80,6 +83,7 @@ IconMenu.defaultProps = {
     anchorOrigin: {},
     transformOrigin: {},
     MenuListProps: {},
+    menuStyle: {},
     style: {},
 };
 
@@ -98,6 +102,7 @@ IconMenu.propTypes = {
         horizontal: PropTypes.string,
     }),
     MenuListProps: PropTypes.object,
+    menuStyle: PropTypes.object,
     style: PropTypes.object,
 };
 
