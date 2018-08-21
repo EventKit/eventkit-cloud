@@ -313,6 +313,7 @@ class TestJobViewSet(APITestCase):
             'translation': ''
         }
         response = self.client.post(url, request_data, format='json')
+
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
@@ -684,8 +685,10 @@ class TestExportRunViewSet(APITestCase):
     def test_zipfile_url_s3(self):
 
         example_url = "/downloads/{0}/file.zip".format(self.run_uid)
-        file_result = FileProducingTaskResult.objects.create(download_url=example_url)
-        self.export_run.downloadable = file_result
+        data_provider_task_record = DataProviderTaskRecord.objects.create(run=self.export_run, name="run", slug="run")
+        file_result = FileProducingTaskResult.objects.create(download_url=example_url, size=10)
+        ExportTaskRecord.objects.create(export_provider_task=data_provider_task_record,
+                                        result=file_result, name="Zip")
         self.export_run.save()
         download_url = 'http://testserver/download?uid={0}'.format(file_result.uid)
 
@@ -694,7 +697,6 @@ class TestExportRunViewSet(APITestCase):
         with self.settings(USE_S3=False):
             response = self.client.get(url)
             result = response.data
-
             self.assertEquals(
                 download_url,
                 result[0]['zipfile_url']
