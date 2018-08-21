@@ -58,6 +58,12 @@ const muiThemeV1 = createMuiTheme({
                 },
             },
         },
+        MuiList: {
+            padding: {
+                paddingTop: '0px',
+                paddingBottom: '0px',
+            },
+        },
         MuiTableCell: {
             head: {
                 fontSize: '12px',
@@ -76,6 +82,7 @@ const muiThemeV1 = createMuiTheme({
                 padding: '0px 16px',
                 height: '30px',
                 lineHeight: '30px',
+                borderRadius: '0px',
             },
         },
         MuiMenuItem: {

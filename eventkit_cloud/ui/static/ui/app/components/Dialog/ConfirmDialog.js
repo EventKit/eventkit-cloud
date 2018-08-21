@@ -1,30 +1,33 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from './BaseDialog';
 
 export class ConfirmDialog extends Component {
     render() {
+        const style = {
+            backgroundColor: 'whitesmoke',
+            fontWeight: 'bold',
+            color: '#4598bf',
+        };
+
         const deleteActions = [
-            <RaisedButton
-                className="qa-ConfirmDialog-RaisedButton-CancelButton"
-                style={{ marginRight: '10px' }}
-                backgroundColor="rgba(226,226,226,0.5)"
-                labelStyle={{ fontWeight: 'bold' }}
-                labelColor="#4598bf"
-                disableTouchRipple
-                label={this.props.cancelLabel}
+            <Button
+                className="qa-ConfirmDialog-Button-CancelButton"
+                style={{ ...style, marginRight: '10px' }}
                 onClick={this.props.onCancel}
-            />,
-            <RaisedButton
-                className="qa-ConfirmDialog-RaisedButton-ConfirmButton"
-                backgroundColor="rgba(226,226,226,0.5)"
-                labelStyle={{ fontWeight: 'bold' }}
-                labelColor={this.props.isDestructive ? '#ff0000' : '#4598bf'}
-                disableTouchRipple
-                label={this.props.confirmLabel}
+                variant="contained"
+            >
+                {this.props.cancelLabel}
+            </Button>,
+            <Button
+                className="qa-ConfirmDialog-Button-ConfirmButton"
+                style={{ ...style, color: this.props.isDestructive ? '#ff0000' : '#4598bf' }}
                 onClick={this.props.onConfirm}
-            />,
+                variant="contained"
+            >
+                {this.props.confirmLabel}
+            </Button>,
         ];
 
         return (

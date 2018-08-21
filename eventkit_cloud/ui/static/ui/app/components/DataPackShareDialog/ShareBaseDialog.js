@@ -1,8 +1,10 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
-import Dialog from 'material-ui/Dialog';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../CustomScrollbar';
 import { isViewportS } from '../../utils/viewport';
@@ -31,97 +33,84 @@ export class ShareBaseDialog extends Component {
     }
 
     render() {
+        const marginSubtract = this.state.mobile ? 32 : 96;
         const styles = {
             dialog: {
                 width: 'calc(100% - 32px)',
                 height: '100%',
                 minWidth: '325px',
                 maxWidth: '650px',
+                margin: 'auto',
+                maxHeight: `calc(100% - ${marginSubtract}px)`,
             },
             title: {
-                padding: '25px',
-                fontWeight: 'none',
+                padding: '24px 24px 20px',
+                fontWeight: 700,
                 fontSize: '18px',
+                lineHeight: '32px',
             },
             body: {
-                padding: '0px 25px',
-                maxHeight: '100%',
+                padding: '0px 24px',
+                fontSize: '16px',
+                color: '#707274',
+                position: 'relative',
             },
             actions: {
-                padding: '25px',
+                margin: '20px 24px 24px',
+                justifyContent: 'space-between',
             },
             clear: {
                 float: 'right',
-                fill: '#4598bf',
                 cursor: 'pointer',
-            },
-            label: {
-                color: 'whitesmoke',
-                fontWeight: 'bold',
-            },
-            button: {
-                backgroundColor: '#4598bf',
-                borderRadius: '0px',
             },
         };
 
-        if (this.state.mobile) {
-            styles.dialog.transform = 'translate(0px, 16px)';
-        }
-
         const actions = [
-            <RaisedButton
-                className="qa-ShareBaseDialog-save"
-                style={{ margin: '0px' }}
-                labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ borderRadius: '0px' }}
-                backgroundColor="#4598bf"
-                disableTouchRipple
-                label={this.props.submitButtonLabel}
-                primary={false}
-                onClick={this.props.handleSave}
-                disabled={false}
-            />,
-            <FlatButton
+            <Button
                 className="qa-ShareBaseDialog-cancel"
-                style={{ margin: '0px', float: 'left' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                backgroundColor="#fff"
-                disableTouchRipple
-                label="CANCEL"
+                style={{ fontWeight: 'bold' }}
+                variant="flat"
+                color="primary"
                 onClick={this.props.onClose}
-            />,
+            >
+                CANCEL
+            </Button>,
+            <Button
+                className="qa-ShareBaseDialog-save"
+                style={{ fontWeight: 'bold' }}
+                variant="contained"
+                color="primary"
+                onClick={this.props.handleSave}
+            >
+                {this.props.submitButtonLabel}
+            </Button>,
         ];
 
         // display passed in title and a clear button which calls props.onClose
         const title = (
             <div className="qa-ShareBaseDialog-title">
                 <strong>{this.props.title}</strong>
-                <Clear style={styles.clear} onClick={this.props.onClose} />
+                <Clear style={styles.clear} onClick={this.props.onClose} color="primary" />
             </div>
         );
 
         return (
             <Dialog
                 className="qa-ShareBaseDialog-Dialog"
-                contentStyle={styles.dialog}
-                bodyStyle={styles.body}
-                actions={actions}
-                style={{ paddingTop: '0px' }}
-                modal
+                style={{ zIndex: 1500 }}
                 open={this.props.show}
-                onRequestClose={this.props.onClose}
-                title={title}
-                titleStyle={styles.title}
-                actionsContainerStyle={styles.actions}
-                autoDetectWindowHeight={false}
-                repositionOnUpdate={false}
+                onClose={this.props.onClose}
+                PaperProps={{ style: styles.dialog }}
             >
-                <CustomScrollbar
-                    style={{ height: this.state.mobile ? window.innerHeight - 200 : window.innerHeight - 296 }}
-                >
-                    {this.props.children}
-                </CustomScrollbar>
+                <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
+                <DialogContent style={styles.body}>
+                    <CustomScrollbar
+                        style={{ height: window.innerHeight - marginSubtract - 76 - 74 }}
+                    >
+                        {this.props.children}
+                    </CustomScrollbar>
+                </DialogContent>
+                <DialogActions style={styles.actions}>{actions}</DialogActions>
             </Dialog>
         );
     }
