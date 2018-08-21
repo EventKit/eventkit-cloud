@@ -1,9 +1,10 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { Tab, Tabs } from 'material-ui';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
-import DashboardSection from '../../components/DashboardPage/DashboardSection';
+import { DashboardSection } from '../../components/DashboardPage/DashboardSection';
 
 describe('DashboardSection component', () => {
     let wrapper;
@@ -44,7 +45,7 @@ describe('DashboardSection component', () => {
     beforeEach(setup);
 
     it('renders header title', () => {
-        expect(wrapper.find('.qa-DashboardSection-Header-Title').text()).toBe(instance.props.title);
+        expect(wrapper.find('.qa-DashboardSection-Header-Title').hostNodes().text()).toBe(instance.props.title);
     });
 
     it('limits the number of pages to maxPages', () => {
@@ -73,7 +74,7 @@ describe('DashboardSection component', () => {
 
     it('updates the page index on a page change', () => {
         expect(wrapper.state().pageIndex).not.toBe(1);
-        instance.handlePageChange(1);
+        instance.handlePageChange({}, 1);
         expect(wrapper.state().pageIndex).toBe(1);
     });
 
@@ -110,20 +111,17 @@ describe('DashboardSection component', () => {
 
         it('enables the first tab button', () => {
             const tabButton = wrapper.find(Tab).at(0);
-            expect(tabButton.props().style.pointerEvents).not.toBe('none');
-            expect(tabButton.props().buttonStyle.backgroundColor).toBe('white');
+            expect(tabButton.props().disabled).not.toBe(true);
         });
 
         it('disables the second tab button', () => {
             const tabButton = wrapper.find(Tab).at(1);
-            expect(tabButton.props().style.pointerEvents).toBe('none');
-            expect(tabButton.props().buttonStyle.backgroundColor).not.toBe('white');
+            expect(tabButton.props().disabled).toBe(true);
         });
 
         it('disables the third tab button', () => {
             const tabButton = wrapper.find(Tab).at(2);
-            expect(wrapper.find(Tab).at(2).props().style.pointerEvents).toBe('none');
-            expect(tabButton.props().buttonStyle.backgroundColor).not.toBe('white');
+            expect(tabButton.props().disabled).toBe(true);
         });
 
         it('renders SwipeableViews component', () => {
