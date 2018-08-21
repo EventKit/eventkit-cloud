@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import logging
-import os
 
 from django.test import TestCase
-from mock import Mock, patch, mock_open
 
-from eventkit_cloud.ui.helpers import cd, get_style_files, get_file_paths, file_to_geojson, \
-    read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon, get_last_update, get_osm_last_update, \
-    get_metadata_url
+import os
+
+from mock import Mock, patch, mock_open
+from eventkit_cloud.ui.helpers import cd, file_to_geojson, \
+    read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,13 +21,6 @@ class TestHelpers(TestCase):
         with cd(parent_path):
             self.assertEquals(parent_path, os.getcwd())
         self.assertEquals(current_path, os.getcwd())
-
-    def test_get_style_files(self):
-        for file in get_style_files():
-            self.assertTrue(os.path.isfile(file))
-
-    def test_get_file_paths(self):
-        self.assertTrue(os.path.abspath(__file__) in get_file_paths(os.path.dirname(__file__)))
 
     @patch('eventkit_cloud.ui.helpers.os.path.splitext')
     @patch('eventkit_cloud.ui.helpers.shutil.rmtree')
@@ -202,36 +196,4 @@ class TestHelpers(TestCase):
             math.isnan.return_value = True
             self.assertFalse(is_lat_lon(valid_3))
 
-    @patch('eventkit_cloud.ui.helpers.get_osm_last_update')
-    def test_get_last_update(self, mock_get_osm_last_update):
-        test_url = "https://test"
-        test_type = "osm"
-        test_slug = "slug"
-        get_last_update(test_url, test_type, slug=test_slug)
-        mock_get_osm_last_update.assert_called_once_with(test_url, slug=test_slug)
 
-    @patch('eventkit_cloud.ui.helpers.auth_requests')
-    def test_get_osm_last_update(self, mock_auth_requests):
-        test_url = "https://test/interpreter"
-        test_slug = "slug"
-        expected_url = "https://test/timestamp"
-        expected_time = "2017-12-29T13:09:59Z"
-
-        mock_auth_requests.get.return_value.content = expected_time
-        returned_time = get_osm_last_update(test_url, slug=test_slug)
-        mock_auth_requests.get.assert_called_once_with(expected_url, slug=test_slug)
-        self.assertEqual(expected_time, returned_time)
-
-        mock_auth_requests.get.side_effect = Exception("FAIL")
-        returned_time = get_osm_last_update(test_url, slug=test_slug)
-        self.assertIsNone(returned_time)
-
-    def test_get_metadata_url(self):
-        test_url = "https://test"
-
-        expected_value = "https://test?request=GetCapabilities"
-        returned_value = get_metadata_url(test_url, 'wcs')
-        self.assertEqual(expected_value, returned_value)
-
-        returned_value = get_metadata_url(test_url, 'arcgis-raster')
-        self.assertEqual(test_url, returned_value)
