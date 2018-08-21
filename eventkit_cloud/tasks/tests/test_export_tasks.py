@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # test cases for Export Tasks
 import cPickle
-import datetime
 import logging
 import os
 import sys
@@ -9,24 +8,22 @@ import uuid
 
 import celery
 from billiard.einfo import ExceptionInfo
-from celery import chain
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
-from mock import call, Mock, PropertyMock, patch, MagicMock, ANY
+from mock import Mock, PropertyMock, patch, MagicMock
 
 from eventkit_cloud.celery import TaskPriority, app
-from eventkit_cloud.jobs.models import DatamodelPreset, DataProvider
-from eventkit_cloud.jobs.models import Job
+from eventkit_cloud.jobs.models import DatamodelPreset, Job
 from eventkit_cloud.tasks.export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
-    zip_file_task, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates, zip_export_provider,
+    zip_files, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
     bounds_export_task, parse_result, finalize_export_provider_task,
-    FormatTask, wait_for_providers_task, example_finalize_run_hook_task, prepare_for_export_zip_task
+    FormatTask, wait_for_providers_task, create_zip_task, default_format_time
 )
 from eventkit_cloud.tasks.models import (
     ExportRun,
@@ -34,7 +31,6 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord
 )
-from eventkit_cloud.ui.helpers import get_style_files
 
 logger = logging.getLogger(__name__)
 
@@ -236,104 +232,6 @@ class TestExportTasks(ExportTaskBase):
         self.assertIsNotNone(run_task)
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
-    @patch('eventkit_cloud.tasks.tests.test_export_tasks.os.mkdir')
-    @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
-    @patch('eventkit_cloud.tasks.export_tasks.json')
-    @patch('__builtin__.open')
-    @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
-    @patch('eventkit_cloud.tasks.export_tasks.logger')
-    @patch('os.path.isfile')
-    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord')
-    @patch('eventkit_cloud.tasks.export_tasks.zip_file_task')
-    @patch('celery.app.task.Task.request')
-    def test_run_zip_export_provider(self, mock_request, mock_zip_file, mock_export_provider_task, mock_isfile,
-                                     mock_logger, mock_qgs_file, mock_open, mock_json,
-                                     mock_get_human_readable_metadata_document, os_mkdir):
-        file_names = ('file1', 'file2', 'file3')
-        tasks = (Mock(result=Mock(filename=file_names[0])),
-                 Mock(result=Mock(filename=file_names[1])),
-                 Mock(result=Mock(filename=file_names[2])))
-        stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid), "slug")
-
-        mock_all = Mock()
-        mock_all.return_value = tasks
-        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.SUCCESS.value,
-                                                                  tasks=Mock(all=mock_all))
-        celery_uid = str(uuid.uuid4())
-        type(mock_request).id = PropertyMock(return_value=celery_uid)
-
-        job_name = self.job.name.lower()
-
-        expected_output_path = os.path.join(stage_dir,
-                                            '{}.zip'.format(job_name))
-        mock_zip_file.run.return_value = {'result': expected_output_path}
-        mock_isfile.return_value = True
-
-        export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
-                                                                     status=TaskStates.PENDING.value)
-        DataProvider.objects.create(slug='slug')
-
-        saved_export_task = ExportTaskRecord.objects.create(export_provider_task=export_provider_task,
-                                                            status=TaskStates.PENDING.value,
-                                                            name=zip_export_provider.name)
-        zip_export_provider.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
-        result = zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                         job_name=job_name, run_uid=self.run.uid)
-        self.assertEquals(expected_output_path, result['result'])
-        # test the tasks update_task_state method
-        run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
-        self.assertIsNotNone(run_task)
-        self.assertEquals(TaskStates.RUNNING.value, run_task.status)
-        mock_zip_file.run.assert_called_once_with(adhoc=True, run_uid=self.run.uid, include_files=ANY,
-                                                  file_name=os.path.join(stage_dir, "{0}.zip".format(job_name)),
-                                                  static_files=get_style_files())
-        mock_open.assert_called_once()
-        mock_json.dump.assert_called_once()
-
-        # Check that an exception is raised if no zip file is returned.
-        mock_zip_file.run.return_value = None
-        with self.assertRaises(Exception):
-            zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                    job_name=job_name, run_uid=self.run.uid)
-
-        # Check that an exception is raised if no files can be zipped.
-        mock_zip_file.run.return_value = {'result': expected_output_path}
-        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.FAILED.value,
-                                                                  tasks=Mock(all=mock_all))
-        with self.assertRaises(Exception):
-            zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                    job_name=job_name, run_uid=self.run.uid)
-
-        # Check that errors are logged for missing files.
-        mock_logger.reset_mock()
-        tasks = (Mock(result=Mock(filename=file_names[0])),
-                 Mock(result=None),
-                 Mock(result=Mock(filename=file_names[2])))
-        mock_all = Mock()
-        mock_all.return_value = tasks
-        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.SUCCESS.value,
-                                                                  tasks=Mock(all=mock_all))
-
-        zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                job_name=job_name, run_uid=self.run.uid)
-        mock_logger.error.assert_called_once()
-
-        mock_logger.reset_mock()
-        tasks = (Mock(result=Mock(filename=file_names[0])),
-                 Mock(result=Mock(filename=file_names[1])),
-                 Mock(result=Mock(filename=file_names[2])))
-        mock_all = Mock()
-        mock_all.return_value = tasks
-        mock_export_provider_task.objects.get.return_value = Mock(slug="slug", status=TaskStates.SUCCESS.value,
-                                                                  tasks=Mock(all=mock_all))
-
-        mock_isfile.side_effect = [True, True, False]
-        zip_export_provider.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                job_name=job_name, run_uid=self.run.uid)
-
-        mock_logger.error.assert_called_once()
-
-
     @patch('eventkit_cloud.tasks.export_tasks.add_metadata_task')
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.utils.external_service.ExternalRasterServiceToGeopackage')
@@ -420,6 +318,8 @@ class TestExportTasks(ExportTaskBase):
             def __enter__(self, *args, **kw):
                 return self
 
+        expected_archived_files = {'data/osm/file1-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file1.txt',
+                                   'data/osm/file2-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file2.txt'}
         run_uid = str(self.run.uid)
         self.run.job.include_zipfile = True
         self.run.job.event = 'test'
@@ -427,30 +327,20 @@ class TestExportTasks(ExportTaskBase):
         zipfile = MockZipFile()
         mock_zipfile.return_value = zipfile
         stage_dir = settings.EXPORT_STAGING_ROOT
-        zipfile_path = os.path.join(stage_dir,'{0}'.format(run_uid),'osm-vector','test.gpkg')
+        provider_slug = 'osm'
+        zipfile_path = os.path.join(stage_dir,'{0}'.format(run_uid), provider_slug, 'test.gpkg')
+        include_files = ['{0}/file1.txt'.format(provider_slug), '{0}/file2.txt'.format(provider_slug)]
         mock_os_walk.return_value = [(
-            os.path.join(stage_dir, run_uid, 'osm-vector'),
+            os.path.join(stage_dir, run_uid, provider_slug),
             None,
             ['test.gpkg', 'test.om5', 'test.osm']  # om5 and osm should get filtered out
         )]
         date = timezone.now().strftime('%Y%m%d')
-        fname = os.path.join('data', 'osm-vector', 'test-osm-vector-{0}.gpkg'.format(date,))
         zipfile_name = os.path.join('/downloads', '{0}'.format(run_uid), 'testjob-test-eventkit-{0}.zip'.format(date))
         s3.return_value = "www.s3.eventkit-cloud/{}".format(zipfile_name)
-        result = zip_file_task.run(run_uid=run_uid, include_files=[zipfile_path])
-        self.assertEqual(zipfile.files,{fname: zipfile_path})
-        run = ExportRun.objects.get(uid=run_uid)
-        if getattr(settings, "USE_S3", False):
-            self.assertEqual(
-                run.zipfile_url,
-                "www.s3.eventkit-cloud/{0}".format(zipfile_name)
-            )
-        else:
-            self.assertEqual(
-                run.zipfile_url,
-                zipfile_name
-            )
-        assert str(run_uid) in result['result']
+        result = zip_files(include_files=include_files, file_path=zipfile_path )
+        self.assertEqual(zipfile.files, expected_archived_files)
+        self.assertEquals(result, zipfile_path)
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.geopackage')
@@ -643,7 +533,7 @@ class TestExportTasks(ExportTaskBase):
         download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
         run_dir = os.path.join(download_root, str(run_uid))
         finalize_export_provider_task.run(result={'status': TaskStates.SUCCESS.value}, run_uid=self.run.uid,
-                                          export_provider_task_uid=export_provider_task.uid,
+                                          data_provider_task_uid=export_provider_task.uid,
                                           run_dir=run_dir, status=TaskStates.COMPLETED.value)
         export_provider_task.refresh_from_db()
         self.assertEqual(export_provider_task.status, TaskStates.COMPLETED.value)
@@ -678,7 +568,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_provider_task = Mock(status=TaskStates.SUCCESS.value)
         mock_export_run.objects.filter().first.return_value = Mock()
-        mock_export_run.objects.filter().first().provider_tasks.all.return_value = [mock_provider_task]
+        mock_export_run.objects.filter().first().provider_tasks.filter.return_value = [mock_provider_task]
 
         callback_task = MagicMock()
         apply_args = {"arg1": "example_value"}
@@ -690,7 +580,7 @@ class TestExportTasks(ExportTaskBase):
 
         mock_provider_task = Mock(status=TaskStates.RUNNING.value)
         mock_export_run.objects.filter().first.return_value = Mock()
-        mock_export_run.objects.filter().first().provider_tasks.all.return_value = [mock_provider_task]
+        mock_export_run.objects.filter().first().provider_tasks.filter.return_value = [mock_provider_task]
 
         wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
         callback_task.apply_async.assert_not_called()
@@ -700,26 +590,37 @@ class TestExportTasks(ExportTaskBase):
             mock_export_run.objects.filter().first().__nonzero__.return_value = False
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
+    @patch('eventkit_cloud.tasks.export_tasks.create_license_file')
+    @patch('eventkit_cloud.tasks.export_tasks.get_data_type_from_provider')
+    @patch('eventkit_cloud.tasks.export_tasks.zip_files')
     @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
+    @patch('eventkit_cloud.tasks.export_tasks.get_style_files')
     @patch('eventkit_cloud.tasks.export_tasks.json')
     @patch('__builtin__.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('os.path.join', side_effect=lambda *args: args[-1])
     @patch('os.path.isfile')
-    @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_prepare_for_export_zip_task(self, mock_ExportRun, isfile, join, mock_generate_qgs_style, mock_open,
-                                         mock_json, mock_get_human_readable_metadata_document):
+    @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord')
+    def test_create_zip_task(self, mock_DataProviderTaskRecord, isfile, join, mock_generate_qgs_style, mock_open,
+                             mock_json, mock_get_style_files, mock_get_human_readable_metadata_document,
+                             mock_zip_files, mock_get_data_type_from_provider, mock_create_license_file):
 
         # This doesn't need to be valid with ExportRun mocked
         mock_run_uid = str(uuid.uuid4())
         mock_job_name = 'test'
-
+        mock_get_data_type_from_provider.return_value = 'osm'
+        expected_zip = "{0}.zip".format(mock_job_name)
+        mock_zip_files.return_value = expected_zip
+        expected_style_files = ['test.svg']
+        mock_get_style_files.return_value = expected_style_files
         style_file = "style.qgs"
         mock_generate_qgs_style.return_value = style_file
         metadata_file = "ReadMe.txt"
         mock_get_human_readable_metadata_document.return_value = metadata_file
-        
-        expected_file_list = ['e1', 'e2', 'e3', style_file, 'metadata.json', metadata_file]
+        license_file = "license.txt"
+        mock_create_license_file.return_value = license_file
+
+        expected_file_list = ['e1', 'e2', 'e3', style_file, license_file, 'metadata.json', metadata_file]
         missing_file_list = ['e4']
         all_file_list = expected_file_list + missing_file_list
 
@@ -743,198 +644,43 @@ class TestExportTasks(ExportTaskBase):
         mocked_provider_task.status = TaskStates.COMPLETED.value
         mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
         mocked_provider_task.slug = 'dummy_slug'
+        mocked_provider_task.run.uid = mock_run_uid
+        mocked_provider_task.run.job.include_zipfile = True
+        mocked_provider_task.run.job.name = mock_job_name
+        mocked_provider_task.run.provider_tasks.all.return_value = [mocked_provider_task]
 
-        DataProvider.objects.create(slug='dummy_slug')
+        mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task
 
-        mocked_run = MagicMock()
-        mocked_run.job.include_zipfile = True
-        mocked_run.job.name = mock_job_name
-        mocked_run.provider_tasks.all.return_value = [mocked_provider_task]
-
-        mock_ExportRun.objects.get.return_value = mocked_run
-
-        include_files = prepare_for_export_zip_task.run(run_uid=mock_run_uid)
+        returned_zip = create_zip_task.run(data_provider_task_uid=mock_run_uid)
         mock_generate_qgs_style.assert_called_once_with(run_uid=mock_run_uid)
         mock_open.assert_called_once()
+        mock_zip_files.assert_called_once_with(file_path=expected_zip,
+                                               include_files=set(expected_file_list),
+                                               static_files=expected_style_files,
+                                               )
         mock_json.dump.assert_called_once()
-        self.assertEqual(include_files, set(expected_file_list))
+        self.assertEqual(returned_zip, {'result': expected_zip})
 
-    def test_zip_file_task_no_files_to_zip(self):
-        include_files = []
-        res = zip_file_task(include_files)
-        self.assertEqual(res, {'result': None})
+
+
+        sys.stdout.flush()
+
+    def test_zip_file_task_invalid_params(self):
+
+        with self.assertRaises(Exception):
+            include_files = []
+            file_path = '/test/path.zip'
+            res = zip_files(include_files, file_path=file_path)
+            self.assertIsNone(res)
+
+        with self.assertRaises(Exception):
+            include_files = ['test1', 'test2']
+            file_path = ''
+            res = zip_files(include_files, file_path=file_path)
+            self.assertIsNone(res)
 
 
 class TestFormatTasks(ExportTaskBase):
 
     def test_ensure_display(self):
         self.assertTrue(FormatTask.display)
-
-
-class FinalizeRunHookTaskTests(ExportTaskBase):
-    def setUp(self):
-        from eventkit_cloud.tasks import FinalizeRunHookTask
-        from eventkit_cloud.celery import app
-
-        @app.task(bind=True, base=FinalizeRunHookTask)
-        def finalize_hook_file1(self, new_zip_filepaths=[], run_uid=None):
-            return ['file1']
-
-        @app.task(bind=True, base=FinalizeRunHookTask)
-        def finalize_hook_file2(self, new_zip_filepaths=[], run_uid=None):
-            return ['file2']
-
-        @app.task(bind=True, base=FinalizeRunHookTask)
-        def finalize_hook_file3(self, new_zip_filepaths=[], run_uid=None):
-            return ['file3']
-
-        self.finalize_hook_file1 = finalize_hook_file1
-        self.finalize_hook_file2 = finalize_hook_file2
-        self.finalize_hook_file3 = finalize_hook_file3
-
-    @patch('eventkit_cloud.tasks.models.ExportRun')
-    @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
-    @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
-    @patch('eventkit_cloud.tasks.models.FileProducingTaskResult.objects.create')
-    @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
-    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_new_files_in_chain_result(self, record_task_state, frhtr_get, fptr_create, os_getsize, shutil_copy, ExportRunMock):
-        """ Check that expected new files appear in the result & the new files are recorded in
-            FileProducingTaskResult.
-        """
-        os_getsize.return_value = 0
-
-        # With record_task_state mocked there doesn't need to be an ExportRun instance with this id.
-        run_uid = str(uuid.uuid4())
-        fh1_sig = self.finalize_hook_file1.si(run_uid=run_uid)
-        fh2_sig = self.finalize_hook_file2.s(run_uid=run_uid)
-        fh3_sig = self.finalize_hook_file3.s(run_uid=run_uid)
-
-        pf_chain = chain(fh1_sig, fh2_sig, fh3_sig)
-        eager_res = pf_chain.apply()
-
-        fh3_uid = eager_res.as_tuple()[0][0]
-        fh2_uid = eager_res.as_tuple()[0][1][0][0]
-        fh1_uid = eager_res.as_tuple()[0][1][0][1][0][0]
-
-        res = eager_res.get()
-
-        # 2 calls per task run
-        self.assertEqual(record_task_state.call_count, 6)
-        self.assertEqual(res, ['file1', 'file2', 'file3'])
-
-        expected_url_path = lambda x: os.path.join(settings.EXPORT_MEDIA_ROOT, run_uid, x)
-
-        expected_create_calls = [
-            call(download_url=expected_url_path('file1'), filename='file1', size=0),
-            call(download_url=expected_url_path('file2'), filename='file2', size=0),
-            call(download_url=expected_url_path('file3'), filename='file3', size=0),
-        ]
-        fptr_create.assert_has_calls(expected_create_calls, any_order=True)
-
-        expected_get_calls = [call(celery_uid=fh1_uid), call(celery_uid=fh2_uid), call(celery_uid=fh3_uid)]
-        frhtr_get.assert_has_calls(expected_get_calls, any_order=True)
-
-    @patch('eventkit_cloud.tasks.export_tasks.shutil.copy')
-    @patch('eventkit_cloud.tasks.export_tasks.os.path.getsize')
-    @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
-    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    def test_manually_passed_files_in_chain_result(self, record_task_state, frhtr_get, os_getsize, shutil_copy):
-        os_getsize.return_value = 0
-
-        manual_filepath_list = ['my_file_a', 'my_file_b']
-        # With record_task_state mocked there doesn't need to be an ExportRun instance with this id.
-        run_uid = str(uuid.uuid4())
-        pf1_sig = self.finalize_hook_file1.s(manual_filepath_list, run_uid=run_uid)
-        pf2_sig = self.finalize_hook_file2.s(run_uid=run_uid)
-
-        pf_chain = chain(pf1_sig, pf2_sig)
-        eager_res = pf_chain.apply()
-        res = eager_res.get()
-
-        # 2 calls per task run
-        self.assertEqual(record_task_state.call_count, 4)
-        self.assertEqual(res, ['my_file_a', 'my_file_b', 'file1', 'file2'])
-
-    def test_none_uid_raises_error(self):
-        run_uid = None
-        pf1_sig = self.finalize_hook_file1.s(run_uid=run_uid)
-
-        expected_ex_msg = '"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask'
-        self.assertRaisesRegexp(ValueError, expected_ex_msg, pf1_sig.apply, throw=True)
-
-
-    @patch('eventkit_cloud.tasks.export_tasks.AsyncResult')
-    @patch('eventkit_cloud.tasks.models.ExportRun')
-    @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get_or_create')
-    def test_record_task_state(self, get_or_create_mock, ExportRunMock, AsyncResultMock):
-        # With ExportRun mocked this uid doesn't need a corresponding instance.
-        run_uid = str(uuid.uuid4())
-
-        def reset_mocks():
-            get_or_create_mock.reset_mock()
-            get_or_create_mock.return_value = (MagicMock(), None)
-            ExportRunMock.reset_mock()
-            AsyncResultMock.reset_mock()
-
-        reset_mocks()
-
-        # --- When neither started_at nor finished_at are provided a record is created/retrieved but that's it.
-        self.finalize_hook_file1.record_task_state(testing_run_uid=run_uid)
-        get_or_create_mock.assert_called_once()
-        frhtr_instance, _ = get_or_create_mock.return_value
-        frhtr_instance.save.assert_not_called()
-        # Check that no value has been assigned to started_at or finished_at
-        self.assertIsInstance(frhtr_instance.started_at, MagicMock)
-        self.assertIsInstance(frhtr_instance.finished_at, MagicMock)
-        reset_mocks()
-
-        # --- When started_at is provided it should be set & FinalizeRunHookTaskRecord saved.
-        started_at = datetime.datetime.now()
-
-        self.finalize_hook_file1.record_task_state(started_at=started_at, testing_run_uid=run_uid)
-        get_or_create_mock.assert_called_once()
-        frhtr_instance, _ = get_or_create_mock.return_value
-        self.assertEqual(frhtr_instance.started_at, started_at)
-        frhtr_instance.save.assert_called_once_with()
-        reset_mocks()
-
-        # --- When finished_at is provided it should be set & FinalizeRunHookTaskRecord saved.
-        finished_at = datetime.datetime.now()
-        self.finalize_hook_file1.record_task_state(finished_at=finished_at, testing_run_uid=run_uid)
-        get_or_create_mock.called_once_with()
-        frhtr_instance, _ = get_or_create_mock.return_value
-        self.assertEqual(frhtr_instance.finished_at, finished_at)
-        frhtr_instance.save.assert_called_once_with()
-        reset_mocks()
-
-        # --- When started_at and finished_at are provided, both should be set & FinalizeRunHookTaskRecord saved.
-        started_at = datetime.datetime.now()
-        finished_at = datetime.datetime.now() + datetime.timedelta(hours=1)
-        self.finalize_hook_file1.record_task_state(
-            started_at=started_at, finished_at=finished_at, testing_run_uid=run_uid)
-        get_or_create_mock.assert_called_once()
-        frhtr_instance, _ = get_or_create_mock.return_value
-        self.assertEqual(frhtr_instance.started_at, started_at)
-        self.assertEqual(frhtr_instance.finished_at, finished_at)
-        frhtr_instance.save.assert_called_once_with()
-
-    @patch('eventkit_cloud.tasks.models.FinalizeRunHookTaskRecord.objects.get')
-    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_example_finalize_run_hook_task(self, ExportRun, record_task_state, frhtr_get):
-        mock_run_uid = str(uuid.uuid4())
-        example_finalize_run_hook_task(run_uid=mock_run_uid)
-        frhtr_get.assert_called_once_with(celery_uid=None)
-
-    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_finalize_run_hook_task_call_nonsequence_arg(self, ExportRun, record_task_state):
-        mock_run_uid = str(uuid.uuid4())
-        non_sequence_arg = {}
-        self.assertRaises(Exception, example_finalize_run_hook_task, non_sequence_arg, run_uid=mock_run_uid)
-
-    @patch('eventkit_cloud.tasks.export_tasks.FinalizeRunHookTask.record_task_state')
-    @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_finalize_run_hook_task_record_task_state_no_run_uid(self, ExportRun, record_task_state):
-        self.assertRaises(ValueError, example_finalize_run_hook_task)

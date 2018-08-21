@@ -3,11 +3,12 @@ import datetime
 import os
 
 from django.conf import settings
+
 from django.test import TestCase
 from mock import patch, MagicMock
 
 from eventkit_cloud.tasks import TaskStates
-from eventkit_cloud.ui.helpers import generate_qgs_style
+from eventkit_cloud.tasks.helpers import generate_qgs_style
 
 
 class TestStyles(TestCase):

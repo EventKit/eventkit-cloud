@@ -92,14 +92,14 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         return data
 
 
-class ExportTaskResultSerializer(serializers.ModelSerializer):
+class FileProducingTaskResultSerializer(serializers.ModelSerializer):
     """Serialize FileProducingTaskResult models."""
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
     uid = serializers.UUIDField(read_only=True)
 
     def __init__(self, *args, **kwargs):
-        super(ExportTaskResultSerializer, self).__init__(*args, **kwargs)
+        super(FileProducingTaskResultSerializer, self).__init__(*args, **kwargs)
         if self.context.get('no_license'):
             self.fields.pop('url')
 
@@ -113,7 +113,10 @@ class ExportTaskResultSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_size(obj):
-        return "{0:.3f} MB".format(obj.size)
+        size = ""
+        if obj.size:
+            size = "{0:.3f} MB".format(obj.size)
+        return size
 
 
 class ExportTaskExceptionSerializer(serializers.ModelSerializer):
@@ -150,7 +153,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         """Serialize the FileProducingTaskResult for this ExportTaskRecord."""
         try:
             result = obj.result
-            serializer = ExportTaskResultSerializer(result, many=False, context=self.context)
+            serializer = FileProducingTaskResultSerializer(result, many=False, context=self.context)
             return serializer.data
         except FileProducingTaskResult.DoesNotExist:
             return None  # no result yet
@@ -298,11 +301,12 @@ class ExportRunSerializer(serializers.ModelSerializer):
             return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
-        if obj.downloadable and not obj.deleted:
-            request = self.context['request']
-            return request.build_absolute_uri('/download?uid={}'.format(obj.downloadable.uid))
-        else:
-            return ""
+        request = self.context['request']
+        if obj.provider_tasks.filter(name='run'):
+            task_downloadable = obj.provider_tasks.get(name='run').tasks.filter(name__icontains='zip')[0].result
+            if task_downloadable:
+                return request.build_absolute_uri('/download?uid={}'.format(task_downloadable.uid))
+        return ""
 
     def get_created_at(self, obj):
         if not obj.deleted:
@@ -662,13 +666,6 @@ class JobSerializer(serializers.Serializer):
     tags = serializers.SerializerMethodField()
     include_zipfile = serializers.BooleanField(required=False, default=False)
 
-    def get_zipfile_url(self, obj):
-        if obj.downloadable:
-            request = self.context['request']
-            return request.build_absolute_uri('/download?uid={}'.format(obj.downloadable.uid))
-        else:
-            return ""
-
     @staticmethod
     def create(validated_data, **kwargs):
         """Creates an export Job.
@@ -792,11 +789,11 @@ class NotificationSerializer(serializers.ModelSerializer):
 
         response = {}
         if referenced_object_id > 0:
-            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+            response['type'] = str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
             response['id'] = referenced_object_id
 
         if isinstance(referenced_object, User):
-            response['details'] =   UserSerializer(referenced_object).data
+            response['details'] = UserSerializer(referenced_object).data
         if isinstance(referenced_object, Job):
             job = Job.objects.get(pk=obj.actor_object_id)
             response['details'] = ListJobSerializer(job,context={'request': request}).data
