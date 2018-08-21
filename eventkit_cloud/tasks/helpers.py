@@ -141,9 +141,15 @@ def create_license_file(provider_task):
     return license_file_path
 
 
-def generate_qgs_style(run_uid=None, export_provider_task=None):
+def generate_qgs_style(run_uid=None, data_provider_task_record=None):
     """
     Task to create QGIS project file with styles for osm.
+
+    If a data_provider_task_record is provided a style file will be generated only for that, otherwise all of the
+    data providers in the run will be added to the style file.
+    :param run_uid: A uid representing the run.
+    :param data_provider_task_record: A DataProviderTaskRecord model.
+    :return: The path to the generated qgs file.
     """
     from eventkit_cloud.tasks.models import ExportRun
     from eventkit_cloud.tasks.export_tasks import TaskStates
@@ -161,48 +167,53 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
     has_raster = False
     has_elevation = False
     # This collecting of metadata should be generalized and used for both QGS styles and arcmap styles.
-    if export_provider_task:
-        provider_details[export_provider_task.slug] = {'provider_slug': export_provider_task.slug, 'file_path': '', 'provider_name': export_provider_task.name}
-    else:
-        for provider_task in provider_tasks:
-            if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-                for export_task in provider_task.tasks.all():
-                    try:
-                        filename = export_task.result.filename
-                    except Exception:
-                        continue
-                    full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                  provider_task.slug, filename)
-                    if not os.path.isfile(full_file_path):
-                        logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                      export_task.name))
-                        continue
-                    # Exclude zip files created by prepare_file_for zip and the selection geojson
-                    # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
-                    # GeoTIFF are elevation.  This will need to be updated in the future.
-                    file_ext = os.path.splitext(full_file_path)[1]
-                    if file_ext not in [".zip", ".geojson"]:
-                        provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
-                                           'provider_name': provider_task.name,
-                                           'file_type': file_ext}
-                        if provider_task.slug not in ['osm', 'nome']:
-                            if file_ext == '.gpkg':
-                                has_raster = True
-                            if file_ext == '.tif':
-                                has_elevation = True
-                        if os.path.splitext(full_file_path)[1] == '.tif':
-                            # Get statistics to update ranges in template.
-                            band_stats = get_band_statistics(full_file_path)
-                            logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                            provider_details[provider_task.slug]["band_stats"] = band_stats
-                            # Calculate the value for each elevation step (of 16)
-                            steps = linspace(band_stats[0], band_stats[1], num=16)
-                            provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
+    if data_provider_task_record:
+        provider_tasks = [data_provider_task_record]
 
-    style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
-                                                              default_format_time(timezone.now())))
+    for provider_task in provider_tasks:
+        if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+            for export_task in provider_task.tasks.all():
+                try:
+                    filename = export_task.result.filename
+                except Exception:
+                    continue
+                full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
+                                              provider_task.slug, filename)
+                if not os.path.isfile(full_file_path):
+                    logger.error("Could not find file {0} for export {1}.".format(full_file_path,
+                                                                                  export_task.name))
+                    continue
+                # Exclude zip files created by prepare_file_for zip and the selection geojson
+                # also within the QGIS style sheet it is currently assumed that GPKG files are Imagery and
+                # GeoTIFF are elevation.  This will need to be updated in the future.
+                file_ext = os.path.splitext(full_file_path)[1]
+                if file_ext not in [".zip", ".geojson"]:
+                    provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
+                                       'provider_name': provider_task.name,
+                                       'file_type': file_ext}
+                    if provider_task.slug not in ['osm', 'nome']:
+                        if file_ext == '.gpkg':
+                            has_raster = True
+                        if file_ext == '.tif':
+                            has_elevation = True
+                    if os.path.splitext(full_file_path)[1] == '.tif':
+                        # Get statistics to update ranges in template.
+                        band_stats = get_band_statistics(full_file_path)
+                        logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
+                        provider_details[provider_task.slug]["band_stats"] = band_stats
+                        # Calculate the value for each elevation step (of 16)
+                        steps = linspace(band_stats[0], band_stats[1], num=16)
+                        provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
+
+    if data_provider_task_record:
+        style_file_name =  '{0}-{1}-{2}.qgs'.format(normalize_name(job_name), normalize_name(data_provider_task_record.slug),
+                                                         default_format_time(timezone.now()))
+    else:
+        style_file_name = '{0}-{1}.qgs'.format(normalize_name(job_name), default_format_time(timezone.now()))
+    style_file = os.path.join(stage_dir, style_file_name)
 
     provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
+    logger.error(provider_details)
 
     with open(style_file, 'w') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),
@@ -311,6 +322,8 @@ def get_osm_last_update(url, slug=None):
         logger.warning(e)
         logger.warning("Could not get the timestamp from the overpass url.")
         return None
+
+
 def progressive_kill(pid):
     """
     Tries to kill first with TERM and then with KILL.
