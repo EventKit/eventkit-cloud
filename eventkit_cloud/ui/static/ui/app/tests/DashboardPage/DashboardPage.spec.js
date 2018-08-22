@@ -3,7 +3,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
-import { CircularProgress } from 'material-ui';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DashboardSection from '../../components/DashboardPage/DashboardSection';
@@ -460,17 +460,17 @@ describe('DashboardPage component', () => {
         });
 
         it('renders Notifications "no data" element', () => {
-            const notificationsSection = wrapper.find('.qa-DashboardSection-Notifications').dive();
+            const notificationsSection = wrapper.find('.qa-DashboardSection-Notifications').dive().dive();
             expect(notificationsSection.find('.qa-DashboardSection-Notifications-NoData')).toHaveLength(1);
         });
 
         it('renders Recently Viewed "no data" element', () => {
-            const recentlyViewedSection = wrapper.find('.qa-DashboardSection-RecentlyViewed').dive();
+            const recentlyViewedSection = wrapper.find('.qa-DashboardSection-RecentlyViewed').dive().dive();
             expect(recentlyViewedSection.find('.qa-DashboardSection-RecentlyViewed-NoData')).toHaveLength(1);
         });
 
         it('renders My DataPacks "no data" element', () => {
-            const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').dive();
+            const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').dive().dive();
             expect(myDataPacksSection.find('.qa-DashboardSection-MyDataPacks-NoData')).toHaveLength(1);
         });
     });
