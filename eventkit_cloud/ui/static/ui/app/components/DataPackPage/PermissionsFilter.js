@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Lock from '@material-ui/icons/LockOutlined';
 import SocialGroup from '@material-ui/icons/Group';
 import CheckCircle from '@material-ui/icons/CheckCircle';
@@ -34,7 +36,8 @@ export class PermissionsFilter extends Component {
         this.handleClose();
     }
 
-    handleSelection(e, v) {
+    handleSelection(e) {
+        const v = e.target.value;
         // Dont do anything if the value is already selected
         if (v === this.props.permissions.value) {
             return;
@@ -79,7 +82,8 @@ export class PermissionsFilter extends Component {
             },
             icon: {
                 fill: 'grey',
-                height: '26px',
+                width: '24px',
+                height: '24px',
                 flex: '0 0 auto',
             },
             groups: {
@@ -96,13 +100,15 @@ export class PermissionsFilter extends Component {
             },
         };
 
+        const { permissions } = this.props;
+
         const checkIcon = (<CheckCircle style={{ fill: '#4598bf' }} />);
 
         let sharedButton = null;
         // SHARED and PUBLIC are internal, to the user they are both 'SHARED'
-        if (this.props.permissions.value === 'SHARED' || this.props.permissions.value === 'PUBLIC') {
-            const groupCount = Object.keys(this.props.permissions.groups).length;
-            const memberCount = Object.keys(this.props.permissions.members).length;
+        if (permissions.value === 'SHARED' || permissions.value === 'PUBLIC') {
+            const groupCount = Object.keys(permissions.groups).length;
+            const memberCount = Object.keys(permissions.members).length;
 
             let groupText = '';
             if (groupCount === 0) {
@@ -127,13 +133,13 @@ export class PermissionsFilter extends Component {
             }
 
             sharedButton = (
-                <EnhancedButton
+                <ButtonBase
                     className="qa-PermissionsFilter-MembersAndGroups-button"
                     onClick={this.handleOpen}
                     style={styles.sharedButton}
                 >
                     {memberText} / {groupText}
-                </EnhancedButton>
+                </ButtonBase>
             );
         }
 
@@ -145,48 +151,40 @@ export class PermissionsFilter extends Component {
                 >
                     <strong>Permissions</strong>
                 </p>
-                <RadioButtonGroup
+                <RadioGroup
                     className="qa-PermissionsFilter-RadioButtonGroup"
                     name="permissions"
                     onChange={this.handleSelection}
-                    valueSelected={this.props.permissions.value}
-                    style={{ width: '100%' }}
+                    value={permissions.value}
+                    style={{ width: '100%', flexWrap: 'no-wrap' }}
                 >
-                    <RadioButton
-                        className="qa-PermissionsFilter-RadioButton-private"
-                        style={{ width: '100%', marginBottom: '10px' }}
-                        iconStyle={styles.radioIcon}
-                        labelStyle={styles.radioLabel}
+                    <FormControlLabel
+                        style={{ margin: '0px 0px 5px 0px' }}
                         value="PRIVATE"
-                        checkedIcon={checkIcon}
                         label={
-                            <div style={{ display: 'flex' }}>
-                                <div style={{ flex: '1 1 auto' }}>
+                            <div style={{ display: 'flex', flex: '1 1 auto', lineHeight: '24px' }}>
+                                <div style={{ flex: '1 1 auto', fontSize: '14px', color: '#707274' }}>
                                     Private (only me)
                                 </div>
                                 <Lock style={styles.icon} />
                             </div>
                         }
+                        control={<Radio style={{ width: 24, height: 24, marginRight: '5px' }} checkedIcon={checkIcon} />}
                     />
-                    <RadioButton
-                        className="qa-PermissionsFilter-RadioButton-group"
-                        style={{ width: '100%' }}
-                        iconStyle={styles.radioIcon}
-                        labelStyle={styles.radioLabel}
-                        // The value can be either since they are show to the user in the same way
-                        // PUBLIC and SHARED are distinct only for interal use
-                        value={this.props.permissions.value === 'SHARED' ? 'SHARED' : 'PUBLIC'}
-                        checkedIcon={checkIcon}
+                    <FormControlLabel
+                        style={{ margin: '0px 0px 5px 0px' }}
+                        value={permissions.value === 'SHARED' ? 'SHARED' : 'PUBLIC'}
                         label={
-                            <div style={{ display: 'flex' }}>
-                                <div style={{ flex: '1 1 auto' }}>
+                            <div style={{ display: 'flex', flex: '1 1 auto', lineHeight: '24px' }}>
+                                <div style={{ flex: '1 1 auto', fontSize: '14px', color: '#707274' }}>
                                     Shared
                                 </div>
                                 <SocialGroup style={styles.icon} />
                             </div>
                         }
+                        control={<Radio style={{ width: 24, height: 24, marginRight: '5px' }} checkedIcon={checkIcon} />}
                     />
-                </RadioButtonGroup>
+                </RadioGroup>
                 {sharedButton}
                 <DataPackShareDialog
                     show={this.state.open}

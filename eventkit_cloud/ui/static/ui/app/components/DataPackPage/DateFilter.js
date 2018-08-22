@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import DatePicker from 'material-ui/DatePicker';
+import DatePicker from '../common/DatePicker';
 
 export class DateFilter extends Component {
     render() {
@@ -9,7 +9,11 @@ export class DateFilter extends Component {
                 width: '100%',
                 paddingLeft: '10px',
                 paddingRight: '10px',
-                lineHeight: '36px',
+            },
+            label: {
+                fontSize: '10px',
+                color: '#707274',
+                paddingLeft: '5px',
             },
             textField: {
                 fontSize: '14px',
@@ -25,25 +29,23 @@ export class DateFilter extends Component {
             >
                 <p
                     className="qa-DateFilter-p"
-                    style={{ width: '100%', margin: '0px' }}
+                    style={{ width: '100%', margin: '0px', lineHeight: '36px' }}
                 >
                     <strong>Date Added</strong>
                 </p>
+                <span style={styles.label}>From</span>
                 <DatePicker
                     className="qa-DateFilter-DatePicker-from"
-                    autoOk
-                    hintText="From"
-                    textFieldStyle={styles.textField}
                     onChange={this.props.onMinChange}
                     value={this.props.minDate}
+                    fullWidth
                 />
+                <span style={styles.label}>To</span>
                 <DatePicker
                     className="qa-DateFilter-DatePicker-to"
-                    autoOk
-                    hintText="To"
-                    textFieldStyle={styles.textField}
                     onChange={this.props.onMaxChange}
                     value={this.props.maxDate}
+                    fullWidth
                 />
             </div>
         );

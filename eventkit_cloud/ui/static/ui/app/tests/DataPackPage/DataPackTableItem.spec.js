@@ -4,15 +4,15 @@ import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Link } from 'react-router';
-import { TableRow, TableRowColumn } from 'material-ui/Table';
-import IconButton from 'material-ui/IconButton';
-import IconMenu from 'material-ui/IconMenu';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import AlertError from '@material-ui/icons/Error';
 import Lock from '@material-ui/icons/LockOutlined';
 import SocialGroup from '@material-ui/icons/Group';
 import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import NavigationCheck from '@material-ui/icons/Check';
 import NotificationSync from '@material-ui/icons/Sync';
+import IconMenu from '../../components/common/IconMenu';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
@@ -125,18 +125,17 @@ describe('DataPackTableItem component', () => {
         const props = getProps();
         const wrapper = getWrapperMount(props);
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(8);
+        expect(wrapper.find(TableCell)).toHaveLength(8);
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual(`/status/${run.job.uid}`);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(0).text()).toEqual(run.job.name);
-        expect(wrapper.find(TableRowColumn).at(1).text()).toEqual(run.job.event);
-        expect(wrapper.find(TableRowColumn).at(2).text()).toEqual('3/10/17');
-        expect(wrapper.find(TableRowColumn).at(3).find(NavigationCheck)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(4).find(Lock)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(5).text()).toEqual('My DataPack');
+        expect(wrapper.find(TableCell).at(0).text()).toEqual(run.job.name);
+        expect(wrapper.find(TableCell).at(1).text()).toEqual(run.job.event);
+        expect(wrapper.find(TableCell).at(2).text()).toEqual('3/10/17');
+        expect(wrapper.find(TableCell).at(3).find(NavigationCheck)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(4).find(Lock)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(5).text()).toEqual('My DataPack');
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
@@ -147,12 +146,12 @@ describe('DataPackTableItem component', () => {
         props.run.job.permissions.value = 'PUBLIC';
         props.run.status = 'INCOMPLETE';
         wrapper.setProps(props);
-        expect(wrapper.find(TableRowColumn).at(3).find(AlertError)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(4).find(SocialGroup)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn).at(5).text()).toEqual('Not Admin');
+        expect(wrapper.find(TableCell).at(3).find(AlertError)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(4).find(SocialGroup)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(5).text()).toEqual('Not Admin');
         props.run.status = 'SUBMITTED';
         wrapper.setProps(props);
-        expect(wrapper.find(TableRowColumn).at(3).find(NotificationSync)).toHaveLength(1);
+        expect(wrapper.find(TableCell).at(3).find(NotificationSync)).toHaveLength(1);
     });
 
     it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user', () => {
@@ -214,7 +213,6 @@ describe('DataPackTableItem component', () => {
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWithExactly({
-            menuOpen: false,
             providerDescs: {
                 'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
             },
@@ -231,7 +229,6 @@ describe('DataPackTableItem component', () => {
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWithExactly({
-            menuOpen: false,
             deleteDialogOpen: true,
         }));
         stateSpy.restore();
@@ -267,7 +264,6 @@ describe('DataPackTableItem component', () => {
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
         expect(stateSpy.calledWithExactly({
-            menuOpen: false,
             shareDialogOpen: true,
         }));
         stateSpy.restore();
@@ -291,14 +287,6 @@ describe('DataPackTableItem component', () => {
         expect(instance.handleShareClose.callCount).toBe(1);
         expect(instance.props.onRunShare.callCount).toBe(1);
         expect(instance.props.onRunShare.calledWithExactly(instance.props.run.job.uid, permissions));
-    });
-
-    it('should set menu open prop with menuOpen value', () => {
-        const wrapper = getWrapperMount(getProps());
-        expect(wrapper.state().menuOpen).toBe(false);
-        expect(wrapper.find(IconMenu).props().open).toBe(false);
-        wrapper.setState({ menuOpen: true });
-        expect(wrapper.find(IconMenu).props().open).toBe(true);
     });
 
     it('should set share dialog open prop with shareDialogOpen value', () => {

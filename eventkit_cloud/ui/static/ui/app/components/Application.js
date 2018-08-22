@@ -45,8 +45,29 @@ const muiThemeV1 = createMuiTheme({
                 '&$disabled': { color: 'grey' },
             },
         },
-        MuiTableRow: {
-            selectedColor: 'initial',
+        MuiInput: {
+            underline: {
+                '&:before': {
+                    borderBottomColor: '#5a5a5a',
+                },
+                '&:hover:not($disabled):not($error):not($focused):before': {
+                    borderBottomColor: '#5a5a5a',
+                },
+                '&:after': {
+                    borderBottomColor: '#4598bf',
+                },
+            },
+        },
+        MuiTableCell: {
+            head: {
+                fontSize: '12px',
+            },
+            body: {
+                fontSize: '12px',
+            },
+            footer: {
+                fontSize: '12px',
+            },
         },
         MuiButton: {
             root: {
@@ -57,9 +78,19 @@ const muiThemeV1 = createMuiTheme({
                 lineHeight: '30px',
             },
         },
+        MuiMenuItem: {
+            selected: {
+                color: '#4598bf',
+            },
+        },
         MuiSvgIcon: {
             colorSecondary: {
                 color: '#fff',
+            },
+        },
+        MuiTypography: {
+            root: {
+                width: '100%',
             },
         },
     },

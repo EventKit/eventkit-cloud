@@ -1423,7 +1423,7 @@ describe('ExportAOI component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-DataPackLinkButton-RaisedButton',
+                selector: '.qa-DataPackLinkButton-Button',
                 style: {},
                 text: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',
@@ -1444,7 +1444,7 @@ describe('ExportAOI component', () => {
             index: 2,
             step: {
                 position: 'bottom',
-                selector: '.qa-DataPackLinkButton-RaisedButton',
+                selector: '.qa-DataPackLinkButton-Button',
                 style: {},
                 text: 'Click here to Navigate to Create a DataPack.',
                 title: 'Create DataPack',

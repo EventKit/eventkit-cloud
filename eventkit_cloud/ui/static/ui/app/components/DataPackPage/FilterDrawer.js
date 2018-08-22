@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import Drawer from 'material-ui/Drawer';
+import Drawer from '@material-ui/core/Drawer';
 import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
@@ -70,12 +70,12 @@ export class FilterDrawer extends Component {
         this.setState({ providers });
     }
 
-    handleMinDate(e, date) {
-        this.setState({ minDate: date });
+    handleMinDate(e) {
+        this.setState({ minDate: e.target.value });
     }
 
-    handleMaxDate(e, date) {
-        this.setState({ maxDate: date });
+    handleMaxDate(e) {
+        this.setState({ maxDate: e.target.value });
     }
 
     render() {
@@ -86,16 +86,20 @@ export class FilterDrawer extends Component {
                 height: window.innerHeight - 221,
                 overflowY: 'hidden',
                 overflowX: 'hidden',
+                width: '250px',
             },
         };
 
         return (
             <Drawer
                 className="qa-FilterDrawer-Drawer"
-                width={250}
-                openSecondary
+                variant="persistent"
+                anchor="right"
                 open={this.props.open}
-                containerStyle={styles.containerStyle}
+                PaperProps={{ style: styles.containerStyle }}
+                SlideProps={{
+                    unmountOnExit: true,
+                }}
             >
                 <CustomScrollbar>
                     <FilterHeader

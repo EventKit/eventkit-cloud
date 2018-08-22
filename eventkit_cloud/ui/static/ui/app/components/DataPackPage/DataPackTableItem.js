@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Link, browserHistory } from 'react-router';
-import { TableRow, TableRowColumn } from 'material-ui/Table';
-import IconButton from 'material-ui/IconButton';
-import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import MenuItem from '@material-ui/core/MenuItem';
 import AlertError from '@material-ui/icons/Error';
 import Lock from '@material-ui/icons/LockOutlined';
 import SocialGroup from '@material-ui/icons/Group';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import NavigationCheck from '@material-ui/icons/Check';
 import Star from '@material-ui/icons/Star';
 import NotificationSync from '@material-ui/icons/Sync';
-import { List, ListItem } from 'material-ui/List';
+import List from '@material-ui/core/List';
 import moment from 'moment';
+import IconMenu from '../common/IconMenu';
+import DropDownListItem from '../common/DropDownListItem';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
@@ -21,7 +21,6 @@ import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 export class DataPackTableItem extends Component {
     constructor(props) {
         super(props);
-        this.handleMenuChange = this.handleMenuChange.bind(this);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.showDeleteDialog = this.showDeleteDialog.bind(this);
@@ -35,7 +34,6 @@ export class DataPackTableItem extends Component {
             providerDialogOpen: false,
             deleteDialogOpen: false,
             shareDialogOpen: false,
-            menuOpen: false,
         };
     }
 
@@ -69,10 +67,6 @@ export class DataPackTableItem extends Component {
         e.stopPropagation();
     }
 
-    handleMenuChange(menuOpen) {
-        this.setState({ menuOpen });
-    }
-
     handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
@@ -84,17 +78,13 @@ export class DataPackTableItem extends Component {
             providerDesc[a.name] = a.service_description;
         });
         this.setState({
-            menuOpen: false,
             providerDescs: providerDesc,
             providerDialogOpen: true,
         });
     }
 
     showDeleteDialog() {
-        this.setState({
-            menuOpen: false,
-            deleteDialogOpen: true,
-        });
+        this.setState({ deleteDialogOpen: true });
     }
 
     hideDeleteDialog() {
@@ -107,10 +97,7 @@ export class DataPackTableItem extends Component {
     }
 
     handleShareOpen() {
-        this.setState({
-            menuOpen: false,
-            shareDialogOpen: true,
-        });
+        this.setState({ shareDialogOpen: true });
     }
 
     handleShareClose() {
@@ -125,30 +112,6 @@ export class DataPackTableItem extends Component {
 
     render() {
         const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
-
-        const providersList = Object.entries(this.state.providerDescs).map(([key, value], ix) => (
-            <ListItem
-                className="qa-DataPackTableItem-ListItem-providerDescs"
-                key={key}
-                style={{
-                    backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontWeight: 'bold', width: '100%', zIndex: 0,
-                }}
-                nestedListStyle={{ padding: '0px' }}
-                primaryText={key}
-                initiallyOpen={false}
-                primaryTogglesNestedList={false}
-                nestedItems={[
-                    <ListItem
-                        key={1}
-                        primaryText={<div style={{ whiteSpace: 'pre-wrap', fontWeight: 'bold' }}>{value}</div>}
-                        style={{
-                            backgroundColor: ix % 2 === 0 ? 'whitesmoke' : 'white', fontSize: '14px', width: '100%', zIndex: 0,
-                        }}
-                    />,
-                ]}
-            />
-        ));
-
         const styles = {
             nameColumn: {
                 padding: '0px 0px 0px 10px',
@@ -167,13 +130,13 @@ export class DataPackTableItem extends Component {
                 color: 'grey',
             },
             statusColumn: {
-                width: '65px',
-                padding: '0px 0px 0px 0px',
+                width: '70px',
+                padding: '0px 0px 0px 10px',
                 textAlign: 'center',
             },
             permissionsColumn: {
-                width: '100px',
-                padding: '0px 0px 0px 0px',
+                width: '102px',
+                padding: '0px 0px 0px 10px',
                 textAlign: 'center',
             },
             ownerColumn: {
@@ -182,25 +145,19 @@ export class DataPackTableItem extends Component {
             },
             featuredColumn: {
                 padding: '0px 0px 0px 10px',
-                width: '80px',
+                width: '82px',
                 textAlign: 'center',
             },
             optionsColumn: {
-                paddingRight: '10px',
                 padding: '0px',
                 width: '35px',
-            },
-            dropDownIcon: {
-                padding: '0px',
-                width: '20px',
-                verticalAlign: 'middle',
             },
         };
 
         return (
             <TableRow className="qa-DataPackTableItem-TableRow">
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-jobLink"
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-jobLink"
                     style={styles.nameColumn}
                 >
                     <Link
@@ -210,94 +167,88 @@ export class DataPackTableItem extends Component {
                     >
                         {this.props.run.job.name}
                     </Link>
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-event"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-event"
                     style={styles.eventColumn}
                 >
                     {this.props.run.job.event}
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-started"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-started"
                     style={styles.startedColumn}
                 >
                     {moment(this.props.run.started_at).format('M/D/YY')}
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-status tour-datapack-status"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-status tour-datapack-status"
                     style={styles.statusColumn}
                 >
                     {this.getStatusIcon(this.props.run.status)}
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-published"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-published"
                     style={styles.permissionsColumn}
                 >
                     {this.getPermissionsIcon(this.props.run.job.permissions.value)}
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-owner"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-owner"
                     style={styles.ownerColumn}
                 >
                     {this.getOwnerText(this.props.run, this.props.user.data.user.username)}
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-featured tour-datapack-featured"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-featured tour-datapack-featured"
                     style={styles.featuredColumn}
                 >
                     {this.props.run.job.featured ? <Star style={{ fill: 'grey' }} /> : null}
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-DataPackTableItem-TableRowColumn-iconMenu tour-datapack-options"
+                </TableCell>
+                <TableCell
+                    className="qa-DataPackTableItem-TableCell-iconMenu tour-datapack-options"
                     style={styles.optionsColumn}
                 >
                     <IconMenu
                         className="qa-DataPackTableItem-IconMenu"
-                        open={this.state.menuOpen}
-                        iconButtonElement={
-                            <IconButton
-                                className="qa-DataPackTableItem-IconMenu"
-                                style={styles.dropDownIcon}
-                                iconStyle={{ color: '#4598bf' }}
-                                onClick={this.handleMenuButtonClick}
-                            >
-                                <NavigationMoreVert className="qa-DataPackTableItem-NavigationMoreVert" />
-                            </IconButton>}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        onRequestChange={this.handleMenuChange}
+                        style={{ width: '30px', height: '30px' }}
                     >
                         <MenuItem
+                            key="download"
                             className="qa-DataPackTableItem-MenuItem-statusDownloadLink"
                             style={{ fontSize: '12px' }}
-                            primaryText="Status & Download"
                             onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
-                        />
+                        >
+                            Status & Download
+                        </MenuItem>
                         <MenuItem
+                            key="sources"
                             className="qa-DataPackTableItem-MenuItem-viewDataSources"
                             style={{ fontSize: '12px' }}
-                            primaryText="View Data Sources"
                             onClick={() => this.handleProviderOpen(runProviders)}
-                        />
-                        { this.props.adminPermissions ?
-                            [
-                                <MenuItem
-                                    key="delete"
-                                    className="qa-DataPackTableItem-MenuItem-deleteExport"
-                                    style={{ fontSize: '12px' }}
-                                    primaryText="Delete Export"
-                                    onClick={this.showDeleteDialog}
-                                />,
-                                <MenuItem
-                                    key="share"
-                                    className="qa-DataPackTableItem-MenuItem-share"
-                                    style={{ fontSize: '12px' }}
-                                    primaryText="Share"
-                                    onClick={this.handleShareOpen}
-                                />,
-                            ]
-                            :
-                            null
+                        >
+                            View Data Sources
+                        </MenuItem>
+                        {this.props.adminPermissions ?
+                            <MenuItem
+                                key="delete"
+                                className="qa-DataPackTableItem-MenuItem-deleteExport"
+                                style={{ fontSize: '12px' }}
+                                onClick={this.showDeleteDialog}
+                            >
+                                Delete Export
+                            </MenuItem>
+                            : null
+                        }
+                        {this.props.adminPermissions ?
+                            <MenuItem
+                                key="share"
+                                className="qa-DataPackTableItem-MenuItem-share"
+                                style={{ fontSize: '12px' }}
+                                onClick={this.handleShareOpen}
+                            >
+                                Share
+                            </MenuItem>
+                            : null
                         }
                     </IconMenu>
                     <BaseDialog
@@ -306,7 +257,17 @@ export class DataPackTableItem extends Component {
                         title="DATA SOURCES"
                         onClose={this.handleProviderClose}
                     >
-                        <List className="qa-DataPackTableItem-List-dataSources">{providersList}</List>
+                        <List className="qa-DataPackTableItem-List-dataSources">
+                            {Object.entries(this.state.providerDescs).map(([key, value], ix) => (
+                                <DropDownListItem
+                                    title={key}
+                                    key={key}
+                                    alt={ix % 2 !== 0}
+                                >
+                                    {value}
+                                </DropDownListItem>
+                            ))}
+                        </List>
                     </BaseDialog>
                     <DeleteDataPackDialog
                         className="qa-DataPackTableItem-DeleteDialog"
@@ -314,7 +275,7 @@ export class DataPackTableItem extends Component {
                         onCancel={this.hideDeleteDialog}
                         onDelete={this.handleDelete}
                     />
-                </TableRowColumn>
+                </TableCell>
                 <DataPackShareDialog
                     show={this.state.shareDialogOpen}
                     onClose={this.handleShareClose}

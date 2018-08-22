@@ -435,7 +435,7 @@ export const joyride = {
                 title: 'Menu Options',
                 text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
-                selector: '.tour-datapack-options',
+                selector: '.qa-IconMenu-IconButton',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -451,7 +451,7 @@ export const joyride = {
                 title: 'Create DataPack',
                 text: `Click here to begin creating a DataPack.
                     This will leave the DataPack Library and take you to the Create DataPack page.`,
-                selector: '.qa-DataPackLinkButton-RaisedButton',
+                selector: '.qa-DataPackLinkButton-Button',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -503,7 +503,7 @@ export const joyride = {
                 title: 'Menu Options',
                 text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
-                selector: '.qa-DataPackGridItem-IconMenu',
+                selector: '.qa-IconMenu-IconButton',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -519,7 +519,7 @@ export const joyride = {
                 title: 'Create DataPack',
                 text: `Click here to begin creating a DataPack.
                     This will leave the DataPack Library and take you to the Create DataPack page.`,
-                selector: '.qa-DataPackLinkButton-RaisedButton',
+                selector: '.qa-DataPackLinkButton-Button',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -566,7 +566,7 @@ export const joyride = {
                 text: `Use the placename search as a spatial filter for DataPacks.
                     If a placename has an associated polygon, EventKit will return all DataPacks that intersect the polygon.
                     If the placename is a point or an MGRS coordinate, then EventKit will return all DataPacks that contain that point.`,
-                selector: '.bootstrap-typeahead-input',
+                selector: '.qa-SearchAOIToolbar-typeahead',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -584,7 +584,7 @@ export const joyride = {
                 title: 'Menu Options',
                 text: `Use this menu to navigate to the “Status & Download” page where you can download the DataPack files,
                     share the DataPack with other EventKit users, or delete the datapack.`,
-                selector: '.qa-DataPackListItem-IconMenu',
+                selector: '.qa-IconMenu-IconButton',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
             },
@@ -607,7 +607,7 @@ export const joyride = {
                 title: 'Create DataPack',
                 text: `Click here to begin creating a DataPack.
                     This will leave the DataPack Library and take you to the Create DataPack page.`,
-                selector: '.qa-DataPackLinkButton-RaisedButton',
+                selector: '.qa-DataPackLinkButton-Button',
                 position: 'bottom',
                 style: JoyRideStyles.tooltipStyle,
 
