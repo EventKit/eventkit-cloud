@@ -133,7 +133,6 @@ export class GroupsHeaderRow extends Component {
         return (
             <Card
                 style={styles.card}
-                containerStyle={{ paddingBottom: '0px' }}
                 className="qa-GroupsHeaderRow-Card"
             >
                 <CardHeader

@@ -67,6 +67,7 @@ export class ShareBaseDialog extends Component {
 
         const actions = [
             <Button
+                key="cancel"
                 className="qa-ShareBaseDialog-cancel"
                 style={{ fontWeight: 'bold' }}
                 variant="flat"
@@ -76,6 +77,7 @@ export class ShareBaseDialog extends Component {
                 CANCEL
             </Button>,
             <Button
+                key="save"
                 className="qa-ShareBaseDialog-save"
                 style={{ fontWeight: 'bold' }}
                 variant="contained"

@@ -174,7 +174,7 @@ export class GroupRow extends Component {
                     style={{ padding: '12px' }}
                 />
                 <Collapse in={this.state.expanded}>
-                    <CardContent expandable style={styles.cardText}>
+                    <CardContent style={styles.cardText}>
                         {firstFour.map((member) => {
                             const isAdmin = this.props.group.administrators.includes(member.user.username);
                             return (
