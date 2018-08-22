@@ -50,6 +50,7 @@ export class BaseDialog extends Component {
         // the default is just a close button
         const defaultActions = [
             <Button
+                key="close"
                 className="qa-BaseDialog-Button"
                 style={styles.button}
                 variant="contained"

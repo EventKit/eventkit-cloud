@@ -13,6 +13,7 @@ export class ConfirmDialog extends Component {
 
         const deleteActions = [
             <Button
+                key="cancel"
                 className="qa-ConfirmDialog-Button-CancelButton"
                 style={{ ...style, marginRight: '10px' }}
                 onClick={this.props.onCancel}
@@ -21,6 +22,7 @@ export class ConfirmDialog extends Component {
                 {this.props.cancelLabel}
             </Button>,
             <Button
+                key="confirm"
                 className="qa-ConfirmDialog-Button-ConfirmButton"
                 style={{ ...style, color: this.props.isDestructive ? '#ff0000' : '#4598bf' }}
                 onClick={this.props.onConfirm}
