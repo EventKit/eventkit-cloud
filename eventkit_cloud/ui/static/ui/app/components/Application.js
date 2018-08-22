@@ -90,6 +90,11 @@ const muiThemeV1 = createMuiTheme({
                 color: '#4598bf',
             },
         },
+        MuiMenuItem: {
+            selected: {
+                color: '#4598bf',
+            },
+        },
         MuiSvgIcon: {
             colorSecondary: {
                 color: '#fff',
