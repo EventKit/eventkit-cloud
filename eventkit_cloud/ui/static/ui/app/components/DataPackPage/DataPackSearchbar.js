@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import TextField from 'material-ui/TextField';
+import TextField from '@material-ui/core/TextField';
 
 class DataPackSearchbar extends React.Component {
     constructor(props) {
@@ -16,38 +16,26 @@ class DataPackSearchbar extends React.Component {
         }
     }
 
-    handleChange(event, value) {
-        const text = value || '';
+    handleChange(event) {
+        const text = event.target.value || '';
         this.props.onSearchChange(text);
     }
 
     render() {
         const styles = {
             container: {
-                color: 'white',
                 height: '36px',
                 width: '100%',
                 backgroundColor: '#16212f',
                 lineHeight: '36px',
             },
-            hint: {
-                color: '#5a5a5a',
-                height: '36px',
-                lineHeight: 'inherit',
-                bottom: '0px',
-                paddingLeft: '5px',
-            },
             input: {
-                color: '#cacaca',
-                paddingLeft: '5px',
-            },
-            underline: {
-                borderBottom: '1px solid #5a5a5a',
-                bottom: '0px',
-            },
-            underlineFocus: {
-                borderBottom: '2px solid #4498c0',
-                bottom: '0px',
+                color: '#fff',
+                height: '36px',
+                width: '100%',
+                lineHeight: '36px',
+                padding: '0px 10px',
+                fontSize: '16px',
             },
         };
 
@@ -55,12 +43,9 @@ class DataPackSearchbar extends React.Component {
             <TextField
                 className="qa-DataPackSearchBar-TextField"
                 style={styles.container}
-                hintText="Search DataPacks"
-                hintStyle={styles.hint}
-                inputStyle={styles.input}
+                inputProps={{ style: styles.input }}
+                placeholder="Search DataPacks"
                 onChange={this.handleChange}
-                underlineStyle={styles.underline}
-                underlineFocusStyle={styles.underlineFocus}
                 onKeyDown={this.handleKeyDown}
                 defaultValue={this.props.defaultValue}
             />

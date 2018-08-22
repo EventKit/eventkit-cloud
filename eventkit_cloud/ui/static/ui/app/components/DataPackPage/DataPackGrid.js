@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { GridList } from 'material-ui/GridList';
+import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from './LoadButtons';
@@ -49,7 +49,7 @@ export class DataPackGrid extends Component {
                         className="qa-DataPackGrid-GridList"
                         cellHeight="auto"
                         style={styles.gridList}
-                        padding={window.innerWidth >= 768 ? 7 : 2}
+                        spacing={window.innerWidth >= 768 ? 7 : 2}
                         cols={this.getColumns()}
                     >
                         {this.props.runs.map((run, index) => {

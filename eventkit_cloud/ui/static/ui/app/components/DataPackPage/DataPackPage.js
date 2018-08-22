@@ -3,11 +3,11 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import AppBar from 'material-ui/AppBar';
-import CircularProgress from 'material-ui/CircularProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Help from '@material-ui/icons/Help';
-import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import Toolbar from '@material-ui/core/Toolbar';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import PageHeader from '../common/PageHeader';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
@@ -274,7 +274,7 @@ export class DataPackPage extends React.Component {
         });
     }
 
-    handleOwnerFilter(event, index, value) {
+    handleOwnerFilter(value) {
         this.updateLocationQuery({ collection: value });
     }
 
@@ -449,12 +449,7 @@ export class DataPackPage extends React.Component {
                 backgroundRepeat: 'repeat repeat',
                 marginRight: this.state.open && window.innerWidth >= 1200 ? '250px' : '0px',
                 marginTop: window.innerWidth > 575 ? '10px' : '2px',
-            },
-            appBar: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
+                position: 'relative',
             },
             pageTitle: {
                 fontSize: '18px',
@@ -463,11 +458,14 @@ export class DataPackPage extends React.Component {
                 height: '35px',
             },
             toolbarSearch: {
+                height: '56px',
+                minHeight: '56px',
                 backgroundColor: '#253447',
             },
             toolbarSort: {
                 backgroundColor: '#253447',
                 height: '35px',
+                minHeight: '35px',
                 display: 'inline-block',
                 width: '100%',
             },
@@ -496,7 +494,7 @@ export class DataPackPage extends React.Component {
                 color: '#4598bf',
                 cursor: 'pointer',
                 display: 'inline-block',
-                marginRight: '30px',
+                marginRight: '15px',
             },
             tourIcon: {
                 color: '#4598bf',
@@ -510,13 +508,13 @@ export class DataPackPage extends React.Component {
         };
 
         const iconElementRight = (
-            <EnhancedButton
+            <ButtonBase
                 onClick={this.handleJoyride}
                 style={styles.tourButton}
             >
                 <Help style={styles.tourIcon} />
                 Page Tour
-            </EnhancedButton>
+            </ButtonBase>
         );
 
         return (
@@ -538,25 +536,20 @@ export class DataPackPage extends React.Component {
                     }}
                     run={isRunning}
                 />
-                <AppBar
-                    className="qa-DataPackPage-AppBar"
-                    style={styles.appBar}
+                <PageHeader
+                    className="qa-DataPackPage-PageHeader"
                     title={pageTitle}
-                    titleStyle={styles.pageTitle}
-                    iconElementLeft={<p />}
-                    iconElementRight={iconElementRight}
                 >
+                    {iconElementRight}
                     <DataPackLinkButton />
-                </AppBar>
+                </PageHeader>
 
                 <Toolbar className="qa-DataPackPage-Toolbar-search" style={styles.toolbarSearch}>
-                    <ToolbarGroup className="qa-DataPackPage-ToolbarGroup-search" style={{ width: '100%' }}>
-                        <DataPackSearchbar
-                            onSearchChange={this.checkForEmptySearch}
-                            onSearchSubmit={this.onSearch}
-                            defaultValue={this.props.location.query.search}
-                        />
-                    </ToolbarGroup>
+                    <DataPackSearchbar
+                        onSearchChange={this.checkForEmptySearch}
+                        onSearchSubmit={this.onSearch}
+                        defaultValue={this.props.location.query.search}
+                    />
                 </Toolbar>
 
                 <Toolbar className="qa-DataPackPage-Toolbar-sort" style={styles.toolbarSort}>
@@ -573,7 +566,7 @@ export class DataPackPage extends React.Component {
                         null
                         :
                         <DataPackSortDropDown
-                            handleChange={(e, i, v) => { this.handleSortChange(v); }}
+                            handleChange={this.handleSortChange}
                             value={this.props.location.query.order || '-job__featured'}
                         />
                     }
@@ -597,7 +590,7 @@ export class DataPackPage extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 style={{ margin: 'auto', display: 'block' }}
-                                color="#4598bf"
+                                color="primary"
                                 size={50}
                             />
                         </div>
@@ -609,7 +602,7 @@ export class DataPackPage extends React.Component {
                             this.props.importGeom.processing ?
                                 <div
                                     style={{
-                                        zIndex: 10,
+                                        zIndex: 100,
                                         position: 'absolute',
                                         width: '100%',
                                         height: '100%',
@@ -619,7 +612,7 @@ export class DataPackPage extends React.Component {
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                                         <CircularProgress
                                             style={{ margin: 'auto', display: 'block' }}
-                                            color="#4598bf"
+                                            color="primary"
                                             size={50}
                                         />
                                     </div>

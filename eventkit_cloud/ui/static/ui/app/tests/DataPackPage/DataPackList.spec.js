@@ -3,8 +3,11 @@ import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Table, TableBody, TableHeader, TableHeaderColumn } from 'material-ui/Table';
-import { GridList } from 'material-ui/GridList';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import GridList from '@material-ui/core/GridList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import DataPackList from '../../components/DataPackPage/DataPackList';
@@ -154,9 +157,9 @@ describe('DataPackList component', () => {
         expect(wrapper.find(GridList)).toHaveLength(0);
         expect(wrapper.find(Table)).toHaveLength(2);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
-        expect(wrapper.find(TableHeader)).toHaveLength(1);
-        expect(wrapper.find(TableHeaderColumn)).toHaveLength(8);
-        const headerColumns = wrapper.find(TableHeaderColumn);
+        expect(wrapper.find(Table).first().find(TableRow)).toHaveLength(1);
+        expect(wrapper.find(Table).first().find(TableCell)).toHaveLength(8);
+        const headerColumns = wrapper.find(Table).first().find(TableCell);
         expect(headerColumns.at(0).text()).toEqual('Name');
         expect(headerColumns.at(0).find(NavigationArrowDropDown)).toHaveLength(1);
         expect(headerColumns.at(1).text()).toEqual('Event');
@@ -172,7 +175,7 @@ describe('DataPackList component', () => {
         expect(headerColumns.at(6).text()).toEqual('Featured');
         expect(headerColumns.at(6).find(NavigationArrowDropDown)).toHaveLength(1);
         expect(headerColumns.at(7).text()).toEqual('');
-        expect(wrapper.find(TableBody)).toHaveLength(1);
+        expect(wrapper.find(Table).first().find(TableBody)).toHaveLength(1);
         expect(wrapper.find(DataPackTableItem)).toHaveLength(3);
     });
 
@@ -181,7 +184,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(0).find('div').simulate('click');
+        wrapper.find(TableCell).at(0).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('job__name')).toBe(true);
         orderSpy.restore();
@@ -192,7 +195,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(1).find('div').simulate('click');
+        wrapper.find(TableCell).at(1).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('job__event')).toBe(true);
         orderSpy.restore();
@@ -203,7 +206,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(2).find('div').simulate('click');
+        wrapper.find(TableCell).at(2).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('-started_at')).toBe(true);
         orderSpy.restore();
@@ -214,7 +217,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(3).find('div').simulate('click');
+        wrapper.find(TableCell).at(3).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('status')).toBe(true);
         orderSpy.restore();
@@ -225,7 +228,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(4).find('div').simulate('click');
+        wrapper.find(TableCell).at(4).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('job__published')).toBe(true);
         orderSpy.restore();
@@ -236,7 +239,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(5).find('div').simulate('click');
+        wrapper.find(TableCell).at(5).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('user__username')).toBe(true);
         orderSpy.restore();
@@ -247,7 +250,7 @@ describe('DataPackList component', () => {
         const orderSpy = sinon.spy(DataPackList.prototype, 'handleOrder');
         const wrapper = getWrapper(props);
         expect(orderSpy.called).toBe(false);
-        wrapper.find(TableHeaderColumn).at(6).find('div').simulate('click');
+        wrapper.find(TableCell).at(6).find('div').simulate('click');
         expect(orderSpy.called).toBe(true);
         expect(orderSpy.calledWith('-job__featured')).toBe(true);
     });

@@ -3,7 +3,8 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Drawer from 'material-ui/Drawer';
+// import Drawer from 'material-ui/Drawer';
+import Drawer from '@material-ui/core/Drawer';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
@@ -178,9 +179,10 @@ describe('FilterDrawer component', () => {
     it('handleMinDate should set state', () => {
         const props = getProps();
         const date = new Date(2017, 2, 30);
+        const e = { target: { value: date } };
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
-        wrapper.instance().handleMinDate(null, date);
+        wrapper.instance().handleMinDate(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ minDate: date }));
         stateStub.restore();
@@ -189,9 +191,10 @@ describe('FilterDrawer component', () => {
     it('handleMaxDate should set state', () => {
         const props = getProps();
         const date = new Date(2017, 2, 30);
+        const e = { target: { value: date } };
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
-        wrapper.instance().handleMaxDate(null, date);
+        wrapper.instance().handleMaxDate(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ maxDate: date }));
         stateStub.restore();
