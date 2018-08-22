@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
 import MembersBody from './MembersBody';
@@ -139,27 +138,14 @@ export class DataPackShareDialog extends Component {
                 borderRadius: '0px',
                 backgroundColor: this.state.view === 'groups' ? '#4598bf' : 'whitesmoke',
                 boxShadow: 'none',
+                color: this.state.view === 'groups' ? '#fff' : '#4598bf',
             },
             membersButton: {
                 flex: '1 1 auto',
                 borderRadius: '0px',
                 backgroundColor: this.state.view === 'members' ? '#4598bf' : 'whitesmoke',
                 boxShadow: 'none',
-            },
-            textField: {
-                fontSize: '14px',
-                backgroundColor: 'whitesmoke',
-                height: '36px',
-                lineHeight: '36px',
-                margin: '10px 0px',
-            },
-            characterLimit: {
-                bottom: '0px',
-                height: '100%',
-                display: 'flex',
-                transform: 'none',
-                alignItems: 'center',
-                fontSize: '14px',
+                color: this.state.view === 'members' ? '#fff' : '#4598bf',
             },
         };
 
@@ -231,22 +217,22 @@ export class DataPackShareDialog extends Component {
                         className="qa-DataPackShareDialog-headers"
                         style={{ display: 'flex', flexWrap: 'wrap' }}
                     >
-                        <RaisedButton
-                            className="qa-DataPackShareDialog-RaisedButton-groups"
-                            label={`GROUPS (${groupCount})`}
+                        <Button
+                            className="qa-DataPackShareDialog-Button-groups"
+                            variant="contained"
                             style={styles.groupsButton}
-                            labelColor={this.state.view === 'groups' ? '#fff' : '#4598bf'}
-                            backgroundColor={this.state.view === 'groups' ? '#4598bf' : 'whitesmoke'}
+
                             onClick={this.toggleView}
-                        />
-                        <RaisedButton
-                            className="qa-DataPackShareDialog-RaisedButton-members"
-                            label={`MEMBERS (${memberCount})`}
+                        >
+                            {`GROUPS (${groupCount})`}
+                        </Button>
+                        <Button
+                            className="qa-DataPackShareDialog-Button-members"
                             style={styles.membersButton}
-                            labelColor={this.state.view === 'members' ? '#fff' : '#4598bf'}
-                            backgroundColor={this.state.view === 'members' ? '#4598bf' : 'whitesmoke'}
                             onClick={this.toggleView}
-                        />
+                        >
+                            {`MEMBERS (${memberCount})`}
+                        </Button>
                         <div
                             className="qa-DataPackShareDialog-buttonUnderline"
                             style={{
@@ -264,24 +250,25 @@ export class DataPackShareDialog extends Component {
                         show
                         onClose={this.hidePublicWarning}
                         title="SHARE WITH ALL MEMBERS"
+                        overlayStyle={{ zIndex: 1501 }}
                         actions={[
-                            <FlatButton
+                            <Button
                                 style={{ margin: '0px', float: 'left' }}
-                                labelStyle={{ color: '#4598bf' }}
-                                disableTouchRipple
+                                variant="flat"
+                                color="primary"
                                 label="CONTINUE EDITING"
-                                primary={false}
                                 onClick={this.hidePublicWarning}
-                            />,
-                            <RaisedButton
+                            >
+                                CONTINUE EDITING
+                            </Button>,
+                            <Button
                                 style={{ margin: '0px' }}
-                                labelStyle={{ color: 'whitesmoke' }}
-                                buttonStyle={{ backgroundColor: '#4598bf', borderRadius: '0px' }}
-                                disableTouchRipple
-                                label="SHARE"
-                                primary={false}
+                                variant="contained"
+                                color="primary"
                                 onClick={this.handleSave}
-                            />,
+                            >
+                                SHARE
+                            </Button>,
                         ]}
                     >
                         Sharing with all members will make this DataPack visible to everyone with an EventKit account.

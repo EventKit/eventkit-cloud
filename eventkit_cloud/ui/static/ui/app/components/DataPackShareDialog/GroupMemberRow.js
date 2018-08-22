@@ -14,7 +14,7 @@ export class GroupMemberRow extends Component {
                 style={{ padding: '6px 0px 0px' }}
                 className="qa-GroupMemberRow"
             >
-                <div className="qa-GroupMemberRow-name" style={{ wordBreak: 'break-word' }}>
+                <div className="qa-GroupMemberRow-name" style={{ wordBreak: 'break-word', fontSize: '14px' }}>
                     <strong>
                         {name}
                         {this.props.isGroupAdmin ? ' (Group Admin)' : ''}

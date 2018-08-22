@@ -1,15 +1,15 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Card, CardHeader } from 'material-ui/Card';
-import Popover from 'material-ui/Popover';
-import Menu from 'material-ui/Menu';
-import MenuItem from 'material-ui/MenuItem';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBox from '@material-ui/icons/CheckBox';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
 import ArrowUp from '@material-ui/icons/ArrowDropUp';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import IndeterminateIcon from '../icons/IndeterminateIcon';
 
 export class GroupsHeaderRow extends Component {
     constructor(props) {
@@ -19,14 +19,13 @@ export class GroupsHeaderRow extends Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleGroupChange = this.handleGroupChange.bind(this);
         this.state = {
-            open: false,
             anchor: null,
         };
     }
 
     handleClick(e) {
         if (this.props.canUpdateAdmin) {
-            this.setState({ open: true, anchor: e.currentTarget });
+            this.setState({ anchor: e.currentTarget });
         } else if (!this.props.activeOrder.includes('shared')) {
             this.props.onSharedClick(this.props.sharedOrder);
         } else {
@@ -36,10 +35,10 @@ export class GroupsHeaderRow extends Component {
     }
 
     handleClose() {
-        this.setState({ open: false });
+        this.setState({ anchor: null });
     }
 
-    handleChange(e, v) {
+    handleChange(v) {
         this.props.onSharedClick(v);
         this.handleClose();
     }
@@ -79,12 +78,11 @@ export class GroupsHeaderRow extends Component {
                 float: 'right',
                 marginRight: '39px',
                 cursor: 'pointer',
+                color: '#4598bf',
             },
             menuItem: {
                 fontSize: '12px',
-                padding: 0,
-                minHeight: '36px',
-                lineHeight: '36px',
+                height: 'auto',
                 color: '#707274',
             },
         };
@@ -135,7 +133,6 @@ export class GroupsHeaderRow extends Component {
         return (
             <Card
                 style={styles.card}
-                containerStyle={{ paddingBottom: '0px' }}
                 className="qa-GroupsHeaderRow-Card"
             >
                 <CardHeader
@@ -143,7 +140,7 @@ export class GroupsHeaderRow extends Component {
                     title={
                         <div style={styles.cardHeader}>
                             <div style={styles.group} className="qa-GroupsHeaderRow-CardHeader-text">
-                                <EnhancedButton
+                                <ButtonBase
                                     onClick={this.handleGroupChange}
                                     style={{ marginRight: '10px', color: this.props.activeOrder.includes('group') ? '#4598bf' : '#707274' }}
                                     disableTouchRipple
@@ -154,10 +151,10 @@ export class GroupsHeaderRow extends Component {
                                         :
                                         <ArrowUp style={{ height: '28px', verticalAlign: 'bottom' }} />
                                     }
-                                </EnhancedButton>
+                                </ButtonBase>
                             </div>
                             <div style={styles.share} className="qa-GroupsHeaderRow-CardHeader-icons">
-                                <EnhancedButton
+                                <ButtonBase
                                     onClick={this.handleClick}
                                     style={{
                                         marginRight: '10px',
@@ -167,34 +164,50 @@ export class GroupsHeaderRow extends Component {
                                     disableTouchRipple
                                 >
                                     {sharedSort}
-                                </EnhancedButton>
+                                </ButtonBase>
                                 {checkIcon}
                             </div>
-                            <Popover
-                                className="qa-GroupsHeaderRow-Popover-sort"
-                                open={this.state.open}
+                            <Menu
+                                className="qa-GroupsHeaderRow-Menu-sort"
+                                onClose={this.handleClose}
+                                open={Boolean(this.state.anchor)}
                                 anchorEl={this.state.anchor}
-                                anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                onRequestClose={this.handleClose}
+                                style={{ padding: '0px', zIndex: 1501 }}
+                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                             >
-                                <Menu
-                                    className="qa-GroupsHeaderRow-Menu-sort"
-                                    value={this.props.activeOrder}
-                                    onChange={this.handleChange}
-                                    menuItemStyle={styles.menuItem}
-                                    style={{ padding: 0 }}
+                                <MenuItem
+                                    value="shared"
+                                    style={styles.menuItem}
+                                    onClick={() => this.handleChange('shared')}
                                 >
-                                    <MenuItem primaryText="SHARED" value="shared" />
-                                    <MenuItem primaryText="NOT SHARED" value="-shared" />
-                                    <MenuItem primaryText="ADMIN SHARED" value="admin-shared" />
-                                    <MenuItem primaryText="NOT ADMIN SHARED" value="-admin-shared" />
-                                </Menu>
-                            </Popover>
+                                    SHARED
+                                </MenuItem>
+                                <MenuItem
+                                    value="-shared"
+                                    style={styles.menuItem}
+                                    onClick={() => this.handleChange('-shared')}
+                                >
+                                    NOT SHARED
+                                </MenuItem>
+                                <MenuItem
+                                    value="admin-shared"
+                                    style={styles.menuItem}
+                                    onClick={() => this.handleChange('admin-shared')}
+                                >
+                                    ADMIN SHARED
+                                </MenuItem>
+                                <MenuItem
+                                    value="-admin-shared"
+                                    style={styles.menuItem}
+                                    onClick={() => this.handleChange('-admin-shared')}
+                                >
+                                    NOT ADMIN SHARED
+                                </MenuItem>
+                            </Menu>
                         </div>
                     }
                     style={{ padding: '12px' }}
-                    textStyle={{ padding: '0px', width: '100%' }}
                 />
             </Card>
         );

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
@@ -194,7 +194,7 @@ export class GroupsBody extends Component {
         const styles = {
             fixedHeader: {
                 position: 'sticky',
-                top: 38,
+                top: 32,
                 left: 0,
                 backgroundColor: '#fff',
                 zIndex: 15,
@@ -262,14 +262,14 @@ export class GroupsBody extends Component {
         if (this.props.canUpdateAdmin) {
             shareInfo = (
                 <div style={styles.shareInfo} className="qa-GroupsBody-shareInfo">
-                    <EnhancedButton
+                    <ButtonBase
                         className="qa-GroupsBody-shareInfo-button"
                         onClick={this.props.handleShowShareInfo}
                         style={styles.shareInfoButton}
                     >
                         <InfoIcon style={styles.shareInfoIcon} className="qa-GroupsBody-shareInfo-icon" />
                         Sharing Rights
-                    </EnhancedButton>
+                    </ButtonBase>
                     <span style={styles.shareInfoText} className="qa-GroupsBody-shareInfo-text">
                         Shared: {selectedCount - adminCount} Groups plus {adminCount} Admin Groups
                     </span>
