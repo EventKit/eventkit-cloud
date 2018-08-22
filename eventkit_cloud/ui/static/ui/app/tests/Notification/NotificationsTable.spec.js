@@ -2,7 +2,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { TableHeaderColumn } from 'material-ui';
+import TableCell from '@material-ui/core/TableCell';
 import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../../components/icons/IndeterminateIcon';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
@@ -98,7 +98,7 @@ describe('NotificationsTable component', () => {
             },
         });
 
-        expect(wrapper.find(TableHeaderColumn).at(1).find('span').text()).toBe('2 Selected');
+        expect(wrapper.find(TableCell).at(1).find('span').text()).toBe('2 Selected');
     });
 
     it('passes correct props to NotificationsTableMenu', () => {
@@ -109,7 +109,7 @@ describe('NotificationsTable component', () => {
             },
         });
         const tableMenu = wrapper.find(NotificationsTableMenu);
-        expect(Object.keys(tableMenu.props()).length).toBe(6);
+        expect(Object.keys(tableMenu.props()).length).toBe(5);
         expect(tableMenu.props().selectedNotifications).toBe(wrapper.state().selected);
         expect(tableMenu.props().onMarkAsRead).toBe(instance.props.onMarkAsRead);
         expect(tableMenu.props().onMarkAsUnread).toBe(instance.props.onMarkAsUnread);
@@ -124,7 +124,7 @@ describe('NotificationsTable component', () => {
             },
         });
         const tableItem = wrapper.find(NotificationsTableItem).at(0);
-        expect(Object.keys(tableItem.props()).length).toBe(8);
+        expect(Object.keys(tableItem.props()).length).toBe(9);
         expect(tableItem.props().notification).toBe(instance.props.notificationsArray[0]);
         expect(tableItem.props().router).toBe(instance.props.router);
         expect(tableItem.props().isSelected).toBe(true);
@@ -173,7 +173,7 @@ describe('NotificationsTable component', () => {
 
         describe('then "Select All" checkbox is clicked', () => {
             beforeEach(() => {
-                selectAllCheckbox.props().onCheck();
+                selectAllCheckbox.props().onChange();
             });
 
             it('updates "selected" state', () => {
@@ -223,7 +223,7 @@ describe('NotificationsTable component', () => {
 
         describe('then "Select All" checkbox is clicked', () => {
             beforeEach(() => {
-                selectAllCheckbox.props().onCheck();
+                selectAllCheckbox.props().onChange();
             });
 
             it('updates "selected" state', () => {
@@ -262,7 +262,7 @@ describe('NotificationsTable component', () => {
 
         describe('then "Select All" checkbox is clicked', () => {
             beforeEach(() => {
-                selectAllCheckbox.props().onCheck();
+                selectAllCheckbox.props().onChange();
             });
 
             it('updates "selected" state', () => {

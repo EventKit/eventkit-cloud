@@ -2,12 +2,11 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { IconMenu } from 'material-ui';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import FlagIcon from '@material-ui/icons/Flag';
 import CloseIcon from '@material-ui/icons/Close';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
+import IconMenu from '../../components/common/IconMenu';
 import { NotificationMenu } from '../../components/Notification/NotificationMenu';
 
 describe('NotificationMenu component', () => {
@@ -56,20 +55,10 @@ describe('NotificationMenu component', () => {
         });
     }
 
-    function wrapShallow(element) {
-        return shallow(<div>{element}</div>).childAt(0);
-    }
-
     beforeEach(setup);
 
     it('renders IconMenu', () => {
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-    });
-
-    it('renders IconButton with MoreVertIcon', () => {
-        const iconMenu = wrapper.find(IconMenu);
-        const iconButton = wrapShallow(iconMenu.props().iconButtonElement);
-        expect(iconButton.find(MoreVertIcon)).toHaveLength(1);
     });
 
     it('renders Remove menu item', () => {
@@ -78,14 +67,9 @@ describe('NotificationMenu component', () => {
 
     it('renders CloseIcon in Remove menu item', () => {
         const removeMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-Remove');
-        expect(removeMenuItem.props().leftIcon).toEqual(<CloseIcon />);
+        expect(removeMenuItem.find(CloseIcon)).toHaveLength(1);
     });
 
-    describe('initial state', () => {
-        it('does not open menu', () => {
-            expect(wrapper.find(IconMenu).props().open).toBe(false);
-        });
-    });
 
     describe('when notification is unread', () => {
         let markAsReadMenuItem;
@@ -97,12 +81,12 @@ describe('NotificationMenu component', () => {
             markAsReadMenuItem = wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead');
         });
 
-        it('renders Mark As Read menu item with FlagIcon', () => {
+        it('renders Mark As Read menu item', () => {
             expect(markAsReadMenuItem).toHaveLength(1);
         });
 
         it('renders FlagIcon in Mark As Read menu item', () => {
-            expect(markAsReadMenuItem.props().leftIcon).toEqual(<FlagIcon />);
+            expect(markAsReadMenuItem.find(FlagIcon)).toHaveLength(1);
         });
 
         it('does not render Mark As Unread menu item', () => {
@@ -125,7 +109,7 @@ describe('NotificationMenu component', () => {
         });
 
         it('renders FlagIcon in Mark As Unread menu item', () => {
-            expect(markAsUnreadMenuItem.props().leftIcon).toEqual(<FlagIcon />);
+            expect(markAsUnreadMenuItem.find(FlagIcon)).toHaveLength(1);
         });
 
         it('does not render Mark As Read menu item', () => {
@@ -149,10 +133,6 @@ describe('NotificationMenu component', () => {
                 wrapper.find('.qa-NotificationMenu-MenuItem-MarkAsRead').props().onClick();
             };
             setupA();
-        });
-
-        it('closes menu', () => {
-            expect(wrapper.state().open).toBe(false);
         });
 
         it('calls onMarkAsRead() with notification', () => {
@@ -204,10 +184,6 @@ describe('NotificationMenu component', () => {
             setupA();
         });
 
-        it('closes menu', () => {
-            expect(wrapper.state().open).toBe(false);
-        });
-
         it('calls onMarkAsUnread() with notification', () => {
             expect(instance.props.onMarkAsUnread.callCount).toBe(1);
             expect(instance.props.onMarkAsUnread.calledWith(instance.props.notification)).toBe(true);
@@ -249,10 +225,6 @@ describe('NotificationMenu component', () => {
                 wrapper.find('.qa-NotificationMenu-MenuItem-View').props().onClick();
             };
             setupA();
-        });
-
-        it('closes menu', () => {
-            expect(wrapper.state().open).toBe(false);
         });
 
         it('calls onView() with notification and view path', () => {
@@ -309,10 +281,6 @@ describe('NotificationMenu component', () => {
             setupA();
         });
 
-        it('closes menu', () => {
-            expect(wrapper.state().open).toBe(false);
-        });
-
         it('calls onRemove() with notification', () => {
             expect(instance.props.onRemove.callCount).toBe(1);
             expect(instance.props.onRemove.calledWith(instance.props.notification)).toBe(true);
@@ -356,7 +324,7 @@ describe('NotificationMenu component', () => {
         });
 
         it('renders OpenInNewIcon in View menu item', () => {
-            expect(viewMenuItem.props().leftIcon).toEqual(<OpenInNewIcon />);
+            expect(viewMenuItem.find(OpenInNewIcon)).toHaveLength(1);
         });
     });
 
@@ -369,30 +337,6 @@ describe('NotificationMenu component', () => {
 
         it('does not render View menu item', () => {
             expect(wrapper.find('.qa-NotificationMenu-MenuItem-View')).toHaveLength(0);
-        });
-    });
-
-    describe('when "open" is set to true', () => {
-        beforeEach(() => {
-            wrapper.setState({
-                open: true,
-            });
-        });
-
-        it('sets IconMenu "open" prop to true', () => {
-            expect(wrapper.find(IconMenu).props().open).toBe(true);
-        });
-    });
-
-    describe('when "open" is set to false', () => {
-        beforeEach(() => {
-            wrapper.setState({
-                open: false,
-            });
-        });
-
-        it('sets IconMenu "open" prop to false', () => {
-            expect(wrapper.find(IconMenu).props().open).toBe(false);
         });
     });
 });
