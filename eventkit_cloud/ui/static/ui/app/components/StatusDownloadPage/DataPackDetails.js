@@ -1,8 +1,10 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
-import { Table, TableHeader, TableHeaderColumn, TableRow }
-    from 'material-ui/Table';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
@@ -67,7 +69,7 @@ export class DataPackDetails extends Component {
     }
 
     getToggleCellWidth() {
-        return '70px';
+        return '86px';
     }
 
     isZipFileCompleted() {
@@ -117,17 +119,13 @@ export class DataPackDetails extends Component {
                 <Table
                     className="qa-DataPackDetails-Table"
                     style={{ width: '100%', tableLayout: 'fixed' }}
-                    selectable={false}
                 >
-                    <TableHeader
+                    <TableBody
                         className="qa-DataPackDetails-TableHeader"
-                        displaySelectAll={false}
-                        adjustForCheckbox={false}
-                        enableSelectAll={false}
                     >
                         <TableRow className="qa-DataPackDetails-TableRow">
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-zipButton"
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-zipButton"
                                 style={styles.download}
                             >
                                 <Button
@@ -137,32 +135,31 @@ export class DataPackDetails extends Component {
                                     className="qa-DataPackDetails-RaisedButton-zipButton"
                                     classes={{ root: classes.root }}
                                     disabled={!this.isZipFileCompleted()}
-                                    disableTouchRipple
-                                    style={{ fontSize: textFontSize }}
+                                    style={{ fontSize: textFontSize, lineHeight: 'initial' }}
                                 >
                                     {this.getCloudDownloadIcon()}
                                     {this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
 
                                 </Button>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-fileSize"
+                            </TableCell>
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-fileSize"
                                 style={styles.genericColumn}
                             >
                                 FILE SIZE
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-progress"
+                            </TableCell>
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-progress"
                                 style={styles.genericColumn}
                             >
                                 PROGRESS
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-empty"
+                            </TableCell>
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-empty"
                                 style={{ ...styles.genericColumn, width: toggleCellWidth }}
                             />
                         </TableRow>
-                    </TableHeader>
+                    </TableBody>
                 </Table>
                 <div className="qa-DataPackDetails-providers" id="Providers">
                     {providers.map((provider, ix) => (

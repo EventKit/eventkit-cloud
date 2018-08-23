@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { TableRow, TableRowColumn } from 'material-ui/Table';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import BaseDialog from '../Dialog/BaseDialog';
 
 export class LicenseRow extends Component {
@@ -12,7 +13,6 @@ export class LicenseRow extends Component {
             licenseDialogOpen: false,
         };
     }
-
 
     getTextFontSize() {
         if (window.innerWidth <= 575) {
@@ -50,20 +50,19 @@ export class LicenseRow extends Component {
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = '50px';
 
+        const { name, text } = this.props;
         return (
             <TableRow
                 className="qa-LicenseRow-TableRow"
-                selectable={false}
-                style={{ height: '20px' }}
-                displayBorder
+                style={{ height: '48px' }}
             >
-                <TableRowColumn
-                    className="qa-LicenseRow-TableRowColumn-empty"
+                <TableCell
+                    className="qa-LicenseRow-TableCell-empty"
                     style={{ paddingRight: '12px', paddingLeft: '12px', width: '44px' }}
                 />
-                <TableRowColumn
-                    className="qa-LicenseRow-TableRowColumn-licenseText"
-                    style={{ paddingRight: '12px', paddingLeft: '12px', fontSize: '12px' }}
+                <TableCell
+                    className="qa-LicenseRow-TableCell-licenseText"
+                    style={{ padding: '0px', fontSize: '12px' }}
                 >
                     <i>
                         Use of this data is governed by&nbsp;
@@ -74,19 +73,19 @@ export class LicenseRow extends Component {
                             onClick={this.setLicenseOpen}
                             style={{ cursor: 'pointer', color: '#4598bf' }}
                         >
-                            {this.props.name}
+                            {name}
                         </span>
                     </i>
                     <BaseDialog
                         className="qa-LicenseRow-BaseDialog"
                         show={this.state.licenseDialogOpen}
-                        title={this.props.name}
+                        title={name}
                         onClose={this.handleLicenseClose}
                     >
-                        <div style={{ whiteSpace: 'pre-wrap' }}>{this.props.text}</div>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{text}</div>
                     </BaseDialog>
-                </TableRowColumn>
-                <TableRowColumn
+                </TableCell>
+                <TableCell
                     style={{
                         width: tableCellWidth,
                         paddingRight: '0px',
@@ -95,7 +94,7 @@ export class LicenseRow extends Component {
                         fontSize: textFontSize,
                     }}
                 />
-                <TableRowColumn
+                <TableCell
                     style={{
                         width: tableCellWidth,
                         paddingRight: '10px',
@@ -105,16 +104,16 @@ export class LicenseRow extends Component {
                         fontWeight: 'bold',
                     }}
                 />
-                <TableRowColumn
+                <TableCell
                     style={{
                         paddingRight: '0px',
                         paddingLeft: '0px',
-                        width: '20px',
+                        width: '36px',
                         textAlign: 'center',
                         fontSize: textFontSize,
                     }}
                 />
-                <TableRowColumn
+                <TableCell
                     style={{
                         paddingRight: '0px',
                         paddingLeft: '0px',

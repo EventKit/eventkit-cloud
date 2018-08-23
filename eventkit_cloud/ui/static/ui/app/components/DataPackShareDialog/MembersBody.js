@@ -202,7 +202,7 @@ export class MembersBody extends Component {
         const styles = {
             fixedHeader: {
                 position: 'sticky',
-                top: 32,
+                top: 38,
                 left: 0,
                 backgroundColor: '#fff',
                 zIndex: 15,

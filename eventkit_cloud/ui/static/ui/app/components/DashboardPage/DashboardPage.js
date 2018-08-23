@@ -282,7 +282,9 @@ export class DashboardPage extends React.Component {
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
-                fontSize: '16px',
+                fontSize: '14px',
+                height: '30px',
+                lineHeight: '30px',
             },
             tourIcon: {
                 color: '#4598bf',

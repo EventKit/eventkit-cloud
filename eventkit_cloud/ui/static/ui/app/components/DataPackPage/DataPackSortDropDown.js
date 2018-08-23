@@ -34,6 +34,7 @@ export class DataPackSortDropDown extends React.Component {
             <DropDownMenu
                 className="qa-DataPackSortDropDown-Menu"
                 value={NAME_LOOKUP[this.props.value]}
+                style={{ height: '30px', lineHeight: '30px' }}
             >
                 <MenuItem
                     className="qa-DataPackSortDropDown-MenuItem-featured"

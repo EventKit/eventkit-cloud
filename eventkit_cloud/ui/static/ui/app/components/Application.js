@@ -80,9 +80,12 @@ const muiThemeV1 = createMuiTheme({
                 fontSize: '14px',
                 minHeight: '30px',
                 padding: '0px 16px',
-                height: '30px',
-                lineHeight: '30px',
+                height: '36px',
+                lineHeight: '36px',
                 borderRadius: '0px',
+            },
+            containedSecondary: {
+                color: '#4598bf',
             },
         },
         MuiMenuItem: {
@@ -108,7 +111,9 @@ const muiThemeV1 = createMuiTheme({
             dark: '#3982a4',
         },
         secondary: {
-            main: '#ce4427',
+            light: '#fafafa',
+            main: '#eeeeee',
+            dark: '#d6d6d6',
         },
     },
     typography: {

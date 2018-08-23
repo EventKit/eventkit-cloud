@@ -1,9 +1,7 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Divider from 'material-ui/Divider';
+import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
@@ -32,15 +30,9 @@ describe('TaskError component', () => {
         }
     );
 
-    const muiTheme = getMuiTheme();
 
     const getWrapper = props => (
-        mount(<TaskError {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<TaskError {...props} />)
     );
 
     it('should render UI elements', () => {

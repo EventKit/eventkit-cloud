@@ -72,6 +72,7 @@ export class RevertDialog extends Component {
             },
             revert: {
                 color: 'whitesmoke',
+                backgroundColor: '#ce4427',
                 fontWeight: 'bold',
             },
             clear: {
@@ -114,7 +115,6 @@ export class RevertDialog extends Component {
                 key="RevertDialog-revert"
                 className="qa-RevertDialog-RaisedButton-revert"
                 variant="contained"
-                color="secondary"
                 style={styles.revert}
                 onClick={this.props.onRevertClick}
             >

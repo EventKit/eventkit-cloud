@@ -36,6 +36,7 @@ export class DataPackOwnerSort extends React.Component {
             <DropDownMenu
                 className="qa-DataPackOwnerSort-Menu"
                 value={text}
+                style={{ height: '30px', lineHeight: '30px' }}
             >
                 <MenuItem
                     className="qa-DataPackOwnerSort-MenuItem-allDatapacks"

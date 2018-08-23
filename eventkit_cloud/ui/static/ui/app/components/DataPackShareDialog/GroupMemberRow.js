@@ -11,7 +11,7 @@ export class GroupMemberRow extends Component {
         return (
             <div
                 key={this.props.member.user.username}
-                style={{ padding: '6px 0px 0px' }}
+                style={{ padding: '6px 0px 0px', fontSize: '14px' }}
                 className="qa-GroupMemberRow"
             >
                 <div className="qa-GroupMemberRow-name" style={{ wordBreak: 'break-word' }}>
