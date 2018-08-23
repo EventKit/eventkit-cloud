@@ -1,15 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import Drawer from 'material-ui/Drawer';
-import Menu from 'material-ui/Menu';
-import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
-import IconButton from 'material-ui/IconButton';
-import Divider from 'material-ui/Divider';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import Vert from '@material-ui/icons/MoreVert';
+import Drawer from '@material-ui/core/Drawer';
+import MenuList from '@material-ui/core/MenuList';
+import MenuItem from '@material-ui/core/MenuItem';
+import Divider from '@material-ui/core/Divider';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
+import IconMenu from '../common/IconMenu';
 import CustomScrollbar from '../CustomScrollbar';
 
 
@@ -21,8 +19,13 @@ export class GroupsDrawer extends Component {
                 top: '130px',
                 height: window.innerHeight - 130,
                 overflow: 'visible',
+                width: '250px',
             },
-            simpleMenuItem: {
+            item: {
+                height: '32px',
+                lineHeight: '32px',
+                padding: '0px 20px',
+                fontSize: '15px',
                 color: '#4598bf',
             },
             heading: {
@@ -50,9 +53,6 @@ export class GroupsDrawer extends Component {
                 lineHeight: '24px',
                 padding: '0px 10px',
             },
-            innerDiv: {
-                padding: '0px 48px 0px 20px',
-            },
             groupName: {
                 textOverflow: 'ellipsis',
                 overflow: 'hidden',
@@ -67,34 +67,23 @@ export class GroupsDrawer extends Component {
                 verticalAlign: 'text-top',
                 cursor: 'pointer',
             },
-            groupActionList: {
-                paddingTop: '4px',
-                paddingBottom: '4px',
-            },
-            groupActionItem: {
-                fontSize: '14px',
-                minHeight: '36px',
-                lineHeight: '36px',
-            },
         };
 
         return (
             <Drawer
-                width={250}
-                openSecondary
+                variant="persistent"
+                anchor="right"
                 open={this.props.open}
-                containerStyle={styles.drawer}
                 className="qa-GroupsDrawer-Drawer"
+                PaperProps={{ style: styles.drawer }}
+                SlideProps={{
+                    unmountOnExit: true,
+                }}
             >
-                <Menu
-                    disableAutoFocus
-                    autoWidth={false}
-                    desktop
+                <MenuList
                     width={250}
-                    className="qa-GroupsDrawer-Menu"
-                    onChange={this.props.onSelectionChange}
-                    selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#e8eef5' }}
-                    value={this.props.selectedValue}
+                    className="qa-GroupsDrawer-MenuList"
+                    style={{ padding: '16px 0px' }}
                 >
                     <span
                         style={styles.heading}
@@ -103,13 +92,16 @@ export class GroupsDrawer extends Component {
                         <strong>MEMBERS</strong>
                     </span>
                     <MenuItem
-                        primaryText={`All (${this.props.usersCount})`}
-                        style={styles.simpleMenuItem}
-                        innerDivStyle={styles.innerDiv}
+                        style={styles.item}
                         className="qa-GroupsDrawer-allMembers"
                         value="all"
-                    />
-                </Menu>
+                        onClick={() => this.props.onSelectionChange('all')}
+                        selected={this.props.selectedValue === 'all'}
+                    >
+                        {`All (${this.props.usersCount})`}
+                    </MenuItem>
+                </MenuList>
+
                 <Divider className="qa-GroupsDrawer-Divider" />
 
                 <span
@@ -117,7 +109,7 @@ export class GroupsDrawer extends Component {
                     className="qa-GroupsDrawer-membersHeading"
                 >
                     <strong>GROUPS</strong>
-                    <EnhancedButton
+                    <ButtonBase
                         style={styles.newGroupBtn}
                         onClick={this.props.onNewGroupClick}
                         className="qa-GroupsDrawer-addGroup"
@@ -127,19 +119,13 @@ export class GroupsDrawer extends Component {
                             className="qa-GroupsDrawer-newGroupIcon"
                         />
                         <strong>NEW GROUP</strong>
-                    </EnhancedButton>
+                    </ButtonBase>
                 </span>
 
                 <CustomScrollbar className="qa-GroupsDrawer-CustomScrollbar" style={{ height: 'calc(100% - 145px)' }} >
-                    <Menu
-                        disableAutoFocus
-                        autoWidth={false}
-                        desktop
+                    <MenuList
                         width={250}
-                        className="qa-GroupsDrawer-Menu"
-                        onChange={this.props.onSelectionChange}
-                        selectedMenuItemStyle={{ ...styles.simpleMenuItem, backgroundColor: '#e8eef5' }}
-                        value={this.props.selectedValue}
+                        className="qa-GroupsDrawer-MenuList"
                     >
                         <span
                             style={styles.subHeading}
@@ -156,53 +142,46 @@ export class GroupsDrawer extends Component {
                             <MenuItem
                                 key={group.name}
                                 value={group.id}
-                                primaryText={
-                                    <div style={{ display: 'flex', maxWidth: '178px' }}>
-                                        <div style={styles.groupName}>
-                                            {group.name}
-                                        </div>
-                                        <div style={{ flex: '0 0 auto' }}>
-                                            ({group.members.length})
-                                        </div>
-                                    </div>
-                                }
-                                innerDivStyle={styles.innerDiv}
-                                style={{ color: '#4598bf' }}
-                                rightIcon={
-                                    <IconMenu
-                                        iconButtonElement={
-                                            <IconButton style={{ padding: '0px', width: '24px', height: '24px' }}>
-                                                <Vert />
-                                            </IconButton>
-                                        }
-                                        listStyle={styles.groupActionList}
-                                        menuItemStyle={styles.groupActionItem}
-                                        className="qa-GroupsDrawer-groupOptions"
-                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                    >
-                                        <MenuItem
-                                            className="qa-GroupsDrawer-group-rename"
-                                            primaryText="Change Group Name"
-                                            style={{ color: '#707274' }}
-                                            onClick={() => { this.props.onRenameGroupClick(group); }}
-                                        />
-                                        <MenuItem
-                                            className="qa-GroupsDrawer-group-leave"
-                                            primaryText="Leave Group"
-                                            style={{ color: '#ce4427', opacity: '0.7' }}
-                                            onClick={() => { this.props.onLeaveGroupClick(group); }}
-                                        />
-                                        <MenuItem
-                                            className="qa-GroupsDrawer-group-delete"
-                                            primaryText="Delete Group"
-                                            style={{ color: '#ce4427', opacity: '0.7' }}
-                                            onClick={() => { this.props.onDeleteGroupClick(group); }}
-                                        />
-                                    </IconMenu>
-                                }
+                                onClick={() => this.props.onSelectionChange(group.id)}
+                                selected={this.props.selectedValue === group.id}
+                                style={styles.item}
                                 className="qa-GroupsDrawer-groupItem"
-                            />
+                            >
+                                <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
+                                    <div style={styles.groupName}>
+                                        {group.name}
+                                    </div>
+                                    <div style={{ flex: '0 0 auto' }}>
+                                        ({group.members.length})
+                                    </div>
+                                </div>
+                                <IconMenu
+                                    className="qa-GroupsDrawer-groupOptions"
+                                    style={{ height: '32px', width: '32px' }}
+                                >
+                                    <MenuItem
+                                        className="qa-GroupsDrawer-group-rename"
+                                        style={{ color: '#707274', fontSize: '14px' }}
+                                        onClick={() => { this.props.onRenameGroupClick(group); }}
+                                    >
+                                        Change Group Name
+                                    </MenuItem>
+                                    <MenuItem
+                                        className="qa-GroupsDrawer-group-leave"
+                                        style={{ color: '#ce4427', opacity: '0.7', fontSize: '14px' }}
+                                        onClick={() => { this.props.onLeaveGroupClick(group); }}
+                                    >
+                                        Leave Group
+                                    </MenuItem>
+                                    <MenuItem
+                                        className="qa-GroupsDrawer-group-delete"
+                                        style={{ color: '#ce4427', opacity: '0.7', fontSize: '14px' }}
+                                        onClick={() => { this.props.onDeleteGroupClick(group); }}
+                                    >
+                                        Delete Group
+                                    </MenuItem>
+                                </IconMenu>
+                            </MenuItem>
                         ))}
 
                         <span
@@ -220,41 +199,35 @@ export class GroupsDrawer extends Component {
                             <MenuItem
                                 key={group.name}
                                 value={group.id}
-                                primaryText={
-                                    <div style={{ display: 'flex', maxWidth: '178px' }}>
-                                        <div style={styles.groupName}>
-                                            {group.name}
-                                        </div>
-                                        <div style={{ flex: '0 0 auto' }}>
-                                            ({group.members.length})
-                                        </div>
-                                    </div>
-                                }
-                                style={{ color: '#4598bf' }}
-                                innerDivStyle={styles.innerDiv}
-                                rightIcon={
-                                    <IconMenu
-                                        iconButtonElement={
-                                            <IconButton style={{ padding: '0px', width: '24px', height: '24px' }}>
-                                                <Vert />
-                                            </IconButton>
-                                        }
-                                        listStyle={styles.groupActionList}
-                                        menuItemStyle={styles.groupActionItem}
-                                        className="qa-GroupsDrawer-groupOptions"
-                                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                    >
-                                        <MenuItem
-                                            className="qa-GroupsDrawer-group-leave"
-                                            primaryText="Leave Group"
-                                            style={{ color: '#ce4427', opacity: '0.7' }}
-                                            onClick={() => { this.props.onLeaveGroupClick(group); }}
-                                        />
-                                    </IconMenu>
-                                }
+                                onClick={() => this.props.onSelectionChange(group.id)}
+                                selected={this.props.selectedValue === group.id}
+                                style={styles.item}
                                 className="qa-GroupsDrawer-sharedGroupItem"
-                            />
+                            >
+                                <div style={{ display: 'flex', flex: '1 1 auto', maxWidth: 250 - 40 - 32 }}>
+                                    <div style={styles.groupName}>
+                                        {group.name}
+                                    </div>
+                                    <div style={{ flex: '0 0 auto' }}>
+                                        ({group.members.length})
+                                    </div>
+                                </div>
+                                <IconMenu
+                                    className="qa-GroupsDrawer-groupOptions"
+                                    style={{ width: '32px', height: '32px' }}
+                                >
+                                    [
+                                    <MenuItem
+                                        key="leave"
+                                        className="qa-GroupsDrawer-group-leave"
+                                        style={{ color: '#ce4427', opacity: '0.7', fontSize: '14px' }}
+                                        onClick={() => { this.props.onLeaveGroupClick(group); }}
+                                    >
+                                        Leave Group
+                                    </MenuItem>
+                                    ]
+                                </IconMenu>
+                            </MenuItem>
                         ))}
 
                         <span
@@ -272,22 +245,22 @@ export class GroupsDrawer extends Component {
                             <MenuItem
                                 key={group.name}
                                 value={group.id}
-                                primaryText={
-                                    <div style={{ display: 'flex', maxWidth: '178px' }}>
-                                        <div style={styles.groupName}>
-                                            {group.name}
-                                        </div>
-                                        <div style={{ flex: '0 0 auto' }}>
-                                            ({group.members.length})
-                                        </div>
-                                    </div>
-                                }
-                                style={{ color: '#4598bf' }}
-                                innerDivStyle={styles.innerDiv}
+                                onClick={() => this.props.onSelectionChange(group.id)}
+                                selected={this.props.selectedValue === group.id}
+                                style={styles.item}
                                 className="qa-GroupsDrawer-otherGroupItem"
-                            />
+                            >
+                                <div style={{ display: 'flex', maxWidth: 250 - 40 - 32 }}>
+                                    <div style={styles.groupName}>
+                                        {group.name}
+                                    </div>
+                                    <div style={{ flex: '0 0 auto' }}>
+                                        ({group.members.length})
+                                    </div>
+                                </div>
+                            </MenuItem>
                         ))}
-                    </Menu>
+                    </MenuList>
                 </CustomScrollbar>
             </Drawer>
         );

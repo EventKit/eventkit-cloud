@@ -397,20 +397,13 @@ export class UserGroupsPage extends Component {
         this.handleDeleteClose();
     }
 
-    handleDrawerSelectionChange(e, v) {
-        const target = e.target.tagName.toLowerCase();
-        if (target === 'path' || target === 'svg') {
-            // if the clicked element is path or svg we need to ignore
-            // and just handle delete group.
-            // YES this is a weird way to do it, but MUI was putting up a fight
-            return;
-        }
+    handleDrawerSelectionChange(value) {
         const query = { ...this.props.location.query };
-        if (v === 'all') {
+        if (value === 'all') {
             query.groups = null;
             delete query.groups;
         } else {
-            query.groups = v;
+            query.groups = value;
         }
         browserHistory.push({ ...this.props.location, query });
     }

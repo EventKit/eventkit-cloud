@@ -15,10 +15,12 @@ export class IconMenu extends Component {
     }
 
     handleOpen(e) {
+        e.stopPropagation();
         this.setState({ anchor: e.currentTarget });
     }
 
-    handleClose() {
+    handleClose(e) {
+        if (e) e.stopPropagation();
         this.setState({ anchor: null });
     }
 
@@ -34,8 +36,10 @@ export class IconMenu extends Component {
                     ...this.props.style,
                 }}
                 onClick={this.handleOpen}
+                disabled={this.props.disabled}
+                color={this.props.color}
             >
-                <NavigationMoreVert className="qa-IconMenu-NavigationMoreVert" color="primary" />
+                {this.props.icon || <NavigationMoreVert className="qa-IconMenu-icon" color="primary" />}
             </IconButton>,
             <Menu
                 key="menu"
@@ -85,6 +89,9 @@ IconMenu.defaultProps = {
     MenuListProps: {},
     menuStyle: {},
     style: {},
+    icon: undefined,
+    disabled: false,
+    color: undefined,
 };
 
 IconMenu.propTypes = {
@@ -104,6 +111,9 @@ IconMenu.propTypes = {
     MenuListProps: PropTypes.object,
     menuStyle: PropTypes.object,
     style: PropTypes.object,
+    icon: PropTypes.node,
+    disabled: PropTypes.bool,
+    color: PropTypes.string,
 };
 
 export default IconMenu;

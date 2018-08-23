@@ -89,8 +89,15 @@ const muiThemeV1 = createMuiTheme({
             },
         },
         MuiMenuItem: {
+            root: {
+                backgroundColor: 'transparent',
+                '&$selected': {
+                    backgroundColor: '#e8eef5',
+                },
+            },
             selected: {
                 color: '#4598bf',
+                backgroundColor: '#e8eef5',
             },
         },
         MuiSvgIcon: {
