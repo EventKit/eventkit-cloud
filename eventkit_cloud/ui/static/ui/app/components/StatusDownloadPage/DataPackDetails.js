@@ -132,7 +132,7 @@ export class DataPackDetails extends Component {
                                     id="CompleteDownload"
                                     href={this.props.zipFileProp}
                                     variant="contained"
-                                    className="qa-DataPackDetails-RaisedButton-zipButton"
+                                    className="qa-DataPackDetails-Button-zipButton"
                                     classes={{ root: classes.root }}
                                     disabled={!this.isZipFileCompleted()}
                                     style={{ fontSize: textFontSize, lineHeight: 'initial' }}
