@@ -38,7 +38,7 @@ from eventkit_cloud.ui.helpers import get_style_files, generate_qgs_style, creat
     get_human_readable_metadata_document
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
-    overpass, pbf, s3, external_service, wfs, wcs, arcgis_feature_service, geopackage, gdalutils
+    overpass, pbf, s3, external_service, wcs, arcgis_feature_service, geopackage, gdalutils
 )
 from eventkit_cloud.utils.ogr import OGR
 
@@ -679,7 +679,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     # Strip out query string parameters that might conflict
     service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "",
                               service_url)
-    query_str = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(self.layer)
+    query_str = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer)
     if "?" in service_url:
         if "&" != service_url[-1]:
             service_url += "&"
@@ -701,8 +701,8 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         result['result'] = out
         result['geopackage'] = out
         # Check for geopackage contents; gdal wfs driver fails silently
-        if not geopackage.check_content_exists(gpkg):
-            raise Exception, "Empty response: Unknown layer name '{}' or invalid AOI bounds".format(self.layer)
+        if not geopackage.check_content_exists(out):
+            raise Exception, "Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer)
         return result
     except Exception as e:
         logger.error('Raised exception in wfs export, %s', str(e))

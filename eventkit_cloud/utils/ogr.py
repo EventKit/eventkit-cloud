@@ -42,7 +42,7 @@ class OGR(object):
         :return: The `out_file`, or raises an exception.
         """
         layer_param = lco_param = co_param = dco_param = overwrite_param = skipfailures_param = \
-                spat_srs = t_srs_param = ""
+            spat_srs_param = t_srs_param = ""
 
         bbox = bbox or spat
         
@@ -71,7 +71,7 @@ class OGR(object):
             t_srs_param = '-t_srs {}'.format(t_srs)
 
         if spat_srs:
-            spat_srs_param = '-t_srs {}'.format(spat_srs)
+            spat_srs_param = '-spat_srs {}'.format(spat_srs)
 
 
         cmd = "ogr2ogr -f '{format}' {out_file} {in_file} {layer_param} {bbox_param} " \
