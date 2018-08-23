@@ -640,7 +640,9 @@ class TestExportTasks(ExportTaskBase):
             mps.result.filename = fname
             mocked_provider_subtasks.append(mps)
 
+        mocked_provider_task_uid = uuid.uuid4()
         mocked_provider_task = MagicMock()
+        mocked_provider_task.uid = mocked_provider_task_uid
         mocked_provider_task.status = TaskStates.COMPLETED.value
         mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
         mocked_provider_task.slug = 'dummy_slug'
@@ -651,8 +653,8 @@ class TestExportTasks(ExportTaskBase):
 
         mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task
 
-        returned_zip = create_zip_task.run(data_provider_task_uid=mock_run_uid)
-        mock_generate_qgs_style.assert_called_once_with(run_uid=mock_run_uid)
+        returned_zip = create_zip_task.run(data_provider_task_uid=mocked_provider_task_uid)
+        mock_generate_qgs_style.assert_called_once_with(run_uid=mock_run_uid, data_provider_task_record=mocked_provider_task)
         mock_open.assert_called_once()
         mock_zip_files.assert_called_once_with(file_path=expected_zip,
                                                include_files=set(expected_file_list),

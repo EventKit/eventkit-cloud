@@ -73,18 +73,18 @@
         <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=places_points" name="place label">
           <customproperties/>
         </layer-tree-layer>
-        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
+        <layer-tree-layer expanded="1" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset=&quot;aeroway&quot; = 'aerodrome'" name="airport">
           <customproperties/>
         </layer-tree-layer>
         <layer-tree-group expanded="1" checked="Qt::Checked" name="points of interest">
           <customproperties/>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points" name="POI (points)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points" name="POI (points)">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="POI (polygon, set 2)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="POI (polygon, set 2)">
             <customproperties/>
           </layer-tree-layer>
-          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="POI (polygon, set 1)">
+          <layer-tree-layer expanded="0" providerKey="ogr" checked="Qt::Checked" id="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}" source="./data/{{ provider.provider_slug }}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug }}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons" name="POI (polygon, set 1)">
             <customproperties>
               <property key="showFeatureCount" value="0"/>
             </customproperties>
@@ -214,10 +214,10 @@
       {%  endif %}
       {% if provider.provider_slug == "osm" %}
       <item>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</item>
-      <item>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}</item>
+      <item>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
       <item>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</item>
@@ -340,23 +340,23 @@
         </legendlayer>
         <legendlayer drawingOrder="-1" open="true" checked="Qt::Checked" name="airport" showFeatureCount="0">
           <filegroup open="true" hidden="false">
-            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}" visible="1"/>
+            <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
           </filegroup>
         </legendlayer>
         <legendgroup open="true" checked="Qt::Checked" name="points of interest">
           <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="POI (points)" showFeatureCount="0">
             <filegroup open="false" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
           <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="POI (polygon, set 2)" showFeatureCount="0">
             <filegroup open="false" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
           <legendlayer drawingOrder="-1" open="false" checked="Qt::Checked" name="POI (polygon, set 1)" showFeatureCount="0">
             <filegroup open="false" hidden="false">
-              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}" visible="1"/>
+              <legendlayerfile isInOverview="0" layerid="{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}" visible="1"/>
             </filegroup>
           </legendlayer>
         </legendgroup>
@@ -9169,7 +9169,7 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</id>
+      <id>{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.provider_slug}}{{ job_date_time }}</id>
       <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_points</datasource>
       <keywordList>
         <value></value>
@@ -11714,7 +11714,7 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</id>
+      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}</id>
       <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
@@ -12537,7 +12537,7 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</id>
+      <id>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}</id>
       <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=amenities_polygons</datasource>
       <keywordList>
         <value></value>
@@ -15966,7 +15966,7 @@ def my_form_open(dialog, layer, feature):
       <xmax>{{ bbox.2 }}</xmax>
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
-      <id>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</id>
+      <id>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}</id>
       <datasource>./data/{{ provider.provider_slug}}/{{ job_name.split|join:"_" }}-{{ provider.provider_slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=aviation_points|subset="aeroway" = 'aerodrome'</datasource>
       <keywordList>
         <value></value>
@@ -22611,10 +22611,10 @@ def my_form_open(dialog, layer, feature):
         <value>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_waterways_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_places_points_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_aviation_points_anyosm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_points_anyosm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</value>
-        <value>{{ job_name.split|join:"_" }}_amenities_polygons_anyosm{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_aviation_points_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_points_any{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}</value>
+        <value>{{ job_name.split|join:"_" }}_amenities_polygons_any{{ provider.provider_slug}}{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_rail_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_roads_lines_any_{{ provider.provider_slug}}{{ job_date_time }}</value>
         <value>{{ job_name.split|join:"_" }}_buildings_polygons_any_{{ provider.provider_slug}}{{ job_date_time }}</value>

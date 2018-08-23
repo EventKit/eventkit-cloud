@@ -475,7 +475,7 @@ def osm_data_collection_task(
 @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
-    Task to create styles for osm.
+    Task to create metadata to a geopackage.
     """
     from eventkit_cloud.jobs.models import Job, DataProvider
 
@@ -861,10 +861,13 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
         result = {}
 
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    data_provider_task_slug = data_provider_task.slug
+
     run = data_provider_task.run
 
     if data_provider_task.name == 'run':
         provider_tasks = run.provider_tasks.filter(~Q(name='run'))
+        data_provider_task = None
     else:
         provider_tasks = [data_provider_task]
 
@@ -898,7 +901,7 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
                         provider_task.slug)
                     # If a single data source is being zipped hide the task to only display the zip in the UI.
-                    if data_provider_task.name != 'run':
+                    if data_provider_task:
                         export_task.display = False
                         export_task.save()
                 if not os.path.isfile(full_file_path):
@@ -921,14 +924,14 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
         # No need to add QGIS file if there aren't any files to be zipped.
-        include_files += [generate_qgs_style(run_uid=run.uid)]
+        include_files += [generate_qgs_style(run_uid=run.uid, data_provider_task_record=data_provider_task)]
         include_files += [get_human_readable_metadata_document(run_uid=run.uid)]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
         include_files = set(include_files)
         result['result'] = zip_files(include_files=include_files,
-                                     file_path=os.path.join(get_provider_staging_dir(run.uid, data_provider_task.slug),
+                                     file_path=os.path.join(get_provider_staging_dir(run.uid, data_provider_task_slug),
                                                             "{0}.zip".format(normalize_name(run.job.name))),
                                      static_files=get_style_files())
     return result
