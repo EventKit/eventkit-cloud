@@ -306,7 +306,7 @@ export const joyride = {
             text: `You can review relevant information about the DataPack here such as its creation date,
                 Area of Interest, and which data is included.
                 Most importantly, you can download the data.`,
-            selector: '.qa-StatusDownload-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
@@ -342,7 +342,7 @@ export const joyride = {
             text: `For convenience, EventKit bundles all the individual data sources into a single download (formatted as a .zip file).
                 Additionally, this file contains GIS application files (QGIS and ArcMap),
                 cartographic styles, metadata, and associated documents.`,
-            selector: '.qa-DataPackDetails-RaisedButton-zipButton',
+            selector: '.qa-DataPackDetails-Button-zipButton',
             position: 'bottom',
             scrollToId: 'DownloadOptions',
             style: JoyRideStyles.tooltipStyle,
