@@ -4,13 +4,13 @@ import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
-import Paper from 'material-ui/Paper';
-import AppBar from 'material-ui/AppBar';
-import CircularProgress from 'material-ui/CircularProgress';
-import Divider from 'material-ui/Divider';
+import Paper from '@material-ui/core/Paper';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import ErrorOutline from '@material-ui/icons/ErrorOutlined';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import PageHeader from '../common/PageHeader';
 import DataCartDetails from './DataCartDetails';
 import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
@@ -216,18 +216,6 @@ export class StatusDownload extends React.Component {
 
         const marginPadding = this.getMarginPadding();
         const styles = {
-            appBar: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
-            },
-            pageTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                paddingLeft: '10px',
-                height: '35px',
-            },
             root: {
                 height: window.innerHeight - 95,
                 width: '100%',
@@ -276,7 +264,9 @@ export class StatusDownload extends React.Component {
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
-                fontSize: '16px',
+                fontSize: '14px',
+                height: '30px',
+                lineHeight: '30px',
             },
             tourIcon: {
                 color: '#4598bf',
@@ -290,13 +280,13 @@ export class StatusDownload extends React.Component {
         };
 
         const iconElementRight = (
-            <EnhancedButton
+            <ButtonBase
                 onClick={this.handleWalkthroughClick}
                 style={styles.tourButton}
             >
                 <Help style={styles.tourIcon} />
                 Page Tour
-            </EnhancedButton>
+            </ButtonBase>
         );
 
         const errorMessage = this.getErrorMessage();
@@ -351,20 +341,14 @@ export class StatusDownload extends React.Component {
 
         return (
             <div className="qa-StatusDownload-div-root" style={styles.root}>
-                <AppBar
-                    className="qa-StatusDownload-AppBar"
-                    style={styles.appBar}
-                    title={pageTitle}
-                    titleStyle={styles.pageTitle}
-                    iconStyleRight={{ marginTop: '2px' }}
-                    iconElementRight={iconElementRight}
-                    iconElementLeft={<p style={{ display: 'none' }} />}
-                />
+                <PageHeader title={pageTitle} className="qa-StatusDownload-PageHeader">
+                    {iconElementRight}
+                </PageHeader>
                 {this.props.runDeletion.deleting ?
                     <div style={styles.deleting}>
                         <CircularProgress
                             style={{ margin: 'auto', display: 'block' }}
-                            color="#4598bf"
+                            color="primary"
                             size={50}
                         />
                     </div>
@@ -395,13 +379,13 @@ export class StatusDownload extends React.Component {
                             run={isRunning}
                         />
                         <form>
-                            <Paper className="qa-Paper" style={{ padding: '20px' }} zDepth={2} >
+                            <Paper className="qa-Paper" style={{ padding: '20px' }} elevation={2} >
                                 <div className="qa-StatusDownload-heading" style={styles.heading}>
                                     DataPack Details
                                 </div>
                                 {this.state.isLoading ?
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                                        <CircularProgress color="#4598bf" size={50} style={{ margin: '30px auto', display: 'block' }} />
+                                        <CircularProgress color="primary" size={50} style={{ margin: '30px auto', display: 'block' }} />
                                     </div>
                                     :
                                     null

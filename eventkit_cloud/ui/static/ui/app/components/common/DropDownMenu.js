@@ -35,6 +35,7 @@ export class DropDownMenu extends React.Component {
                 bottom: '1px',
                 left: 5,
                 right: 5,
+                ...this.props.underlineStyle,
             },
         };
 
@@ -95,6 +96,7 @@ DropDownMenu.defaultProps = {
     },
     MenuListProps: {},
     style: {},
+    underlineStyle: {},
 };
 
 DropDownMenu.propTypes = {
@@ -103,7 +105,10 @@ DropDownMenu.propTypes = {
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
     ]).isRequired,
-    value: PropTypes.string.isRequired,
+    value: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node,
+    ]).isRequired,
     anchorOrigin: PropTypes.shape({
         vertical: PropTypes.string,
         horizontal: PropTypes.string,
@@ -114,6 +119,7 @@ DropDownMenu.propTypes = {
     }),
     MenuListProps: PropTypes.object,
     style: PropTypes.object,
+    underlineStyle: PropTypes.object,
 };
 
 export default DropDownMenu;

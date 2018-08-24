@@ -1,9 +1,7 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Divider from 'material-ui/Divider';
+import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
@@ -60,15 +58,9 @@ describe('ProviderError component', () => {
             },
         }
     );
-    const muiTheme = getMuiTheme();
 
     const getWrapper = props => (
-        mount(<ProviderError {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<ProviderError {...props} />)
     );
 
     it('should render UI elements', () => {

@@ -20,6 +20,11 @@ export class DatePicker extends Component {
                     style: { fontSize: '14px', padding: '0px 5px' },
                     ...this.props.InputProps,
                 }}
+                // eslint-disable-next-line react/jsx-no-duplicate-props
+                inputProps={{
+                    min: this.props.min,
+                    max: this.props.max,
+                }}
                 style={{ fontSize: '14px' }}
             />
         );
@@ -35,6 +40,8 @@ DatePicker.defaultProps = {
     placeholder: undefined,
     value: undefined,
     InputProps: {},
+    min: undefined,
+    max: undefined,
 };
 
 DatePicker.propTypes = {
@@ -62,6 +69,8 @@ DatePicker.propTypes = {
     ]),
     onChange: PropTypes.func.isRequired,
     InputProps: PropTypes.object,
+    min: PropTypes.string,
+    max: PropTypes.string,
 };
 
 export default DatePicker;

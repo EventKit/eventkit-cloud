@@ -2,8 +2,9 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Table, TableHeader, TableHeaderColumn, TableRow }
-    from 'material-ui/Table';
+import Table from '@material-ui/core/Table';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
@@ -87,13 +88,12 @@ describe('DataPackDetails component', () => {
         expect(wrapper.find('div').at(1).text()).toEqual('Download Options');
         expect(wrapper.find(Table)).toHaveLength(2);
         const table = wrapper.find(Table).first();
-        expect(table.find(TableHeader)).toHaveLength(1);
         expect(table.find(TableRow)).toHaveLength(1);
-        expect(table.find(TableHeaderColumn)).toHaveLength(4);
-        expect(table.find(TableHeaderColumn).at(0).text()).toEqual('CREATING DATAPACK ZIP');
-        expect(table.find(TableHeaderColumn).at(0).find(Button)).toHaveLength(1);
-        expect(table.find(TableHeaderColumn).at(1).text()).toEqual('FILE SIZE');
-        expect(table.find(TableHeaderColumn).at(2).text()).toEqual('PROGRESS');
+        expect(table.find(TableCell)).toHaveLength(4);
+        expect(table.find(TableCell).at(0).text()).toEqual('CREATING DATAPACK ZIP');
+        expect(table.find(TableCell).at(0).find(Button)).toHaveLength(1);
+        expect(table.find(TableCell).at(1).text()).toEqual('FILE SIZE');
+        expect(table.find(TableCell).at(2).text()).toEqual('PROGRESS');
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
     });
     it('getTextFontSize should return the font string for table text based on window width', () => {
