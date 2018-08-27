@@ -313,8 +313,8 @@ export class UserGroupsPage extends Component {
         this.setState({ showCreate: false, createInput: '' });
     }
 
-    handleCreateInput(e, val) {
-        this.setState({ createInput: val });
+    handleCreateInput(e) {
+        this.setState({ createInput: e.target.value });
     }
 
     handleCreateSave() {
@@ -331,8 +331,8 @@ export class UserGroupsPage extends Component {
         this.setState({ showRename: false, renameInput: '', targetGroup: null });
     }
 
-    handleRenameInput(e, val) {
-        this.setState({ renameInput: val });
+    handleRenameInput(e) {
+        this.setState({ renameInput: e.target.value });
     }
 
     handleRenameSave() {
