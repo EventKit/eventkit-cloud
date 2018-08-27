@@ -10,6 +10,7 @@ from pysqlite2 import dbapi2 as sqlite3
 
 from artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
+from eventkit_cloud.utils.ogr import OGR
 
 LOG = logging.getLogger(__name__)
 
@@ -431,54 +432,9 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
     with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
         open_file.write(geojson)
 
-    cmd = Template("ogr2ogr -f 'GPKG' $gpkg $geojson_file -nln $layer_name")
+    ogr = OGR(task_uid=task_uid)
+    gpkg = ogr.convert(file_format='GPKG', in_file=gpkg, out_file=geojson_file, params=-"-nln {0}".format(layer_name))
 
-    append_cmd = cmd.safe_substitute({'geojson_file': geojson_file,
-                                      'gpkg': gpkg,
-                                      'layer_name': layer_name})
-
-    task_process = TaskProcess(task_uid=task_uid)
-    task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if task_process.exitcode != 0:
-        logger.error('{0}'.format(task_process.stderr))
-        raise Exception("ogr2ogr process failed with returncode: {0}".format(task_process.exitcode))
-    return gpkg
-
-
-def clip_geopackage(geojson_file=None, gpkg=None, task_uid=None):
-    """Uses an ogr2ogr and/or gdalwarp script to clip a geopackage.
-        Args:
-            geojson_file: A geojson file to serve as a cutline.
-            gpkg: Geopackage to clip.
-            task_uid: A task uid to update.
-        Returns:
-            True if the file is successfully clipped.
-        """
-
-    if not geojson_file or not gpkg:
-        raise Exception("A geojson_file: {0} \nor a geopackage: {1} was not accessible.".format(geojson_file, gpkg))
-
-    # set cmd to gdalwarp if tiled gpkg, otherwise ogr2ogr
-    if get_tile_table_names(gpkg):
-        cmd = Template("gdalwarp -cutline $geojson_file -crop_to_cutline -dstalpha $in_gpkg $out_gpkg")
-    else:
-        cmd = Template("ogr2ogr -f GPKG -clipsrc $geojson_file $out_gpkg $in_gpkg")
-
-    in_gpkg = os.path.join(os.path.dirname(gpkg), "old_{0}".format(os.path.basename(gpkg)))
-    os.rename(gpkg, in_gpkg)
-
-    append_cmd = cmd.safe_substitute({'geojson_file': geojson_file,
-                                      'in_gpkg': in_gpkg,
-                                      'out_gpkg': gpkg})
-
-    logger.info(append_cmd)
-    task_process = TaskProcess(task_uid=task_uid)
-    task_process.start_process(append_cmd, shell=True, executable='/bin/bash',
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if task_process.exitcode != 0:
-        logger.error('{0}'.format(task_process.stderr))
-        raise Exception("{} process failed with returncode: {0}".format(append_cmd.split()[0], task_process.exitcode))
     return gpkg
 
 

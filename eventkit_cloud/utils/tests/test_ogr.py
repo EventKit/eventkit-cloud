@@ -8,6 +8,8 @@ from mock import Mock, patch, MagicMock
 
 from eventkit_cloud.utils.ogr import OGR, create_zip_file, get_zip_name, enable_spatialite, execute_spatialite_script
 
+from pysqlite2 import dbapi2 as sqlite3
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +28,7 @@ class TestOGR(TestCase):
         kmlfile = '/path/to/query.kml'
         expected_file = '/path/to/query.kmz'
         mock_create_zip_file.return_value = expected_file
-        expected_cmd = "ogr2ogr -f 'KML' {0} {1}".format(kmlfile, gpkg)
+        expected_cmd = "ogr2ogr -f 'KML'  {0} {1}".format(kmlfile, gpkg)
         self.task_process.return_value = Mock(exitcode=0)
         # set zipped to False for testing
         ogr = OGR(task_uid=self.task_uid)
@@ -52,8 +54,8 @@ class TestOGR(TestCase):
         self.assertEquals(expected_value, returned_value)
 
     @patch("audit_logging.file_logging.logging_open")
-    @patch("eventkit_cloud.utils.sqlite.enable_spatialite")
-    @patch("eventkit_cloud.utils.sqlite.sqlite3")
+    @patch("eventkit_cloud.utils.ogr.enable_spatialite")
+    @patch("eventkit_cloud.utils.ogr.sqlite3")
     def test_execute_spatialite_script(self, mock_sqlite3, mock_enable, mock_logging_open):
         test_db = "test.gpkg"
         test_script = "test.sql"

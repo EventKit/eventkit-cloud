@@ -108,7 +108,7 @@ class TestUIViews(TestCase):
 
     @patch('eventkit_cloud.ui.views.is_lat_lon')
     @patch('eventkit_cloud.ui.views.is_mgrs')
-    @patch('eventkit_cloud.ui.views.Convert')
+    @patch('eventkit_cloud.ui.views.CoordinateConverter')
     @patch('eventkit_cloud.ui.views.ReverseGeocode')
     @patch('eventkit_cloud.ui.views.Geocode')
     def test_search(self, mock_geocode, mock_reverse, mock_convert, mock_is_mgrs, mock_is_lat_lon):

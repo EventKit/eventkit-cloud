@@ -114,13 +114,13 @@ class ExportTaskBase(TransactionTestCase):
 
 class TestExportTasks(ExportTaskBase):
     @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.shp.GPKGToShp')
-    def test_run_shp_export_task(self, mock, mock_request):
+    @patch('eventkit_cloud.tasks.export_tasks.OGR')
+    def test_run_shp_export_task(self, mock_ogr, mock_request):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        gpkg_to_shp = mock.return_value
+        ogr_mock = mock_ogr.return_value
         job_name = self.job.name.lower()
-        gpkg_to_shp.convert.return_value = '/path/to/' + job_name + '.shp'
+        ogr_mock.convert.return_value = '/path/to/' + job_name + '.shp'
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid)
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='Shapefile Export',
                                                                      status=TaskStates.PENDING.value)
@@ -129,7 +129,7 @@ class TestExportTasks(ExportTaskBase):
                                                             name=shp_export_task.name)
         shp_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
         result = shp_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
-        gpkg_to_shp.convert.assert_called_once()
+        ogr_mock.convert.assert_called_once()
         self.assertEquals('/path/to/' + job_name + '.shp', result['result'])
         # test tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
@@ -137,15 +137,15 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(TaskStates.RUNNING.value, run_task.status)
 
     @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.kml.GPKGToKml')
-    def test_run_kml_export_task(self, mock_kml, mock_request):
+    @patch('eventkit_cloud.tasks.export_tasks.OGR')
+    def test_run_kml_export_task(self, mock_ogr, mock_request):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        gpkg_to_kml = mock_kml.return_value
+        ogr_mock = mock_ogr.return_value
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             '{}.kmz'.format(job_name))
-        gpkg_to_kml.convert.return_value = expected_output_path
+        ogr_mock.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run, name='GPKGToKml',
                                                                      status=TaskStates.PENDING.value)
@@ -154,7 +154,7 @@ class TestExportTasks(ExportTaskBase):
                                                             name=kml_export_task.name)
         kml_export_task.update_task_state(task_status=TaskStates.RUNNING.value, task_uid=str(saved_export_task.uid))
         result = kml_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir, job_name=job_name)
-        gpkg_to_kml.convert.assert_called_once()
+        ogr_mock.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
@@ -210,15 +210,15 @@ class TestExportTasks(ExportTaskBase):
         self.assertEquals(expected_output_path, result['geopackage'])
 
     @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.arcgis_feature_service.ArcGISFeatureServiceToGPKG')
-    def test_run_arcgis_feature_service_export_task(self, mock_service, mock_request):
+    @patch('eventkit_cloud.tasks.export_tasks.OGR')
+    def test_run_arcgis_feature_service_export_task(self, mock_ogr, mock_request):
         celery_uid = str(uuid.uuid4())
         type(mock_request).id = PropertyMock(return_value=celery_uid)
-        arcfs_to_gpkg = mock_service.return_value
+        ogr_mock = mock_ogr.return_value
         job_name = self.job.name.lower()
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             '{}.gpkg'.format(job_name))
-        arcfs_to_gpkg.convert.return_value = expected_output_path
+        ogr_mock.convert.return_value = expected_output_path
         stage_dir = settings.EXPORT_STAGING_ROOT + str(self.run.uid) + '/'
         export_provider_task = DataProviderTaskRecord.objects.create(run=self.run,
                                                                      status=TaskStates.PENDING.value)
@@ -229,7 +229,7 @@ class TestExportTasks(ExportTaskBase):
                                                              task_uid=str(saved_export_task.uid))
         result = arcgis_feature_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
                                                         job_name=job_name)
-        arcfs_to_gpkg.convert.assert_called_once()
+        ogr_mock.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method
         run_task = ExportTaskRecord.objects.get(celery_uid=celery_uid)

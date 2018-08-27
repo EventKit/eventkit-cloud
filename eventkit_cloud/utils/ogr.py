@@ -27,60 +27,21 @@ class OGR(object):
         """
         self.task_uid = task_uid
 
-    def convert(self, file_format, out_file, in_file, layer_name=None, bbox=None, lco=None, dco=None, co=None,
-                overwrite=False, skipfailures=False, spat=None, t_srs=None, spat_srs=None):
+    def convert(self, file_format, out_file, in_file, params=None):
         """
 
         :param file_format: The OGR format (e.g. KML, GPKG, ESRI Shapefile)
         :param out_file: The full path to the converted file.
         :param in_file: The full path to the source file.
-        :param layer_name: An optional layer name (if only converting one layer).
-        :param lco: OGR Layer creation options ("OPTION=SOMETHING")
-        :param dco: OGR Data creation options ("OPTION=SOMETHING")
-        :param co: OGR creation options ("OPTION=SOMETHING")
-        :param overwrite: If wishing to overwrite the source data.
+        :param params: any arbitrary parameters passed as a string.
         :return: The `out_file`, or raises an exception.
         """
-        layer_param = lco_param = co_param = dco_param = overwrite_param = skipfailures_param = \
-            spat_srs_param = t_srs_param = ""
 
-        bbox = bbox or spat
-        
-        if layer_name:
-            layer_param = "-nln {0}".format(layer_name)
+        if not params:
+            params = ""
 
-        if lco:
-            lco_param = "-lco '{0}'".format(lco)
-
-        if dco:
-            dco_param = "-dco '{0}'".format(dco)
-
-        if co:
-            co_param = "-co '{0}'".format(co)
-
-        if overwrite:
-            overwrite_param = '-overwrite'
-
-        if skipfailures:
-            skipfailures_param = "-skipfailures"
-
-        if bbox:
-            bbox_param = '-spat {0} {1} {2} {3}'.format(bbox[0], bbox[1], bbox[2], bbox[3])
-
-        if t_srs:
-            t_srs_param = '-t_srs {}'.format(t_srs)
-
-        if spat_srs:
-            spat_srs_param = '-spat_srs {}'.format(spat_srs)
-
-
-        cmd = "ogr2ogr -f '{format}' {out_file} {in_file} {layer_param} {bbox_param} " \
-              "{lco_param} {dco_param} {co_param} {t_srs_param} {spat_srs_param} {overwrite_param} {skipfailures_param}".format(
-                format=file_format, in_file=in_file, out_file=out_file, layer_param=layer_param,
-                lco_param=lco_param, bbox_param=bbox_param,
-                dco_param=dco_param, co_param=co_param,
-                overwrite_param=overwrite_param, skipfailures_param=skipfailures_param,
-                t_srs_param=t_srs_param, spat_srs_param=spat_srs_param)
+        cmd = "ogr2ogr -f '{format}' {params} {out_file} {in_file}".format(
+                format=file_format, in_file=in_file, out_file=out_file, params=params)
 
         logger.info('Running: {}'.format(cmd))
         task_process = TaskProcess(task_uid=self.task_uid)
@@ -138,6 +99,8 @@ def get_zip_name(file_name):
 
 def execute_spatialite_script(db, sql_script, user_details=None):
     # This is just to make it easier to trace when user_details haven't been sent
+    from audit_logging.file_logging import logging_open  # NOQA
+
     if user_details is None:
         user_details = {'username': 'unknown-execute_spatialite_script'}
 
@@ -146,7 +109,6 @@ def execute_spatialite_script(db, sql_script, user_details=None):
     enable_spatialite(conn)
     try:
         cur = conn.cursor()
-        from audit_logging.file_logging import logging_open
         with logging_open(sql_script, 'r', user_details=user_details) as sql_file:
             sql = sql_file.read()
             cur.executescript(sql)

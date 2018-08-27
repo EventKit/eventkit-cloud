@@ -9,6 +9,7 @@ from enum import Enum
 
 logger = logging.getLogger()
 
+
 class Directory(Enum):
     ARCGIS = 'arcgis'
     DATA = 'data'

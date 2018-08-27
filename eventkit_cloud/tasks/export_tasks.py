@@ -38,7 +38,7 @@ from eventkit_cloud.ui.helpers import get_style_files, generate_qgs_style, creat
     get_human_readable_metadata_document
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
-    overpass, pbf, s3, external_service, wcs, arcgis_feature_service, geopackage, gdalutils
+    overpass, pbf, s3, external_service, wcs, geopackage, gdalutils
 )
 from eventkit_cloud.utils.ogr import OGR
 
@@ -518,8 +518,8 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
 
     try:
         ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile, lco="ENCODING=UTF-8",
-                         overwrite=True)
+        out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
+                          params="-lco 'ENCODING=UTF-8' -overwrite")
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -694,18 +694,23 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
             url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
 
+    if bbox:
+        params = "-skipfailures -spat {w} {s} {e} {n}".format(
+            w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
+    else:
+        params = "-skipfailures"
+
     try:
         ogr = OGR(task_uid=task_uid)
-        out = ogr.convert(file_format='GPKG', in_file="WFS:'{}'".format(url), out_file=gpkg, bbox=bbox,
-                            skipfailures=True)
+        out = ogr.convert(file_format='GPKG', in_file="WFS:\"{}\"".format(url), out_file=gpkg, params=params)
         result['result'] = out
         result['geopackage'] = out
         # Check for geopackage contents; gdal wfs driver fails silently
         if not geopackage.check_content_exists(out):
-            raise Exception, "Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer)
+            raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
         return result
     except Exception as e:
-        logger.error('Raised exception in wfs export, %s', str(e))
+        logger.error('Raised exception in wfs export: {}'.format(str(e)))
         raise Exception(e)
 
 
@@ -736,9 +741,8 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
 
 
 @app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
-def arcgis_feature_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
-                                       stage_dir=None, job_name=None, bbox=None, service_url=None, name=None,
-                                       service_type=None, user_details=None,
+def arcgis_feature_service_export_task(self, result=None, task_uid=None,
+                                       stage_dir=None, job_name=None, bbox=None, service_url=None,
                                        *args, **kwargs):
     """
     Class defining sqlite export for ArcFeatureService service.
@@ -746,12 +750,26 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
     result = result or {}
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
-        w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url,
-                                                                name=name, layer=layer,
-                                                                config=config, service_type=service_type,
-                                                                task_uid=task_uid,
-                                                                *args, **kwargs)
-        out = w2g.convert()
+        if not os.path.exists(os.path.dirname(gpkg)):
+            os.makedirs(os.path.dirname(gpkg), 6600)
+
+        try:
+            # remove any url query so we can add our own
+            service_url = service_url.split('/query?')[0]
+        except ValueError:
+            # if no url query we can just check for trailing slash and move on
+            service_url = service_url.rstrip('/\\')
+        finally:
+            service_url = '{}{}'.format(service_url, '/query?where=objectid%3Dobjectid&outfields=*&f=json')
+
+        if bbox:
+            params = "-skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat {w} {s} {e} {n}".format(
+                w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
+        else:
+            params = "-skipfailures -t_srs EPSG:3857"
+
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='GPKG', in_file=service_url, out_file=gpkg, params=params)
         result['result'] = out
         result['geopackage'] = out
         return result

@@ -6,12 +6,12 @@ from uuid import uuid4
 from django.test import TransactionTestCase
 from mock import Mock, patch, call
 
-from eventkit_cloud.utils.geopackage import (SQliteToGeopackage)
-from eventkit_cloud.utils.geopackage import add_geojson_to_geopackage, clip_geopackage, get_table_count, \
+from eventkit_cloud.utils.geopackage import add_geojson_to_geopackage, get_table_count, \
     get_table_names, get_tile_table_names, get_table_gpkg_contents_information, set_gpkg_contents_bounds, \
     get_zoom_levels_table, remove_empty_zoom_levels, remove_zoom_level, get_tile_matrix_table_zoom_levels, \
     check_content_exists, check_zoom_levels, get_table_info, create_table_from_existing, create_metadata_tables, \
     create_extension_table, add_file_metadata
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,24 +24,6 @@ class TestGeopackage(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('os.path.isfile')
-    def test_convert(self, isfile):
-        sqlite = '/path/to/query.sqlite'
-        gpkgfile = '/path/to/query.gpkg'
-        cmd = "ogr2ogr -f 'GPKG' {0} {1}".format(gpkgfile, sqlite)
-        isfile.return_value = True
-        self.task_process.return_value = Mock(exitcode=0)
-        s2g = SQliteToGeopackage(gpkgfile=gpkgfile, debug=False, task_uid=self.task_uid)
-        isfile.assert_called_once_with(sqlite)
-        out = s2g.convert()
-        self.task_process.assert_called_once_with(task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/bash', shell=True, stderr=-1,
-                                                                  stdout=-1)
-        self.assertEquals(out, gpkgfile)
-
-        self.task_process.return_value = Mock(exitcode=1)
-        with self.assertRaises(Exception):
-            s2g.convert()
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     def test_get_table_count(self, sqlite3):
@@ -233,39 +215,6 @@ class TestGeopackage(TransactionTestCase):
         with self.assertRaises(Exception):
             add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
 
-    @patch('eventkit_cloud.utils.geopackage.sqlite3')
-    @patch('os.rename')
-    def test_clip_geopackage(self, rename, sqlite3):
-        geojson = "{}"
-        gpkg = None
-        with self.assertRaises(Exception):
-            add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg)
-
-        geojson_file = "test.geojson"
-        in_gpkg = "old_test.gpkg"
-        gpkg = "test.gpkg"
-        expected_tables_no_tiles = ()
-        expected_tables_with_tiles = (("",),)  # contents don't matter, just checks length
-
-        sqlite3.connect().__enter__().execute.return_value = expected_tables_no_tiles
-        expected_call = "ogr2ogr -f GPKG -clipsrc {0} {2} {1}".format(geojson_file, in_gpkg, gpkg)
-        self.task_process.return_value = Mock(exitcode=0)
-        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
-        self.task_process.assert_called_once_with(task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_once_with(expected_call, executable='/bin/bash', shell=True,
-                                                                  stderr=-1, stdout=-1)
-        rename.assert_called_once_with(gpkg, in_gpkg)
-
-        sqlite3.connect().__enter__().execute.return_value = expected_tables_with_tiles
-        expected_call = "gdalwarp -cutline {0} -crop_to_cutline -dstalpha {1} {2}".format(geojson_file, in_gpkg, gpkg)
-        self.task_process.return_value = Mock(exitcode=0)
-        clip_geopackage(geojson_file=geojson_file, gpkg=gpkg, task_uid=self.task_uid)
-        self.task_process().start_process.assert_called_with(expected_call, executable='/bin/bash', shell=True,
-                                                                  stderr=-1, stdout=-1)
-
-        self.task_process.return_value = Mock(exitcode=1)
-        with self.assertRaises(Exception):
-            clip_geopackage(geojson=geojson, gpkg=gpkg, task_uid=self.task_uid)
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')
     @patch('eventkit_cloud.utils.geopackage.get_table_info')
