@@ -125,7 +125,7 @@ def get_style_files():
 def create_license_file(provider_task):
     # checks a DataProviderTaskRecord's license file and adds it to the file list if it exists
     from eventkit_cloud.jobs.models import DataProvider
-    from eventkit_cloud.tasks.task_runners import normalize_name
+    from eventkit_cloud.tasks.helpers import normalize_name
     data_provider_license = DataProvider.objects.get(slug=provider_task.slug).license
 
     # DataProviders are not required to have a license
