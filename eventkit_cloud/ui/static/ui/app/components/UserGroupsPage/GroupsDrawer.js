@@ -76,9 +76,6 @@ export class GroupsDrawer extends Component {
                 open={this.props.open}
                 className="qa-GroupsDrawer-Drawer"
                 PaperProps={{ style: styles.drawer }}
-                SlideProps={{
-                    unmountOnExit: true,
-                }}
             >
                 <MenuList
                     width={250}

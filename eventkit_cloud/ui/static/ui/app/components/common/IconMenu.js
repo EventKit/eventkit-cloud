@@ -28,7 +28,7 @@ export class IconMenu extends Component {
         return ([
             <IconButton
                 key="button"
-                className="qa-IconMenu-IconButton"
+                className={this.props.className || 'qa-IconMenu-IconButton'}
                 style={{
                     width: '36px',
                     height: '36px',
@@ -92,6 +92,7 @@ IconMenu.defaultProps = {
     icon: undefined,
     disabled: false,
     color: undefined,
+    className: undefined,
 };
 
 IconMenu.propTypes = {
@@ -114,6 +115,7 @@ IconMenu.propTypes = {
     icon: PropTypes.node,
     disabled: PropTypes.bool,
     color: PropTypes.string,
+    className: PropTypes.string,
 };
 
 export default IconMenu;

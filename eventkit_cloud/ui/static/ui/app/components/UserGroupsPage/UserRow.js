@@ -136,9 +136,9 @@ export class UserRow extends Component {
         }
 
         const checkbox = this.props.selected ?
-            <Checked onClick={this.onSelect} className="qa-UserRow-checkbox" />
+            <Checked onClick={this.onSelect} className="qa-UserRow-checkbox" color="primary" />
             :
-            <Unchecked onClick={this.onSelect} className="qa-UserRow-checkbox" />;
+            <Unchecked onClick={this.onSelect} className="qa-UserRow-checkbox" color="primary" />;
 
         return (
             <div
@@ -169,7 +169,7 @@ export class UserRow extends Component {
                     </div>
                     {adminLabel}
                     <IconMenu
-                        className="qa-UserRow-IconButton-options"
+                        className="qa-UserRow-options"
                         style={{ width: '48px', backgroundColor: 'transparent' }}
                         color="primary"
                         icon={

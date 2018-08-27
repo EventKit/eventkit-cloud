@@ -1,31 +1,27 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 
 export class DeleteGroupDialog extends Component {
     render() {
         const deleteActions = [
-            <RaisedButton
+            <Button
                 className="qa-DeleteGroupDialog-delete"
-                style={{ margin: '0px' }}
-                labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ backgroundColor: '#CE4427', borderRadius: '0px' }}
-                disableTouchRipple
-                label="DELETE GROUP"
-                primary={false}
+                variant="contained"
+                style={{ color: 'whitesmoke', backgroundColor: '#ce4427' }}
                 onClick={this.props.onDelete}
-            />,
-            <FlatButton
+            >
+                DELETE GROUP
+            </Button>,
+            <Button
                 className="qa-DeleteGroupDialog-cancel"
-                style={{ margin: '0px', float: 'left' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                backgroundColor="#fff"
-                disableTouchRipple
-                label="CANCEL"
+                variant="flat"
+                color="primary"
                 onClick={this.props.onClose}
-            />,
+            >
+                CANCEL
+            </Button>,
         ];
 
         return (

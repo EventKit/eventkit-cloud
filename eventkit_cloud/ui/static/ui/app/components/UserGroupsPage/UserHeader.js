@@ -1,22 +1,17 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
-import IconButton from 'material-ui/IconButton';
+import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import Sort from '@material-ui/icons/Sort';
 import DropDown from '@material-ui/icons/ArrowDropDown';
 import Checked from '@material-ui/icons/CheckBox';
 import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
-import GroupsDropDownMenu from './GroupsDropDownMenu';
+import IconMenu from '../common/IconMenu';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
 
 export class UserHeader extends Component {
     constructor(props) {
         super(props);
-        this.handleOpen = this.handleOpen.bind(this);
-        this.handleClose = this.handleClose.bind(this);
         this.handleAddUsersClick = this.handleAddUsersClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
         this.handleRemoveUsersClick = this.handleRemoveUsersClick.bind(this);
@@ -26,38 +21,23 @@ export class UserHeader extends Component {
         this.select = this.props.onSelect.bind(this, true);
         this.deselect = this.props.onSelect.bind(this, false);
         this.state = {
-            open: false,
-            popoverAnchor: null,
             showAdminConfirm: false,
         };
     }
 
-    handleOpen(e) {
-        e.preventDefault();
-        this.setState({ open: true, popoverAnchor: e.currentTarget });
-    }
-
-    handleClose() {
-        this.setState({ open: false, popoverAnchor: null });
-    }
-
     handleAddUsersClick() {
-        this.handleClose();
         this.props.handleAddUsers(this.props.selectedUsers);
     }
 
     handleNewGroupClick() {
-        this.handleClose();
         this.props.handleNewGroup(this.props.selectedUsers);
     }
 
     handleRemoveUsersClick() {
-        this.handleClose();
         this.props.handleRemoveUsers(this.props.selectedUsers);
     }
 
     handleOpenAdminConfirm() {
-        this.handleClose();
         this.setState({ showAdminConfirm: true });
     }
 
@@ -79,52 +59,25 @@ export class UserHeader extends Component {
                 alignItems: 'center',
                 height: '56px',
             },
-            iconMenu: {
-                width: '24px',
-                height: '100%',
-                margin: '0px 12px',
-            },
-            iconButton: {
-                padding: '0px',
-                marginLeft: '10px',
-                height: '24px',
-                width: '24pz',
-                verticalAlign: 'middle',
-                flex: '0 0 auto',
-            },
-            dropDown: {
-                height: '24px',
+            item: {
                 fontSize: '14px',
-                float: 'right',
-            },
-            menuItem: {
-                fontSize: '14px',
-                overflow: 'hidden',
-                color: '#707274',
-            },
-            menuItemInner: {
-                padding: '0px',
-                margin: '0px 22px 0px 16px',
-                height: '48px',
-                display: 'flex',
             },
         };
 
         const checkbox = this.props.selected ?
-            <Checked onClick={this.deselect} className="qa-UserHeader-checkbox" />
+            <Checked onClick={this.deselect} className="qa-UserHeader-checkbox" color="primary" />
             :
-            <Unchecked onClick={this.select} className="qa-UserHeader-checkbox" />;
+            <Unchecked onClick={this.select} className="qa-UserHeader-checkbox" color="primary" />;
 
         let removeButton = null;
         if (this.props.showRemoveButton) {
             removeButton = (
                 <MenuItem
-                    style={{ ...styles.menuItem, color: '#ce4427' }}
-                    innerDivStyle={styles.menuItemInner}
+                    style={{ ...styles.item, color: '#ce4427' }}
                     onClick={this.handleRemoveUsersClick}
                     className="qa-UserHeader-MenuItem-remove"
                 >
-                    <span>Remove User(s)</span>
+                    Remove User(s)
                 </MenuItem>
             );
         }
@@ -148,18 +101,16 @@ export class UserHeader extends Component {
                 }) selected members?`;
             }
 
-            adminButton = ([
+            adminButton = (
                 <MenuItem
                     key="makeAdminMenuItem"
-                    style={styles.menuItem}
-                    innerDivStyle={styles.menuItemInner}
+                    style={styles.item}
                     onClick={this.handleOpenAdminConfirm}
                     className="qa-UserHeader-MenuItem-makeAdmin"
                 >
-                    <span>{adminLabel}</span>
-                </MenuItem>,
-                <Divider key="makeAdminDivider" className="qa-UserHeader-Divider" />,
-            ]);
+                    {adminLabel}
+                </MenuItem>
+            );
         }
 
         return (
@@ -183,89 +134,101 @@ export class UserHeader extends Component {
                         </strong>
 
                         { this.props.selectedUsers.length ?
-                            <IconButton
-                                style={styles.iconButton}
-                                iconStyle={{ color: '#4598bf' }}
-                                onClick={this.handleOpen}
-                                className="qa-UserHeader-IconButton-options"
+                            <IconMenu
+                                style={{ marginLeft: '10px', width: '48px', backgroundColor: 'transparent' }}
+                                className="qa-UserHeader-options"
+                                color="primary"
+                                icon={
+                                    <div style={{ display: 'flex' }}>
+                                        <Person />
+                                        <DropDown />
+                                    </div>
+                                }
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'left',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'left',
+                                }}
                             >
-                                <Person />
-                                <DropDown />
-                            </IconButton>
+                                <MenuItem
+                                    style={styles.item}
+                                    onClick={this.handleAddUsersClick}
+                                    className="qa-UserHeader-MenuItem-editGroups"
+                                >
+                                    Add to Existing Group
+                                </MenuItem>
+                                <MenuItem
+                                    style={styles.item}
+                                    onClick={this.handleNewGroupClick}
+                                    className="qa-UserHeader-MenuItem-newGroup"
+                                >
+                                    Add to New Group
+                                </MenuItem>
+                                {adminButton}
+                                {removeButton}
+                            </IconMenu>
                             :
                             null
                         }
-                        <GroupsDropDownMenu
-                            open={this.state.open}
-                            anchorEl={this.state.popoverAnchor}
-                            anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-                            targetOrigin={{ horizontal: 'left', vertical: 'top' }}
-                            onClose={this.handleClose}
-                            width={200}
-                            className="qa-UserHeader-GroupsDropDownMenu"
-                        >
-                            <MenuItem
-                                style={styles.menuItem}
-                                innerDivStyle={styles.menuItemInner}
-                                onClick={this.handleAddUsersClick}
-                                className="qa-UserHeader-MenuItem-editGroups"
-                            >
-                                <span>Add to Existing Group</span>
-                            </MenuItem>
-                            <Divider className="qa-UserHeader-Divider" />
-                            <MenuItem
-                                style={styles.menuItem}
-                                innerDivStyle={styles.menuItemInner}
-                                onClick={this.handleNewGroupClick}
-                                className="qa-UserHeader-MenuItem-newGroup"
-                            >
-                                <span>Add to New Group</span>
-                            </MenuItem>
-                            <Divider className="qa-UserHeader-Divider" />
-                            {adminButton}
-                            {removeButton}
-                        </GroupsDropDownMenu>
                     </div>
                     <IconMenu
-                        value={this.props.orderingValue}
-                        onChange={this.props.handleOrderingChange}
-                        iconButtonElement={
-                            <IconButton style={{ padding: '0px', height: '24px' }}>
+                        style={{ width: '48px', backgroundColor: 'transparent' }}
+                        icon={
+                            <div style={{ display: 'flex' }}>
                                 <Sort /><DropDown />
-                            </IconButton>
+                            </div>
                         }
-                        style={styles.dropDown}
-                        menuItemStyle={{ color: '#707274', fontSize: '14px' }}
-                        selectedMenuItemStyle={{ color: '#4598bf', fontSize: '14px' }}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        className="qa-UserHeader-DropDownMenu-sort"
+                        color="primary"
+                        className="qa-UserHeader-sort"
                     >
                         <MenuItem
                             value="username"
-                            primaryText="Username A-Z"
+                            style={styles.item}
+                            onClick={() => this.props.handleOrderingChange('username')}
+                            selected={this.props.orderingValue === 'username'}
                             className="qa-UserHeader-MenuItem-sortAZ"
-                        />
+                        >
+                            Username A-Z
+                        </MenuItem>
                         <MenuItem
                             value="-username"
-                            primaryText="Username Z-A"
+                            style={styles.item}
+                            onClick={() => this.props.handleOrderingChange('-username')}
+                            selected={this.props.orderingValue === '-username'}
                             className="qa-UserHeader-MenuItem-sortZA"
-                        />
+                        >
+                            Username Z-A
+                        </MenuItem>
                         <MenuItem
                             value="-date_joined"
-                            primaryText="Newest"
+                            style={styles.item}
+                            onClick={() => this.props.handleOrderingChange('-date_joined')}
+                            selected={this.props.orderingValue === '-date_joined'}
                             className="qa-UserHeader-MenuItem-sortNewest"
-                        />
+                        >
+                            Newest
+                        </MenuItem>
                         <MenuItem
                             value="date_joined"
-                            primaryText="Oldest"
+                            style={styles.item}
+                            onClick={() => this.props.handleOrderingChange('date_joined')}
+                            selected={this.props.orderingValue === 'date_joined'}
                             className="qa-UserHeader-MenuItem-sortOldest"
-                        />
+                        >
+                            Oldest
+                        </MenuItem>
                         <MenuItem
                             value="admin"
-                            primaryText="Administrator"
+                            style={styles.item}
+                            onClick={() => this.props.handleOrderingChange('admin')}
+                            selected={this.props.orderingValue === 'admin'}
                             className="qa-UserHeader-MenuItem-sortAdmin"
-                        />
+                        >
+                            Administrator
+                        </MenuItem>
                     </IconMenu>
                 </div>
                 <ConfirmDialog

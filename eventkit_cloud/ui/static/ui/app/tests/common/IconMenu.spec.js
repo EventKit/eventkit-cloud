@@ -32,7 +32,7 @@ describe('IconMenu component', () => {
 
     it('handleOpen should set anchor to current target', () => {
         expect(wrapper.state('anchor')).toBe(null);
-        const e = { currentTarget: <p>hi</p> };
+        const e = { currentTarget: <p>hi</p>, stopPropagation: () => {} };
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleOpen(e);
         wrapper.update();

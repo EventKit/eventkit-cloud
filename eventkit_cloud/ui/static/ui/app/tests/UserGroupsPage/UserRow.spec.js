@@ -1,14 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import IconButton from 'material-ui/IconButton';
-import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDownMenu';
+import IconMenu from '../../components/common/IconMenu';
 import UserRow from '../../components/UserGroupsPage/UserRow';
 
 describe('UserRow component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             user: {
@@ -28,20 +24,14 @@ describe('UserRow component', () => {
     );
 
     const getWrapper = props => (
-        mount(<UserRow {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<UserRow {...props} />)
     );
 
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-UserRow')).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(1);
-        expect(wrapper.find(GroupsDropDownMenu)).toHaveLength(1);
+        expect(wrapper.find(IconMenu)).toHaveLength(1);
     });
 
     it('should render username and no email text', () => {
@@ -60,8 +50,8 @@ describe('UserRow component', () => {
         props.showAdminButton = true;
         props.isAdmin = true;
         const wrapper = getWrapper(props);
-        const dropdown = wrapper.find(GroupsDropDownMenu);
-        expect(dropdown.props().children).toHaveLength(6);
+        const dropdown = wrapper.find(IconMenu);
+        expect(dropdown.props().children).toHaveLength(4);
     });
 
     it('handleMouseOver should setState to hovered', () => {
@@ -82,79 +72,40 @@ describe('UserRow component', () => {
         expect(stateStub.calledWith({ hovered: false })).toBe(true);
     });
 
-    it('handleOpen should preventDefault, stopPropagation, and setState', () => {
-        const fakeEvent = {
-            preventDefault: sinon.spy(),
-            stopPropagation: sinon.spy(),
-            currentTarget: null,
-        };
-        const props = getProps();
-        const stateSpy = sinon.spy(UserRow.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleOpen(fakeEvent);
-        expect(fakeEvent.preventDefault.calledOnce).toBe(true);
-        expect(fakeEvent.stopPropagation.calledOnce).toBe(true);
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ open: true, popoverAnchor: null })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handleClose should setState', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy(UserRow.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleClose();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ open: false })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('handleAddUserClick should call handleClose and handleNewGroup', () => {
+    it('handleAddUserClick should call handleNewGroup', () => {
         const props = getProps();
         props.handleAddUser = sinon.spy();
-        const closeStub = sinon.stub(UserRow.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleAddUserClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleAddUser.calledOnce).toBe(true);
         expect(props.handleAddUser.calledWith([props.user])).toBe(true);
-        closeStub.restore();
     });
 
-    it('handleNewGroupClick should call handle close and handle new group', () => {
+    it('handleNewGroupClick should call handle new group', () => {
         const props = getProps();
         props.handleNewGroup = sinon.spy();
-        const closeStub = sinon.stub(UserRow.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleNewGroupClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleNewGroup.calledOnce).toBe(true);
         expect(props.handleNewGroup.calledWith([props.user])).toBe(true);
-        closeStub.restore();
     });
 
-    it('handleMakeAdminClick should handleClose and call handleMakeAdmin', () => {
+    it('handleMakeAdminClick should call handleMakeAdmin', () => {
         const props = getProps();
         props.handleMakeAdmin = sinon.spy();
-        const closeStub = sinon.stub(UserRow.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleMakeAdminClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleMakeAdmin.calledOnce).toBe(true);
         expect(props.handleMakeAdmin.calledWith(props.user)).toBe(true);
-        closeStub.restore();
     });
 
-    it('handleDemoteAdminClick should handleClose and call handleDemoteAdmin', () => {
+    it('handleDemoteAdminClick should call handleDemoteAdmin', () => {
         const props = getProps();
         props.handleDemoteAdmin = sinon.spy();
-        const closeStub = sinon.stub(UserRow.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleDemoteAdminClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleDemoteAdmin.calledOnce).toBe(true);
         expect(props.handleDemoteAdmin.calledWith(props.user)).toBe(true);
-        closeStub.restore();
     });
 
     it('make and demote admin and remove user should log a warning if functions are not supplied', () => {
@@ -169,13 +120,11 @@ describe('UserRow component', () => {
         consoleStub.restore();
     });
 
-    it('handleRemoveUserClick should call handleClose and handleRemoveUser', () => {
+    it('handleRemoveUserClick should call handleRemoveUser', () => {
         const props = getProps();
         props.handleRemoveUser = sinon.spy();
-        const closeStub = sinon.stub(UserRow.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleRemoveUserClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleRemoveUser.calledOnce).toBe(true);
         expect(props.handleRemoveUser.calledWith(props.user)).toBe(true);
     });

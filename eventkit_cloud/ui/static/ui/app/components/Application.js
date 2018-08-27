@@ -48,10 +48,10 @@ const muiThemeV1 = createMuiTheme({
         MuiInput: {
             underline: {
                 '&:before': {
-                    borderBottomColor: '#5a5a5a',
+                    borderBottomColor: '#4598bf',
                 },
                 '&:hover:not($disabled):not($error):not($focused):before': {
-                    borderBottomColor: '#5a5a5a',
+                    borderBottomColor: '#4598bf',
                 },
                 '&:after': {
                     borderBottomColor: '#4598bf',
@@ -94,6 +94,7 @@ const muiThemeV1 = createMuiTheme({
                 '&$selected': {
                     backgroundColor: '#e8eef5',
                 },
+                color: '#707274',
             },
             selected: {
                 color: '#4598bf',

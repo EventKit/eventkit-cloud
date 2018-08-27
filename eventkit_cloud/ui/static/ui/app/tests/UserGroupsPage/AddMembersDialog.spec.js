@@ -3,14 +3,14 @@ import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Tabs, Tab } from 'material-ui/Tabs';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import Checked from '@material-ui/icons/CheckBox';
 import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
-import Dialog from 'material-ui/Dialog';
+import Dialog from '@material-ui/core/Dialog';
 import Indeterminate from '../../components/icons/IndeterminateIcon';
-import * as viewport from '../../utils/viewport';
 import CustomScrollbar from '../../components/CustomScrollbar';
-import AddMembersDialog from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
+import { AddMembersDialog } from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
 
 describe('AddMembersDialog component', () => {
     const muiTheme = getMuiTheme();
@@ -30,6 +30,7 @@ describe('AddMembersDialog component', () => {
                 { user: { username: '2' } },
                 { user: { username: '3' } },
             ],
+            classes: {},
         }
     );
 
@@ -40,25 +41,16 @@ describe('AddMembersDialog component', () => {
         })
     );
 
-    const getChildWrapper = child => (
-        mount(child, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
-    );
-
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Dialog)).toHaveLength(1);
-        const description = getChildWrapper(wrapper.find(Dialog).props().children[0]);
-        expect(description.find('.qa-AddMembersDialog-description')).toHaveLength(1);
-        const tab = getChildWrapper(wrapper.find(Dialog).props().children[1]);
-        expect(tab.find(Tabs)).toHaveLength(1);
-        expect(tab.find(Tab)).toHaveLength(2);
-        expect(tab.find(CustomScrollbar)).toHaveLength(2);
-        expect(tab.find('.qa-AddMembersDialog-unassignedRow')).toHaveLength(2);
-        expect(tab.find('.qa-AddMembersDialog-assignedRow')).toHaveLength(1);
+        expect(wrapper.find('.qa-AddMembersDialog-description')).toHaveLength(1);
+        expect(wrapper.find(Tabs)).toHaveLength(1);
+        expect(wrapper.find(Tab)).toHaveLength(2);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
+        expect(wrapper.find('.qa-AddMembersDialog-unassignedRow')).toHaveLength(2);
+        expect(wrapper.find('.qa-AddMembersDialog-assignedRow')).toHaveLength(0);
     });
 
     it('getInitialState should return the initial state', () => {
@@ -66,28 +58,6 @@ describe('AddMembersDialog component', () => {
         const wrapper = getWrapper(props);
         const state = wrapper.state();
         expect(wrapper.instance().getInitialState()).toEqual(state);
-    });
-
-    it('componentDidMount should add an event listener', () => {
-        const props = getProps();
-        const addStub = sinon.stub(window, 'addEventListener');
-        const wrapper = getWrapper(props);
-        expect(addStub.called).toBe(true);
-        expect(addStub.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
-        addStub.restore();
-    });
-
-    it('componentWillUnmount should remove the event listener', () => {
-        const props = getProps();
-        const addStub = sinon.stub(window, 'addEventListener').returns(null);
-        const removeStub = sinon.stub(window, 'removeEventListener');
-        const wrapper = getWrapper(props);
-        const resize = wrapper.instance().handleResize;
-        wrapper.unmount();
-        expect(removeStub.called).toBe(true);
-        expect(removeStub.calledWith('resize', resize)).toBe(true);
-        addStub.restore();
-        removeStub.restore();
     });
 
     it('getUnassignedCheckbox should return Checked', () => {
@@ -171,7 +141,7 @@ describe('AddMembersDialog component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleTabChange(0);
+        wrapper.instance().handleTabChange({}, 0);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ tab: 0, search: '', sort: 'name' })).toBe(true);
     });
@@ -231,18 +201,6 @@ describe('AddMembersDialog component', () => {
         wrapper.instance().handleDeselectAll();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ selection: [] })).toBe(true);
-    });
-
-    it('handleResize should negate mobile state', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        wrapper.setState({ mobile: true });
-        const viewStub = sinon.stub(viewport, 'isViewportS').returns(false);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleResize();
-        expect(viewStub.calledOnce).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ mobile: false })).toBe(true);
     });
 
     it('searchGroups should filter groups by name', () => {
