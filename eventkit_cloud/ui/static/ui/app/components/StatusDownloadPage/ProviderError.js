@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import Divider from 'material-ui/Divider';
+import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
 

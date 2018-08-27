@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 
@@ -69,57 +69,60 @@ export class DataPackOptions extends Component {
 
     render() {
         const rerunExportActions = [
-            <RaisedButton
-                className="qa-DataPackOptions-RaisedButton-rerunCancel"
+            <Button
+                key="cancel-rerun"
+                className="qa-DataPackOptions-Button-rerunCancel"
+                variant="contained"
+                color="secondary"
                 style={{ marginRight: '10px' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                buttonStyle={{ backgroundColor: 'whitesmoke' }}
-                disableTouchRipple
-                label="Cancel"
-                primary={false}
                 onClick={this.handleRerunClose}
-            />,
-            <RaisedButton
+            >
+                Cancel
+            </Button>,
+            <Button
+                key="rerun"
                 className="qa-DataPackOptions-RaisedButton-rerun"
-                buttonStyle={{ backgroundColor: '#4598bf' }}
-                label="Rerun"
-                primary
+                variant="contained"
+                color="primary"
                 onClick={this.handleRerun}
-            />,
+            >
+                Rerun
+            </Button>,
         ];
         const cloneExportActions = [
-            <RaisedButton
+            <Button
+                key="cancel-clone"
                 className="qa-DataPackOptions-RaisedButton-cloneCancel"
                 style={{ marginRight: '10px' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                buttonStyle={{ backgroundColor: 'whitesmoke' }}
-                disableTouchRipple
-                label="Cancel"
-                primary={false}
+                variant="contained"
+                color="secondary"
                 onClick={this.handleCloneClose}
-            />,
-            <RaisedButton
+            >
+                Cancel
+            </Button>,
+            <Button
+                key="clone"
                 className="qa-DataPackOptions-RaisedButton-clone"
-                buttonStyle={{ backgroundColor: '#4598bf' }}
-                label="Clone"
-                primary
+                variant="contained"
+                color="primary"
                 onClick={this.handleClone}
-            />,
+            >
+                Clone
+            </Button>,
         ];
 
         return (
             <div>
-                <RaisedButton
+                <Button
                     className="qa-DataPackOptions-RaisedButton-rerunExport"
-                    style={{ margin: '10px' }}
+                    style={{ margin: '10px', fontWeight: 'bold' }}
+                    variant="contained"
+                    color="secondary"
                     disabled={!this.props.adminPermissions}
-                    backgroundColor="rgba(226,226,226,0.5)"
-                    disableTouchRipple
-                    labelColor="#4598bf"
-                    labelStyle={{ fontWeight: 'bold' }}
                     onClick={this.handleRerunOpen}
-                    label="RUN EXPORT AGAIN"
-                />
+                >
+                    RUN EXPORT AGAIN
+                </Button>
                 <BaseDialog
                     className="qa-DataPackOptions-BaseDialog-rerunExport"
                     show={this.state.showRerunDialog}
@@ -129,16 +132,15 @@ export class DataPackOptions extends Component {
                 >
                     <strong>Are you sure you want to run this DataPack again?</strong>
                 </BaseDialog>
-                <RaisedButton
+                <Button
                     className="qa-DataPackOptions-RaisedButton-cloneExport"
-                    style={{ margin: '10px' }}
-                    backgroundColor="rgba(226,226,226,0.5)"
-                    disableTouchRipple
-                    labelColor="#4598bf"
-                    labelStyle={{ fontWeight: 'bold' }}
+                    style={{ margin: '10px', fontWeight: 'bold' }}
+                    variant="contained"
+                    color="secondary"
                     onClick={this.handleCloneOpen}
-                    label="CLONE"
-                />
+                >
+                    CLONE
+                </Button>
                 <BaseDialog
                     className="qa-DataPackOptions-BaseDialog-cloneExport"
                     show={this.state.showCloneDialog}
@@ -148,17 +150,16 @@ export class DataPackOptions extends Component {
                 >
                     <strong>Are you sure you want to clone this DataPack?</strong>
                 </BaseDialog>
-                <RaisedButton
+                <Button
                     className="qa-DataPackOptions-RaisedButton-deleteExport"
-                    style={{ margin: '10px' }}
+                    style={{ margin: '10px', color: '#ff0000', fontWeight: 'bold' }}
+                    variant="contained"
+                    color="secondary"
                     disabled={!this.props.adminPermissions}
-                    backgroundColor="rgba(226,226,226,0.5)"
-                    disableTouchRipple
-                    labelColor="#ff0000"
-                    labelStyle={{ fontWeight: 'bold' }}
                     onClick={this.handleDeleteOpen}
-                    label="DELETE"
-                />
+                >
+                    DELETE
+                </Button>
                 <DeleteDataPackDialog
                     className="qa-DataPackOptions-DeleteDialog-deleteExport"
                     show={this.state.showDeleteDialog}

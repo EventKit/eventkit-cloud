@@ -3,7 +3,9 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardContent from '@material-ui/core/CardContent';
 import GroupMemberRow from '../../components/DataPackShareDialog/GroupMemberRow';
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
 
@@ -60,10 +62,7 @@ describe('GroupRow component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(CardText)).toHaveLength(0);
-        wrapper.setState({ expanded: true });
-        wrapper.update();
-        expect(wrapper.find(CardText)).toHaveLength(1);
+        expect(wrapper.find(CardContent)).toHaveLength(1);
         expect(wrapper.find(GroupMemberRow)).toHaveLength(props.members.length);
     });
 

@@ -1,7 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Link } from 'react-router';
-import { Card, CardTitle, CardText } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardContent from '@material-ui/core/CardContent';
 import moment from 'moment';
 import isUndefined from 'lodash/isUndefined';
 import Map from 'ol/map';
@@ -139,13 +141,7 @@ export class DataPackFeaturedItem extends Component {
                 padding: (window.innerWidth > 768) ? '17px 24px 20px' : '12px 16px 14px',
                 order: (window.innerWidth > 768) ? '2' : '1',
             },
-            infoHeader: {
-                paddingBottom: '14px',
-                display: 'flex',
-                flexDirection: (window.innerWidth > 768) ? 'column' : 'row',
-                maxWidth: '100%',
-            },
-            cardTitle: {
+            cardHeader: {
                 wordWrap: 'break-word',
                 fontWeight: 'bold',
                 textTransform: 'uppercase',
@@ -153,8 +149,11 @@ export class DataPackFeaturedItem extends Component {
                 maxWidth: '100%',
                 padding: '0',
             },
-            cardTitle2: {
-                fontSize: 22,
+            cardTitle: {
+                display: 'inline-block',
+                width: '100%',
+                color: '#4598bf',
+                fontSize: '22px',
             },
             titleLink: {
                 color: 'inherit',
@@ -181,6 +180,7 @@ export class DataPackFeaturedItem extends Component {
                 overflow: 'hidden',
             },
             cardText: {
+                color: '#000',
                 wordWrap: 'break-word',
                 width: '100%',
                 backgroundColor: '#f7f8f8',
@@ -207,13 +207,11 @@ export class DataPackFeaturedItem extends Component {
                         ref={this.mapContainerRef}
                     />
                     <div style={styles.info}>
-                        <CardTitle
-                            titleColor="#4598bf"
-                            style={styles.cardTitle}
-                            titleStyle={styles.cardTitle2}
+                        <CardHeader
+                            style={styles.cardHeader}
                             title={
                                 <div>
-                                    <div style={{ display: 'inline-block', width: '100%' }}>
+                                    <div style={styles.cardTitle}>
                                         <Link
                                             to={`/status/${this.props.run.job.uid}`}
                                             href={`/status/${this.props.run.job.uid}`}
@@ -224,7 +222,7 @@ export class DataPackFeaturedItem extends Component {
                                     </div>
                                 </div>
                             }
-                            subtitle={
+                            subheader={
                                 <div style={styles.cardSubtitle}>
                                     <div
                                         className="qa-DataPackFeaturedItem-Subtitle-Event"
@@ -243,13 +241,13 @@ export class DataPackFeaturedItem extends Component {
                                 </div>
                             }
                         />
-                        <CardText
+                        <CardContent
                             style={styles.cardTextContainer}
                         >
                             <span style={styles.cardText}>
                                 {this.props.run.job.description}
                             </span>
-                        </CardText>
+                        </CardContent>
                     </div>
                 </div>
             </Card>

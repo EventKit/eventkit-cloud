@@ -3,9 +3,9 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import DropDownMenu from 'material-ui/DropDownMenu';
 import DatePicker from 'material-ui/DatePicker';
 import Edit from '@material-ui/icons/Edit';
+import DropDownMenu from '../../components/common/DropDownMenu';
 import CustomTableRow from '../../components/CustomTableRow';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
@@ -111,15 +111,6 @@ describe('DataPackStatusTable component', () => {
         expect(focusSpy.calledOnce).toBe(true);
     });
 
-    it('the value of the drop down menu should be SHARED', () => {
-        const props = getProps();
-        props.permissions.value = 'SHARED';
-        const wrapper = getWrapper(props);
-        const val = wrapper.find(DropDownMenu).props().value;
-        wrapper.update();
-        expect(val).toEqual('SHARED');
-    });
-
     it('handleShareDialogOpen should set open to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -161,7 +152,7 @@ describe('DataPackStatusTable component', () => {
         const props = getProps();
         props.handlePermissionsChange = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleDropDownChange({}, 0, 'SHARED');
+        wrapper.instance().handleDropDownChange('SHARED');
         expect(props.handlePermissionsChange.calledOnce).toBe(true);
         expect(props.handlePermissionsChange.calledWith({ ...props.permissions, value: 'SHARED' })).toBe(true);
     });

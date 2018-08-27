@@ -1,9 +1,41 @@
 /* eslint react/no-array-index-key: 0 */
 import PropTypes from 'prop-types';
-
 import React from 'react';
-import { GridList, Tab, Tabs } from 'material-ui';
+import { withStyles } from '@material-ui/core/styles';
+import GridList from '@material-ui/core/GridList';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
+
+const jss = () => ({
+    tabsRoot: {
+        height: '16px',
+        minHeight: '16px',
+    },
+    tabsIndicator: {
+        display: 'none',
+    },
+    tabRoot: {
+        borderRadius: '50%',
+        width: '16px',
+        height: '16px',
+        backgroundColor: 'white',
+        border: '3px solid rgb(69, 152, 191)',
+        margin: '0px 4px',
+        transition: 'border 0.25s',
+        minWidth: '16px',
+        minHeight: '16px',
+        opacity: '1',
+    },
+    tabSelected: {
+        border: '8px solid #4598bf',
+    },
+    tabDisabled: {
+        backgroundColor: 'lightgray',
+        border: '3px solid gray',
+        opacity: '0.5',
+    },
+});
 
 export class DashboardSection extends React.Component {
     constructor(props) {
@@ -31,17 +63,19 @@ export class DashboardSection extends React.Component {
         return pages;
     }
 
-    handlePageChange(pageIndex) {
+    handlePageChange(e, pageIndex) {
         this.setState({
             pageIndex,
         });
     }
 
     render() {
+        const { classes } = this.props;
+
         const spacing = window.innerWidth > 575 ? 10 : 2;
         const scrollbarWidth = 6;
         const halfGridPadding = this.props.gridPadding / 2;
-        let styles = {
+        const styles = {
             root: {
                 marginBottom: '35px',
                 ...this.props.style,
@@ -64,23 +98,6 @@ export class DashboardSection extends React.Component {
                 display: 'flex',
                 alignItems: 'center',
             },
-            tabButtonsContainer: {
-                backgroundColor: 'rgba(0, 0, 0, 0)',
-            },
-            tabButton: {
-                borderRadius: '50%',
-                width: '16px',
-                height: '16px',
-                backgroundColor: 'white',
-                border: '3px solid rgb(69, 152, 191)',
-                margin: '0',
-                transition: 'border 0.25s',
-            },
-            tab: {
-                width: 'auto',
-                margin: '0 4px',
-                padding: '0 4px',
-            },
             swipeableViews: {
                 width: '100%',
             },
@@ -100,25 +117,6 @@ export class DashboardSection extends React.Component {
                 marginLeft: '18px',
             },
         };
-
-        // Inherited styles.
-        styles = {
-            ...styles,
-            tabDisabled: {
-                ...styles.tab,
-                pointerEvents: 'none',
-            },
-            tabButtonDisabled: {
-                ...styles.tabButton,
-                backgroundColor: 'lightgray',
-                border: '3px solid gray',
-                opacity: '0.5',
-            },
-        };
-
-        const tabButtonBorderStyle = selected => (
-            selected ? '8px solid rgb(69, 152, 191)' : '3px solid rgb(69, 152, 191)'
-        );
 
         const childrenPages = this.getPages();
 
@@ -167,7 +165,7 @@ export class DashboardSection extends React.Component {
                                     key={`DashboardSection-${this.props.name}-Page${pageIndex}-Column${columnIndex}`}
                                     className="qa-DashboardSection-Page-Column"
                                     cellHeight={this.props.cellHeight || 'auto'}
-                                    padding={this.props.gridPadding}
+                                    spacing={this.props.gridPadding}
                                     cols={1}
                                 >
                                     {childrenColumn.map((child, index) => (
@@ -188,7 +186,7 @@ export class DashboardSection extends React.Component {
                                 className="qa-DashboardSection-Page"
                                 cellHeight={this.props.cellHeight || 'auto'}
                                 style={styles.gridList}
-                                padding={this.props.gridPadding}
+                                spacing={this.props.gridPadding}
                                 cols={this.props.columns}
                             >
                                 {content}
@@ -220,26 +218,24 @@ export class DashboardSection extends React.Component {
                     {(childrenPages.length > 0) ?
                         <div style={styles.sectionHeaderRight}>
                             <Tabs
-                                tabItemContainerStyle={styles.tabButtonsContainer}
-                                inkBarStyle={{ display: 'none' }}
                                 onChange={this.handlePageChange}
                                 value={this.state.pageIndex}
+                                classes={{
+                                    root: classes.tabsRoot,
+                                    indicator: classes.tabsIndicator,
+                                }}
                             >
                                 {[...Array(this.maxPages)].map((nothing, pageIndex) => (
                                     <Tab
                                         key={`DashboardSection-${this.props.name}-Tab${pageIndex}`}
                                         className="qa-DashboardSection-Tab"
                                         value={pageIndex}
-                                        style={(pageIndex < childrenPages.length) ? styles.tab : styles.tabDisabled}
-                                        disableTouchRipple
-                                        buttonStyle={(pageIndex < childrenPages.length) ?
-                                            {
-                                                ...styles.tabButton,
-                                                border: tabButtonBorderStyle(pageIndex === this.state.pageIndex),
-                                            }
-                                            :
-                                            styles.tabButtonDisabled
-                                        }
+                                        classes={{
+                                            root: classes.tabRoot,
+                                            selected: classes.tabSelected,
+                                            disabled: classes.tabDisabled,
+                                        }}
+                                        disabled={!(pageIndex < childrenPages.length)}
                                     />
                                 ))}
                             </Tabs>
@@ -284,6 +280,7 @@ DashboardSection.propTypes = {
         PropTypes.node,
         PropTypes.string,
     ]),
+    classes: PropTypes.object,
 };
 
 DashboardSection.defaultProps = {
@@ -295,6 +292,7 @@ DashboardSection.defaultProps = {
     rows: 1,
     rowMajor: true,
     children: undefined,
+    classes: {},
 };
 
-export default DashboardSection;
+export default withStyles(jss)(DashboardSection);

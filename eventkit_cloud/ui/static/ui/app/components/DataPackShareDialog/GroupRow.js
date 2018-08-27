@@ -1,6 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Card, CardHeader, CardText } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardContent from '@material-ui/core/CardContent';
+import Collapse from '@material-ui/core/Collapse';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBox from '@material-ui/icons/CheckBox';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
@@ -87,7 +90,6 @@ export class GroupRow extends Component {
                 flexDirection: 'row-reverse',
             },
             expandIcon: {
-                fill: '#4598bf',
                 marginLeft: '15px',
                 cursor: 'pointer',
             },
@@ -110,11 +112,11 @@ export class GroupRow extends Component {
         };
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} />;
+        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} />;
+            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
         }
 
         let adminButton = null;
@@ -148,23 +150,21 @@ export class GroupRow extends Component {
         return (
             <Card
                 key={this.props.group.name}
-                expanded={this.state.expanded}
                 style={styles.card}
-                containerStyle={{ paddingBottom: '0px' }}
                 className="qa-GroupRow-Card"
             >
                 <CardHeader
                     className="qa-GroupRow-CardHeader"
                     title={
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', fontSize: '15px' }}>
                             <div style={styles.groupText} className="qa-GroupRow-CardHeader-text">
                                 {this.props.group.name}
                             </div>
                             <div style={styles.groupIcons} className="qa-GroupRow-CardHeader-icons">
                                 {this.state.expanded ?
-                                    <ArrowUp style={styles.expandIcon} onClick={this.toggleExpanded} />
+                                    <ArrowUp style={styles.expandIcon} onClick={this.toggleExpanded} color="primary" />
                                     :
-                                    <ArrowDown style={styles.expandIcon} onClick={this.toggleExpanded} />
+                                    <ArrowDown style={styles.expandIcon} onClick={this.toggleExpanded} color="primary" />
                                 }
                                 {groupIcon}
                                 {adminButton}
@@ -172,28 +172,29 @@ export class GroupRow extends Component {
                         </div>
                     }
                     style={{ padding: '12px' }}
-                    textStyle={{ padding: '0px', width: '100%' }}
                 />
-                <CardText expandable style={styles.cardText}>
-                    {firstFour.map((member) => {
-                        const isAdmin = this.props.group.administrators.includes(member.user.username);
-                        return (
-                            <GroupMemberRow
-                                key={member.user.username}
-                                member={member}
-                                isGroupAdmin={isAdmin}
-                            />
-                        );
-                    })}
-                    {groupMembers.length ?
-                        <div style={{ lineHeight: '20px', paddingTop: '10px' }} className="qa-GroupRow-viewMore">
-                            <Eye style={{ height: '20px', verticalAlign: 'text-top' }} />
-                            <a href={`/groups?groups=${this.props.group.id}`}>View all on Members and Groups Page</a>
-                        </div>
-                        :
-                        null
-                    }
-                </CardText>
+                <Collapse in={this.state.expanded}>
+                    <CardContent style={styles.cardText}>
+                        {firstFour.map((member) => {
+                            const isAdmin = this.props.group.administrators.includes(member.user.username);
+                            return (
+                                <GroupMemberRow
+                                    key={member.user.username}
+                                    member={member}
+                                    isGroupAdmin={isAdmin}
+                                />
+                            );
+                        })}
+                        {groupMembers.length ?
+                            <div style={{ lineHeight: '20px', paddingTop: '10px', fontSize: '14px' }} className="qa-GroupRow-viewMore">
+                                <Eye style={{ height: '20px', verticalAlign: 'text-top' }} color="primary" />
+                                <a href={`/groups?groups=${this.props.group.id}`}>View all on Members and Groups Page</a>
+                            </div>
+                            :
+                            null
+                        }
+                    </CardContent>
+                </Collapse>
             </Card>
         );
     }

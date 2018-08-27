@@ -1,16 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DeleteDataPackDialog from '../../components/Dialog/DeleteDataPackDialog';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 
 describe('DataPackOptions component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             rerunDisabled: false,
@@ -31,16 +27,13 @@ describe('DataPackOptions component', () => {
     );
 
     const getWrapper = props => (
-        mount(<DataPackOptions {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<DataPackOptions {...props} />)
     );
 
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(RaisedButton)).toHaveLength(3);
+        expect(wrapper.find(Button)).toHaveLength(3);
         expect(wrapper.find(BaseDialog)).toHaveLength(3);
         expect(wrapper.find(DeleteDataPackDialog)).toHaveLength(1);
     });

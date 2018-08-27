@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Card, CardHeader } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import CheckBox from '@material-ui/icons/CheckBox';
 import AdminShare from '../icons/AdminShareIcon';
@@ -74,11 +75,11 @@ export class MemberRow extends Component {
         };
 
         // Assume group is not selected by default
-        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} />;
+        let groupIcon = <CheckBoxOutline style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
 
         // Check if group is selected
         if (this.props.selected) {
-            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} />;
+            groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
         }
 
         if (this.props.showAdmin && !this.props.selected) {
@@ -122,7 +123,6 @@ export class MemberRow extends Component {
             <Card
                 key={this.props.member.user.username}
                 style={styles.card}
-                containerStyle={{ paddingBottom: '0px' }}
                 className="qa-MemberRow-Card"
             >
                 <CardHeader
@@ -144,7 +144,6 @@ export class MemberRow extends Component {
                         </div>
                     }
                     style={{ padding: '6px' }}
-                    textStyle={{ padding: '0px', width: '100%' }}
                 />
             </Card>
         );

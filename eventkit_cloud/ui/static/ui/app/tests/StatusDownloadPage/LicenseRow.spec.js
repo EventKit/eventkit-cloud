@@ -1,32 +1,24 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { TableRow, TableRowColumn } from 'material-ui/Table';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 
 describe('LicenseRow component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => ({
         name: 'test name',
         text: 'test text',
     });
 
-    const getWrapper = props => mount(<LicenseRow {...props} />, {
-        context: { muiTheme },
-        childContextTypes: {
-            muiTheme: PropTypes.object,
-        },
-    });
+    const getWrapper = props => mount(<LicenseRow {...props} />);
 
     it('should render elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(6);
+        expect(wrapper.find(TableCell)).toHaveLength(6);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find('i')).toHaveLength(1);
         expect(wrapper.find('i').text()).toEqual('Use of this data is governed by\u00a0test name');

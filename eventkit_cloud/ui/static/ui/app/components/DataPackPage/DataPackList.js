@@ -1,7 +1,10 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Table, TableBody, TableHeader, TableHeaderColumn, TableRow } from 'material-ui/Table';
-import { GridList } from 'material-ui/GridList';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
+import GridList from '@material-ui/core/GridList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import { userIsDataPackAdmin } from '../../utils/generic';
@@ -62,14 +65,16 @@ export class DataPackList extends Component {
                 marginRight: spacing,
                 paddingBottom: spacing,
             },
+            headerTable: {
+                backgroundColor: '#fff',
+                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                fontSize: '12px',
+                tableLayout: 'fixed',
+            },
             clickable: {
                 cursor: 'pointer',
-                width: 'min-content',
             },
             tableRow: {
-                marginLeft: '12px',
-                paddingRight: '6px',
-                color: '#fff',
                 height: '50px',
             },
             nameColumn: {
@@ -89,13 +94,13 @@ export class DataPackList extends Component {
                 height: 'inherit',
             },
             statusColumn: {
-                width: '65px',
+                width: '70px',
                 padding: '0px 0px 0px 10px',
                 textAlign: 'center',
                 height: 'inherit',
             },
             permissionsColumn: {
-                width: '100px',
+                width: '102px',
                 padding: '0px 0px 0px 10px',
                 textAlign: 'center',
                 height: 'inherit',
@@ -109,7 +114,7 @@ export class DataPackList extends Component {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
                 height: 'inherit',
-                width: '80px',
+                width: '82px',
             },
         };
 
@@ -135,7 +140,7 @@ export class DataPackList extends Component {
                             className="qa-DataPackList-GridList"
                             cellHeight="auto"
                             cols={1}
-                            padding={0}
+                            spacing={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
                             {this.props.runs.map((run) => {
@@ -164,16 +169,17 @@ export class DataPackList extends Component {
         return (
             <div>
                 <div style={styles.root} className="qa-DataPackList-root">
-                    <Table className="qa-DataPackList-Table-list">
-                        <TableHeader
+                    <Table
+                        className="qa-DataPackList-Table-list"
+                        style={styles.headerTable}
+                    >
+                        <TableBody
                             className="qa-DataPackList-TableHeader"
-                            displaySelectAll={false}
-                            adjustForCheckbox={false}
                             style={{ height: '50px' }}
                         >
                             <TableRow className="qa-DataPackList-TableRow" style={styles.tableRow}>
-                                <TableHeaderColumn
-                                    className="qa-DataPackList-TableHeaderColumn-name"
+                                <TableCell
+                                    className="qa-DataPackList-TableCell-name"
                                     style={styles.nameColumn}
                                 >
                                     <div
@@ -186,8 +192,8 @@ export class DataPackList extends Component {
                                         <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__name'))}>Name</span>
                                         {this.getIcon('-job__name')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-event" style={styles.eventColumn}>
+                                </TableCell>
+                                <TableCell className="qa-DataPackList-TableCell-event" style={styles.eventColumn}>
                                     <div
                                         role="button"
                                         tabIndex={0}
@@ -198,8 +204,8 @@ export class DataPackList extends Component {
                                         <span style={this.getHeaderStyle(this.isSameOrderType(this.props.order, 'job__event'))}>Event</span>
                                         {this.getIcon('-job__event')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-date" style={styles.dateColumn}>
+                                </TableCell>
+                                <TableCell className="qa-DataPackList-TableCell-date" style={styles.dateColumn}>
                                     <div
                                         role="button"
                                         tabIndex={0}
@@ -212,8 +218,8 @@ export class DataPackList extends Component {
                                         </span>
                                         {this.getIcon('started_at')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-status" style={styles.statusColumn}>
+                                </TableCell>
+                                <TableCell className="qa-DataPackList-TableCell-status" style={styles.statusColumn}>
                                     <div
                                         role="button"
                                         tabIndex={0}
@@ -226,9 +232,9 @@ export class DataPackList extends Component {
                                         </span>
                                         {this.getIcon('-status')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn
-                                    className="qa-DataPackList-TableHeaderColumn-permission"
+                                </TableCell>
+                                <TableCell
+                                    className="qa-DataPackList-TableCell-permission"
                                     style={styles.permissionsColumn}
                                 >
                                     <div
@@ -243,8 +249,8 @@ export class DataPackList extends Component {
                                         </span>
                                         {this.getIcon('-job__published')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-owner" style={styles.ownerColumn}>
+                                </TableCell>
+                                <TableCell className="qa-DataPackList-TableCell-owner" style={styles.ownerColumn}>
                                     <div
                                         role="button"
                                         tabIndex={0}
@@ -257,8 +263,8 @@ export class DataPackList extends Component {
                                         </span>
                                         {this.getIcon('-user__username')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn className="qa-DataPackList-TableHeaderColumn-featured" style={styles.featuredColum}>
+                                </TableCell>
+                                <TableCell className="qa-DataPackList-TableCell-featured" style={styles.featuredColum}>
                                     <div
                                         role="button"
                                         tabIndex={0}
@@ -271,17 +277,20 @@ export class DataPackList extends Component {
                                         </span>
                                         {this.getIcon('job__featured')}
                                     </div>
-                                </TableHeaderColumn>
-                                <TableHeaderColumn style={{ padding: '0px', width: '35px', height: 'inherit' }} />
+                                </TableCell>
+                                <TableCell style={{ padding: '0px', width: '35px', height: 'inherit' }} />
                             </TableRow>
-                        </TableHeader>
+                        </TableBody>
                     </Table>
                     <CustomScrollbar
                         ref={(instance) => { this.scrollbar = instance; }}
                         style={{ height: window.innerHeight - 287 }}
                     >
-                        <Table className="qa-DataPackList-Table-item">
-                            <TableBody displayRowCheckbox={false}>
+                        <Table
+                            className="qa-DataPackList-Table-item"
+                            style={{ backgroundColor: '#fff', fontSize: '12px', tableLayout: 'fixed' }}
+                        >
+                            <TableBody>
                                 {this.props.runs.map((run) => {
                                     const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
                                     return (

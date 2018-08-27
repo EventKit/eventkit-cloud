@@ -4,7 +4,8 @@ import { Link } from 'react-router';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import moment from 'moment';
-import { CardTitle, CardText } from 'material-ui/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardContent from '@material-ui/core/CardContent';
 import { DataPackFeaturedItem } from '../../components/DashboardPage/DataPackFeaturedItem';
 
 describe('DataPackFeaturedItem component', () => {
@@ -53,7 +54,7 @@ describe('DataPackFeaturedItem component', () => {
     beforeEach(setup);
 
     it('renders card title with correct text and props', () => {
-        const title = wrapShallow(wrapper.find(CardTitle).props().title);
+        const title = wrapShallow(wrapper.find(CardHeader).props().title);
         const titleLink = title.find(Link);
         expect(titleLink.props().to).toBe(`/status/${instance.props.run.job.uid}`);
         expect(titleLink.props().href).toBe(`/status/${instance.props.run.job.uid}`);
@@ -61,7 +62,7 @@ describe('DataPackFeaturedItem component', () => {
     });
 
     it('renders card subtitle with correct text', () => {
-        const subtitle = wrapShallow(wrapper.find(CardTitle).props().subtitle);
+        const subtitle = wrapShallow(wrapper.find(CardHeader).props().subheader);
         expect(subtitle.find('.qa-DataPackFeaturedItem-Subtitle-Event').text()).toBe(
             `Event: ${instance.props.run.job.event}`,
         );
@@ -74,7 +75,7 @@ describe('DataPackFeaturedItem component', () => {
     });
 
     it('renders card text with the job description', () => {
-        expect(wrapper.find(CardText).childAt(0).text()).toBe(instance.props.run.job.description);
+        expect(wrapper.find(CardContent).childAt(0).text()).toBe(instance.props.run.job.description);
     });
 
     it('inits map on component mount', () => {

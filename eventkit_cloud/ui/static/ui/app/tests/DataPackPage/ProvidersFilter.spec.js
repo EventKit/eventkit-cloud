@@ -1,13 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Checkbox from 'material-ui/Checkbox';
+import Checkbox from '@material-ui/core/Checkbox';
 import { ProvidersFilter } from '../../components/DataPackPage/ProvidersFilter';
 
 describe('ProvidersFilter component', () => {
-    const muiTheme = getMuiTheme();
     const providers = [
         {
             id: 2,
@@ -39,19 +36,14 @@ describe('ProvidersFilter component', () => {
     );
 
     const getWrapper = props => (
-        mount(<ProvidersFilter {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<ProvidersFilter {...props} />)
     );
 
     it('should have checkboxes', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('p').first().text()).toEqual('Sources');
-        expect(wrapper.find(Checkbox).at(0).text()).toEqual(providers[0].name);
+        expect(wrapper.find('.qa-ProvidersFilter-name').at(0).text()).toEqual(providers[0].name);
         expect(wrapper.find(Checkbox).at(0).props().checked).toEqual(false);
     });
 

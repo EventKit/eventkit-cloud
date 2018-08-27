@@ -1,77 +1,59 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import DropDownMenu from 'material-ui/DropDownMenu';
-import MenuItem from 'material-ui/MenuItem';
+import MenuItem from '@material-ui/core/MenuItem';
+import DropDownMenu from '../common/DropDownMenu';
 
 export class DataPackOwnerSort extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleAll = this.handleAll.bind(this);
+        this.handleOwner = this.handleOwner.bind(this);
+    }
+
+    handleAll() {
+        this.props.handleChange('all');
+    }
+
+    handleOwner() {
+        this.props.handleChange(this.props.owner);
+    }
+
     render() {
         const styles = {
-            dropDown: {
-                height: '30px',
-                lineHeight: '35px',
-                marginRight: '10px',
-            },
             item: {
-                fontSize: window.innerWidth > 575 ? '12px' : '11px',
+                fontSize: '12px',
+                padding: '0px 24px',
+                height: '32px',
             },
-            icon: {
-                padding: 0,
-                fill: '#4498c0',
-                position: 'inline-block',
-                verticalAlign: 'top',
-                top: 0,
-                right: 0,
-                width: 20,
-                height: 24,
-                margin: 3,
-            },
-            label: {
-                lineHeight: '30px',
-                color: '#4498c0',
-                paddingLeft: 0,
-                paddingRight: 32,
-                height: '30px',
-                display: 'inline-block',
-                padding: 0,
-                fontSize: window.innerWidth > 575 ? '14px' : '12px',
-            },
-            list: {
-                paddingTop: '5px',
-                paddingBottom: '0px',
-            },
-            selectedItem: {
-                color: '#4498c0',
-            },
-            underline: {
-                borderTopColor: '#4498c0',
-                margin: '0px',
-            },
+
         };
+
+        const { value, owner } = this.props;
+
+        const text = value === 'all' ? 'All DataPacks' : 'My DataPacks';
 
         return (
             <DropDownMenu
-                className="qa-DataPackOwnerSort-DropDownMenu"
-                style={styles.dropDown}
-                labelStyle={styles.label}
-                iconStyle={styles.icon}
-                listStyle={styles.list}
-                selectedMenuItemStyle={styles.selectedItem}
-                underlineStyle={styles.underline}
-                value={this.props.value}
-                onChange={this.props.handleChange}
+                className="qa-DataPackOwnerSort-Menu"
+                value={text}
+                style={{ height: '30px', lineHeight: '30px' }}
             >
                 <MenuItem
                     className="qa-DataPackOwnerSort-MenuItem-allDatapacks"
                     style={styles.item}
-                    value="all"
-                    primaryText="All DataPacks"
-                />
+                    selected={value === 'all'}
+                    onClick={this.handleAll}
+                >
+                    All DataPacks
+                </MenuItem>
                 <MenuItem
                     className="qa-DataPackOwnerSort-Menuitem-myDatapacks"
                     style={styles.item}
-                    value={this.props.owner}
-                    primaryText="My DataPacks"
-                />
+                    selected={value === owner}
+                    onClick={this.handleOwner}
+                >
+                    My DataPacks
+                </MenuItem>
             </DropDownMenu>
         );
     }

@@ -1,7 +1,10 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import Dialog from 'material-ui/Dialog';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../CustomScrollbar';
 
@@ -17,51 +20,45 @@ export class BaseDialog extends Component {
                 ...this.props.dialogStyle,
             },
             title: {
-                padding: '25px',
-                fontWeight: 'none',
+                padding: '24px 24px 20px',
+                fontWeight: 700,
                 fontSize: '18px',
+                lineHeight: '32px',
                 ...this.props.titleStyle,
             },
             body: {
-                padding: '0px 25px',
+                padding: '0px 24px',
+                fontSize: '16px',
+                color: '#707274',
                 ...this.props.bodyStyle,
             },
             actions: {
-                padding: '25px',
+                margin: '20px 24px 24px',
                 ...this.props.actionsStyle,
             },
             clear: {
                 float: 'right',
-                fill: '#4598bf',
                 cursor: 'pointer',
             },
-            label: {
+            button: {
                 color: 'whitesmoke',
                 fontWeight: 'bold',
-                ...this.props.labelStyle,
-            },
-            button: {
-                backgroundColor: '#4598bf',
-                borderRadius: '0px',
                 ...this.props.buttonStyle,
-            },
-            overlay: {
-                ...this.props.overlayStyle,
             },
         };
 
         // the default is just a close button
         const defaultActions = [
-            <RaisedButton
-                className="qa-BaseDialog-RasiedButton"
-                style={{ margin: '0px' }}
-                labelStyle={styles.label}
-                buttonStyle={styles.button}
-                disableTouchRipple
-                label={this.props.buttonText || 'Close'}
-                primary={false}
+            <Button
+                key="close"
+                className="qa-BaseDialog-Button"
+                style={styles.button}
+                variant="contained"
+                color="primary"
                 onClick={this.props.onClose}
-            />,
+            >
+                {this.props.buttonText || 'Close'}
+            </Button>,
         ];
 
         // if actions have been passed in, use those instead of the default
@@ -71,30 +68,29 @@ export class BaseDialog extends Component {
         const title = (
             <div className="qa-BaseDialog-div">
                 <strong>{this.props.title ? this.props.title : ''}</strong>
-                <Clear style={styles.clear} onClick={this.props.onClose} />
+                <Clear style={styles.clear} color="primary" onClick={this.props.onClose} />
             </div>
         );
 
         return (
             <Dialog
                 className="qa-BaseDialog-Dialog"
-                contentStyle={styles.dialog}
-                bodyStyle={styles.body}
-                actions={actions}
-                modal
                 open={this.props.show}
-                onRequestClose={this.props.onClose}
-                title={title}
-                titleStyle={styles.title}
-                actionsContainerStyle={styles.actions}
-                overlayStyle={styles.overlay}
+                onClose={this.props.onClose}
+                maxWidth="md"
+                PaperProps={{ style: styles.dialog }}
+                style={this.props.overlayStyle}
             >
-                <CustomScrollbar
-                    autoHeight
-                    autoHeightMax={400}
-                >
-                    {this.props.children}
-                </CustomScrollbar>
+                <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
+                <DialogContent style={styles.body}>
+                    <CustomScrollbar
+                        autoHeight
+                        autoHeightMax={400}
+                    >
+                        {this.props.children}
+                    </CustomScrollbar>
+                </DialogContent>
+                <DialogActions style={styles.actions}>{actions}</DialogActions>
             </Dialog>
         );
     }
@@ -110,7 +106,6 @@ BaseDialog.defaultProps = {
     titleStyle: {},
     bodyStyle: {},
     actionsStyle: {},
-    labelStyle: {},
     buttonStyle: {},
     overlayStyle: {},
 };
@@ -130,7 +125,6 @@ BaseDialog.propTypes = {
     titleStyle: PropTypes.object,
     bodyStyle: PropTypes.object,
     actionsStyle: PropTypes.object,
-    labelStyle: PropTypes.object,
     buttonStyle: PropTypes.object,
     overlayStyle: PropTypes.object,
 };

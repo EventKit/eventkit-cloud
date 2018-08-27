@@ -45,21 +45,62 @@ const muiThemeV1 = createMuiTheme({
                 '&$disabled': { color: 'grey' },
             },
         },
-        MuiTableRow: {
-            selectedColor: 'initial',
+        MuiInput: {
+            underline: {
+                '&:before': {
+                    borderBottomColor: '#5a5a5a',
+                },
+                '&:hover:not($disabled):not($error):not($focused):before': {
+                    borderBottomColor: '#5a5a5a',
+                },
+                '&:after': {
+                    borderBottomColor: '#4598bf',
+                },
+            },
+        },
+        MuiList: {
+            padding: {
+                paddingTop: '0px',
+                paddingBottom: '0px',
+            },
+        },
+        MuiTableCell: {
+            head: {
+                fontSize: '12px',
+            },
+            body: {
+                fontSize: '12px',
+            },
+            footer: {
+                fontSize: '12px',
+            },
         },
         MuiButton: {
             root: {
                 fontSize: '14px',
                 minHeight: '30px',
                 padding: '0px 16px',
-                height: '30px',
-                lineHeight: '30px',
+                height: '36px',
+                lineHeight: '36px',
+                borderRadius: '0px',
+            },
+            containedSecondary: {
+                color: '#4598bf',
+            },
+        },
+        MuiMenuItem: {
+            selected: {
+                color: '#4598bf',
             },
         },
         MuiSvgIcon: {
             colorSecondary: {
                 color: '#fff',
+            },
+        },
+        MuiTypography: {
+            root: {
+                width: '100%',
             },
         },
     },
@@ -70,7 +111,9 @@ const muiThemeV1 = createMuiTheme({
             dark: '#3982a4',
         },
         secondary: {
-            main: '#ce4427',
+            light: '#fafafa',
+            main: '#eeeeee',
+            dark: '#d6d6d6',
         },
     },
     typography: {
