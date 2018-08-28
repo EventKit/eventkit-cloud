@@ -116,7 +116,7 @@ export class ExportAOI extends Component {
             if (valid !== this.state.valid) {
                 this.setState({ validBuffer: valid });
             }
-        }, 50);
+        }, 10);
 
         this.initializeOpenLayers();
         if (Object.keys(this.props.aoiInfo.geojson).length !== 0) {
@@ -684,7 +684,6 @@ export class ExportAOI extends Component {
     handleBufferChange(value) {
         const buffer = Number(value);
         if (buffer <= 10000 && buffer >= 0) {
-            // this.setState({ buffer });
             this.props.updateAoiInfo({ ...this.props.aoiInfo, buffer });
             const { geojson } = this.props.aoiInfo;
             if (Object.keys(geojson).length === 0) {
