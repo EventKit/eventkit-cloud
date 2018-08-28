@@ -16,7 +16,7 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import { MuiThemeProvider as MuiThemeProviderV0 } from 'material-ui/styles/MuiThemeProvider';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { MuiThemeProvider as MuiThemeProviderV1, createMuiTheme } from '@material-ui/core/styles';
 import Banner from './Banner';
@@ -640,7 +640,7 @@ export class Application extends Component {
 
         return (
             <MuiThemeProviderV1 theme={muiThemeV1}>
-                <MuiThemeProviderV0 muiTheme={muiThemeV0}>
+                <MuiThemeProvider muiTheme={muiThemeV0}>
                     <div style={{ backgroundColor: '#000' }}>
                         <AppBar
                             className="qa-Application-AppBar"
@@ -857,7 +857,7 @@ export class Application extends Component {
                             <strong>Are you sure?</strong>
                         </ConfirmDialog>
                     </div>
-                </MuiThemeProviderV0>
+                </MuiThemeProvider>
             </MuiThemeProviderV1>
         );
     }
