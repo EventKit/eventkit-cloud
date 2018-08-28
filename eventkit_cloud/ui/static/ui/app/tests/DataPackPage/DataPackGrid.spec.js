@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import GridList from '@material-ui/core/GridList';
 import DataPackGrid from '../../components//DataPackPage/DataPackGrid';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
@@ -111,7 +109,6 @@ afterAll(() => {
 });
 
 describe('DataPackGrid component', () => {
-    const muiTheme = getMuiTheme();
     const props = {
         runs: getRuns(),
         providers,
@@ -124,10 +121,7 @@ describe('DataPackGrid component', () => {
 
     it('should render a DataPackGridItem for each run passed in', () => {
         const getColumnSpy = sinon.spy(DataPackGrid.prototype, 'getColumns');
-        const wrapper = mount(<DataPackGrid {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<DataPackGrid {...props} />);
         expect(wrapper.find(GridList)).toHaveLength(1);
         expect(wrapper.find(DataPackGridItem)).toHaveLength(3);
         expect(getColumnSpy.calledOnce).toBe(true);

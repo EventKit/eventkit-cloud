@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import PageHeader from '../../components/common/PageHeader';
@@ -13,8 +11,6 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 import { Account } from '../../components/AccountPage/Account';
 
 describe('Account Component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => ({
         user: {
             data: {
@@ -48,10 +44,7 @@ describe('Account Component', () => {
         classes: { root: {} },
     });
 
-    const getMountedWrapper = props => mount(<Account {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    });
+    const getMountedWrapper = props => mount(<Account {...props} />);
 
     it('should call joyrideAddSteps when mounted', () => {
         const props = getProps();

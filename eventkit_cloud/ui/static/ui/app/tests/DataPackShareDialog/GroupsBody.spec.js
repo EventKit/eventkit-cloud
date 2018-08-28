@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import CustomTextField from '../../components/CustomTextField';
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
 import GroupsHeaderRow from '../../components/DataPackShareDialog/GroupsHeaderRow';
@@ -10,7 +8,6 @@ import GroupBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTool
 import GroupBody, { GroupsBody } from '../../components/DataPackShareDialog/GroupsBody';
 
 describe('GroupBody component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             groups: [
@@ -56,12 +53,7 @@ describe('GroupBody component', () => {
     );
 
     const getWrapper = props => (
-        mount(<GroupBody {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<GroupBody {...props} />)
     );
 
     it('should render the basic components', () => {

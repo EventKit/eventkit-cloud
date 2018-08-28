@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import About from '../../components/About/About';
 import { about } from '../../about.config';
 import PageHeader from '../../components/common/PageHeader';
@@ -12,12 +11,8 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 
 
 describe('About component', () => {
-    const muiTheme = getMuiTheme();
     const getWrapper = () => (
-        mount(<About />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<About />)
     );
 
     it('should render all the basic elements', () => {
@@ -45,9 +40,8 @@ describe('About component', () => {
     it('should render the version tag', () => {
         const config = { VERSION: '1.2.3' };
         const wrapper = mount(<About />, {
-            context: { muiTheme, config },
+            context: { config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 config: PropTypes.object,
             },
         });
@@ -57,9 +51,8 @@ describe('About component', () => {
     it('should render the contact url', () => {
         const config = { CONTACT_URL: 'some url' };
         const wrapper = mount(<About />, {
-            context: { muiTheme, config },
+            context: { config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 config: PropTypes.object,
             },
         });

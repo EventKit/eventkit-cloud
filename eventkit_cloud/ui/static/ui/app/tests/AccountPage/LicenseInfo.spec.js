@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Checkbox from '@material-ui/core/Checkbox';
 import LicenseInfo from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
@@ -10,7 +8,6 @@ import UserLicense from '../../components/AccountPage/UserLicense';
 
 
 describe('LicenseInfo component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             user: { data: { accepted_licenses: { test1: false, test2: false } } },
@@ -27,10 +24,7 @@ describe('LicenseInfo component', () => {
     );
 
     const getMountedWrapper = props => (
-        mount(<LicenseInfo {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<LicenseInfo {...props} />)
     );
 
     it('should render a title, subtitle, all checkboxes, two UserLicenses, and the agreement warning', () => {

@@ -1,13 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import { DeleteGroupDialog } from '../../components/UserGroupsPage/Dialogs/DeleteGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
-    const muiTheme = getMuiTheme();
-
     const props = {
         show: true,
         onClose: () => {},
@@ -16,12 +12,7 @@ describe('LeaveGroupDialog component', () => {
     };
 
     it('should render a BaseDialog with message', () => {
-        const wrapper = mount(<DeleteGroupDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const wrapper = mount(<DeleteGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(BaseDialog).props().children)
             .toEqual("Are you sure you'd like to delete 'Test Group'?");

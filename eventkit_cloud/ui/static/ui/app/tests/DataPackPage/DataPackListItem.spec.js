@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Link } from 'react-router';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -17,8 +15,6 @@ import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackListItem component', () => {
-    const muiTheme = getMuiTheme();
-
     const providers = [
         {
             id: 2,
@@ -109,10 +105,7 @@ describe('DataPackListItem component', () => {
     });
 
     const getWrapperMount = props => (
-        mount(<DataPackListItem {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<DataPackListItem {...props} />)
     );
 
     const getWrapperShallow = props => (

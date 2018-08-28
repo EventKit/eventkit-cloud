@@ -1,13 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
 describe('DropZoneError component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         importGeom: {
             processing: false,
@@ -19,10 +16,7 @@ describe('DropZoneError component', () => {
         resetGeoJSONFile: () => {},
     });
 
-    const getWrapper = props => mount(<DropZoneError {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    });
+    const getWrapper = props => mount(<DropZoneError {...props} />);
 
     it('should render error message when new props are received', () => {
         const props = getProps();
@@ -31,10 +25,7 @@ describe('DropZoneError component', () => {
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const children = mount(wrapper.find(BaseDialog).props().children, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const children = mount(wrapper.find(BaseDialog).props().children);
         expect(children.find('.qa-DropZoneError-error')).toHaveLength(1);
         expect(children.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');
     });

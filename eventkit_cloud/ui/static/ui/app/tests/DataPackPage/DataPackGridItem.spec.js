@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
@@ -7,13 +6,10 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
 import MenuItem from '@material-ui/core/MenuItem';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import SocialGroup from '@material-ui/icons/Group';
 import Lock from '@material-ui/icons/LockOutlined';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
-
-const muiTheme = getMuiTheme();
 
 const tasks = [{
     duration: '0:00:15.317672',
@@ -152,10 +148,7 @@ afterAll(() => {
 });
 
 const getWrapperMount = props => (
-    mount(<DataPackGridItem {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    })
+    mount(<DataPackGridItem {...props} />)
 );
 
 const getWrapperShallow = props => (

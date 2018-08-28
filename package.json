@@ -4,8 +4,8 @@
   "description": "Eventkit-cloud is based on the HOT OSM Export Tool 2. It allows the user to select data from different sources to export into a variety of formats.",
   "main": "webpack.config.js",
   "dependencies": {
-    "@material-ui/core": "~1.4.2",
-    "@material-ui/icons": "~2.0.0",
+    "@material-ui/core": "~3.0.0",
+    "@material-ui/icons": "~3.0.0",
     "axios": "~0.15.3",
     "babel-polyfill": "~6.23.0",
     "jsts": "~1.4.0",
@@ -91,6 +91,7 @@
     "coverageDirectory": "/var/lib/eventkit/coverage",
     "collectCoverageFrom": [
       "**/app/**.{js,jsx}",
+      "!**/icons/**",
       "!**/config.js",
       "!**/*.config.{js, jsx}",
       "!**/setupFile.js",

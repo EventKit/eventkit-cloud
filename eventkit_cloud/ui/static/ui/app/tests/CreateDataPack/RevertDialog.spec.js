@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Button from '@material-ui/core/Button';
 import Clear from '@material-ui/icons/Clear';
 import AlertWarning from '@material-ui/icons/Warning';
@@ -14,7 +12,6 @@ import RevertDialog from '../../components/CreateDataPack/RevertDialog';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 
 describe('AlertCallout component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             show: true,
@@ -30,10 +27,7 @@ describe('AlertCallout component', () => {
     );
 
     const getWrapper = props => (
-        mount(<RevertDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<RevertDialog {...props} />)
     );
 
     it('should render the basic elements', () => {

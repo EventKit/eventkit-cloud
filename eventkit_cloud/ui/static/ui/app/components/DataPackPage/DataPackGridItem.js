@@ -345,7 +345,7 @@ export class DataPackGridItem extends Component {
                                         {this.props.run.job.name}
                                     </Link>
                                 </div>
-                                <IconMenu className="qa-DataPackGridItem-IconMenu" style={styles.iconMenu}>
+                                <IconMenu className="qa-DataPackGridItem-IconMenu tour-datapack-options" style={styles.iconMenu}>
                                     <MenuItem
                                         className="qa-DataPackGridItem-MenuItem-showHideMap"
                                         style={{ fontSize: cardTextFontSize }}

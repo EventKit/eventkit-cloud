@@ -288,8 +288,8 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleSearchChange(event, value) {
-        const text = value || '';
+    handleSearchChange(event) {
+        const text = event.target.value || '';
         if (!text && this.props.location.query.search) {
             // we need to undo any search
             const query = { ...this.props.location.query };

@@ -1,14 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import ActionSearch from '@material-ui/icons/Search';
 import ContentClear from '@material-ui/icons/Clear';
 import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
 
 describe('SearchAOIButton component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         buttonState: 'DEFAULT',
         handleCancel: () => {},
@@ -17,10 +14,7 @@ describe('SearchAOIButton component', () => {
     });
     it('should render its default state', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<SearchAOIButton {...props} />);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ActionSearch)).toHaveLength(1);
         expect(wrapper.find('#default_icon')).toHaveLength(1);
@@ -29,10 +23,7 @@ describe('SearchAOIButton component', () => {
 
     it('should render its inactive state', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<SearchAOIButton {...props} />);
         const nextProps = getProps();
         nextProps.buttonState = 'INACTIVE';
         wrapper.setProps(nextProps);
@@ -44,10 +35,7 @@ describe('SearchAOIButton component', () => {
 
     it('should render its active state', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<SearchAOIButton {...props} />);
         const nextProps = getProps();
         nextProps.buttonState = 'SELECTED';
         wrapper.setProps(nextProps);
@@ -59,10 +47,7 @@ describe('SearchAOIButton component', () => {
 
     it('should handle onClick', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<SearchAOIButton {...props} />);
         const nextProps = getProps();
         nextProps.buttonState = 'SELECTED';
         nextProps.handleCancel = sinon.spy();
@@ -75,10 +60,7 @@ describe('SearchAOIButton component', () => {
 
     it('should do nothing onClick when inactive', () => {
         const props = getProps();
-        const wrapper = mount(<SearchAOIButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<SearchAOIButton {...props} />);
         const nextProps = getProps();
         nextProps.buttonState = 'INACTIVE';
         nextProps.handleCancel = sinon.spy();

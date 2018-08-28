@@ -1,25 +1,18 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import NavigationCheck from '@material-ui/icons/Check';
 import Button from '@material-ui/core/Button';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import SaveButton from '../../components/AccountPage/SaveButton';
 
 describe('SaveButton component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => ({
         saved: false,
         saveDisabled: true,
         handleSubmit: () => {},
     });
 
-    const getMountedWrapper = props => mount(<SaveButton {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    });
+    const getMountedWrapper = props => mount(<SaveButton {...props} />);
 
     it('should render a disabled save button', () => {
         const props = getProps();

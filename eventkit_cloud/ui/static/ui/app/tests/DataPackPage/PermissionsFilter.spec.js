@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -10,7 +8,6 @@ import PermissionsFilter from '../../components/DataPackPage/PermissionsFilter';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('PermissionsFilter component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             permissions: {
@@ -47,10 +44,7 @@ describe('PermissionsFilter component', () => {
     );
 
     const getWrapper = props => (
-        mount(<PermissionsFilter {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<PermissionsFilter {...props} />)
     );
 
     it('should render a title and a RadioGroup with 2 Radios', () => {

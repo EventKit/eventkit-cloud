@@ -1,14 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
 import ContentClear from '@material-ui/icons/Clear';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { ImportButton } from '../../components/MapTools/ImportButton';
 
 describe('ImportButton component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         buttonState: 'DEFAULT',
         setImportButtonSelected: () => {},
@@ -18,10 +15,7 @@ describe('ImportButton component', () => {
     });
     it('should display the default icon', () => {
         const props = getProps();
-        const wrapper = mount(<ImportButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<ImportButton {...props} />);
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(FileFileUpload)).toHaveLength(1);
@@ -30,10 +24,7 @@ describe('ImportButton component', () => {
 
     it('should display inactive icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<ImportButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<ImportButton {...props} />);
         const newProps = getProps();
         newProps.buttonState = 'INACTIVE';
         wrapper.setProps(newProps);
@@ -45,10 +36,7 @@ describe('ImportButton component', () => {
 
     it('should display selected icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<ImportButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<ImportButton {...props} />);
         const newProps = getProps();
         newProps.buttonState = 'SELECTED';
         wrapper.setProps(newProps);
@@ -60,10 +48,7 @@ describe('ImportButton component', () => {
 
     it('should handleOnClick when icon is in SELECTED state', () => {
         const props = getProps();
-        const wrapper = mount(<ImportButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<ImportButton {...props} />);
         const newProps = getProps();
         newProps.buttonState = 'SELECTED';
         newProps.setAllButtonsDefault = sinon.spy();
@@ -80,10 +65,7 @@ describe('ImportButton component', () => {
         const props = getProps();
         props.setImportButtonSelected = sinon.spy();
         props.setImportModalState = sinon.spy();
-        const wrapper = mount(<ImportButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<ImportButton {...props} />);
         wrapper.find('button').simulate('click');
         expect(props.setImportButtonSelected.calledOnce).toEqual(true);
         expect(props.setImportModalState.calledOnce).toEqual(true);
@@ -91,10 +73,7 @@ describe('ImportButton component', () => {
 
     it('handleOnClick should do nothing when icon is in INACTIVE state', () => {
         const props = getProps();
-        const wrapper = mount(<ImportButton {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<ImportButton {...props} />);
         const newProps = getProps();
         newProps.buttonState = 'INACTIVE';
         newProps.setAllButtonsDefault = sinon.spy();

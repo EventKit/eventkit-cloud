@@ -1,15 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Dropzone from 'react-dropzone';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneDialog } from '../../components/MapTools/DropZoneDialog';
 
 describe('DropZoneDialog component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         showImportModal: false,
         setAllButtonsDefault: () => {},
@@ -17,10 +14,7 @@ describe('DropZoneDialog component', () => {
         processGeoJSONFile: () => {},
     });
 
-    const getWrapper = props => mount(<DropZoneDialog {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    });
+    const getWrapper = props => mount(<DropZoneDialog {...props} />);
 
     it('should have a dropzone', () => {
         const props = getProps();
@@ -28,14 +22,12 @@ describe('DropZoneDialog component', () => {
         const wrapper = getWrapper(props);
         const children = mount(wrapper.find(BaseDialog).props().children, {
             ...props,
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
         });
         expect(children.find(Dropzone)).toHaveLength(1);
         expect(children.find('.qa-DropZoneDialog-text')).toHaveLength(1);
         expect(children.find('.qa-DropZoneDialog-text').find('span').first().text())
             .toEqual('GeoJSON, KML, GPKG, zipped SHP,and other major geospatial data formats are supported. 5 MB maxDrag and drop or');
-        expect(children.find('.qa-DropZoneDialog-RaisedButton-select').hostNodes()).toHaveLength(1);
+        expect(children.find('.qa-DropZoneDialog-Button-select').hostNodes()).toHaveLength(1);
         expect(children.find(FileFileUpload)).toHaveLength(1);
     });
 
@@ -49,8 +41,6 @@ describe('DropZoneDialog component', () => {
         const wrapper = getWrapper(props);
         const children = mount(wrapper.find(BaseDialog).props().children, {
             ...props,
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
         });
         children.find(Dropzone).simulate('drop', { dataTransfer: { files: [fakeFile] } });
         expect(props.setImportModalState.calledOnce).toEqual(true);
@@ -67,8 +57,6 @@ describe('DropZoneDialog component', () => {
         const wrapper = getWrapper(props);
         const children = mount(wrapper.find(BaseDialog).props().children, {
             ...props,
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
         });
         children.find(Dropzone).simulate('drop', { dataTransfer: { files: oversizedFile } });
         expect(props.setImportModalState.calledOnce).toEqual(false);

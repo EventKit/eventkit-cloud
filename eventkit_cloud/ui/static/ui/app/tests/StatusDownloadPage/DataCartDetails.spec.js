@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import moment from 'moment';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
@@ -79,8 +77,6 @@ describe('DataCartDetails component', () => {
         },
     ];
 
-    const muiTheme = getMuiTheme();
-
     const didMount = DataCartDetails.prototype.componentDidMount;
 
     beforeAll(() => {
@@ -114,12 +110,7 @@ describe('DataCartDetails component', () => {
     );
 
     const getWrapper = props => (
-        mount(<DataCartDetails {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<DataCartDetails {...props} />)
     );
 
     it('should render elements', () => {

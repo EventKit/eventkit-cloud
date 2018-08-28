@@ -1,13 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
 
 
 describe('MembersHeaderRow component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             view: 'groups',
@@ -16,10 +13,7 @@ describe('MembersHeaderRow component', () => {
     );
 
     const getWrapper = props => (
-        mount(<ShareInfoBody {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<ShareInfoBody {...props} />)
     );
 
     it('should render the basic components', () => {
