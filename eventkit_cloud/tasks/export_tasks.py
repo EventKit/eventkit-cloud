@@ -22,6 +22,7 @@ from django.core.cache import caches
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
+from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
 from enum import Enum
@@ -31,10 +32,8 @@ from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, Noti
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
-    get_download_filename, \
-    get_run_staging_dir, \
-    get_provider_staging_dir, get_run_download_dir, Directory, default_format_time, progressive_kill
-from eventkit_cloud.ui.helpers import get_style_files, generate_qgs_style, create_license_file, \
+    get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
+    default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
@@ -253,10 +252,17 @@ class ExportTask(UserDetailsBase):
             provider_slug = parts[-2]
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
-            download_filename = get_download_filename(name,
-                                                      finished,
-                                                      ext,
-                                                      additional_descriptors=provider_slug)
+            if provider_slug == 'run':
+                event = normalize_name(task.export_provider_task.run.job.event)
+                download_filename = get_download_filename(name,
+                                                          finished,
+                                                          ext,
+                                                          additional_descriptors=[event, 'eventkit'])
+            else:
+                download_filename = get_download_filename(name,
+                                                          finished,
+                                                          ext,
+                                                          additional_descriptors=provider_slug)
 
             # construct the download url
             skip_copy = (task.name == 'OverpassQuery')
@@ -471,7 +477,7 @@ def osm_data_collection_task(
 @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
-    Task to create styles for osm.
+    Task to create metadata to a geopackage.
     """
     from eventkit_cloud.jobs.models import Job, DataProvider
 
@@ -778,76 +784,6 @@ def arcgis_feature_service_export_task(self, result=None, task_uid=None,
         raise Exception(e)
 
 
-@app.task(name='Project file (.zip)', bind=True, base=FormatTask)
-def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
-                        stage_dir=None, *args, **kwargs):
-    from eventkit_cloud.tasks.models import DataProviderTaskRecord
-
-    result = result or {}
-
-    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-    # deleted during cancellation.
-    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
-
-    logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
-    include_files = []
-    metadata = {"name": normalize_name(job_name), "bbox": export_provider_task.run.job.extents,
-                "data_sources": {export_provider_task.slug: {"name": export_provider_task.name}}}
-    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-        for export_task in export_provider_task.tasks.all():
-            try:
-                filename = export_task.result.filename
-                export_task.display = False
-            except Exception:
-                logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
-                continue
-            full_file_path = os.path.join(stage_dir, filename)
-            ext = os.path.splitext(filename)[1]
-            if ext in ['.gpkg', '.tif']:
-                download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
-                                                          timezone.now(), ext,
-                                                          additional_descriptors=export_provider_task.slug)
-                filepath = get_archive_data_path(export_provider_task.slug, download_filename)
-                metadata['data_sources'][export_provider_task.slug]['file_path'] = filepath
-                metadata['data_sources'][export_provider_task.slug]['type'] = get_data_type_from_provider(export_provider_task.slug)
-            if not os.path.isfile(full_file_path):
-                logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                              export_task.name))
-                continue
-            include_files += [full_file_path]
-            export_task.save()
-    # Need to remove duplicates from the list because
-    # some intermediate tasks produce files with the same name.
-    # sorted while adding time allows comparisons in tests.
-    include_files = sorted(list(set(include_files)))
-    if include_files:
-        license_file = create_license_file(export_provider_task)
-
-        if license_file:
-            include_files += [license_file]
-        include_files += [generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)]
-        include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
-
-        arcgis_dir = os.path.join(stage_dir, Directory.ARCGIS.value)
-        make_dirs(arcgis_dir)
-        metadata_file = os.path.join(arcgis_dir, 'metadata.json')
-        with open(metadata_file, 'w') as open_md_file:
-            json.dump(metadata, open_md_file)
-        include_files += [metadata_file]
-
-        logger.debug("Zipping files: {0}".format(include_files))
-        zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
-                                     adhoc=True, static_files=get_style_files()).get('result')
-    else:
-        raise Exception("There are no files in this provider available to zip.")
-    if not zip_file:
-        raise Exception("A zipfile could not be created, please contact an administrator.")
-    result['result'] = zip_file
-
-    return result
-
-
 @app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
 def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=None, provider_slug=None,
                        *args, **kwargs):
@@ -928,9 +864,9 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
     except Exception as e:
-        logger.error(e)
         run.status = TaskStates.FAILED.value
         run.save()
+        logger.error(str(e))
         raise
 
 
@@ -944,8 +880,9 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 
     run = ExportRun.objects.filter(uid=run_uid).first()
     if run:
+        provider_tasks = run.provider_tasks.filter(~Q(slug='run'))
         if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
-               run.provider_tasks.all()):
+               provider_tasks):
             callback_task.apply_async(**apply_args)
         else:
             logger.error("Waiting for other tasks to finish.")
@@ -953,149 +890,40 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-class FinalizeRunHookTask(UserDetailsBase):
-    """ Base for tasks which execute after all export provider tasks have completed, but before finalize_run_task.
-        - Ensures the task state is recorded when the task is started and after it has completed.
-        - Combines new_zip_filepaths list from the previous FinalizeRunHookTask in a chain with the new
-          filepaths returned from this task so they can all be passed to prepare_for_export_zip_task later in the chain.
-        @params:
-          new_zip_filepaths is a list of new files the previous FinalizeRunHookTask created in the export directory.
-          kwarg 'run_uid' is the value of ExportRun.uid for the ExportRun which is being finalized.
-        @see create_finalize_run_task_collection
-        @returns: list of any new files created that should be included in the ExportRun's zip & available for
-            download.  These should be located in the download directory; see example_finalize_run_hook_task
-            for details.
+@app.task(name='Project File (.zip)', base=FormatTask)
+def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *args, **kwargs):
     """
-
-    def __call__(self, new_zip_filepaths=None, run_uid=None):
-        """ Override execution so tasks derived from this aren't responsible for concatenating files
-            from previous tasks to their return value.
-        """
-        if new_zip_filepaths is None:
-            new_zip_filepaths = []
-
-        if not isinstance(new_zip_filepaths, Sequence):
-            msg = 'new_zip_filepaths is not a sequence, got: {}'.format(new_zip_filepaths)
-            logger.error(msg)
-            raise Exception(msg)
-
-        self.run_uid = run_uid
-        if run_uid is None:
-            raise ValueError('"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask')
-
-        self.record_task_state()
-
-        # Ensure that the staging and download directories for the run this task is associated with exist
-        try:
-            os.makedirs(get_run_staging_dir(run_uid))
-        except OSError:
-            pass  # Already exists
-
-        try:
-            os.makedirs(get_run_download_dir(run_uid))
-        except OSError:
-            pass  # Already exists
-
-        task_files = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths, run_uid=run_uid)
-        # task_files could be None
-        task_files = task_files or []
-
-        self.save_files_produced(task_files, run_uid)
-        new_zip_filepaths.extend(task_files)
-        return new_zip_filepaths
-
-    def save_files_produced(self, new_files, run_uid):
-        if len(new_files) > 0:
-            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord, ExportRun
-
-            for file_path in new_files:
-                filename = os.path.split(file_path)[-1]
-                provider_slug = os.path.split(file_path)[-2]
-
-                size = os.path.getsize(file_path)
-
-                download_url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug,
-                                                      size=size)
-
-                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=download_url)
-                task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
-                task_record.result = result
-                task_record.save()
-
-    def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
-        """ When testing-only param testing_run_uid is set, this value will be used if self.run_uid is not set
-        """
-        run_uid = getattr(self, 'run_uid', None) or testing_run_uid
-        if run_uid is None:
-            msg = 'ExportRun uid is {}, unable to record task state.'.format(self.run_uid)
-            logger.error(msg)
-            raise TypeError(msg)
-
-        from eventkit_cloud.tasks.models import FinalizeRunHookTaskRecord
-        from eventkit_cloud.tasks.models import ExportRun
-
-        export_run = ExportRun.objects.get(uid=run_uid)
-        worker_name = self.request.hostname
-        status = AsyncResult(self.request.id).status
-        tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
-            run=export_run, celery_uid=self.request.id, name=self.name,
-            status=status, pid=os.getpid(), worker=worker_name
-        )
-
-        if started_at or finished_at:
-            if started_at:
-                tr.started_at = started_at
-            if finished_at:
-                tr.finished_at = finished_at
-            tr.save()
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        self.record_task_state(finished_at=timezone.now())
-        super(FinalizeRunHookTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
-
-
-@app.task(name='Do Some Example Thing', base=FinalizeRunHookTask, bind=True)
-def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *args, **kwargs):
-    """ Just a placeholder hook task that doesn't do anything except create a new file to collect from the chain
-        It's included in.
+    :param result: The celery task result value, it should be a dict with the current state.
+    :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
+    :param run_uid: A run to be zipped (this or data_provider_task_uid must be passed).
+    :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
-    f1_name = 'non_downloadable_file_not_included_in_zip'
-    # If this were a real task, you'd do something with a file at f1_path now.
-    # It won't be saved to the database for display to user or included in the zip file.
+    if not result:
+        result = {}
 
-    # The path to this file is returned, so it will be duplicated to the download directory, it's location
-    #    stored in the database, and passed along the finalize run task chain for inclusion in the run's zip.
-    f1_name = 'downloadable_file_to_be_included_in_zip'
-    f1_stage_path = os.path.join(get_run_staging_dir(run_uid), f1_name)
-    with open(f1_stage_path, 'w+') as f2:
-        f2.write('hi')
+    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    data_provider_task_slug = data_provider_task.slug
 
-    created_files = [f1_stage_path]
+    run = data_provider_task.run
 
-    logger.debug('example_finalize_run_hook_task.  Created files: {}, new_zip_filepaths: {}, run_uid: {}' \
-                 .format(created_files, new_zip_filepaths, run_uid))
-
-    return created_files
-
-
-@app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
-def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
-    from eventkit_cloud.tasks.models import ExportRun
-
-    run = ExportRun.objects.get(uid=run_uid)
+    if data_provider_task.name == 'run':
+        provider_tasks = run.provider_tasks.filter(~Q(name='run'))
+        data_provider_task = None
+    else:
+        provider_tasks = [data_provider_task]
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
     include_files = list([])
 
-    provider_tasks = run.provider_tasks.all()
     metadata = {"name": normalize_name(run.job.name), "bbox": run.job.extents, "data_sources": {}}
 
     for provider_task in provider_tasks:
         metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-            provider_staging_dir = get_provider_staging_dir(run_uid, provider_task.slug)
+            provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
             for export_task in provider_task.tasks.all():
                 try:
                     filename = export_task.result.filename
@@ -1115,39 +943,45 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                     metadata['data_sources'][provider_task.slug]['file_path'] = filepath
                     metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
                         provider_task.slug)
+                    # If a single data source is being zipped hide the task to only display the zip in the UI.
+                    if data_provider_task:
+                        export_task.display = False
+                        export_task.save()
                 if not os.path.isfile(full_file_path):
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
-                if full_file_path.endswith(".zip") == False:
+                if not full_file_path.endswith(".zip"):
                     include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
         license_file = create_license_file(provider_task)
-        logger.error("LICENSE FILE: {0}".format(license_file))
         if license_file:
             include_files += [license_file]
 
     if include_files:
-        arcgis_dir = os.path.join(get_run_staging_dir(run_uid), Directory.ARCGIS.value)
+        arcgis_dir = os.path.join(get_run_staging_dir(run.uid), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
         metadata_file = os.path.join(arcgis_dir, 'metadata.json')
         with open(metadata_file, 'w') as open_md_file:
             json.dump(metadata, open_md_file)
         include_files += [metadata_file]
         # No need to add QGIS file if there aren't any files to be zipped.
-        include_files += [generate_qgs_style(run_uid=run_uid)]
-        include_files += [get_human_readable_metadata_document(run_uid=run_uid)]
+        include_files += [generate_qgs_style(run_uid=run.uid, data_provider_task_record=data_provider_task)]
+        include_files += [get_human_readable_metadata_document(run_uid=run.uid)]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
         include_files = set(include_files)
-
-    return include_files
+        result['result'] = zip_files(include_files=include_files,
+                                     file_path=os.path.join(get_provider_staging_dir(run.uid, data_provider_task_slug),
+                                                            "{0}.zip".format(normalize_name(run.job.name))),
+                                     static_files=get_style_files())
+    return result
 
 
 @app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
-def finalize_export_provider_task(result=None, export_provider_task_uid=None,
+def finalize_export_provider_task(result=None, data_provider_task_uid=None,
                                   status=None, *args, **kwargs):
     """
     Finalizes provider task.
@@ -1162,8 +996,7 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
     result_status = parse_result(result, 'status')
 
     with transaction.atomic():
-
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
         if TaskStates[result_status] == TaskStates.CANCELED:
             export_provider_task.status = TaskStates.CANCELED.value
         elif TaskStates[result_status] != TaskStates.SUCCESS:
@@ -1176,39 +1009,27 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
     return result
 
 
-@app.task(name='Zip File Task', bind=False, base=UserDetailsBase)
-def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, static_files=None, *args, **kwargs):
+def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs):
     """
-    rolls up runs into a zip file
+    Contains the organization for the files within the archive.
+    :param include_files: A list of files to be included.
+    :param run_uid: The UUID of the export run.
+    :param file_path: An optional name for the archive.
+    :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
+    :return: The zipfile path.
     """
-    from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportRun as ExportRunModel
-    from django import db
 
-    run_staging_dir = get_run_staging_dir(run_uid)
-
-    files = []
     if not include_files:
-        logger.warn("zip_file_task called with no include_files.")
-        return {'result': None}
-    files += [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
+        logger.error("zip_file_task called with no include_files.")
+        raise Exception("zip_file_task called with no include_files.")
 
-    run = ExportRunModel.objects.get(uid=run_uid)
+    if not file_path:
+        logger.error("zip_file_task called no file path.")
+        raise Exception("zip_file_task called no file path.")
 
-    name = run.job.name
-    project = run.job.event
-    date = timezone.now()
-    # XXX: name-project-eventkit-yyyymmdd.zip
-    if file_name:
-        zip_filename = file_name
-    else:
-        zip_filename = get_download_filename(normalize_name(name),
-                                             date,
-                                             '.zip',
-                                             additional_descriptors=[normalize_name(project), "eventkit"])
+    files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
-    zip_st_filepath = os.path.join(run_staging_dir, zip_filename)
-
-    with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
+    with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.iteritems():
                 filename = relative_file_path
@@ -1252,7 +1073,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 # prepend with `data`
                 download_filename = get_download_filename(
                     name,
-                    date,
+                    timezone.now(),
                     ext,
                     additional_descriptors=provider_slug
                 )
@@ -1266,29 +1087,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 arcname=filename
             )
 
-    # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
-    # be handled as an ExportTaskRecord.
-
-    if not adhoc:
-        file_size = os.path.getsize(zip_st_filepath) / 1024.0 / 1024.0
-
-        # Not adhoc means the zip for the run, which doesn't need a provider slug.
-        zipfile_url = make_file_downloadable(zip_st_filepath, run_uid, download_filename=zip_filename,
-                               size=file_size)
-        # Update Connection
-        db.close_old_connections()
-        run.refresh_from_db()
-
-        downloadable = FileProducingTaskResult.objects.create(size=file_size, download_url=zipfile_url)
-        run.downloadable = downloadable
-
-        try:
-            run.save()
-        except Exception as e:
-            logger.error(e)
-
-    result = {'result': zip_st_filepath}
-    return result
+    return file_path
 
 
 class FinalizeRunBase(UserDetailsBase):
@@ -1302,12 +1101,12 @@ class FinalizeRunBase(UserDetailsBase):
         Updates run with finish time.
         Emails user notification.
         """
+        """
+        """
         from eventkit_cloud.tasks.models import ExportRun
         result = result or {}
 
         run = ExportRun.objects.get(uid=run_uid)
-        if run.job.include_zipfile and not run.zipfile_url:
-            logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
         notification_level = NotificationLevel.SUCCESS.value
         verb = NotificationVerb.RUN_COMPLETED.value
@@ -1334,7 +1133,6 @@ class FinalizeRunBase(UserDetailsBase):
         run.save()
 
         # sendnotification to user via django notifications
-
         sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
 
         # send notification email to user
@@ -1391,8 +1189,6 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     result = result or {}
 
     run = ExportRun.objects.get(uid=run_uid)
-    if run.job.include_zipfile and not run.zipfile_url:
-        logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
     verb = NotificationVerb.RUN_COMPLETED.value
     notification_level = NotificationLevel.SUCCESS.value

@@ -4,8 +4,10 @@ import { connect } from 'react-redux';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
-import { AppBar, CircularProgress, Paper } from 'material-ui';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Paper from '@material-ui/core/Paper';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import PageHeader from '../common/PageHeader';
 import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
@@ -245,21 +247,8 @@ export class DashboardPage extends React.Component {
                 backgroundImage: `url(${background})`,
                 color: 'white',
             },
-            appBar: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
-                zIndex: '0',
-            },
             customScrollbar: {
                 height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
-            },
-            pageTitle: {
-                fontSize: '18px',
-                lineHeight: '35px',
-                paddingLeft: '10px',
-                height: '35px',
             },
             loadingOverlay: {
                 position: 'absolute',
@@ -293,7 +282,9 @@ export class DashboardPage extends React.Component {
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
-                fontSize: '16px',
+                fontSize: '14px',
+                height: '30px',
+                lineHeight: '30px',
             },
             tourIcon: {
                 color: '#4598bf',
@@ -307,26 +298,24 @@ export class DashboardPage extends React.Component {
         };
 
         const iconElementRight = (
-            <EnhancedButton
+            <ButtonBase
                 onClick={this.handleWalkthroughClick}
                 style={styles.tourButton}
             >
                 <Help style={styles.tourIcon} />
                 Page Tour
-            </EnhancedButton>
+            </ButtonBase>
         );
 
         return (
             <div style={styles.root}>
-                <AppBar
+                <PageHeader
                     id="Dashboard"
-                    className="qa-Dashboard-AppBar"
-                    style={styles.appBar}
+                    className="qa-Dashboard-PageHeader"
                     title="Dashboard"
-                    titleStyle={styles.pageTitle}
-                    iconElementLeft={<p />}
-                    iconElementRight={iconElementRight}
-                />
+                >
+                    {iconElementRight}
+                </PageHeader>
                 {this.isLoading() ?
                     <div
                         style={{
@@ -340,7 +329,7 @@ export class DashboardPage extends React.Component {
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
                             <CircularProgress
                                 style={{ margin: 'auto', display: 'block' }}
-                                color="#4598bf"
+                                color="primary"
                                 size={50}
                             />
                         </div>

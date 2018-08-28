@@ -1,7 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
-import { Checkbox, FlatButton, TableRow, TableRowColumn } from 'material-ui';
+import Checkbox from '@material-ui/core/Checkbox';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import FlagIcon from '@material-ui/icons/Flag';
 import CloseIcon from '@material-ui/icons/Close';
@@ -49,30 +52,27 @@ export class NotificationsTableItem extends React.Component {
         let styles = {
             tableRow: {
                 transition: 'background-color 0.25s',
+                borderBottom: '1px solid #e0e0e0',
             },
-            tableRowColumn: {
+            cell: {
                 padding: '0 15px',
                 color: 'rgba(0, 0, 0, 0.54)',
                 fontSize: '18px',
+                height: '48px',
+                borderBottom: 'none',
             },
             optionsButtonsContainer: {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: (window.innerWidth > 1280) ? 'center' : 'flex-end',
             },
-            optionButtonLabel: {
-                position: 'relative',
-                top: '-2px',
-                color: 'rgb(69, 152, 191)',
-                fill: 'rgb(69, 152, 191)',
-            },
-            menuButton: {
-                padding: '0',
-                width: '20px',
-                verticalAlign: 'middle',
-            },
-            menuButtonIcon: {
+            button: {
+                fontSize: '14px',
                 color: '#4598bf',
+                textTransform: 'uppercase',
+            },
+            optionButtonLabel: {
+                marginRight: '5px',
             },
         };
 
@@ -83,20 +83,20 @@ export class NotificationsTableItem extends React.Component {
         styles = {
             ...styles,
             checkboxRowColumn: {
-                ...styles.tableRowColumn,
-                width: '45px',
+                ...styles.cell,
+                width: '54px',
             },
             contentRowColumn: {
-                ...styles.tableRowColumn,
+                ...styles.cell,
                 display: 'flex',
                 alignItems: 'center',
             },
             dateRowColumn: {
-                ...styles.tableRowColumn,
+                ...styles.cell,
                 width: (window.innerWidth > 768) ? '200px' : '150px',
             },
             optionsRowColumn: {
-                ...styles.tableRowColumn,
+                ...styles.cell,
                 width: optionsWidth,
             },
         };
@@ -113,28 +113,29 @@ export class NotificationsTableItem extends React.Component {
                 }}
                 selectable={false}
             >
-                <TableRowColumn
-                    className="qa-NotificationsTableItem-TableRowColumn-Checkbox"
+                <TableCell
+                    className="qa-NotificationsTableItem-TableCell-Checkbox"
                     style={styles.checkboxRowColumn}
                 >
                     <Checkbox
                         className="qa-NotificationsTableItem-Checkbox"
+                        color="primary"
+                        style={{ width: '24px', height: '24px' }}
                         checked={this.props.isSelected}
-                        onCheck={(e, isChecked) => this.props.setSelected(this.props.notification, isChecked)}
-                        disableTouchRipple
+                        onChange={(e, isChecked) => this.props.setSelected(this.props.notification, isChecked)}
                     />
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-NotificationsTableItem-TableRowColumn-Content"
+                </TableCell>
+                <TableCell
+                    className="qa-NotificationsTableItem-TableCell-Content"
                     style={styles.contentRowColumn}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         {icon}
                         {message}
                     </div>
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-NotificationsTableItem-TableRowColumn-Date"
+                </TableCell>
+                <TableCell
+                    className="qa-NotificationsTableItem-TableCell-Date"
                     style={styles.dateRowColumn}
                 >
                     <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
@@ -143,9 +144,9 @@ export class NotificationsTableItem extends React.Component {
                     <div style={{ display: 'inline-block', width: '75px', textAlign: 'right' }}>
                         {moment(this.props.notification.timestamp).format('h:mma')}
                     </div>
-                </TableRowColumn>
-                <TableRowColumn
-                    className="qa-NotificationsTableItem-TableRowColumn-Options"
+                </TableCell>
+                <TableCell
+                    className="qa-NotificationsTableItem-TableCell-Options"
                     style={styles.optionsRowColumn}
                 >
                     <div style={styles.optionsButtonsContainer}>
@@ -159,15 +160,14 @@ export class NotificationsTableItem extends React.Component {
                                 }}
                                 >
                                     {viewPath ?
-                                        <FlatButton
+                                        <ButtonBase
                                             className="qa-NotificationsTableItem-ActionButtons-View"
-                                            label="View"
-                                            labelStyle={styles.optionButtonLabel}
-                                            icon={<OpenInNewIcon style={styles.optionButtonLabel} />}
-                                            hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple
+                                            style={styles.button}
                                             onClick={this.handleView}
-                                        />
+                                        >
+                                            <OpenInNewIcon style={styles.optionButtonLabel} color="primary" />
+                                            View
+                                        </ButtonBase>
                                         :
                                         null
                                     }
@@ -177,40 +177,37 @@ export class NotificationsTableItem extends React.Component {
                                 }}
                                 >
                                     {this.props.notification.unread ?
-                                        <FlatButton
+                                        <ButtonBase
                                             className="qa-NotificationsTableItem-ActionButtons-MarkAsRead"
-                                            label="Mark As Read"
-                                            labelStyle={styles.optionButtonLabel}
-                                            icon={<FlagIcon style={styles.optionButtonLabel} />}
-                                            hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple
+                                            style={styles.button}
                                             onClick={this.handleMarkAsRead}
-                                        />
+                                        >
+                                            <FlagIcon style={styles.optionButtonLabel} color="primary" />
+                                            Mark As Read
+                                        </ButtonBase>
                                         :
-                                        <FlatButton
+                                        <ButtonBase
                                             className="qa-NotificationsTableItem-ActionButtons-MarkAsUnread"
-                                            label="Mark As Unread"
-                                            labelStyle={styles.optionButtonLabel}
-                                            icon={<FlagIcon style={styles.optionButtonLabel} />}
-                                            hoverColor="rgba(0, 0, 0, 0)"
-                                            disableTouchRipple
+                                            style={styles.button}
                                             onClick={this.handleMarkAsUnread}
-                                        />
+                                        >
+                                            <FlagIcon style={styles.optionButtonLabel} color="primary" />
+                                            Mark As Unread
+                                        </ButtonBase>
                                     }
                                 </div>
                                 <div style={{
                                     flex: '1', textAlign: 'left', marginLeft: '6px', boxSizing: 'border-box',
                                 }}
                                 >
-                                    <FlatButton
+                                    <ButtonBase
                                         className="qa-NotificationsTableItem-ActionButtons-Remove"
-                                        label="Remove"
-                                        labelStyle={styles.optionButtonLabel}
-                                        icon={<CloseIcon style={styles.optionButtonLabel} />}
-                                        hoverColor="rgba(0, 0, 0, 0)"
-                                        disableTouchRipple
+                                        style={styles.button}
                                         onClick={this.handleRemove}
-                                    />
+                                    >
+                                        <CloseIcon style={styles.optionButtonLabel} color="primary" />
+                                        Remove
+                                    </ButtonBase>
                                 </div>
                             </div>
                             :
@@ -225,7 +222,7 @@ export class NotificationsTableItem extends React.Component {
                             />
                         }
                     </div>
-                </TableRowColumn>
+                </TableCell>
             </TableRow>
         );
     }

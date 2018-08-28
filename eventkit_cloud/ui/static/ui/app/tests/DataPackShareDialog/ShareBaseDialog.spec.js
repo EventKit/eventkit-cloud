@@ -3,7 +3,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Dialog from 'material-ui/Dialog';
+import Dialog from '@material-ui/core/Dialog';
 import * as viewport from '../../utils/viewport';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 
@@ -68,14 +68,5 @@ describe('MembersHeaderRow component', () => {
         expect(stateStub.calledWith({ mobile: !mobile })).toBe(true);
         mobileStub.restore();
         stateStub.restore();
-    });
-
-    it('should set styles based on viewport size', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        window.resizeTo(500, 500);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
-        expect(wrapper.find(Dialog).props().contentStyle.transform).toEqual('translate(0px, 16px)');
     });
 });

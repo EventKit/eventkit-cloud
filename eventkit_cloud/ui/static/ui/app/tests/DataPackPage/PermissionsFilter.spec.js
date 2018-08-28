@@ -3,7 +3,9 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { RadioButton, RadioButtonGroup } from 'material-ui/RadioButton';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import PermissionsFilter from '../../components/DataPackPage/PermissionsFilter';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
@@ -51,18 +53,18 @@ describe('PermissionsFilter component', () => {
         })
     );
 
-    it('should render a title and a RadioButtonGroup with 2 RadioButtons', () => {
+    it('should render a title and a RadioGroup with 2 Radios', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('p').text()).toEqual('Permissions');
-        expect(wrapper.find(RadioButtonGroup)).toHaveLength(1);
-        expect(wrapper.find(RadioButtonGroup).props().name).toEqual('permissions');
-        expect(wrapper.find(RadioButtonGroup).props().valueSelected).toEqual('SHARED');
-        expect(wrapper.find(RadioButton)).toHaveLength(2);
-        expect(wrapper.find(RadioButton).at(0).text()).toEqual('Private (only me)');
-        expect(wrapper.find(RadioButton).at(0).props().value).toEqual('PRIVATE');
-        expect(wrapper.find(RadioButton).at(1).text()).toEqual('Shared');
-        expect(wrapper.find(RadioButton).at(1).props().value).toEqual('SHARED');
+        expect(wrapper.find(RadioGroup)).toHaveLength(1);
+        expect(wrapper.find(RadioGroup).props().name).toEqual('permissions');
+        expect(wrapper.find(RadioGroup).props().value).toEqual('SHARED');
+        expect(wrapper.find(Radio)).toHaveLength(2);
+        expect(wrapper.find(FormControlLabel).at(0).text()).toEqual('Private (only me)');
+        expect(wrapper.find(Radio).at(0).props().value).toEqual('PRIVATE');
+        expect(wrapper.find(FormControlLabel).at(1).text()).toEqual('Shared');
+        expect(wrapper.find(Radio).at(1).props().value).toEqual('SHARED');
     });
 
     it('should render a Share Dialog', () => {
@@ -146,7 +148,7 @@ describe('PermissionsFilter component', () => {
         const props = getProps();
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleSelection({}, 'PRIVATE');
+        wrapper.instance().handleSelection({ target: { value: 'PRIVATE' } });
         expect(props.onChange.calledOnce).toBe(true);
         expect(props.onChange.calledWith({ value: 'PRIVATE' })).toBe(true);
     });
@@ -162,7 +164,7 @@ describe('PermissionsFilter component', () => {
         props.members.forEach((member) => { expected.members[member.user.username] = 'READ'; });
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleSelection({}, 'PUBLIC');
+        wrapper.instance().handleSelection({ target: { value: 'PUBLIC' } });
         expect(props.onChange.calledOnce).toBe(true);
         expect(props.onChange.calledWith(expected)).toBe(true);
     });

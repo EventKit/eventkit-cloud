@@ -1,40 +1,40 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 
 export class DataPackDrawer extends Component {
     render() {
         const styles = {
             drawerHeader: {
                 width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
                 paddingTop: '10px',
                 paddingLeft: '10px',
                 paddingRight: '10px',
                 paddingBottom: '5px',
-                lineHeight: '36px',
             },
         };
         return (
             <div className="qa-FilterHeader-div" style={styles.drawerHeader}>
-                <RaisedButton
-                    className="qa-FilterHeader-RaisedButton-apply"
-                    style={{ minWidth: 'none', borderRadius: '0px' }}
-                    buttonStyle={{ borderRadius: '0px' }}
-                    backgroundColor="#4598bf"
-                    label="Apply"
-                    labelStyle={{ color: '#fff', textTransform: 'none' }}
+                <Button
+                    className="qa-FilterHeader-Button-apply"
+                    style={{ minWidth: 'none', borderRadius: '0px', textTransform: 'none' }}
+                    color="primary"
+                    variant="contained"
                     onClick={this.props.onApply}
-                />
-                <FlatButton
-                    className="qa-FilterHeader-FlatButton-clear"
-                    style={{ float: 'right', minWidth: 'none' }}
-                    hoverColor="none"
-                    label="Clear All"
-                    labelStyle={{ color: '#4598bf', textTransform: 'none', paddingRight: '0px' }}
+                >
+                    Apply
+                </Button>
+                <Button
+                    className="qa-FilterHeader-Button-clear"
+                    style={{ minWidth: 'none', textTransform: 'none' }}
+                    color="primary"
+                    variant="flat"
                     onClick={this.props.onClear}
-                    disableTouchRipple
-                />
+                >
+                    Clear All
+                </Button>
             </div>
         );
     }

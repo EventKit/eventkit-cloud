@@ -2,7 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import moment from 'moment';
-import { Paper } from 'material-ui';
+import Paper from '@material-ui/core/Paper';
 import { NotificationGridItem } from '../../components/Notification/NotificationGridItem';
 import NotificationMenu from '../../components/Notification/NotificationMenu';
 import { getNotificationViewPath } from '../../utils/notificationUtils';

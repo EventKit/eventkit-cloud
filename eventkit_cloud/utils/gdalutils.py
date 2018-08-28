@@ -240,7 +240,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         if not table:  # gdalwarp needs a file
             temp_boundfile = NamedTemporaryFile()
             bounds_template = Template('{"type":"MultiPolygon","coordinates":[[[[$xmin,$ymin],'
-                                       '[$xmax,$ymin],[$xmax,$ymax],[$xmin,$ymax],[$xmin,$ymin]]]]}')
+                                       '[$xmax,$ymin],[$xmax,$y'
+                                       'max],[$xmin,$ymax],[$xmin,$ymin]]]]}')
             temp_boundfile.write(bounds_template.safe_substitute({
                 'xmin': boundary[0],
                 'ymin': boundary[1],

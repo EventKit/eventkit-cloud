@@ -3,7 +3,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
 import MembersBody from '../../components/DataPackShareDialog/MembersBody';
@@ -97,7 +97,7 @@ describe('DataPackPage component', () => {
                 muiTheme: PropTypes.object,
             },
         });
-        expect(header.find(RaisedButton)).toHaveLength(2);
+        expect(header.find(Button)).toHaveLength(2);
         const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
             context: { muiTheme },
             childContextTypes: {
@@ -144,8 +144,8 @@ describe('DataPackPage component', () => {
                 muiTheme: PropTypes.object,
             },
         });
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').hostNodes().text()).toEqual('GROUPS (0)');
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').hostNodes().text()).toEqual('MEMBERS (0)');
+        expect(header.find('.qa-DataPackShareDialog-Button-groups').hostNodes().text()).toEqual('GROUPS (0)');
+        expect(header.find('.qa-DataPackShareDialog-Button-members').hostNodes().text()).toEqual('MEMBERS (0)');
     });
 
     it('should display "ALL" as the selected count on the header buttons', () => {
@@ -160,8 +160,8 @@ describe('DataPackPage component', () => {
                 muiTheme: PropTypes.object,
             },
         });
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-groups').hostNodes().text()).toEqual('GROUPS (ALL)');
-        expect(header.find('.qa-DataPackShareDialog-RaisedButton-members').hostNodes().text()).toEqual('MEMBERS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-Button-groups').hostNodes().text()).toEqual('GROUPS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-Button-members').hostNodes().text()).toEqual('MEMBERS (ALL)');
     });
 
     it('getAdjustedPermissions should move the user out of the members list', () => {

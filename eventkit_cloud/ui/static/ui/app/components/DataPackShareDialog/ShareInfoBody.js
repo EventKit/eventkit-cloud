@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import ButtonBase from '@material-ui/core/ButtonBase';
 
 export class ShareInfoBody extends Component {
     render() {
@@ -70,13 +70,13 @@ export class ShareInfoBody extends Component {
                 style={styles.body}
                 className="qa-ShareInfoBody-body"
             >
-                <EnhancedButton
-                    className="qa-ShareInfoBody-EnhancedButton-return"
+                <ButtonBase
+                    className="qa-ShareInfoBody-ButtonBase-return"
                     style={styles.return}
                     onClick={this.props.onReturn}
                 >
                     {'<'} Return to {this.props.view}
-                </EnhancedButton>
+                </ButtonBase>
                 <div style={styles.text} className="qa-ShareInfoBody-text">
                     {title}
                     <p className="qa-ShareInfoBody-rightsTitle">

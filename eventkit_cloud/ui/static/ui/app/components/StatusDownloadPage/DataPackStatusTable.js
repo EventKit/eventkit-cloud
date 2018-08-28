@@ -1,14 +1,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import DropDownMenu from 'material-ui/DropDownMenu';
-import MenuItem from 'material-ui/MenuItem';
+import MenuItem from '@material-ui/core/MenuItem';
 import DatePicker from 'material-ui/DatePicker';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import SocialGroup from '@material-ui/icons/Group';
 import Check from '@material-ui/icons/Check';
 import Edit from '@material-ui/icons/Edit';
 import Lock from '@material-ui/icons/LockOutlined';
 import moment from 'moment';
+import DropDownMenu from '../common/DropDownMenu';
 import CustomTableRow from '../CustomTableRow';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
@@ -37,7 +37,7 @@ export class DataPackStatusTable extends Component {
         this.handleShareDialogClose();
     }
 
-    handleDropDownChange(e, k, value) {
+    handleDropDownChange(value) {
         // update the value in permissions
         // if new value is private, remove all but the logged in user
         const permissions = { ...this.props.permissions, value };
@@ -66,6 +66,11 @@ export class DataPackStatusTable extends Component {
                 margin: '0px 5px 0px 0px',
                 lineHeight: '24px',
                 flex: '0 0 auto',
+                color: '#8b9396',
+                backgroundColor: 'transparent',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                textTransform: 'capitalize',
             },
             icon: {
                 height: '24px',
@@ -76,21 +81,6 @@ export class DataPackStatusTable extends Component {
                 top: '0px',
                 right: '0px',
                 verticalAlign: 'top',
-            },
-            label: {
-                lineHeight: '24px',
-                height: '24px',
-                color: '#8b9396',
-                paddingLeft: '0px',
-                fontSize: '14px',
-                fontWeight: 600,
-                paddingRight: '0px',
-                display: 'inline-block',
-            },
-            list: {
-                paddingTop: '10px',
-                paddingBottom: '10px',
-                display: 'inlineBlock',
             },
             underline: {
                 display: 'none',
@@ -109,12 +99,18 @@ export class DataPackStatusTable extends Component {
                 fill: '#8b9396',
                 height: '24px',
                 verticalAlign: 'middle',
+                marginLeft: '30px',
             },
             permissionsIcon: {
                 fill: '#8b9396',
                 height: '24px',
                 verticalAlign: 'middle',
                 marginRight: '5px',
+            },
+            item: {
+                color: '#8b9396',
+                fontSize: '14px',
+                padding: '6px 16px',
             },
         };
 
@@ -185,7 +181,7 @@ export class DataPackStatusTable extends Component {
                 }
 
                 membersAndGroups = (
-                    <EnhancedButton
+                    <ButtonBase
                         className="qa-DataPackStatusTable-MembersAndGroups-button"
                         key="membersAndGroupsButton"
                         onClick={this.handleShareDialogOpen}
@@ -193,7 +189,7 @@ export class DataPackStatusTable extends Component {
                         disabled={!this.props.adminPermissions}
                     >
                         {memberText} / {groupText}
-                    </EnhancedButton>
+                    </ButtonBase>
                 );
             }
 
@@ -201,39 +197,36 @@ export class DataPackStatusTable extends Component {
                 <DropDownMenu
                     key="permissionsMenu"
                     className="qa-DataPackStatusTable-DropDownMenu-published"
-                    value={this.props.permissions.value}
-                    onChange={this.handleDropDownChange}
+                    value={this.props.permissions.value !== 'PRIVATE' ?
+                        <span>{permissionsIcons.members} Share</span>
+                        :
+                        <span>{permissionsIcons.private} Private</span>
+                    }
                     style={styles.dropDown}
-                    labelStyle={styles.label}
-                    iconStyle={styles.icon}
-                    listStyle={styles.list}
-                    selectedMenuItemStyle={{ color: '#8b9396' }}
                     underlineStyle={styles.underline}
                 >
                     <MenuItem
-                        value="PRIVATE"
                         className="qa-DataPackStatusTable-MenuItem-permissionPrivate"
-                        rightIcon={permissionsIcons.privateCheck}
-                        primaryText={
-                            <div>
-                                {permissionsIcons.private}
-                                Private
-                            </div>
-                        }
-                        style={{ color: '#8b9396' }}
-                    />
+                        style={styles.item}
+                        onClick={() => this.handleDropDownChange('PRIVATE')}
+                    >
+                        <div>
+                            {permissionsIcons.private}
+                            Private
+                            {permissionsIcons.privateCheck}
+                        </div>
+                    </MenuItem>
                     <MenuItem
-                        value={this.props.permissions.value === 'PUBLIC' ? 'PUBLIC' : 'SHARED'}
                         className="qa-DataPackStatusTable-MenuItem-permissionMembers"
-                        rightIcon={permissionsIcons.membersCheck}
-                        primaryText={
-                            <div>
-                                {permissionsIcons.members}
-                                Share
-                            </div>
-                        }
-                        style={{ color: '#8b9396' }}
-                    />
+                        style={styles.item}
+                        onClick={() => this.handleDropDownChange(this.props.permissions.value === 'PUBLIC' ? 'PUBLIC' : 'SHARED')}
+                    >
+                        <div>
+                            {permissionsIcons.members}
+                            Share
+                            {permissionsIcons.membersCheck}
+                        </div>
+                    </MenuItem>
                 </DropDownMenu>,
                 membersAndGroups,
             ];
@@ -257,7 +250,7 @@ export class DataPackStatusTable extends Component {
                 />
                 <CustomTableRow
                     title="Permissions"
-                    dataStyle={{ flexWrap: 'wrap' }}
+                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
                     data={permissionData}
                 />
                 <DataPackShareDialog

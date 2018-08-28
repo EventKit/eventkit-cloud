@@ -1,7 +1,7 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
-import { CircularProgress } from 'material-ui';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { NotificationsPage } from '../../components/NotificationsPage/NotificationsPage';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
 import LoadButtons from '../../components/DataPackPage/LoadButtons';

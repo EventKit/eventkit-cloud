@@ -1131,7 +1131,8 @@ class DataProviderTaskViewSet(viewsets.ModelViewSet):
         """
         Cancels an export provider task.
         * param uid: The uid of the DataProviderTaskRecord (export provider task model) to be canceled.
-        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser, they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
+        * return: Returns {'success': True} on success. If the user did not have the correct rights (if not superuser,
+                  they must be asking for one of their own export provider tasks), then 403 forbidden will be returned.
         """
 
         data_provider_task_record = DataProviderTaskRecord.objects.get(uid=uid)

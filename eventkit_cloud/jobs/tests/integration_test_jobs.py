@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 # Default length of time to let a single test case run.
-DEFAULT_TIMEOUT = 120
+DEFAULT_TIMEOUT = 600
 
 
 class TestJob(TestCase):
@@ -41,7 +41,9 @@ class TestJob(TestCase):
         if not os.path.exists(self.download_dir):
             os.makedirs(self.download_dir, mode=0660)
         self.client = requests.session()
-        self.client.get(self.login_url)
+        response = self.client.get(self.login_url)
+        if not (response.status_code == requests.codes.ok):
+            raise Exception("FAILURE: The target server returned: {0}".format(str(response.status_code)))
         self.csrftoken = self.client.cookies['csrftoken']
 
         login_data = dict(username=username, password=password, csrfmiddlewaretoken=self.csrftoken, next='/exports', submit='Log in')
@@ -137,7 +139,7 @@ class TestJob(TestCase):
                     "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data, run_timeout=90))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_osm_shp(self):
         """
@@ -230,7 +232,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data, run_timeout=90))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_wfs_sqlite(self):
         """
@@ -297,7 +299,7 @@ class TestJob(TestCase):
                                                    # {"provider": "eventkit-integration-test-arc-fs",
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
                                                    ]}
-        self.assertTrue(self.run_job(job_data, run_timeout=300))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_loaded(self):
         """
@@ -314,7 +316,7 @@ class TestJob(TestCase):
                     "provider_tasks": provider_tasks,
                     "selection": self.selection,
                     "tags": []}
-        self.assertTrue(self.run_job(job_data, run_timeout=300))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_rerun_all(self):
         """
@@ -348,7 +350,7 @@ class TestJob(TestCase):
         self.assertEquals(response.status_code, 202)
         job = response.json()
 
-        run = self.wait_for_run(job.get('uid'), run_timeout=300)
+        run = self.wait_for_run(job.get('uid'), run_timeout=DEFAULT_TIMEOUT)
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):
             geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
@@ -364,7 +366,7 @@ class TestJob(TestCase):
                                                   'Referer': self.create_export_url})
 
         self.assertEquals(rerun_response.status_code, 202)
-        rerun = self.wait_for_run(job.get('uid'), run_timeout=300)
+        rerun = self.wait_for_run(job.get('uid'), run_timeout=DEFAULT_TIMEOUT)
         self.assertTrue(rerun.get('status') == "COMPLETED")
         for provider_task in rerun.get('provider_tasks'):
             geopackage_url = self.get_gpkg_url(rerun, provider_task.get("name"))
@@ -400,22 +402,16 @@ class TestJob(TestCase):
         self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
 
-        # This can be added back during filename refactoring. 
-        # test_zip_url = '%s%s%s/%s' % (
-        #     self.base_url,
-        #     settings.EXPORT_MEDIA_ROOT,
-        #     run.get('uid'),
-        #     '%s-%s-%s-%s.zip' % (
-        #         normalize_name(orm_run.job.name),
-        #         normalize_name(orm_run.job.event),
-        #         'eventkit',
-        #         date
-        #     ))
-        #
-        # if not getattr(settings, "USE_S3", False):
-        #     self.assertEquals(test_zip_url, run['zipfile_url'])
+        # Get the filename for the zip, to ensure that it exists.
+        for provider_task in run['provider_tasks']:
+            if provider_task['name'] == 'run':
+                run_provider_task = provider_task
 
-        assert '.zip' in orm_run.zipfile_url
+        for task in run_provider_task['tasks']:
+            if 'zip' in task['name'].lower():
+                zip_result = task['result']
+
+        assert '.zip' in zip_result['filename']
 
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):

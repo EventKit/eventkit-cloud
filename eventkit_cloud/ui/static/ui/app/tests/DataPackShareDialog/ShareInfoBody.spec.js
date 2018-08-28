@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
 
 
@@ -26,7 +26,7 @@ describe('MembersHeaderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-ShareInfoBody-body')).toHaveLength(1);
-        expect(wrapper.find(EnhancedButton)).toHaveLength(1);
+        expect(wrapper.find(ButtonBase)).toHaveLength(1);
         expect(wrapper.find('.qa-ShareInfoBody-text')).toHaveLength(1);
         expect(wrapper.find('.qa-ShareInfoBody-title')).toHaveLength(1);
         expect(wrapper.find('.qa-ShareInfoBody-rightsTitle')).toHaveLength(1);

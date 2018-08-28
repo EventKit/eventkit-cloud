@@ -3,7 +3,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { GridList } from 'material-ui/GridList';
+import GridList from '@material-ui/core/GridList';
 import DataPackGrid from '../../components//DataPackPage/DataPackGrid';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
 

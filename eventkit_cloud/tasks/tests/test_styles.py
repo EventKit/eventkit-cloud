@@ -3,11 +3,12 @@ import datetime
 import os
 
 from django.conf import settings
+
 from django.test import TestCase
 from mock import patch, MagicMock
 
 from eventkit_cloud.tasks import TaskStates
-from eventkit_cloud.ui.helpers import generate_qgs_style
+from eventkit_cloud.tasks.helpers import generate_qgs_style
 
 
 class TestStyles(TestCase):
@@ -46,11 +47,15 @@ class TestStyles(TestCase):
         returnvalue = generate_qgs_style(run_uid, mocked_provider_task)
         now = datetime.datetime.now()
         datestamp = "%s%02d%02d" % (now.year, now.month, now.day)
-        style_file = os.path.join(stage_dir, mocked_run.job.name + "-" + datestamp + ".qgs")
+        style_file = os.path.join(stage_dir,
+                                  mocked_run.job.name + "-" + mocked_provider_task.slug + "-" + datestamp + ".qgs")
         mock_open.assert_called_once_with(style_file, 'w')
         self.assertEquals(returnvalue, style_file)
 
         # test 2 - without a provider task
+
+        style_file = os.path.join(stage_dir,
+                                  mocked_run.job.name + "-" + datestamp + ".qgs")
 
         returnvalue = generate_qgs_style(run_uid, None)
         self.assertEquals(returnvalue, style_file)

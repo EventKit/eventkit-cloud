@@ -3,10 +3,10 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Card, CardHeader } from 'material-ui/Card';
-import Popover from 'material-ui/Popover';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
 import CheckBox from '@material-ui/icons/CheckBox';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
+import ButtonBase from '@material-ui/core/ButtonBase';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
 
@@ -41,8 +41,7 @@ describe('MembersHeaderRow component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(EnhancedButton)).toHaveLength(2);
-        expect(wrapper.find(Popover)).toHaveLength(1);
+        expect(wrapper.find(ButtonBase)).toHaveLength(2);
     });
 
     it('should render the checked icon', () => {
@@ -77,7 +76,7 @@ describe('MembersHeaderRow component', () => {
         const e = { currentTarget: {} };
         wrapper.instance().handleClick(e);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ open: true, anchor: e.currentTarget })).toBe(true);
+        expect(stateStub.calledWith({ anchor: e.currentTarget })).toBe(true);
         stateStub.restore();
     });
 
@@ -101,13 +100,13 @@ describe('MembersHeaderRow component', () => {
         expect(props.onSharedClick.calledWith('-shared')).toBe(true);
     });
 
-    it('handleClose should set open to false', () => {
+    it('handleClose should set anchor to null', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ open: false })).toBe(true);
+        expect(stateStub.calledWith({ anchor: null })).toBe(true);
     });
 
     it('handleChange should call onSharedCLick and handleClose', () => {
@@ -115,7 +114,7 @@ describe('MembersHeaderRow component', () => {
         props.onSharedClick = sinon.spy();
         const wrapper = getWrapper(props);
         const closeStub = sinon.stub(wrapper.instance(), 'handleClose');
-        wrapper.instance().handleChange({}, 'value');
+        wrapper.instance().handleChange('value');
         expect(props.onSharedClick.calledOnce).toBe(true);
         expect(props.onSharedClick.calledWith('value')).toBe(true);
         expect(closeStub.calledOnce).toBe(true);

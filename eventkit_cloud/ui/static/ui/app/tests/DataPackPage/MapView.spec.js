@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { GridList } from 'material-ui/GridList';
+import GridList from '@material-ui/core/GridList';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 

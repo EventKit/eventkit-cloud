@@ -2,24 +2,21 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
-import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
-import IconButton from 'material-ui/IconButton';
+import MenuItem from '@material-ui/core/MenuItem';
+import IconButton from '@material-ui/core/IconButton';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {
-    Table,
-    TableBody,
-    TableHeader,
-    TableHeaderColumn,
-    TableRow,
-    TableRowColumn,
-} from 'material-ui/Table';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import Warning from '@material-ui/icons/Warning';
 import Check from '@material-ui/icons/Check';
 import CloudDownload from '@material-ui/icons/CloudDownload';
-import LinearProgress from 'material-ui/LinearProgress';
+import IconMenu from '../../components/common/IconMenu';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
@@ -113,9 +110,9 @@ describe('ProviderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Table)).toHaveLength(1);
-        expect(wrapper.find(TableHeader)).toHaveLength(1);
+        expect(wrapper.find(TableHead)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableHeaderColumn)).toHaveLength(5);
+        expect(wrapper.find(TableCell)).toHaveLength(5);
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
         expect(wrapper.find(IconButton)).toHaveLength(2);
@@ -138,10 +135,10 @@ describe('ProviderRow component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ openTable: true });
-        expect(wrapper.find(Table)).toHaveLength(1);
-        expect(wrapper.find(TableHeader)).toHaveLength(1);
+        expect(wrapper.find(Table)).toHaveLength(2);
+        expect(wrapper.find(TableHead)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(3);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(12);
+        expect(wrapper.find(TableCell)).toHaveLength(17);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
@@ -150,24 +147,18 @@ describe('ProviderRow component', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
-        menu.setState({ open: true });
-        expect(menu.find(MenuItem)).toHaveLength(2);
-        menu.find(MenuItem).first().simulate('click');
+        wrapper.find(IconMenu).childAt(0).simulate('click');
         expect(props.onProviderCancel.calledOnce).toBe(true);
         expect(props.onProviderCancel.calledWith(props.provider.uid)).toBe(true);
     });
 
-    it('View source MenuItem should call handleProviderOpen with uid', () => {
+    it('View source MenuItem should call handleProviderOpen', () => {
         const props = getProps();
-        props.onProviderCancel = sinon.spy();
+        const handleStub = sinon.stub(ProviderRow.prototype, 'handleProviderOpen');
         const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).getElement(), { context: { muiTheme } });
-        menu.setState({ open: true });
-        expect(menu.find(MenuItem)).toHaveLength(2);
-        menu.find(MenuItem).first().simulate('click');
-        expect(props.onProviderCancel.calledOnce).toBe(true);
-        expect(props.onProviderCancel.calledWith(props.provider.uid)).toBe(true);
+        wrapper.find(IconMenu).childAt(1).simulate('click');
+        expect(handleStub.calledOnce).toBe(true);
+        handleStub.restore();
     });
 
     it('getTaskDownloadIcon should return an icon that calls handleSingleDownload', () => {
@@ -258,7 +249,7 @@ describe('ProviderRow component', () => {
         props.provider.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({ status: 'RUNNING', progress: 100 })).toEqual((
             <span className="qa-ProviderRow-span-taskStatus">
-                <LinearProgress mode="determinate" value={100} />
+                <LinearProgress variant="determinate" value={100} />
                 {''}
             </span>
         ));

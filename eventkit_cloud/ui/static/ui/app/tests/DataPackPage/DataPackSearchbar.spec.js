@@ -1,31 +1,21 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import TextField from 'material-ui/TextField';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import TextField from '@material-ui/core/TextField';
 import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
 
 describe('DataPackSearchbar component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         onSearchChange: () => {},
         onSearchSubmit: () => {},
     });
 
-    const getWrapper = props => mount(<DataPackSearchbar {...props} />, {
-        context: { muiTheme },
-        childContextTypes: {
-            muiTheme: PropTypes.object,
-        },
-    });
+    const getWrapper = props => mount(<DataPackSearchbar {...props} />);
 
     it('should render the TextField component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(TextField)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackSearchBar-TextField').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackSearchBar-TextField').hostNodes().text()).toEqual('Search DataPacks');
     });
 
     it('should call handleChange', () => {
@@ -36,7 +26,7 @@ describe('DataPackSearchbar component', () => {
         expect(changeSpy.called).toBe(false);
         wrapper.find('input').simulate('change', e);
         expect(changeSpy.calledOnce).toBe(true);
-        expect(changeSpy.args[0][1]).toEqual('Search Text');
+        expect(changeSpy.args[0][0].target.value).toEqual(e.target.value);
     });
 
     it('should call handleKeyDown', () => {
@@ -85,7 +75,7 @@ describe('DataPackSearchbar component', () => {
         const props = getProps();
         props.onSearchChange = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleChange(null, null);
+        wrapper.instance().handleChange({ target: { value: '' } });
         expect(props.onSearchChange.calledOnce).toBe(true);
         expect(props.onSearchChange.calledWith('')).toBe(true);
     });

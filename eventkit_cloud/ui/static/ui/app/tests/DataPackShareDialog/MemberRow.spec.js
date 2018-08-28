@@ -3,7 +3,8 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { Card, CardHeader } from 'material-ui/Card';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import MemberRow from '../../components/DataPackShareDialog/MemberRow';
 

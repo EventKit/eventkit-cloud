@@ -1,17 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { Table, TableBody, TableHeader,
-    TableHeaderColumn, TableRow, TableRowColumn } from 'material-ui/Table';
-import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import MenuItem from '@material-ui/core/MenuItem';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import IconButton from '@material-ui/core/IconButton';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import ArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import Warning from '@material-ui/icons/Warning';
 import Check from '@material-ui/icons/Check';
-import IconButton from 'material-ui/IconButton';
 import CloudDownload from '@material-ui/icons/CloudDownload';
-import LinearProgress from 'material-ui/LinearProgress';
+import IconMenu from '../common/IconMenu';
 import TaskError from './TaskError';
 import ProviderError from './ProviderError';
 import BaseDialog from '../Dialog/BaseDialog';
@@ -88,7 +90,7 @@ export class ProviderRow extends Component {
             case 'RUNNING':
                 return (
                     <span className="qa-ProviderRow-span-taskStatus">
-                        <LinearProgress mode="determinate" value={task.progress} />
+                        <LinearProgress variant="determinate" value={task.progress} />
                         {task.progress === 100 ? '' : `${task.progress} %`}
                     </span>
                 );
@@ -289,7 +291,7 @@ export class ProviderRow extends Component {
                 fontSize: textFontSize,
             },
             menuColumn: {
-                width: '20px',
+                width: '36px',
                 paddingRight: '0px',
                 paddingLeft: '0px',
                 textAlign: 'right',
@@ -322,16 +324,18 @@ export class ProviderRow extends Component {
                 key="cancel"
                 disabled={cancelMenuDisabled}
                 style={{ fontSize: '12px' }}
-                primaryText="Cancel"
                 onClick={() => { this.props.onProviderCancel(provider.uid); }}
-            />,
+            >
+                Cancel
+            </MenuItem>,
             <MenuItem
                 className="qa-ProviderRow-MenuItem-viewDataSources"
                 key="viewProviderData"
                 style={{ fontSize: '12px' }}
-                primaryText="View Data Source"
                 onClick={this.handleProviderOpen}
-            />,
+            >
+                View Data Source
+            </MenuItem>,
         );
 
         const tasks = provider.tasks.filter(task => (task.display !== false));
@@ -339,136 +343,118 @@ export class ProviderRow extends Component {
         let tableData;
         if (this.state.openTable) {
             tableData = (
-                <TableBody
-                    className="qa-ProviderRow-TableBody"
-                    displayRowCheckbox={false}
-                    deselectOnClickaway={false}
-                    showRowHover={false}
-                >
-                    {licenseData}
-                    {tasks.map(task => (
-                        <TableRow
-                            className="qa-ProviderRow-TableRow-task"
-                            selectable={false}
-                            style={{ height: '20px' }}
-                            displayBorder
-                            key={task.uid}
-                        >
-                            <TableRowColumn style={{ paddingRight: '12px', paddingLeft: '12px', width: '12px' }} />
-                            <TableRowColumn
-                                className="qa-ProviderRow-TableRowColumn-taskLinks"
-                                style={{ paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize }}
+                <Table style={{ tableLayout: 'fixed' }}>
+                    <TableBody
+                        className="qa-ProviderRow-TableBody"
+                    >
+                        {licenseData}
+                        {tasks.map(task => (
+                            <TableRow
+                                className="qa-ProviderRow-TableRow-task"
+                                key={task.uid}
                             >
-                                {this.getTaskLink(task)}
-                                {this.getTaskDownloadIcon(task)}
-                            </TableRowColumn>
-                            <TableRowColumn
-                                className="qa-ProviderRow-TableRowColumn-size"
-                                style={styles.sizeColumnn}
-                            >
-                                {task.result == null ? '' : task.result.size}
-                            </TableRowColumn>
-                            <TableRowColumn
-                                className="qa-ProviderRow-TableRowColumn-status"
-                                style={styles.taskStatusColumn}
-                            >
-                                {this.getTaskStatus(task)}
-                            </TableRowColumn>
-                            <TableRowColumn style={styles.emptyTaskColumn} />
-                            <TableRowColumn style={{ ...styles.emptyTaskColumn, width: toggleCellWidth }} />
-                        </TableRow>
-                    ))}
-                </TableBody>
+                                <TableCell style={{ paddingRight: '12px', paddingLeft: '12px', width: '12px' }} />
+                                <TableCell
+                                    className="qa-ProviderRow-TableCell-taskLinks"
+                                    style={{ paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize }}
+                                >
+                                    {this.getTaskLink(task)}
+                                    {this.getTaskDownloadIcon(task)}
+                                </TableCell>
+                                <TableCell
+                                    className="qa-ProviderRow-TableCell-size"
+                                    style={styles.sizeColumnn}
+                                >
+                                    {task.result == null ? '' : task.result.size}
+                                </TableCell>
+                                <TableCell
+                                    className="qa-ProviderRow-TableCell-status"
+                                    style={styles.taskStatusColumn}
+                                >
+                                    {this.getTaskStatus(task)}
+                                </TableCell>
+                                <TableCell style={styles.emptyTaskColumn} />
+                                <TableCell style={{ ...styles.emptyTaskColumn, width: toggleCellWidth }} />
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             );
         } else {
-            tableData = <TableBody />;
+            tableData = null;
         }
 
         return (
-            <Table
-                key={provider.uid}
-                className="qa-ProviderRow-Table"
-                style={{ width: '100%', backgroundColor: this.props.backgroundColor }}
-                selectable={false}
-                multiSelectable={false}
-            >
-                <TableHeader
-                    className="qa-ProviderRow-TableHeader"
-                    displaySelectAll={false}
-                    adjustForCheckbox={false}
-                    enableSelectAll={false}
+            <div>
+                <Table
+                    key={provider.uid}
+                    className="qa-ProviderRow-Table"
+                    style={{ width: '100%', backgroundColor: this.props.backgroundColor, tableLayout: 'fixed' }}
                 >
-                    <TableRow className="qa-ProviderRow-TableRow-provider" displayBorder>
-                        <TableHeaderColumn
-                            className="qa-ProviderRow-TableRowColumn-providerName"
-                            style={styles.providerColumn}
-                        >
-                            {provider.name}
-                        </TableHeaderColumn>
-                        <TableHeaderColumn
-                            className="qa-ProviderRow-TableRowColumn-fileSize"
-                            style={styles.fileSizeColumn}
-                        >
-                            {this.state.fileSize == null ? '' : `${this.state.fileSize} MB`}
-                        </TableHeaderColumn>
-                        <TableHeaderColumn
-                            className="qa-ProviderRow-TableRowColumn-providerStatus"
-                            style={styles.providerStatusColumn}
-                        >
-                            {this.getProviderStatus(this.props.provider)}
-                        </TableHeaderColumn>
-                        <TableHeaderColumn
-                            className="qa-ProviderRow-TableRowColumn-menu"
-                            style={styles.menuColumn}
-                        >
-                            {menuItems.length > 0 ?
-                                <IconMenu
-                                    className="qa-ProviderRow-IconMenu"
-                                    iconButtonElement={
-                                        <IconButton
-                                            className="qa-ProviderRow-IconButton"
-                                            style={{ padding: '0px', width: '20px', verticalAlign: 'middle' }}
-                                            iconStyle={{ color: '#4598bf' }}
-                                        >
-                                            <NavigationMoreVert className="qa-ProviderRow-NavigationMoreVert" />
-                                        </IconButton>}
-                                    anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                    targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                                >
-                                    {menuItems}
-                                </IconMenu>
-                                :
-                                null
-                            }
-                            <BaseDialog
-                                className="qa-ProviderRow-BaseDialog"
-                                show={this.state.providerDialogOpen}
-                                title={provider.name}
-                                onClose={this.handleProviderClose}
+                    <TableHead
+                        className="qa-ProviderRow-TableHead"
+                    >
+                        <TableRow className="qa-ProviderRow-TableRow-provider">
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-providerName"
+                                style={styles.providerColumn}
                             >
-                                {this.state.providerDesc}
-                            </BaseDialog>
-                        </TableHeaderColumn>
-                        <TableHeaderColumn
-                            className="qa-ProviderRow-TableRowColumn-arrows"
-                            style={styles.arrowColumn}
-                        >
-                            <IconButton
-                                disableTouchRipple
-                                onClick={this.handleToggle}
-                                iconStyle={{ fill: '4598bf' }}
+                                {provider.name}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-fileSize"
+                                style={styles.fileSizeColumn}
                             >
-                                {this.state.openTable ?
-                                    <ArrowUp className="qa-ProviderRow-ArrowUp" />
+                                {this.state.fileSize == null ? '' : `${this.state.fileSize} MB`}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-providerStatus"
+                                style={styles.providerStatusColumn}
+                            >
+                                {this.getProviderStatus(this.props.provider)}
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-menu"
+                                style={styles.menuColumn}
+                            >
+                                {menuItems.length > 0 ?
+                                    <IconMenu
+                                        className="qa-ProviderRow-IconMenu"
+                                    >
+                                        {menuItems}
+                                    </IconMenu>
                                     :
-                                    <ArrowDown className="qa-ProviderRow-ArrowDown" />
+                                    null
                                 }
-                            </IconButton>
-                        </TableHeaderColumn>
-                    </TableRow>
-                </TableHeader>
+                                <BaseDialog
+                                    className="qa-ProviderRow-BaseDialog"
+                                    show={this.state.providerDialogOpen}
+                                    title={provider.name}
+                                    onClose={this.handleProviderClose}
+                                >
+                                    {this.state.providerDesc}
+                                </BaseDialog>
+                            </TableCell>
+                            <TableCell
+                                className="qa-ProviderRow-TableCell-arrows"
+                                style={styles.arrowColumn}
+                            >
+                                <IconButton
+                                    disableTouchRipple
+                                    onClick={this.handleToggle}
+                                >
+                                    {this.state.openTable ?
+                                        <ArrowUp className="qa-ProviderRow-ArrowUp" color="primary" />
+                                        :
+                                        <ArrowDown className="qa-ProviderRow-ArrowDown" color="primary" />
+                                    }
+                                </IconButton>
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                </Table>
                 {tableData}
-            </Table>
+            </div>
         );
     }
 }
