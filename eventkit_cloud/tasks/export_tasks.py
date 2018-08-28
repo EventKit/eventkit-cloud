@@ -951,7 +951,7 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
-                if not full_file_path.endswith(".zip"):
+                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
                     include_files += [full_file_path]
 
         # add the license for this provider if there are other files already
