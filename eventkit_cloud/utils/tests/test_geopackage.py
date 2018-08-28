@@ -194,8 +194,9 @@ class TestGeopackage(TransactionTestCase):
 
         self.assertEqual([call(gpkg), call(gpkg)], get_table_names.mock_calls)
 
+    @patch('eventkit_cloud.utils.geopackage.OGR')
     @patch('__builtin__.open')
-    def test_add_geojson_to_geopackage(self, open):
+    def test_add_geojson_to_geopackage(self, open, mock_ogr):
 
         geojson = "{}"
         gpkg = None
@@ -205,15 +206,12 @@ class TestGeopackage(TransactionTestCase):
         geojson = "{}"
         gpkg = "test.gpkg"
         layer_name = "test_layer"
-        self.task_process.return_value = Mock(exitcode=0)
         add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
-        self.task_process.assert_called_once_with(task_uid=self.task_uid)
         open.assert_called_once_with(os.path.join(os.path.dirname(gpkg),
                                 "{0}.geojson".format(os.path.splitext(os.path.basename(gpkg))[0])), 'w')
-
-        self.task_process.return_value = Mock(exitcode=1)
-        with self.assertRaises(Exception):
-            add_geojson_to_geopackage(geojson=geojson, gpkg=gpkg, layer_name=layer_name, task_uid=self.task_uid)
+        ogr_mock = mock_ogr.return_value
+        ogr_mock.convert.called_once_with(file_format='GPKG', in_file=geojson, out_file=gpkg,
+                             params="-nln {0}".format(layer_name))
 
 
     @patch('eventkit_cloud.utils.geopackage.sqlite3')

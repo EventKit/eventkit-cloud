@@ -15,13 +15,12 @@ logger = logging.getLogger(__name__)
 
 class OGR(object):
     """
-    Thin wrapper around ogr2ogr to convert sqlite to KML.
+    Thin wrapper around ogr2ogr to convert feature data files.
     """
 
     def __init__(self, task_uid=None):
         """
-        Initialize the SQliteToKml utility.
-
+        Initialize the OGR converter.
         Args:
             task_uid: the task uid for the celery task
         """

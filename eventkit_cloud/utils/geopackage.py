@@ -433,7 +433,7 @@ def add_geojson_to_geopackage(geojson=None, gpkg=None, layer_name=None, task_uid
         open_file.write(geojson)
 
     ogr = OGR(task_uid=task_uid)
-    gpkg = ogr.convert(file_format='GPKG', in_file=gpkg, out_file=geojson_file, params=-"-nln {0}".format(layer_name))
+    gpkg = ogr.convert(file_format='GPKG', in_file=gpkg, out_file=geojson_file, params="-nln {0}".format(layer_name))
 
     return gpkg
 

@@ -216,6 +216,7 @@ class TestExportTasks(ExportTaskBase):
         type(mock_request).id = PropertyMock(return_value=celery_uid)
         ogr_mock = mock_ogr.return_value
         job_name = self.job.name.lower()
+        service_url = "http://example.test/arcgis/layer/FeatureService"
         expected_output_path = os.path.join(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(self.run.uid)),
                                             '{}.gpkg'.format(job_name))
         ogr_mock.convert.return_value = expected_output_path
@@ -228,7 +229,7 @@ class TestExportTasks(ExportTaskBase):
         arcgis_feature_service_export_task.update_task_state(task_status=TaskStates.RUNNING.value,
                                                              task_uid=str(saved_export_task.uid))
         result = arcgis_feature_service_export_task.run(task_uid=str(saved_export_task.uid), stage_dir=stage_dir,
-                                                        job_name=job_name)
+                                                        job_name=job_name, service_url=service_url)
         ogr_mock.convert.assert_called_once()
         self.assertEquals(expected_output_path, result['result'])
         # test the tasks update_task_state method

@@ -27,7 +27,7 @@ class TestGeopackage(TransactionTestCase):
     @patch('eventkit_cloud.utils.external_service.set_gpkg_contents_bounds')
     @patch('eventkit_cloud.utils.external_service.check_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.check_service')
-    @patch('eventkit_cloud.utils.geopackage.remove_empty_zoom_levels')
+    @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
     @patch('eventkit_cloud.utils.external_service.connections')
     @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
     @patch('eventkit_cloud.utils.external_service.seeder')
