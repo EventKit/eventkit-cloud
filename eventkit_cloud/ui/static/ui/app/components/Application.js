@@ -16,7 +16,7 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import { MuiThemeProvider as MuiThemeProviderV0 } from 'material-ui';
+import { MuiThemeProvider as MuiThemeProviderV0 } from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { MuiThemeProvider as MuiThemeProviderV1, createMuiTheme } from '@material-ui/core/styles';
 import Banner from './Banner';
