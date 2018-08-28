@@ -9,7 +9,7 @@ from mock import patch, call
 import os
 import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
-    get_osm_last_update
+    get_osm_last_update, cd
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 
@@ -20,7 +20,7 @@ class TestHelpers(TestCase):
     """
     Test Task Helpers
     """
-    
+
     def test_cd(self):
         current_path = os.getcwd()
         parent_path = os.path.dirname(current_path)
