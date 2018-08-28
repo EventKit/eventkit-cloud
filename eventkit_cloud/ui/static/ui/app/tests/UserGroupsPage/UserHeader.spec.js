@@ -1,16 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import IconMenu from 'material-ui/IconMenu';
-import { GroupsDropDownMenu } from '../../components/UserGroupsPage/GroupsDropDownMenu';
+import IconMenu from '../../components/common/IconMenu';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 
 describe('UserHeader component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             selected: false,
@@ -35,20 +30,14 @@ describe('UserHeader component', () => {
     );
 
     const getWrapper = props => (
-        mount(<UserHeader {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<UserHeader {...props} />)
     );
 
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-UserHeader')).toHaveLength(1);
-        expect(wrapper.find(GroupsDropDownMenu)).toHaveLength(1);
-        expect(wrapper.find(IconMenu)).toHaveLength(1);
+        expect(wrapper.find(IconMenu)).toHaveLength(2);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
     });
 
@@ -56,9 +45,9 @@ describe('UserHeader component', () => {
         const props = getProps();
         props.selectedUsers = [];
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-UserHeader-IconButton-options')).toHaveLength(0);
+        expect(wrapper.find('.qa-UserHeader-options')).toHaveLength(0);
         wrapper.setProps({ selectedUsers: getProps().selectedUsers });
-        expect(wrapper.find('.qa-UserHeader-IconButton-options').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserHeader-options').hostNodes()).toHaveLength(1);
     });
 
     it('should render the admin and remove buttons', () => {
@@ -66,78 +55,44 @@ describe('UserHeader component', () => {
         props.showRemoveButton = true;
         props.showAdminButton = true;
         const wrapper = getWrapper(props);
-        const dropdown = wrapper.find(GroupsDropDownMenu);
-        expect(dropdown.props().children).toHaveLength(6);
+        const dropdown = wrapper.find(IconMenu).first();
+        expect(dropdown.props().children).toHaveLength(4);
     });
 
-    it('handleOpen should prevent default and set state', () => {
-        const fakeEvent = { preventDefault: sinon.spy(), currentTarget: null };
-        const props = getProps();
-        const stateStub = sinon.stub(UserHeader.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleOpen(fakeEvent);
-        expect(fakeEvent.preventDefault.calledOnce).toBe(true);
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ open: true, popoverAnchor: null })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleClose should setState', () => {
-        const props = getProps();
-        const stateStub = sinon.stub(UserHeader.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleClose();
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ open: false, popoverAnchor: null })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('handleAddUsersClick should call handleClose and handleAddUsers', () => {
+    it('handleAddUsersClick should call handleAddUsers', () => {
         const props = getProps();
         props.handleAddUsers = sinon.spy();
-        const closeStub = sinon.stub(UserHeader.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleAddUsersClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleAddUsers.calledOnce).toBe(true);
         expect(props.handleAddUsers.calledWith(props.selectedUsers)).toBe(true);
-        closeStub.restore();
     });
 
-    it('handleNewGroupClick should call handleClose and handleNewGroup', () => {
+    it('handleNewGroupClick should call handleNewGroup', () => {
         const props = getProps();
         props.handleNewGroup = sinon.spy();
-        const closeStub = sinon.stub(UserHeader.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleNewGroupClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleNewGroup.calledOnce).toBe(true);
         expect(props.handleNewGroup.calledWith(props.selectedUsers)).toBe(true);
-        closeStub.restore();
     });
 
-    it('handleRemoveUsersClick should call handleClose and handleRemoveUsers', () => {
+    it('handleRemoveUsersClick should call handleRemoveUsers', () => {
         const props = getProps();
         props.handleRemoveUsers = sinon.spy();
-        const closeStub = sinon.stub(UserHeader.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         wrapper.instance().handleRemoveUsersClick();
-        expect(closeStub.calledOnce).toBe(true);
         expect(props.handleRemoveUsers.calledOnce).toBe(true);
         expect(props.handleRemoveUsers.calledWith(props.selectedUsers)).toBe(true);
-        closeStub.restore();
     });
 
-    it('handleOpenAdminConfirm should call handleClose and setState', () => {
+    it('handleOpenAdminConfirm should call setState', () => {
         const props = getProps();
-        const closeStub = sinon.stub(UserHeader.prototype, 'handleClose');
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleOpenAdminConfirm();
-        expect(closeStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showAdminConfirm: true })).toBe(true);
-        closeStub.restore();
     });
 
     it('handleCloseAdminConfirm should setState', () => {

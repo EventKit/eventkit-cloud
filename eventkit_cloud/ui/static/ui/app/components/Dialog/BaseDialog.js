@@ -34,6 +34,8 @@ export class BaseDialog extends Component {
             },
             actions: {
                 margin: '20px 24px 24px',
+                flexDirection: 'row-reverse',
+                justifyContent: 'space-between',
                 ...this.props.actionsStyle,
             },
             clear: {

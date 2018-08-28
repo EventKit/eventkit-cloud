@@ -1,11 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import GroupsDrawer from '../../components/UserGroupsPage/GroupsDrawer';
 import CreateGroupDialog from '../../components/UserGroupsPage/Dialogs/CreateGroupDialog';
 import LeaveGroupDialog from '../../components/UserGroupsPage/Dialogs/LeaveGroupDialog';
@@ -18,8 +16,6 @@ import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
 import * as viewport from '../../utils/viewport';
 
 describe('UserGroupsPage component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             location: {
@@ -107,12 +103,7 @@ describe('UserGroupsPage component', () => {
     );
 
     const getWrapper = props => (
-        mount(<UserGroupsPage {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<UserGroupsPage {...props} />)
     );
 
     beforeAll(() => {
@@ -128,8 +119,8 @@ describe('UserGroupsPage component', () => {
     it('should render its basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-UserGroupsPage-AppBar').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-RaisedButton-create').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-PageHeader').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-Button-create').hostNodes()).toHaveLength(1);
         expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar').hostNodes()).toHaveLength(1);
         expect(wrapper.find('.qa-UserGroupsPage-search').hostNodes()).toHaveLength(1);
         expect(wrapper.find(UserHeader)).toHaveLength(1);
@@ -642,28 +633,13 @@ describe('UserGroupsPage component', () => {
         closeStub.restore();
     });
 
-    it('handleDrawerSelectionChange should ignore path or svg elements', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        browserHistory.push.reset();
-        const fakeEvent = {
-            target: { tagName: 'SVG' },
-        };
-        const fakeValue = 'something';
-        wrapper.instance().handleDrawerSelectionChange(fakeEvent, fakeValue);
-        expect(browserHistory.push.called).toBe(false);
-    });
-
     it('handleDrawerSelectionChange should clear the group query', () => {
         const props = getProps();
         props.location.query = { groups: '12' };
         const wrapper = getWrapper(props);
         browserHistory.push.reset();
-        const fakeEvent = {
-            target: { tagName: 'div' },
-        };
         const fakeValue = 'all';
-        wrapper.instance().handleDrawerSelectionChange(fakeEvent, fakeValue);
+        wrapper.instance().handleDrawerSelectionChange(fakeValue);
         expect(browserHistory.push.calledOnce).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
@@ -675,11 +651,8 @@ describe('UserGroupsPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         browserHistory.push.reset();
-        const fakeEvent = {
-            target: { tagName: 'div' },
-        };
         const fakeValue = '12';
-        wrapper.instance().handleDrawerSelectionChange(fakeEvent, fakeValue);
+        wrapper.instance().handleDrawerSelectionChange(fakeValue);
         expect(browserHistory.push.calledOnce).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
@@ -1053,7 +1026,7 @@ describe('UserGroupsPage component', () => {
             action: 'next',
             index: 2,
             step: {
-                selector: '.qa-UserHeader-IconButton-options',
+                selector: '.qa-UserHeader-options',
             },
             type: 'step:after',
         };

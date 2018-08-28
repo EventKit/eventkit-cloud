@@ -1,34 +1,29 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../CustomTextField';
 
 export class CreateGroupDialog extends Component {
     render() {
         const createActions = [
-            <RaisedButton
+            <Button
                 className="qa-CreateGroupDialog-save"
-                style={{ margin: '0px' }}
-                labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ borderRadius: '0px' }}
-                backgroundColor="#4598bf"
-                disableTouchRipple
-                label="SAVE"
-                primary={false}
+                variant="contained"
+                color="primary"
                 onClick={this.props.onSave}
                 disabled={!this.props.value}
-            />,
-            <FlatButton
+            >
+                SAVE
+            </Button>,
+            <Button
                 className="qa-CreateGroupDialog-cancel"
-                style={{ margin: '0px', float: 'left' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                backgroundColor="#fff"
-                disableTouchRipple
-                label="CANCEL"
+                variant="flat"
+                color="primary"
                 onClick={this.props.onClose}
-            />,
+            >
+                CANCEL
+            </Button>,
         ];
 
         return (

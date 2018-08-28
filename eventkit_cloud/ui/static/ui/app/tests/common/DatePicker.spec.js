@@ -2,7 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import TextField from '@material-ui/core/TextField';
-import DatePicker from '../../components/common/DatePicker';
+import { DatePicker } from '../../components/common/DatePicker';
 
 
 describe('DatePicker component', () => {
@@ -12,6 +12,7 @@ describe('DatePicker component', () => {
         {
             value: '2015-12-01',
             onChange: sinon.spy(),
+            classes: {},
         }
     );
 

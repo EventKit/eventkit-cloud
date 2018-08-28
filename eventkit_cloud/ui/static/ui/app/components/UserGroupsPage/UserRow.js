@@ -1,21 +1,17 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import IconButton from 'material-ui/IconButton';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
+import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
 import Checked from '@material-ui/icons/CheckBox';
 import Unchecked from '@material-ui/icons/CheckBoxOutlineBlank';
-import GroupsDropDownMenu from './GroupsDropDownMenu';
+import IconMenu from '../common/IconMenu';
 
 export class UserRow extends Component {
     constructor(props) {
         super(props);
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
-        this.handleOpen = this.handleOpen.bind(this);
-        this.handleClose = this.handleClose.bind(this);
         this.handleAddUserClick = this.handleAddUserClick.bind(this);
         this.handleNewGroupClick = this.handleNewGroupClick.bind(this);
         this.handleMakeAdminClick = this.handleMakeAdminClick.bind(this);
@@ -23,8 +19,6 @@ export class UserRow extends Component {
         this.handleRemoveUserClick = this.handleRemoveUserClick.bind(this);
         this.onSelect = this.props.onSelect.bind(this, this.props.user);
         this.state = {
-            open: false,
-            popoverAnchor: null,
             hovered: false,
         };
     }
@@ -37,38 +31,23 @@ export class UserRow extends Component {
         this.setState({ hovered: false });
     }
 
-    handleOpen(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.setState({ open: true, popoverAnchor: e.currentTarget });
-    }
-
-    handleClose() {
-        this.setState({ open: false });
-    }
-
     handleAddUserClick() {
-        this.handleClose();
         this.props.handleAddUser([this.props.user]);
     }
 
     handleNewGroupClick() {
-        this.handleClose();
         this.props.handleNewGroup([this.props.user]);
     }
 
     handleMakeAdminClick() {
-        this.handleClose();
         this.props.handleMakeAdmin(this.props.user);
     }
 
     handleDemoteAdminClick() {
-        this.handleClose();
         this.props.handleDemoteAdmin(this.props.user);
     }
 
     handleRemoveUserClick() {
-        this.handleClose();
         this.props.handleRemoveUser(this.props.user);
     }
 
@@ -88,19 +67,6 @@ export class UserRow extends Component {
                 flexWrap: 'wrap',
                 wordBreak: 'break-word',
             },
-            iconMenu: {
-                width: '24px',
-                height: '40px',
-                margin: '0px 12px',
-                float: 'right',
-            },
-            iconButton: {
-                padding: '0px',
-                height: '40px',
-                width: '48px',
-                flex: '0 0 auto',
-                alignSelf: 'center',
-            },
             adminContainer: {
                 display: 'flex',
                 margin: '0px 30px 0px 20px',
@@ -113,24 +79,10 @@ export class UserRow extends Component {
                 fontSize: '11px',
                 cursor: 'pointer',
             },
-            notAdmin: {
-                backgroundColor: '#ccc',
-                color: '#fff',
-                padding: '4px 11px',
-                fontSize: '11px',
-                opacity: '0.8',
-                cursor: 'pointer',
-            },
             menuItem: {
                 fontSize: '14px',
                 overflow: 'hidden',
                 color: '#707274',
-            },
-            menuItemInner: {
-                padding: '0px',
-                margin: '0px 22px 0px 16px',
-                height: '48px',
-                display: 'flex',
             },
         };
 
@@ -143,18 +95,16 @@ export class UserRow extends Component {
                 adminFunction = this.handleDemoteAdminClick;
             }
 
-            adminButton = ([
+            adminButton = (
                 <MenuItem
                     key="makeAdminMenuItem"
                     style={styles.menuItem}
-                    innerDivStyle={styles.menuItemInner}
                     onClick={adminFunction}
                     className="qa-UserRow-MenuItem-makeAdmin"
                 >
-                    <span>{adminButtonText}</span>
-                </MenuItem>,
-                <Divider key="makeAdminDivider" className="qa-UserRow-Divider" />,
-            ]);
+                    {adminButtonText}
+                </MenuItem>
+            );
         }
 
         let removeButton = null;
@@ -162,11 +112,10 @@ export class UserRow extends Component {
             removeButton = (
                 <MenuItem
                     style={{ ...styles.menuItem, color: '#ce4427' }}
-                    innerDivStyle={styles.menuItemInner}
                     onClick={this.handleRemoveUserClick}
                     className="qa-UserRow-MenuItem-remove"
                 >
-                    <span>Remove User</span>
+                    Remove User
                 </MenuItem>
             );
         }
@@ -187,9 +136,9 @@ export class UserRow extends Component {
         }
 
         const checkbox = this.props.selected ?
-            <Checked onClick={this.onSelect} className="qa-UserRow-checkbox" />
+            <Checked onClick={this.onSelect} className="qa-UserRow-checkbox" color="primary" />
             :
-            <Unchecked onClick={this.onSelect} className="qa-UserRow-checkbox" />;
+            <Unchecked onClick={this.onSelect} className="qa-UserRow-checkbox" color="primary" />;
 
         return (
             <div
@@ -219,45 +168,34 @@ export class UserRow extends Component {
                         </div>
                     </div>
                     {adminLabel}
-                    <IconButton
-                        style={styles.iconButton}
-                        iconStyle={{ color: '#4598bf' }}
-                        onClick={this.handleOpen}
-                        className="qa-UserRow-IconButton-options"
-                    >
-                        <Person />
-                        <ArrowDown />
-                    </IconButton>
-                    <GroupsDropDownMenu
-                        open={this.state.open}
-                        anchorEl={this.state.popoverAnchor}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        onClose={this.handleClose}
-                        width={200}
-                        className="qa-UserRow-GroupsDropDownMenu"
+                    <IconMenu
+                        className="qa-UserRow-options"
+                        style={{ width: '48px', backgroundColor: 'transparent' }}
+                        color="primary"
+                        icon={
+                            <div style={{ display: 'flex' }}>
+                                <Person />
+                                <ArrowDown />
+                            </div>
+                        }
                     >
                         <MenuItem
                             style={styles.menuItem}
-                            innerDivStyle={styles.menuItemInner}
                             onClick={this.handleAddUserClick}
                             className="qa-UserRow-MenuItem-editGroups"
                         >
-                            <span>Add to Existing Group</span>
+                            Add to Existing Group
                         </MenuItem>
-                        <Divider className="qa-UserRow-Divider" />
                         <MenuItem
                             style={styles.menuItem}
-                            innerDivStyle={styles.menuItemInner}
                             onClick={this.handleNewGroupClick}
                             className="qa-UserRow-MenuItem-newGroup"
                         >
-                            <span>Add to New Group</span>
+                            Add to New Group
                         </MenuItem>
-                        <Divider className="qa-UserRow-Divider" />
                         {adminButton}
                         {removeButton}
-                    </GroupsDropDownMenu>
+                    </IconMenu>
                 </div>
             </div>
         );

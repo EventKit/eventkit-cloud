@@ -1,34 +1,29 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../CustomTextField';
 
 export class RenameGroupDialog extends Component {
     render() {
         const createActions = [
-            <RaisedButton
+            <Button
                 className="qa-RenameGroupDialog-save"
-                style={{ margin: '0px' }}
-                labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ borderRadius: '0px' }}
-                backgroundColor="#4598bf"
-                disableTouchRipple
-                label="RENAME"
-                primary={false}
                 onClick={this.props.onSave}
                 disabled={!this.props.value || !this.props.valid}
-            />,
-            <FlatButton
+                variant="contained"
+                color="primary"
+            >
+                RENAME
+            </Button>,
+            <Button
                 className="qa-RenameGroupDialog-cancel"
-                style={{ margin: '0px', float: 'left' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                backgroundColor="#fff"
-                disableTouchRipple
-                label="CANCEL"
                 onClick={this.props.onClose}
-            />,
+                variant="flat"
+                color="primary"
+            >
+                CANCEL
+            </Button>,
         ];
 
         const underlineColor = this.props.valid ? '#4498c0' : '#ce4427';
