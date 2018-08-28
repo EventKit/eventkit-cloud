@@ -56,7 +56,6 @@ class TestHelpers(TestCase):
     def test_get_file_paths(self):
         self.assertTrue(os.path.abspath(__file__) in get_file_paths(os.path.dirname(__file__)))
 
-
     @patch('eventkit_cloud.tasks.helpers.get_osm_last_update')
     def test_get_last_update(self, mock_get_osm_last_update):
         test_url = "https://test"
