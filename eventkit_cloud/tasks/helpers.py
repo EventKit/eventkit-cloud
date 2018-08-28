@@ -1,13 +1,16 @@
 import os
 import re
 
+from contextlib import contextmanager
+
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q
+
 from enum import Enum
 from numpy import linspace
-from eventkit_cloud.ui.helpers import logger, cd
+from eventkit_cloud.ui.helpers import logger
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
 import logging
@@ -16,6 +19,16 @@ import signal
 
 
 logger = logging.getLogger()
+
+
+@contextmanager
+def cd(newdir):
+    prevdir = os.getcwd()
+    os.chdir(newdir)
+    try:
+        yield
+    finally:
+        os.chdir(prevdir)
 
 
 class Directory(Enum):
