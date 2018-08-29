@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
@@ -11,8 +9,6 @@ import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackPage component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             show: false,
@@ -78,12 +74,7 @@ describe('DataPackPage component', () => {
     );
 
     const getWrapper = props => (
-        mount(<DataPackShareDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<DataPackShareDialog {...props} />)
     );
 
     it('should render all the basic components', () => {
@@ -91,19 +82,9 @@ describe('DataPackPage component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(ShareBaseDialog)).toHaveLength(1);
         wrapper.setProps({ ...props, show: true });
-        const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const header = mount(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find(Button)).toHaveLength(2);
-        const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const body = mount(wrapper.find(ShareBaseDialog).props().children[1]);
         expect(body.find(GroupsBody)).toHaveLength(1);
     });
 
@@ -111,12 +92,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ showShareInfo: true });
-        const body = mount(wrapper.find(ShareBaseDialog).props().children, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const body = mount(wrapper.find(ShareBaseDialog).props().children);
         expect(body.find(ShareInfoBody)).toHaveLength(1);
     });
 
@@ -124,12 +100,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ view: 'members' });
-        const body = mount(wrapper.find(ShareBaseDialog).props().children[1], {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const body = mount(wrapper.find(ShareBaseDialog).props().children[1]);
         expect(body.find(MembersBody)).toHaveLength(1);
     });
 
@@ -138,12 +109,7 @@ describe('DataPackPage component', () => {
         props.permissions.groups = {};
         props.permissions.members = {};
         const wrapper = getWrapper(props);
-        const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const header = mount(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find('.qa-DataPackShareDialog-Button-groups').hostNodes().text()).toEqual('GROUPS (0)');
         expect(header.find('.qa-DataPackShareDialog-Button-members').hostNodes().text()).toEqual('MEMBERS (0)');
     });
@@ -154,12 +120,7 @@ describe('DataPackPage component', () => {
         props.permissions.groups = { group_one: '', group_two: '', group_three: '' };
         props.permissions.members = { user_one: '', user_two: '', user_three: '' };
         const wrapper = getWrapper(props);
-        const header = mount(wrapper.find(ShareBaseDialog).props().children[0], {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const header = mount(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find('.qa-DataPackShareDialog-Button-groups').hostNodes().text()).toEqual('GROUPS (ALL)');
         expect(header.find('.qa-DataPackShareDialog-Button-members').hostNodes().text()).toEqual('MEMBERS (ALL)');
     });

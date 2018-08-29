@@ -220,7 +220,6 @@ export class AddMembersDialog extends Component {
                 cursor: 'pointer',
             },
             textField: {
-                fontSize: '14px',
                 backgroundColor: 'whitesmoke',
                 height: '36px',
                 lineHeight: '36px',
@@ -301,13 +300,11 @@ export class AddMembersDialog extends Component {
                 className="qa-AddMembersDialog-search"
                 fullWidth
                 maxLength={50}
-                hintText="Search"
+                placeholder="Search"
                 onChange={this.handleSearchInput}
                 value={this.state.search}
-                inputStyle={{ paddingLeft: '16px' }}
                 style={styles.textField}
-                underlineShow={false}
-                hintStyle={{ paddingLeft: '16px', bottom: '0px', color: '#707274' }}
+                InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
                 charsRemainingStyle={styles.characterLimit}
             />
         );

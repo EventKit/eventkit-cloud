@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import PropTypes from 'prop-types';
 import raf from 'raf';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import View from 'ol/view';
 import GeoJSON from 'ol/format/geojson';
 import Feature from 'ol/feature';
@@ -13,8 +12,6 @@ import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo
 raf.polyfill();
 
 describe('DataPackAoiInfo component', () => {
-    const muiTheme = getMuiTheme();
-
     const didMount = DataPackAoiInfo.prototype.componentDidMount;
 
     beforeAll(() => {
@@ -34,7 +31,6 @@ describe('DataPackAoiInfo component', () => {
     const getWrapper = props => (
         mount(<DataPackAoiInfo {...props} />, {
             context: {
-                muiTheme,
                 config: {
                     BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png',
                     BASEMAP_COPYRIGHT: 'my copyright',

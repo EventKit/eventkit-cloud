@@ -322,9 +322,13 @@ export class ExportInfo extends React.Component {
                 lineHeight: '25px',
             },
             textField: {
-                backgroundColor: 'whitesmoke',
-                width: '100%',
                 marginTop: '15px',
+                backgroundColor: 'whitesmoke',
+            },
+            input: {
+                fontSize: '16px',
+                paddingLeft: '5px',
+                paddingRight: '50px',
             },
             listHeading: {
                 fontSize: '16px',
@@ -402,43 +406,39 @@ export class ExportInfo extends React.Component {
                                         className="qa-ExportInfo-input-name"
                                         id="Name"
                                         name="exportName"
-                                        underlineStyle={style.underlineStyle}
-                                        underlineFocusStyle={style.underlineStyle}
                                         onChange={this.onNameChange}
                                         defaultValue={this.props.exportInfo.exportName}
-                                        hintText="Datapack Name"
+                                        placeholder="Datapack Name"
                                         style={style.textField}
-                                        inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        InputProps={{ style: style.input }}
+                                        fullWidth
                                         maxLength={100}
                                     />
                                     <CustomTextField
                                         className="qa-ExportInfo-input-description"
                                         id="Description"
-                                        underlineStyle={style.underlineStyle}
-                                        underlineFocusStyle={style.underlineStyle}
                                         name="datapackDescription"
                                         onChange={this.onDescriptionChange}
                                         defaultValue={this.props.exportInfo.datapackDescription}
-                                        hintText="Description"
-                                        multiLine
+                                        placeholder="Description"
+                                        multiline
                                         style={style.textField}
-                                        textareaStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        inputProps={{ style: { fontSize: '16px', lineHeight: '20px' } }}
+                                        fullWidth
                                         maxLength={250}
+                                        // eslint-disable-next-line react/jsx-no-duplicate-props
+                                        InputProps={{ style: { ...style.input, lineHeight: '21px' } }}
                                     />
                                     <CustomTextField
                                         className="qa-ExportInfo-input-project"
                                         id="Project"
-                                        underlineStyle={style.underlineStyle}
-                                        underlineFocusStyle={style.underlineStyle}
                                         name="projectName"
                                         onChange={this.onProjectChange}
                                         defaultValue={this.props.exportInfo.projectName}
-                                        hintText="Project Name"
+                                        placeholder="Project Name"
                                         style={style.textField}
-                                        inputStyle={{ fontSize: '16px', paddingLeft: '5px' }}
-                                        hintStyle={{ fontSize: '16px', paddingLeft: '5px' }}
+                                        InputProps={{ style: style.input }}
+                                        fullWidth
                                         maxLength={100}
                                     />
                                 </div>

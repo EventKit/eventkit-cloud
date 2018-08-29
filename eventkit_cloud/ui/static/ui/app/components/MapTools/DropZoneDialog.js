@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
 import BaseDialog from '../Dialog/BaseDialog';
 
@@ -74,15 +74,16 @@ export class DropZoneDialog extends Component {
                             <strong> 5 MB </strong>max<br />
                             Drag and drop or<br />
                         </span>
-                        <RaisedButton
-                            style={{ margin: '15px 5px 10px' }}
-                            labelStyle={{ color: 'whitesmoke' }}
-                            backgroundColor="#4598bf"
-                            label="Select A File"
-                            icon={<FileFileUpload color="secondary" />}
+                        <Button
+                            style={{ margin: '15px 10px' }}
+                            variant="contained"
+                            color="primary"
                             onClick={this.onOpenClick}
-                            className="qa-DropZoneDialog-RaisedButton-select"
-                        />
+                            className="qa-DropZoneDialog-Button-select"
+                        >
+                            <FileFileUpload color="secondary" style={{ marginRight: '5px' }} />
+                            Select A File
+                        </Button>
                     </div>
                 </Dropzone>
             </BaseDialog>

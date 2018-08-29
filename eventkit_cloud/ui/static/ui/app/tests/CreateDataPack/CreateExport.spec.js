@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { mount, shallow } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Help from '@material-ui/icons/Help';
 import initialState from '../../reducers/initialState';
 import { fakeStore } from '../../__mocks__/fakeStore';
@@ -12,8 +11,6 @@ import { ConfirmDialog } from '../../components/Dialog/ConfirmDialog';
 import PageHeader from '../../components/common/PageHeader';
 
 describe('CreateExport component', () => {
-    const muiTheme = getMuiTheme();
-
     function getProps() {
         return {
             router: {
@@ -27,9 +24,8 @@ describe('CreateExport component', () => {
     function getMountedWrapper(props = getProps()) {
         const store = fakeStore(initialState);
         return mount(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
-            context: { muiTheme, store },
+            context: { store },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 store: PropTypes.object,
             },
         });

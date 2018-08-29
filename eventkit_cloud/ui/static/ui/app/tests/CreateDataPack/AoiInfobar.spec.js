@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import AlertWarning from '@material-ui/icons/Warning';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ActionRoom from '@material-ui/icons/Room';
@@ -14,7 +12,6 @@ import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import { AoiInfobar } from '../../components/CreateDataPack/AoiInfobar';
 
 describe('AoiInfobar component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             aoiInfo: {
@@ -34,10 +31,7 @@ describe('AoiInfobar component', () => {
     );
 
     const getWrapper = props => (
-        mount(<AoiInfobar {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<AoiInfobar {...props} />)
     );
 
     const geojson = {

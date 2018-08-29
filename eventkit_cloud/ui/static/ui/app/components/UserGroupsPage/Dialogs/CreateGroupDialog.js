@@ -35,22 +35,13 @@ export class CreateGroupDialog extends Component {
                 dialogStyle={{ maxWidth: '500px' }}
             >
                 <CustomTextField
-                    hintText="Name Group"
+                    placeholder="Name Group"
                     maxLength={50}
                     onChange={this.props.onInputChange}
                     value={this.props.value}
                     autoFocus
-                    style={{
-                        width: '100%',
-                    }}
-                    underlineStyle={{
-                        borderBottom: '1px solid #4498c0',
-                        bottom: '0px',
-                    }}
-                    underlineFocusStyle={{
-                        borderBottom: '2px solid #4498c0',
-                        bottom: '0px',
-                    }}
+                    style={{ width: '100%' }}
+                    InputProps={{ style: { lineHeight: '24px', fontSize: '14px', paddingLeft: '5px' } }}
                     className="qa-CreateGroupDialog-textField"
                 />
             </BaseDialog>

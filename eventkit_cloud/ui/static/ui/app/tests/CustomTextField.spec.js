@@ -1,19 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { TextField } from 'material-ui';
+import TextField from '@material-ui/core/TextField';
 import CustomTextField from '../components/CustomTextField';
 
 describe('CustomTextField component', () => {
-    const muiTheme = getMuiTheme();
-
     const getWrapper = props => (
-        mount(<CustomTextField {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<CustomTextField {...props} />)
     );
 
     it('should render a material-ui TextField component', () => {
@@ -56,9 +49,9 @@ describe('CustomTextField component', () => {
         const wrapper = getWrapper(props);
         const e = { target: { value: 'text value' } };
 
-        wrapper.instance().onChange(e, e.target.value);
+        wrapper.instance().onChange(e);
         expect(props.onChange.calledOnce).toBe(true);
-        expect(props.onChange.calledWith(e, e.target.value)).toBe(true);
+        expect(props.onChange.calledWith(e)).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ charsRemaining: props.maxLength - e.target.value.length })).toBe(true);
         stateStub.restore();

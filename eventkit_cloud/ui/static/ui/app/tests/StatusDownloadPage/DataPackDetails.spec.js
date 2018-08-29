@@ -1,7 +1,5 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Table from '@material-ui/core/Table';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
@@ -66,8 +64,6 @@ describe('DataPackDetails component', () => {
         },
     ];
 
-    const muiTheme = getMuiTheme();
-
     const getProps = () => ({
         providerTasks,
         providers,
@@ -76,12 +72,8 @@ describe('DataPackDetails component', () => {
         classes: { root: {} },
     });
 
-    const getWrapper = props => mount(<DataPackDetails {...props} />, {
-        context: { muiTheme },
-        childContextTypes: {
-            muiTheme: PropTypes.object,
-        },
-    });
+    const getWrapper = props => mount(<DataPackDetails {...props} />);
+
     it('should render elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);

@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Button from '@material-ui/core/Button';
 import ReactDOM from 'react-dom';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
@@ -10,7 +8,6 @@ import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import { LoadButtons } from '../../components/DataPackPage/LoadButtons';
 
 describe('LoadButtons component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         range: '12/26',
         handleLoadLess: () => {},
@@ -19,12 +16,7 @@ describe('LoadButtons component', () => {
         loadMoreDisabled: false,
         classes: { root: {} },
     });
-    const getWrapper = props => mount(<LoadButtons {...props} />, {
-        context: { muiTheme },
-        childContextTypes: {
-            muiTheme: PropTypes.object,
-        },
-    });
+    const getWrapper = props => mount(<LoadButtons {...props} />);
 
     it('should render all the basic components', () => {
         const props = getProps();

@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import debounce from 'lodash/debounce';
-import CircularProgress from 'material-ui/CircularProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
 import { TypeaheadMenuItem } from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
@@ -170,7 +170,7 @@ export class SearchAOIToolbar extends Component {
                         <CircularProgress
                             size={25}
                             style={styles.loading}
-                            color="#4598bf"
+                            color="primary"
                         />
                         : null
                     }

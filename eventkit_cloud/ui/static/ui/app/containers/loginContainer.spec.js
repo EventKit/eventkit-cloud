@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import { Form } from './loginContainer';
 
 
@@ -24,8 +24,8 @@ describe('loginContainer', () => {
         const wrapper = mount(<Form {...props} />);
         wrapper.setState(state);
         expect(wrapper.find('form').exists()).toEqual(true);
-        expect(wrapper.find(RaisedButton)).toHaveLength(1);
-        expect(wrapper.find(RaisedButton).props().label).toEqual('Login');
+        expect(wrapper.find(Button)).toHaveLength(1);
+        expect(wrapper.find(Button).text()).toEqual('Login');
     });
 
     it('shows only the oauth button if oauth endpoint is available', () => {
@@ -44,8 +44,8 @@ describe('loginContainer', () => {
         const wrapper = mount(<Form {...props} />);
         wrapper.setState(state);
         expect(wrapper.find('form').exists()).toEqual(false);
-        expect(wrapper.find(RaisedButton)).toHaveLength(1);
-        expect(wrapper.find(RaisedButton).props().label).toEqual('Login with OAuth');
+        expect(wrapper.find(Button)).toHaveLength(1);
+        expect(wrapper.find(Button).text()).toEqual('Login with OAuth');
     });
 
     it('shows both the form and oauth button if endpoints are available', () => {
@@ -64,9 +64,9 @@ describe('loginContainer', () => {
         const wrapper = mount(<Form {...props} />);
         wrapper.setState(state);
         expect(wrapper.find('form').exists()).toEqual(true);
-        expect(wrapper.find(RaisedButton)).toHaveLength(1);
+        expect(wrapper.find(Button)).toHaveLength(1);
         expect(wrapper.find('.qa-LoginForm-oauth')).toHaveLength(1);
-        expect(wrapper.find(RaisedButton).props().label).toEqual('Login');
+        expect(wrapper.find(Button).text()).toEqual('Login');
         expect(wrapper.find('.qa-LoginForm-oauth').text()).toEqual('Or, login with OAuth');
     });
 

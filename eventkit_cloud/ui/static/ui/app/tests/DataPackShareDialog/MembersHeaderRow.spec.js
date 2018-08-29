@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CheckBox from '@material-ui/icons/CheckBox';
@@ -11,7 +9,6 @@ import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
 
 describe('MembersHeaderRow component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             memberCount: 2,
@@ -28,12 +25,7 @@ describe('MembersHeaderRow component', () => {
     );
 
     const getWrapper = props => (
-        mount(<MembersHeaderRow {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<MembersHeaderRow {...props} />)
     );
 
     it('should render the basic components', () => {

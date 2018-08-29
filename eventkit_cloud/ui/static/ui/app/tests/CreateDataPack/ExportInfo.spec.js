@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import List from '@material-ui/core/List';
 import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
@@ -35,8 +34,6 @@ const formats = [
     }];
 
 describe('ExportInfo component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             geojson: {
@@ -77,9 +74,8 @@ describe('ExportInfo component', () => {
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
         return mount(<ExportInfo {...props} />, {
-            context: { muiTheme, config },
+            context: { config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 config: PropTypes.object,
             },
         });

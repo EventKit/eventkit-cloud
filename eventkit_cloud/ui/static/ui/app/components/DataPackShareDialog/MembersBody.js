@@ -209,7 +209,6 @@ export class MembersBody extends Component {
                 padding: '0px 10px',
             },
             textField: {
-                fontSize: '14px',
                 backgroundColor: 'whitesmoke',
                 height: '36px',
                 lineHeight: '36px',
@@ -308,13 +307,11 @@ export class MembersBody extends Component {
                         className="qa-MembersBody-search"
                         fullWidth
                         maxLength={50}
-                        hintText="Search"
+                        placeholder="Search"
                         onChange={this.handleSearchInput}
                         value={this.state.search}
-                        inputStyle={{ paddingLeft: '16px' }}
                         style={styles.textField}
-                        underlineShow={false}
-                        hintStyle={{ paddingLeft: '16px', bottom: '0px', color: '#707274' }}
+                        InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
                         charsRemainingStyle={styles.characterLimit}
                     />
                     {shareInfo}

@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import raf from 'raf';
 import Joyride from 'react-joyride';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import MapCard from '../../components/common/MapCard';
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
@@ -15,8 +14,6 @@ import CustomTableRow from '../../components/CustomTableRow';
 raf.polyfill();
 
 describe('Export Summary Component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => ({
         geojson: {
             type: 'FeatureCollection',
@@ -65,9 +62,8 @@ describe('Export Summary Component', () => {
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
         return mount(<ExportSummary {...props} />, {
-            context: { muiTheme, config },
+            context: { config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 config: PropTypes.object,
             },
         });

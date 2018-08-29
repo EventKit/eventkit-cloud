@@ -1,13 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 
 describe('AlertCallout component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             style: {},
@@ -18,10 +15,7 @@ describe('AlertCallout component', () => {
     );
 
     const getWrapper = props => (
-        mount(<AlertCallout {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<AlertCallout {...props} />)
     );
 
     it('should render the basic elements', () => {

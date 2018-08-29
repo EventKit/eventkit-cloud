@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -16,7 +14,6 @@ import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 import CustomScrollbar from '../../components/CustomScrollbar';
 
 describe('DataPackList component', () => {
-    const muiTheme = getMuiTheme();
     const providers = [
         {
             id: 2,
@@ -126,10 +123,7 @@ describe('DataPackList component', () => {
         providers,
     });
 
-    const getWrapper = props => mount(<DataPackList {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    });
+    const getWrapper = props => mount(<DataPackList {...props} />);
 
     it('should render list items as part of the mobile view', () => {
         const props = getProps();

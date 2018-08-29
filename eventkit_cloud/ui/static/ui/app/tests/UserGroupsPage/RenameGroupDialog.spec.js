@@ -1,14 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { BaseDialog } from '../../components/Dialog/BaseDialog';
 import CustomTextField from '../../components/CustomTextField';
 import RenameGroupDialog from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
-    const muiTheme = getMuiTheme();
-
     const props = {
         show: true,
         onInputChange: () => {},
@@ -20,45 +16,24 @@ describe('LeaveGroupDialog component', () => {
 
 
     it('should render a BaseDialog with text field', () => {
-        const wrapper = mount(<RenameGroupDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const wrapper = mount(<RenameGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = mount(wrapper.find(BaseDialog).props().children[1], {
-            ...props,
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const child = mount(wrapper.find(BaseDialog).props().children[1]);
         expect(child.find(CustomTextField)).toHaveLength(1);
     });
 
     it('should show name unavailable warning', () => {
         props.valid = false;
-        const wrapper = mount(<RenameGroupDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const wrapper = mount(<RenameGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = mount(wrapper.find(BaseDialog).props().children[0], {
-            ...props,
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const child = mount(wrapper.find(BaseDialog).props().children[0]);
         expect(child.text()).toEqual('Name unavailable');
     });
 
     it('should set the save button disabled if no value or its invalid', () => {
         props.valid = true;
         props.value = '';
-        const wrapper = mount(<RenameGroupDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<RenameGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog).props().actions[0].props.disabled).toBe(true);
         wrapper.setProps({ valid: false, value: 'something' });
         expect(wrapper.find(BaseDialog).props().actions[0].props.disabled).toBe(true);

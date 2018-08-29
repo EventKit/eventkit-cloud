@@ -1,15 +1,11 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import CustomTableRow from '../../components/CustomTableRow';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 
 describe('DataPackGeneralTable component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             dataPack: {
@@ -51,10 +47,7 @@ describe('DataPackGeneralTable component', () => {
     );
 
     const getWrapper = props => (
-        mount(<DataPackGeneralTable {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<DataPackGeneralTable {...props} />)
     );
 
     it('should render the basic components', () => {

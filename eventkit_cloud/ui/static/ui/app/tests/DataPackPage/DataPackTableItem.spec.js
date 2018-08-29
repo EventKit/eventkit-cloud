@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { shallow, mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Link } from 'react-router';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
@@ -94,7 +92,6 @@ describe('DataPackTableItem component', () => {
         expiration: '2017-03-24T15:52:35.637258Z',
     };
 
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         run,
         user: { data: { user: { username: 'admin' } } },
@@ -107,10 +104,7 @@ describe('DataPackTableItem component', () => {
     });
 
     const getWrapperMount = (props) => {
-        const wrapper = mount(<DataPackTableItem {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<DataPackTableItem {...props} />);
         wrapper.instance().iconMenu = { setState: sinon.spy() };
         return wrapper;
     };

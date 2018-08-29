@@ -1,16 +1,13 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import TextField from '@material-ui/core/TextField';
-import Slider from 'material-ui/Slider';
+import Slider from '@material-ui/lab/Slider';
 import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
 import BufferDialog from '../../components/CreateDataPack/BufferDialog';
 
 describe('AlertCallout component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             show: true,
@@ -24,10 +21,7 @@ describe('AlertCallout component', () => {
     );
 
     const getWrapper = props => (
-        mount(<BufferDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<BufferDialog {...props} />)
     );
 
     it('should render the basic elements', () => {

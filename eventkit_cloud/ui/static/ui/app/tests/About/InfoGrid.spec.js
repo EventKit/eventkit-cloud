@@ -1,14 +1,10 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
 import GridTile from '@material-ui/core/GridListTile';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import InfoGrid from '../../components/About/InfoGrid';
 
 describe('InfoGrid component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             title: 'Test Header',
@@ -20,12 +16,7 @@ describe('InfoGrid component', () => {
     );
 
     const getWrapper = props => (
-        mount(<InfoGrid {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<InfoGrid {...props} />)
     );
 
     it('should render a header and GridList with passed in items', () => {

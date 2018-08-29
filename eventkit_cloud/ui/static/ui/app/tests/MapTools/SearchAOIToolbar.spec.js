@@ -1,17 +1,14 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
 import { Provider } from 'react-redux';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { SearchAOIToolbar } from '../../components/MapTools/SearchAOIToolbar';
 import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
 import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 import { fakeStore } from '../../__mocks__/fakeStore';
 
 describe('SearchAOIToolbar button', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         toolbarIcons: { search: 'DEFAULT' },
         geocode: {
@@ -30,10 +27,7 @@ describe('SearchAOIToolbar button', () => {
     it('should render a searchbar and button', () => {
         const store = fakeStore({});
         const props = getProps();
-        const wrapper = mount(<Provider store={store}><SearchAOIToolbar {...props} /></Provider>, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const wrapper = mount(<Provider store={store}><SearchAOIToolbar {...props} /></Provider>);
         expect(wrapper.find(Typeahead)).toHaveLength(1);
         expect(wrapper.find(Menu)).toHaveLength(0);
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(0);

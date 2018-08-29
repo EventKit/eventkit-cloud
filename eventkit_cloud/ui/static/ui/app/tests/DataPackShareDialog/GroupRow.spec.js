@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
@@ -10,7 +8,6 @@ import GroupMemberRow from '../../components/DataPackShareDialog/GroupMemberRow'
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
 
 describe('GroupRow component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             group: {
@@ -49,12 +46,7 @@ describe('GroupRow component', () => {
     );
 
     const getWrapper = props => (
-        mount(<GroupRow {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<GroupRow {...props} />)
     );
 
     it('should render the basic elements', () => {
