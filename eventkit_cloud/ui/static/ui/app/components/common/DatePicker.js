@@ -1,9 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
 export class DatePicker extends Component {
     render() {
+        const { classes } = this.props;
         return (
             <TextField
                 id="date-picker"
@@ -17,6 +19,7 @@ export class DatePicker extends Component {
                 placeholder={this.props.placeholder}
                 value={this.props.value}
                 InputProps={{
+                    classes: { ...classes },
                     style: { fontSize: '14px', padding: '0px 5px' },
                     ...this.props.InputProps,
                 }}
@@ -31,6 +34,20 @@ export class DatePicker extends Component {
     }
 }
 
+const jss = {
+    underline: {
+        '&:before': {
+            borderBottomColor: '#5a5a5a',
+        },
+        '&:after': {
+            borderBottomColor: '#4598bf',
+        },
+        '&:hover:before': {
+            borderBottomColor: '#5a5a5a !important',
+        },
+    },
+};
+
 DatePicker.defaultProps = {
     label: undefined,
     disabled: false,
@@ -42,6 +59,7 @@ DatePicker.defaultProps = {
     InputProps: {},
     min: undefined,
     max: undefined,
+    classes: {},
 };
 
 DatePicker.propTypes = {
@@ -71,6 +89,7 @@ DatePicker.propTypes = {
     InputProps: PropTypes.object,
     min: PropTypes.string,
     max: PropTypes.string,
+    classes: PropTypes.object,
 };
 
-export default DatePicker;
+export default withStyles(jss)(DatePicker);

@@ -409,7 +409,7 @@ export class BreadcrumbStepper extends React.Component {
                             <CircularProgress
                                 className="qa-BreadcrumbStepper-CircularProgress"
                                 style={{ margin: 'auto', display: 'block' }}
-                                color="#4598bf"
+                                color="primary"
                                 size={50}
                             />
                         </div>

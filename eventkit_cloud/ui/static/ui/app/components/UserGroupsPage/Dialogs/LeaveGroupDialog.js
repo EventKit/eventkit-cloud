@@ -1,31 +1,27 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
+import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 
 export class LeaveGroupDialog extends Component {
     render() {
         const leaveActions = [
-            <RaisedButton
+            <Button
+                variant="contained"
                 className="qa-LeaveGroupDialog-leave"
-                style={{ margin: '0px' }}
-                labelStyle={{ color: 'whitesmoke', fontWeight: 'bold' }}
-                buttonStyle={{ backgroundColor: '#CE4427', borderRadius: '0px' }}
-                disableTouchRipple
-                label="LEAVE GROUP"
-                primary={false}
+                style={{ backgroundColor: '#CE4427', color: 'whitesmoke' }}
                 onClick={this.props.onLeave}
-            />,
-            <FlatButton
+            >
+                LEAVE GROUP
+            </Button>,
+            <Button
                 className="qa-LeaveGroupDialog-cancel"
-                style={{ margin: '0px', float: 'left' }}
-                labelStyle={{ color: '#4598bf', fontWeight: 'bold' }}
-                backgroundColor="#fff"
-                disableTouchRipple
-                label="CANCEL"
+                variant="flat"
+                color="primary"
                 onClick={this.props.onClose}
-            />,
+            >
+                CANCEL
+            </Button>,
         ];
 
         return (

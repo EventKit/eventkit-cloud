@@ -620,7 +620,7 @@ export const joyride = {
             text: `EventKit allows you to easily share your data with other EventKit users.
                 Here, you can create and administer groups, allowing you to share DataPacks with your team,
                 customers, community of interest, etc.`,
-            selector: '.qa-UserGroupsPage-AppBar',
+            selector: '.qa-PageHeader',
             position: 'top',
             style: JoyRideStyles.welcomeTooltipStyle,
         },
@@ -634,14 +634,14 @@ export const joyride = {
         {
             title: 'Sort Members',
             text: 'You can sort the members list by Name, Date Joined, and Administrator status.',
-            selector: '.qa-UserHeader-DropDownMenu-sort',
+            selector: '.qa-UserHeader-sort',
             position: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Create Group',
             text: 'You can click the New Group button to create a new group.',
-            selector: '.qa-UserGroupsPage-RaisedButton-create',
+            selector: '.qa-UserGroupsPage-Button-create',
             position: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -664,7 +664,7 @@ export const joyride = {
             title: 'Add Individual User to Group',
             text: `From dropdown menu you can add a user to an existing group or a new group.
                 Additionally, within a group, you can grant or remove Administrator rights to a user.`,
-            selector: '.qa-UserRow-IconButton-options',
+            selector: '.qa-UserRow-options',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },
@@ -685,7 +685,7 @@ export const joyride = {
         {
             title: 'Add Users to Groups',
             text: 'If multiple users are selected, the actions in this dropdown menu will apply to the set of selected users.',
-            selector: '.qa-UserHeader-IconButton-options',
+            selector: '.qa-UserHeader-options',
             position: 'bottom',
             style: JoyRideStyles.tooltipStyle,
         },

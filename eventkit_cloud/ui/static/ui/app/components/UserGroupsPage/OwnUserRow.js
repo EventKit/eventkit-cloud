@@ -1,24 +1,19 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import IconButton from 'material-ui/IconButton';
-import MenuItem from 'material-ui/MenuItem';
-import Divider from 'material-ui/Divider';
+import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
-import GroupsDropDownMenu from './GroupsDropDownMenu';
+import IconMenu from '../common/IconMenu';
 
 export class OwnUserRow extends Component {
     constructor(props) {
         super(props);
         this.handleMouseOver = this.handleMouseOver.bind(this);
         this.handleMouseOut = this.handleMouseOut.bind(this);
-        this.handleOpen = this.handleOpen.bind(this);
-        this.handleClose = this.handleClose.bind(this);
         this.handleDemoteAdminClick = this.handleDemoteAdminClick.bind(this);
         this.handleRemoveUserClick = this.handleRemoveUserClick.bind(this);
         this.state = {
             hovered: false,
-            open: false,
         };
     }
 
@@ -30,23 +25,11 @@ export class OwnUserRow extends Component {
         this.setState({ hovered: false });
     }
 
-    handleOpen(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.setState({ open: true, popoverAnchor: e.currentTarget });
-    }
-
-    handleClose() {
-        this.setState({ open: false });
-    }
-
     handleDemoteAdminClick() {
-        this.handleClose();
         this.props.handleDemoteAdmin(this.props.user);
     }
 
     handleRemoveUserClick() {
-        this.handleClose();
         this.props.handleRemoveUser(this.props.user);
     }
 
@@ -62,12 +45,6 @@ export class OwnUserRow extends Component {
                 borderBottom: '1px solid rgba(0, 0, 0, 0.2)',
                 backgroundColor: this.state.hovered ? '#4598bf33' : 'rgba(0, 0, 0, 0.05)',
             },
-            checkbox: {
-                display: 'flex',
-                flex: '0 0 auto',
-                paddingLeft: '24px',
-                alignItems: 'center',
-            },
             userInfo: {
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -81,13 +58,6 @@ export class OwnUserRow extends Component {
                 paddingLeft: '15px',
                 fontWeight: 800,
             },
-            iconButton: {
-                padding: '0px',
-                height: '40px',
-                width: '48px',
-                flex: '0 0 auto',
-                alignSelf: 'center',
-            },
             adminContainer: {
                 display: 'flex',
                 margin: '0px 30px 0px 20px',
@@ -100,41 +70,25 @@ export class OwnUserRow extends Component {
                 fontSize: '11px',
                 cursor: 'pointer',
             },
-            notAdmin: {
-                backgroundColor: '#ccc',
-                color: '#fff',
-                padding: '4px 11px',
-                fontSize: '11px',
-                opacity: '0.8',
-                cursor: 'pointer',
-            },
             menuItem: {
                 fontSize: '14px',
                 overflow: 'hidden',
                 color: '#ce4427',
             },
-            menuItemInner: {
-                padding: '0px',
-                margin: '0px 22px 0px 16px',
-                height: '48px',
-                display: 'flex',
-            },
         };
 
         let adminButton = null;
         if (this.props.showAdminButton && this.props.isAdmin) {
-            adminButton = ([
+            adminButton = (
                 <MenuItem
                     key="adminMenuItem"
                     style={styles.menuItem}
-                    innerDivStyle={styles.menuItemInner}
                     onClick={this.handleDemoteAdminClick}
                     className="qa-OwnUserRow-MenuItem-makeAdmin"
                 >
-                    <span>Remove Admin Rights</span>
-                </MenuItem>,
-                <Divider key="makeAdminDivider" className="qa-OwnUserRow-Divider" />,
-            ]);
+                    Remove Admin Rights
+                </MenuItem>
+            );
         }
 
         let removeButton = null;
@@ -142,11 +96,10 @@ export class OwnUserRow extends Component {
             removeButton = (
                 <MenuItem
                     style={styles.menuItem}
-                    innerDivStyle={styles.menuItemInner}
                     onClick={this.handleRemoveUserClick}
                     className="qa-OwnUserRow-MenuItem-remove"
                 >
-                    <span>Leave Group</span>
+                    Leave Group
                 </MenuItem>
             );
         }
@@ -189,28 +142,21 @@ export class OwnUserRow extends Component {
                     </div>
                     <div style={styles.me}>(me)</div>
                     {adminLabel}
-                    <IconButton
-                        style={styles.iconButton}
-                        iconStyle={{ color: iconDisabled ? '#707274' : '#4598bf' }}
-                        onClick={this.handleOpen}
+                    <IconMenu
                         disabled={iconDisabled}
-                        className="qa-OwnUserRow-IconButton-options"
-                    >
-                        <Person />
-                        <ArrowDown />
-                    </IconButton>
-                    <GroupsDropDownMenu
-                        open={this.state.open}
-                        anchorEl={this.state.popoverAnchor}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                        targetOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        onClose={this.handleClose}
-                        width={200}
-                        className="qa-OwnUserRow-GroupsDropDownMenu"
+                        style={{ width: '48px', backgroundColor: 'transparent' }}
+                        color="primary"
+                        icon={
+                            <div style={{ display: 'flex' }}>
+                                <Person />
+                                <ArrowDown />
+                            </div>
+                        }
+                        className="qa-OwnUserRow-IconMenu"
                     >
                         {adminButton}
                         {removeButton}
-                    </GroupsDropDownMenu>
+                    </IconMenu>
                 </div>
             </div>
         );

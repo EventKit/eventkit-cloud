@@ -4,13 +4,13 @@ import { connect } from 'react-redux';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
-import AppBar from 'material-ui/AppBar';
-import RaisedButton from 'material-ui/RaisedButton';
-import EnhancedButton from 'material-ui/internal/EnhancedButton';
-import TextField from 'material-ui/TextField';
+import Button from '@material-ui/core/Button';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import TextField from '@material-ui/core/TextField';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Warning from '@material-ui/icons/Warning';
 import AddCircle from '@material-ui/icons/AddCircle';
-import CircularProgress from 'material-ui/CircularProgress';
+import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import UserRow from './UserRow';
 import OwnUserRow from './OwnUserRow';
@@ -299,9 +299,9 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleOrderingChange(e, val) {
+    handleOrderingChange(value) {
         const query = { ...this.props.location.query };
-        query.ordering = val;
+        query.ordering = value;
         browserHistory.push({ ...this.props.location, query });
     }
 
@@ -397,20 +397,13 @@ export class UserGroupsPage extends Component {
         this.handleDeleteClose();
     }
 
-    handleDrawerSelectionChange(e, v) {
-        const target = e.target.tagName.toLowerCase();
-        if (target === 'path' || target === 'svg') {
-            // if the clicked element is path or svg we need to ignore
-            // and just handle delete group.
-            // YES this is a weird way to do it, but MUI was putting up a fight
-            return;
-        }
+    handleDrawerSelectionChange(value) {
         const query = { ...this.props.location.query };
-        if (v === 'all') {
+        if (value === 'all') {
             query.groups = null;
             delete query.groups;
         } else {
-            query.groups = v;
+            query.groups = value;
         }
         browserHistory.push({ ...this.props.location, query });
     }
@@ -540,7 +533,7 @@ export class UserGroupsPage extends Component {
 
         if (isViewportXS()) {
             const ix = newSteps.findIndex(step => (
-                step.selector === '.qa-UserGroupsPage-RaisedButton-create'
+                step.selector === '.qa-UserGroupsPage-Button-create'
             ));
             if (ix > -1) {
                 newSteps[ix + 1].text = newSteps[ix].text;
@@ -597,7 +590,7 @@ export class UserGroupsPage extends Component {
                 }
             } else if (step.selector === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
                 this.handleSelectAll(true);
-            } else if (step.selector === '.qa-UserHeader-IconButton-options' && type === 'step:after') {
+            } else if (step.selector === '.qa-UserHeader-options' && type === 'step:after') {
                 // because the next step will render immidiately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
@@ -696,10 +689,9 @@ export class UserGroupsPage extends Component {
                 lineHeight: '24px',
             },
             container: {
-                color: 'white',
                 height: '36px',
                 width: 'calc(100% - 48px)',
-                backgroundColor: '#F8F8F8',
+                backgroundColor: '#eee',
                 lineHeight: '36px',
                 margin: '0px 24px 10px',
             },
@@ -709,18 +701,6 @@ export class UserGroupsPage extends Component {
                 lineHeight: 'inherit',
                 bottom: '0px',
                 paddingLeft: '10px',
-            },
-            input: {
-                color: '#707274',
-                paddingLeft: '10px',
-            },
-            underline: {
-                borderBottom: '1px solid #4498c0',
-                bottom: '0px',
-            },
-            underlineFocus: {
-                borderBottom: '2px solid #4498c0',
-                bottom: '0px',
             },
             ownUser: {
                 position: 'sticky',
@@ -770,10 +750,22 @@ export class UserGroupsPage extends Component {
                 width: '18px',
                 verticalAlign: 'middle',
             },
+            input: {
+                color: '#000',
+                height: '36px',
+                paddingLeft: '10px',
+                fontSize: '16px',
+            },
+            createButton: {
+                height: '35px',
+                lineHeight: '35px',
+                marginLeft: '10px',
+                fontSize: '12px',
+            },
         };
 
         const tourButton = (
-            <EnhancedButton
+            <ButtonBase
                 onClick={this.handleJoyride}
                 style={styles.tourButton}
             >
@@ -781,7 +773,7 @@ export class UserGroupsPage extends Component {
                     style={styles.tourIcon}
                 />
                 {smallViewport ? '' : <span style={{ marginLeft: '5px' }}>Page Tour</span>}
-            </EnhancedButton>
+            </ButtonBase>
         );
 
         const ownedGroups = [];
@@ -879,50 +871,38 @@ export class UserGroupsPage extends Component {
                     run={isRunning}
                 />
                 {
-                    <AppBar
-                        title={
-                            <div style={{ lineHeight: '35px' }}>
-                                Members and Groups
-                            </div>
-                        }
-                        style={styles.header}
-                        titleStyle={styles.headerTitle}
-                        showMenuIconButton={false}
+                    <PageHeader
+                        title="Members and Groups"
                         className="qa-UserGroupsPage-AppBar"
                     >
                         {tourButton}
                         {!xsmallViewport ?
-                            <RaisedButton
-                                label={
-                                    <div>
-                                        <AddCircle style={styles.newGroupIcon} />
-                                        New Group
-                                    </div>
-                                }
-                                primary
-                                labelStyle={styles.label}
-                                style={styles.button}
-                                buttonStyle={{ borderRadius: '0px', backgroundColor: '#4598bf' }}
-                                overlayStyle={{ borderRadius: '0px' }}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                style={styles.createButton}
                                 onClick={this.handleCreateOpen}
-                                className="qa-UserGroupsPage-RaisedButton-create"
-                            />
+                                className="qa-UserGroupsPage-Button-create"
+                            >
+                                <AddCircle style={styles.newGroupIcon} />
+                                New Group
+                            </Button>
                             :
                             null
                         }
 
                         {smallViewport ?
-                            <EnhancedButton
+                            <ButtonBase
                                 onClick={this.toggleDrawer}
                                 style={styles.drawerButton}
                                 className="qa-UserGroupsPage-drawerButton"
                             >
                                 {`${this.state.drawerOpen ? 'HIDE' : 'SHOW'} PAGE MENU`}
-                            </EnhancedButton>
+                            </ButtonBase>
                             :
                             null
                         }
-                    </AppBar>
+                    </PageHeader>
                 }
                 <div style={styles.body}>
                     <div
@@ -937,11 +917,10 @@ export class UserGroupsPage extends Component {
                         <TextField
                             style={styles.container}
                             hintText="Search Users"
-                            hintStyle={styles.hint}
-                            inputStyle={styles.input}
+                            type="text"
+                            placeholder="Search Users"
+                            InputProps={{ style: styles.input }}
                             onChange={this.handleSearchChange}
-                            underlineStyle={styles.underline}
-                            underlineFocusStyle={styles.underlineFocus}
                             onKeyDown={this.handleSearchKeyDown}
                             className="qa-UserGroupsPage-search"
                         />
@@ -1062,7 +1041,7 @@ export class UserGroupsPage extends Component {
                     <div style={styles.loadingBackground}>
                         <div style={styles.loadingContainer}>
                             <CircularProgress
-                                color="#4598bf"
+                                color="primary"
                                 style={styles.loading}
                                 className="qa-UserGroupsPage-loading"
                             />

@@ -1,16 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Drawer from 'material-ui/Drawer';
-import IconMenu from 'material-ui/IconMenu';
-import IconButton from 'material-ui/IconButton';
+import Drawer from '@material-ui/core/Drawer';
+import IconMenu from '../../components/common/IconMenu';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 
 
 describe('GroupsDrawer component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             selectedValue: '',
@@ -43,12 +39,7 @@ describe('GroupsDrawer component', () => {
         }
     );
     const getWrapper = props => (
-        mount(<GroupsDrawer {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<GroupsDrawer {...props} />)
     );
 
     it('should render something', () => {
@@ -69,8 +60,6 @@ describe('GroupsDrawer component', () => {
         props.onRenameGroupClick = sinon.spy();
         const wrapper = getWrapper(props);
         const item = wrapper.find('.qa-GroupsDrawer-groupItem');
-        expect(item.find(IconButton)).toHaveLength(1);
-        item.find(IconButton).simulate('click');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onRenameGroupClick.calledOnce).toBe(false);
         item.find(IconMenu).props().children[0].props.onClick();
@@ -82,8 +71,6 @@ describe('GroupsDrawer component', () => {
         props.onDeleteGroupClick = sinon.spy();
         const wrapper = getWrapper(props);
         const item = wrapper.find('.qa-GroupsDrawer-groupItem');
-        expect(item.find(IconButton)).toHaveLength(1);
-        item.find(IconButton).simulate('click');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onDeleteGroupClick.calledOnce).toBe(false);
         item.find(IconMenu).props().children[2].props.onClick();
@@ -95,11 +82,9 @@ describe('GroupsDrawer component', () => {
         props.onLeaveGroupClick = sinon.spy();
         const wrapper = getWrapper(props);
         const item = wrapper.find('.qa-GroupsDrawer-sharedGroupItem');
-        expect(item.find(IconButton)).toHaveLength(1);
-        item.find(IconButton).simulate('click');
         expect(item.find(IconMenu)).toHaveLength(1);
         expect(props.onLeaveGroupClick.called).toBe(false);
-        item.find(IconMenu).props().children.props.onClick();
+        item.find(IconMenu).props().children[1].props.onClick();
         expect(props.onLeaveGroupClick.calledOnce).toBe(true);
         expect(props.onLeaveGroupClick.calledWith(props.sharedGroups[0])).toBe(true);
     });
