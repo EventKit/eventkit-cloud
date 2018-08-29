@@ -1,14 +1,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 
 
 describe('TypeaheadMenuItem component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         result: {},
         index: 1,
@@ -19,7 +17,6 @@ describe('TypeaheadMenuItem component', () => {
         onActiveItemChange: () => {},
         onInitialItemChange: () => {},
         onMenuItemClick: () => {},
-        muiTheme,
     });
 
     it('should return a MenuItem with proper child components', () => {

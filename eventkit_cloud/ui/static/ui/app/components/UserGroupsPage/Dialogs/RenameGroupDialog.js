@@ -26,8 +26,6 @@ export class RenameGroupDialog extends Component {
             </Button>,
         ];
 
-        const underlineColor = this.props.valid ? '#4498c0' : '#ce4427';
-
         return (
             <BaseDialog
                 show={this.props.show}
@@ -42,21 +40,12 @@ export class RenameGroupDialog extends Component {
                     null
                 }
                 <CustomTextField
-                    hintText="Rename Group"
+                    placeholder="Rename Group"
                     maxLength={50}
                     onChange={this.props.onInputChange}
                     value={this.props.value}
-                    style={{
-                        width: '100%',
-                    }}
-                    underlineStyle={{
-                        borderBottom: `1px solid ${underlineColor}`,
-                        bottom: '0px',
-                    }}
-                    underlineFocusStyle={{
-                        borderBottom: `2px solid ${underlineColor}`,
-                        bottom: '0px',
-                    }}
+                    style={{ width: '100%' }}
+                    InputProps={{ style: { lineHeight: '24px', fontSize: '14px', paddingLeft: '5px' }, error: !this.props.valid }}
                     className="qa-RenameGroupDialog-textField"
                 />
             </BaseDialog>

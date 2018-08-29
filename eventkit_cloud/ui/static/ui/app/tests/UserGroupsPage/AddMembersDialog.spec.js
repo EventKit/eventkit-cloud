@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import Checked from '@material-ui/icons/CheckBox';
@@ -13,8 +11,6 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 import { AddMembersDialog } from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
 
 describe('AddMembersDialog component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             show: true,
@@ -35,10 +31,7 @@ describe('AddMembersDialog component', () => {
     );
 
     const getWrapper = props => (
-        mount(<AddMembersDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<AddMembersDialog {...props} />)
     );
 
     it('should render the basic components', () => {

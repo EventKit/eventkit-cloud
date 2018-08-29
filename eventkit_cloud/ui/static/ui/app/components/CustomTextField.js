@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import { TextField } from 'material-ui';
+import TextField from '@material-ui/core/TextField';
 import * as ReactDOM from 'react-dom';
 
 export class CustomTextField extends Component {
@@ -18,7 +18,7 @@ export class CustomTextField extends Component {
         this.styles = {
             charsRemaining: {
                 position: 'absolute',
-                bottom: '4px',
+                bottom: '0px',
                 right: '16px',
                 transform: 'translateY(-50%)',
                 fontWeight: 'bold',
@@ -27,9 +27,9 @@ export class CustomTextField extends Component {
         };
     }
 
-    onChange(e, val) {
+    onChange(e) {
         if (this.props.onChange) {
-            this.props.onChange(e, val);
+            this.props.onChange(e);
         }
 
         this.setState({ charsRemaining: this.props.maxLength - e.target.value.length });
@@ -76,6 +76,9 @@ export class CustomTextField extends Component {
             onChange,
             onFocus,
             onBlur,
+            inputProps,
+            InputProps,
+            maxLength,
             ...rest
         } = this.props;
 
@@ -91,7 +94,7 @@ export class CustomTextField extends Component {
                             return;
                         }
 
-                        if (this.props.maxLength && this.props.showRemaining) {
+                        if (maxLength && showRemaining) {
                             // eslint-disable-next-line react/no-find-dom-node
                             ReactDOM.findDOMNode(textField).style.paddingRight = '55px';
                         }
@@ -99,9 +102,13 @@ export class CustomTextField extends Component {
                     onChange={this.onChange}
                     onFocus={this.onFocus}
                     onBlur={this.onBlur}
+                    inputProps={{ maxLength, ...inputProps }}
+                    // eslint-disable-next-line react/jsx-no-duplicate-props
+                    InputProps={{ ...InputProps }}
+                    type="text"
                     {...rest}
                 />
-                {(this.props.maxLength && this.props.showRemaining && this.state.focused) ?
+                {(maxLength && showRemaining && this.state.focused) ?
                     <div
                         className="qa-CustomTextField-div-charsRemaining"
                         style={{ ...this.styles.charsRemaining, color: charsRemainingColor }}
@@ -123,6 +130,8 @@ CustomTextField.propTypes = {
     onChange: PropTypes.func,
     onFocus: PropTypes.func,
     onBlur: PropTypes.func,
+    inputProps: PropTypes.object,
+    InputProps: PropTypes.object,
 };
 
 CustomTextField.defaultProps = {
@@ -132,6 +141,8 @@ CustomTextField.defaultProps = {
     onChange: undefined,
     onFocus: undefined,
     onBlur: undefined,
+    inputProps: {},
+    InputProps: {},
 };
 
 export default CustomTextField;

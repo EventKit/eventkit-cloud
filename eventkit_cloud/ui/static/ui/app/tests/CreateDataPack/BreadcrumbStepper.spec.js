@@ -1,9 +1,7 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import { browserHistory } from 'react-router';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Warning from '@material-ui/icons/Warning';
 import Button from '@material-ui/core/Button';
 import NavigationArrowBack from '@material-ui/icons/ArrowBack';
@@ -75,7 +73,6 @@ const formats = [
 ];
 
 describe('BreadcrumbStepper component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         aoiInfo: { geojson: {}, originalGeojson: {} },
         providers,
@@ -111,12 +108,7 @@ describe('BreadcrumbStepper component', () => {
         getFormats: () => {},
     });
     const getWrapper = props => (
-        shallow(<BreadcrumbStepper {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        shallow(<BreadcrumbStepper {...props} />)
     );
 
     it('should render step 1 with disabled next arrow by default', () => {
@@ -219,12 +211,7 @@ describe('BreadcrumbStepper component', () => {
     it('getErrorMessage should return formated title and detail', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        const message = mount(wrapper.instance().getErrorMessage('test title', 'test detail'));
         expect(message.find('.BreadcrumbStepper-error-container')).toHaveLength(1);
         expect(message.find('.BreadcrumbStepper-error-title')).toHaveLength(1);
         expect(message.find('.BreadcrumbStepper-error-title').find(Warning)).toHaveLength(1);
@@ -289,30 +276,15 @@ describe('BreadcrumbStepper component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
 
-        let content = mount(wrapper.instance().getButtonContent(0), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        let content = mount(wrapper.instance().getButtonContent(0));
         expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getButtonContent(1), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        content = mount(wrapper.instance().getButtonContent(1));
         expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowForward)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getButtonContent(2), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        content = mount(wrapper.instance().getButtonContent(2));
         expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationCheck)).toHaveLength(1);
 
@@ -324,28 +296,13 @@ describe('BreadcrumbStepper component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
 
-        let content = mount(wrapper.instance().getPreviousButtonContent(0), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        let content = mount(wrapper.instance().getPreviousButtonContent(0));
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getPreviousButtonContent(1), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        content = mount(wrapper.instance().getPreviousButtonContent(1));
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 
-        content = mount(wrapper.instance().getPreviousButtonContent(2), {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        });
+        content = mount(wrapper.instance().getPreviousButtonContent(2));
         expect(content.find(Button)).toHaveLength(1);
         expect(content.find(NavigationArrowBack)).toHaveLength(1);
 

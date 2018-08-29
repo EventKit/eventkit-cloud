@@ -1,10 +1,8 @@
 import React from 'react';
 import sinon from 'sinon';
-import PropTypes from 'prop-types';
 import raf from 'raf';
 import { browserHistory } from 'react-router';
 import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Help from '@material-ui/icons/Help';
@@ -29,7 +27,6 @@ raf.polyfill();
 jest.mock('../../components/DataPackPage/MapView');
 
 describe('DataPackPage component', () => {
-    const muiTheme = getMuiTheme();
     const testProviders = [
         {
             id: 2,
@@ -139,12 +136,7 @@ describe('DataPackPage component', () => {
     });
 
     const getWrapper = props => (
-        mount(<DataPackPage {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<DataPackPage {...props} />)
     );
 
     beforeAll(() => {

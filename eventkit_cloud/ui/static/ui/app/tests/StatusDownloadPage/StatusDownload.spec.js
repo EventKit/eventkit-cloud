@@ -1,8 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
@@ -13,8 +11,6 @@ import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo
 import CustomScrollbar from '../../components/CustomScrollbar';
 
 describe('StatusDownload component', () => {
-    const muiTheme = getMuiTheme();
-
     const config = { MAX_DATAPACK_EXPIRATION_DAYS: '30' };
     const providers = [
         {
@@ -160,10 +156,7 @@ describe('StatusDownload component', () => {
 
     const getWrapper = props => (
         mount(<StatusDownload {...props} />, {
-            context: { muiTheme, config },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
+            context: { config },
         })
     );
 

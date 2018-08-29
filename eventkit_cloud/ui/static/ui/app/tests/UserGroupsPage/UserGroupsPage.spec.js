@@ -402,7 +402,7 @@ describe('UserGroupsPage component', () => {
         const wrapper = getWrapper(props);
         browserHistory.push.reset();
         const value = '';
-        wrapper.instance().handleSearchChange({}, value);
+        wrapper.instance().handleSearchChange({ target: { value } });
         expect(browserHistory.push.calledOnce).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
@@ -415,7 +415,7 @@ describe('UserGroupsPage component', () => {
         const wrapper = getWrapper(props);
         browserHistory.push.reset();
         const val = '-username';
-        wrapper.instance().handleOrderingChange({}, val);
+        wrapper.instance().handleOrderingChange(val);
         expect(browserHistory.push.calledOnce).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
@@ -448,7 +448,7 @@ describe('UserGroupsPage component', () => {
         const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
         const wrapper = getWrapper(props);
         const val = 'create name';
-        wrapper.instance().handleCreateInput({}, val);
+        wrapper.instance().handleCreateInput({ target: { value: val } });
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ createInput: val })).toBe(true);
         stateStub.restore();
@@ -492,7 +492,7 @@ describe('UserGroupsPage component', () => {
         const props = getProps();
         const stateStub = sinon.stub(UserGroupsPage.prototype, 'setState');
         const wrapper = getWrapper(props);
-        wrapper.instance().handleRenameInput({}, 'test');
+        wrapper.instance().handleRenameInput({ target: { value: 'test' } });
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ renameInput: 'test' })).toBe(true);
         stateStub.restore();

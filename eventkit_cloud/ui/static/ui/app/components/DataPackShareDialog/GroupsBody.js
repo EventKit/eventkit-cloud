@@ -201,7 +201,6 @@ export class GroupsBody extends Component {
                 padding: '0px 10px',
             },
             textField: {
-                fontSize: '14px',
                 backgroundColor: 'whitesmoke',
                 height: '36px',
                 lineHeight: '36px',
@@ -303,13 +302,11 @@ export class GroupsBody extends Component {
                         className="qa-GroupsBody-search"
                         fullWidth
                         maxLength={50}
-                        hintText="Search"
+                        placeholder="Search"
                         onChange={this.handleSearchInput}
                         value={this.state.search}
-                        inputStyle={{ paddingLeft: '16px' }}
+                        InputProps={{ style: { paddingLeft: '16px', lineHeight: '36px', fontSize: '14px' }, disableUnderline: true }}
                         style={styles.textField}
-                        underlineShow={false}
-                        hintStyle={{ paddingLeft: '16px', bottom: '0px', color: '#707274' }}
                         charsRemainingStyle={styles.characterLimit}
                     />
                     {shareInfo}

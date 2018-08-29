@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import { mount } from 'enzyme';
 import PropTypes from 'prop-types';
 import raf from 'raf';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import Joyride from 'react-joyride';
@@ -34,8 +33,6 @@ raf.polyfill();
 
 
 describe('ExportAOI component', () => {
-    const muiTheme = getMuiTheme();
-
     const geojson = {
         type: 'FeatureCollection',
         features: [{
@@ -98,9 +95,8 @@ describe('ExportAOI component', () => {
             MAX_RASTER_AOI_SQ_KM: 10000,
         };
         return mount(<ExportAOI {...props} />, {
-            context: { muiTheme, config },
+            context: { config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 config: PropTypes.object,
             },
         });

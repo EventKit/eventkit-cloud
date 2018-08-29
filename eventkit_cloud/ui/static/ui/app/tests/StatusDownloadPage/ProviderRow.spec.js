@@ -1,10 +1,8 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount, shallow } from 'enzyme';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconButton from '@material-ui/core/IconButton';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableHead from '@material-ui/core/TableHead';
@@ -24,8 +22,6 @@ import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 import { ProviderRow } from '../../components/StatusDownloadPage/ProviderRow';
 
 describe('ProviderRow component', () => {
-    const muiTheme = getMuiTheme();
-
     const selectedProviders = {
         123: true,
         456: false,
@@ -98,12 +94,7 @@ describe('ProviderRow component', () => {
     );
 
     const getWrapper = props => (
-        mount(<ProviderRow {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<ProviderRow {...props} />)
     );
 
     it('should render elements', () => {
@@ -146,7 +137,7 @@ describe('ProviderRow component', () => {
     it('Cancel MenuItem should call onProviderCancel with uid', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
-        const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
+        const wrapper = shallow(<ProviderRow {...props} />);
         wrapper.find(IconMenu).childAt(0).simulate('click');
         expect(props.onProviderCancel.calledOnce).toBe(true);
         expect(props.onProviderCancel.calledWith(props.provider.uid)).toBe(true);
@@ -155,7 +146,7 @@ describe('ProviderRow component', () => {
     it('View source MenuItem should call handleProviderOpen', () => {
         const props = getProps();
         const handleStub = sinon.stub(ProviderRow.prototype, 'handleProviderOpen');
-        const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
+        const wrapper = shallow(<ProviderRow {...props} />);
         wrapper.find(IconMenu).childAt(1).simulate('click');
         expect(handleStub.calledOnce).toBe(true);
         handleStub.restore();
@@ -342,10 +333,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         const task = { result: {} };
         const icon = wrapper.instance().getTaskDownloadIcon(task);
-        const elem = mount(icon, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const elem = mount(icon);
         expect(elem.is(CloudDownload)).toBe(true);
         expect(elem.props().onClick).toBe(undefined);
     });
@@ -355,10 +343,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         const task = { result: { url: 'test-url.io' } };
         const icon = wrapper.instance().getTaskDownloadIcon(task);
-        const elem = mount(icon, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        });
+        const elem = mount(icon);
         expect(elem.is(CloudDownload)).toBe(true);
         expect(elem.props().onClick).not.toBe(undefined);
     });

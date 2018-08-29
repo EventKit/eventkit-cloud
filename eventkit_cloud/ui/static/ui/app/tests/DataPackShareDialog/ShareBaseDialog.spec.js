@@ -1,15 +1,12 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import Dialog from '@material-ui/core/Dialog';
 import * as viewport from '../../utils/viewport';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 
 
 describe('MembersHeaderRow component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             title: 'SHARE',
@@ -22,12 +19,7 @@ describe('MembersHeaderRow component', () => {
     );
 
     const getWrapper = props => (
-        mount(<ShareBaseDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: PropTypes.object,
-            },
-        })
+        mount(<ShareBaseDialog {...props} />)
     );
 
     it('should render the basic components', () => {

@@ -3,10 +3,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import AppBar from '@material-ui/core/AppBar';
-import Drawer from 'material-ui/Drawer';
-import MenuItem from 'material-ui/MenuItem';
+import Drawer from '@material-ui/core/Drawer';
+import MenuItem from '@material-ui/core/MenuItem';
 import { Link, IndexLink } from 'react-router';
-import IconButton from 'material-ui/IconButton';
+import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
 import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
 import ContentAddBox from '@material-ui/icons/AddBox';
@@ -16,7 +16,7 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import { MuiThemeProvider as MuiThemeProviderV0 } from 'material-ui';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { MuiThemeProvider as MuiThemeProviderV1, createMuiTheme } from '@material-ui/core/styles';
 import Banner from './Banner';
@@ -560,20 +560,11 @@ export class Application extends Component {
                 width: '70px',
                 height: '70px',
             },
-            menuButtonIcon: {
-                width: '36px',
-                height: '36px',
-                color: 'white',
-            },
             notificationsButton: {
                 width: '70px',
                 height: '70px',
                 transitionProperty: 'none',
-            },
-            notificationsButtonIcon: {
-                width: '38px',
-                height: '38px',
-                color: 'white',
+                borderRadius: 'unset',
             },
             notificationsIndicator: {
                 position: 'absolute',
@@ -600,23 +591,24 @@ export class Application extends Component {
                 align: 'left',
             },
             menuItem: {
-                marginLeft: '0px',
-                padding: '0px',
+                fontSize: '16px',
+                height: '58px',
+                padding: '0px 0px',
             },
             link: {
-                position: 'relative',
-                display: 'block',
-                padding: '5px',
-                textAlign: 'left',
+                padding: '0px 0px 0px 5px',
+                width: '100%',
+                height: '58px',
+                lineHeight: '58px',
                 textDecoration: 'none',
                 color: '#4498c0',
                 fill: '#4498c0',
             },
             activeLink: {
-                position: 'relative',
-                display: 'block',
-                padding: '5px',
-                textAlign: 'left',
+                padding: '0px 0px 0px 5px',
+                width: '100%',
+                height: '58px',
+                lineHeight: '58px',
                 textDecoration: 'none',
                 color: '#4498c0',
                 backgroundColor: '#161e2e',
@@ -648,7 +640,7 @@ export class Application extends Component {
 
         return (
             <MuiThemeProviderV1 theme={muiThemeV1}>
-                <MuiThemeProviderV0 muiTheme={muiThemeV0}>
+                <MuiThemeProvider muiTheme={muiThemeV0}>
                     <div style={{ backgroundColor: '#000' }}>
                         <AppBar
                             className="qa-Application-AppBar"
@@ -662,11 +654,10 @@ export class Application extends Component {
                                 <IconButton
                                     className="qa-Application-AppBar-MenuButton"
                                     style={styles.menuButton}
-                                    iconStyle={styles.menuButtonIcon}
-                                    touchRippleColor="white"
+                                    color="secondary"
                                     onClick={this.handleToggle}
                                 >
-                                    <Menu />
+                                    <Menu style={{ width: '36px', height: '36px' }} />
                                 </IconButton>
                                 <div style={{ display: 'inline-block', position: 'relative' }}>
                                     <IconButton
@@ -676,13 +667,12 @@ export class Application extends Component {
                                             backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
                                                 '#4598BF' : '',
                                         }}
-                                        iconStyle={styles.notificationsButtonIcon}
-                                        touchRippleColor="white"
+                                        color="secondary"
                                         onClick={this.handleNotificationsButtonClick}
                                         onMouseEnter={() => this.handleMouseOver('/notifications')}
                                         onMouseLeave={this.handleMouseOut}
                                     >
-                                        <Notifications />
+                                        <Notifications style={{ width: '38px', height: '38px' }} />
                                     </IconButton>
                                     <div
                                         className="qa-Application-AppBar-NotificationsIndicator"
@@ -709,15 +699,15 @@ export class Application extends Component {
                         </AppBar>
                         <Drawer
                             className="qa-Application-Drawer"
-                            containerStyle={styles.drawer}
-                            overlayStyle={styles.drawer}
-                            docked
+                            PaperProps={{ style: styles.drawer }}
+                            SlideProps={{ unmountOnExit: true }}
+                            variant="persistent"
                             open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                         >
                             <MenuItem
                                 className="qa-Application-MenuItem-dashboard"
                                 onClick={this.onMenuItemClick}
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <IndexLink
                                     className="qa-Application-Link-dashboard"
@@ -734,7 +724,7 @@ export class Application extends Component {
                             <MenuItem
                                 className="qa-Application-MenuItem-exports"
                                 onClick={this.onMenuItemClick}
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <Link
                                     className="qa-Application-Link-exports"
@@ -752,7 +742,7 @@ export class Application extends Component {
                             <MenuItem
                                 className="qa-Application-MenuItem-create"
                                 onClick={this.onMenuItemClick}
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <Link
                                     className="qa-Application-Link-create"
@@ -770,7 +760,7 @@ export class Application extends Component {
                             <MenuItem
                                 className="qa-Application-MenuItem-groups"
                                 onClick={this.onMenuItemClick}
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <Link
                                     className="qa-Application-Link-groups"
@@ -788,7 +778,7 @@ export class Application extends Component {
                             <MenuItem
                                 className="qa-Application-MenuItem-about"
                                 onClick={this.onMenuItemClick}
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <Link
                                     className="qa-Application-Link-about"
@@ -806,7 +796,7 @@ export class Application extends Component {
                             <MenuItem
                                 className="qa-Application-MenuItem-account"
                                 onClick={this.onMenuItemClick}
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <Link
                                     className="qa-Application-Link-account"
@@ -823,7 +813,7 @@ export class Application extends Component {
                             </MenuItem>
                             <MenuItem
                                 className="qa-Application-MenuItem-logout"
-                                innerDivStyle={styles.menuItem}
+                                style={styles.menuItem}
                             >
                                 <Link // eslint-disable-line jsx-a11y/anchor-is-valid
                                     className="qa-Application-Link-logout"
@@ -867,7 +857,7 @@ export class Application extends Component {
                             <strong>Are you sure?</strong>
                         </ConfirmDialog>
                     </div>
-                </MuiThemeProviderV0>
+                </MuiThemeProvider>
             </MuiThemeProviderV1>
         );
     }

@@ -3,7 +3,6 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import Paper from '@material-ui/core/Paper';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { LoginPage } from '../../components/auth/LoginPage';
 import LoginForm from '../../containers/loginContainer';
@@ -12,15 +11,13 @@ import * as utils from '../../utils/generic';
 
 
 describe('LoginPage component', () => {
-    const muiTheme = getMuiTheme();
     const store = fakeStore({});
     const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer' };
 
     function getWrapper(config) {
         return mount(<LoginPage />, {
-            context: { muiTheme, store, config },
+            context: { store, config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 store: PropTypes.object,
                 config: PropTypes.object,
             },

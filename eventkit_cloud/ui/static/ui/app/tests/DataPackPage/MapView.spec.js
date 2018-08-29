@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import PropTypes from 'prop-types';
 import raf from 'raf';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import GridList from '@material-ui/core/GridList';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
@@ -195,7 +194,6 @@ function getRuns() {
 }
 
 describe('MapView component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => ({
         runs: getRuns(),
         user: { data: { user: { username: 'admin' } } },
@@ -220,9 +218,8 @@ describe('MapView component', () => {
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
         return mount(<MapView {...props} />, {
-            context: { muiTheme, config },
+            context: { config },
             childContextTypes: {
-                muiTheme: PropTypes.object,
                 config: PropTypes.object,
             },
         });

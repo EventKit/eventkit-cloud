@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { mount } from 'enzyme';
 import sinon from 'sinon';
@@ -7,13 +6,10 @@ import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import UserLicense from '../../components/AccountPage/UserLicense';
 
 describe('User License component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => ({
         license: { slug: 'test-license', name: 'license name', text: 'license text' },
         checked: false,
@@ -21,10 +17,7 @@ describe('User License component', () => {
         disabled: false,
     });
 
-    const getMountedWrapper = props => mount(<UserLicense {...props} />, {
-        context: { muiTheme },
-        childContextTypes: { muiTheme: PropTypes.object },
-    });
+    const getMountedWrapper = props => mount(<UserLicense {...props} />);
 
     it('should render a card with the license information', () => {
         const props = getProps();

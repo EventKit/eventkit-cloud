@@ -1,9 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-// import Drawer from 'material-ui/Drawer';
 import Drawer from '@material-ui/core/Drawer';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
@@ -14,7 +11,6 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 import ProvidersFilter from '../../components/DataPackPage/ProvidersFilter';
 
 describe('FilterDrawer component', () => {
-    const muiTheme = getMuiTheme();
     const providers = [
         {
             id: 2,
@@ -53,10 +49,7 @@ describe('FilterDrawer component', () => {
     );
 
     const getWrapper = props => (
-        mount(<FilterDrawer {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<FilterDrawer {...props} />)
     );
 
     it('should render all the basic components', () => {

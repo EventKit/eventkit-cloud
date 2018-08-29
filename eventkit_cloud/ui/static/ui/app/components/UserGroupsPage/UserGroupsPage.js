@@ -288,8 +288,8 @@ export class UserGroupsPage extends Component {
         }
     }
 
-    handleSearchChange(event, value) {
-        const text = value || '';
+    handleSearchChange(event) {
+        const text = event.target.value || '';
         if (!text && this.props.location.query.search) {
             // we need to undo any search
             const query = { ...this.props.location.query };
@@ -313,8 +313,8 @@ export class UserGroupsPage extends Component {
         this.setState({ showCreate: false, createInput: '' });
     }
 
-    handleCreateInput(e, val) {
-        this.setState({ createInput: val });
+    handleCreateInput(e) {
+        this.setState({ createInput: e.target.value });
     }
 
     handleCreateSave() {
@@ -331,8 +331,8 @@ export class UserGroupsPage extends Component {
         this.setState({ showRename: false, renameInput: '', targetGroup: null });
     }
 
-    handleRenameInput(e, val) {
-        this.setState({ renameInput: val });
+    handleRenameInput(e) {
+        this.setState({ renameInput: e.target.value });
     }
 
     handleRenameSave() {

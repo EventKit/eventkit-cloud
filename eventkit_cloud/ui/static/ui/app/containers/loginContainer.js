@@ -1,10 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
-import baseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import axios from 'axios';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from '@material-ui/core/Button';
 import { login } from '../actions/userActions';
 
 export class Form extends React.Component {
@@ -19,10 +17,6 @@ export class Form extends React.Component {
             loginForm: false,
             oauthName: '',
         };
-    }
-
-    getChildContext() {
-        return { muiTheme: getMuiTheme(baseTheme) };
     }
 
     componentDidMount() {
@@ -116,15 +110,16 @@ export class Form extends React.Component {
                         type="password"
                         maxLength="256"
                     />
-                    <RaisedButton
+                    <Button
                         style={{ margin: '30px auto', width: '150px' }}
-                        backgroundColor="#4598bf"
-                        label="Login"
-                        labelColor="#fff"
                         type="submit"
                         name="submit"
+                        color="primary"
+                        variant="contained"
                         disabled={this.state.buttonDisabled}
-                    />
+                    >
+                        Login
+                    </Button>
                 </form>
             );
         }
@@ -135,14 +130,14 @@ export class Form extends React.Component {
                         <div style={{ margin: '40px auto', fontSize: '24px', color: '#fff' }}>
                             <strong>Welcome to EventKit</strong>
                         </div>
-                        <RaisedButton
+                        <Button
                             style={{ margin: '40px auto', minWidth: '150px' }}
-                            labelStyle={{ textTransform: 'none' }}
-                            backgroundColor="#4598bf"
-                            label={`Login with ${this.state.oauthName}`}
-                            labelColor="#fff"
+                            variant="contained"
+                            color="primary"
                             onClick={this.handleOAuth}
-                        />
+                        >
+                            {`Login with ${this.state.oauthName}`}
+                        </Button>
                     </div>
                 );
             } else {
