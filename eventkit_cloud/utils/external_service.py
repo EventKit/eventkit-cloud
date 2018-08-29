@@ -14,8 +14,8 @@ from mapproxy.seed.util import ProgressLog
 from pysqlite2 import dbapi2 as sqlite3
 
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.geopackage import (get_tile_table_names, get_zoom_levels_table,
-                                             get_table_tile_matrix_information, set_gpkg_contents_bounds)
+from eventkit_cloud.utils.geopackage import get_tile_table_names, set_gpkg_contents_bounds, \
+    get_table_tile_matrix_information, get_zoom_levels_table, remove_empty_zoom_levels
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,6 @@ class ExternalRasterServiceToGeopackage(object):
         """
 
         from eventkit_cloud.tasks.task_process import TaskProcess
-        from eventkit_cloud.utils.geopackage import remove_empty_zoom_levels
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
 

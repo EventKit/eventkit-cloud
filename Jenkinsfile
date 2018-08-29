@@ -1,5 +1,3 @@
-#!/usr/bin/groovy
-
 node {
 
     stage("Add Repo"){
@@ -137,3 +135,4 @@ def handleErrors(message){
     sh "docker-compose down"
     error(message)
 }
+

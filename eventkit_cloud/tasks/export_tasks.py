@@ -5,6 +5,7 @@ import cPickle
 import json
 import logging
 import os
+import re
 import shutil
 import socket
 import traceback
@@ -34,11 +35,12 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
     get_human_readable_metadata_document
+from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
-    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
+    overpass, pbf, s3, external_service, wcs, geopackage, gdalutils
 )
-from eventkit_cloud.utils.geopackage import add_file_metadata
-from eventkit_cloud.utils.hotosm_geopackage import Geopackage
+from eventkit_cloud.utils.ogr import OGR
+
 
 BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
@@ -410,7 +412,7 @@ def osm_data_collection_pipeline(
     feature_selection = FeatureSelection.example(config)
     update_progress(export_task_record_uid, progress=25)
     geom = Polygon.from_bbox(bbox)
-    g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
+    g = geopackage.Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
                    export_task_record_uid=export_task_record_uid)
     g.run()
     update_progress(export_task_record_uid, progress=75)
@@ -503,7 +505,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     metadata = render_to_string('data/geopackage_metadata.xml', context=metadata_values)
 
-    add_file_metadata(input_gpkg, metadata)
+    geopackage.add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
     result['geopackage'] = input_gpkg
@@ -521,8 +523,9 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
 
     try:
-        s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile, task_uid=task_uid)
-        out = s2s.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
+                          params="-lco 'ENCODING=UTF-8' -overwrite")
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -542,8 +545,8 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
     try:
-        s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
-        out = s2k.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -563,8 +566,8 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
     try:
-        s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, task_uid=task_uid)
-        out = s2g.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='SQLite', in_file=gpkg, out_file=sqlitefile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -678,15 +681,42 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     result = result or {}
 
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+
+    # Strip out query string parameters that might conflict
+    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "",
+                              service_url)
+    query_str = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer)
+    if "?" in service_url:
+        if "&" != service_url[-1]:
+            service_url += "&"
+        service_url += query_str
+    else:
+        service_url += "?" + query_str
+
+    url = service_url
+    cred = get_cred(slug=name, url=url)
+    if cred:
+        user, pw = cred
+        if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
+            url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
+
+    if bbox:
+        params = "-skipfailures -spat {w} {s} {e} {n}".format(
+            w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
+    else:
+        params = "-skipfailures"
+
     try:
-        w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                            config=config, service_type=service_type, task_uid=task_uid)
-        out = w2g.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='GPKG', in_file="WFS:\"{}\"".format(url), out_file=gpkg, params=params)
         result['result'] = out
         result['geopackage'] = out
+        # Check for geopackage contents; gdal wfs driver fails silently
+        if not geopackage.check_content_exists(out):
+            raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
         return result
     except Exception as e:
-        logger.error('Raised exception in wfs export, %s', str(e))
+        logger.error('Raised exception in wfs export: {}'.format(str(e)))
         raise Exception(e)
 
 
@@ -717,9 +747,8 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
 
 
 @app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
-def arcgis_feature_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
-                                       stage_dir=None, job_name=None, bbox=None, service_url=None, name=None,
-                                       service_type=None, user_details=None,
+def arcgis_feature_service_export_task(self, result=None, task_uid=None,
+                                       stage_dir=None, job_name=None, bbox=None, service_url=None,
                                        *args, **kwargs):
     """
     Class defining sqlite export for ArcFeatureService service.
@@ -727,12 +756,26 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
     result = result or {}
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
-        w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url,
-                                                                name=name, layer=layer,
-                                                                config=config, service_type=service_type,
-                                                                task_uid=task_uid,
-                                                                *args, **kwargs)
-        out = w2g.convert()
+        if not os.path.exists(os.path.dirname(gpkg)):
+            os.makedirs(os.path.dirname(gpkg), 6600)
+
+        try:
+            # remove any url query so we can add our own
+            service_url = service_url.split('/query?')[0]
+        except ValueError:
+            # if no url query we can just check for trailing slash and move on
+            service_url = service_url.rstrip('/\\')
+        finally:
+            service_url = '{}{}'.format(service_url, '/query?where=objectid%3Dobjectid&outfields=*&f=json')
+
+        if bbox:
+            params = "-skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat {w} {s} {e} {n}".format(
+                w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
+        else:
+            params = "-skipfailures -t_srs EPSG:3857"
+
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='GPKG', in_file=service_url, out_file=gpkg, params=params)
         result['result'] = out
         result['geopackage'] = out
         return result
@@ -908,7 +951,7 @@ def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *ar
                     logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
-                if not full_file_path.endswith(".zip"):
+                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
                     include_files += [full_file_path]
 
         # add the license for this provider if there are other files already

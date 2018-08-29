@@ -6,7 +6,7 @@ from django.test import TestCase
 import os
 
 from mock import Mock, patch, mock_open
-from eventkit_cloud.ui.helpers import cd, file_to_geojson, \
+from eventkit_cloud.ui.helpers import file_to_geojson, \
     read_json_file, unzip_file, write_uploaded_file, is_mgrs, is_lat_lon
 
 
@@ -15,12 +15,6 @@ logger = logging.getLogger(__name__)
 
 class TestHelpers(TestCase):
 
-    def test_cd(self):
-        current_path = os.getcwd()
-        parent_path = os.path.dirname(current_path)
-        with cd(parent_path):
-            self.assertEquals(parent_path, os.getcwd())
-        self.assertEquals(current_path, os.getcwd())
 
     @patch('eventkit_cloud.ui.helpers.os.path.splitext')
     @patch('eventkit_cloud.ui.helpers.shutil.rmtree')

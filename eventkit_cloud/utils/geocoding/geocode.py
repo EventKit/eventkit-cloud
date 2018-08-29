@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 import requests
 from django.conf import settings
 
-from geocode_auth import get_auth_headers, authenticate
+from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, authenticate
 
 logger = logging.getLogger(__name__)
 

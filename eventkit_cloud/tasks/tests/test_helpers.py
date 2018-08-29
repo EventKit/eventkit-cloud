@@ -9,7 +9,7 @@ from mock import patch, call
 import os
 import signal
 from eventkit_cloud.tasks.helpers import get_style_files, get_file_paths, get_last_update, get_metadata_url, \
-    get_osm_last_update
+    get_osm_last_update, cd
 
 from eventkit_cloud.tasks.helpers import progressive_kill
 
@@ -20,6 +20,14 @@ class TestHelpers(TestCase):
     """
     Test Task Helpers
     """
+
+    def test_cd(self):
+        current_path = os.getcwd()
+        parent_path = os.path.dirname(current_path)
+        with cd(parent_path):
+            self.assertEquals(parent_path, os.getcwd())
+        self.assertEquals(current_path, os.getcwd())
+
     @patch('eventkit_cloud.tasks.helpers.sleep')
     @patch('eventkit_cloud.tasks.helpers.os')
     def test_progessive_kill(self, mock_os, mock_sleep):
@@ -47,7 +55,6 @@ class TestHelpers(TestCase):
 
     def test_get_file_paths(self):
         self.assertTrue(os.path.abspath(__file__) in get_file_paths(os.path.dirname(__file__)))
-
 
     @patch('eventkit_cloud.tasks.helpers.get_osm_last_update')
     def test_get_last_update(self, mock_get_osm_last_update):

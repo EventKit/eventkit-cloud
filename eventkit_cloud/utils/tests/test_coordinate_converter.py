@@ -5,7 +5,7 @@ import requests_mock
 from django.conf import settings
 from django.test import TestCase
 
-from eventkit_cloud.utils.convert import Convert
+from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
 
 logger = logging.getLogger(__name__)
 mockURL = "http://192.168.20.1"
@@ -22,7 +22,7 @@ class TestConvert(TestCase):
     def convert_test_success(self, api_response):
         
         self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
-        convert = Convert()
+        convert = CoordinateConverter()
         result = convert.get("18S TJ 97100 03003")
         self.assertIsNotNone(result.get("geometry"))
         self.assertEquals(result.get("type"), "Feature")
@@ -54,7 +54,7 @@ class TestConvert(TestCase):
 
     def convert_test_fail(self, api_response):
         self.mock_requests.get(mockURL, text=json.dumps(api_response), status_code=200)
-        convert = Convert()
+        convert = CoordinateConverter()
         result = convert.get("12UUA844")
         self.assertIsNone(result.get("geometry"))
         properties = result.get("properties")

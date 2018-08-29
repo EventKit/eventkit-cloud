@@ -13,7 +13,7 @@ build:
 
 requirements:
   build:
-#    - curl
+    - curl
 #    - expat
     - freexl ==1.0.2
     - geos ==3.6.1-0
@@ -33,7 +33,7 @@ requirements:
 #    - zlib  # [not win]
 #    - xz
   run:
-#    - curl
+    - curl
 #    - expat
     - freexl ==1.0.2
     - geos ==3.6.1-0

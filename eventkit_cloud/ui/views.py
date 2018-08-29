@@ -18,9 +18,9 @@ from rest_framework.renderers import JSONRenderer
 from eventkit_cloud.api.serializers import UserDataSerializer
 from eventkit_cloud.ui.data_estimator import get_size_estimate
 from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
-from eventkit_cloud.utils.convert import Convert
-from eventkit_cloud.utils.geocode import Geocode
-from eventkit_cloud.utils.reverse import ReverseGeocode
+from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
+from eventkit_cloud.utils.geocoding.geocode import Geocode
+from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode
 
 logger = getLogger(__file__)
 
@@ -137,7 +137,7 @@ def search(request):
             return HttpResponse('No Reverse Geocode API specified', status=501)
 
         # make call to convert which should return a geojson feature of the MGRS location
-        convert = Convert()
+        convert = CoordinateConverter()
         try:
             mgrs_data = convert.get(q)
         except Exception:
@@ -261,7 +261,7 @@ def geocode(request):
 
 @require_http_methods(['GET'])
 def convert(request):
-    convert = Convert()
+    convert = CoordinateConverter()
     if getattr(settings, 'CONVERT_API_URL') is not None:
         if request.GET.get('convert'):
             result = convert.get(request.GET.get('convert'))

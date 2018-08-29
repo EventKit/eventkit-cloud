@@ -5,7 +5,7 @@ import requests_mock
 from django.conf import settings
 from django.test import TestCase, override_settings
 
-from eventkit_cloud.utils.reverse import ReverseGeocode, ReverseGeocodeAdapter, expand_bbox, is_valid_bbox
+from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode, ReverseGeocodeAdapter, expand_bbox, is_valid_bbox
 
 logger = logging.getLogger(__name__)
 mockURL = "http://192.168.20.1"

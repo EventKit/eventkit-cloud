@@ -7,7 +7,6 @@ import re
 import shutil
 import subprocess
 import zipfile
-from contextlib import contextmanager
 from datetime import datetime
 from string import Template
 from uuid import uuid4
@@ -16,24 +15,10 @@ import pytz
 from celery.utils.log import get_task_logger
 from django.conf import settings
 
-from django.template.loader import render_to_string
-from django.utils import timezone
-from numpy import linspace
 
-from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_meta, get_band_statistics
+from eventkit_cloud.utils.gdalutils import get_meta
 
 logger = get_task_logger(__name__)
-
-
-@contextmanager
-def cd(newdir):
-    prevdir = os.getcwd()
-    os.chdir(newdir)
-    try:
-        yield
-    finally:
-        os.chdir(prevdir)
 
 
 def file_to_geojson(in_memory_file):
