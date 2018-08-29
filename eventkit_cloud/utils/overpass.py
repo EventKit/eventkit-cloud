@@ -8,7 +8,7 @@ from string import Template
 from django.conf import settings
 from requests import exceptions
 
-import auth_requests
+from . import auth_requests
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action="store_true", help="Turn on debug output")
     args = parser.parse_args()
     config = {}
-    for k, v in vars(args).items():
+    for k, v in list(vars(args).items()):
         if (v == None):
             continue
         else:

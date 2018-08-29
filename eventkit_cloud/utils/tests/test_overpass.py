@@ -32,7 +32,7 @@ class TestOverpass(TestCase):
 
         preset = DatamodelPreset.objects.get(name='hdm')
         tags = preset.json_tags
-        self.assertEquals(259, len(tags))
+        self.assertEqual(259, len(tags))
 
         self.job = Job.objects.create(name='TestJob', description='Test description',
                                       event='Nepal activation', user=self.user, the_geom=the_geom,
@@ -61,7 +61,7 @@ class TestOverpass(TestCase):
             bbox=self.bbox, job_name='testjob',
         )
         q = overpass.get_query()
-        self.assertEquals(q, self.query)
+        self.assertEqual(q, self.query)
 
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')

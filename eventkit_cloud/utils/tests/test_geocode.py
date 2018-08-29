@@ -22,7 +22,7 @@ class TestGeoCode(TestCase):
         geocode = Geocode()
         result = geocode.search("test")
         self.assertIsNotNone(result.get("features"))
-        self.assertEquals(result.get("type"), "FeatureCollection")
+        self.assertEqual(result.get("type"), "FeatureCollection")
         self.assertIsInstance(result.get("bbox"), list)
 
         for feature in result.get("features"):
@@ -93,7 +93,7 @@ class TestGeoCode(TestCase):
         }
         geocode = Geocode()
         result = geocode.add_bbox(in_result)
-        self.assertEquals(result, in_result)
+        self.assertEqual(result, in_result)
 
 
 
@@ -180,9 +180,9 @@ class TestGeoCode(TestCase):
         expected_bbox = api_response.get('bbox')
         geocode = Geocode()
         result = geocode.add_bbox(in_result)
-        self.assertEquals(result.get('type'), 'Feature')
-        self.assertEquals(result.get('bbox'), expected_bbox)
-        self.assertEquals(result.get('properties').get('bbox'), expected_bbox)
+        self.assertEqual(result.get('type'), 'Feature')
+        self.assertEqual(result.get('bbox'), expected_bbox)
+        self.assertEqual(result.get('properties').get('bbox'), expected_bbox)
 
     @override_settings(GEOCODING_API_URL="http://pelias.url/",
                        GEOCODING_API_TYPE="pelias",
@@ -201,7 +201,7 @@ class TestGeoCode(TestCase):
         }
         geocode = Geocode()
         result = geocode.add_bbox(in_result)
-        self.assertEquals(result, in_result)
+        self.assertEqual(result, in_result)
 
     @override_settings(GEOCODING_API_URL="",
                        GEOCODING_API_TYPE="")
@@ -271,7 +271,7 @@ class TestGeoCode(TestCase):
         self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         geocode = Geocode()
         result = geocode.search("test")
-        self.assertEquals(result.get('features')[0].get('geometry').get('coordinates'), [[[-71.1912490997, 42.227911131], [-70.9227798807, 42.227911131], [-70.9227798807, 42.3969775021], [-71.1912490997, 42.3969775021], [-71.1912490997, 42.227911131]]])
+        self.assertEqual(result.get('features')[0].get('geometry').get('coordinates'), [[[-71.1912490997, 42.227911131], [-70.9227798807, 42.227911131], [-70.9227798807, 42.3969775021], [-71.1912490997, 42.3969775021], [-71.1912490997, 42.227911131]]])
     
     @override_settings(GEOCODING_API_URL="http://pelias.url/",
                        GEOCODING_API_TYPE="pelias",
@@ -294,4 +294,4 @@ class TestGeoCode(TestCase):
         self.mock_requests.get(settings.GEOCODING_API_URL, text=json.dumps(api_response), status_code=200)
         geocode = Geocode()
         result = geocode.search("test")
-        self.assertEquals(result.get('features')[0].get('geometry').get('coordinates'), polygonCoordinates)
+        self.assertEqual(result.get('features')[0].get('geometry').get('coordinates'), polygonCoordinates)

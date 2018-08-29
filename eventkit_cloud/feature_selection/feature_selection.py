@@ -6,7 +6,7 @@ from yaml.constructor import ConstructorError
 from yaml.parser import ParserError
 from yaml.scanner import ScannerError
 
-from sql import SQLValidator
+from .sql import SQLValidator
 
 CREATE_TEMPLATE = """CREATE TABLE {0}(
 fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +71,7 @@ BANNED_THEME_NAMES = [
 
 # adapted from https://github.com/django/django/blob/92053acbb9160862c3e743a99ed8ccff8d4f8fd6/django/utils/text.py#L417
 def slugify(s):
-    slug = unicodedata.normalize('NFKD', unicode(s))
+    slug = unicodedata.normalize('NFKD', str(s))
     slug = slug.encode('ascii', 'ignore').lower()
     slug = re.sub(r'[^a-z0-9]+', '_', slug).strip('_')
     slug = re.sub(r'[_]+', '_', slug)
@@ -101,7 +101,7 @@ class FeatureSelection(object):
             if not isinstance(loaded_doc,dict):
                 self._errors.append("YAML must be dict, not list")
                 return False
-            for theme, theme_dict in loaded_doc.iteritems():
+            for theme, theme_dict in loaded_doc.items():
                 if theme in BANNED_THEME_NAMES or theme.startswith("gpkg_") or theme.startswith("rtree_"):
                     self._errors.append("Theme name reserved: {0}".format(theme))
                     return False
@@ -163,12 +163,12 @@ class FeatureSelection(object):
     @property
     def themes(self):
         if self.doc:
-            return self.doc.keys()
+            return list(self.doc.keys())
         return []
 
     @property
     def slug_themes(self):
-        return map(lambda x: slugify(x), self.themes)
+        return [slugify(x) for x in self.themes]
 
     def geom_types(self,theme):
         if 'types' in self.doc[theme]:
@@ -184,7 +184,7 @@ class FeatureSelection(object):
             if isinstance(theme['where'],list):
                 return ' OR '.join(theme['where'])
             return theme['where']
-        return ' OR '.join(map(lambda x:'"' + x + '" IS NOT NULL',theme['select']))
+        return ' OR '.join(['"' + x + '" IS NOT NULL' for x in theme['select']])
 
     def zip_readme(self,theme):
         columns = []

@@ -50,7 +50,7 @@ class TestStyles(TestCase):
         style_file = os.path.join(stage_dir,
                                   mocked_run.job.name + "-" + mocked_provider_task.slug + "-" + datestamp + ".qgs")
         mock_open.assert_called_once_with(style_file, 'w')
-        self.assertEquals(returnvalue, style_file)
+        self.assertEqual(returnvalue, style_file)
 
         # test 2 - without a provider task
 
@@ -58,4 +58,4 @@ class TestStyles(TestCase):
                                   mocked_run.job.name + "-" + datestamp + ".qgs")
 
         returnvalue = generate_qgs_style(run_uid, None)
-        self.assertEquals(returnvalue, style_file)
+        self.assertEqual(returnvalue, style_file)

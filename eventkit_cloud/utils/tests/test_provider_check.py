@@ -40,12 +40,12 @@ class TestProviderCheck(TransactionTestCase):
         # Test: cannot connect to server
         get.side_effect = requests.exceptions.ConnectionError()
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.CONNECTION), result_status)
+        self.assertEqual(get_status(CheckResults.CONNECTION), result_status)
 
         # Test: server throws SSL exception
         get.side_effect = requests.exceptions.SSLError()
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.SSL_EXCEPTION), result_status)
+        self.assertEqual(get_status(CheckResults.SSL_EXCEPTION), result_status)
 
         # Test: server returns unauthorized response code
         get.side_effect = None
@@ -55,13 +55,13 @@ class TestProviderCheck(TransactionTestCase):
         response.ok = False
         get.return_value = response
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.UNAUTHORIZED), result_status)
+        self.assertEqual(get_status(CheckResults.UNAUTHORIZED), result_status)
 
         # Test: server returns 404 response code
         response.status_code = 404
         get.return_value = response
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.NOT_FOUND), result_status)
+        self.assertEqual(get_status(CheckResults.NOT_FOUND), result_status)
 
         # Test: server does not return recognizable xml
         response.content = invalid_content
@@ -69,32 +69,32 @@ class TestProviderCheck(TransactionTestCase):
         response.ok = True
         get.return_value = response
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.UNKNOWN_FORMAT), result_status)
+        self.assertEqual(get_status(CheckResults.UNKNOWN_FORMAT), result_status)
 
         if service_type not in ['wms', 'wmts']: # TODO: fix layer checks for WMS/WMTS
             # Test: server does not offer the requested layer/coverage
             response.content = empty_content
             get.return_value = response
             result_status = json.loads(pc.check())['status']
-            self.assertEquals(get_status(CheckResults.LAYER_NOT_AVAILABLE), result_status)
+            self.assertEqual(get_status(CheckResults.LAYER_NOT_AVAILABLE), result_status)
 
         if service_type not in ['wms', 'wmts']:  # TODO: fix layer checks for WMS/WMTS
             # Test: requested layer/coverage does not intersect given AOI
             response.content = no_intersect_content
             get.return_value = response
             result_status = json.loads(pc.check())['status']
-            self.assertEquals(get_status(CheckResults.NO_INTERSECT), result_status)
+            self.assertEqual(get_status(CheckResults.NO_INTERSECT), result_status)
 
         # Test: success
         response.content = valid_content
         get.return_value = response
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.SUCCESS), result_status)
+        self.assertEqual(get_status(CheckResults.SUCCESS), result_status)
 
         # Test: no service_url was provided
         pc.service_url = ""
         result_status = json.loads(pc.check())['status']
-        self.assertEquals(get_status(CheckResults.NO_URL), result_status)
+        self.assertEqual(get_status(CheckResults.NO_URL), result_status)
 
     @patch('eventkit_cloud.utils.provider_check.requests.get')
     def test_check_wfs(self, get):

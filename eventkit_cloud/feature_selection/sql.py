@@ -65,7 +65,7 @@ class SQLValidator(object):
         # takes a dictionary, returns a list
         def column_names_in_dict(d):
             result = []
-            for column_name, value in d.iteritems():
+            for column_name, value in d.items():
                 if 'columnName' == column_name:
                     result = result + [value]
                 if isinstance(value, dict):

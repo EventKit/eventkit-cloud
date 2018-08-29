@@ -36,7 +36,7 @@ class TestOGR(TestCase):
         self.task_process.assert_called_once_with(task_uid=self.task_uid)
         self.task_process().start_process.assert_called_once_with(expected_cmd, executable='/bin/bash', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, expected_file)
+        self.assertEqual(out, expected_file)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
@@ -46,12 +46,12 @@ class TestOGR(TestCase):
         example_value = "/path/name.txt"
         expected_value = "/path/name.zip"
         returned_value = get_zip_name(example_value)
-        self.assertEquals(expected_value, returned_value)
+        self.assertEqual(expected_value, returned_value)
 
         example_value = "/path/name.kml"
         expected_value = "/path/name.kmz"
         returned_value = get_zip_name(example_value)
-        self.assertEquals(expected_value, returned_value)
+        self.assertEqual(expected_value, returned_value)
 
     @patch("audit_logging.file_logging.logging_open")
     @patch("eventkit_cloud.utils.ogr.enable_spatialite")
@@ -85,10 +85,10 @@ class TestOGR(TestCase):
         mock_connection = MagicMock()
         mock_connection.execute.return_value = True
         connection = enable_spatialite(mock_connection)
-        self.assertEquals(mock_connection, connection)
+        self.assertEqual(mock_connection, connection)
         mock_connection.execute.assert_called_with("SELECT load_extension('mod_spatialite')")
 
         mock_connection.execute.side_effect = [sqlite3.OperationalError, True]
         connection = enable_spatialite(mock_connection)
-        self.assertEquals(mock_connection, connection)
+        self.assertEqual(mock_connection, connection)
         mock_connection.execute.assert_called_with("SELECT load_extension('libspatialite')")

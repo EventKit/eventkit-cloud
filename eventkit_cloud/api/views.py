@@ -479,7 +479,7 @@ class JobViewSet(viewsets.ModelViewSet):
         response = {}
         payload = request.data
 
-        for attribute, value in payload.iteritems():
+        for attribute, value in payload.items():
             if attribute == 'visibility' and value not in VisibilityState.__members__:
                 msg = "unknown visibility value - %s" % value
                 return Response([{'detail': msg}], status.HTTP_400_BAD_REQUEST)

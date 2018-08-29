@@ -19,16 +19,16 @@ class TestGeoCodeAuth(TestCase):
         self.addCleanup(self.mock_requests.stop)
 
     def testGetHeadersWithNoURL(self):        
-        self.assertEquals(get_auth_headers(), {})
+        self.assertEqual(get_auth_headers(), {})
 
     @override_settings(GEOCODING_AUTH_URL="http://fake.url/", GEOCODING_AUTH_CERT="-----BEGIN CERTIFICATE----------END CERTIFICATE----------BEGIN RSA PRIVATE KEY----------END RSA PRIVATE KEY-----")
     def testGetHeaders(self):
         testJwt = {'token': 'hello_world'}
         self.mock_requests.get(settings.GEOCODING_AUTH_URL, text=json.dumps(testJwt), status_code=200)
-        self.assertEquals(get_auth_headers(), {'Authorization': 'Bearer ' + testJwt['token']})
+        self.assertEqual(get_auth_headers(), {'Authorization': 'Bearer ' + testJwt['token']})
 
     @override_settings(GEOCODING_AUTH_URL="http://fake.url/")
     def testGetHeaders(self):        
         cacheValue = 'this_was_in_cache'
         cache.set('pelias_token', cacheValue, None)
-        self.assertEquals(get_auth_headers(), {'Authorization': 'Bearer ' + cacheValue})
+        self.assertEqual(get_auth_headers(), {'Authorization': 'Bearer ' + cacheValue})

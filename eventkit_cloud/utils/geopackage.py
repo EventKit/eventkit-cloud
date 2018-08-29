@@ -8,7 +8,7 @@ from eventkit_cloud.tasks.task_process import TaskProcess
 from osgeo import gdal, osr
 from pysqlite2 import dbapi2 as sqlite3
 
-from artifact import Artifact
+from .artifact import Artifact
 from eventkit_cloud.feature_selection.feature_selection import slugify
 from eventkit_cloud.utils.ogr import OGR
 

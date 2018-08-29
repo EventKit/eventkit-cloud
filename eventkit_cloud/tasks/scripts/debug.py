@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import socket
 from datetime import datetime, timedelta
@@ -13,40 +13,40 @@ class TestTask(Task):
         super(TestTask, self).run(*args, **kwargs)
 
     def on_success(self, retval, task_id, args, kwargs):
-        print("SUCCESS FOR {0}".format(task_id))
+        print(("SUCCESS FOR {0}".format(task_id)))
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        print("FAILURE FOR {0}".format(task_id))
+        print(("FAILURE FOR {0}".format(task_id)))
 
 
 @task(base=TestTask)
 def example_task(result=None, job_num=None, task_num=None):
-    print("RUNNING TASK {0}.{1}".format(job_num, task_num))
+    print(("RUNNING TASK {0}.{1}".format(job_num, task_num)))
     sleep(1)
     return {'result': result}
 
 
 @task(base=TestTask)
 def failure_task(result=None, job_num=None, task_num=None):
-    print("RUNNING TASK {0}.{1}".format(job_num, task_num))
+    print(("RUNNING TASK {0}.{1}".format(job_num, task_num)))
     raise Exception("TASK {0}.{1} HAS FAILED".format(job_num, task_num))
     return {'result': result}
 
 
 @task(base=TestTask)
 def final_provider_task(result=None, job_num=None, provider_name=None):
-    print("ALL TASKS FOR JOB {0} PROVIDER {1} HAVE RAN.".format(job_num, provider_name))
+    print(("ALL TASKS FOR JOB {0} PROVIDER {1} HAVE RAN.".format(job_num, provider_name)))
 
 
 @task(base=TestTask)
 def final_task(result=None, job_num=None, task_num=None):
-    print("ALL PROVIDERS HAVE RAN AND CLEANUP HAS OCCURED.".format(task_num))
+    print(("ALL PROVIDERS HAVE RAN AND CLEANUP HAS OCCURED.".format(task_num)))
 
 
 @task(base=TestTask)
 def pick_up_job_task(job_num=None):
     worker = socket.gethostname()
-    print("AssignTask picked up by {0} running job {1}".format(worker, job_num))
+    print(("AssignTask picked up by {0} running job {1}".format(worker, job_num)))
     create_task_factory(worker, job_num)
 
 

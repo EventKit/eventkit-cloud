@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import json
 import logging
@@ -101,7 +101,7 @@ class TestJobViewSet(APITestCase):
     def test_list(self,):
         expected = '/api/jobs'
         url = reverse('api:jobs-list')
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
 
     def test_make_job_with_export_providers(self,):
         """tests job creation with export providers"""
@@ -140,7 +140,7 @@ class TestJobViewSet(APITestCase):
     def test_get_job_detail(self,):
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         data = {"uid": str(self.job.uid),
                 "name": "TestJob",
                 "url": 'http://testserver{0}'.format(url),
@@ -156,13 +156,13 @@ class TestJobViewSet(APITestCase):
                 "status": "SUCCESS"}
         response = self.client.get(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
 
         # test significant content
-        self.assertEquals(response.data['uid'], data['uid'])
-        self.assertEquals(response.data['url'], data['url'])
+        self.assertEqual(response.data['uid'], data['uid'])
+        self.assertEqual(response.data['url'], data['url'])
         self.assertEqual(response.data['exports'][0]['formats'][0]['url'], data['exports'][0]['formats'][0]['url'])
 
     def test_get_job_detail_no_permissions(self,):
@@ -175,12 +175,12 @@ class TestJobViewSet(APITestCase):
                                 HTTP_HOST='testserver')
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
 
         # test significant content
         self.assertIsNotNone(response.data["errors"][0]["detail"])
@@ -189,9 +189,9 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEquals(response['Content-Length'], '0')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response['Content-Length'], '0')
+        self.assertEqual(response['Content-Language'], 'en')
 
     def test_delete_job_no_permission(self,):
         user = User.objects.create_user( username='demo2', email='demo2@demo.com', password='demo' )
@@ -205,8 +205,8 @@ class TestJobViewSet(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         response = self.client.delete(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data[0]['detail'], 'ADMIN permission is required to delete this job.')
 
     def test_create_zipfile(self):
         formats = [export_format.slug for export_format in ExportFormat.objects.all()]
@@ -273,12 +273,12 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        expected_user_details = {'username': u'demo', 'is_superuser': False, 'is_staff': False}
+        expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
 
         # test significant response content
 
@@ -317,13 +317,13 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        expected_user_details = {'username': u'demo', 'is_superuser': False, 'is_staff': False}
+        expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
 
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
 
         # test significant response content
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
@@ -357,13 +357,13 @@ class TestJobViewSet(APITestCase):
         job_uid = response.data['uid']
         # test that the mock methods get called.
         create_run_mock.assert_called_once_with(job_uid=job_uid, user=self.user)
-        expected_user_details = {'username': u'demo', 'is_superuser': False, 'is_staff': False}
+        expected_user_details = {'username': 'demo', 'is_superuser': False, 'is_staff': False}
         pickup_mock.delay.assert_called_once_with(run_uid="some_run_uid", user_details=expected_user_details)
 
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_202_ACCEPTED)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
 
         # test significant response content
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
@@ -385,10 +385,10 @@ class TestJobViewSet(APITestCase):
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, request_data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('no geometry', response.data['errors'][0]['title'])
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('no geometry', response.data['errors'][0]['title'])
 
     def test_empty_string_param(self,):
         url = reverse('api:jobs-list')
@@ -401,9 +401,9 @@ class TestJobViewSet(APITestCase):
             'formats': formats
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data['errors'][0]['title'])
 
     def test_string_too_long_param(self,):
@@ -418,11 +418,11 @@ class TestJobViewSet(APITestCase):
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('ValidationError', response.data['errors'][0]['title'])
-        self.assertEquals('name: Ensure this field has no more than 100 characters.', response.data['errors'][0]['detail'])
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('ValidationError', response.data['errors'][0]['title'])
+        self.assertEqual('name: Ensure this field has no more than 100 characters.', response.data['errors'][0]['detail'])
 
     def test_missing_format_param(self,):
         url = reverse('api:jobs-list')
@@ -434,8 +434,8 @@ class TestJobViewSet(APITestCase):
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)'}]  # 'formats': formats}]# missing
         }
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data['errors'][0]['title'])
 
     def test_invalid_format_param(self,):
@@ -448,9 +448,9 @@ class TestJobViewSet(APITestCase):
             'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': ''}]  # invalid
         }
         response = self.client.post(url, request_data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data.get('errors')[0]['title'])
 
     def test_no_matching_format_slug(self,):
@@ -465,9 +465,9 @@ class TestJobViewSet(APITestCase):
         }
         response = self.client.post(url, request_data, format='json')
 
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
         self.assertIsNotNone(response.data["errors"][0]["detail"])
 
     def test_extents_too_large(self,):
@@ -485,32 +485,32 @@ class TestJobViewSet(APITestCase):
         with self.settings(JOB_MAX_EXTENT=100000):
             response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
 
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('invalid_extents', response.data['errors'][0]['title'])
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('invalid_extents', response.data['errors'][0]['title'])
 
 
     def test_patch(self):
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
 
         request_data = {"published": False}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['published'])
         self.assertTrue(response.data['success'])
 
         request_data = {"featured": True}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['featured'])
         self.assertTrue(response.data['success'])
 
         request_data = {"featured": True, "published" : False, "visibility" : VisibilityState.SHARED.value }
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['featured'])
         self.assertIsNotNone(response.data['published'])
         self.assertIsNotNone(response.data['visibility'])
@@ -557,8 +557,8 @@ class TestBBoxSearch(APITestCase):
                 'provider_tasks': [{'provider': 'OpenStreetMap Data (Generic)', 'formats': formats}]
             }
             response = self.client.post(url, request_data, format='json')
-            self.assertEquals(status.HTTP_202_ACCEPTED, response.status_code, response.content)
-        self.assertEquals(8, len(Job.objects.all()))
+            self.assertEqual(status.HTTP_202_ACCEPTED, response.status_code, response.content)
+        self.assertEqual(8, len(Job.objects.all()))
         LinkHeaderPagination.page_size = 2
 
     def test_bbox_search_success(self,):
@@ -566,36 +566,36 @@ class TestBBoxSearch(APITestCase):
         extent = (-79.5, -16.16, 7.40, 52.44)
         param = 'bbox={0},{1},{2},{3}'.format(extent[0], extent[1], extent[2], extent[3])
         response = self.client.get('{0}?{1}'.format(url, param))
-        self.assertEquals(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
-        self.assertEquals(2, len(response.data))  # 8 jobs in total but response is paginated
+        self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
+        self.assertEqual(2, len(response.data))  # 8 jobs in total but response is paginated
 
     def test_list_jobs_no_bbox(self,):
         url = reverse('api:jobs-list')
         response = self.client.get(url)
-        self.assertEquals(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals(response['Link'], '<http://testserver/api/jobs?page=2>; rel="next"')
-        self.assertEquals(2, len(response.data))  # 8 jobs in total but response is paginated
+        self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual(response['Link'], '<http://testserver/api/jobs?page=2>; rel="next"')
+        self.assertEqual(2, len(response.data))  # 8 jobs in total but response is paginated
 
     def test_bbox_search_missing_params(self,):
         url = reverse('api:jobs-list')
         param = 'bbox='  # missing params
         response = self.client.get('{0}?{1}'.format(url, param))
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('missing_bbox_parameter', response.data['errors']['id'])
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
 
     def test_bbox_missing_coord(self,):
         url = reverse('api:jobs-list')
         extent = (-79.5, -16.16, 7.40)  # one missing
         param = 'bbox={0},{1},{2}'.format(extent[0], extent[1], extent[2])
         response = self.client.get('{0}?{1}'.format(url, param))
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
-        self.assertEquals('missing_bbox_parameter', response.data['errors']['id'])
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
+        self.assertEqual('missing_bbox_parameter', response.data['errors']['id'])
 
 
 class TestPagination(APITestCase):
@@ -651,36 +651,36 @@ class TestExportRunViewSet(APITestCase):
         ok_expiration = today + timedelta(max_days-1)
         request_data = {"expiration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIsNotNone(response.data['expiration'])
         self.assertTrue(response.data['success'])
 
         not_ok_expiration = ok_expiration  - timedelta(1)
         request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertFalse(response.data['success'])
 
         not_ok_expiration = today + timedelta(max_days+1)
         request_data = {"expiration": not_ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertFalse(response.data['success'])
 
         request_data = {"exploration": ok_expiration.isoformat()}
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
         run = ExportRun.objects.get(uid=self.export_run.uid)
-        self.assertEquals(ok_expiration,run.expiration.replace(tzinfo=None))
+        self.assertEqual(ok_expiration,run.expiration.replace(tzinfo=None))
 
     def test_delete_run(self,):
         url = reverse('api:runs-detail', args=[self.export_run.uid])
         response = self.client.delete(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEquals(response['Content-Length'], '0')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response['Content-Length'], '0')
+        self.assertEqual(response['Content-Language'], 'en')
 
     def test_zipfile_url_s3(self):
 
@@ -697,7 +697,7 @@ class TestExportRunViewSet(APITestCase):
         with self.settings(USE_S3=False):
             response = self.client.get(url)
             result = response.data
-            self.assertEquals(
+            self.assertEqual(
                 download_url,
                 result[0]['zipfile_url']
             )
@@ -706,7 +706,7 @@ class TestExportRunViewSet(APITestCase):
             response = self.client.get(url)
             result = response.data
 
-            self.assertEquals(
+            self.assertEqual(
                 download_url,
                 result[0]['zipfile_url']
             )
@@ -715,24 +715,24 @@ class TestExportRunViewSet(APITestCase):
         expected = '/api/runs/{0}'.format(self.run_uid)
 
         url = reverse('api:runs-detail', args=[self.run_uid])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
         # make sure we get the correct uid back out
-        self.assertEquals(self.run_uid, result[0].get('uid'))
+        self.assertEqual(self.run_uid, result[0].get('uid'))
 
     @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
     def test_retrieve_run_invalid_license(self, mock_validate_licenses):
         expected = '/api/runs/{0}'.format(self.run_uid)
         mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
         url = reverse('api:runs-detail', args=[self.run_uid])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
         self.assertTrue("InvalidLicense" in result[0].get('detail'))
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
     @patch('eventkit_cloud.api.views.get_invalid_licenses')
     def test_validate_licenses(self, mock_invalid_licenses):
@@ -749,14 +749,14 @@ class TestExportRunViewSet(APITestCase):
     def test_list_runs(self,):
         expected = '/api/runs'
         url = reverse('api:runs-list')
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         query = '{0}?job_uid={1}'.format(url, self.job.uid)
         response = self.client.get(query)
         self.assertIsNotNone(response)
         result = response.data
         # make sure we get the correct uid back out
-        self.assertEquals(1, len(result))
-        self.assertEquals(self.run_uid, result[0].get('uid'))
+        self.assertEqual(1, len(result))
+        self.assertEqual(self.run_uid, result[0].get('uid'))
 
     @patch('eventkit_cloud.api.views.ExportRunViewSet.validate_licenses')
     def test_list_runs_invalid_license(self, mock_validate_licenses):
@@ -764,18 +764,18 @@ class TestExportRunViewSet(APITestCase):
         expected = '/api/runs'
         url = reverse('api:runs-list')
         mock_validate_licenses.side_effect = (InvalidLicense('no license'),)
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
         result = response.data
         self.assertTrue("InvalidLicense" in result[0].get('detail'))
-        self.assertEquals(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
 
     def test_filter_runs(self,):
         expected = '/api/runs/filter'
         url = reverse('api:runs-filter')
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         query = '{0}'.format(url)
         extents = (-4, 15, 8.0, 28)
         bbox = Polygon.from_bbox(extents)
@@ -785,8 +785,8 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         result = response.data
         # make sure we get a single run back
-        self.assertEquals(1, len(result))
-        self.assertEquals(self.run_uid, result[0].get('uid'))
+        self.assertEqual(1, len(result))
+        self.assertEqual(self.run_uid, result[0].get('uid'))
 
         extents = (-3, 16, 7.0, 27)
         bbox = Polygon.from_bbox(extents)
@@ -796,7 +796,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         result = response.data
         # make sure 1 run is returned as it should be completely contained
-        self.assertEquals(1, len(result))
+        self.assertEqual(1, len(result))
 
         extents = (4, 17, 9.0, 28)
         bbox = Polygon.from_bbox(extents)
@@ -806,7 +806,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         result = response.data
         # make sure 1 run is returned as it should intersect
-        self.assertEquals(1, len(result))
+        self.assertEqual(1, len(result))
 
         extents = (-40, -5, -30, 5)
         bbox = Polygon.from_bbox(extents)
@@ -816,7 +816,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         result = response.data
         #make sure no runs are returned since it should not intersect
-        self.assertEquals(0, len(result))
+        self.assertEqual(0, len(result))
 
         name='TestJob'
         query = '{0}?search_term={1}'.format(url, name)
@@ -833,7 +833,7 @@ class TestExportRunViewSet(APITestCase):
         self.assertIsNotNone(response)
         result = response.data
         # make sure no runs are returned as they should have been filtered out
-        self.assertEquals(0, len(result))
+        self.assertEqual(0, len(result))
 
 class TestExportTaskViewSet(APITestCase):
     """
@@ -889,37 +889,37 @@ class TestExportTaskViewSet(APITestCase):
     def test_retrieve(self,):
         expected = '/api/tasks/{0}'.format(self.task_uid)
         url = reverse('api:tasks-detail', args=[self.task_uid])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         result = json.dumps(response.data)
         data = json.loads(result)
         # make sure we get the correct uid back out
-        self.assertEquals(self.task_uid, data[0].get('uid'))
+        self.assertEqual(self.task_uid, data[0].get('uid'))
 
     def test_list(self,):
         expected = '/api/tasks'.format(self.task_uid)
         url = reverse('api:tasks-list')
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         result = json.dumps(response.data)
         data = json.loads(result)
         # should only be one task in the list
-        self.assertEquals(1, len(data))
+        self.assertEqual(1, len(data))
         # make sure we get the correct uid back out
-        self.assertEquals(self.task_uid, data[0].get('uid'))
+        self.assertEqual(self.task_uid, data[0].get('uid'))
 
     def test_patch_cancel_task(self,):
         expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
         url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.patch(url)
         # test significant content
-        self.assertEquals(response.data, {'success': True})
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'success': True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         pt = DataProviderTaskRecord.objects.get(uid=self.export_provider_task.uid)
         et = pt.tasks.last()
@@ -937,15 +937,15 @@ class TestExportTaskViewSet(APITestCase):
                                 HTTP_HOST='testserver')
         expected = '/api/provider_tasks/{0}'.format(self.export_provider_task.uid)
         url = reverse('api:provider_tasks-list') + '/%s' % (self.export_provider_task.uid,)
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.patch(url)
         # test the response headers
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEquals(response['Content-Type'], 'application/json')
-        self.assertEquals(response['Content-Language'], 'en')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Language'], 'en')
 
         # test significant content
-        self.assertEquals(response.data, {'success': False})
+        self.assertEqual(response.data, {'success': False})
 
     def test_export_provider_task_get(self):
         url = reverse('api:provider_tasks-list')
@@ -1004,7 +1004,7 @@ class TestLicenseViewSet(APITestCase):
             {'slug': 'test1', 'name': 'name1', 'text': 'text1'}
         ]
         url = reverse('api:licenses-list')
-        self.assertEquals(expected_url, url)
+        self.assertEqual(expected_url, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
@@ -1015,29 +1015,29 @@ class TestLicenseViewSet(APITestCase):
         expected_url = '/api/licenses/test1'
         expected_data = {"slug": "test1", "name": "name1", "text": "text1"}
         url = reverse('api:licenses-detail', args=['test1'])
-        self.assertEquals(expected_url, url)
+        self.assertEqual(expected_url, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         data = json.loads(response.content)
-        self.assertEquals(expected_data, data)
+        self.assertEqual(expected_data, data)
 
     def test_get_licenses_download(self):
         expected_url = '/api/licenses/test1/download'
         url = reverse('api:licenses-download', args=['test1'])
-        self.assertEquals(expected_url, url)
+        self.assertEqual(expected_url, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
-        self.assertEquals(self.licenses[0].text, response.content)
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(self.licenses[0].text, response.content)
 
         expected_bad_url = '/api/licenses/test22/download'
         bad_url = reverse('api:licenses-download', args=['test22'])
         self.assertEqual(expected_bad_url, bad_url)
         bad_response = self.client.get(bad_url);
         self.assertIsNotNone(bad_response)
-        self.assertEquals(400, bad_response.status_code)
-        self.assertEquals(str({'detail': _('Not found')}), bad_response.content)
+        self.assertEqual(400, bad_response.status_code)
+        self.assertEqual(str({'detail': _('Not found')}), bad_response.content)
 
 
 class TestUserDataViewSet(APITestCase):
@@ -1057,23 +1057,23 @@ class TestUserDataViewSet(APITestCase):
     def test_get_userdata_list(self):
         expected = '/api/users'
         url = reverse('api:users-list')
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         data = json.loads(response.content)
-        self.assertEquals(self.user.username, data[0].get('user').get('username'))
+        self.assertEqual(self.user.username, data[0].get('user').get('username'))
         self.assertIsNotNone(data[0].get('accepted_licenses').get(self.licenses[0].slug))
 
     def test_get_userdata(self):
         expected = '/api/users/{0}'.format(self.user)
         url = reverse('api:users-detail', args=[self.user])
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(200, response.status_code)
+        self.assertEqual(200, response.status_code)
         data = json.loads(response.content)
-        self.assertEquals(self.user.username, data.get('user').get('username'))
+        self.assertEqual(self.user.username, data.get('user').get('username'))
         self.assertIsNotNone(data.get('accepted_licenses').get(self.licenses[0].slug))
 
     def test_set_licenses(self):
@@ -1134,24 +1134,24 @@ class TestGroupDataViewSet(APITestCase):
     def test_insert_group(self):
         expected = '/api/groups'
         url = reverse('api:groups-list')
-        self.assertEquals(expected, url)
+        self.assertEqual(expected, url)
         payload = {'name' : "Any group"}
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_duplicate_group(self):
         url = reverse('api:groups-list')
         payload = {'name': "oMaHa 319"}
         response = self.client.post(url, data=json.dumps(payload), content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_get_list(self):
         url = reverse('api:groups-list')
         response = self.client.get(url)
         self.assertIsNotNone(response)
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         data = json.loads(response.content)
-        self.assertEquals(len(data),2)
+        self.assertEqual(len(data),2)
 
 
     def test_get_group(self):
@@ -1159,14 +1159,14 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.get(url, content_type='application/json; version=1.0')
         data= json.loads(response.content)
         self.groupid = data["id"]
-        self.assertEquals(data["name"], self.testName)
-        self.assertEquals(len(data["members"]),0)
-        self.assertEquals(len(data["administrators"]), 1)
+        self.assertEqual(data["name"], self.testName)
+        self.assertEqual(len(data["members"]),0)
+        self.assertEqual(len(data["administrators"]), 1)
 
     def test_set_membership(self):
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(response.status_code,status.HTTP_200_OK)
         groupdata = json.loads(response.content)
 
         # add a user to group members and to group administrators
@@ -1176,55 +1176,55 @@ class TestGroupDataViewSet(APITestCase):
         groupdata['members'].append( 'user_2')
         groupdata['administrators'].append( 'user_2')
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = json.loads(response.content)
-        self.assertEquals(len(groupdata["members"]),2)
-        self.assertEquals(len(groupdata["administrators"]), 2)
+        self.assertEqual(len(groupdata["members"]),2)
+        self.assertEqual(len(groupdata["administrators"]), 2)
 
         # remove user_2 from members
 
         groupdata['members'] = ['user_1']
         groupdata['administrators'] = ['user_1']
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,status.HTTP_200_OK)
+        self.assertEqual(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         groupdata = json.loads(response.content)
-        self.assertEquals(len(groupdata["members"]),1)
-        self.assertEquals(groupdata["members"][0],"user_1")
+        self.assertEqual(len(groupdata["members"]),1)
+        self.assertEqual(groupdata["members"][0],"user_1")
 
         # check for a 403 if we remove all administrators
 
         groupdata['administrators'] = []
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code,status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code,status.HTTP_403_FORBIDDEN)
 
     def test_leave_group(self):
         # ensure the group is created
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # check add user_2 as member and only one admin
         group_data = json.loads(response.content)
         group_data['members'] = ['user_1', 'user_2']
         group_data['administrators'] = ['user_2']
         response = self.client.patch(url, data=json.dumps(group_data), content_type='application/json; version=1.0')
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
         group_data = json.loads(response.content)
-        self.assertEquals(len(group_data['members']), 2)
-        self.assertEquals(len(group_data['administrators']), 1)
-        self.assertEquals(group_data['administrators'][0], 'user_2')
+        self.assertEqual(len(group_data['members']), 2)
+        self.assertEqual(len(group_data['administrators']), 1)
+        self.assertEqual(group_data['administrators'][0], 'user_2')
 
         # empty patch request should remove user_1 from members
         response = self.client.patch(url)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # verify the results
         response = self.client.get(url, content_type='application/json; verison=1.0')
         group_data = json.loads(response.content)
-        self.assertEquals(len(group_data['members']), 1)
-        self.assertEquals(group_data['members'][0], 'user_2')
+        self.assertEqual(len(group_data['members']), 1)
+        self.assertEqual(group_data['members'][0], 'user_2')
 
 
 class TestUserJobActivityViewSet(APITestCase):

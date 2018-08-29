@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import itertools
 import logging
@@ -87,7 +87,7 @@ class TaskFactory:
             run = ExportRun.objects.get(uid=run_uid)
             job = run.job
             run_dir = get_run_staging_dir(run.uid)
-            os.makedirs(run_dir, 0750)
+            os.makedirs(run_dir, 0o750)
 
             finalize_task_settings = {
                 'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,

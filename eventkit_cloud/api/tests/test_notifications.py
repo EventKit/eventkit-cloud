@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import os
 
@@ -40,11 +40,11 @@ class TestNotifications(APITestCase):
         sendnotification(self.user1, self.user1, verb, None, None, level, memo)
         url = '/api/notifications/all'
         response = self.client.get(url, content_type='application/json; version=1.0')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        self.assertEquals(len(response.data),1)
-        self.assertEquals(response.data[0]["description"],memo)
-        self.assertEquals(response.data[0]["level"],level)
-        self.assertEquals(response.data[0]["verb"],verb)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(len(response.data),1)
+        self.assertEqual(response.data[0]["description"],memo)
+        self.assertEqual(response.data[0]["level"],level)
+        self.assertEqual(response.data[0]["verb"],verb)
 
 
 

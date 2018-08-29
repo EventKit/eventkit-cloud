@@ -118,8 +118,8 @@ class TestUIViews(TestCase):
         mock_is_mgrs.return_value = True
         with self.settings(CONVERT_API_URL=None):
             response = self.client.get('/search', {'query': 'some query'})
-            self.assertEquals(response.status_code, 501)
-            self.assertEquals(response.content, 'No Convert API specified')
+            self.assertEqual(response.status_code, 501)
+            self.assertEqual(response.content, 'No Convert API specified')
 
         with self.settings(CONVERT_API_URL="url", REVERSE_GEOCODING_API_URL=None):
             response = self.client.get('/search', {'query': 'some query'})
@@ -230,21 +230,21 @@ class TestUIViews(TestCase):
         geocode.search.return_value = expected_result
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode',{'search': 'some_search'})
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.content), expected_result)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content), expected_result)
 
         expected_result = {"something-else": "value", "bbox": [1, 1, 1, 1]}
         # test result
         geocode.add_bbox.return_value = expected_result
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode', {"result": '{"something-else": "value"}'})
-        self.assertEquals(response.status_code, 200)
-        self.assertEquals(json.loads(response.content), expected_result)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content), expected_result)
 
         expected_result = None
         # test result
         geocode.search.return_value = expected_result
         mock_geocode.return_value = geocode
         response = self.client.get('/geocode', {'wrong-key': 'value'})
-        self.assertEquals(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 

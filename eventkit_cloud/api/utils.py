@@ -54,7 +54,7 @@ def eventkit_exception_handler(exc, context):
                     # provider tasks errors have some extra nesting that needs to be handled
                     detail = parse_provider_tasks(error)
                 else:
-                    for key, value in error.iteritems():
+                    for key, value in error.items():
                         detail += '{0}: {1}\n'.format(key, stringify(value))
                 detail = detail.rstrip('\n')
             else:
@@ -82,7 +82,7 @@ def parse_provider_tasks(error):
     """
     if error.get('provider_tasks'):
         if isinstance(error.get('provider_tasks')[0], dict):
-            return stringify(error.get('provider_tasks')[0].values()[0])
+            return stringify(list(error.get('provider_tasks')[0].values())[0])
         else:
             return error.get('provider_tasks')[0]
     else:
@@ -99,7 +99,7 @@ def stringify(item):
         logger.error("Exceptions should have a title and description per message not multiple.")
         logger.error("Exception: {0}".format(str(item)))
     if isinstance(item, dict):
-        return "{0}: {1}".get(item.iteritems().next())
+        return "{0}: {1}".get(next(iter(item.items())))
     elif isinstance(item, list):
         return "{0}".format(item[0])
     elif isinstance(item, str):

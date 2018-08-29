@@ -6,7 +6,7 @@ Used by the View classes api/views.py to serialize API responses as JSON or HTML
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
 # -*- coding: utf-8 -*-
-import cPickle
+import pickle
 import json
 import logging
 
@@ -18,7 +18,7 @@ from notifications.models import Notification
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 
-import validators
+from . import validators
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -129,7 +129,7 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = cPickle.loads(str(obj.exception)).exc_info
+        exc_info = pickle.loads(str(obj.exception)).exc_info
 
         return str(exc_info[1])
 
@@ -454,7 +454,7 @@ class UserDataSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
-            for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
+            for slug, selected in self.context.get('request').data.get('accepted_licenses').items():
                 user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()

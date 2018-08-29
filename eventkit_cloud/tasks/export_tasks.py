@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-import cPickle
+
+import pickle
 import json
 import logging
 import os
@@ -316,7 +316,7 @@ class ExportTask(UserDetailsBase):
             logger.error(traceback.format_exc())
             logger.error('Cannot update the status of ExportTaskRecord object: no such object has been created for '
                          'this task yet.')
-        exception = cPickle.dumps(einfo)
+        exception = pickle.dumps(einfo)
         ete = ExportTaskException(task=task, exception=exception)
         ete.save()
         if task.status != TaskStates.CANCELED.value:
@@ -1031,7 +1031,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
 
     with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
-            for absolute_file_path, relative_file_path in static_files.iteritems():
+            for absolute_file_path, relative_file_path in static_files.items():
                 filename = relative_file_path
                 # Support files should go in the correct directory.  It might make sense to break these files up
                 # by directory and then just put each directory in the correct location so that we don't have to
@@ -1336,7 +1336,7 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
-            ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
+            ExportTaskException.objects.create(task=export_task, exception=pickle.dumps(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
         task_result = export_task.result

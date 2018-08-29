@@ -217,7 +217,7 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
                         provider_details[provider_task.slug]["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
                         steps = linspace(band_stats[0], band_stats[1], num=16)
-                        provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
+                        provider_details[provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
 
     if data_provider_task_record:
         style_file_name =  '{0}-{1}-{2}.qgs'.format(normalize_name(job_name), normalize_name(data_provider_task_record.slug),
@@ -226,7 +226,7 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
         style_file_name = '{0}-{1}.qgs'.format(normalize_name(job_name), default_format_time(timezone.now()))
     style_file = os.path.join(stage_dir, style_file_name)
 
-    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
+    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.items()]
     logger.error(provider_details)
 
     with open(style_file, 'w') as open_file:

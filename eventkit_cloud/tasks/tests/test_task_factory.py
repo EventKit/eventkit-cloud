@@ -104,13 +104,13 @@ class TestExportTaskFactory(TestCase):
         # The license should not be returned if the user has agreed to it.
         expected_invalid_licenses = []
         invalid_licenses = get_invalid_licenses(self.job)
-        self.assertEquals(invalid_licenses, expected_invalid_licenses)
+        self.assertEqual(invalid_licenses, expected_invalid_licenses)
 
         # A license should be returned if the user has not agreed to it.
         UserLicense.objects.get(license=self.license, user=self.user).delete()
         expected_invalid_licenses = [self.license.name]
         invalid_licenses = get_invalid_licenses(self.job)
-        self.assertEquals(invalid_licenses, expected_invalid_licenses)
+        self.assertEqual(invalid_licenses, expected_invalid_licenses)
 
         UserLicense.objects.create(license=self.license, user=self.user)
 

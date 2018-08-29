@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import json
 import logging
 import re
 import xml.etree.ElementTree as ET
-from StringIO import StringIO
+from io import StringIO
 
 import requests
 from django.conf import settings
@@ -392,8 +392,8 @@ class WCSProviderCheck(OWSProviderCheck):
         if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
             return None
 
-        x1, y1 = map(float, pos[0].text.split(' '))
-        x2, y2 = map(float, pos[1].text.split(' '))
+        x1, y1 = list(map(float, pos[0].text.split(' ')))
+        x2, y2 = list(map(float, pos[1].text.split(' ')))
 
         minx, maxx = sorted([x1, x2])
         miny, maxy = sorted([y1, y2])
@@ -545,7 +545,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         southwest = bbox_element.find("lowercorner").text.split()[::-1]
         northeast = bbox_element.find("uppercorner").text.split()[::-1]
 
-        bbox = map(float, southwest + northeast)
+        bbox = list(map(float, southwest + northeast))
         return bbox
 
 
