@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import Slider from 'material-ui/Slider';
+import Slider from '@material-ui/lab/Slider';
 import AlertWarning from '@material-ui/icons/Warning';
 import Clear from '@material-ui/icons/Clear';
 import AlertCallout from './AlertCallout';
@@ -102,6 +102,12 @@ export class BufferDialog extends Component {
                 color: '#ce4427',
                 textAlign: 'left',
             },
+            slider: {
+                position: 'absolute',
+                width: '100%',
+                bottom: 0,
+                padding: '21px 0px',
+            },
         };
 
         const bufferActions = [
@@ -135,9 +141,6 @@ export class BufferDialog extends Component {
         if (!this.props.show) {
             return null;
         }
-
-        const sliderColor = this.props.valid ? '#4598bf' : '#d32f2f';
-        this.context.muiTheme.slider.selectionColor = sliderColor;
 
         let over = false;
         const maxAoi = this.props.maxVectorAoiSqKm;
@@ -227,13 +230,12 @@ export class BufferDialog extends Component {
                                     <tr>
                                         <td style={{ ...styles.tableData, borderLeft: '1px solid #ccc' }} >
                                             <Slider
-                                                style={{ position: 'absolute', width: '100%', bottom: 0 }}
-                                                sliderStyle={{ marginTop: '12px', marginBottom: '14px' }}
+                                                style={styles.slider}
                                                 step={10}
                                                 max={10000}
                                                 min={0}
                                                 value={this.props.value}
-                                                onChange={(e, v) => this.props.handleBufferChange(v)}
+                                                onChange={(e, value) => this.props.handleBufferChange(value)}
                                             />
                                         </td>
                                         <td style={{ ...styles.tableData, borderRight: '1px solid #ccc' }} />
@@ -260,10 +262,6 @@ export class BufferDialog extends Component {
 
 BufferDialog.defaultProps = {
     maxVectorAoiSqKm: null,
-};
-
-BufferDialog.contextTypes = {
-    muiTheme: PropTypes.object.isRequired,
 };
 
 BufferDialog.propTypes = {
