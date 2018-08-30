@@ -2,7 +2,7 @@ name: eventkit-cloud
 channels:
  - local
 dependencies:
- - python=2.7.15
+ - python=3.5
  - django-audit-logging=0.1.9
  - gdal=2.2.2-0
  - geos=3.6.1
