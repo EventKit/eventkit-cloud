@@ -16,8 +16,6 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { MuiThemeProvider as MuiThemeProviderV1, createMuiTheme } from '@material-ui/core/styles';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
@@ -127,29 +125,6 @@ const muiThemeV1 = createMuiTheme({
     typography: {
         fontSize: 14,
         htmlFontSize: 14,
-    },
-});
-
-const muiThemeV0 = getMuiTheme({
-    datePicker: {
-        selectColor: '#253447',
-    },
-    flatButton: {
-        textColor: '#253447',
-        primaryTextColor: '#253447',
-    },
-    checkbox: {
-        boxColor: '#4598bf',
-        checkedColor: '#4598bf',
-    },
-    tableRow: {
-        selectedColor: 'initial',
-    },
-    svgIcon: {
-        color: '#4598bf',
-    },
-    palette: {
-        accent1Color: '#4598bf',
     },
 });
 
@@ -640,224 +615,222 @@ export class Application extends Component {
 
         return (
             <MuiThemeProviderV1 theme={muiThemeV1}>
-                <MuiThemeProvider muiTheme={muiThemeV0}>
-                    <div style={{ backgroundColor: '#000' }}>
-                        <AppBar
-                            className="qa-Application-AppBar"
-                            style={styles.appBar}
-                        >
-                            <Banner />
-                            <div style={styles.title}>
-                                <img style={styles.img} src={logo} alt="EventKit" />
-                            </div>
-                            <div style={{ position: 'absolute', left: '0', top: '25px' }}>
+                <div style={{ backgroundColor: '#000' }}>
+                    <AppBar
+                        className="qa-Application-AppBar"
+                        style={styles.appBar}
+                    >
+                        <Banner />
+                        <div style={styles.title}>
+                            <img style={styles.img} src={logo} alt="EventKit" />
+                        </div>
+                        <div style={{ position: 'absolute', left: '0', top: '25px' }}>
+                            <IconButton
+                                className="qa-Application-AppBar-MenuButton"
+                                style={styles.menuButton}
+                                color="secondary"
+                                onClick={this.handleToggle}
+                            >
+                                <Menu style={{ width: '36px', height: '36px' }} />
+                            </IconButton>
+                            <div style={{ display: 'inline-block', position: 'relative' }}>
                                 <IconButton
-                                    className="qa-Application-AppBar-MenuButton"
-                                    style={styles.menuButton}
+                                    className="qa-Application-AppBar-NotificationsButton"
+                                    style={{
+                                        ...styles.notificationsButton,
+                                        backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
+                                            '#4598BF' : '',
+                                    }}
                                     color="secondary"
-                                    onClick={this.handleToggle}
+                                    onClick={this.handleNotificationsButtonClick}
+                                    onMouseEnter={() => this.handleMouseOver('/notifications')}
+                                    onMouseLeave={this.handleMouseOut}
                                 >
-                                    <Menu style={{ width: '36px', height: '36px' }} />
+                                    <Notifications style={{ width: '38px', height: '38px' }} />
                                 </IconButton>
-                                <div style={{ display: 'inline-block', position: 'relative' }}>
-                                    <IconButton
-                                        className="qa-Application-AppBar-NotificationsButton"
+                                <div
+                                    className="qa-Application-AppBar-NotificationsIndicator"
+                                    style={{
+                                        ...styles.notificationsIndicator,
+                                        transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
+                                        transform: (this.props.notifications.unreadCount.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
+                                    }}
+                                />
+                                <div ref={this.setNotificationsDropdownContainerRef}>
+                                    <NotificationsDropdown
                                         style={{
-                                            ...styles.notificationsButton,
-                                            backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
-                                                '#4598BF' : '',
+                                            opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
+                                            pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
+                                            transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
                                         }}
-                                        color="secondary"
-                                        onClick={this.handleNotificationsButtonClick}
-                                        onMouseEnter={() => this.handleMouseOver('/notifications')}
-                                        onMouseLeave={this.handleMouseOut}
-                                    >
-                                        <Notifications style={{ width: '38px', height: '38px' }} />
-                                    </IconButton>
-                                    <div
-                                        className="qa-Application-AppBar-NotificationsIndicator"
-                                        style={{
-                                            ...styles.notificationsIndicator,
-                                            transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                            transform: (this.props.notifications.unreadCount.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
-                                        }}
+                                        notifications={this.props.notifications}
+                                        router={this.props.router}
+                                        onNavigate={this.handleNotificationsDropdownNavigate}
                                     />
-                                    <div ref={this.setNotificationsDropdownContainerRef}>
-                                        <NotificationsDropdown
-                                            style={{
-                                                opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
-                                                pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
-                                                transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
-                                            }}
-                                            notifications={this.props.notifications}
-                                            router={this.props.router}
-                                            onNavigate={this.handleNotificationsDropdownNavigate}
-                                        />
-                                    </div>
                                 </div>
                             </div>
-                        </AppBar>
-                        <Drawer
-                            className="qa-Application-Drawer"
-                            PaperProps={{ style: styles.drawer }}
-                            SlideProps={{ unmountOnExit: true }}
-                            variant="persistent"
-                            open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
-                        >
-                            <MenuItem
-                                className="qa-Application-MenuItem-dashboard"
-                                onClick={this.onMenuItemClick}
-                                style={styles.menuItem}
-                            >
-                                <IndexLink
-                                    className="qa-Application-Link-dashboard"
-                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
-                                    activeStyle={styles.activeLink}
-                                    to="/dashboard"
-                                    onMouseEnter={() => this.handleMouseOver('/dashboard')}
-                                    onMouseLeave={this.handleMouseOut}
-                                >
-                                    <Dashboard style={styles.icon} />
-                                    Dashboard
-                                </IndexLink>
-                            </MenuItem>
-                            <MenuItem
-                                className="qa-Application-MenuItem-exports"
-                                onClick={this.onMenuItemClick}
-                                style={styles.menuItem}
-                            >
-                                <Link
-                                    className="qa-Application-Link-exports"
-                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/exports') }}
-                                    activeStyle={styles.activeLink}
-                                    to="/exports"
-                                    href="/exports"
-                                    onMouseEnter={() => this.handleMouseOver('/exports')}
-                                    onMouseLeave={this.handleMouseOut}
-                                >
-                                    <AVLibraryBooks style={styles.icon} />
-                                    DataPack Library
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                className="qa-Application-MenuItem-create"
-                                onClick={this.onMenuItemClick}
-                                style={styles.menuItem}
-                            >
-                                <Link
-                                    className="qa-Application-Link-create"
-                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/create') }}
-                                    activeStyle={styles.activeLink}
-                                    onMouseEnter={() => this.handleMouseOver('/create')}
-                                    onMouseLeave={this.handleMouseOut}
-                                    to="/create"
-                                    href="/create"
-                                >
-                                    <ContentAddBox style={styles.icon} />
-                                    Create DataPack
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                className="qa-Application-MenuItem-groups"
-                                onClick={this.onMenuItemClick}
-                                style={styles.menuItem}
-                            >
-                                <Link
-                                    className="qa-Application-Link-groups"
-                                    style={{ ...styles.link, backgroundColor: this.state.hovered === 'groups' ? '#161e2e' : '' }}
-                                    activeStyle={styles.activeLink}
-                                    onMouseEnter={() => this.handleMouseOver('groups')}
-                                    onMouseLeave={this.handleMouseOut}
-                                    to="/groups"
-                                    href="/groups"
-                                >
-                                    <SocialGroup style={styles.icon} />
-                                    Members and Groups
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                className="qa-Application-MenuItem-about"
-                                onClick={this.onMenuItemClick}
-                                style={styles.menuItem}
-                            >
-                                <Link
-                                    className="qa-Application-Link-about"
-                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/about') }}
-                                    activeStyle={styles.activeLink}
-                                    onMouseEnter={() => this.handleMouseOver('/about')}
-                                    onMouseLeave={this.handleMouseOut}
-                                    to="/about"
-                                    href="/about"
-                                >
-                                    <ActionInfoOutline style={styles.icon} />
-                                    About EventKit
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                className="qa-Application-MenuItem-account"
-                                onClick={this.onMenuItemClick}
-                                style={styles.menuItem}
-                            >
-                                <Link
-                                    className="qa-Application-Link-account"
-                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/account') }}
-                                    activeStyle={styles.activeLink}
-                                    onMouseEnter={() => this.handleMouseOver('/account')}
-                                    onMouseLeave={this.handleMouseOut}
-                                    to="/account"
-                                    href="/account"
-                                >
-                                    <SocialPerson style={styles.icon} />
-                                    Account Settings
-                                </Link>
-                            </MenuItem>
-                            <MenuItem
-                                className="qa-Application-MenuItem-logout"
-                                style={styles.menuItem}
-                            >
-                                <Link // eslint-disable-line jsx-a11y/anchor-is-valid
-                                    className="qa-Application-Link-logout"
-                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/logout') }}
-                                    activeStyle={styles.activeLink}
-                                    onMouseEnter={() => this.handleMouseOver('/logout')}
-                                    onMouseLeave={this.handleMouseOut}
-                                    onClick={this.handleLogoutClick}
-                                >
-                                    <ActionExitToApp style={styles.icon} />
-                                    Log Out
-                                </Link>
-                            </MenuItem>
-                        </Drawer>
-                        <div style={styles.content} className="qa-Application-content">
-                            <div>{childrenWithContext}</div>
                         </div>
-                        <BaseDialog
-                            show={this.state.showAutoLogoutWarningDialog}
-                            title="AUTO LOGOUT"
-                            buttonText="Stay Logged In"
-                            onClose={this.handleStayLoggedIn}
+                    </AppBar>
+                    <Drawer
+                        className="qa-Application-Drawer"
+                        PaperProps={{ style: styles.drawer }}
+                        SlideProps={{ unmountOnExit: true }}
+                        variant="persistent"
+                        open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
+                    >
+                        <MenuItem
+                            className="qa-Application-MenuItem-dashboard"
+                            onClick={this.onMenuItemClick}
+                            style={styles.menuItem}
                         >
-                            <strong>{this.state.autoLogoutWarningText}</strong>
-                        </BaseDialog>
-                        <BaseDialog
-                            show={this.state.showAutoLoggedOutDialog}
-                            title="AUTO LOGOUT"
-                            onClose={this.handleCloseAutoLoggedOutDialog}
+                            <IndexLink
+                                className="qa-Application-Link-dashboard"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
+                                activeStyle={styles.activeLink}
+                                to="/dashboard"
+                                onMouseEnter={() => this.handleMouseOver('/dashboard')}
+                                onMouseLeave={this.handleMouseOut}
+                            >
+                                <Dashboard style={styles.icon} />
+                                Dashboard
+                            </IndexLink>
+                        </MenuItem>
+                        <MenuItem
+                            className="qa-Application-MenuItem-exports"
+                            onClick={this.onMenuItemClick}
+                            style={styles.menuItem}
                         >
-                            <strong>You have been automatically logged out due to inactivity.</strong>
-                        </BaseDialog>
-                        <ConfirmDialog
-                            show={this.state.showLogoutDialog}
-                            title="LOG OUT"
-                            confirmLabel="Log Out"
-                            isDestructive
-                            onCancel={this.handleLogoutDialogCancel}
-                            onConfirm={this.handleLogoutDialogConfirm}
+                            <Link
+                                className="qa-Application-Link-exports"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/exports') }}
+                                activeStyle={styles.activeLink}
+                                to="/exports"
+                                href="/exports"
+                                onMouseEnter={() => this.handleMouseOver('/exports')}
+                                onMouseLeave={this.handleMouseOut}
+                            >
+                                <AVLibraryBooks style={styles.icon} />
+                                DataPack Library
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className="qa-Application-MenuItem-create"
+                            onClick={this.onMenuItemClick}
+                            style={styles.menuItem}
                         >
-                            <strong>Are you sure?</strong>
-                        </ConfirmDialog>
+                            <Link
+                                className="qa-Application-Link-create"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/create') }}
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('/create')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/create"
+                                href="/create"
+                            >
+                                <ContentAddBox style={styles.icon} />
+                                Create DataPack
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className="qa-Application-MenuItem-groups"
+                            onClick={this.onMenuItemClick}
+                            style={styles.menuItem}
+                        >
+                            <Link
+                                className="qa-Application-Link-groups"
+                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'groups' ? '#161e2e' : '' }}
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('groups')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/groups"
+                                href="/groups"
+                            >
+                                <SocialGroup style={styles.icon} />
+                                Members and Groups
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className="qa-Application-MenuItem-about"
+                            onClick={this.onMenuItemClick}
+                            style={styles.menuItem}
+                        >
+                            <Link
+                                className="qa-Application-Link-about"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/about') }}
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('/about')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/about"
+                                href="/about"
+                            >
+                                <ActionInfoOutline style={styles.icon} />
+                                About EventKit
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className="qa-Application-MenuItem-account"
+                            onClick={this.onMenuItemClick}
+                            style={styles.menuItem}
+                        >
+                            <Link
+                                className="qa-Application-Link-account"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/account') }}
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('/account')}
+                                onMouseLeave={this.handleMouseOut}
+                                to="/account"
+                                href="/account"
+                            >
+                                <SocialPerson style={styles.icon} />
+                                Account Settings
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className="qa-Application-MenuItem-logout"
+                            style={styles.menuItem}
+                        >
+                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
+                                className="qa-Application-Link-logout"
+                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/logout') }}
+                                activeStyle={styles.activeLink}
+                                onMouseEnter={() => this.handleMouseOver('/logout')}
+                                onMouseLeave={this.handleMouseOut}
+                                onClick={this.handleLogoutClick}
+                            >
+                                <ActionExitToApp style={styles.icon} />
+                                Log Out
+                            </Link>
+                        </MenuItem>
+                    </Drawer>
+                    <div style={styles.content} className="qa-Application-content">
+                        <div>{childrenWithContext}</div>
                     </div>
-                </MuiThemeProvider>
+                    <BaseDialog
+                        show={this.state.showAutoLogoutWarningDialog}
+                        title="AUTO LOGOUT"
+                        buttonText="Stay Logged In"
+                        onClose={this.handleStayLoggedIn}
+                    >
+                        <strong>{this.state.autoLogoutWarningText}</strong>
+                    </BaseDialog>
+                    <BaseDialog
+                        show={this.state.showAutoLoggedOutDialog}
+                        title="AUTO LOGOUT"
+                        onClose={this.handleCloseAutoLoggedOutDialog}
+                    >
+                        <strong>You have been automatically logged out due to inactivity.</strong>
+                    </BaseDialog>
+                    <ConfirmDialog
+                        show={this.state.showLogoutDialog}
+                        title="LOG OUT"
+                        confirmLabel="Log Out"
+                        isDestructive
+                        onCancel={this.handleLogoutDialogCancel}
+                        onConfirm={this.handleLogoutDialogConfirm}
+                    >
+                        <strong>Are you sure?</strong>
+                    </ConfirmDialog>
+                </div>
             </MuiThemeProviderV1>
         );
     }

@@ -40,7 +40,7 @@ export class DataCartDetails extends Component {
         this.props.onUpdateDataCartPermissions(this.props.cartDetails.job.uid, permissions);
     }
 
-    handleExpirationChange(e, date) {
+    handleExpirationChange(date) {
         this.props.onUpdateExpiration(this.props.cartDetails.uid, date);
     }
 

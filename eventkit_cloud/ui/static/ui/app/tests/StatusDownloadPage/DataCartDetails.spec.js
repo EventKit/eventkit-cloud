@@ -195,7 +195,7 @@ describe('DataCartDetails component', () => {
         const props = getProps();
         props.onUpdateExpiration = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleExpirationChange({}, 'today');
+        wrapper.instance().handleExpirationChange('today');
         expect(props.onUpdateExpiration.calledOnce).toBe(true);
         expect(props.onUpdateExpiration.calledWith(props.cartDetails.uid, 'today')).toBe(true);
     });

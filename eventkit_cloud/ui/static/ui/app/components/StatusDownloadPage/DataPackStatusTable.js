@@ -1,13 +1,15 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import MenuItem from '@material-ui/core/MenuItem';
-import DatePicker from 'material-ui/DatePicker';
 import ButtonBase from '@material-ui/core/ButtonBase';
+import Popover from '@material-ui/core/Popover';
 import SocialGroup from '@material-ui/icons/Group';
 import Check from '@material-ui/icons/Check';
 import Edit from '@material-ui/icons/Edit';
 import Lock from '@material-ui/icons/LockOutlined';
 import moment from 'moment';
+import DayPicker from 'react-day-picker';
+import 'react-day-picker/lib/style.css';
 import DropDownMenu from '../common/DropDownMenu';
 import CustomTableRow from '../CustomTableRow';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
@@ -19,9 +21,26 @@ export class DataPackStatusTable extends Component {
         this.handleShareDialogClose = this.handleShareDialogClose.bind(this);
         this.handleShareDialogSave = this.handleShareDialogSave.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.handleDayClick = this.handleDayClick.bind(this);
         this.state = {
             shareDialogOpen: false,
+            anchor: null,
         };
+    }
+
+    handleDayClick(date) {
+        this.handleClose();
+        this.props.handleExpirationChange(date);
+    }
+
+    handleClick(e) {
+        this.setState({ anchor: e.currentTarget });
+    }
+
+    handleClose() {
+        this.setState({ anchor: null });
     }
 
     handleShareDialogOpen() {
@@ -131,22 +150,34 @@ export class DataPackStatusTable extends Component {
             expirationData = (
                 <div>
                     {expiration}
-                    <DatePicker
-                        ref={(instance) => { this.dp = instance; }}
-                        style={{ height: '0px', display: '-webkit-inline-box', width: '0px' }}
-                        autoOk
-                        minDate={this.props.minDate}
-                        maxDate={this.props.maxDate}
-                        id="datePicker"
-                        onChange={this.props.handleExpirationChange}
-                        textFieldStyle={styles.textField}
-                        underlineStyle={{ display: 'none' }}
-                        disabled
-                    />
                     <Edit
-                        onClick={() => { this.dp.focus(); }}
+                        onClick={this.handleClick}
                         style={styles.tableRowInfoIcon}
                     />
+                    <Popover
+                        className="qa-DataPackStatusTable-Popover"
+                        open={Boolean(this.state.anchor)}
+                        anchorEl={this.state.anchor}
+                        onClose={this.handleClose}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                    >
+                        <style>{'.DayPicker-Day { width: 34px; } .DayPicker { font-size: 14px; } '}</style>
+                        <DayPicker
+                            onDayClick={this.handleDayClick}
+                            selectedDays={new Date(this.props.expiration)}
+                            month={new Date(this.props.expiration)}
+                            modifiers={{ disabled: { before: this.props.minDate, after: this.props.maxDate } }}
+                            modifiersStyles={{ selected: { backgroundColor: '#4598bf' } }}
+                            className="qa-DataPackStatusTable-DayPicker"
+                        />
+                    </Popover>
                 </div>
             );
 

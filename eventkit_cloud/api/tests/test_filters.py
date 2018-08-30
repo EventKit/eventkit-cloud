@@ -54,13 +54,13 @@ class TestJobFilter(APITestCase):
 
     def test_filterset_no_user(self, ):
         url = reverse('api:jobs-list')
-        url += '?start=2015-01-01&end=2030-08-01'
+        url += '?start=2015-01-01T00:00:00.000000Z&end=2030-08-01T00:00:00.000000Z'
         response = self.client.get(url)
         self.assertEquals(1, len(response.data))
 
     def test_filterset_with_user(self, ):
         url = reverse('api:jobs-list')
-        url += '?start=2015-01-01&end=2030-08-01&user=demo1'
+        url += '?start=2015-01-01T00:00:00.000000Z&end=2030-08-01T00:00:00.000000Z&user=demo1'
         response = self.client.get(url)
         self.assertEquals(1, len(response.data))
 
