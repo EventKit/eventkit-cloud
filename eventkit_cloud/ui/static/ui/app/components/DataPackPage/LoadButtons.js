@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import { withStyles } from '@material-ui/core/styles';
 
 export class LoadButtons extends React.Component {
     constructor(props) {
@@ -59,16 +58,15 @@ export class LoadButtons extends React.Component {
                 },
         };
 
-        const { classes } = this.props;
-
         return (
             <div style={inlineStyles.container}>
                 <div style={{ display: 'inline-block' }}>
                     {this.props.handleLoadLess ?
                         <Button
                             className="qa-LoadButtons-RaisedButton-showLess'"
-                            classes={{ root: classes.root }}
                             variant="contained"
+                            color="secondary"
+                            style={{ minWidth: '145px', margin: '5px 2.5px' }}
                             disabled={this.props.loadLessDisabled}
                             onClick={this.props.handleLoadLess}
                         >
@@ -80,8 +78,9 @@ export class LoadButtons extends React.Component {
                     }
                     <Button
                         className="qa-LoadButtons-RaisedButton-showLess"
-                        classes={{ root: classes.root }}
                         variant="contained"
+                        color="secondary"
+                        style={{ minWidth: '145px', margin: '5px 2.5px' }}
                         disabled={this.props.loadMoreDisabled}
                         onClick={this.props.handleLoadMore}
                     >
@@ -104,7 +103,6 @@ LoadButtons.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    classes: PropTypes.object.isRequired,
 
 };
 
@@ -114,17 +112,4 @@ LoadButtons.defaultProps = {
     loadLessDisabled: false,
 };
 
-const classStyles = {
-    root: {
-        minWidth: '145px',
-        margin: '5px 2.5px',
-        backgroundColor: '#e5e5e5',
-        color: '#4498c0',
-        '&:disabled': {
-            backgroundColor: '#e5e5e5',
-            color: 'rgba(0, 0, 0, 0.3)',
-        },
-    },
-};
-
-export default withStyles(classStyles)(LoadButtons);
+export default LoadButtons;

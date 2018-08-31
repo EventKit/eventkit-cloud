@@ -17,6 +17,7 @@ import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
 import { MuiThemeProvider as MuiThemeProviderV1, createMuiTheme } from '@material-ui/core/styles';
+import theme from '../styles/eventkit_theme';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
 import logo from '../../images/eventkit-logo.1.png';
@@ -34,99 +35,7 @@ import background from '../../images/ek_topo_pattern.png';
 
 require('../fonts/index.css');
 
-const muiThemeV1 = createMuiTheme({
-    overrides: {
-        MuiCheckbox: {
-            colorPrimary: {
-                color: '#4598bf',
-                '&$checked': { color: '#4598bf' },
-                '&$disabled': { color: 'grey' },
-            },
-        },
-        MuiInput: {
-            underline: {
-                '&:before': {
-                    borderBottomColor: '#4598bf',
-                },
-                '&:hover:not($disabled):not($error):not($focused):before': {
-                    borderBottomColor: '#4598bf',
-                },
-                '&:after': {
-                    borderBottomColor: '#4598bf',
-                },
-            },
-        },
-        MuiList: {
-            padding: {
-                paddingTop: '0px',
-                paddingBottom: '0px',
-            },
-        },
-        MuiTableCell: {
-            head: {
-                fontSize: '12px',
-            },
-            body: {
-                fontSize: '12px',
-            },
-            footer: {
-                fontSize: '12px',
-            },
-        },
-        MuiButton: {
-            root: {
-                fontSize: '14px',
-                minHeight: '30px',
-                padding: '0px 16px',
-                height: '36px',
-                lineHeight: '36px',
-                borderRadius: '0px',
-            },
-            containedSecondary: {
-                color: '#4598bf',
-            },
-        },
-        MuiMenuItem: {
-            root: {
-                backgroundColor: 'transparent',
-                '&$selected': {
-                    backgroundColor: '#e8eef5',
-                },
-                color: '#707274',
-            },
-            selected: {
-                color: '#4598bf',
-                backgroundColor: '#e8eef5',
-            },
-        },
-        MuiSvgIcon: {
-            colorSecondary: {
-                color: '#fff',
-            },
-        },
-        MuiTypography: {
-            root: {
-                width: '100%',
-            },
-        },
-    },
-    palette: {
-        primary: {
-            light: '#63a8c9',
-            main: '#4598bf',
-            dark: '#3982a4',
-        },
-        secondary: {
-            light: '#fafafa',
-            main: '#eeeeee',
-            dark: '#d6d6d6',
-        },
-    },
-    typography: {
-        fontSize: 14,
-        htmlFontSize: 14,
-    },
-});
+const muiThemeV1 = createMuiTheme(theme);
 
 export class Application extends Component {
     constructor(props) {
@@ -576,8 +485,8 @@ export class Application extends Component {
                 height: '58px',
                 lineHeight: '58px',
                 textDecoration: 'none',
-                color: '#4498c0',
-                fill: '#4498c0',
+                color: '#4598bf',
+                fill: '#4598bf',
             },
             activeLink: {
                 padding: '0px 0px 0px 5px',
@@ -585,7 +494,7 @@ export class Application extends Component {
                 height: '58px',
                 lineHeight: '58px',
                 textDecoration: 'none',
-                color: '#4498c0',
+                color: '#4598bf',
                 backgroundColor: '#161e2e',
                 fill: '#1675aa',
             },

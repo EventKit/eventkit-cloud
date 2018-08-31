@@ -245,7 +245,6 @@ export class DashboardPage extends React.Component {
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
                 backgroundImage: `url(${background})`,
-                color: 'white',
             },
             customScrollbar: {
                 height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,

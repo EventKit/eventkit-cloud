@@ -25,7 +25,6 @@ export class ProviderError extends Component {
     render() {
         const styles = {
             errorText: {
-                display: 'inlineBlock',
                 borderTopWidth: '10px',
                 borderBottomWidth: '10px',
                 borderLeftWidth: '10px',
@@ -36,13 +35,11 @@ export class ProviderError extends Component {
             warning: {
                 marginLeft: '10px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
                 fill: '#ce4427',
                 verticalAlign: 'bottom',
             },
             warningIcon: {
                 marginRight: '10px',
-                display: 'inlineBlock',
                 fill: '#e8ac90',
                 verticalAlign: 'bottom',
             },

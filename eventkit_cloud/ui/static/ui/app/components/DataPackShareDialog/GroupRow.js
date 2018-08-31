@@ -121,12 +121,14 @@ export class GroupRow extends Component {
 
         let adminButton = null;
         if (this.props.showAdmin) {
+            styles.adminCheckIcon.color = '#707274';
             if (!this.props.selected) {
-                styles.adminCheckIcon.color = '#707274';
                 styles.adminCheckIcon.opacity = 0.15;
                 styles.adminCheckIcon.cursor = 'default';
             } else if (!this.props.admin) {
                 styles.adminCheckIcon.opacity = 0.55;
+            } else {
+                styles.adminCheckIcon.color = '#4598bf';
             }
 
             adminButton = (

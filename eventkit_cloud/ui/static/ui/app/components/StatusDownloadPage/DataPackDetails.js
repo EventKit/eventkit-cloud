@@ -9,6 +9,22 @@ import Button from '@material-ui/core/Button';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
 
+const jss = theme => ({
+    root: {
+        backgroundColor: 'rgba(179, 205, 224, 0.5)',
+        color: theme.eventkit.colors.primary,
+        fontWeight: 'bold',
+        '&:hover': {
+            backgroundColor: 'rgba(179, 205, 224, 0.8)',
+            color: theme.eventkit.colors.primary,
+        },
+        '&:disabled': {
+            backgroundColor: theme.eventkit.colors.secondary_dark,
+            color: theme.eventkit.colors.grey,
+        },
+    },
+});
+
 export class DataPackDetails extends Component {
     constructor(props) {
         super(props);
@@ -192,20 +208,4 @@ DataPackDetails.propTypes = {
     classes: PropTypes.object.isRequired,
 };
 
-const classStyles = {
-    root: {
-        backgroundColor: 'rgba(179, 205, 224, 0.5)',
-        color: '#4598bf',
-        fontWeight: 'bold',
-        '&:hover': {
-            backgroundColor: 'rgba(179, 205, 224, 0.8)',
-            color: '#4598bf',
-        },
-        '&:disabled': {
-            backgroundColor: '#e5e5e5',
-            color: 'rgba(0, 0, 0, 0.3)',
-        },
-    },
-};
-
-export default withStyles(classStyles)(DataPackDetails);
+export default withStyles(jss)(DataPackDetails);

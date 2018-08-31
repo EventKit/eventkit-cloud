@@ -734,7 +734,6 @@ export class UserGroupsPage extends Component {
             },
             errorIcon: {
                 marginRight: '10px',
-                display: 'inlineBlock',
                 fill: '#CE4427',
                 verticalAlign: 'bottom',
             },
@@ -916,7 +915,6 @@ export class UserGroupsPage extends Component {
                         </div>
                         <TextField
                             style={styles.container}
-                            hintText="Search Users"
                             type="text"
                             placeholder="Search Users"
                             InputProps={{ style: styles.input }}

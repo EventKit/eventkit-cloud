@@ -23,14 +23,14 @@ export class MapViewButton extends Component {
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '100%',
                 height: '12px',
-                color: '#4498c0',
+                color: '#4598bf',
                 position: 'relative',
                 bottom: '5px',
                 padding: '0 4px',
-                lineHeight: '1.3em',
+                lineHeight: '8px',
             },
             drawButtonGeneral: {
                 height: '50px',
@@ -50,7 +50,7 @@ export class MapViewButton extends Component {
             <div id="default_icon">
                 <ActionSettingsOverscan
                     className="qa-MapViewButton-ActionSettingsOverscan-default"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-MapViewButton-div-default" style={styles.buttonName}>CURRENT VIEW</div>
             </div>
@@ -60,9 +60,8 @@ export class MapViewButton extends Component {
             <div id="inactive_icon">
                 <ActionSettingsOverscan
                     className="qa-MapViewButton-ActionSettingsOverscan-inactive"
-                    style={{
-                        opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0',
-                    }}
+                    style={{ opacity: 0.4 }}
+                    color="primary"
                 />
                 <div className="qa-MapViewButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>CURRENT VIEW</div>
             </div>
@@ -72,7 +71,7 @@ export class MapViewButton extends Component {
             <div id="selected_icon">
                 <ContentClear
                     className="qa-MapViewButton-ContentClear"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-MapViewButton-div-selected" style={styles.buttonName}>CURRENT VIEW</div>
             </div>

@@ -24,7 +24,7 @@ export class DataPackList extends Component {
 
     // If it is a 'reversed' order the arrow should be up, otherwise it should be down
     getIcon(order) {
-        const style = { verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' };
+        const style = { verticalAlign: 'middle', marginBottom: '2px', fill: '#4598bf' };
         const icon = this.props.order === order ?
             <NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={style} />
             :

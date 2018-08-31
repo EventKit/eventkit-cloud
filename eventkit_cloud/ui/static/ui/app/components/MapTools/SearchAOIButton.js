@@ -20,9 +20,9 @@ export class SearchAOIButton extends Component {
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                color: '#4498c0',
+                color: '#4598bf',
                 bottom: '0px',
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '50px',
                 height: '12px',
             },
@@ -44,7 +44,7 @@ export class SearchAOIButton extends Component {
             <div id="default_icon">
                 <ActionSearch
                     className="qa-SearchAOIButton-ActionSearch-default"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-SearchAOIButton-div-default" style={styles.buttonName}>SEARCH</div>
             </div>
@@ -54,9 +54,8 @@ export class SearchAOIButton extends Component {
             <div id="inactive_icon">
                 <ActionSearch
                     className="qa-SearchAOIButton-ActionSearch-inactive"
-                    style={{
-                        opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0',
-                    }}
+                    style={{ opacity: 0.4 }}
+                    color="primary"
                 />
                 <div className="qa-SearchAOIButton-div-default"style={{ ...styles.buttonName, opacity: 0.4 }}>SEARCH</div>
             </div>
@@ -66,7 +65,7 @@ export class SearchAOIButton extends Component {
             <div id="selected_icon">
                 <ContentClear
                     className="qa-SearchAOIButton-ContentClear"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-SearchAOIButton-div" style={styles.buttonName}>SEARCH</div>
             </div>

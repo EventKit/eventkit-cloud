@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 export class FeaturedFlag extends Component {
     render() {
         const style = {
-            backgroundColor: '#4498c0',
+            backgroundColor: '#4598bf',
             color: '#fff',
             textAlign: 'center',
             fontSize: '11px',

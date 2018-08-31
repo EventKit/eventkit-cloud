@@ -136,8 +136,6 @@ export class NotificationsTable extends React.Component {
                 <Table selectable={false} style={{ tableLayout: 'fixed' }}>
                     <TableBody
                         style={styles.tableHeader}
-                        displaySelectAll={false}
-                        adjustForCheckbox={false}
                     >
                         <TableRow>
                             <TableCell
@@ -145,7 +143,6 @@ export class NotificationsTable extends React.Component {
                                 style={styles.checkboxHeaderColumn}
                             >
                                 <Checkbox
-                                    style={{ width: '24px', height: '24px' }}
                                     color="primary"
                                     className="qa-NotificationsTable-SelectAllCheckbox"
                                     checked={this.getSelectedCount() > 0}

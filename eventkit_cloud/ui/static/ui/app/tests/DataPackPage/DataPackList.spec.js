@@ -294,14 +294,14 @@ describe('DataPackList component', () => {
         expect(icon).toEqual((
             <NavigationArrowDropDown
                 className="qa-DataPackList-NavigationArrowDropDown"
-                style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }}
+                style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4598bf' }}
             />
         ));
         icon = wrapper.instance().getIcon('-started_at');
         expect(icon).toEqual((
             <NavigationArrowDropUp
                 className="qa-DataPackList-NavigationArrowDropUp"
-                style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4498c0' }}
+                style={{ verticalAlign: 'middle', marginBottom: '2px', fill: '#4598bf' }}
             />
         ));
     });

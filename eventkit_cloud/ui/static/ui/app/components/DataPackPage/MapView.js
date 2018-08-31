@@ -60,7 +60,7 @@ export const RED_STYLE = new Style({
 
 export const BLUE_STYLE = new Style({
     stroke: new Stroke({
-        color: '#4498c0',
+        color: '#4598bf',
         width: 4,
     }),
     image: null,

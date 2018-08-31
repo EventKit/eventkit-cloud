@@ -7,7 +7,7 @@ import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
 
-const jss = () => ({
+const jss = theme => ({
     tabsRoot: {
         height: '16px',
         minHeight: '16px',
@@ -20,7 +20,7 @@ const jss = () => ({
         width: '16px',
         height: '16px',
         backgroundColor: 'white',
-        border: '3px solid rgb(69, 152, 191)',
+        border: `3px solid ${theme.eventkit.colors.primary}`,
         margin: '0px 4px',
         transition: 'border 0.25s',
         minWidth: '16px',
@@ -28,11 +28,11 @@ const jss = () => ({
         opacity: '1',
     },
     tabSelected: {
-        border: '8px solid #4598bf',
+        border: `8px solid ${theme.eventkit.colors.primary}`,
     },
     tabDisabled: {
-        backgroundColor: 'lightgray',
-        border: '3px solid gray',
+        backgroundColor: theme.eventkit.colors.secondary_dark,
+        border: `3px solid ${theme.eventkit.colors.grey}`,
         opacity: '0.5',
     },
 });
@@ -90,6 +90,7 @@ export class DashboardSection extends React.Component {
                 textTransform: 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
+                color: 'white',
             },
             sectionHeaderLeft: {
                 flex: '1',

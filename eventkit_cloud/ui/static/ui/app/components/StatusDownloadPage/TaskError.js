@@ -25,7 +25,6 @@ export class TaskError extends Component {
     render() {
         const styles = {
             errorText: {
-                display: 'inlineBlock',
                 borderTopWidth: '10px',
                 borderBottomWidth: '10px',
                 borderLeftWidth: '10px',
@@ -34,7 +33,6 @@ export class TaskError extends Component {
             },
             warningIcon: {
                 marginRight: '10px',
-                display: 'inlineBlock',
                 fill: '#e8ac90',
                 verticalAlign: 'bottom',
             },

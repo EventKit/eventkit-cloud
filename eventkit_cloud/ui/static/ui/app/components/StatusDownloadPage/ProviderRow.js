@@ -100,7 +100,6 @@ export class ProviderRow extends Component {
                         className="qa-ProviderRow-Warning-taskStatus"
                         style={{
                             marginLeft: '10px',
-                            display: 'inlineBlock',
                             fill: '#f4d225',
                             verticalAlign: 'bottom',
                         }}
@@ -132,7 +131,6 @@ export class ProviderRow extends Component {
                         className="qa-ProviderRow-span-providerStatus"
                         style={{
                             fontWeight: 'bold',
-                            display: 'inlineBlock',
                             borderTopWidth: '10px',
                             borderBottomWidth: '10px',
                             borderLeftWidth: '10px',
@@ -144,7 +142,6 @@ export class ProviderRow extends Component {
                             className="qa-ProviderRow-Warning-providerStatus"
                             style={{
                                 marginLeft: '10px',
-                                display: 'inlineBlock',
                                 fill: '#f4d225',
                                 verticalAlign: 'bottom',
                             }}
@@ -161,7 +158,7 @@ export class ProviderRow extends Component {
             return (
                 <span
                     className="qa-ProviderRow-span-taskLinkDisabled"
-                    style={{ display: 'inlineBlock', color: 'gray' }}
+                    style={{ color: 'gray' }}
                 >
                     {task.name}
                 </span>
@@ -174,7 +171,7 @@ export class ProviderRow extends Component {
                 tabIndex={0}
                 onClick={() => { this.handleSingleDownload(task.result.url); }}
                 onKeyPress={() => { this.handleSingleDownload(task.result.url); }}
-                style={{ display: 'inlineBlock', color: '#4598bf', cursor: 'pointer' }}
+                style={{ color: '#4598bf', cursor: 'pointer' }}
             >
                 {task.name}
             </span>
@@ -189,7 +186,6 @@ export class ProviderRow extends Component {
                     key={task.result == null ? '' : task.result.url}
                     style={{
                         marginLeft: '10px',
-                        display: 'inlineBlock',
                         fill: 'gray',
                         verticalAlign: 'middle',
                     }}
@@ -204,7 +200,6 @@ export class ProviderRow extends Component {
                 style={{
                     marginLeft: '10px',
                     cursor: 'pointer',
-                    display: 'inlineBlock',
                     fill: '#4598bf',
                     verticalAlign: 'middle',
                 }}

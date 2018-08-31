@@ -249,7 +249,6 @@ describe('ProviderRow component', () => {
                 className="qa-ProviderRow-Warning-taskStatus"
                 style={{
                     marginLeft: '10px',
-                    display: 'inlineBlock',
                     fill: '#f4d225',
                     verticalAlign: 'bottom',
                 }}
@@ -282,7 +281,6 @@ describe('ProviderRow component', () => {
                 className="qa-ProviderRow-span-providerStatus"
                 style={{
                     fontWeight: 'bold',
-                    display: 'inlineBlock',
                     borderTopWidth: '10px',
                     borderBottomWidth: '10px',
                     borderLeftWidth: '10px',
@@ -294,7 +292,6 @@ describe('ProviderRow component', () => {
                     className="qa-ProviderRow-Warning-providerStatus"
                     style={{
                         marginLeft: '10px',
-                        display: 'inlineBlock',
                         fill: '#f4d225',
                         verticalAlign: 'bottom',
                     }}

@@ -78,7 +78,6 @@ export class DataPackStatusTable extends Component {
                 fontSize: '14px',
                 height: '36px',
                 width: '0px',
-                display: 'inlineBlock',
             },
             dropDown: {
                 height: '24px',
@@ -91,16 +90,6 @@ export class DataPackStatusTable extends Component {
                 fontWeight: 'bold',
                 textTransform: 'capitalize',
             },
-            icon: {
-                height: '24px',
-                width: '24px',
-                padding: '0px',
-                fill: '#4498c0',
-                position: 'relative',
-                top: '0px',
-                right: '0px',
-                verticalAlign: 'top',
-            },
             underline: {
                 display: 'none',
                 marginLeft: '0px',
@@ -110,7 +99,6 @@ export class DataPackStatusTable extends Component {
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
                 fill: '#4598bf',
                 verticalAlign: 'middle',
             },

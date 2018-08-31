@@ -39,7 +39,7 @@ export class DropZoneDialog extends Component {
                 textAlign: 'center',
                 border: '1px dashed',
                 fontSize: '1em',
-                color: '#4498c0',
+                color: '#4598bf',
             },
             text: {
                 verticalAlign: 'center',

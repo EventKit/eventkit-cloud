@@ -177,14 +177,14 @@ export class AoiInfobar extends Component {
                 fontSize: '10px',
                 background: 'none',
                 border: 'none',
-                color: '#4498c0',
+                color: '#4598bf',
                 outline: 'none',
                 padding: '0px',
             },
             searchIcon: {
                 height: '20px',
                 width: '20px',
-                fill: '#4498c0',
+                fill: '#4598bf',
                 verticalAlign: 'middle',
             },
             bufferButton: {

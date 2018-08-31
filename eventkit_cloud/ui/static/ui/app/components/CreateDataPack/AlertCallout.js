@@ -10,7 +10,7 @@ export class AlertCallout extends Component {
                 height: '20px',
                 width: '20px',
                 flex: '0 0 auto',
-                fill: '#4498c0',
+                fill: '#4598bf',
                 cursor: 'pointer',
             },
         };

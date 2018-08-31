@@ -18,6 +18,19 @@ import Indeterminate from '../../icons/IndeterminateIcon';
 import CustomTextField from '../../CustomTextField';
 import CustomScrollbar from '../../CustomScrollbar';
 
+const jss = theme => ({
+    label: {
+        fontSize: '14px',
+    },
+    labelContainer: {
+        padding: '6px 0px',
+    },
+    selected: {
+        borderBottom: `2px solid ${theme.eventkit.colors.primary}`,
+        transition: 'border-bottom 200ms',
+    },
+});
+
 export class AddMembersDialog extends Component {
     constructor(props) {
         super(props);
@@ -494,19 +507,6 @@ export class AddMembersDialog extends Component {
         );
     }
 }
-
-const jss = {
-    label: {
-        fontSize: '14px',
-    },
-    labelContainer: {
-        padding: '6px 0px',
-    },
-    selected: {
-        borderBottom: '2px solid #4598bf',
-        transition: 'border-bottom 200ms',
-    },
-};
 
 AddMembersDialog.propTypes = {
     show: PropTypes.bool.isRequired,
