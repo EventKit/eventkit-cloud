@@ -15,7 +15,6 @@ import ActionInfoOutline from '@material-ui/icons/InfoOutlined';
 import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import MockAdapter from 'axios-mock-adapter';
 import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
@@ -75,7 +74,6 @@ describe('Application component', () => {
     it('should render the basic elements', () => {
         const props = getProps();
         const wrapper = getMountedWrapper(props);
-        expect(wrapper.find(MuiThemeProvider)).toHaveLength(1);
         expect(wrapper.find(Banner)).toHaveLength(1);
         expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);

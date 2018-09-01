@@ -24,8 +24,8 @@ class JobFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(name="name", lookup_expr="icontains")
     description = django_filters.CharFilter(name="description", lookup_expr="icontains")
     event = django_filters.CharFilter(name="event", lookup_expr="icontains")
-    start = django_filters.DateTimeFilter(name="created_at", lookup_expr="gte")
-    end = django_filters.DateTimeFilter(name="created_at", lookup_expr="lte")
+    start = django_filters.IsoDateTimeFilter(name="created_at", lookup_expr="gte")
+    end = django_filters.IsoDateTimeFilter(name="created_at", lookup_expr="lte")
     region = django_filters.CharFilter(name="region__name")
     user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
     feature = django_filters.CharFilter(name="tags__name", lookup_expr="icontains")
@@ -59,9 +59,9 @@ class ExportRunFilter(django_filters.FilterSet):
     user = django_filters.CharFilter(name="user__username", lookup_expr="exact")
     status = ListFilter(name="status")
     job_uid = django_filters.CharFilter(name="job__uid", lookup_expr="exact")
-    min_date = django_filters.DateFilter(name="started_at", lookup_expr="gte")
-    max_date = django_filters.DateFilter(name="started_at", lookup_expr="lte")
-    started_at = django_filters.DateTimeFilter(name="started_at", lookup_expr="exact")
+    min_date = django_filters.IsoDateTimeFilter(name="started_at", lookup_expr="gte")
+    max_date = django_filters.IsoDateTimeFilter(name="started_at", lookup_expr="lte")
+    started_at = django_filters.IsoDateTimeFilter(name="started_at", lookup_expr="exact")
     visibility = django_filters.CharFilter(name="job__visibility", lookup_expr="exact")
     featured = django_filters.BooleanFilter(name="job__featured", widget=django_filters.widgets.BooleanWidget())
     providers = ListFilter(name="job__provider_tasks__provider__slug")
@@ -75,7 +75,7 @@ class ExportRunFilter(django_filters.FilterSet):
 class UserFilter(django_filters.FilterSet):
     min_date = django_filters.DateFilter(name="date_joined", lookup_expr="gte")
     max_date = django_filters.DateFilter(name="date_joined", lookup_expr="lte")
-    started_at = django_filters.DateTimeFilter(name="date_joined", lookup_expr="exact")
+    started_at = django_filters.IsoDateTimeFilter(name="date_joined", lookup_expr="exact")
     groups = django_filters.CharFilter(method='group_filter')
 
     class Meta:

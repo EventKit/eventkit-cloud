@@ -1,9 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import DatePicker from 'material-ui/DatePicker';
 import Edit from '@material-ui/icons/Edit';
 import DropDownMenu from '../../components/common/DropDownMenu';
 import CustomTableRow from '../../components/CustomTableRow';
@@ -11,8 +8,6 @@ import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackSh
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 
 describe('DataPackStatusTable component', () => {
-    const muiTheme = getMuiTheme();
-
     const getProps = () => (
         {
             status: 'COMPLETED',
@@ -38,17 +33,13 @@ describe('DataPackStatusTable component', () => {
     );
 
     const getWrapper = props => (
-        mount(<DataPackStatusTable {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        mount(<DataPackStatusTable {...props} />)
     );
 
     it('should render basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(CustomTableRow)).toHaveLength(3);
-        expect(wrapper.find(DatePicker)).toHaveLength(1);
         expect(wrapper.find(DropDownMenu)).toHaveLength(1);
     });
 
@@ -102,13 +93,39 @@ describe('DataPackStatusTable component', () => {
         expect(button.text()).toEqual('3 Members / 3 Groups');
     });
 
-    it('Edit icon should call dp.focus on click', () => {
+    it('Edit icon should call handleClick', () => {
+        const props = getProps();
+        const clickStub = sinon.stub(DataPackStatusTable.prototype, 'handleClick');
+        const wrapper = getWrapper(props);
+        wrapper.find(Edit).simulate('click');
+        expect(clickStub.calledOnce).toBe(true);
+        clickStub.restore();
+    });
+
+    it('handleDayClick should call close and handleExpirationChange', () => {
+        const props = getProps();
+        props.handleExpirationChange = sinon.spy();
+        const wrapper = getWrapper(props);
+        const closeStub = sinon.stub(wrapper.instance(), 'handleClose');
+        wrapper.instance().handleDayClick('date');
+        expect(closeStub.calledOnce).toBe(true);
+        expect(props.handleExpirationChange.calledWith('date')).toBe(true);
+    });
+
+    it('handleClick should set the anchor in state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const focusSpy = sinon.spy();
-        wrapper.instance().dp = { focus: focusSpy };
-        wrapper.find(Edit).simulate('click');
-        expect(focusSpy.calledOnce).toBe(true);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleClick({ currentTarget: 'target' });
+        expect(stateStub.calledWithExactly({ anchor: 'target' })).toBe(true);
+    });
+
+    it('handleClose should clear the anchor in state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleClose();
+        expect(stateStub.calledWithExactly({ anchor: null })).toBe(true);
     });
 
     it('handleShareDialogOpen should set open to true', () => {
