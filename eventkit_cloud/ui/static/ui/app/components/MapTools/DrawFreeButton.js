@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ContentCreate from '@material-ui/icons/Create';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -20,13 +21,15 @@ export class DrawFreeButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
                 fontSize: '8px',
                 width: '50px',
                 height: '12px',
-                color: '#4598bf',
+                color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
@@ -38,7 +41,7 @@ export class DrawFreeButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
         };
@@ -95,7 +98,8 @@ DrawFreeButton.propTypes = {
     setFreeButtonSelected: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DrawFreeButton;
+export default withTheme()(DrawFreeButton);
 

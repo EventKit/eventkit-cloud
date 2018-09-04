@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import * as ReactDOM from 'react-dom';
 
@@ -79,10 +80,11 @@ export class CustomTextField extends Component {
             inputProps,
             InputProps,
             maxLength,
+            theme,
             ...rest
         } = this.props;
 
-        const charsRemainingColor = (this.state.charsRemaining > 10) ? '#B4B7B8' : '#CE4427';
+        const charsRemainingColor = (this.state.charsRemaining > 10) ? theme.eventkit.colors.text_primary : theme.eventkit.colors.warning;
 
         return (
             <div style={{ position: 'relative' }}>
@@ -132,6 +134,7 @@ CustomTextField.propTypes = {
     onBlur: PropTypes.func,
     inputProps: PropTypes.object,
     InputProps: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
 CustomTextField.defaultProps = {
@@ -145,4 +148,4 @@ CustomTextField.defaultProps = {
     InputProps: {},
 };
 
-export default CustomTextField;
+export default withTheme()(CustomTextField);

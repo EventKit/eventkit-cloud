@@ -1,6 +1,7 @@
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -21,13 +22,15 @@ export class DrawBoxButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
                 fontSize: '8px',
                 width: '50px',
                 height: '12px',
-                color: '#4598bf',
+                color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
@@ -39,7 +42,7 @@ export class DrawBoxButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
         };
@@ -96,7 +99,8 @@ DrawBoxButton.propTypes = {
     setBoxButtonSelected: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DrawBoxButton;
+export default withTheme()(DrawBoxButton);
 

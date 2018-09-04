@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
@@ -31,6 +32,8 @@ export class LoadButtons extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const range = this.props.range ? this.props.range.split('/') : null;
         const inlineStyles = {
             container: {
@@ -43,7 +46,7 @@ export class LoadButtons extends React.Component {
             },
             range: this.state.width < 768 ?
                 {
-                    color: '#a59c9c',
+                    color: colors.text_primary,
                     lineHeight: '36px',
                     fontSize: '12px',
                 }
@@ -51,7 +54,7 @@ export class LoadButtons extends React.Component {
                 {
                     display: 'inline-block',
                     position: 'absolute',
-                    color: '#a59c9c',
+                    color: colors.text_primary,
                     lineHeight: '36px',
                     right: '10px',
                     fontSize: '12px',
@@ -103,7 +106,7 @@ LoadButtons.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool,
     loadMoreDisabled: PropTypes.bool.isRequired,
-
+    theme: PropTypes.object.isRequired,
 };
 
 LoadButtons.defaultProps = {
@@ -112,4 +115,4 @@ LoadButtons.defaultProps = {
     loadLessDisabled: false,
 };
 
-export default LoadButtons;
+export default withTheme()(LoadButtons);

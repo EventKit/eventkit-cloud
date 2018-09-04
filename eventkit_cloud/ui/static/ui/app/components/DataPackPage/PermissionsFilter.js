@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -64,6 +65,8 @@ export class PermissionsFilter extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             drawerSection: {
                 width: '100%',
@@ -72,28 +75,28 @@ export class PermissionsFilter extends Component {
                 marginBottom: '10px',
             },
             radioIcon: {
-                fill: 'grey',
+                fill: colors.grey,
                 marginRight: '5px',
             },
             radioLabel: {
-                color: 'grey',
+                color: colors.grey,
                 width: '100%',
                 marginBottom: '0px',
             },
             icon: {
-                fill: 'grey',
+                fill: colors.grey,
                 width: '24px',
                 height: '24px',
                 flex: '0 0 auto',
             },
             groups: {
-                borderBottom: '1px solid #B4B7B8',
+                borderBottom: `1px solid ${colors.text_primary}`,
                 display: 'flex',
                 cursor: 'pointer',
                 outline: 'none',
             },
             sharedButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 textDecoration: 'underline',
                 padding: '0px 5px',
                 width: '100%',
@@ -102,7 +105,7 @@ export class PermissionsFilter extends Component {
 
         const { permissions } = this.props;
 
-        const checkIcon = (<CheckCircle style={{ fill: '#4598bf' }} />);
+        const checkIcon = (<CheckCircle color="primary" />);
 
         let sharedButton = null;
         // SHARED and PUBLIC are internal, to the user they are both 'SHARED'
@@ -163,7 +166,7 @@ export class PermissionsFilter extends Component {
                         value="PRIVATE"
                         label={
                             <div style={{ display: 'flex', flex: '1 1 auto', lineHeight: '24px' }}>
-                                <div style={{ flex: '1 1 auto', fontSize: '14px', color: '#707274' }}>
+                                <div style={{ flex: '1 1 auto', fontSize: '14px', color: colors.text_primary }}>
                                     Private (only me)
                                 </div>
                                 <Lock style={styles.icon} />
@@ -176,7 +179,7 @@ export class PermissionsFilter extends Component {
                         value={permissions.value === 'SHARED' ? 'SHARED' : 'PUBLIC'}
                         label={
                             <div style={{ display: 'flex', flex: '1 1 auto', lineHeight: '24px' }}>
-                                <div style={{ flex: '1 1 auto', fontSize: '14px', color: '#707274' }}>
+                                <div style={{ flex: '1 1 auto', fontSize: '14px', color: colors.text_primary }}>
                                     Shared
                                 </div>
                                 <SocialGroup style={styles.icon} />
@@ -230,6 +233,7 @@ PermissionsFilter.propTypes = {
         accepted_licenses: PropTypes.object,
         groups: PropTypes.arrayOf(PropTypes.number),
     })).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default PermissionsFilter;
+export default withTheme()(PermissionsFilter);

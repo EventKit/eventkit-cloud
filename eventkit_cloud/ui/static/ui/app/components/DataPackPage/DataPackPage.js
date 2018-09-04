@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -28,7 +29,6 @@ import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { isViewportL } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
-import background from '../../../images/ek_topo_pattern.png';
 
 export class DataPackPage extends React.Component {
     constructor(props) {
@@ -400,12 +400,12 @@ export class DataPackPage extends React.Component {
                     backgroundColor: 'white',
                     borderRadius: '0',
                     color: 'black',
-                    mainColor: '#ff4456',
+                    mainColor: this.props.theme.eventkit.colors.primary,
                     textAlign: 'left',
                     header: {
                         textAlign: 'left',
                         fontSize: '20px',
-                        borderColor: '#4598bf',
+                        borderColor: this.props.theme.eventkit.colors.primary,
                     },
                     main: {
                         paddingTop: '20px',
@@ -413,13 +413,13 @@ export class DataPackPage extends React.Component {
                     },
                     button: {
                         color: 'white',
-                        backgroundColor: '#4598bf',
+                        backgroundColor: this.props.theme.eventkit.colors.primary,
                     },
                     skip: {
                         display: 'none',
                     },
                     back: {
-                        color: '#8b9396',
+                        color: this.props.theme.eventkit.colors.text_primary,
                     },
                     hole: {
                         backgroundColor: 'rgba(226,226,226, 0.2)',
@@ -437,6 +437,8 @@ export class DataPackPage extends React.Component {
     }
 
     render() {
+        const { colors, images } = this.props.theme.eventkit;
+
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>;
 
@@ -460,44 +462,44 @@ export class DataPackPage extends React.Component {
             toolbarSearch: {
                 height: '56px',
                 minHeight: '56px',
-                backgroundColor: '#253447',
+                backgroundColor: colors.background_light,
             },
             toolbarSort: {
-                backgroundColor: '#253447',
+                backgroundColor: colors.background_light,
                 height: '35px',
                 minHeight: '35px',
                 display: 'inline-block',
                 width: '100%',
             },
             containerStyle: {
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 top: '221px',
                 height: window.innerHeight - 221,
                 overflowY: 'hidden',
                 overflowX: 'hidden',
             },
             backgroundStyle: {
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${images.topo_dark})`,
             },
             range: window.innerWidth < 768 ?
-                { color: '#a59c9c', lineHeight: '36px', fontSize: '12px' }
+                { color: colors.text_primary, lineHeight: '36px', fontSize: '12px' }
                 :
                 {
                     display: 'inline-block',
                     position: 'absolute',
-                    color: '#a59c9c',
+                    color: colors.text_primary,
                     lineHeight: '36px',
                     right: '10px',
                     fontSize: '12px',
                 },
             tourButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginRight: '15px',
             },
             tourIcon: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',
@@ -606,7 +608,7 @@ export class DataPackPage extends React.Component {
                                         position: 'absolute',
                                         width: '100%',
                                         height: '100%',
-                                        backgroundColor: 'rgba(0,0,0,0.2)',
+                                        backgroundColor: colors.backdrop,
                                     }}
                                 >
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -678,6 +680,7 @@ DataPackPage.propTypes = {
             page_size: PropTypes.string,
         }),
     }).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -733,7 +736,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(DataPackPage);
+)(DataPackPage));

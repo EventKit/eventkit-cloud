@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -28,6 +29,8 @@ export class BufferDialog extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             background: {
                 position: 'absolute',
@@ -43,7 +46,7 @@ export class BufferDialog extends Component {
                 bottom: '40px',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 width: '70%',
                 minWidth: '355px',
                 maxWidth: '550px',
@@ -57,14 +60,14 @@ export class BufferDialog extends Component {
                 lineHeight: '32px',
             },
             body: {
-                color: 'rgba(0,0,0,0.6)',
+                color: colors.text_primary,
                 padding: '0px 15px',
                 boxSizing: 'border-box',
             },
             footnote: {
                 padding: '15px 15px 10px',
                 textAlign: 'right',
-                color: 'rgba(0,0,0,0.6)',
+                color: colors.text_primary,
             },
             footer: {
                 boxSizing: 'border-box',
@@ -80,17 +83,17 @@ export class BufferDialog extends Component {
                 width: '65px',
                 height: '24px',
                 fontWeight: 'normal',
-                color: this.props.valid ? 'grey' : '#d32f2f',
+                color: this.props.valid ? colors.grey : colors.warning,
             },
             clear: {
                 float: 'right',
-                fill: '#4598bf',
+                fill: colors.primary,
                 cursor: 'pointer',
             },
             warning: {
                 height: '20px',
                 width: '20px',
-                fill: '#CE4427',
+                fill: colors.warning,
                 verticalAlign: 'middle',
                 cursor: 'pointer',
             },
@@ -99,7 +102,7 @@ export class BufferDialog extends Component {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: '220px',
-                color: '#ce4427',
+                color: colors.warning,
                 textAlign: 'left',
             },
             slider: {
@@ -124,11 +127,7 @@ export class BufferDialog extends Component {
             <Button
                 key="BufferDialog-buffer"
                 className="qa-BufferDialog-Button-buffer"
-                style={{
-                    backgroundColor: this.props.valid ? '#initial' : '#e5e5e5',
-                    color: this.props.valid ? 'whitesmoke' : '#0000004d',
-                    fontWeight: 'bold',
-                }}
+                style={{ fontWeight: 'bold' }}
                 variant="contained"
                 color="primary"
                 onClick={this.props.handleBufferClick}
@@ -209,7 +208,7 @@ export class BufferDialog extends Component {
                                 inputProps={{ style: { textAlign: 'center' } }}
                             />
                             <span style={{ fontSize: '16px', color: 'grey' }}>m</span>
-                            <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? '#ce4427' : 'initial' }}>
+                            <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? colors.warning : 'initial' }}>
                                 {warning}
                                 {getSqKmString(this.props.aoi)} total AOI
                             </div>
@@ -273,6 +272,7 @@ BufferDialog.propTypes = {
     closeBufferDialog: PropTypes.func.isRequired,
     aoi: PropTypes.object.isRequired,
     maxVectorAoiSqKm: PropTypes.number,
+    theme: PropTypes.object.isRequired,
 };
 
-export default BufferDialog;
+export default withTheme()(BufferDialog);

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -22,7 +23,6 @@ import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { getGroups } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
 import { joyride } from '../../joyride.config';
-import background from '../../../images/ek_topo_pattern.png';
 
 export class DashboardPage extends React.Component {
     constructor(props) {
@@ -237,6 +237,8 @@ export class DashboardPage extends React.Component {
     }
 
     render() {
+        const { theme } = this.props;
+
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
         const styles = {
@@ -244,7 +246,7 @@ export class DashboardPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${theme.eventkit.images.topo_dark})`,
             },
             customScrollbar: {
                 height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
@@ -274,10 +276,10 @@ export class DashboardPage extends React.Component {
                 color: 'rgba(0, 0, 0, 0.54)',
             },
             link: {
-                color: '#337ab7',
+                color: theme.eventkit.colors.primary,
             },
             tourButton: {
-                color: '#4598bf',
+                color: theme.eventkit.colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
@@ -286,7 +288,7 @@ export class DashboardPage extends React.Component {
                 lineHeight: '30px',
             },
             tourIcon: {
-                color: '#4598bf',
+                color: theme.eventkit.colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',
@@ -322,7 +324,7 @@ export class DashboardPage extends React.Component {
                             position: 'absolute',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: 'rgba(0,0,0,0.2)',
+                            backgroundColor: theme.eventkit.colors.backdrop,
                         }}
                     >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -357,9 +359,9 @@ export class DashboardPage extends React.Component {
                         run={this.state.isRunning}
                         styles={{
                             options: {
-                                overlayColor: '#4598bf',
-                                backgroundColor: '#4598bf',
-                                primaryColor: '#fff',
+                                overlayColor: theme.eventkit.colors.primary,
+                                backgroundColor: theme.eventkit.colors.primary,
+                                primaryColor: theme.eventkit.colors.white,
                             },
                         }}
                     />
@@ -574,6 +576,7 @@ DashboardPage.propTypes = {
     updateDataCartPermissions: PropTypes.func.isRequired,
     getGroups: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -605,7 +608,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(DashboardPage);
+)(DashboardPage));

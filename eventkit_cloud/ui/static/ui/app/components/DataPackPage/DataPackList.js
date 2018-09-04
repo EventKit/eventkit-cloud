@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -24,7 +25,7 @@ export class DataPackList extends Component {
 
     // If it is a 'reversed' order the arrow should be up, otherwise it should be down
     getIcon(order) {
-        const style = { verticalAlign: 'middle', marginBottom: '2px', fill: '#4598bf' };
+        const style = { verticalAlign: 'middle', marginBottom: '2px', fill: this.props.theme.eventkit.colors.primary };
         const icon = this.props.order === order ?
             <NavigationArrowDropUp className="qa-DataPackList-NavigationArrowDropUp" style={style} />
             :
@@ -33,7 +34,7 @@ export class DataPackList extends Component {
     }
 
     getHeaderStyle(isActive) {
-        return isActive ? { color: '#000', fontWeight: 'bold' } : { color: 'inherit' };
+        return isActive ? { color: this.props.theme.eventkit.colors.black, fontWeight: 'bold' } : { color: 'inherit' };
     }
 
     getScrollbar() {
@@ -55,6 +56,8 @@ export class DataPackList extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
             root: {
@@ -66,8 +69,8 @@ export class DataPackList extends Component {
                 paddingBottom: spacing,
             },
             headerTable: {
-                backgroundColor: '#fff',
-                borderBottom: '1px solid rgba(224, 224, 224, 1)',
+                backgroundColor: colors.white,
+                borderBottom: `1px solid ${colors.secondary}`,
                 fontSize: '12px',
                 tableLayout: 'fixed',
             },
@@ -288,7 +291,7 @@ export class DataPackList extends Component {
                     >
                         <Table
                             className="qa-DataPackList-Table-item"
-                            style={{ backgroundColor: '#fff', fontSize: '12px', tableLayout: 'fixed' }}
+                            style={{ backgroundColor: colors.white, fontSize: '12px', tableLayout: 'fixed' }}
                         >
                             <TableBody>
                                 {this.props.runs.map((run) => {
@@ -337,7 +340,8 @@ DataPackList.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackList;
+export default withTheme()(DataPackList);
 

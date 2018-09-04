@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import debounce from 'lodash/debounce';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
-import { TypeaheadMenuItem } from './TypeaheadMenuItem';
+import TypeaheadMenuItem from './TypeaheadMenuItem';
 import SearchAOIButton from './SearchAOIButton';
 import css from '../../styles/typeahead.css';
 
@@ -68,6 +69,8 @@ export class SearchAOIToolbar extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             container: {
                 zIndex: 2,
@@ -78,7 +81,7 @@ export class SearchAOIToolbar extends Component {
                 height: '50px',
                 top: '1em',
                 right: '10px',
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 ...this.props.containerStyle,
             },
             buttonContainer: {
@@ -88,7 +91,7 @@ export class SearchAOIToolbar extends Component {
                 height: '50px',
             },
             error: {
-                color: '#CE4427',
+                color: colors.warning,
                 padding: '16px',
                 userSelect: 'none',
                 cursor: 'default',
@@ -200,6 +203,7 @@ SearchAOIToolbar.propTypes = {
     setAllButtonsDefault: PropTypes.func.isRequired,
     setSearchAOIButtonSelected: PropTypes.func.isRequired,
     containerStyle: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default SearchAOIToolbar;
+export default withTheme()(SearchAOIToolbar);

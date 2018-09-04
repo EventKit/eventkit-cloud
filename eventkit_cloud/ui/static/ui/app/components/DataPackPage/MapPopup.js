@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Clear from '@material-ui/icons/Clear';
 import Card from '@material-ui/core/Card';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
@@ -23,12 +24,14 @@ export class MapPopup extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             popupHeader: {
                 width: '100%',
                 height: '100%',
                 padding: '10px 10px 5px',
-                color: '#4598bf',
+                color: colors.primary,
             },
             popupNameContainer: {
                 display: 'inline-block',
@@ -51,7 +54,7 @@ export class MapPopup extends Component {
             closeButton: {
                 height: '20px',
                 width: '20px',
-                fill: '#4598bf',
+                fill: colors.primary,
                 cursor: 'pointer',
             },
             buttonLabel: {
@@ -61,7 +64,7 @@ export class MapPopup extends Component {
                 lineHeight: '19px',
             },
             buttonIcon: {
-                fill: '#4598bf',
+                fill: colors.primary,
                 height: '20px',
                 width: '20px',
                 verticalAlign: 'middle',
@@ -70,14 +73,14 @@ export class MapPopup extends Component {
             buttonStyle: {
                 height: '25px',
                 fontSize: '12px',
-                color: '#4598bf',
+                color: colors.primary,
                 lineHeight: '25px',
             },
             event: {
                 width: '100%',
                 height: '100%',
                 padding: '5px 10px',
-                color: 'grey',
+                color: colors.grey,
                 fontSize: '14px',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -86,13 +89,13 @@ export class MapPopup extends Component {
             actions: {
                 width: '100%',
                 padding: '5px 10px 0',
-                color: 'grey',
+                color: colors.grey,
                 display: 'flex',
                 flexWrap: 'wrap',
             },
             actionButton: {
                 display: 'inline-block',
-                color: '#4598bf',
+                color: colors.primary,
                 whiteSpace: 'nowrap',
                 marginBottom: '10px',
                 cursor: 'pointer',
@@ -100,13 +103,13 @@ export class MapPopup extends Component {
             showMoreIcon: {
                 width: '18px',
                 height: '18px',
-                color: '#4598bf',
+                color: colors.primary,
                 verticalAlign: 'bottom',
             },
             dot: {
-                color: '#ce4427',
-                backgroundColor: 'white',
-                border: '1px solid #4598bf',
+                color: colors.warning,
+                backgroundColor: colors.white,
+                border: `1px solid ${colors.primary}`,
                 borderRadius: '100%',
                 height: '14px',
                 width: '14px',
@@ -117,7 +120,7 @@ export class MapPopup extends Component {
                 width: '100%',
                 height: '100%',
                 padding: '0 10px 5px',
-                color: 'grey',
+                color: colors.grey,
             },
         };
 
@@ -126,7 +129,7 @@ export class MapPopup extends Component {
                 <div id="popup-header" style={styles.popupHeader}>
                     <div className="qa-MapPopup-div-name" id="popup-name-container" style={styles.popupNameContainer}>
                         <div id="popup-name" style={styles.popupName}>
-                            <a href={`/status/${this.props.featureInfo.job.uid}`} style={{ color: '#4598bf' }}>
+                            <a href={`/status/${this.props.featureInfo.job.uid}`} style={{ color: colors.primary }}>
                                 <Dot style={styles.dot} />
                                 <strong>{this.props.featureInfo.name}</strong>
                             </a>
@@ -235,6 +238,7 @@ MapPopup.propTypes = {
     detailUrl: PropTypes.string.isRequired,
     handleZoom: PropTypes.func.isRequired,
     handlePopupClose: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MapPopup;
+export default withTheme()(MapPopup);

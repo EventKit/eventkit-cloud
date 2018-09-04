@@ -1,3 +1,8 @@
+import topo_light from '../../images/topoBackground.png';
+import topo_dark from '../../images/ek_topo_pattern.png';
+import logo from '../../images/eventkit-logo.1.png';
+
+
 // define the main eventkit colors
 const colors = {
     primary: '#4598bf',
@@ -16,7 +21,14 @@ const colors = {
     white: '#fff',
     grey: '#808080',
     background: '#161e2e',
+    background_light: '#253447',
     backdrop: 'rgba(0,0,0,0.2)',
+};
+
+const images = {
+    topo_dark,
+    topo_light,
+    logo,
 };
 
 // define a global theme for the application
@@ -25,6 +37,7 @@ const theme = {
     // or components using withTheme() https://material-ui.com/customization/themes/#withtheme-component-component
     eventkit: {
         colors: { ...colors },
+        images: { ...images },
     },
     // adjust the MUI color palette to EK style
     palette: {

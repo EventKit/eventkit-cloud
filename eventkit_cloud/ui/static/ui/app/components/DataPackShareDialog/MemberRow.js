@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
@@ -39,6 +40,8 @@ export class MemberRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             card: {
                 margin: '0px 10px 10px',
@@ -47,11 +50,11 @@ export class MemberRow extends Component {
             text: {
                 flex: '1 1 auto',
                 marginRight: '10px',
-                color: '#707274',
+                color: colors.text_primary,
                 fontSize: '14px',
             },
             expandIcon: {
-                fill: '#4598bf',
+                fill: colors.primary,
                 marginLeft: '15px',
                 cursor: 'pointer',
             },
@@ -68,8 +71,8 @@ export class MemberRow extends Component {
                 marginRight: '15px',
             },
             cardText: {
-                backgroundColor: '#fff',
-                color: '#707274',
+                backgroundColor: colors.white,
+                color: colors.text_primary,
                 padding: '10px 16px 0px',
             },
         };
@@ -82,16 +85,10 @@ export class MemberRow extends Component {
             groupIcon = <CheckBox style={styles.checkIcon} onClick={this.handleCheck} color="primary" />;
         }
 
-        if (this.props.showAdmin && !this.props.selected) {
-            styles.adminCheckIcon.color = '#707274';
-            styles.adminCheckIcon.opacity = 0.2;
-            styles.adminCheckIcon.cursor = 'default';
-        }
-
         let adminButton = null;
         if (this.props.showAdmin) {
             if (!this.props.selected) {
-                styles.adminCheckIcon.color = '#707274';
+                styles.adminCheckIcon.color = colors.text_primary;
                 styles.adminCheckIcon.opacity = 0.2;
                 styles.adminCheckIcon.cursor = 'default';
             } else if (!this.props.admin) {
@@ -107,6 +104,7 @@ export class MemberRow extends Component {
                         onMouseOut={this.onAdminMouseOut}
                         onFocus={this.onAdminMouseOver}
                         onBlur={this.onAdminMouseOut}
+                        color="primary"
                         style={styles.adminCheckIcon}
                     />
                 </div>
@@ -178,6 +176,7 @@ MemberRow.propTypes = {
     handleAdminCheck: PropTypes.func,
     handleAdminMouseOut: PropTypes.func,
     handleAdminMouseOver: PropTypes.func,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MemberRow;
+export default withTheme()(MemberRow);

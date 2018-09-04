@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
@@ -199,17 +200,19 @@ export class MembersBody extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             fixedHeader: {
                 position: 'sticky',
                 top: 38,
                 left: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 zIndex: 15,
                 padding: '0px 10px',
             },
             textField: {
-                backgroundColor: 'whitesmoke',
+                backgroundColor: colors.secondary,
                 height: '36px',
                 lineHeight: '36px',
                 margin: '10px 0px',
@@ -229,7 +232,7 @@ export class MembersBody extends Component {
                 lineHeight: '20px',
             },
             shareInfoButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 fontSize: '13px',
                 flex: '0 0 auto',
             },
@@ -381,6 +384,7 @@ MembersBody.propTypes = {
     onMembersUpdate: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
     handleShowShareInfo: PropTypes.func,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MembersBody;
+export default withTheme()(MembersBody);

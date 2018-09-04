@@ -1,22 +1,24 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
-import backgroundImage from '../../../images/topoBackground.png';
 
 export class LoginPage extends React.Component {
     render() {
+        const { theme } = this.props;
+
         const mobile = window.innerWidth < 768;
         const styles = {
             wholeDiv: {
                 width: '100%',
                 height: window.innerHeight - 95,
-                backgroundColor: '#111823',
+                backgroundColor: theme.eventkit.colors.background,
             },
             paper: {
                 display: 'inline-block',
-                backgroundImage: `url(${backgroundImage})`,
+                backgroundImage: `url(${theme.eventkit.images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 padding: '30px',
                 height: '390px',
@@ -36,7 +38,7 @@ export class LoginPage extends React.Component {
                 alignSelf: 'center',
             },
             disclaimerHeading: {
-                color: '#fff',
+                color: theme.eventkit.colors.white,
                 fontSize: '16px',
                 marginBottom: '5px',
                 textAlign: 'center',
@@ -80,7 +82,7 @@ export class LoginPage extends React.Component {
                                         </div>
                                         <div
                                             className="qa-LoginPage-disclaimer"
-                                            style={{ color: '#fff', paddingRight: '10px' }}
+                                            style={{ color: theme.eventkit.colors.white, paddingRight: '10px' }}
                                             // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={
                                                 { __html: this.context.config.LOGIN_DISCLAIMER }
@@ -113,8 +115,12 @@ export class LoginPage extends React.Component {
     }
 }
 
+LoginPage.propTypes = {
+    theme: PropTypes.object.isRequired,
+};
+
 LoginPage.contextTypes = {
     config: PropTypes.object,
 };
 
-export default LoginPage;
+export default withTheme()(LoginPage);

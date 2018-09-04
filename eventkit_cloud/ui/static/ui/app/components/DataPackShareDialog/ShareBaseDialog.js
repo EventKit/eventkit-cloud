@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -33,6 +34,8 @@ export class ShareBaseDialog extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const marginSubtract = this.state.mobile ? 32 : 96;
         const styles = {
             dialog: {
@@ -52,7 +55,7 @@ export class ShareBaseDialog extends Component {
             body: {
                 padding: '0px 24px',
                 fontSize: '16px',
-                color: '#707274',
+                color: colors.text_primary,
                 position: 'relative',
             },
             actions: {
@@ -137,6 +140,7 @@ ShareBaseDialog.propTypes = {
         PropTypes.node,
     ]),
     submitButtonLabel: PropTypes.string,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ShareBaseDialog;
+export default withTheme()(ShareBaseDialog);

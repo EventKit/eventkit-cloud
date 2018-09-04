@@ -1,9 +1,12 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ButtonBase from '@material-ui/core/ButtonBase';
 
 export class ShareInfoBody extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             body: {
                 minHeight: '100%',
@@ -11,12 +14,12 @@ export class ShareInfoBody extends Component {
                 top: 0,
                 zIndex: 20,
                 position: 'absolute',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
-                backgroundColor: '#fff',
+                border: `1px solid ${colors.secondary_dark}`,
+                backgroundColor: colors.white,
             },
             return: {
                 padding: '20px',
-                color: '#4598bf',
+                color: colors.primary,
                 fontSize: '12px',
             },
             text: {
@@ -110,6 +113,7 @@ ShareInfoBody.propTypes = {
         'members',
     ]).isRequired,
     onReturn: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ShareInfoBody;
+export default withTheme()(ShareInfoBody);

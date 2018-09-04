@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
 class DataPackSearchbar extends React.Component {
@@ -22,15 +23,16 @@ class DataPackSearchbar extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const styles = {
             container: {
                 height: '36px',
                 width: '100%',
-                backgroundColor: '#16212f',
+                backgroundColor: colors.background,
                 lineHeight: '36px',
             },
             input: {
-                color: '#fff',
+                color: colors.white,
                 height: '36px',
                 width: '100%',
                 lineHeight: '36px',
@@ -61,6 +63,7 @@ DataPackSearchbar.propTypes = {
     onSearchChange: PropTypes.func.isRequired,
     onSearchSubmit: PropTypes.func.isRequired,
     defaultValue: PropTypes.string,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackSearchbar;
+export default withTheme()(DataPackSearchbar);

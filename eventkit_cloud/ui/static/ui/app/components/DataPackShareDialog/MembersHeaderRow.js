@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import Menu from '@material-ui/core/Menu';
@@ -53,17 +54,20 @@ export class MembersHeaderRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             card: {
                 boxShadow: 'none',
-                color: '#707274',
-                borderBottom: '1px solid #70727480',
+                color: colors.text_primary,
+                borderBottom: `1px solid ${colors.secondary_dark}`,
                 marginBottom: '6px',
+                borderRadius: '0px',
             },
             cardHeader: {
                 display: 'flex',
                 fontSize: '12px',
-                color: '#707274',
+                color: colors.text_primary,
                 lineHeight: '28px',
             },
             member: {
@@ -80,12 +84,12 @@ export class MembersHeaderRow extends Component {
                 width: '28px',
                 height: '28px',
                 cursor: 'pointer',
-                color: '#4598bf',
+                color: colors.primary,
             },
             menuItem: {
                 fontSize: '12px',
                 height: 'auto',
-                color: '#707274',
+                color: colors.text_primary,
             },
         };
 
@@ -151,7 +155,7 @@ export class MembersHeaderRow extends Component {
                                 <ButtonBase
                                     onClick={this.handleMemberChange}
                                     disableTouchRipple
-                                    style={{ color: this.props.activeOrder.includes('member') ? '#4598bf' : '#707274' }}
+                                    style={{ color: this.props.activeOrder.includes('member') ? colors.primary : colors.text_primary }}
                                 >
                                     MEMBER
                                     {this.props.memberOrder === 'member' ?
@@ -168,7 +172,7 @@ export class MembersHeaderRow extends Component {
                                     style={{
                                         marginRight: '10px',
                                         color: !this.props.activeOrder.includes('member') ?
-                                            '#4598bf' : '#707274',
+                                            colors.primary : colors.text_primary,
                                     }}
                                     disableTouchRipple
                                 >
@@ -250,6 +254,7 @@ MembersHeaderRow.propTypes = {
     handleCheckAll: PropTypes.func.isRequired,
     handleUncheckAll: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MembersHeaderRow;
+export default withTheme()(MembersHeaderRow);

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
@@ -10,7 +11,6 @@ import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../DataPackPage/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
-import background from '../../../images/ek_topo_pattern.png';
 
 export class NotificationsPage extends React.Component {
     constructor(props) {
@@ -71,6 +71,8 @@ export class NotificationsPage extends React.Component {
     }
 
     render() {
+        const { theme } = this.props;
+
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
@@ -79,7 +81,7 @@ export class NotificationsPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${theme.eventkit.images.topo_dark})`,
                 color: 'rgba(0, 0, 0, 0.54)',
             },
             customScrollbar: {
@@ -129,7 +131,7 @@ export class NotificationsPage extends React.Component {
                             position: 'absolute',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: 'rgba(0,0,0,0.2)',
+                            backgroundColor: theme.eventkit.colors.backdrop,
                         }}
                     >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -201,6 +203,7 @@ NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,
     notifications: PropTypes.object.isRequired,
     getNotifications: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -215,7 +218,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(NotificationsPage);
+)(NotificationsPage));

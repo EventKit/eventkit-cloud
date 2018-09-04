@@ -8,7 +8,7 @@
     "@material-ui/icons": "~3.0.0",
     "@material-ui/lab": "~1.0.0-alpha.12",
     "axios": "~0.15.3",
-    "babel-polyfill": "~6.23.0",
+    "@babel/polyfill": "~7.0.0",
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
     "moment": "~2.20.1",
@@ -36,14 +36,18 @@
   },
   "devDependencies": {
     "axios-mock-adapter": "~1.7.1",
-    "babel-core": "~6.26.3",
-    "babel-eslint": "~8.2.5",
-    "babel-jest": "17.0.2",
-    "babel-loader": "~7.0.0",
-    "babel-plugin-transform-class-properties": "~6.19.0",
-    "babel-preset-react": "~6.16.0",
-    "babel-preset-env": "~1.7.0",
-    "babel-preset-stage-0": "~6.16.0",
+    "@babel/core": "~7.0.0",
+    "@babel/cli": "~7.0.0",
+    "babel-eslint": "~9.0.0",
+    "babel-jest": "~23.4.2",
+    "babel-loader": "~8.0.2",
+    "@babel/plugin-proposal-function-bind": "~7.0.0",
+    "@babel/plugin-proposal-class-properties": "~7.0.0",
+    "@babel/plugin-proposal-decorators": "~7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "~7.0.0",
+    "@babel/plugin-transform-async-to-generator": "~7.0.0",
+    "@babel/preset-react": "~7.0.0",
+    "@babel/preset-env": "~7.0.0",
     "canvas": "~1.6.7",
     "compression-webpack-plugin": "~1.1.11",
     "css-loader": "~0.28.0",
@@ -78,13 +82,15 @@
   },
   "babel": {
     "plugins": [
-      "transform-class-properties",
-      "transform-async-to-generator"
+        "@babel/plugin-proposal-function-bind",
+        ["@babel/plugin-proposal-decorators", { "legacy": true }],
+        ["@babel/plugin-proposal-class-properties", { "loose": true }],
+        "@babel/plugin-syntax-dynamic-import",
+        "@babel/plugin-transform-async-to-generator"
     ],
     "presets": [
-      "react",
-      "env",
-      "stage-0"
+      "@babel/preset-react",
+      ["@babel/preset-env", { "targets": "> 0.25%, not dead" }]
     ]
   },
   "jest": {

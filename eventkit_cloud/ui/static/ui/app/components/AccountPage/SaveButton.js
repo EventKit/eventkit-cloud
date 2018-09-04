@@ -1,10 +1,12 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import NavigationCheck from '@material-ui/icons/Check';
 import Button from '@material-ui/core/Button';
 
 export class SaveButton extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
         const styles = {
             button: {
                 height: '35px',
@@ -15,8 +17,8 @@ export class SaveButton extends Component {
         };
 
         if (this.props.saved) {
-            styles.button.backgroundColor = '#55BA63';
-            styles.button.color = '#fff';
+            styles.button.backgroundColor = colors.success;
+            styles.button.color = colors.white;
             return (
                 <Button
                     className="qa-SaveButton-Button-Saved"
@@ -26,14 +28,14 @@ export class SaveButton extends Component {
                     disabled
                 >
                     Saved
-                    <NavigationCheck className="qa-SaveButton-NavigationCheck" style={{ fill: '#fff', verticalAlign: 'middle' }} />
+                    <NavigationCheck className="qa-SaveButton-NavigationCheck" style={{ fill: colors.white, verticalAlign: 'middle' }} />
                 </Button>
             );
         }
 
         if (this.props.saveDisabled) {
-            styles.button.backgroundColor = 'rgba(226,226,226, 0.5)';
-            styles.button.color = '#e2e2e2';
+            styles.button.backgroundColor = colors.grey;
+            styles.button.color = colors.secondary_dark;
         }
 
         return (
@@ -60,6 +62,7 @@ SaveButton.propTypes = {
     saved: PropTypes.bool,
     saveDisabled: PropTypes.bool,
     handleSubmit: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default SaveButton;
+export default withTheme()(SaveButton);

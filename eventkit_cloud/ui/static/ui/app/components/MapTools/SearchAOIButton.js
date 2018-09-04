@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ActionSearch from '@material-ui/icons/Search';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -17,10 +18,12 @@ export class SearchAOIButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                color: '#4598bf',
+                color: colors.primary,
                 bottom: '0px',
                 fontSize: '8px',
                 width: '50px',
@@ -35,7 +38,7 @@ export class SearchAOIButton extends Component {
                 borderRight: 'none',
                 margin: '0px',
                 padding: '0px',
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
 
@@ -90,7 +93,8 @@ SearchAOIButton.propTypes = {
     buttonState: PropTypes.string.isRequired,
     handleCancel: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default SearchAOIButton;
+export default withTheme()(SearchAOIButton);
 

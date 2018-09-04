@@ -1,14 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import Joyride from 'react-joyride';
-
 import Paper from '@material-ui/core/Paper';
 import MapCard from '../common/MapCard';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
-import background from '../../../images/topoBackground.png';
 
 export class ExportSummary extends Component {
     constructor(props) {
@@ -63,12 +62,13 @@ export class ExportSummary extends Component {
     }
 
     render() {
+        const { theme } = this.props;
         const { steps, isRunning } = this.state;
 
         const styles = {
             root: {
                 width: '100%',
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${theme.eventkit.images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -98,7 +98,7 @@ export class ExportSummary extends Component {
             subHeading: {
                 fontSize: '16px',
                 alignContent: 'flex-start',
-                color: '#8b9396',
+                color: theme.eventkit.colors.text_primary,
                 paddingBottom: '10px',
             },
             exportHeading: {
@@ -221,9 +221,10 @@ ExportSummary.propTypes = {
     areaStr: PropTypes.string.isRequired,
     walkthroughClicked: PropTypes.bool.isRequired,
     onWalkthroughReset: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     null,
-)(ExportSummary);
+)(ExportSummary));

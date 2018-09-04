@@ -49,9 +49,8 @@ var config = {
                     loader: 'babel-loader',
                     options: {
                         presets: [
-                            "react",
-                            "env",
-                            "stage-0"
+                            "@babel/preset-react",
+                            "@babel/preset-env",
                         ],
                     },
                 },
@@ -152,6 +151,8 @@ var config = {
         inline: true
     },
 };
+
+// https://github.com/gaearon/react-hot-loader/issues/456 !!!!!!!!!
 
 if (!PROD) {
     config.plugins.push(new WriteFilePlugin());

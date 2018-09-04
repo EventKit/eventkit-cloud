@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
 import Joyride from 'react-joyride';
-
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -21,7 +21,6 @@ import CustomTableRow from '../CustomTableRow';
 import BaseTooltip from '../BaseTooltip';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
-import background from '../../../images/topoBackground.png';
 
 
 export class ExportInfo extends React.Component {
@@ -281,6 +280,7 @@ export class ExportInfo extends React.Component {
 
 
     render() {
+        const { theme } = this.props;
         const { steps, isRunning } = this.state;
 
         const style = {
@@ -294,7 +294,7 @@ export class ExportInfo extends React.Component {
             root: {
                 width: '100%',
                 height: window.innerHeight - 180,
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${theme.eventkit.images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -323,7 +323,7 @@ export class ExportInfo extends React.Component {
             },
             textField: {
                 marginTop: '15px',
-                backgroundColor: 'whitesmoke',
+                backgroundColor: theme.eventkit.colors.secondary,
             },
             input: {
                 fontSize: '16px',
@@ -360,7 +360,7 @@ export class ExportInfo extends React.Component {
                 fontWeight: 'normal',
                 verticalAlign: 'top',
                 cursor: 'pointer',
-                color: '#4598bf',
+                color: theme.eventkit.colors.primary,
             },
         };
 
@@ -622,9 +622,10 @@ ExportInfo.propTypes = {
     setNextEnabled: PropTypes.func.isRequired,
     walkthroughClicked: PropTypes.bool.isRequired,
     onWalkthroughReset: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(ExportInfo);
+)(ExportInfo));
