@@ -19,7 +19,7 @@ const jss = theme => ({
         borderRadius: '50%',
         width: '16px',
         height: '16px',
-        backgroundColor: 'white',
+        backgroundColor: theme.eventkit.colors.white,
         border: `3px solid ${theme.eventkit.colors.primary}`,
         margin: '0px 4px',
         transition: 'border 0.25s',
@@ -70,6 +70,7 @@ export class DashboardSection extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const { classes } = this.props;
 
         const spacing = window.innerWidth > 575 ? 10 : 2;
@@ -90,7 +91,7 @@ export class DashboardSection extends React.Component {
                 textTransform: 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
-                color: 'white',
+                color: colors.white,
             },
             sectionHeaderLeft: {
                 flex: '1',
@@ -111,7 +112,7 @@ export class DashboardSection extends React.Component {
                 paddingRight: (window.innerWidth > 575) ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
             },
             viewAll: {
-                color: 'rgb(69, 152, 191)',
+                color: colors.primary,
                 textTransform: 'uppercase',
                 fontSize: (window.innerWidth > 575) ? '14px' : '12px',
                 cursor: 'pointer',
@@ -282,6 +283,7 @@ DashboardSection.propTypes = {
         PropTypes.string,
     ]),
     classes: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
 DashboardSection.defaultProps = {
@@ -296,4 +298,4 @@ DashboardSection.defaultProps = {
     classes: {},
 };
 
-export default withStyles(jss)(DashboardSection);
+export default withStyles(jss, { withTheme: true })(DashboardSection);

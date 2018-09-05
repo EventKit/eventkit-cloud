@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
@@ -34,16 +35,18 @@ export class OwnUserRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             row: {
                 ...this.props.style,
-                color: '#707274',
+                color: colors.text_primary,
                 fontSize: '14px',
                 whiteSpace: 'normal',
                 display: 'flex',
-                borderTop: '1px solid rgba(0, 0, 0, 0.2)',
-                borderBottom: '1px solid rgba(0, 0, 0, 0.2)',
-                backgroundColor: this.state.hovered ? '#4598bf33' : 'rgba(0, 0, 0, 0.05)',
+                borderTop: `1px solid ${colors.backdrop}`,
+                borderBottom: `1px solid ${colors.backdrop}`,
+                backgroundColor: this.state.hovered ? colors.selected_primary : colors.secondary,
             },
             userInfo: {
                 display: 'flex',
@@ -64,8 +67,8 @@ export class OwnUserRow extends Component {
                 alignItems: 'center',
             },
             admin: {
-                backgroundColor: '#4598bf',
-                color: '#fff',
+                backgroundColor: colors.primary,
+                color: colors.white,
                 padding: '4px 11px',
                 fontSize: '11px',
                 cursor: 'pointer',
@@ -73,7 +76,7 @@ export class OwnUserRow extends Component {
             menuItem: {
                 fontSize: '14px',
                 overflow: 'hidden',
-                color: '#ce4427',
+                color: colors.warning,
             },
         };
 
@@ -190,6 +193,7 @@ OwnUserRow.propTypes = {
     showAdminLabel: PropTypes.bool,
     showRemoveButton: PropTypes.bool,
     style: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default OwnUserRow;
+export default withTheme()(OwnUserRow);

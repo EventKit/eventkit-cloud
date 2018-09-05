@@ -19,7 +19,7 @@ import UnionOp from 'jsts/org/locationtech/jts/operation/union/UnionOp';
 import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 import ZoomSlider from 'ol/control/zoomslider';
-
+import { colors } from '../styles/eventkit_theme';
 const icon = require('../../images/ic_room_black_24px.svg');
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';
@@ -201,7 +201,7 @@ export function generateDrawLayer() {
         }),
         style: new Style({
             stroke: new Stroke({
-                color: '#ce4427',
+                color: colors.warning,
                 width: 3,
             }),
             image: new Icon({
@@ -222,7 +222,7 @@ export function generateDrawBoxInteraction(drawLayer) {
         style: new Style({
             image: new RegularShape({
                 stroke: new Stroke({
-                    color: 'black',
+                    color: colors.black,
                     width: 1,
                 }),
                 points: 4,
@@ -231,7 +231,7 @@ export function generateDrawBoxInteraction(drawLayer) {
                 angle: 0,
             }),
             stroke: new Stroke({
-                color: '#ce4427',
+                color: colors.warning,
                 width: 2,
                 lineDash: [5, 5],
             }),
@@ -250,7 +250,7 @@ export function generateDrawFreeInteraction(drawLayer) {
         style: new Style({
             image: new RegularShape({
                 stroke: new Stroke({
-                    color: 'black',
+                    color: colors.black,
                     width: 1,
                 }),
                 points: 4,
@@ -259,7 +259,7 @@ export function generateDrawFreeInteraction(drawLayer) {
                 angle: 0,
             }),
             stroke: new Stroke({
-                color: '#ce4427',
+                color: colors.warning,
                 width: 2,
                 lineDash: [5, 5],
             }),

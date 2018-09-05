@@ -7,18 +7,18 @@ import CustomScrollbar from '../CustomScrollbar';
 
 export class LoginPage extends React.Component {
     render() {
-        const { theme } = this.props;
+        const { colors, images } = this.props.theme.eventkit;
 
         const mobile = window.innerWidth < 768;
         const styles = {
             wholeDiv: {
                 width: '100%',
                 height: window.innerHeight - 95,
-                backgroundColor: theme.eventkit.colors.background,
+                backgroundColor: colors.background,
             },
             paper: {
                 display: 'inline-block',
-                backgroundImage: `url(${theme.eventkit.images.topo_light})`,
+                backgroundImage: `url(${images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 padding: '30px',
                 height: '390px',
@@ -38,13 +38,13 @@ export class LoginPage extends React.Component {
                 alignSelf: 'center',
             },
             disclaimerHeading: {
-                color: theme.eventkit.colors.white,
+                color: colors.white,
                 fontSize: '16px',
                 marginBottom: '5px',
                 textAlign: 'center',
             },
             footerText: {
-                color: 'grey',
+                color: colors.grey,
                 padding: '5px 10px 5px',
                 opacity: 0.5,
                 fontSize: '9px',
@@ -82,7 +82,7 @@ export class LoginPage extends React.Component {
                                         </div>
                                         <div
                                             className="qa-LoginPage-disclaimer"
-                                            style={{ color: theme.eventkit.colors.white, paddingRight: '10px' }}
+                                            style={{ color: colors.white, paddingRight: '10px' }}
                                             // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={
                                                 { __html: this.context.config.LOGIN_DISCLAIMER }

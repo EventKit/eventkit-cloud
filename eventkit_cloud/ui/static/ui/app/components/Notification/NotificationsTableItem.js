@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import TableRow from '@material-ui/core/TableRow';
@@ -49,14 +50,16 @@ export class NotificationsTableItem extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         let styles = {
             tableRow: {
                 transition: 'background-color 0.25s',
-                borderBottom: '1px solid #e0e0e0',
+                borderBottom: `1px solid ${colors.secondary_dark}`,
             },
             cell: {
                 padding: '0 15px',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.text_primary,
                 fontSize: '18px',
                 height: '48px',
                 borderBottom: 'none',
@@ -68,7 +71,7 @@ export class NotificationsTableItem extends React.Component {
             },
             button: {
                 fontSize: '14px',
-                color: '#4598bf',
+                color: colors.primary,
                 textTransform: 'uppercase',
             },
             optionButtonLabel: {
@@ -109,7 +112,7 @@ export class NotificationsTableItem extends React.Component {
             <TableRow
                 style={{
                     ...styles.tableRow,
-                    backgroundColor: (this.props.notification.unread) ? '#d5e6f1' : 'white',
+                    backgroundColor: (this.props.notification.unread) ? colors.selected_primary : colors.white,
                 }}
                 selectable={false}
             >
@@ -240,6 +243,7 @@ NotificationsTableItem.propTypes = {
     markNotificationsAsRead: PropTypes.func.isRequired,
     markNotificationsAsUnread: PropTypes.func.isRequired,
     removeNotifications: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 NotificationsTableItem.defaultProps = {
@@ -257,7 +261,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     null,
     mapDispatchToProps,
-)(NotificationsTableItem);
+)(NotificationsTableItem));

@@ -52,7 +52,7 @@ import globe from '../../../images/globe-americas.svg';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
-        color: this.props.theme.eventkit.colors.warning,
+        color: '#ce4427',
         width: 6,
     }),
     image: null,
@@ -61,7 +61,7 @@ export const RED_STYLE = new Style({
 
 export const BLUE_STYLE = new Style({
     stroke: new Stroke({
-        color: this.props.theme.eventkit.colors.primary,
+        color: '#4598bf',
         width: 4,
     }),
     image: null,
@@ -979,7 +979,7 @@ export class MapView extends Component {
                             onKeyPress={this.handleOlPopupClose}
                         />
                         <div className="qa-MapView-div-popupContent" id="popup-content">
-                            <p style={{ color: 'grey' }}>Select One:</p>
+                            <p style={{ color: colors.grey }}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                                 {this.state.groupedFeatures.map(groupFeature => (
                                     <span

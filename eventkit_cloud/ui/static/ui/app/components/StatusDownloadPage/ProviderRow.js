@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableHead from '@material-ui/core/TableHead';
@@ -75,12 +76,13 @@ export class ProviderRow extends Component {
     }
 
     getTaskStatus(task) {
+        const { colors } = this.props.theme.eventkit;
         switch (task.status) {
             case 'SUCCESS':
                 return (
                     <Check
                         className="qa-ProviderRow-Check-taskStatus"
-                        style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
+                        style={{ fill: colors.success, verticalAlign: 'middle', marginBottom: '2px' }}
                     />
                 );
             case 'FAILED':
@@ -100,7 +102,7 @@ export class ProviderRow extends Component {
                         className="qa-ProviderRow-Warning-taskStatus"
                         style={{
                             marginLeft: '10px',
-                            fill: '#f4d225',
+                            fill: colors.running,
                             verticalAlign: 'bottom',
                         }}
                     />
@@ -111,12 +113,14 @@ export class ProviderRow extends Component {
     }
 
     getProviderStatus(provider) {
+        const { colors } = this.props.theme.eventkit;
+
         switch (provider.status) {
             case 'COMPLETED':
                 return (
                     <Check
                         className="qa-ProviderRow-Check-providerStatus"
-                        style={{ fill: '#55ba63', verticalAlign: 'middle', marginBottom: '2px' }}
+                        style={{ fill: colors.success, verticalAlign: 'middle', marginBottom: '2px' }}
                     />
                 );
             case 'INCOMPLETE':
@@ -134,7 +138,7 @@ export class ProviderRow extends Component {
                             borderTopWidth: '10px',
                             borderBottomWidth: '10px',
                             borderLeftWidth: '10px',
-                            color: '#f4d225',
+                            color: colors.running,
                         }}
                     >
                     CANCELED
@@ -142,7 +146,7 @@ export class ProviderRow extends Component {
                             className="qa-ProviderRow-Warning-providerStatus"
                             style={{
                                 marginLeft: '10px',
-                                fill: '#f4d225',
+                                fill: colors.warning,
                                 verticalAlign: 'bottom',
                             }}
                         />
@@ -154,11 +158,13 @@ export class ProviderRow extends Component {
     }
 
     getTaskLink(task) {
+        const { colors } = this.props.theme.eventkit;
+
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
                 <span
                     className="qa-ProviderRow-span-taskLinkDisabled"
-                    style={{ color: 'gray' }}
+                    style={{ color: colors.grey }}
                 >
                     {task.name}
                 </span>
@@ -171,7 +177,7 @@ export class ProviderRow extends Component {
                 tabIndex={0}
                 onClick={() => { this.handleSingleDownload(task.result.url); }}
                 onKeyPress={() => { this.handleSingleDownload(task.result.url); }}
-                style={{ color: '#4598bf', cursor: 'pointer' }}
+                style={{ color: colors.primary, cursor: 'pointer' }}
             >
                 {task.name}
             </span>
@@ -179,6 +185,8 @@ export class ProviderRow extends Component {
     }
 
     getTaskDownloadIcon(task) {
+        const { colors } = this.props.theme.eventkit;
+
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
             return (
                 <CloudDownload
@@ -186,7 +194,7 @@ export class ProviderRow extends Component {
                     key={task.result == null ? '' : task.result.url}
                     style={{
                         marginLeft: '10px',
-                        fill: 'gray',
+                        fill: colors.grey,
                         verticalAlign: 'middle',
                     }}
                 />
@@ -200,7 +208,7 @@ export class ProviderRow extends Component {
                 style={{
                     marginLeft: '10px',
                     cursor: 'pointer',
-                    fill: '#4598bf',
+                    fill: colors.primary,
                     verticalAlign: 'middle',
                 }}
             />
@@ -234,6 +242,8 @@ export class ProviderRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = '50px';
@@ -265,7 +275,7 @@ export class ProviderRow extends Component {
                 paddingRight: '12px',
                 paddingLeft: '12px',
                 whiteSpace: 'normal',
-                color: 'black',
+                color: colors.black,
                 fontWeight: 'bold',
                 fontSize: textFontSize,
             },
@@ -274,7 +284,7 @@ export class ProviderRow extends Component {
                 paddingRight: '0px',
                 paddingLeft: '0px',
                 textAlign: 'center',
-                color: 'black!important',
+                color: colors.black,
                 fontSize: textFontSize,
             },
             providerStatusColumn: {
@@ -282,7 +292,7 @@ export class ProviderRow extends Component {
                 paddingRight: '0px',
                 paddingLeft: '0px',
                 textAlign: 'center',
-                color: 'black!important',
+                color: colors.black,
                 fontSize: textFontSize,
             },
             menuColumn: {
@@ -464,6 +474,7 @@ ProviderRow.propTypes = {
     onProviderCancel: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     backgroundColor: PropTypes.string.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ProviderRow;
+export default withTheme()(ProviderRow);

@@ -210,7 +210,7 @@ export class StatusDownload extends React.Component {
     }
 
     render() {
-        const { theme } = this.props;
+        const { colors, images } = this.props.theme.eventkit;
 
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>;
@@ -222,7 +222,7 @@ export class StatusDownload extends React.Component {
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
-                backgroundImage: `url(${theme.eventkit.images.topo_dark})`,
+                backgroundImage: `url(${images.topo_dark})`,
                 backgroundRepeat: 'repeat repeat',
             },
             content: {
@@ -236,7 +236,7 @@ export class StatusDownload extends React.Component {
             heading: {
                 fontSize: '18px',
                 fontWeight: 'bold',
-                color: 'black',
+                color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
             },
@@ -246,22 +246,22 @@ export class StatusDownload extends React.Component {
                 width: '100%',
                 height: '100%',
                 display: 'inline-flex',
-                backgroundColor: theme.eventkit.colors.backdrop,
+                backgroundColor: colors.backdrop,
             },
             notFoundIcon: {
-                color: theme.eventkit.colors.warning,
+                color: colors.warning,
                 height: '22px',
                 width: '22px',
                 verticalAlign: 'bottom',
             },
             notFoundText: {
                 fontSize: '16px',
-                color: theme.eventkit.colors.warning,
+                color: colors.warning,
                 fontWeight: 800,
                 marginLeft: '5px',
             },
             tourButton: {
-                color: theme.eventkit.colors.primary,
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
@@ -270,7 +270,7 @@ export class StatusDownload extends React.Component {
                 lineHeight: '30px',
             },
             tourIcon: {
-                color: theme.eventkit.colors.primary,
+                color: colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',

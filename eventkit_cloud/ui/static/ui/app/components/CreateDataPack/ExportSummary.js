@@ -62,13 +62,13 @@ export class ExportSummary extends Component {
     }
 
     render() {
-        const { theme } = this.props;
+        const { colors, images } = this.props.theme.eventkit;
         const { steps, isRunning } = this.state;
 
         const styles = {
             root: {
                 width: '100%',
-                backgroundImage: `url(${theme.eventkit.images.topo_light})`,
+                backgroundImage: `url(${images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
@@ -91,20 +91,20 @@ export class ExportSummary extends Component {
             heading: {
                 fontSize: '18px',
                 fontWeight: 'bold',
-                color: 'black',
+                color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
             },
             subHeading: {
                 fontSize: '16px',
                 alignContent: 'flex-start',
-                color: theme.eventkit.colors.text_primary,
+                color: colors.text_primary,
                 paddingBottom: '10px',
             },
             exportHeading: {
                 fontSize: '16px',
                 alignContent: 'flex-start',
-                color: 'black',
+                color: colors.black,
                 fontWeight: 'bold',
                 paddingTop: '25px',
                 paddingBottom: '10px',

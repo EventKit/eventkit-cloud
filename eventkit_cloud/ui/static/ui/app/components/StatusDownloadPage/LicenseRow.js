@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import BaseDialog from '../Dialog/BaseDialog';
@@ -46,6 +47,8 @@ export class LicenseRow extends Component {
 
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const textFontSize = this.getTextFontSize();
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = '50px';
@@ -71,7 +74,7 @@ export class LicenseRow extends Component {
                             tabIndex={0}
                             onKeyPress={this.setLicenseOpen}
                             onClick={this.setLicenseOpen}
-                            style={{ cursor: 'pointer', color: '#4598bf' }}
+                            style={{ cursor: 'pointer', color: colors.primary }}
                         >
                             {name}
                         </span>
@@ -130,7 +133,8 @@ export class LicenseRow extends Component {
 LicenseRow.propTypes = {
     name: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default LicenseRow;
+export default withTheme()(LicenseRow);
 

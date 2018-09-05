@@ -210,6 +210,8 @@ export class AddMembersDialog extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             dialog: {
                 width: 'calc(100% - 32px)',
@@ -229,11 +231,11 @@ export class AddMembersDialog extends Component {
             },
             clear: {
                 float: 'right',
-                fill: '#4598bf',
+                fill: colors.primary,
                 cursor: 'pointer',
             },
             textField: {
-                backgroundColor: 'whitesmoke',
+                backgroundColor: colors.secondary,
                 height: '36px',
                 lineHeight: '36px',
                 margin: '15px 0px 5px',
@@ -260,7 +262,7 @@ export class AddMembersDialog extends Component {
                 verticalAlign: 'top',
             },
             unassignedTab: {
-                color: '#707274',
+                color: colors.text_primary,
                 fontSize: '14px',
                 maxWidth: '175px',
                 flex: '1 1 auto',
@@ -268,7 +270,7 @@ export class AddMembersDialog extends Component {
                 height: '36px',
             },
             assignedTab: {
-                color: '#707274',
+                color: colors.text_primary,
                 fontSize: '14px',
                 maxWidth: '175px',
                 flex: '1 1 auto',
@@ -278,7 +280,7 @@ export class AddMembersDialog extends Component {
             row: {
                 display: 'flex',
                 width: '100%',
-                backgroundColor: 'whitesmoke',
+                backgroundColor: colors.secondary,
                 alignItems: 'center',
                 padding: '12px 48px 12px 24px',
                 marginBottom: '10px',
@@ -286,12 +288,12 @@ export class AddMembersDialog extends Component {
             name: {
                 flex: '1 1 auto',
                 fontWeight: 800,
-                color: '#000',
+                color: colors.black,
             },
             tabIndicator: {
                 left: 0,
                 width: '100%',
-                backgroundColor: '#e5e5e5',
+                backgroundColor: colors.secondary,
                 zIndex: -2,
             },
         };
@@ -327,7 +329,7 @@ export class AddMembersDialog extends Component {
                 onClick={this.toggleSortName}
                 style={{
                     padding: '0px 10px',
-                    color: this.state.sort.includes('name') ? '#4598bf' : '#707274',
+                    color: this.state.sort.includes('name') ? colors.primary : colors.text_primary,
                 }}
                 className="qa-AddMembersDialog-sortName"
             >
@@ -345,7 +347,7 @@ export class AddMembersDialog extends Component {
                 onClick={this.toggleSortSelected}
                 style={{
                     padding: '0px 10px',
-                    color: this.state.sort.includes('selected') ? '#4598bf' : '#707274',
+                    color: this.state.sort.includes('selected') ? colors.primary : colors.text_primary,
                 }}
                 className="qa-AddMembersDialog-sortSelected"
             >
@@ -418,7 +420,7 @@ export class AddMembersDialog extends Component {
                 <DialogContent style={{ padding: '0px 24px' }}>
                     <p
                         ref={this.infoPRef}
-                        style={{ marginBottom: '20px', color: '#707274' }}
+                        style={{ marginBottom: '20px', color: colors.text_primary }}
                         className="qa-AddMembersDialog-description"
                     >
                         <strong>You can add selected members to the groups listed in the &apos;AVAILABLE GROUPS&apos; tab.</strong>
@@ -482,7 +484,7 @@ export class AddMembersDialog extends Component {
                                     {sortName(`GROUP ASSIGNMENTS (${assigned.length})`)}
                                 </div>
                                 <div style={{ flex: '0 0 auto', justifyContent: 'flex-end', height: '28px' }}>
-                                    <span style={{ marginRight: '-24px', color: '#707274' }}>(View Only)</span>
+                                    <span style={{ marginRight: '-24px', color: colors.text_primary }}>(View Only)</span>
                                 </div>
                             </div>
                             <CustomScrollbar
@@ -495,7 +497,7 @@ export class AddMembersDialog extends Component {
                                         style={styles.row}
                                     >
                                         <div style={styles.name}>{group.name}</div>
-                                        <Checked style={{ height: '28px', width: '28px', fill: '#9d9d9d' }} />
+                                        <Checked style={{ height: '28px', width: '28px', fill: colors.text_primary }} />
                                     </div>
                                 ))}
                             </CustomScrollbar>
@@ -530,6 +532,7 @@ AddMembersDialog.propTypes = {
         groups: PropTypes.arrayOf(PropTypes.number),
     })).isRequired,
     classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default withStyles(jss)(AddMembersDialog);
+export default withStyles(jss, { withTheme: true })(AddMembersDialog);

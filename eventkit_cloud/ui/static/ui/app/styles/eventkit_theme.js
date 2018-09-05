@@ -4,7 +4,7 @@ import logo from '../../images/eventkit-logo.1.png';
 
 
 // define the main eventkit colors
-const colors = {
+export const colors = {
     primary: '#4598bf',
     primary_light: '#63a8c9',
     primary_dark: '#3982a4',
@@ -15,7 +15,9 @@ const colors = {
     warning: '#ce4427',
     success: '#55ba63',
     running: '#f4d225',
-    selected_primary: '#e8eef5',
+    over: '#faa619',
+    selected_primary: '#d5e6f1',
+    selected_primary_dark: '#c2dbeb',
     selected_secondary: 'rgba(0, 0, 0, 0.8)',
     black: '#000',
     white: '#fff',
@@ -25,14 +27,14 @@ const colors = {
     backdrop: 'rgba(0,0,0,0.2)',
 };
 
-const images = {
+export const images = {
     topo_dark,
     topo_light,
     logo,
 };
 
 // define a global theme for the application
-const theme = {
+export const theme = {
     // add in all the eventkit specific styles so they are accessible to all JSS styled components
     // or components using withTheme() https://material-ui.com/customization/themes/#withtheme-component-component
     eventkit: {

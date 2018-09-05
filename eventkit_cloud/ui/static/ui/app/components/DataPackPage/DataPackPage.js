@@ -196,7 +196,6 @@ export class DataPackPage extends React.Component {
             providers: this.props.providers,
             users: this.props.users,
             groups: this.props.groups,
-            ref: this.getViewRef,
         };
         switch (view) {
             case 'list':
@@ -205,6 +204,7 @@ export class DataPackPage extends React.Component {
                         {...commonProps}
                         onSort={this.handleSortChange}
                         order={this.props.location.query.order}
+                        innerRef={this.getViewRef}
                     />
                 );
             case 'grid':
@@ -212,6 +212,7 @@ export class DataPackPage extends React.Component {
                     <DataPackGrid
                         {...commonProps}
                         name="DataPackLibrary"
+                        ref={this.getViewRef}
                     />
                 );
             case 'map':
@@ -224,6 +225,7 @@ export class DataPackPage extends React.Component {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                         onMapFilter={this.handleSpatialFilter}
+                        innerRef={this.getViewRef}
                     />
                 );
             default: return null;
@@ -381,6 +383,8 @@ export class DataPackPage extends React.Component {
     }
 
     handleJoyride() {
+        const { colors } = this.props.theme.eventkit;
+
         if (this.state.isRunning === true) {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
@@ -397,29 +401,29 @@ export class DataPackPage extends React.Component {
                 text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
                 selector: '.tour-datapack-featured',
                 style: {
-                    backgroundColor: 'white',
+                    backgroundColor: colors.white,
                     borderRadius: '0',
-                    color: 'black',
-                    mainColor: this.props.theme.eventkit.colors.primary,
+                    color: colors.black,
+                    mainColor: colors.primary,
                     textAlign: 'left',
                     header: {
                         textAlign: 'left',
                         fontSize: '20px',
-                        borderColor: this.props.theme.eventkit.colors.primary,
+                        borderColor: colors.primary,
                     },
                     main: {
                         paddingTop: '20px',
                         paddingBottom: '20px',
                     },
                     button: {
-                        color: 'white',
-                        backgroundColor: this.props.theme.eventkit.colors.primary,
+                        color: colors.white,
+                        backgroundColor: colors.primary,
                     },
                     skip: {
                         display: 'none',
                     },
                     back: {
-                        color: this.props.theme.eventkit.colors.text_primary,
+                        color: colors.text_primary,
                     },
                     hole: {
                         backgroundColor: 'rgba(226,226,226, 0.2)',

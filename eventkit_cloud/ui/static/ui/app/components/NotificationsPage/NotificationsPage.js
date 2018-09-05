@@ -71,7 +71,7 @@ export class NotificationsPage extends React.Component {
     }
 
     render() {
-        const { theme } = this.props;
+        const { colors, images } = this.props.theme.eventkit;
 
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
@@ -81,8 +81,8 @@ export class NotificationsPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${theme.eventkit.images.topo_dark})`,
-                color: 'rgba(0, 0, 0, 0.54)',
+                backgroundImage: `url(${images.topo_dark})`,
+                color: colors.text_primary,
             },
             customScrollbar: {
                 height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
@@ -112,7 +112,7 @@ export class NotificationsPage extends React.Component {
                 margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
                 fontSize: '18px',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.text_primary,
             },
         };
 
@@ -131,7 +131,7 @@ export class NotificationsPage extends React.Component {
                             position: 'absolute',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: theme.eventkit.colors.backdrop,
+                            backgroundColor: colors.backdrop,
                         }}
                     >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -21,11 +22,13 @@ export class UserLicense extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             card: {
                 boxShadow: 'none',
                 marginBottom: '10px',
-                border: this.props.checked ? '1px solid whitesmoke' : '1px solid red',
+                border: this.props.checked ? `1px solid ${colors.secondary}` : `1px solid ${colors.warning}`,
             },
             checkbox: {
                 width: '24px',
@@ -34,7 +37,7 @@ export class UserLicense extends Component {
                 marginRight: '10px',
             },
             cardText: {
-                border: '2px solid #dedede',
+                border: `2px solid ${colors.secondary}`,
                 padding: '0px',
             },
             expand: {
@@ -57,7 +60,7 @@ export class UserLicense extends Component {
             >
                 <CardHeader
                     className="qa-UserLicense-CardHeader"
-                    style={{ backgroundColor: 'whitesmoke', padding: '16px' }}
+                    style={{ backgroundColor: colors.secondary, padding: '16px' }}
                     title={
                         <div>
                             <Checkbox
@@ -108,6 +111,7 @@ UserLicense.propTypes = {
     checked: PropTypes.bool.isRequired,
     onCheck: PropTypes.func.isRequired,
     disabled: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default UserLicense;
+export default withTheme()(UserLicense);

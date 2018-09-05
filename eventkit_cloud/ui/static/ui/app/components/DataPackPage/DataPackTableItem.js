@@ -43,15 +43,17 @@ export class DataPackTableItem extends Component {
     }
 
     getPermissionsIcon(visibility) {
+        const { colors } = this.props.theme.eventkit;
+
         return visibility !== 'PRIVATE' ?
             <SocialGroup
                 className="qa-DataPackTableItem-SocialGroup"
-                style={{ color: 'bcdfbb' }}
+                style={{ color: colors.success }}
             />
             :
             <Lock
                 className="qa-DataPackTableItem-Lock"
-                style={{ color: 'grey' }}
+                style={{ color: colors.grey }}
             />;
     }
 

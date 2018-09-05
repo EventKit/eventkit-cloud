@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -78,6 +79,8 @@ export class NotificationsTable extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
         let styles = {
             root: {
@@ -90,12 +93,12 @@ export class NotificationsTable extends React.Component {
             },
             tableHeader: {
                 height: '50px',
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
             },
             cell: {
                 padding: '0 15px',
                 textAlign: 'left',
-                color: '#9e9e9e',
+                color: colors.text_primary,
             },
             contentHeaderColumnWrapper: {
                 display: 'flex',
@@ -210,6 +213,7 @@ NotificationsTable.propTypes = {
     onRemove: PropTypes.func,
     onMarkAllAsRead: PropTypes.func,
     onView: PropTypes.func,
+    theme: PropTypes.object.isRequired,
 };
 
 NotificationsTable.defaultProps = {
@@ -220,4 +224,4 @@ NotificationsTable.defaultProps = {
     onView: undefined,
 };
 
-export default NotificationsTable;
+export default withTheme()(NotificationsTable);

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
 import CustomTableRow from '../CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
@@ -39,6 +40,8 @@ export class DataCartGeneralTable extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
             task.display
         ));
@@ -49,7 +52,7 @@ export class DataCartGeneralTable extends Component {
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
-                fill: '#4598bf',
+                fill: colors.primary,
                 verticalAlign: 'middle',
                 marginRight: '10px',
             },
@@ -137,6 +140,7 @@ DataCartGeneralTable.propTypes = {
         provider_tasks: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataCartGeneralTable;
+export default withTheme()(DataCartGeneralTable);

@@ -237,7 +237,7 @@ export class DashboardPage extends React.Component {
     }
 
     render() {
-        const { theme } = this.props;
+        const { colors, images } = this.props.theme.eventkit;
 
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
@@ -246,7 +246,7 @@ export class DashboardPage extends React.Component {
                 position: 'relative',
                 height: window.innerHeight - mainAppBarHeight,
                 width: '100%',
-                backgroundImage: `url(${theme.eventkit.images.topo_dark})`,
+                backgroundImage: `url(${images.topo_dark})`,
             },
             customScrollbar: {
                 height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
@@ -255,7 +255,7 @@ export class DashboardPage extends React.Component {
                 position: 'absolute',
                 height: '100%',
                 width: '100%',
-                background: 'rgba(0,0,0,0.5)',
+                background: colors.backdrop,
                 zIndex: '100',
             },
             loadingPage: {
@@ -273,13 +273,13 @@ export class DashboardPage extends React.Component {
                 margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
                 fontSize: '18px',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.grey,
             },
             link: {
-                color: theme.eventkit.colors.primary,
+                color: colors.primary,
             },
             tourButton: {
-                color: theme.eventkit.colors.primary,
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
@@ -288,7 +288,7 @@ export class DashboardPage extends React.Component {
                 lineHeight: '30px',
             },
             tourIcon: {
-                color: theme.eventkit.colors.primary,
+                color: colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',
@@ -324,7 +324,7 @@ export class DashboardPage extends React.Component {
                             position: 'absolute',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: theme.eventkit.colors.backdrop,
+                            backgroundColor: colors.backdrop,
                         }}
                     >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -359,9 +359,9 @@ export class DashboardPage extends React.Component {
                         run={this.state.isRunning}
                         styles={{
                             options: {
-                                overlayColor: theme.eventkit.colors.primary,
-                                backgroundColor: theme.eventkit.colors.primary,
-                                primaryColor: theme.eventkit.colors.white,
+                                overlayColor: colors.primary,
+                                backgroundColor: colors.primary,
+                                primaryColor: colors.white,
                             },
                         }}
                     />

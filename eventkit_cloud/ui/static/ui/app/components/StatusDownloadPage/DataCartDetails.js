@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import DataPackDetails from './DataPackDetails';
 import CustomTableRow from '../CustomTableRow';
@@ -45,6 +46,8 @@ export class DataCartDetails extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             container: {
                 width: '100%',
@@ -53,24 +56,25 @@ export class DataCartDetails extends Component {
             subHeading: {
                 fontSize: '16px',
                 alignContent: 'flex-start',
-                color: 'black',
+                color: colors.black,
                 fontWeight: 'bold',
                 marginBottom: '5px',
             },
         };
 
-        let statusBackgroundColor = '#f8f8f8';
-        let statusFontColor = '#8b9396';
+        let statusBackgroundColor = colors.secondary;
+        let statusFontColor = colors.text_primary;
 
         if (this.props.cartDetails.status === 'COMPLETED') {
-            statusBackgroundColor = 'rgba(188,223,187, 0.4)';
-            statusFontColor = '#55ba63';
+            // statusBackgroundColor = 'rgba(188,223,187, 0.4)';
+            statusBackgroundColor = `${colors.success}33`;
+            statusFontColor = colors.success;
         } else if (this.props.cartDetails.status === 'SUBMITTED') {
-            statusBackgroundColor = 'rgba(250,233,173, 0.4)';
-            statusFontColor = '#f4d225';
+            statusBackgroundColor = `${colors.running}33`;
+            statusFontColor = colors.running;
         } else if (this.props.cartDetails.status === 'INCOMPLETE') {
-            statusBackgroundColor = 'rgba(232,172,144, 0.4)';
-            statusFontColor = '#ce4427';
+            statusBackgroundColor = `${colors.warning}33`;
+            statusFontColor = colors.warning;
         }
 
         const adminUser = userIsDataPackAdmin(
@@ -223,6 +227,7 @@ DataCartDetails.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataCartDetails;
+export default withTheme()(DataCartDetails);

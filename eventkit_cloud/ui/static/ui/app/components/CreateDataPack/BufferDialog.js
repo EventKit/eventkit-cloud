@@ -207,7 +207,7 @@ export class BufferDialog extends Component {
                                 // eslint-disable-next-line react/jsx-no-duplicate-props
                                 inputProps={{ style: { textAlign: 'center' } }}
                             />
-                            <span style={{ fontSize: '16px', color: 'grey' }}>m</span>
+                            <span style={{ fontSize: '16px', color: colors.grey }}>m</span>
                             <div style={{ flex: '1 1 auto', textAlign: 'right', color: over ? colors.warning : 'initial' }}>
                                 {warning}
                                 {getSqKmString(this.props.aoi)} total AOI
