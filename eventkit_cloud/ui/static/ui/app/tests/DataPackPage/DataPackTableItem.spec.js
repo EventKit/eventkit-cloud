@@ -7,7 +7,6 @@ import TableCell from '@material-ui/core/TableCell';
 import AlertError from '@material-ui/icons/Error';
 import Lock from '@material-ui/icons/LockOutlined';
 import SocialGroup from '@material-ui/icons/Group';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import NavigationCheck from '@material-ui/icons/Check';
 import NotificationSync from '@material-ui/icons/Sync';
 import IconMenu from '../../components/common/IconMenu';

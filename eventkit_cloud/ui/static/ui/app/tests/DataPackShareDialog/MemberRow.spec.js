@@ -3,7 +3,6 @@ import sinon from 'sinon';
 import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
-import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
 import { MemberRow } from '../../components/DataPackShareDialog/MemberRow';
 
 describe('GroupRow component', () => {

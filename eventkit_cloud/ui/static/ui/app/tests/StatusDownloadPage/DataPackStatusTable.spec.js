@@ -1,7 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import Edit from '@material-ui/icons/Edit';
 import CustomTableRow from '../../components/CustomTableRow';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import { DataPackStatusTable } from '../../components/StatusDownloadPage/DataPackStatusTable';

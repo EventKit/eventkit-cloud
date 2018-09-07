@@ -1,16 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
-import { Link } from 'react-router';
 import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
-import SocialGroup from '@material-ui/icons/Group';
-import Lock from '@material-ui/icons/LockOutlined';
-import NotificationSync from '@material-ui/icons/Sync';
-import NavigationCheck from '@material-ui/icons/Check';
-import AlertError from '@material-ui/icons/Error';
-import IconMenu from '../../components/common/IconMenu';
 import { DataPackListItem } from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 

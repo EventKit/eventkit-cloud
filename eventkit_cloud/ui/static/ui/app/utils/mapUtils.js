@@ -20,6 +20,7 @@ import isValidOp from 'jsts/org/locationtech/jts/operation/valid/IsValidOp';
 import BufferParameters from 'jsts/org/locationtech/jts/operation/buffer/BufferParameters';
 import ZoomSlider from 'ol/control/zoomslider';
 import { colors } from '../styles/eventkit_theme';
+
 const icon = require('../../images/ic_room_black_24px.svg');
 
 export const MODE_DRAW_BBOX = 'MODE_DRAW_BBOX';

@@ -1,6 +1,5 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import sinon from 'sinon';
 import Checkbox from '@material-ui/core/Checkbox';
 import { LicenseInfo } from '../../components/AccountPage/LicenseInfo';
 import Warning from '../../components/AccountPage/Warning';
