@@ -2,8 +2,9 @@ import React from 'react';
 import sinon from 'sinon';
 import PropTypes from 'prop-types';
 import raf from 'raf';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import List from '@material-ui/core/List';
+import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
 import Joyride from 'react-joyride';
 import BaseDialog from '../../components/Dialog/BaseDialog';
@@ -68,12 +69,13 @@ describe('ExportInfo component', () => {
             updateExportInfo: () => {},
             setNextDisabled: () => {},
             setNextEnabled: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
-        return mount(<ExportInfo {...props} />, {
+        return shallow(<ExportInfo {...props} />, {
             context: { config },
             childContextTypes: {
                 config: PropTypes.object,
@@ -87,7 +89,7 @@ describe('ExportInfo component', () => {
         expect(wrapper.find('#root')).toHaveLength(1);
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find('#form')).toHaveLength(1);
-        expect(wrapper.find('#paper').hostNodes()).toHaveLength(1);
+        expect(wrapper.find(Paper)).toHaveLength(1);
         expect(wrapper.find('#mainHeading')).toHaveLength(1);
         expect(wrapper.find(TextField)).toHaveLength(3);
         expect(wrapper.find('#layersHeader')).toHaveLength(1);
@@ -345,6 +347,7 @@ describe('ExportInfo component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
+        wrapper.instance().joyride = { reset: sinon.spy() };
         const stateSpy = sinon.stub(ExportInfo.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));

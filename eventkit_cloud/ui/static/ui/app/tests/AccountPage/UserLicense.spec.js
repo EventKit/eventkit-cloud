@@ -11,6 +11,7 @@ import UserLicense from '../../components/AccountPage/UserLicense';
 
 describe('User License component', () => {
     const getProps = () => ({
+        ...global.eventkit_test_props,
         license: { slug: 'test-license', name: 'license name', text: 'license text' },
         checked: false,
         onCheck: () => {},

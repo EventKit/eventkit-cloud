@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
-import { mount } from 'enzyme';
-import About from '../../components/About/About';
+import { shallow } from 'enzyme';
+import { About } from '../../components/About/About';
 import { about } from '../../about.config';
 import PageHeader from '../../components/common/PageHeader';
 import InfoParagraph from '../../components/About/InfoParagraph';
@@ -12,7 +11,7 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 
 describe('About component', () => {
     const getWrapper = () => (
-        mount(<About />)
+        shallow(<About {...global.eventkit_test_props} />)
     );
 
     it('should render all the basic elements', () => {
@@ -20,7 +19,6 @@ describe('About component', () => {
         about.forEach((item) => { mapping[item.type] += 1; });
         const wrapper = getWrapper();
         expect(wrapper.find(PageHeader)).toHaveLength(1);
-        expect(wrapper.find(PageHeader).text()).toEqual('About EventKit');
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(InfoParagraph)).toHaveLength(mapping.InfoParagraph);
         expect(wrapper.find(ThreeStepInfo)).toHaveLength(mapping.ThreeStepInfo);
@@ -38,25 +36,21 @@ describe('About component', () => {
     });
 
     it('should render the version tag', () => {
-        const config = { VERSION: '1.2.3' };
-        const wrapper = mount(<About />, {
-            context: { config },
-            childContextTypes: {
-                config: PropTypes.object,
-            },
-        });
+        const context = { config: { VERSION: '1.2.3' } };
+        const wrapper = shallow(<About />, { context });
         expect(wrapper.find(PageHeader).props().children).toEqual('1.2.3');
     });
 
-    it('should render the contact url', () => {
-        const config = { CONTACT_URL: 'some url' };
-        const wrapper = mount(<About />, {
-            context: { config },
-            childContextTypes: {
-                config: PropTypes.object,
-            },
-        });
+    it('should show the contact link', () => {
+        const context = { config: { CONTACT_URL: 'something' } };
+        const wrapper = shallow(<About />, { context });
         expect(wrapper.find('.qa-About-contact')).toHaveLength(1);
-        expect(wrapper.find('.qa-About-contact').text()).toEqual('Have an issue or suggestion?Contact Us');
+    });
+
+    it('should render null if no pageInfo', () => {
+        const wrapper = getWrapper();
+        wrapper.setState({ pageInfo: null });
+        wrapper.update();
+        expect(wrapper.type()).toBe(null);
     });
 });

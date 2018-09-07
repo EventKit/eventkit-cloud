@@ -1,50 +1,58 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import TextField from '@material-ui/core/TextField';
-import CustomTextField from '../components/CustomTextField';
+import { CustomTextField } from '../components/CustomTextField';
 
 describe('CustomTextField component', () => {
-    const getWrapper = props => (
-        mount(<CustomTextField {...props} />)
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
+    const props = { ...global.eventkit_test_props };
+
+    const getWrapper = propz => (
+        shallow(<CustomTextField {...propz} />)
     );
 
     it('should render a material-ui TextField component', () => {
-        const wrapper = getWrapper({});
+        const wrapper = getWrapper(props);
         expect(wrapper.find(TextField)).toHaveLength(1);
     });
 
     it('should show remaining characters when maxLength is present and input is focused', () => {
-        const wrapper = getWrapper({ maxLength: 100 });
-        wrapper.find('input').simulate('focus');
+        const wrapper = getWrapper({ ...props, maxLength: 100 });
+        wrapper.find(TextField).simulate('focus');
         expect(wrapper.find('.qa-CustomTextField-div-charsRemaining').text()).toEqual('100');
-        wrapper.find('input').simulate('change', { target: { value: 'abc' } });
+        wrapper.find(TextField).simulate('change', { target: { value: 'abc' } });
         expect(wrapper.find('.qa-CustomTextField-div-charsRemaining').text()).toEqual('97');
-        wrapper.find('input').simulate('blur');
+        wrapper.find(TextField).simulate('blur');
         expect(wrapper.find('.qa-CustomTextField-div-charsRemaining')).toHaveLength(0);
     });
 
     it('should show remaining characters in a warning color', () => {
-        const wrapper = getWrapper({ maxLength: 11 });
-        wrapper.find('input').simulate('focus');
+        const wrapper = getWrapper({ ...props, maxLength: 11 });
+        wrapper.find(TextField).simulate('focus');
         let charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
         expect(charsRemaining).toHaveLength(1);
-        expect(charsRemaining.props().style.color).toEqual('#B4B7B8');
-        wrapper.find('input').simulate('change', { target: { value: 'something' } });
+        expect(charsRemaining.props().style.color).toEqual('#707274');
+        wrapper.find(TextField).simulate('change', { target: { value: 'something' } });
         charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
-        expect(charsRemaining.props().style.color).toEqual('#CE4427');
+        expect(charsRemaining.props().style.color).toEqual('#ce4427');
     });
 
     it('should not show remaining characters when showRemaining is false', () => {
-        const wrapper = getWrapper({ maxLength: 100, showRemaining: false });
-        const input = wrapper.find('input');
+        const wrapper = getWrapper({ ...props, maxLength: 100, showRemaining: false });
         const charsRemaining = wrapper.find('.qa-CustomTextField-div-charsRemaining');
-        input.simulate('focus');
+        wrapper.find(TextField).simulate('focus');
         expect(charsRemaining).toHaveLength(0);
     });
 
     it('onChange should call props.onChange and setState', () => {
-        const props = { onChange: sinon.spy(), maxLength: 50 };
+        props.onChange = sinon.spy();
+        props.maxLength = 50;
         const stateStub = sinon.stub(CustomTextField.prototype, 'setState');
         const wrapper = getWrapper(props);
         const e = { target: { value: 'text value' } };
@@ -58,7 +66,7 @@ describe('CustomTextField component', () => {
     });
 
     it('onFocus should call props.onFocus and setState', () => {
-        const props = { onFocus: sinon.spy() };
+        props.onFocus = sinon.spy();
         const stateStub = sinon.stub(CustomTextField.prototype, 'setState');
         const wrapper = getWrapper(props);
         const e = { target: 'some target' };
@@ -71,7 +79,7 @@ describe('CustomTextField component', () => {
     });
 
     it('onBlur should call props.onBlur and setState', () => {
-        const props = { onBlur: sinon.spy() };
+        props.onBlur = sinon.spy();
         const stateStub = sinon.stub(CustomTextField.prototype, 'setState');
         const wrapper = getWrapper(props);
         const e = { target: 'some target' };

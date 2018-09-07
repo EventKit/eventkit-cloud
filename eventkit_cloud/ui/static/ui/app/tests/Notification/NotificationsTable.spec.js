@@ -1,11 +1,11 @@
 /* eslint prefer-destructuring: 0 */
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import TableCell from '@material-ui/core/TableCell';
 import CheckboxIcon from '@material-ui/icons/CheckBox';
 import IndeterminateCheckboxIcon from '../../components/icons/IndeterminateIcon';
-import NotificationsTable from '../../components/Notification/NotificationsTable';
+import { NotificationsTable } from '../../components/Notification/NotificationsTable';
 import NotificationsTableMenu from '../../components/Notification/NotificationsTableMenu';
 import NotificationsTableItem from '../../components/Notification/NotificationsTableItem';
 
@@ -41,6 +41,11 @@ const mockNotifications = {
 describe('NotificationsTable component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -67,6 +72,7 @@ describe('NotificationsTable component', () => {
             markNotificationsAsRead: sinon.spy(),
             markNotificationsAsUnread: sinon.spy(),
             removeNotifications: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 

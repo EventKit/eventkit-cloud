@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { shallow, mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -8,7 +8,7 @@ import TableRow from '@material-ui/core/TableRow';
 import GridList from '@material-ui/core/GridList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
-import DataPackList from '../../components/DataPackPage/DataPackList';
+import { DataPackList } from '../../components/DataPackPage/DataPackList';
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
 import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
 import CustomScrollbar from '../../components/CustomScrollbar';
@@ -121,9 +121,10 @@ describe('DataPackList component', () => {
         users: [],
         groups: [],
         providers,
+        ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => mount(<DataPackList {...props} />);
+    const getWrapper = props => shallow(<DataPackList {...props} />);
 
     it('should render list items as part of the mobile view', () => {
         const props = getProps();
@@ -154,21 +155,21 @@ describe('DataPackList component', () => {
         expect(wrapper.find(Table).first().find(TableRow)).toHaveLength(1);
         expect(wrapper.find(Table).first().find(TableCell)).toHaveLength(8);
         const headerColumns = wrapper.find(Table).first().find(TableCell);
-        expect(headerColumns.at(0).text()).toEqual('Name');
+        expect(headerColumns.at(0).html()).toContain('Name');
         expect(headerColumns.at(0).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(1).text()).toEqual('Event');
+        expect(headerColumns.at(1).html()).toContain('Event');
         expect(headerColumns.at(1).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(2).text()).toEqual('Date Added');
+        expect(headerColumns.at(2).html()).toContain('Date Added');
         expect(headerColumns.at(2).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(3).text()).toEqual('Status');
+        expect(headerColumns.at(3).html()).toContain('Status');
         expect(headerColumns.at(3).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(4).text()).toEqual('Permissions');
+        expect(headerColumns.at(4).html()).toContain('Permissions');
         expect(headerColumns.at(4).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(5).text()).toEqual('Owner');
+        expect(headerColumns.at(5).html()).toContain('Owner');
         expect(headerColumns.at(5).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(6).text()).toEqual('Featured');
+        expect(headerColumns.at(6).html()).toContain('Featured');
         expect(headerColumns.at(6).find(NavigationArrowDropDown)).toHaveLength(1);
-        expect(headerColumns.at(7).text()).toEqual('');
+        expect(headerColumns.at(7).html()).toContain('');
         expect(wrapper.find(Table).first().find(TableBody)).toHaveLength(1);
         expect(wrapper.find(DataPackTableItem)).toHaveLength(3);
     });
@@ -282,14 +283,14 @@ describe('DataPackList component', () => {
 
     it('isSameOrderType should return true or false', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackList {...props} />);
+        const wrapper = getWrapper(props);
         expect(wrapper.instance().isSameOrderType('-started_at', 'started_at')).toBe(true);
         expect(wrapper.instance().isSameOrderType('job__name', 'started_at')).toBe(false);
     });
 
     it('getIcon should return up arrow if activeSort is equal to passed in sort, else it return down arrow', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackList {...props} />);
+        const wrapper = getWrapper(props);
         let icon = wrapper.instance().getIcon('started_at');
         expect(icon).toEqual((
             <NavigationArrowDropDown
@@ -308,7 +309,7 @@ describe('DataPackList component', () => {
 
     it('getHeaderStyle should return bold black style if true or inherit style if false', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackList {...props} />);
+        const wrapper = getWrapper(props);
         let style = wrapper.instance().getHeaderStyle(true);
         expect(style).toEqual({ color: '#000', fontWeight: 'bold' });
         style = wrapper.instance().getHeaderStyle(false);

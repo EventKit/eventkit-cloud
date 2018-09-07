@@ -376,7 +376,7 @@ describe('Application component', () => {
             },
         });
         button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
-        expect(button.props().style.backgroundColor).toBe('#4598BF');
+        expect(button.props().style.backgroundColor).toBe('#4598bf');
         wrapper.setProps({
             router: {
                 location: {

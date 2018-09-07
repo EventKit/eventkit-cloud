@@ -3,7 +3,7 @@ import React from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 
-class DataPackSearchbar extends React.Component {
+export class DataPackSearchbar extends React.Component {
     constructor(props) {
         super(props);
         this.handleKeyDown = this.handleKeyDown.bind(this);

@@ -1,21 +1,22 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import ActionViewModule from '@material-ui/icons/ViewModule';
 import ActionViewStream from '@material-ui/icons/ViewStream';
 import MapsMap from '@material-ui/icons/Map';
 import IconButton from '@material-ui/core/IconButton';
-import DataPackViewButtons from '../../components/DataPackPage/DataPackViewButtons';
+import { DataPackViewButtons } from '../../components/DataPackPage/DataPackViewButtons';
 
 describe('DataPackViewButtons component', () => {
     const getProps = () => ({
         handleViewChange: () => {},
         view: 'map',
+        ...global.eventkit_test_props,
     });
 
     it('should render three icon buttons', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackViewButtons {...props} />);
+        const wrapper = shallow(<DataPackViewButtons {...props} />);
         expect(wrapper.find(IconButton)).toHaveLength(3);
         expect(wrapper.find(ActionViewModule)).toHaveLength(1);
         expect(wrapper.find(ActionViewStream)).toHaveLength(1);
@@ -25,7 +26,7 @@ describe('DataPackViewButtons component', () => {
     it('should call handleViewChange with the text of which view was selected', () => {
         const props = getProps();
         props.handleViewChange = sinon.spy();
-        const wrapper = mount(<DataPackViewButtons {...props} />);
+        const wrapper = shallow(<DataPackViewButtons {...props} />);
         expect(props.handleViewChange.notCalled).toBe(true);
         wrapper.find(IconButton).at(1).simulate('click');
         expect(props.handleViewChange.calledWith('grid')).toBe(true);
@@ -37,7 +38,7 @@ describe('DataPackViewButtons component', () => {
 
     it('the icon should indicate if the view is active', () => {
         const props = getProps();
-        const wrapper = mount(<DataPackViewButtons {...props} />);
+        const wrapper = shallow(<DataPackViewButtons {...props} />);
 
         const styles = {
             icon: { height: '22px', width: '22px' },

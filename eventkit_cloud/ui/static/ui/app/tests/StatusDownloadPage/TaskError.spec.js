@@ -1,12 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
-import TaskError from '../../components/StatusDownloadPage/TaskError';
+import { TaskError } from '../../components/StatusDownloadPage/TaskError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('TaskError component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             task: {
@@ -27,12 +33,13 @@ describe('TaskError component', () => {
                 ],
                 display: true,
             },
+            ...global.eventkit_test_props,
         }
     );
 
 
     const getWrapper = props => (
-        mount(<TaskError {...props} />)
+        shallow(<TaskError {...props} />)
     );
 
     it('should render UI elements', () => {

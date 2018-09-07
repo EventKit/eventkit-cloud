@@ -1,11 +1,11 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
-import GroupsHeaderRow from '../../components/DataPackShareDialog/GroupsHeaderRow';
+import { GroupsHeaderRow } from '../../components/DataPackShareDialog/GroupsHeaderRow';
 
 describe('GroupsHeaderRow component', () => {
     const getProps = () => (
@@ -20,11 +20,12 @@ describe('GroupsHeaderRow component', () => {
             handleCheckAll: () => {},
             handleUncheckAll: () => {},
             canUpdateAdmin: false,
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<GroupsHeaderRow {...props} />)
+        shallow(<GroupsHeaderRow {...props} />)
     );
 
     it('should render the basic components', () => {
@@ -32,14 +33,14 @@ describe('GroupsHeaderRow component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(ButtonBase)).toHaveLength(2);
+        expect(shallow(wrapper.find(CardHeader).props().title).find(ButtonBase)).toHaveLength(2);
     });
 
     it('should render the indeterminate icon', () => {
         const props = getProps();
         props.selectedCount = 1;
         const wrapper = getWrapper(props);
-        expect(wrapper.find(IndeterminateIcon)).toHaveLength(1);
+        expect(shallow(wrapper.find(CardHeader).props().title).find(IndeterminateIcon)).toHaveLength(1);
     });
 
     it('handleClick should setState to open popover', () => {

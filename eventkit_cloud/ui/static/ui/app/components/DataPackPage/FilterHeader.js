@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Button from '@material-ui/core/Button';
 
-export class DataPackDrawer extends Component {
+export class FilterHeader extends Component {
     render() {
         const styles = {
             drawerHeader: {
@@ -40,9 +40,9 @@ export class DataPackDrawer extends Component {
     }
 }
 
-DataPackDrawer.propTypes = {
+FilterHeader.propTypes = {
     onApply: PropTypes.func.isRequired,
     onClear: PropTypes.func.isRequired,
 };
 
-export default DataPackDrawer;
+export default FilterHeader;

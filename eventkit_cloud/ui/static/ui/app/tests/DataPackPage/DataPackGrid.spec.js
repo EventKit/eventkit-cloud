@@ -1,9 +1,9 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
-import DataPackGrid from '../../components//DataPackPage/DataPackGrid';
-import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
+import { DataPackGrid } from '../../components//DataPackPage/DataPackGrid';
+import DataPackGridItem from '../../components/DataPackPage/DataPackGridItem';
 
 const providers = [
     {
@@ -100,14 +100,6 @@ function getRuns() {
     ];
 }
 
-beforeAll(() => {
-    sinon.stub(DataPackGridItem.prototype, 'initMap');
-});
-
-afterAll(() => {
-    DataPackGridItem.prototype.initMap.restore();
-});
-
 describe('DataPackGrid component', () => {
     const props = {
         runs: getRuns(),
@@ -117,11 +109,12 @@ describe('DataPackGrid component', () => {
         groups: [],
         onRunDelete: () => {},
         onRunShare: () => {},
+        ...global.eventkit_test_props,
     };
 
     it('should render a DataPackGridItem for each run passed in', () => {
         const getColumnSpy = sinon.spy(DataPackGrid.prototype, 'getColumns');
-        const wrapper = mount(<DataPackGrid {...props} />);
+        const wrapper = shallow(<DataPackGrid {...props} />);
         expect(wrapper.find(GridList)).toHaveLength(1);
         expect(wrapper.find(DataPackGridItem)).toHaveLength(3);
         expect(getColumnSpy.calledOnce).toBe(true);

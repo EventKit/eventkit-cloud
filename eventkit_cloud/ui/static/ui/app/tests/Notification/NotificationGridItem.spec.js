@@ -1,5 +1,5 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
@@ -10,6 +10,11 @@ import { getNotificationViewPath } from '../../utils/notificationUtils';
 describe('NotificationGridItem component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -36,6 +41,7 @@ describe('NotificationGridItem component', () => {
             onMarkAsUnread: sinon.spy(),
             onRemove: sinon.spy(),
             onView: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 
@@ -101,7 +107,7 @@ describe('NotificationGridItem component', () => {
         });
 
         it('shows a non-white background color', () => {
-            expect(wrapper.find(Paper).props().style.backgroundColor).not.toBe('white');
+            expect(wrapper.find(Paper).props().style.backgroundColor).not.toBe('#fff');
         });
     });
 
@@ -116,7 +122,7 @@ describe('NotificationGridItem component', () => {
         });
 
         it('shows a white background color', () => {
-            expect(wrapper.find(Paper).props().style.backgroundColor).toBe('white');
+            expect(wrapper.find(Paper).props().style.backgroundColor).toBe('#fff');
         });
     });
 

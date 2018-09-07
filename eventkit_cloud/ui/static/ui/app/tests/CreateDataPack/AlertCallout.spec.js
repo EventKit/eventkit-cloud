@@ -2,7 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import Clear from '@material-ui/icons/Clear';
-import AlertCallout from '../../components/CreateDataPack/AlertCallout';
+import { AlertCallout } from '../../components/CreateDataPack/AlertCallout';
 
 describe('AlertCallout component', () => {
     const getProps = () => (
@@ -11,6 +11,7 @@ describe('AlertCallout component', () => {
             onClose: () => {},
             title: 'test title',
             body: 'test body',
+            ...global.eventkit_test_props,
         }
     );
 

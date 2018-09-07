@@ -8,7 +8,7 @@ import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ActionRoom from '@material-ui/icons/Room';
 import Line from '@material-ui/icons/Timeline';
 import Extent from '@material-ui/icons/SettingsOverscan';
-import RevertDialog from '../../components/CreateDataPack/RevertDialog';
+import { RevertDialog } from '../../components/CreateDataPack/RevertDialog';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 
 describe('AlertCallout component', () => {
@@ -23,6 +23,7 @@ describe('AlertCallout component', () => {
                 description: 'Box',
                 title: 'Box',
             },
+            ...global.eventkit_test_props,
         }
     );
 

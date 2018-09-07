@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
@@ -16,6 +16,12 @@ import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
 import * as viewport from '../../utils/viewport';
 
 describe('UserGroupsPage component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             location: {
@@ -99,11 +105,12 @@ describe('UserGroupsPage component', () => {
             createGroup: () => {},
             updateGroup: () => {},
             getUsers: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<UserGroupsPage {...props} />)
+        shallow(<UserGroupsPage {...props} />)
     );
 
     beforeAll(() => {
@@ -119,10 +126,9 @@ describe('UserGroupsPage component', () => {
     it('should render its basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-PageHeader').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-Button-create').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-search').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-Button-create')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-search')).toHaveLength(1);
         expect(wrapper.find(UserHeader)).toHaveLength(1);
         expect(wrapper.find(OwnUserRow)).toHaveLength(1);
         expect(wrapper.find(UserRow)).toHaveLength(2);
@@ -130,7 +136,7 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(CreateGroupDialog)).toHaveLength(1);
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(6);
+        expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
     });
@@ -977,7 +983,8 @@ describe('UserGroupsPage component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
-        const scrollStub = sinon.stub(wrapper.instance().scrollbar, 'scrollToTop');
+        const scrollStub = sinon.stub();
+        wrapper.instance().scrollbar = { scrollToTop: scrollStub };
         wrapper.instance().callback(data);
         expect(scrollStub.calledOnce).toBe(true);
     });

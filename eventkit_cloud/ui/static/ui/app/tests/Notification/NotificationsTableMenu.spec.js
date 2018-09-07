@@ -1,5 +1,5 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import values from 'lodash/values';
 import { NotificationsTableMenu } from '../../components/Notification/NotificationsTableMenu';
@@ -36,6 +36,11 @@ const mockNotifications = {
 describe('NotificationsTableMenu component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -52,6 +57,7 @@ describe('NotificationsTableMenu component', () => {
             markNotificationsAsUnread: sinon.spy(),
             removeNotifications: sinon.spy(),
             markAllNotificationsAsRead: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 

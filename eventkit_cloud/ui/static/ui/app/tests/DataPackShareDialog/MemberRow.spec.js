@@ -1,10 +1,10 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CheckBoxOutline from '@material-ui/icons/CheckBoxOutlineBlank';
-import MemberRow from '../../components/DataPackShareDialog/MemberRow';
+import { MemberRow } from '../../components/DataPackShareDialog/MemberRow';
 
 describe('GroupRow component', () => {
     const getProps = () => (
@@ -25,11 +25,12 @@ describe('GroupRow component', () => {
             handleAdminMouseOver: () => {},
             showAdmin: false,
             admin: false,
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<MemberRow {...props} />)
+        shallow(<MemberRow {...props} />)
     );
 
     it('should render the basic elements', () => {
@@ -37,8 +38,6 @@ describe('GroupRow component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find('.qa-MemberRow-CardHeader-text')).toHaveLength(1);
-        expect(wrapper.find(CheckBoxOutline)).toHaveLength(1);
     });
 
     it('onAdminMouseOver should call handleAdminMouseOver', () => {

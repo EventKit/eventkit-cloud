@@ -1,7 +1,7 @@
 /* eslint react/no-array-index-key: 0 */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import { withStyles, withTheme } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -298,4 +298,4 @@ DashboardSection.defaultProps = {
     classes: {},
 };
 
-export default withStyles(jss, { withTheme: true })(DashboardSection);
+export default withTheme()(withStyles(jss)(DashboardSection));

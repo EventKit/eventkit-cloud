@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import { Link } from 'react-router';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -11,7 +11,7 @@ import NotificationSync from '@material-ui/icons/Sync';
 import NavigationCheck from '@material-ui/icons/Check';
 import AlertError from '@material-ui/icons/Error';
 import IconMenu from '../../components/common/IconMenu';
-import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
+import { DataPackListItem } from '../../components/DataPackPage/DataPackListItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackListItem component', () => {
@@ -102,65 +102,22 @@ describe('DataPackListItem component', () => {
         onRunDelete: () => {},
         onRunShare: sinon.spy(),
         providers,
+        ...global.eventkit_test_props,
     });
 
-    const getWrapperMount = props => (
-        mount(<DataPackListItem {...props} />)
-    );
-
-    const getWrapperShallow = props => (
+    const getWrapper = props => (
         shallow(<DataPackListItem {...props} />)
     );
 
     it('should render a list item with complete and private icons and owner text', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
-        expect(wrapper.find(Link)).toHaveLength(1);
-        expect(wrapper.find(Link).props().to).toEqual(`/status/${props.run.job.uid}`);
-        expect(wrapper.find(CardHeader)).toHaveLength(1);
-        const cardText = wrapper.find(CardHeader).text();
-        expect(cardText).toContain('Test1');
-        expect(cardText).toContain('Event: Test1 event');
-        expect(cardText).toContain('Added: 3/10/17');
-        expect(cardText).toContain('My DataPack');
-        expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);
-        expect(wrapper.find(NavigationCheck)).toHaveLength(1);
-        expect(wrapper.find(Lock)).toHaveLength(1);
-        expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-    });
-
-    it('should update when the run properties change', () => {
-        const props = getProps();
-        const wrapper = getWrapperMount(props);
-        props.run.started_at = '2017-04-11T15:52:35.637331Z';
-        wrapper.setProps(props);
-        expect(wrapper.find(CardHeader).text()).toContain('Added: 4/11/17');
-        props.run.job.name = 'jobby job';
-        wrapper.setProps(props);
-        expect(wrapper.find(CardHeader).text()).toContain('jobby job');
-        props.run.job.event = 'new event here';
-        wrapper.setProps(props);
-        expect(wrapper.find(CardHeader).text()).toContain('Event: new event here');
-        props.run.user = 'not admin';
-        wrapper.setProps(props);
-        expect(wrapper.find(CardHeader).text()).not.toContain('My DataPack');
-        expect(wrapper.find(CardHeader).text()).toContain('not admin');
-        props.run.status = 'SUBMITTED';
-        wrapper.setProps(props);
-        expect(wrapper.find(NotificationSync)).toHaveLength(1);
-        props.run.status = 'INCOMPLETE';
-        wrapper.setProps(props);
-        expect(wrapper.find(AlertError)).toHaveLength(1);
-        props.run.job.permissions.value = 'PUBLIC';
-        wrapper.setProps(props);
-        expect(wrapper.find(SocialGroup)).toHaveLength(1);
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
@@ -171,7 +128,7 @@ describe('DataPackListItem component', () => {
 
     it('handleProviderOpen should close menu then set provider dialog to open', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
@@ -187,7 +144,7 @@ describe('DataPackListItem component', () => {
 
     it('showDeleteDialog should close menu then set deleteDialogOpen to true', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
@@ -200,7 +157,7 @@ describe('DataPackListItem component', () => {
 
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
@@ -213,7 +170,7 @@ describe('DataPackListItem component', () => {
         const props = getProps();
         props.onRunDelete = sinon.spy();
         const hideSpy = sinon.spy(DataPackListItem.prototype, 'hideDeleteDialog');
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(props.onRunDelete.called).toBe(false);
         expect(hideSpy.called).toBe(false);
         wrapper.instance().handleDelete();
@@ -223,7 +180,7 @@ describe('DataPackListItem component', () => {
     });
 
     it('handleShareOpen should close menu and open share dialog', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
@@ -234,7 +191,7 @@ describe('DataPackListItem component', () => {
     });
 
     it('handleShareClose should close share dialog', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const stateSpy = sinon.spy(DataPackListItem.prototype, 'setState');
         wrapper.instance().handleShareClose();
         expect(stateSpy.callCount).toBe(1);
@@ -243,7 +200,7 @@ describe('DataPackListItem component', () => {
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const instance = wrapper.instance();
         instance.handleShareClose = sinon.spy();
         const permissions = { some: 'permissions' };
@@ -254,7 +211,7 @@ describe('DataPackListItem component', () => {
     });
 
     it('should set share dialog open prop with shareDialogOpen value', () => {
-        const wrapper = getWrapperMount(getProps());
+        const wrapper = getWrapper(getProps());
         expect(wrapper.state().shareDialogOpen).toBe(false);
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         wrapper.setState({ shareDialogOpen: true });

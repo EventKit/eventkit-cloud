@@ -188,8 +188,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-Form.childContextTypes = {
-    muiTheme: PropTypes.object.isRequired,
-};
-
 export default withTheme()(connect(null, mapDispatchToProps)(Form));

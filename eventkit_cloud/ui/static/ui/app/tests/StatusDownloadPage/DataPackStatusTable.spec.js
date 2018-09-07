@@ -1,13 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Edit from '@material-ui/icons/Edit';
-import DropDownMenu from '../../components/common/DropDownMenu';
 import CustomTableRow from '../../components/CustomTableRow';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
-import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
+import { DataPackStatusTable } from '../../components/StatusDownloadPage/DataPackStatusTable';
 
 describe('DataPackStatusTable component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             status: 'COMPLETED',
@@ -29,18 +34,18 @@ describe('DataPackStatusTable component', () => {
             ],
             adminPermissions: true,
             user: { user: { username: 'admin' } },
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<DataPackStatusTable {...props} />)
+        shallow(<DataPackStatusTable {...props} />)
     );
 
     it('should render basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(CustomTableRow)).toHaveLength(3);
-        expect(wrapper.find(DropDownMenu)).toHaveLength(1);
     });
 
     it('should render the share dialog', () => {
@@ -49,7 +54,6 @@ describe('DataPackStatusTable component', () => {
         const wrapper = getWrapper(props);
         wrapper.setState({ shareDialogOpen: true });
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
-        wrapper.unmount();
         stub.restore();
     });
 
@@ -57,9 +61,10 @@ describe('DataPackStatusTable component', () => {
         const props = getProps();
         props.permissions.value = 'SHARED';
         const wrapper = getWrapper(props);
-        let button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
+        // let button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button');
+        let button = shallow(wrapper.find(CustomTableRow).at(2).props().data[1]);
         expect(button).toHaveLength(1);
-        expect(button.text()).toEqual('No Members / No Groups');
+        expect(button.html()).toContain('No Members / No Groups');
 
         let nextProps = getProps();
         nextProps.permissions = {
@@ -68,8 +73,8 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ', user_two: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
-        expect(button.text()).toEqual('All Members / All Groups');
+        button = shallow(wrapper.find(CustomTableRow).at(2).props().data[1]);
+        expect(button.html()).toContain('All Members / All Groups');
 
         nextProps = getProps();
         nextProps.permissions = {
@@ -78,8 +83,8 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
-        expect(button.text()).toEqual('1 Member / 1 Group');
+        button = shallow(wrapper.find(CustomTableRow).at(2).props().data[1]);
+        expect(button.html()).toContain('1 Member / 1 Group');
 
 
         nextProps = getProps();
@@ -89,17 +94,8 @@ describe('DataPackStatusTable component', () => {
             members: { user_one: 'READ', user_two: 'READ', user_three: 'READ' },
         };
         wrapper.setProps(nextProps);
-        button = wrapper.find('.qa-DataPackStatusTable-MembersAndGroups-button').hostNodes();
-        expect(button.text()).toEqual('3 Members / 3 Groups');
-    });
-
-    it('Edit icon should call handleClick', () => {
-        const props = getProps();
-        const clickStub = sinon.stub(DataPackStatusTable.prototype, 'handleClick');
-        const wrapper = getWrapper(props);
-        wrapper.find(Edit).simulate('click');
-        expect(clickStub.calledOnce).toBe(true);
-        clickStub.restore();
+        button = shallow(wrapper.find(CustomTableRow).at(2).props().data[1]);
+        expect(button.html()).toContain('3 Members / 3 Groups');
     });
 
     it('handleDayClick should call close and handleExpirationChange', () => {

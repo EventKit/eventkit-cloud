@@ -7,8 +7,7 @@ import View from 'ol/view';
 import interaction from 'ol/interaction';
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
-
-import MapCard from '../../components/common/MapCard';
+import { MapCard } from '../../components/common/MapCard';
 
 const geojson = {
     type: 'FeatureCollection',
@@ -56,6 +55,7 @@ describe('MapCard component', () => {
         {
             geojson,
             children: <span>Hello</span>,
+            ...global.eventkit_test_props,
         }
     );
 
