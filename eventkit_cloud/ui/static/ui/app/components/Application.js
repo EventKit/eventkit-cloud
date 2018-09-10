@@ -16,10 +16,10 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import { MuiThemeProvider as MuiThemeProviderV1, createMuiTheme } from '@material-ui/core/styles';
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import ekTheme from '../styles/eventkit_theme';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
-import logo from '../../images/eventkit-logo.1.png';
 import { DrawerTimeout } from '../actions/exportsActions';
 import { userActive } from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
@@ -30,103 +30,10 @@ import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
 import { isViewportL, isViewportXL, L_MAX_WIDTH } from '../utils/viewport';
-import background from '../../images/ek_topo_pattern.png';
 
 require('../fonts/index.css');
 
-const muiThemeV1 = createMuiTheme({
-    overrides: {
-        MuiCheckbox: {
-            colorPrimary: {
-                color: '#4598bf',
-                '&$checked': { color: '#4598bf' },
-                '&$disabled': { color: 'grey' },
-            },
-        },
-        MuiInput: {
-            underline: {
-                '&:before': {
-                    borderBottomColor: '#4598bf',
-                },
-                '&:hover:not($disabled):not($error):not($focused):before': {
-                    borderBottomColor: '#4598bf',
-                },
-                '&:after': {
-                    borderBottomColor: '#4598bf',
-                },
-            },
-        },
-        MuiList: {
-            padding: {
-                paddingTop: '0px',
-                paddingBottom: '0px',
-            },
-        },
-        MuiTableCell: {
-            head: {
-                fontSize: '12px',
-            },
-            body: {
-                fontSize: '12px',
-            },
-            footer: {
-                fontSize: '12px',
-            },
-        },
-        MuiButton: {
-            root: {
-                fontSize: '14px',
-                minHeight: '30px',
-                padding: '0px 16px',
-                height: '36px',
-                lineHeight: '36px',
-                borderRadius: '0px',
-            },
-            containedSecondary: {
-                color: '#4598bf',
-            },
-        },
-        MuiMenuItem: {
-            root: {
-                backgroundColor: 'transparent',
-                '&$selected': {
-                    backgroundColor: '#e8eef5',
-                },
-                color: '#707274',
-            },
-            selected: {
-                color: '#4598bf',
-                backgroundColor: '#e8eef5',
-            },
-        },
-        MuiSvgIcon: {
-            colorSecondary: {
-                color: '#fff',
-            },
-        },
-        MuiTypography: {
-            root: {
-                width: '100%',
-            },
-        },
-    },
-    palette: {
-        primary: {
-            light: '#63a8c9',
-            main: '#4598bf',
-            dark: '#3982a4',
-        },
-        secondary: {
-            light: '#fafafa',
-            main: '#eeeeee',
-            dark: '#d6d6d6',
-        },
-    },
-    typography: {
-        fontSize: 14,
-        htmlFontSize: 14,
-    },
-});
+const theme = createMuiTheme(ekTheme);
 
 export class Application extends Component {
     constructor(props) {
@@ -227,7 +134,7 @@ export class Application extends Component {
             });
     }
 
-    getButtonBackgroundColor(route, activeColor = '#161e2e') {
+    getButtonBackgroundColor(route, activeColor = theme.eventkit.colors.background) {
         return (this.props.router.location.pathname.indexOf(route) === 0 || this.state.hovered === route) ? activeColor : '';
     }
 
@@ -548,22 +455,15 @@ export class Application extends Component {
                 width: '14px',
                 height: '14px',
                 borderRadius: '50%',
-                backgroundColor: '#ce4427',
+                backgroundColor: theme.eventkit.colors.warning,
                 zIndex: '1',
                 pointerEvents: 'none',
             },
             drawer: {
                 width: '200px',
                 marginTop: '95px',
-                backgroundColor: '#010101',
+                backgroundColor: theme.eventkit.colors.black,
                 padding: '0px',
-            },
-            mainMenu: {
-                color: '#3e3f3f',
-                display: 'inline-block',
-                marginRight: '40px',
-                fontSize: '20px',
-                align: 'left',
             },
             menuItem: {
                 fontSize: '16px',
@@ -576,8 +476,8 @@ export class Application extends Component {
                 height: '58px',
                 lineHeight: '58px',
                 textDecoration: 'none',
-                color: '#4498c0',
-                fill: '#4498c0',
+                color: theme.eventkit.colors.primary,
+                fill: theme.eventkit.colors.primary,
             },
             activeLink: {
                 padding: '0px 0px 0px 5px',
@@ -585,9 +485,9 @@ export class Application extends Component {
                 height: '58px',
                 lineHeight: '58px',
                 textDecoration: 'none',
-                color: '#4498c0',
-                backgroundColor: '#161e2e',
-                fill: '#1675aa',
+                color: theme.eventkit.colors.primary,
+                backgroundColor: theme.eventkit.colors.background,
+                fill: theme.eventkit.colors.primary,
             },
             icon: {
                 height: '22px',
@@ -600,12 +500,10 @@ export class Application extends Component {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0,
                 background: 'rgb(17, 24, 35)',
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${theme.eventkit.images.topo_dark})`,
                 height: window.innerHeight - mainAppBarHeight,
             },
         };
-
-        const img = <img style={styles.img} src={logo} alt="EventKit" />;
 
         const childrenWithContext = React.Children.map(this.props.children, child => (
             React.cloneElement(child, {
@@ -614,15 +512,15 @@ export class Application extends Component {
         ));
 
         return (
-            <MuiThemeProviderV1 theme={muiThemeV1}>
-                <div style={{ backgroundColor: '#000' }}>
+            <MuiThemeProvider theme={theme}>
+                <div style={{ backgroundColor: theme.eventkit.colors.black }}>
                     <AppBar
                         className="qa-Application-AppBar"
                         style={styles.appBar}
                     >
                         <Banner />
                         <div style={styles.title}>
-                            <img style={styles.img} src={logo} alt="EventKit" />
+                            <img style={styles.img} src={theme.eventkit.images.logo} alt="EventKit" />
                         </div>
                         <div style={{ position: 'absolute', left: '0', top: '25px' }}>
                             <IconButton
@@ -639,7 +537,7 @@ export class Application extends Component {
                                     style={{
                                         ...styles.notificationsButton,
                                         backgroundColor: (this.props.router.location.pathname.indexOf('/notifications') === 0) ?
-                                            '#4598BF' : '',
+                                            theme.eventkit.colors.primary : '',
                                     }}
                                     color="secondary"
                                     onClick={this.handleNotificationsButtonClick}
@@ -738,7 +636,10 @@ export class Application extends Component {
                         >
                             <Link
                                 className="qa-Application-Link-groups"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'groups' ? '#161e2e' : '' }}
+                                style={{
+                                    ...styles.link,
+                                    backgroundColor: this.state.hovered === 'groups' ? theme.eventkit.colors.background : '',
+                                }}
                                 activeStyle={styles.activeLink}
                                 onMouseEnter={() => this.handleMouseOver('groups')}
                                 onMouseLeave={this.handleMouseOut}
@@ -831,7 +732,7 @@ export class Application extends Component {
                         <strong>Are you sure?</strong>
                     </ConfirmDialog>
                 </div>
-            </MuiThemeProviderV1>
+            </MuiThemeProvider>
         );
     }
 }

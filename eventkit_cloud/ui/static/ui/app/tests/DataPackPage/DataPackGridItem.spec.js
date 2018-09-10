@@ -1,11 +1,10 @@
 import React from 'react';
 import sinon from 'sinon';
-import { shallow, mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
-import MenuItem from '@material-ui/core/MenuItem';
 import SocialGroup from '@material-ui/icons/Group';
 import Lock from '@material-ui/icons/LockOutlined';
 import { DataPackGridItem } from '../../components/DataPackPage/DataPackGridItem';
@@ -147,11 +146,7 @@ afterAll(() => {
     DataPackGridItem.prototype.initMap.restore();
 });
 
-const getWrapperMount = props => (
-    mount(<DataPackGridItem {...props} />)
-);
-
-const getWrapperShallow = props => (
+const getWrapper = props => (
     shallow(<DataPackGridItem {...props} />)
 );
 
@@ -165,23 +160,17 @@ describe('DataPackGridItem component', () => {
             providers,
             onRunDelete: () => {},
             onRunShare: sinon.spy(),
+            ...global.eventkit_test_props,
         }
     );
 
     it('should display general run information', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find('.qa-DataPackGridItem-name').text()).toEqual('Test1');
-        expect(wrapper.find(MenuItem)).toHaveLength(0);
-        const subtitle = wrapper.find(CardHeader).find('.qa-DataPackGridItem-div-subtitle').hostNodes();
-        expect(subtitle).toHaveLength(1);
-        expect(subtitle.find('div').at(1).text()).toEqual('Event: Test1 event');
-        expect(subtitle.find('span').at(0).text()).toEqual('Added: 3/10/17');
-        expect(subtitle.find('span').at(1).text()).toEqual('Expires: 3/24/17');
         expect(wrapper.find(CardContent)).toHaveLength(2);
-        expect(wrapper.find(CardContent).first().text()).toEqual('Test1 description');
+        expect(wrapper.find(CardContent).first().html()).toContain('Test1 description');
         expect(wrapper.find(CardActions)).toHaveLength(1);
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
@@ -190,7 +179,7 @@ describe('DataPackGridItem component', () => {
         const props = getProps();
         const mountSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidMount');
         DataPackGridItem.prototype.initMap.reset();
-        getWrapperMount(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(DataPackGridItem.prototype.initMap.calledOnce).toBe(true);
         mountSpy.restore();
@@ -198,31 +187,31 @@ describe('DataPackGridItem component', () => {
 
     it('should display information specific to a unpublished & owned run', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(Lock)).toHaveLength(1);
-        expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
+        expect(wrapper.find(CardActions).find('p').html()).toContain('My DataPack');
     });
 
     it('should display information specific to a published & owned run', () => {
         const props = getProps();
         [, , props.run] = getRuns();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
-        expect(wrapper.find(CardActions).find('p').text()).toEqual('My DataPack');
+        expect(wrapper.find(CardActions).find('p').html()).toContain('My DataPack');
     });
 
     it('should display information specific to a published & not owned run', () => {
         const props = getProps();
         [, props.run] = getRuns();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(SocialGroup)).toHaveLength(1);
-        expect(wrapper.find(CardActions).find('p').text()).toEqual('notAdmin');
+        expect(wrapper.find(CardActions).find('p').html()).toContain('notAdmin');
     });
 
 
     it('should not display a map when the card is not expanded', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const targetSpy = sinon.spy();
         wrapper.instance().map = { setTarget: targetSpy };
         const updateSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
@@ -237,7 +226,7 @@ describe('DataPackGridItem component', () => {
 
     it('should set overflowText true when mouse enters card text div', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.find(CardContent).first().simulate('mouseEnter');
         expect(stateSpy.calledOnce).toBe(true);
@@ -247,7 +236,7 @@ describe('DataPackGridItem component', () => {
 
     it('should set overflowText false when mouse leaves card text div', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.find(CardContent).first().simulate('mouseLeave');
         expect(stateSpy.calledOnce).toBe(true);
@@ -257,10 +246,10 @@ describe('DataPackGridItem component', () => {
 
     it('should negate overflowText state on touchTap of card text div', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const expectedBool = !wrapper.state().overflow;
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        wrapper.find(CardContent).first().find('div').simulate('click');
+        wrapper.find(CardContent).first().simulate('click');
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ overflowText: expectedBool })).toBe(true);
         stateSpy.restore();
@@ -268,9 +257,9 @@ describe('DataPackGridItem component', () => {
 
     it('should set overflowTitle to true when mouse enters name div', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.find('.qa-DataPackGridItem-name').simulate('mouseEnter');
+        (shallow(wrapper.find(CardHeader).props().title).find('.qa-DataPackGridItem-name').simulate('mouseEnter'));
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ overflowTitle: true })).toBe(true);
         stateStub.restore();
@@ -278,9 +267,9 @@ describe('DataPackGridItem component', () => {
 
     it('should set overflowTitle to false when mouse leaves the name div', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.find('.qa-DataPackGridItem-name').simulate('mouseLeave');
+        (shallow(wrapper.find(CardHeader).props().title).find('.qa-DataPackGridItem-name').simulate('mouseLeave'));
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ overflowTitle: false })).toBe(true);
         stateStub.restore();
@@ -288,7 +277,7 @@ describe('DataPackGridItem component', () => {
 
     it('toggleExpanded should set expanded state to its negatation', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.state().expanded).toBe(true);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.instance().toggleExpanded();
@@ -300,7 +289,7 @@ describe('DataPackGridItem component', () => {
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
@@ -312,7 +301,7 @@ describe('DataPackGridItem component', () => {
         const props = getProps();
         props.providers = providers;
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
@@ -327,7 +316,7 @@ describe('DataPackGridItem component', () => {
 
     it('showDeleteDialog should close menu and set deleteDialogOpen to true', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
@@ -340,7 +329,7 @@ describe('DataPackGridItem component', () => {
 
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
@@ -353,7 +342,7 @@ describe('DataPackGridItem component', () => {
         const props = getProps();
         props.onRunDelete = sinon.spy();
         const hideSpy = sinon.spy(DataPackGridItem.prototype, 'hideDeleteDialog');
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(props.onRunDelete.called).toBe(false);
         expect(hideSpy.called).toBe(false);
         wrapper.instance().handleDelete();
@@ -363,7 +352,7 @@ describe('DataPackGridItem component', () => {
     });
 
     it('handleShareOpen should close menu and open share dialog', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
@@ -374,7 +363,7 @@ describe('DataPackGridItem component', () => {
     });
 
     it('handleShareClose should close share dialog', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
         wrapper.instance().handleShareClose();
         expect(stateSpy.callCount).toBe(1);
@@ -383,7 +372,7 @@ describe('DataPackGridItem component', () => {
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const instance = wrapper.instance();
         instance.handleShareClose = sinon.spy();
         const permissions = { some: 'permissions' };
@@ -394,7 +383,7 @@ describe('DataPackGridItem component', () => {
     });
 
     it('should set share dialog open prop with shareDialogOpen value', () => {
-        const wrapper = getWrapperMount(getProps());
+        const wrapper = getWrapper(getProps());
         expect(wrapper.state().shareDialogOpen).toBe(false);
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         wrapper.setState({ shareDialogOpen: true });

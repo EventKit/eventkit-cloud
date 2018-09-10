@@ -1,6 +1,6 @@
 import React from 'react';
-import { mount } from 'enzyme';
-import GroupMemberRow from '../../components/DataPackShareDialog/GroupMemberRow';
+import { shallow } from 'enzyme';
+import { GroupMemberRow } from '../../components/DataPackShareDialog/GroupMemberRow';
 
 describe('GroupMemberRow component', () => {
     const getProps = () => (
@@ -15,11 +15,12 @@ describe('GroupMemberRow component', () => {
                 groups: [1, 2],
             },
             isGroupAdmin: false,
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<GroupMemberRow {...props} />)
+        shallow(<GroupMemberRow {...props} />)
     );
 
     it('should render the basic elements', () => {

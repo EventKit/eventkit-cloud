@@ -1,10 +1,10 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import { withStyles } from '@material-ui/core/styles';
 
 export class LoadButtons extends React.Component {
     constructor(props) {
@@ -32,6 +32,8 @@ export class LoadButtons extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const range = this.props.range ? this.props.range.split('/') : null;
         const inlineStyles = {
             container: {
@@ -44,7 +46,7 @@ export class LoadButtons extends React.Component {
             },
             range: this.state.width < 768 ?
                 {
-                    color: '#a59c9c',
+                    color: colors.text_primary,
                     lineHeight: '36px',
                     fontSize: '12px',
                 }
@@ -52,14 +54,12 @@ export class LoadButtons extends React.Component {
                 {
                     display: 'inline-block',
                     position: 'absolute',
-                    color: '#a59c9c',
+                    color: colors.text_primary,
                     lineHeight: '36px',
                     right: '10px',
                     fontSize: '12px',
                 },
         };
-
-        const { classes } = this.props;
 
         return (
             <div style={inlineStyles.container}>
@@ -67,8 +67,9 @@ export class LoadButtons extends React.Component {
                     {this.props.handleLoadLess ?
                         <Button
                             className="qa-LoadButtons-RaisedButton-showLess'"
-                            classes={{ root: classes.root }}
                             variant="contained"
+                            color="secondary"
+                            style={{ minWidth: '145px', margin: '5px 2.5px' }}
                             disabled={this.props.loadLessDisabled}
                             onClick={this.props.handleLoadLess}
                         >
@@ -80,8 +81,9 @@ export class LoadButtons extends React.Component {
                     }
                     <Button
                         className="qa-LoadButtons-RaisedButton-showLess"
-                        classes={{ root: classes.root }}
                         variant="contained"
+                        color="secondary"
+                        style={{ minWidth: '145px', margin: '5px 2.5px' }}
                         disabled={this.props.loadMoreDisabled}
                         onClick={this.props.handleLoadMore}
                     >
@@ -104,8 +106,7 @@ LoadButtons.propTypes = {
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool,
     loadMoreDisabled: PropTypes.bool.isRequired,
-    classes: PropTypes.object.isRequired,
-
+    theme: PropTypes.object.isRequired,
 };
 
 LoadButtons.defaultProps = {
@@ -114,17 +115,4 @@ LoadButtons.defaultProps = {
     loadLessDisabled: false,
 };
 
-const classStyles = {
-    root: {
-        minWidth: '145px',
-        margin: '5px 2.5px',
-        backgroundColor: '#e5e5e5',
-        color: '#4498c0',
-        '&:disabled': {
-            backgroundColor: '#e5e5e5',
-            color: 'rgba(0, 0, 0, 0.3)',
-        },
-    },
-};
-
-export default withStyles(classStyles)(LoadButtons);
+export default withTheme()(LoadButtons);

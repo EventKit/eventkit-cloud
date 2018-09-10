@@ -1,11 +1,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 import CustomTextField from '../../CustomTextField';
 
 export class RenameGroupDialog extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const createActions = [
             <Button
                 className="qa-RenameGroupDialog-save"
@@ -35,7 +38,7 @@ export class RenameGroupDialog extends Component {
                 dialogStyle={{ maxWidth: '500px' }}
             >
                 {!this.props.valid ?
-                    <div style={{ color: '#ce4427' }}>Name unavailable</div>
+                    <div style={{ color: colors.warning }}>Name unavailable</div>
                     :
                     null
                 }
@@ -60,6 +63,7 @@ RenameGroupDialog.propTypes = {
     onSave: PropTypes.func.isRequired,
     value: PropTypes.string.isRequired,
     valid: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default RenameGroupDialog;
+export default withTheme()(RenameGroupDialog);

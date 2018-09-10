@@ -70,6 +70,15 @@ export class DataPackOptions extends Component {
     render() {
         const rerunExportActions = [
             <Button
+                key="rerun"
+                className="qa-DataPackOptions-RaisedButton-rerun"
+                variant="contained"
+                color="primary"
+                onClick={this.handleRerun}
+            >
+                Rerun
+            </Button>,
+            <Button
                 key="cancel-rerun"
                 className="qa-DataPackOptions-Button-rerunCancel"
                 variant="contained"
@@ -79,17 +88,17 @@ export class DataPackOptions extends Component {
             >
                 Cancel
             </Button>,
-            <Button
-                key="rerun"
-                className="qa-DataPackOptions-RaisedButton-rerun"
-                variant="contained"
-                color="primary"
-                onClick={this.handleRerun}
-            >
-                Rerun
-            </Button>,
         ];
         const cloneExportActions = [
+            <Button
+                key="clone"
+                className="qa-DataPackOptions-RaisedButton-clone"
+                variant="contained"
+                color="primary"
+                onClick={this.handleClone}
+            >
+                Clone
+            </Button>,
             <Button
                 key="cancel-clone"
                 className="qa-DataPackOptions-RaisedButton-cloneCancel"
@@ -99,15 +108,6 @@ export class DataPackOptions extends Component {
                 onClick={this.handleCloneClose}
             >
                 Cancel
-            </Button>,
-            <Button
-                key="clone"
-                className="qa-DataPackOptions-RaisedButton-clone"
-                variant="contained"
-                color="primary"
-                onClick={this.handleClone}
-            >
-                Clone
             </Button>,
         ];
 

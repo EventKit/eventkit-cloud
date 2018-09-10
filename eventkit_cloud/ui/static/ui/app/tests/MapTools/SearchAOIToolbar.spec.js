@@ -1,14 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import { Typeahead, Menu } from 'react-bootstrap-typeahead';
-import { Provider } from 'react-redux';
 import { SearchAOIToolbar } from '../../components/MapTools/SearchAOIToolbar';
-import { SearchAOIButton } from '../../components/MapTools/SearchAOIButton';
-import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
-import { fakeStore } from '../../__mocks__/fakeStore';
+import SearchAOIButton from '../../components/MapTools/SearchAOIButton';
+import TypeaheadMenuItem from '../../components/MapTools/TypeaheadMenuItem';
 
 describe('SearchAOIToolbar button', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => ({
         toolbarIcons: { search: 'DEFAULT' },
         geocode: {
@@ -22,19 +26,19 @@ describe('SearchAOIToolbar button', () => {
         handleCancel: () => {},
         setAllButtonsDefault: () => {},
         setSearchAOIButtonSelected: () => {},
+        ...global.eventkit_test_props,
     });
 
     it('should render a searchbar and button', () => {
-        const store = fakeStore({});
         const props = getProps();
-        const wrapper = mount(<Provider store={store}><SearchAOIToolbar {...props} /></Provider>);
+        const wrapper = shallow(<SearchAOIToolbar {...props} />);
         expect(wrapper.find(Typeahead)).toHaveLength(1);
         expect(wrapper.find(Menu)).toHaveLength(0);
         expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(0);
         expect(wrapper.find(SearchAOIButton)).toHaveLength(1);
     });
 
-    it('should setup debouncer before mounting', () => {
+    it('should setup debouncer before shallowing', () => {
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props} />);
         expect(wrapper.instance().debouncer).toBeDefined();

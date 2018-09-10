@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import axios from 'axios';
 import Button from '@material-ui/core/Button';
 import { login } from '../actions/userActions';
@@ -61,6 +62,8 @@ export class Form extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             form: {
                 verticalAlign: 'middle',
@@ -71,18 +74,18 @@ export class Form extends React.Component {
                 width: '100%',
                 fontSize: '20px',
                 fontWeight: 'bold',
-                color: 'white',
+                color: colors.white,
                 margin: '15px auto 0px auto',
             },
             input: {
                 borderRadius: '0px',
                 outline: 'none',
                 border: 'none',
-                backgroundColor: 'rgba(179,205,224,.2)',
+                backgroundColor: `${colors.secondary}33`,
                 fontSize: '16px',
                 width: '100%',
                 height: '45px',
-                color: '#e2e2e2',
+                color: colors.white,
                 margin: '15px auto 0px auto',
                 padding: '10px',
             },
@@ -127,7 +130,7 @@ export class Form extends React.Component {
             if (!this.state.loginForm) {
                 oauthButton = (
                     <div className="qa-LoginForm-oauth">
-                        <div style={{ margin: '40px auto', fontSize: '24px', color: '#fff' }}>
+                        <div style={{ margin: '40px auto', fontSize: '24px', color: colors.white }}>
                             <strong>Welcome to EventKit</strong>
                         </div>
                         <Button
@@ -145,7 +148,7 @@ export class Form extends React.Component {
                     <span
                         role="button"
                         tabIndex={0}
-                        style={{ color: '#4598bf', cursor: 'pointer', margin: '15px auto' }}
+                        style={{ color: colors.primary, cursor: 'pointer', margin: '15px auto' }}
                         onClick={this.handleOAuth}
                         onKeyPress={this.handleOAuth}
                         className="qa-LoginForm-oauth"
@@ -160,7 +163,7 @@ export class Form extends React.Component {
                 {loginForm}
                 {oauthButton}
                 {!loginForm && !oauthButton ?
-                    <div style={{ color: '#fff', marginTop: '150px' }}>
+                    <div style={{ color: colors.white, marginTop: '150px' }}>
                         No login methods available, please contact an administrator
                     </div>
                     : null}
@@ -174,6 +177,7 @@ Form.propTypes = {
     location: PropTypes.shape({
         query: PropTypes.object,
     }).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapDispatchToProps(dispatch) {
@@ -184,8 +188,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-Form.childContextTypes = {
-    muiTheme: PropTypes.object.isRequired,
-};
-
-export default connect(null, mapDispatchToProps)(Form);
+export default withTheme()(connect(null, mapDispatchToProps)(Form));

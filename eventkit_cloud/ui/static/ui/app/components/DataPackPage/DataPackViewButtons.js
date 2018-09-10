@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import IconButton from '@material-ui/core/IconButton';
 import ActionViewModule from '@material-ui/icons/ViewModule';
 import ActionViewStream from '@material-ui/icons/ViewStream';
@@ -7,6 +8,8 @@ import MapsMap from '@material-ui/icons/Map';
 
 export class DataPackViewButtons extends React.Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             button: {
                 height: '35px',
@@ -19,8 +22,8 @@ export class DataPackViewButtons extends React.Component {
                 width: '22px',
             },
             selectedIcon: {
-                color: '#253447',
-                backgroundColor: '#4598bf',
+                color: colors.background_light,
+                backgroundColor: colors.primary,
                 height: '22px',
                 width: '22px',
             },
@@ -69,6 +72,7 @@ export class DataPackViewButtons extends React.Component {
 DataPackViewButtons.propTypes = {
     handleViewChange: PropTypes.func.isRequired,
     view: PropTypes.string.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackViewButtons;
+export default withTheme()(DataPackViewButtons);

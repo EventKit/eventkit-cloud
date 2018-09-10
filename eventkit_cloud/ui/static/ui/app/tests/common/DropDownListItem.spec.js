@@ -4,7 +4,7 @@ import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import DropDownListItem from '../../components/common/DropDownListItem';
+import { DropDownListItem } from '../../components/common/DropDownListItem';
 
 
 describe('DropDownListItem component', () => {
@@ -14,6 +14,7 @@ describe('DropDownListItem component', () => {
         {
             title: 'test title',
             children: <span className="test-child">hello</span>,
+            ...global.eventkit_test_props,
         }
     );
 

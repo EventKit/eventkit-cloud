@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import FlagIcon from '@material-ui/icons/Flag';
@@ -49,13 +50,15 @@ export class NotificationMenu extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             menuItem: {
                 fontSize: '12px',
                 lineHeight: '24px',
             },
             icon: {
-                color: '#757575',
+                color: colors.text_primary,
                 marginRight: '5px',
             },
         };
@@ -118,6 +121,7 @@ NotificationMenu.propTypes = {
     markNotificationsAsRead: PropTypes.func.isRequired,
     markNotificationsAsUnread: PropTypes.func.isRequired,
     removeNotifications: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 NotificationMenu.defaultProps = {
@@ -135,7 +139,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     null,
     mapDispatchToProps,
-)(NotificationMenu);
+)(NotificationMenu));

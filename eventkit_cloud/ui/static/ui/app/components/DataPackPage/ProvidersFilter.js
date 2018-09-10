@@ -1,10 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import Checked from '@material-ui/icons/CheckBox';
 
 export class ProvidersFilter extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         let providers = [];
         if (this.props.providers) {
             providers = this.props.providers.filter(provider => provider.display);
@@ -25,7 +28,7 @@ export class ProvidersFilter extends Component {
                 flexWrap: 'nowrap',
                 lineHeight: '24px',
                 paddingBottom: '8px',
-                color: '#707274',
+                color: colors.text_primary,
                 fontWeight: 700,
             },
             checkbox: {
@@ -75,6 +78,7 @@ ProvidersFilter.propTypes = {
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     selected: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ProvidersFilter;
+export default withTheme()(ProvidersFilter);

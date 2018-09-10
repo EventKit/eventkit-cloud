@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import PropTypes from 'prop-types';
 import raf from 'raf';
 import axios from 'axios';
@@ -85,6 +85,7 @@ describe('ExportAOI component', () => {
             getGeocode: () => {},
             processGeoJSONFile: () => {},
             resetGeoJSONFile: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
@@ -94,7 +95,7 @@ describe('ExportAOI component', () => {
             MAX_VECTOR_AOI_SQ_KM: 20000,
             MAX_RASTER_AOI_SQ_KM: 10000,
         };
-        return mount(<ExportAOI {...props} />, {
+        return shallow(<ExportAOI {...props} />, {
             context: { config },
             childContextTypes: {
                 config: PropTypes.object,
@@ -232,7 +233,7 @@ describe('ExportAOI component', () => {
         const updateSpy = sinon.spy(wrapper.instance(), 'componentDidUpdate');
         expect(updateSpy.called).toBe(false);
         expect(updateMapSpy.called).toBe(false);
-        wrapper.instance().forceUpdate();
+        wrapper.instance().componentDidUpdate();
         wrapper.update();
         expect(updateSpy.calledOnce).toBe(true);
         expect(updateMapSpy.calledOnce).toBe(true);

@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconButton from '@material-ui/core/IconButton';
 import Table from '@material-ui/core/Table';
@@ -9,7 +9,6 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import Warning from '@material-ui/icons/Warning';
 import Check from '@material-ui/icons/Check';
@@ -22,6 +21,12 @@ import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 import { ProviderRow } from '../../components/StatusDownloadPage/ProviderRow';
 
 describe('ProviderRow component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const selectedProviders = {
         123: true,
         456: false,
@@ -90,11 +95,12 @@ describe('ProviderRow component', () => {
             backgroundColor: 'white',
             onSelectionToggle: () => {},
             onProviderCancel: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ProviderRow {...props} />)
+        shallow(<ProviderRow {...props} />)
     );
 
     it('should render elements', () => {
@@ -106,9 +112,9 @@ describe('ProviderRow component', () => {
         expect(wrapper.find(TableCell)).toHaveLength(5);
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(2);
+        expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(IconButton).find(ArrowDown)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(0);
+        expect(wrapper.find(MenuItem)).toHaveLength(2);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
@@ -118,8 +124,6 @@ describe('ProviderRow component', () => {
         props.onProviderCancel = sinon.spy();
         const wrapper = getWrapper(props);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconMenu).find(IconButton)).toHaveLength(1);
-        expect(wrapper.find(IconMenu).find(NavigationMoreVert)).toHaveLength(1);
     });
 
     it('should render the task rows when the table is open', () => {
@@ -128,8 +132,8 @@ describe('ProviderRow component', () => {
         wrapper.setState({ openTable: true });
         expect(wrapper.find(Table)).toHaveLength(2);
         expect(wrapper.find(TableHead)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(3);
-        expect(wrapper.find(TableCell)).toHaveLength(17);
+        expect(wrapper.find(TableRow)).toHaveLength(2);
+        expect(wrapper.find(TableCell)).toHaveLength(11);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
@@ -249,7 +253,6 @@ describe('ProviderRow component', () => {
                 className="qa-ProviderRow-Warning-taskStatus"
                 style={{
                     marginLeft: '10px',
-                    display: 'inlineBlock',
                     fill: '#f4d225',
                     verticalAlign: 'bottom',
                 }}
@@ -282,7 +285,6 @@ describe('ProviderRow component', () => {
                 className="qa-ProviderRow-span-providerStatus"
                 style={{
                     fontWeight: 'bold',
-                    display: 'inlineBlock',
                     borderTopWidth: '10px',
                     borderBottomWidth: '10px',
                     borderLeftWidth: '10px',
@@ -294,8 +296,7 @@ describe('ProviderRow component', () => {
                     className="qa-ProviderRow-Warning-providerStatus"
                     style={{
                         marginLeft: '10px',
-                        display: 'inlineBlock',
-                        fill: '#f4d225',
+                        fill: '#ce4427',
                         verticalAlign: 'bottom',
                     }}
                 />
@@ -333,9 +334,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         const task = { result: {} };
         const icon = wrapper.instance().getTaskDownloadIcon(task);
-        const elem = mount(icon);
-        expect(elem.is(CloudDownload)).toBe(true);
-        expect(elem.props().onClick).toBe(undefined);
+        expect(icon.props.onClick).toBe(undefined);
     });
 
     it('getTaskDownloadIcon should return a icon with click handler', () => {
@@ -343,9 +342,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         const task = { result: { url: 'test-url.io' } };
         const icon = wrapper.instance().getTaskDownloadIcon(task);
-        const elem = mount(icon);
-        expect(elem.is(CloudDownload)).toBe(true);
-        expect(elem.props().onClick).not.toBe(undefined);
+        expect(icon.props.onClick).not.toBe(undefined);
     });
 
     it('handleProviderOpen should set provider dialog to open', () => {

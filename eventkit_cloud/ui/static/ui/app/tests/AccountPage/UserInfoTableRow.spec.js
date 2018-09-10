@@ -1,9 +1,9 @@
 import React from 'react';
 import { mount } from 'enzyme';
-import UserInfoTableRow from '../../components/AccountPage/UserInfoTableRow';
+import { UserInfoTableRow } from '../../components/AccountPage/UserInfoTableRow';
 
 describe('UserInfoTableRow component', () => {
-    const props = { title: 'test title', data: 'test data' };
+    const props = { title: 'test title', data: 'test data', ...global.eventkit_test_props };
     it('should render a table row with title and data cells', () => {
         const wrapper = mount(<UserInfoTableRow {...props} />);
         expect(wrapper.find('tr')).toHaveLength(1);
@@ -13,7 +13,7 @@ describe('UserInfoTableRow component', () => {
     });
 
     it('should return null if no title or data are passed in', () => {
-        const wrapper = mount(<UserInfoTableRow title="test title" />);
+        const wrapper = mount(<UserInfoTableRow {...props} data={null} />);
         expect(wrapper.find('tr')).toHaveLength(0);
         expect(wrapper.find('td')).toHaveLength(0);
         expect(wrapper.children().exists()).toBe(false);
@@ -21,7 +21,7 @@ describe('UserInfoTableRow component', () => {
 
     it('should update text when props change', () => {
         const wrapper = mount(<UserInfoTableRow {...props} />);
-        const newProps = { title: 'new title', data: 'new data' };
+        const newProps = { ...props, title: 'new title', data: 'new data' };
         wrapper.setProps(newProps);
         expect(wrapper.find('td').first().text()).toEqual('new title');
         expect(wrapper.find('td').last().text()).toEqual('new data');

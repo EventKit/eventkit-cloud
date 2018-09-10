@@ -17,6 +17,7 @@ describe('DashboardSection component', () => {
             columns: 3,
             providers: [],
             noDataElement: <div className="qa-DashboardSection-NoDataElement" />,
+            ...global.eventkit_test_props,
         };
     }
 

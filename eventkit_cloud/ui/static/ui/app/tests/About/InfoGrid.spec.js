@@ -2,11 +2,12 @@ import React from 'react';
 import { mount } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
 import GridTile from '@material-ui/core/GridListTile';
-import InfoGrid from '../../components/About/InfoGrid';
+import { InfoGrid } from '../../components/About/InfoGrid';
 
 describe('InfoGrid component', () => {
     const getProps = () => (
         {
+            ...global.eventkit_test_props,
             title: 'Test Header',
             items: [
                 { title: 'item 1', body: 'body 1' },

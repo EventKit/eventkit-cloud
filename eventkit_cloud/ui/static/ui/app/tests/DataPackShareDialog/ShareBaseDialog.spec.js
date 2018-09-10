@@ -1,9 +1,9 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Dialog from '@material-ui/core/Dialog';
 import * as viewport from '../../utils/viewport';
-import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
+import { ShareBaseDialog } from '../../components/DataPackShareDialog/ShareBaseDialog';
 
 
 describe('MembersHeaderRow component', () => {
@@ -15,11 +15,12 @@ describe('MembersHeaderRow component', () => {
             show: true,
             onClose: () => {},
             handleSave: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ShareBaseDialog {...props} />)
+        shallow(<ShareBaseDialog {...props} />)
     );
 
     it('should render the basic components', () => {

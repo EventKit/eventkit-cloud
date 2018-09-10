@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import AlertWarning from '@material-ui/icons/Warning';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ActionRoom from '@material-ui/icons/Room';
@@ -27,11 +27,12 @@ describe('AoiInfobar component', () => {
             onRevertClick: () => {},
             clickZoomToSelection: () => {},
             handleBufferClick: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<AoiInfobar {...props} />)
+        shallow(<AoiInfobar {...props} />)
     );
 
     const geojson = {
@@ -69,11 +70,11 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find('.qa-AoiInfobar')).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-title').text()).toEqual('AREA OF INTEREST (AOI)');
         expect(wrapper.find('.qa-AoiInfobar-button-zoom')).toHaveLength(1);
-        expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toEqual(' ZOOM TO');
+        expect(wrapper.find('.qa-AoiInfobar-button-zoom').first().text()).toContain(' ZOOM TO');
         expect(wrapper.find(ActionZoomIn)).toHaveLength(1);
         expect(wrapper.find('.qa-AoiInfobar-infoTitle').text()).toEqual('fake title');
         expect(wrapper.find('.qa-AoiInfobar-infoDescription').text()).toEqual('fake description');
-        expect(wrapper.find('.qa-AoiInfobar-icon-polygon').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(1);
     });
 
     it('should add an event listener on mount', () => {
@@ -129,7 +130,7 @@ describe('AoiInfobar component', () => {
         props.aoiInfo.title = 'fake title';
         props.handleBufferClick = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.find('.qa-AoiInfobar-buffer-button').find('button').simulate('click');
+        wrapper.find('.qa-AoiInfobar-buffer-button').shallow().simulate('click');
         expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 
@@ -142,8 +143,8 @@ describe('AoiInfobar component', () => {
         props.maxVectorAoiSqKm = 0.0000000001;
         const showSpy = sinon.spy(AoiInfobar.prototype, 'showAlert');
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-AoiInfobar-alert-icon').hostNodes()).toHaveLength(1);
-        wrapper.find('.qa-AoiInfobar-alert-icon').hostNodes().simulate('click');
+        expect(wrapper.find('.qa-AoiInfobar-alert-icon')).toHaveLength(1);
+        wrapper.find('.qa-AoiInfobar-alert-icon').simulate('click');
         expect(showSpy.calledOnce).toBe(true);
         showSpy.restore();
     });

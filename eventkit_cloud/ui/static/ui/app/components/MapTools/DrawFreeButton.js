@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ContentCreate from '@material-ui/icons/Create';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -20,13 +21,15 @@ export class DrawFreeButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '50px',
                 height: '12px',
-                color: '#4498c0',
+                color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
@@ -38,7 +41,7 @@ export class DrawFreeButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
         };
@@ -47,7 +50,7 @@ export class DrawFreeButton extends Component {
             <div id="default_icon">
                 <ContentCreate
                     className="qa-DrawFreeButton-ContentCreate-default"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-DrawFreeButton-div-default" style={styles.buttonName}>DRAW</div>
             </div>
@@ -57,9 +60,8 @@ export class DrawFreeButton extends Component {
             <div id="inactive_icon">
                 <ContentCreate
                     className="qa-DrawFreeButton-ContentCreate-inactive"
-                    style={{
-                        opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0',
-                    }}
+                    style={{ opacity: 0.4 }}
+                    color="primary"
                 />
                 <div className="qa-DrawFreeButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>DRAW</div>
             </div>
@@ -69,7 +71,7 @@ export class DrawFreeButton extends Component {
             <div id="selected_icon">
                 <ContentClear
                     className="qa-DrawFreeButton-ContentCreate-selected"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-DrawFreeButton-div-selected" style={styles.buttonName}>DRAW</div>
             </div>
@@ -96,7 +98,8 @@ DrawFreeButton.propTypes = {
     setFreeButtonSelected: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DrawFreeButton;
+export default withTheme()(DrawFreeButton);
 

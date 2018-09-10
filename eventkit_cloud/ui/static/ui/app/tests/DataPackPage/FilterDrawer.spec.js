@@ -1,8 +1,8 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Drawer from '@material-ui/core/Drawer';
-import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
+import { FilterDrawer } from '../../components/DataPackPage/FilterDrawer';
 import PermissionFilter from '../../components/DataPackPage/PermissionsFilter';
 import StatusFilter from '../../components/DataPackPage/StatusFilter';
 import DateFilter from '../../components/DataPackPage/DateFilter';
@@ -45,11 +45,12 @@ describe('FilterDrawer component', () => {
                 { id: 'group3', name: 'group3', members: ['user1'] },
             ],
             members: [],
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<FilterDrawer {...props} />)
+        shallow(<FilterDrawer {...props} />)
     );
 
     it('should render all the basic components', () => {

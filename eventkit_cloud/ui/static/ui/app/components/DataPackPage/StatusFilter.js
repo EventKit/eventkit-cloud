@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Checkbox from '@material-ui/core/Checkbox';
 import AlertError from '@material-ui/icons/Error';
 import NotificationSync from '@material-ui/icons/Sync';
@@ -8,6 +9,8 @@ import ToggleCheckBox from '@material-ui/icons/CheckBox';
 
 export class StatusFilter extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             drawerSection: {
                 width: '100%',
@@ -19,7 +22,7 @@ export class StatusFilter extends Component {
                 flexWrap: 'nowrap',
                 lineHeight: '24px',
                 paddingBottom: '10px',
-                color: '#707274',
+                color: colors.text_primary,
                 fontWeight: 700,
             },
             checkBox: {
@@ -29,13 +32,13 @@ export class StatusFilter extends Component {
                 marginRight: '5px',
             },
             checkmark: {
-                color: '#bcdfbb',
+                color: colors.success,
             },
             sync: {
-                fill: '#f4D225',
+                fill: colors.running,
             },
             error: {
-                fill: '#ce4427',
+                fill: colors.warning,
                 opacity: '0.6',
             },
         };
@@ -116,6 +119,7 @@ StatusFilter.propTypes = {
     completed: PropTypes.bool.isRequired,
     incomplete: PropTypes.bool.isRequired,
     submitted: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default StatusFilter;
+export default withTheme()(StatusFilter);

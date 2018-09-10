@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import Popover from '@material-ui/core/Popover';
@@ -73,33 +74,24 @@ export class DataPackStatusTable extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             textField: {
                 fontSize: '14px',
                 height: '36px',
                 width: '0px',
-                display: 'inlineBlock',
             },
             dropDown: {
                 height: '24px',
                 margin: '0px 5px 0px 0px',
                 lineHeight: '24px',
                 flex: '0 0 auto',
-                color: '#8b9396',
+                color: colors.text_primary,
                 backgroundColor: 'transparent',
                 fontSize: '14px',
                 fontWeight: 'bold',
                 textTransform: 'capitalize',
-            },
-            icon: {
-                height: '24px',
-                width: '24px',
-                padding: '0px',
-                fill: '#4498c0',
-                position: 'relative',
-                top: '0px',
-                right: '0px',
-                verticalAlign: 'top',
             },
             underline: {
                 display: 'none',
@@ -110,24 +102,23 @@ export class DataPackStatusTable extends Component {
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
-                fill: '#4598bf',
+                fill: colors.primary,
                 verticalAlign: 'middle',
             },
             checkIcon: {
-                fill: '#8b9396',
+                fill: colors.text_primary,
                 height: '24px',
                 verticalAlign: 'middle',
                 marginLeft: '30px',
             },
             permissionsIcon: {
-                fill: '#8b9396',
+                fill: colors.text_primary,
                 height: '24px',
                 verticalAlign: 'middle',
                 marginRight: '5px',
             },
             item: {
-                color: '#8b9396',
+                color: colors.text_primary,
                 fontSize: '14px',
                 padding: '6px 16px',
             },
@@ -174,7 +165,7 @@ export class DataPackStatusTable extends Component {
                             selectedDays={new Date(this.props.expiration)}
                             month={new Date(this.props.expiration)}
                             modifiers={{ disabled: { before: this.props.minDate, after: this.props.maxDate } }}
-                            modifiersStyles={{ selected: { backgroundColor: '#4598bf' } }}
+                            modifiersStyles={{ selected: { backgroundColor: colors.primary } }}
                             className="qa-DataPackStatusTable-DayPicker"
                         />
                     </Popover>
@@ -216,7 +207,7 @@ export class DataPackStatusTable extends Component {
                         className="qa-DataPackStatusTable-MembersAndGroups-button"
                         key="membersAndGroupsButton"
                         onClick={this.handleShareDialogOpen}
-                        style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
+                        style={{ color: colors.primary, textDecoration: 'underline', padding: '0px 5px' }}
                         disabled={!this.props.adminPermissions}
                     >
                         {memberText} / {groupText}
@@ -350,6 +341,7 @@ DataPackStatusTable.propTypes = {
         user: PropTypes.object,
         groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackStatusTable;
+export default withTheme()(DataPackStatusTable);

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -616,6 +617,7 @@ export class UserGroupsPage extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const { steps, isRunning } = this.state;
         const smallViewport = isViewportS();
         const xsmallViewport = isViewportXS();
@@ -623,8 +625,8 @@ export class UserGroupsPage extends Component {
         const bodyHeight = window.innerHeight - 130;
         const styles = {
             header: {
-                backgroundColor: '#161e2e',
-                color: 'white',
+                backgroundColor: colors.background,
+                color: colors.white,
                 fontSize: '14px',
                 padding: '0px 24px',
                 flexWrap: 'wrap-reverse',
@@ -650,12 +652,12 @@ export class UserGroupsPage extends Component {
             },
             drawerButton: {
                 fontSize: '12px',
-                color: '#4598bf',
+                color: colors.primary,
                 padding: '0px 10px',
                 margin: '0px -10px 0px 5px',
             },
             newGroupIcon: {
-                color: '#fff',
+                color: colors.white,
                 height: '35px',
                 width: '18px',
                 verticalAlign: 'bottom',
@@ -667,7 +669,7 @@ export class UserGroupsPage extends Component {
             },
             fixedHeader: {
                 paddingTop: 15,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 maxWidth: '1000px',
                 margin: 'auto',
                 position: 'relative',
@@ -691,12 +693,12 @@ export class UserGroupsPage extends Component {
             container: {
                 height: '36px',
                 width: 'calc(100% - 48px)',
-                backgroundColor: '#eee',
+                backgroundColor: colors.secondary,
                 lineHeight: '36px',
                 margin: '0px 24px 10px',
             },
             hint: {
-                color: '#5a5a5a',
+                color: colors.text_primary,
                 height: '36px',
                 lineHeight: 'inherit',
                 bottom: '0px',
@@ -707,7 +709,7 @@ export class UserGroupsPage extends Component {
                 top: 0,
                 left: 0,
                 zIndex: 3,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
             },
             loadingBackground: {
@@ -716,7 +718,7 @@ export class UserGroupsPage extends Component {
                 top: 0,
                 width: '100%',
                 height: '100%',
-                backgroundColor: 'rgba(0,0,0,0.1)',
+                backgroundColor: colors.backdrop,
                 zIndex: 2001,
             },
             loadingContainer: {
@@ -734,24 +736,23 @@ export class UserGroupsPage extends Component {
             },
             errorIcon: {
                 marginRight: '10px',
-                display: 'inlineBlock',
-                fill: '#CE4427',
+                fill: colors.warning,
                 verticalAlign: 'bottom',
             },
             tourButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
             },
             tourIcon: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 height: '35px',
                 width: '18px',
                 verticalAlign: 'middle',
             },
             input: {
-                color: '#000',
+                color: colors.black,
                 height: '36px',
                 paddingLeft: '10px',
                 fontSize: '16px',
@@ -851,7 +852,7 @@ export class UserGroupsPage extends Component {
         }
 
         return (
-            <div style={{ backgroundColor: 'white', position: 'relative' }}>
+            <div style={{ backgroundColor: colors.white, position: 'relative' }}>
                 <Joyride
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
@@ -916,7 +917,6 @@ export class UserGroupsPage extends Component {
                         </div>
                         <TextField
                             style={styles.container}
-                            hintText="Search Users"
                             type="text"
                             placeholder="Search Users"
                             InputProps={{ style: styles.input }}
@@ -1145,6 +1145,7 @@ UserGroupsPage.propTypes = {
     updateGroup: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -1179,7 +1180,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(UserGroupsPage);
+)(UserGroupsPage));

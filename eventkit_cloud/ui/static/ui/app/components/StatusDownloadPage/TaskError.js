@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import BaseDialog from '../Dialog/BaseDialog';
@@ -23,19 +24,19 @@ export class TaskError extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             errorText: {
-                display: 'inlineBlock',
                 borderTopWidth: '10px',
                 borderBottomWidth: '10px',
                 borderLeftWidth: '10px',
-                color: '#ce4427',
+                color: colors.warning,
                 cursor: 'pointer',
             },
             warningIcon: {
                 marginRight: '10px',
-                display: 'inlineBlock',
-                fill: '#e8ac90',
+                fill: colors.warning,
                 verticalAlign: 'bottom',
             },
         };
@@ -64,7 +65,7 @@ export class TaskError extends Component {
                     title={
                         <strong id="error-title">
                             {task.name} has
-                            <strong style={{ color: '#ce4427' }}> {taskErrors.length} error(s).</strong>
+                            <strong style={{ color: colors.warning }}> {taskErrors.length} error(s).</strong>
                         </strong>
                     }
                     onClose={this.handleTaskErrorClose}
@@ -94,7 +95,8 @@ export class TaskError extends Component {
 
 TaskError.propTypes = {
     task: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default TaskError;
+export default withTheme()(TaskError);
 

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Clear from '@material-ui/icons/Clear';
 import css from '../../styles/popup.css';
 
@@ -10,7 +11,7 @@ export class AlertCallout extends Component {
                 height: '20px',
                 width: '20px',
                 flex: '0 0 auto',
-                fill: '#4498c0',
+                fill: this.props.theme.eventkit.colors.primary,
                 cursor: 'pointer',
             },
         };
@@ -61,6 +62,7 @@ AlertCallout.propTypes = {
     ]).isRequired,
     style: PropTypes.object,
     onClose: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default AlertCallout;
+export default withTheme()(AlertCallout);

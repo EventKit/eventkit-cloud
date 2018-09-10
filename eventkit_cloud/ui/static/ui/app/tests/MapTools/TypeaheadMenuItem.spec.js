@@ -1,15 +1,22 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../../components/icons/IrregularPolygon';
 import { TypeaheadMenuItem } from '../../components/MapTools/TypeaheadMenuItem';
 
 
 describe('TypeaheadMenuItem component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => ({
         result: {},
         index: 1,
+        ...global.eventkit_test_props,
     });
 
     const getContext = () => ({
@@ -22,19 +29,17 @@ describe('TypeaheadMenuItem component', () => {
     it('should return a MenuItem with proper child components', () => {
         const props = getProps();
         const context = getContext();
-        const wrapper = mount(<TypeaheadMenuItem {...props} />, {
+        const wrapper = shallow(<TypeaheadMenuItem {...props} />, {
             context,
             childContextTypes: {
                 activeIndex: PropTypes.number.isRequired,
                 onActiveItemChange: PropTypes.func.isRequired,
                 onInitialItemChange: PropTypes.func.isRequired,
                 onMenuItemClick: PropTypes.func.isRequired,
-                muiTheme: PropTypes.object,
             },
         });
-        expect(wrapper.find(TypeaheadMenuItem)).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(6);
-        expect(wrapper.find('.menuItem').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.menuItem')).toHaveLength(1);
         expect(wrapper.find('.qa-TypeaheadMenuItem-icon-div')).toHaveLength(1);
         expect(wrapper.find(ActionRoom)).toHaveLength(0);
         expect(wrapper.find('.qa-TypeaheadMenuItem-name')).toHaveLength(1);
@@ -51,7 +56,7 @@ describe('TypeaheadMenuItem component', () => {
         };
         const props = getProps();
         const context = getContext();
-        const wrapper = mount(<TypeaheadMenuItem {...props} />, {
+        const wrapper = shallow(<TypeaheadMenuItem {...props} />, {
             context,
             childContextTypes: {
                 activeIndex: PropTypes.number.isRequired,
@@ -73,7 +78,7 @@ describe('TypeaheadMenuItem component', () => {
         props.result.province = 'province';
         props.result.region = 'region';
         props.result.country = 'country name';
-        const wrapper = mount(<TypeaheadMenuItem {...props} />, {
+        const wrapper = shallow(<TypeaheadMenuItem {...props} />, {
             context,
             childContextTypes: {
                 activeIndex: PropTypes.number.isRequired,

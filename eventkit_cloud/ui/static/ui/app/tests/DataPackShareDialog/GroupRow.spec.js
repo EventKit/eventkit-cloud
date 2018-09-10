@@ -1,11 +1,11 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import GroupMemberRow from '../../components/DataPackShareDialog/GroupMemberRow';
-import GroupRow from '../../components/DataPackShareDialog/GroupRow';
+import { GroupRow } from '../../components/DataPackShareDialog/GroupRow';
 
 describe('GroupRow component', () => {
     const getProps = () => (
@@ -42,11 +42,12 @@ describe('GroupRow component', () => {
             handleAdminMouseOver: () => {},
             showAdmin: false,
             admin: false,
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<GroupRow {...props} />)
+        shallow(<GroupRow {...props} />)
     );
 
     it('should render the basic elements', () => {

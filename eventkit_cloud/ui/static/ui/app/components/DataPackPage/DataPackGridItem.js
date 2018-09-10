@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Collapse from '@material-ui/core/Collapse';
 import Card from '@material-ui/core/Card';
@@ -200,6 +201,8 @@ export class DataPackGridItem extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
         const titleFontSize = 22;
         const styles = {
@@ -208,8 +211,8 @@ export class DataPackGridItem extends Component {
                 ...this.props.style,
             },
             cardTitle: {
-                backgroundColor: '#f7f8f8',
-                color: '#4598bf',
+                backgroundColor: colors.secondary,
+                color: colors.primary,
                 display: 'flex',
                 width: '100%',
                 height: '36px',
@@ -221,7 +224,7 @@ export class DataPackGridItem extends Component {
                 width: 'calc(100% - 24px)',
                 position: 'absolute',
                 lineHeight: '24px',
-                backgroundColor: '#f7f8f8',
+                backgroundColor: colors.secondary,
             },
             titleLink: {
                 color: 'inherit',
@@ -244,42 +247,42 @@ export class DataPackGridItem extends Component {
             },
             completeIcon: {
                 float: 'left',
-                color: '#bcdfbb',
+                color: colors.success,
                 fontSize: '20px',
             },
             errorIcon: {
                 float: 'left',
-                color: '#ce4427',
+                color: colors.warning,
                 fontSize: '20px',
                 opacity: '0.6',
             },
             runningIcon: {
                 float: 'left',
-                color: '#f4D225',
+                color: colors.running,
                 fontSize: '22px',
             },
             unpublishedIcon: {
                 float: 'right',
-                color: 'grey',
+                color: colors.grey,
                 fontSize: '18px',
                 marginRight: '5px',
             },
             publishedIcon: {
                 float: 'right',
-                color: 'grey',
+                color: colors.grey,
                 fontSize: '20px',
                 marginRight: '5px',
             },
             ownerLabel: {
                 float: 'right',
-                color: 'grey',
+                color: colors.grey,
                 margin: '0px',
                 fontSize: cardTextFontSize,
             },
             cardTextMinimized: {
                 wordWrap: 'break-word',
                 width: '100%',
-                backgroundColor: '#f7f8f8',
+                backgroundColor: colors.secondary,
                 padding: '0px 10px 5px',
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
@@ -291,12 +294,12 @@ export class DataPackGridItem extends Component {
             cardText: {
                 wordWrap: 'break-word',
                 width: '100%',
-                backgroundColor: '#f7f8f8',
+                backgroundColor: colors.secondary,
                 padding: '0px 10px 5px',
                 position: 'absolute',
             },
             cardTextContainer: {
-                backgroundColor: '#f7f8f8',
+                backgroundColor: colors.secondary,
                 fontSize: cardTextFontSize,
                 padding: '0px',
                 marginBottom: '10px',
@@ -322,7 +325,7 @@ export class DataPackGridItem extends Component {
             <div style={styles.gridItem} key={this.props.run.uid}>
                 <Card
                     className="qa-DataPackGridItem-Card"
-                    style={{ backgroundColor: '#f7f8f8' }}
+                    style={{ backgroundColor: colors.secondary }}
                 >
                     <CardHeader
                         className="qa-DataPackGridItem-CardTitle"
@@ -504,6 +507,7 @@ DataPackGridItem.propTypes = {
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     style: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
 DataPackGridItem.defaultProps = {
@@ -511,4 +515,4 @@ DataPackGridItem.defaultProps = {
     style: {},
 };
 
-export default DataPackGridItem;
+export default withTheme()(DataPackGridItem);

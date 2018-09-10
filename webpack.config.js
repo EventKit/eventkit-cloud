@@ -49,9 +49,8 @@ var config = {
                     loader: 'babel-loader',
                     options: {
                         presets: [
-                            "react",
-                            "env",
-                            "stage-0"
+                            "@babel/preset-react",
+                            "@babel/preset-env",
                         ],
                     },
                 },
@@ -154,7 +153,9 @@ var config = {
 };
 
 if (!PROD) {
-    config.plugins.push(new WriteFilePlugin());
+    config.plugins.push(new WriteFilePlugin({
+        test: /^(?!.*(hot)).*/, // exclude hot-update files
+    }));
     config.entry.bundle.push('webpack-dev-server/client?http://0.0.0.0:8080');
     config.plugins.push(new webpack.HotModuleReplacementPlugin());
     config.devtool = 'inline-source-map';

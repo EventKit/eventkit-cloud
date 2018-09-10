@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import Button from '@material-ui/core/Button';
@@ -8,10 +8,19 @@ import { Form } from './loginContainer';
 
 
 describe('loginContainer', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
+    const getProps = () => ({
+        handleLogin: sinon.spy(),
+        ...global.eventkit_test_props,
+    });
+
     it('shows only the form if auth endpoint is available', () => {
-        const props = {
-            handleLogin: sinon.spy(),
-        };
+        const props = getProps();
 
         const state = {
             username: 'UserName',
@@ -21,17 +30,15 @@ describe('loginContainer', () => {
             oauthName: '',
         };
 
-        const wrapper = mount(<Form {...props} />);
+        const wrapper = shallow(<Form {...props} />);
         wrapper.setState(state);
         expect(wrapper.find('form').exists()).toEqual(true);
-        expect(wrapper.find(Button)).toHaveLength(1);
-        expect(wrapper.find(Button).text()).toEqual('Login');
+        expect(wrapper.find('form').find(Button)).toHaveLength(1);
+        expect(wrapper.find('form').find(Button).html()).toContain('Login');
     });
 
     it('shows only the oauth button if oauth endpoint is available', () => {
-        const props = {
-            handleLogin: sinon.spy(),
-        };
+        const props = getProps();
 
         const state = {
             username: 'UserName',
@@ -41,17 +48,15 @@ describe('loginContainer', () => {
             oauthName: 'OAuth',
         };
 
-        const wrapper = mount(<Form {...props} />);
+        const wrapper = shallow(<Form {...props} />);
         wrapper.setState(state);
         expect(wrapper.find('form').exists()).toEqual(false);
         expect(wrapper.find(Button)).toHaveLength(1);
-        expect(wrapper.find(Button).text()).toEqual('Login with OAuth');
+        expect(wrapper.find(Button).html()).toContain('Login with OAuth');
     });
 
     it('shows both the form and oauth button if endpoints are available', () => {
-        const props = {
-            handleLogin: sinon.spy(),
-        };
+        const props = getProps();
 
         const state = {
             username: 'UserName',
@@ -61,28 +66,33 @@ describe('loginContainer', () => {
             oauthName: 'OAuth',
         };
 
-        const wrapper = mount(<Form {...props} />);
+        const wrapper = shallow(<Form {...props} />);
         wrapper.setState(state);
         expect(wrapper.find('form').exists()).toEqual(true);
         expect(wrapper.find(Button)).toHaveLength(1);
         expect(wrapper.find('.qa-LoginForm-oauth')).toHaveLength(1);
-        expect(wrapper.find(Button).text()).toEqual('Login');
-        expect(wrapper.find('.qa-LoginForm-oauth').text()).toEqual('Or, login with OAuth');
+        expect(wrapper.find(Button).html()).toContain('Login');
+        expect(wrapper.find('.qa-LoginForm-oauth').html()).toContain('Or, login with OAuth');
     });
 
     it('if no login methods available, it displays text to the user', () => {
-        const wrapper = mount(<Form />);
+        const props = getProps();
+        props.handleLogin = undefined;
+        const wrapper = shallow(<Form {...props} />);
         expect(wrapper.state().loginForm).toBe(false);
         expect(wrapper.state().oauthName).toEqual('');
         expect(wrapper.find('div')).toHaveLength(2);
-        expect(wrapper.find('div').last().text()).toEqual('No login methods available, please contact an administrator');
+        expect(wrapper.find('div').last().html()).toContain('No login methods available, please contact an administrator');
     });
 
     it('should call checkAuth and checkOAuth on mount', () => {
+        const props = getProps();
+        props.handleLogin = undefined;
+
         const mountSpy = sinon.spy(Form.prototype, 'componentDidMount');
         const authSpy = sinon.spy(Form.prototype, 'checkAuthEndpoint');
         const oauthSpy = sinon.spy(Form.prototype, 'checkOAuthEndpoint');
-        mount(<Form />);
+        shallow(<Form {...props} />);
         expect(mountSpy.calledOnce).toBe(true);
         expect(authSpy.calledOnce).toBe(true);
         expect(oauthSpy.calledOnce).toBe(true);
@@ -99,7 +109,7 @@ describe('loginContainer', () => {
             loginForm: true,
             oauthName: '',
         };
-        const props = { handleLogin: sinon.spy() };
+        const props = getProps();
         const wrapper = shallow(<Form {...props} />);
         wrapper.setState(state);
         const event = { preventDefault: sinon.spy() };
@@ -110,7 +120,8 @@ describe('loginContainer', () => {
     });
 
     it('handleOAuth should call prevent default and change window location', () => {
-        const wrapper = shallow(<Form />);
+        const props = getProps();
+        const wrapper = shallow(<Form {...props} />);
         const event = { preventDefault: sinon.spy() };
         const locationSpy = sinon.spy();
         window.location.assign = locationSpy;
@@ -123,11 +134,12 @@ describe('loginContainer', () => {
     it('changing username updates state', () => {
         const expectedUsername = 'UserName';
         const expectedPassword = 'Password';
-        const wrapper = mount(<Form />);
+        const props = getProps();
+        const wrapper = shallow(<Form {...props} />);
         const spy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setState({ loginForm: true });
         expect(wrapper.state().buttonDisabled).toBe(true);
-        wrapper.find('input[name="username"]').simulate('change', {
+        wrapper.find('form').simulate('change', {
             target: {
                 name: 'username',
                 value: expectedUsername,
@@ -135,7 +147,7 @@ describe('loginContainer', () => {
         });
         expect(spy.calledWith({ username: expectedUsername })).toEqual(true);
         expect(wrapper.state().buttonDisabled).toBe(true);
-        wrapper.find('input[name="password"]').simulate('change', {
+        wrapper.find('form').simulate('change', {
             target: {
                 name: 'password',
                 value: expectedPassword,
@@ -145,7 +157,7 @@ describe('loginContainer', () => {
         expect(wrapper.state().buttonDisabled).toBe(false);
         expect(spy.calledWith({ buttonDisabled: false })).toBe(true);
 
-        wrapper.find('input[name="password"]').simulate('change', {
+        wrapper.find('form').simulate('change', {
             target: {
                 name: 'password',
                 value: '',
@@ -157,9 +169,7 @@ describe('loginContainer', () => {
     });
 
     it('submit calls handleLogin', () => {
-        const props = {
-            handleLogin: sinon.spy(),
-        };
+        const props = getProps();
 
         const state = {
             username: 'UserName',
@@ -169,17 +179,15 @@ describe('loginContainer', () => {
             oauthName: '',
         };
 
-        const wrapper = mount(<Form {...props} />);
+        const wrapper = shallow(<Form {...props} />);
         wrapper.setState(state);
-        wrapper.find('form').simulate('submit');
+        wrapper.find('form').simulate('submit', { preventDefault: sinon.spy() });
         expect(props.handleLogin.callCount).toEqual(1);
         expect(props.handleLogin.calledWith(state)).toEqual(true);
     });
 
     it('checkAuthEndpoint updates state if available', async () => {
-        const props = {
-            handleLogin: sinon.spy(),
-        };
+        const props = getProps();
         const mock = new MockAdapter(axios, { delayResponse: 100 });
 
         mock.onGet('/auth').reply(200, {
@@ -196,9 +204,7 @@ describe('loginContainer', () => {
 
     it('checkOAuthEndpoint updates state if available', async () => {
         const oauthName = 'oauth_provider';
-        const props = {
-            handleLogin: sinon.spy(),
-        };
+        const props = getProps();
 
         const mock = new MockAdapter(axios, { delayResponse: 100 });
 

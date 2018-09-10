@@ -1,10 +1,16 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { DropZoneError } from '../../components/MapTools/DropZoneError';
 
 describe('DropZoneError component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => ({
         importGeom: {
             processing: false,
@@ -14,9 +20,10 @@ describe('DropZoneError component', () => {
         },
         setAllButtonsDefault: () => {},
         resetGeoJSONFile: () => {},
+        ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => mount(<DropZoneError {...props} />);
+    const getWrapper = props => shallow(<DropZoneError {...props} />);
 
     it('should render error message when new props are received', () => {
         const props = getProps();
@@ -25,7 +32,7 @@ describe('DropZoneError component', () => {
         nextProps.importGeom.error = 'An error has occured';
         wrapper.setProps(nextProps);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const children = mount(wrapper.find(BaseDialog).props().children);
+        const children = shallow(wrapper.find(BaseDialog).props().children);
         expect(children.find('.qa-DropZoneError-error')).toHaveLength(1);
         expect(children.find('.qa-DropZoneError-error').text()).toEqual('An error has occured');
     });

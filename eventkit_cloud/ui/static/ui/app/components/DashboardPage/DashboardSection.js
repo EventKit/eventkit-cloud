@@ -1,13 +1,13 @@
 /* eslint react/no-array-index-key: 0 */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import { withStyles, withTheme } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
 
-const jss = () => ({
+const jss = theme => ({
     tabsRoot: {
         height: '16px',
         minHeight: '16px',
@@ -19,8 +19,8 @@ const jss = () => ({
         borderRadius: '50%',
         width: '16px',
         height: '16px',
-        backgroundColor: 'white',
-        border: '3px solid rgb(69, 152, 191)',
+        backgroundColor: theme.eventkit.colors.white,
+        border: `3px solid ${theme.eventkit.colors.primary}`,
         margin: '0px 4px',
         transition: 'border 0.25s',
         minWidth: '16px',
@@ -28,11 +28,11 @@ const jss = () => ({
         opacity: '1',
     },
     tabSelected: {
-        border: '8px solid #4598bf',
+        border: `8px solid ${theme.eventkit.colors.primary}`,
     },
     tabDisabled: {
-        backgroundColor: 'lightgray',
-        border: '3px solid gray',
+        backgroundColor: theme.eventkit.colors.secondary_dark,
+        border: `3px solid ${theme.eventkit.colors.grey}`,
         opacity: '0.5',
     },
 });
@@ -70,6 +70,7 @@ export class DashboardSection extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const { classes } = this.props;
 
         const spacing = window.innerWidth > 575 ? 10 : 2;
@@ -90,6 +91,7 @@ export class DashboardSection extends React.Component {
                 textTransform: 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
+                color: colors.white,
             },
             sectionHeaderLeft: {
                 flex: '1',
@@ -110,7 +112,7 @@ export class DashboardSection extends React.Component {
                 paddingRight: (window.innerWidth > 575) ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
             },
             viewAll: {
-                color: 'rgb(69, 152, 191)',
+                color: colors.primary,
                 textTransform: 'uppercase',
                 fontSize: (window.innerWidth > 575) ? '14px' : '12px',
                 cursor: 'pointer',
@@ -281,6 +283,7 @@ DashboardSection.propTypes = {
         PropTypes.string,
     ]),
     classes: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
 DashboardSection.defaultProps = {
@@ -295,4 +298,4 @@ DashboardSection.defaultProps = {
     classes: {},
 };
 
-export default withStyles(jss)(DashboardSection);
+export default withTheme()(withStyles(jss)(DashboardSection));

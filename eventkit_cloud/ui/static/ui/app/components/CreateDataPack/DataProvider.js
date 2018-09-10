@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Collapse from '@material-ui/core/Collapse';
@@ -37,6 +38,8 @@ export class DataProvider extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const { provider } = this.props;
         const styles = {
             listItem: {
@@ -48,7 +51,7 @@ export class DataProvider extends React.Component {
                 fontWeight: 'normal',
                 fontSize: '13px',
                 padding: '14px 20px 14px 49px',
-                borderTop: '1px solid rgb(224, 224, 224)',
+                borderTop: colors.secondary,
             },
             checkbox: {
                 width: '24px',
@@ -87,7 +90,7 @@ export class DataProvider extends React.Component {
                                 tabIndex={0}
                                 onClick={this.handleLicenseOpen}
                                 onKeyPress={this.handleLicenseOpen}
-                                style={{ cursor: 'pointer', color: '#4598bf' }}
+                                style={{ cursor: 'pointer', color: colors.primary }}
                             >
                                 {provider.license.name}
                             </span>
@@ -135,7 +138,7 @@ export class DataProvider extends React.Component {
             </ListItem>
         ));
 
-        const backgroundColor = (this.props.alt) ? 'whitesmoke' : 'white';
+        const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
 
         return ([
             <ListItem
@@ -153,7 +156,7 @@ export class DataProvider extends React.Component {
                         checked={this.props.checked}
                         onChange={this.props.onChange}
                         checkedIcon={
-                            <ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" style={{ fill: '#55ba63' }} />
+                            <ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" style={{ fill: colors.success }} />
                         }
                         icon={
                             <UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" color="primary" />
@@ -203,6 +206,7 @@ DataProvider.propTypes = {
     checked: PropTypes.bool.isRequired,
     onChange: PropTypes.func.isRequired,
     alt: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataProvider;
+export default withTheme()(DataProvider);

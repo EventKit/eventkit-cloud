@@ -1,14 +1,20 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CheckBox from '@material-ui/icons/CheckBox';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import IndeterminateIcon from '../../components/icons/IndeterminateIcon';
-import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
+import { MembersHeaderRow } from '../../components/DataPackShareDialog/MembersHeaderRow';
 
 describe('MembersHeaderRow component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             memberCount: 2,
@@ -21,11 +27,12 @@ describe('MembersHeaderRow component', () => {
             handleCheckAll: () => {},
             handleUncheckAll: () => {},
             canUpdateAdmin: false,
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<MembersHeaderRow {...props} />)
+        shallow(<MembersHeaderRow {...props} />)
     );
 
     it('should render the basic components', () => {
@@ -33,21 +40,21 @@ describe('MembersHeaderRow component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(Card)).toHaveLength(1);
         expect(wrapper.find(CardHeader)).toHaveLength(1);
-        expect(wrapper.find(ButtonBase)).toHaveLength(2);
+        expect(wrapper.find(CardHeader).shallow().dive().find(ButtonBase)).toHaveLength(2);
     });
 
     it('should render the checked icon', () => {
         const props = getProps();
         props.selectedCount = props.memberCount;
         const wrapper = getWrapper(props);
-        expect(wrapper.find(CheckBox)).toHaveLength(1);
+        expect(wrapper.find(CardHeader).shallow().dive().find(CheckBox)).toHaveLength(1);
     });
 
     it('should render the indeterminate icon', () => {
         const props = getProps();
         props.selectedCount = 1;
         const wrapper = getWrapper(props);
-        expect(wrapper.find(IndeterminateIcon)).toHaveLength(1);
+        expect(wrapper.find(CardHeader).shallow().dive().find(IndeterminateIcon)).toHaveLength(1);
     });
 
     it('should render the condensed count text on small screens', () => {
@@ -56,8 +63,9 @@ describe('MembersHeaderRow component', () => {
         window.resizeTo(500, 500);
         wrapper.instance().forceUpdate();
         wrapper.update();
-        expect(wrapper.find('.qa-MembersHeaderRow-countText')).toHaveLength(1);
-        expect(wrapper.find('.qa-MembersHeaderRow-countText').text()).toEqual('(0/2)');
+        expect(wrapper.find(CardHeader).shallow().dive().find('.qa-MembersHeaderRow-countText')).toHaveLength(1);
+        expect(wrapper.find(CardHeader).shallow().dive().find('.qa-MembersHeaderRow-countText')
+            .text()).toEqual('(0/2)');
     });
 
     it('handleClick should setState to open popover', () => {

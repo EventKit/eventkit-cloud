@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
@@ -68,15 +69,16 @@ export class GroupRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const styles = {
             card: {
-                backgroundColor: 'whitesmoke',
+                backgroundColor: colors.secondary,
                 margin: '0px 10px 10px',
                 boxShadow: 'none',
             },
             groupText: {
                 flex: '1 1 auto',
-                color: '#000',
+                color: colors.black,
                 fontSize: '16px',
                 fontWeight: 'bold',
                 marginRight: '10px',
@@ -105,8 +107,8 @@ export class GroupRow extends Component {
                 marginRight: '15px',
             },
             cardText: {
-                backgroundColor: '#fff',
-                color: '#707274',
+                backgroundColor: colors.white,
+                color: colors.text_primary,
                 padding: '10px 16px 0px',
             },
         };
@@ -121,12 +123,14 @@ export class GroupRow extends Component {
 
         let adminButton = null;
         if (this.props.showAdmin) {
+            styles.adminCheckIcon.color = colors.text_primary;
             if (!this.props.selected) {
-                styles.adminCheckIcon.color = '#707274';
                 styles.adminCheckIcon.opacity = 0.15;
                 styles.adminCheckIcon.cursor = 'default';
             } else if (!this.props.admin) {
                 styles.adminCheckIcon.opacity = 0.55;
+            } else {
+                styles.adminCheckIcon.color = colors.primary;
             }
 
             adminButton = (
@@ -234,6 +238,7 @@ GroupRow.propTypes = {
     handleAdminMouseOver: PropTypes.func,
     showAdmin: PropTypes.bool,
     admin: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
-export default GroupRow;
+export default withTheme()(GroupRow);

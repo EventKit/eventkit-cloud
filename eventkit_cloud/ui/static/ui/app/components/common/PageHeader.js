@@ -1,14 +1,17 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 
 export class PageHeader extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             header: {
-                backgroundColor: '#161e2e',
+                backgroundColor: colors.background,
                 height: '35px',
                 lineHeight: '35px',
-                color: 'white',
+                color: colors.white,
                 padding: '0px 24px',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -61,6 +64,7 @@ PageHeader.propTypes = {
         PropTypes.node,
         PropTypes.arrayOf(PropTypes.node),
     ]),
+    theme: PropTypes.object.isRequired,
 };
 
-export default PageHeader;
+export default withTheme()(PageHeader);

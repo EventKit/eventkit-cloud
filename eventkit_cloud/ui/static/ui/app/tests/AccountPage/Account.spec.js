@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -12,6 +12,7 @@ import { Account } from '../../components/AccountPage/Account';
 
 describe('Account Component', () => {
     const getProps = () => ({
+        ...global.eventkit_test_props,
         user: {
             data: {
                 user: {
@@ -44,13 +45,13 @@ describe('Account Component', () => {
         classes: { root: {} },
     });
 
-    const getMountedWrapper = props => mount(<Account {...props} />);
+    const getWrapper = props => shallow(<Account {...props} />);
 
     it('should call joyrideAddSteps when mounted', () => {
         const props = getProps();
         const joyrideSpy = sinon.spy(Account.prototype, 'joyrideAddSteps');
         const mountSpy = sinon.spy(Account.prototype, 'componentDidMount');
-        getMountedWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
         joyrideSpy.restore();
@@ -66,7 +67,7 @@ describe('Account Component', () => {
             isFixed: true,
         }];
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.stub(Account.prototype, 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
@@ -76,7 +77,7 @@ describe('Account Component', () => {
 
     it('handleJoyride should set state', () => {
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.stub(Account.prototype, 'setState');
         wrapper.instance().handleJoyride();
         expect(stateSpy.calledOnce).toBe(true);
@@ -98,7 +99,8 @@ describe('Account Component', () => {
             type: 'step:before',
         };
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
+        wrapper.instance().joyride = { reset: sinon.spy() };
         const stateSpy = sinon.spy(Account.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
@@ -108,11 +110,10 @@ describe('Account Component', () => {
 
     it('should render an header with save button, and body with license info and user info', () => {
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(PageHeader)).toHaveLength(1);
-        expect(wrapper.find(PageHeader).text()).toEqual('AccountPage TourSave Changes');
         expect(wrapper.find(SaveButton)).toHaveLength(1);
-        expect(wrapper.find(CustomScrollbar)).toHaveLength(3);
+        expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(LicenseInfo)).toHaveLength(1);
         expect(wrapper.find(UserInfo)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
@@ -123,7 +124,7 @@ describe('Account Component', () => {
         const props = getProps();
         props.user.data.user = {};
         props.licenses.licenses = [];
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(LicenseInfo)).toHaveLength(0);
         expect(wrapper.find(UserInfo)).toHaveLength(0);
     });
@@ -133,7 +134,7 @@ describe('Account Component', () => {
         props.getLicenses = sinon.spy();
         const mountSpy = sinon.spy(Account.prototype, 'componentWillMount');
         const stateSpy = sinon.spy(Account.prototype, 'setState');
-        getMountedWrapper(props);
+        getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ acceptedLicenses: props.user.data.accepted_licenses })).toBe(true);
         expect(props.getLicenses.calledOnce).toBe(true);
@@ -145,7 +146,7 @@ describe('Account Component', () => {
         jest.useFakeTimers();
         const props = getProps();
         const stateSpy = sinon.spy(Account.prototype, 'setState');
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
         const nextProps = getProps();
         nextProps.user.patched = true;
@@ -162,7 +163,7 @@ describe('Account Component', () => {
     it('handleCheck should marked the license as checked/unchecked and update state', () => {
         const props = getProps();
         const stateSpy = sinon.spy(Account.prototype, 'setState');
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
         wrapper.instance().handleCheck('test1', true);
         expect(stateSpy.calledWith({ acceptedLicenses: { ...props.user.data.accepted_licenses, test1: true } }));
@@ -172,7 +173,7 @@ describe('Account Component', () => {
     it('handleAll should check all as checked/unchecked and update the state', () => {
         const props = getProps();
         const stateSpy = sinon.spy(Account.prototype, 'setState');
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.state().acceptedLicenses).toEqual({ ...props.user.data.accepted_licenses });
         wrapper.instance().handleAll({}, true);
         expect(stateSpy.calledWith({ acceptedLicenses: { test1: true, test2: true } }));
@@ -183,7 +184,7 @@ describe('Account Component', () => {
         const props = getProps();
         props.user.data.accepted_licenses.test1 = true;
         const stateSpy = sinon.spy(Account.prototype, 'setState');
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: false });
         wrapper.setState({ acceptedLicenses: { test1: true, test2: true } });
         expect(wrapper.state().acceptedLicenses).toEqual({ test1: true, test2: true });
@@ -195,7 +196,7 @@ describe('Account Component', () => {
     it('handleSubmit should call patchUser', () => {
         const props = getProps();
         props.patchUser = sinon.spy();
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(props.patchUser.notCalled).toBe(true);
         wrapper.instance().handleSubmit();
         expect(props.patchUser.calledWith(wrapper.state().acceptedLicenses, props.user.data.user.username)).toBe(true);

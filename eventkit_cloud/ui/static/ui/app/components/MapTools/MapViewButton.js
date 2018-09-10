@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ActionSettingsOverscan from '@material-ui/icons/SettingsOverscan';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -20,17 +21,19 @@ export class MapViewButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '100%',
                 height: '12px',
-                color: '#4498c0',
+                color: colors.primary,
                 position: 'relative',
                 bottom: '5px',
                 padding: '0 4px',
-                lineHeight: '1.3em',
+                lineHeight: '8px',
             },
             drawButtonGeneral: {
                 height: '50px',
@@ -41,7 +44,7 @@ export class MapViewButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
         };
@@ -50,7 +53,7 @@ export class MapViewButton extends Component {
             <div id="default_icon">
                 <ActionSettingsOverscan
                     className="qa-MapViewButton-ActionSettingsOverscan-default"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-MapViewButton-div-default" style={styles.buttonName}>CURRENT VIEW</div>
             </div>
@@ -60,9 +63,8 @@ export class MapViewButton extends Component {
             <div id="inactive_icon">
                 <ActionSettingsOverscan
                     className="qa-MapViewButton-ActionSettingsOverscan-inactive"
-                    style={{
-                        opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0',
-                    }}
+                    style={{ opacity: 0.4 }}
+                    color="primary"
                 />
                 <div className="qa-MapViewButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>CURRENT VIEW</div>
             </div>
@@ -72,7 +74,7 @@ export class MapViewButton extends Component {
             <div id="selected_icon">
                 <ContentClear
                     className="qa-MapViewButton-ContentClear"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-MapViewButton-div-selected" style={styles.buttonName}>CURRENT VIEW</div>
             </div>
@@ -99,7 +101,8 @@ MapViewButton.propTypes = {
     setMapViewButtonSelected: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MapViewButton;
+export default withTheme()(MapViewButton);
 

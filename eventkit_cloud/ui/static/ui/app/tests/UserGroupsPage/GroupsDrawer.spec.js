@@ -1,12 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Drawer from '@material-ui/core/Drawer';
 import IconMenu from '../../components/common/IconMenu';
 import { GroupsDrawer } from '../../components/UserGroupsPage/GroupsDrawer';
 
 
 describe('GroupsDrawer component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             selectedValue: '',
@@ -36,10 +42,11 @@ describe('GroupsDrawer component', () => {
             onLeaveGroupClick: () => {},
             onDeleteGroupClick: () => {},
             onRenameGroupClick: () => {},
+            ...global.eventkit_test_props,
         }
     );
     const getWrapper = props => (
-        mount(<GroupsDrawer {...props} />)
+        shallow(<GroupsDrawer {...props} />)
     );
 
     it('should render something', () => {
@@ -51,8 +58,8 @@ describe('GroupsDrawer component', () => {
     it('should show both MY GROUPS and SHARED GROUPS', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-GroupsDrawer-groupItem').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupsDrawer-sharedGroupItem')).toHaveLength(1);
+        expect(wrapper.find('.qa-GroupsDrawer-groupItem')).toHaveLength(1);
     });
 
     it('Change Group Name should call onRenameGroupClick', () => {

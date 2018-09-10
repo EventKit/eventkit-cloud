@@ -1,10 +1,16 @@
 import React from 'react';
-import { mount } from 'enzyme';
-import { BaseDialog } from '../../components/Dialog/BaseDialog';
+import { createShallow } from '@material-ui/core/test-utils';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import CustomTextField from '../../components/CustomTextField';
-import RenameGroupDialog from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
+import { RenameGroupDialog } from '../../components/UserGroupsPage/Dialogs/RenameGroupDialog';
 
 describe('LeaveGroupDialog component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const props = {
         show: true,
         onInputChange: () => {},
@@ -12,28 +18,28 @@ describe('LeaveGroupDialog component', () => {
         onSave: () => {},
         value: '',
         valid: true,
+        ...global.eventkit_test_props,
     };
 
 
     it('should render a BaseDialog with text field', () => {
-        const wrapper = mount(<RenameGroupDialog {...props} />);
+        const wrapper = shallow(<RenameGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = mount(wrapper.find(BaseDialog).props().children[1]);
-        expect(child.find(CustomTextField)).toHaveLength(1);
+        expect(wrapper.find(BaseDialog).dive().find(CustomTextField)).toHaveLength(1);
     });
 
     it('should show name unavailable warning', () => {
         props.valid = false;
-        const wrapper = mount(<RenameGroupDialog {...props} />);
+        const wrapper = shallow(<RenameGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
-        const child = mount(wrapper.find(BaseDialog).props().children[0]);
+        const child = shallow(wrapper.find(BaseDialog).props().children[0]);
         expect(child.text()).toEqual('Name unavailable');
     });
 
     it('should set the save button disabled if no value or its invalid', () => {
         props.valid = true;
         props.value = '';
-        const wrapper = mount(<RenameGroupDialog {...props} />);
+        const wrapper = shallow(<RenameGroupDialog {...props} />);
         expect(wrapper.find(BaseDialog).props().actions[0].props.disabled).toBe(true);
         wrapper.setProps({ valid: false, value: 'something' });
         expect(wrapper.find(BaseDialog).props().actions[0].props.disabled).toBe(true);

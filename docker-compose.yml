@@ -7,6 +7,7 @@ services:
     image: eventkit-base:1.1.1
     volumes:
     - ./:/var/lib/eventkit/
+    - /var/lib/eventkit/node_modules/
     user: eventkit
     depends_on:
     - postgis
@@ -191,6 +192,8 @@ services:
     - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
     - ./.eslintignore:/var/lib/eventkit/.eslintignore
     - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
+    - ./babel.config.js:/var/lib/eventkit/babel.config.js
+    - ./config/setupFile.js:/var/lib/eventkit/setupFile.js
     - ./.git:/var/lib/eventkit/.git
     ports:
     - "8080:8080"

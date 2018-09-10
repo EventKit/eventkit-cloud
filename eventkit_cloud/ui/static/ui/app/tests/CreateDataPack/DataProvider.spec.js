@@ -1,7 +1,7 @@
 import React from 'react';
 import sinon from 'sinon';
 import { shallow } from 'enzyme';
-import DataProvider from '../../components/CreateDataPack/DataProvider';
+import { DataProvider } from '../../components/CreateDataPack/DataProvider';
 
 
 describe('DataProvider component', () => {
@@ -24,6 +24,7 @@ describe('DataProvider component', () => {
             checked: false,
             onChange: sinon.spy(),
             alt: false,
+            ...global.eventkit_test_props,
         }
     );
 

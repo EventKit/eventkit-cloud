@@ -5,7 +5,7 @@ import moment from 'moment';
 import DayPicker from 'react-day-picker';
 import Modal from '@material-ui/core/Modal';
 import Input from '@material-ui/core/Input';
-import DateFilter from '../../components/DataPackPage/DateFilter';
+import { DateFilter } from '../../components/DataPackPage/DateFilter';
 
 describe('DateFilter component', () => {
     const getProps = () => ({
@@ -13,6 +13,7 @@ describe('DateFilter component', () => {
         onMaxChange: () => {},
         minDate: null,
         maxDate: null,
+        ...global.eventkit_test_props,
     });
 
     const getWrapper = props => ((

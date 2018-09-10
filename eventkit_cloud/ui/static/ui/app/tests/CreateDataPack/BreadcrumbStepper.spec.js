@@ -106,6 +106,7 @@ describe('BreadcrumbStepper component', () => {
         getNotifications: () => {},
         getNotificationsUnreadCount: () => {},
         getFormats: () => {},
+        ...global.eventkit_test_props,
     });
     const getWrapper = props => (
         shallow(<BreadcrumbStepper {...props} />)

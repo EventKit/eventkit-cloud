@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import DayPicker from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
@@ -40,6 +41,8 @@ export class DateFilter extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             drawerSection: {
                 width: '100%',
@@ -47,7 +50,7 @@ export class DateFilter extends Component {
                 paddingRight: '10px',
             },
             container: {
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 width: 'auto',
                 height: 'auto',
                 transform: 'translate(-50%, -50%)',
@@ -84,7 +87,7 @@ export class DateFilter extends Component {
                                 .DayPicker { font-size: 14px; }
                                 .DayPicker-Day { width: 34px; }
                                 .DayPicker-Caption > div { font-weight: 700; }
-                                .DayPicker-NavButton { color: #4598bf; }
+                                .DayPicker-NavButton { color: ${colors.primary}; }
                             `}
                         </style>
                         <DayPicker
@@ -93,7 +96,7 @@ export class DateFilter extends Component {
                             month={this.props.minDate ? min : new Date()}
                             onDayClick={this.handleMinUpdate}
                             modifiers={{ disabled: { after: this.props.maxDate ? max : undefined } }}
-                            modifiersStyles={{ selected: { backgroundColor: '#4598bf' } }}
+                            modifiersStyles={{ selected: { backgroundColor: colors.primary } }}
                             className="datepicker"
                         />
                     </div>
@@ -119,14 +122,14 @@ export class DateFilter extends Component {
                             month={this.props.maxDate ? max : new Date()}
                             onDayClick={this.handleMaxUpdate}
                             modifiers={{ disabled: { before: min } }}
-                            modifiersStyles={{ selected: { backgroundColor: '#4598bf' } }}
+                            modifiersStyles={{ selected: { backgroundColor: colors.primary } }}
                             className="datepicker"
                         />
                     </div>
                 </Modal>
 
                 <Input
-                    style={{ fontSize: '14px', borderBottom: '1px solid #707274' }}
+                    style={{ fontSize: '14px', borderBottom: `1px solid ${colors.text_primary}` }}
                     value={this.props.minDate ? moment(this.props.minDate).format('YYYY-MM-DD') : ''}
                     onClick={this.handleMinOpen}
                     placeholder="From"
@@ -135,7 +138,7 @@ export class DateFilter extends Component {
                     readOnly
                 />
                 <Input
-                    style={{ fontSize: '14px', borderBottom: '1px solid #707274' }}
+                    style={{ fontSize: '14px', borderBottom: `1px solid ${colors.text_primary}` }}
                     value={this.props.maxDate ? moment(this.props.maxDate).format('YYYY-MM-DD') : ''}
                     onClick={this.handleMaxOpen}
                     placeholder="To"
@@ -158,6 +161,7 @@ DateFilter.propTypes = {
     onMaxChange: PropTypes.func.isRequired,
     minDate: PropTypes.instanceOf(Date),
     maxDate: PropTypes.instanceOf(Date),
+    theme: PropTypes.object.isRequired,
 };
 
-export default DateFilter;
+export default withTheme()(DateFilter);
