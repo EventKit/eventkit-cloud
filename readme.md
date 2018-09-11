@@ -107,11 +107,6 @@ By default EventKit will use geonames.org. However it also supports pelias. If w
 To set the application basemap add:
 <pre>BASEMAP_URL=http://my-tile-service.com/{z}/{x}/{y}.png</pre>
 
-#### ArcGIS Support
-EventKit-Cloud will optionally export an MXD file if there is access to a machine running the [EventKit ArcGIS Service](https://github.com/venicegeo/eventkit-arcgis-service).
-Specify the service location with the environment variable:
-<pre>EVENTKIT_ARCGIS_SERVICE=http://cloud.eventkit.dev:9000/</pre>
-
 
 ### Tests
 To run tests:
