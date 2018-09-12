@@ -59,10 +59,8 @@ describe('MembersHeaderRow component', () => {
 
     it('should render the condensed count text on small screens', () => {
         const props = getProps();
+        props.width = 'xs';
         const wrapper = getWrapper(props);
-        window.resizeTo(500, 500);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
         expect(wrapper.find(CardHeader).shallow().dive().find('.qa-MembersHeaderRow-countText')).toHaveLength(1);
         expect(wrapper.find(CardHeader).shallow().dive().find('.qa-MembersHeaderRow-countText')
             .text()).toEqual('(0/2)');

@@ -128,10 +128,6 @@ describe('ExportAOI component', () => {
         const props = getProps();
         props.drawer = 'open';
         const wrapper = getWrapper(props);
-        window.resizeTo(1300, 800);
-        expect(window.innerWidth).toBe(1300);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
         expect(wrapper.find('#map').props().style.left).toEqual('200px');
         const nextProps = getProps();
         nextProps.drawer = 'closed';

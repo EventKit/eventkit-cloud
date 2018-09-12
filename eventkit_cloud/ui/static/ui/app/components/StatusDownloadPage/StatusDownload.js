@@ -219,7 +219,7 @@ export class StatusDownload extends React.Component {
         const marginPadding = this.getMarginPadding();
         const styles = {
             root: {
-                height: window.innerHeight - 95,
+                height: 'calc(100vh - 95px)',
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
@@ -359,7 +359,7 @@ export class StatusDownload extends React.Component {
                 }
                 <CustomScrollbar
                     ref={(instance) => { this.scrollbar = instance; }}
-                    style={{ height: window.innerHeight - 130, width: '100%' }}
+                    style={{ height: 'calc(100vh - 130px)', width: '100%' }}
                 >
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <Joyride

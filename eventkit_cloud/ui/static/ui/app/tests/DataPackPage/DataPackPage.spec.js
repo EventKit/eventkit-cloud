@@ -532,6 +532,7 @@ describe('DataPackPage component', () => {
 
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
+        props.width = 'md';
         const wrapper = shallow(<DataPackPage {...props} />);
         const currentState = { ...wrapper.state() };
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
@@ -544,8 +545,6 @@ describe('DataPackPage component', () => {
                 incomplete: false,
             },
         };
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith(
@@ -562,10 +561,9 @@ describe('DataPackPage component', () => {
 
     it('handleFilterClear should setState then re-apply search and sort', () => {
         const props = getProps();
+        props.width = 'lg';
         const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({

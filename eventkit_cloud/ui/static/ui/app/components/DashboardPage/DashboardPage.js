@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthDown, isWidthUp } from '@material-ui/core/withWidth';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';

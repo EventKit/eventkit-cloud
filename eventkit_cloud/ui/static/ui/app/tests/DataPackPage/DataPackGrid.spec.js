@@ -122,19 +122,16 @@ describe('DataPackGrid component', () => {
     });
 
     it('getColumns should return 2, 3, or 4 depending on screensize', () => {
+        props.width = 'sm';
         const wrapper = shallow(<DataPackGrid {...props} />);
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
         let cols = wrapper.instance().getColumns();
         expect(cols).toEqual(2);
 
-        window.resizeTo(1000, 1100);
-        expect(window.innerWidth).toEqual(1000);
+        wrapper.setProps({ width: 'lg' });
         cols = wrapper.instance().getColumns();
         expect(cols).toEqual(3);
 
-        window.resizeTo(1300, 1400);
-        expect(window.innerWidth).toEqual(1300);
+        wrapper.setProps({ width: 'xl' });
         cols = wrapper.instance().getColumns();
         expect(cols).toEqual(4);
     });

@@ -622,7 +622,7 @@ export class UserGroupsPage extends Component {
         const smallViewport = isWidthDown('sm', this.props.width);
         const xsmallViewport = isWidthDown('xs', this.props.width);
         const bodyWidth = !smallViewport ? 'calc(100% - 250px)' : '100%';
-        const bodyHeight = window.innerHeight - 130;
+        const bodyHeight = 'calc(100vh - 130px)';
         const styles = {
             header: {
                 backgroundColor: colors.background,
@@ -943,7 +943,7 @@ export class UserGroupsPage extends Component {
                     </div>
                     <div style={{ maxWidth: '1000px', margin: 'auto', position: 'relative' }}>
                         <CustomScrollbar
-                            style={{ height: bodyHeight - 155, width: '100%' }}
+                            style={{ height: 'calc(100vh - 130px - 155px)', width: '100%' }}
                             className="qa-UserGroupsPage-CustomScrollbar"
                             ref={(instance) => { this.scrollbar = instance; }}
                         >

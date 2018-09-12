@@ -19,7 +19,7 @@ global.window.resizeTo = (width, height) => {
 
 global.eventkit_test_props = {
     theme: { ...theme },
-    width: 'lg',
+    width: 'xl',
 };
 
 Enzyme.configure({ adapter: new Adapter() });
