@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -27,7 +28,6 @@ import { getGroups } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { isViewportL } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
 
 export class DataPackPage extends React.Component {
@@ -51,7 +51,7 @@ export class DataPackPage extends React.Component {
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
-            open: window.innerWidth >= 1200,
+            open: !isWidthDown('lg', this.props.width),
             permissions: {
                 value: '',
                 groups: {},
@@ -282,7 +282,7 @@ export class DataPackPage extends React.Component {
 
     handleFilterApply(state) {
         this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
+        if (isWidthDown('lg', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -304,7 +304,7 @@ export class DataPackPage extends React.Component {
             providers: {},
             loading: true,
         }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
+        if (isWidthDown('lg', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -366,16 +366,16 @@ export class DataPackPage extends React.Component {
                     this.setState({ open: true });
                 }
             }
-            if (data.step.title === 'Filters' && data.type === 'step:after' && isViewportL()) {
+            if (data.step.title === 'Filters' && data.type === 'step:after' && isWidthDown('lg', this.props.width)) {
                 this.setState({ open: false });
             }
-            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isViewportL()) {
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isWidthDown('lg', this.props.width)) {
                 this.setState({ open: false });
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
                 && this.props.location.query.view === 'list'
-                && isViewportL()
+                && isWidthDown('lg', this.props.width)
             ) {
                 this.setState({ open: false });
             }
@@ -448,13 +448,13 @@ export class DataPackPage extends React.Component {
 
         const styles = {
             wholeDiv: {
-                height: window.innerWidth > 575 ?
+                height: !isWidthDown('xs', this.props.width) ?
                     window.innerHeight - 231
                     :
                     window.innerHeight - 223,
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && window.innerWidth >= 1200 ? '250px' : '0px',
-                marginTop: window.innerWidth > 575 ? '10px' : '2px',
+                marginRight: this.state.open && !isWidthDown('lg', this.props.width) ? '250px' : '0px',
+                marginTop: !isWidthDown('xs', this.props.width) ? '10px' : '2px',
                 position: 'relative',
             },
             pageTitle: {
@@ -485,7 +485,7 @@ export class DataPackPage extends React.Component {
             backgroundStyle: {
                 backgroundImage: `url(${images.topo_dark})`,
             },
-            range: window.innerWidth < 768 ?
+            range: isWidthDown('sm', this.props.width) ?
                 { color: colors.text_primary, lineHeight: '36px', fontSize: '12px' }
                 :
                 {
@@ -568,7 +568,7 @@ export class DataPackPage extends React.Component {
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {this.props.location.query.view === 'list' && window.innerWidth >= 768 ?
+                    {this.props.location.query.view === 'list' && !isWidthDown('sm', this.props.width) ?
                         null
                         :
                         <DataPackSortDropDown
@@ -685,6 +685,7 @@ DataPackPage.propTypes = {
         }),
     }).isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -740,7 +741,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(DataPackPage));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends DataPackPage {}

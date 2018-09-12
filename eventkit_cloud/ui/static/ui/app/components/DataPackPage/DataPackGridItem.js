@@ -203,7 +203,7 @@ export class DataPackGridItem extends Component {
     render() {
         const { colors } = this.props.theme.eventkit;
 
-        const cardTextFontSize = window.innerWidth < 768 ? 10 : 12;
+        const cardTextFontSize = 12;
         const titleFontSize = 22;
         const styles = {
             gridItem: {
@@ -288,7 +288,7 @@ export class DataPackGridItem extends Component {
                 WebkitBoxOrient: 'vertical',
                 textOverflow: 'ellipsis',
                 WebkitLineClamp: 3,
-                height: window.innerWidth < 768 ? '47px' : '56px',
+                height: '56px',
                 position: 'absolute',
             },
             cardText: {
@@ -303,7 +303,7 @@ export class DataPackGridItem extends Component {
                 fontSize: cardTextFontSize,
                 padding: '0px',
                 marginBottom: '10px',
-                height: window.innerWidth < 768 ? '42px' : '51px',
+                height: '51px',
                 overflow: this.state.overflowText ? 'visible' : 'hidden',
                 position: 'relative',
                 zIndex: 10,

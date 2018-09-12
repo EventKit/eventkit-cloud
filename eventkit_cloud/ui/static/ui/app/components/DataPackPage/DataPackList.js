@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -58,7 +59,7 @@ export class DataPackList extends Component {
     render() {
         const { colors } = this.props.theme.eventkit;
 
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -132,11 +133,11 @@ export class DataPackList extends Component {
             />
         );
 
-        if (window.innerWidth < 768) {
+        if (!isWidthUp('md', this.props.width)) {
             return (
                 <CustomScrollbar
                     ref={(instance) => { this.scrollbar = instance; }}
-                    style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}
+                    style={{ height: window.innerHeight - 236, width: '100%' }}
                 >
                     <div style={styles.root} className="qa-DataPackList-root">
                         <GridList
@@ -341,7 +342,10 @@ DataPackList.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default withTheme()(DataPackList);
-
+export default
+@withWidth()
+@withTheme()
+class Default extends DataPackList {}

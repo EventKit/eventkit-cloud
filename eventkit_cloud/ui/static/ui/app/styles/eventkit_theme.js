@@ -2,6 +2,20 @@ import topo_light from '../../images/topoBackground.png';
 import topo_dark from '../../images/ek_topo_pattern.png';
 import logo from '../../images/eventkit-logo.1.png';
 
+export const XS_MAX_WIDTH = 576;
+export const S_MAX_WIDTH = 768;
+export const M_MAX_WIDTH = 992;
+export const L_MAX_WIDTH = 1200;
+
+export const breakpoints = {
+    values: {
+        xs: 0,
+        sm: 576,
+        md: 768,
+        lg: 992,
+        xl: 1200,
+    },
+};
 
 // define the main eventkit colors
 export const colors = {
@@ -53,6 +67,10 @@ export const theme = {
             main: colors.secondary,
             dark: colors.secondary_dark,
         },
+    },
+    // override the media query breakpoints
+    breakpoints: {
+        ...breakpoints,
     },
     // override specific MUI styles for all instances of a component
     overrides: {

@@ -87,6 +87,7 @@ export class FilterDrawer extends Component {
                 overflowY: 'hidden',
                 overflowX: 'hidden',
                 width: '250px',
+                visibility: this.props.open ? 'visible' : 'hidden',
             },
         };
 
@@ -97,9 +98,6 @@ export class FilterDrawer extends Component {
                 anchor="right"
                 open={this.props.open}
                 PaperProps={{ style: styles.containerStyle }}
-                SlideProps={{
-                    unmountOnExit: true,
-                }}
             >
                 <CustomScrollbar>
                     <FilterHeader

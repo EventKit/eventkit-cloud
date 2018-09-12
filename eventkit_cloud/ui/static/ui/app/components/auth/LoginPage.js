@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
@@ -9,7 +10,7 @@ export class LoginPage extends React.Component {
     render() {
         const { colors, images } = this.props.theme.eventkit;
 
-        const mobile = window.innerWidth < 768;
+        const mobile = isWidthDown('sm', this.props.width);
         const styles = {
             wholeDiv: {
                 width: '100%',
@@ -117,10 +118,14 @@ export class LoginPage extends React.Component {
 
 LoginPage.propTypes = {
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 LoginPage.contextTypes = {
     config: PropTypes.object,
 };
 
-export default withTheme()(LoginPage);
+export default
+@withWidth()
+@withTheme()
+class Default extends LoginPage {}

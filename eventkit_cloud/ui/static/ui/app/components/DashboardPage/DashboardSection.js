@@ -2,6 +2,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { withStyles, withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -72,8 +73,9 @@ export class DashboardSection extends React.Component {
     render() {
         const { colors } = this.props.theme.eventkit;
         const { classes } = this.props;
+        const xs = isWidthUp('sm', this.props.width);
 
-        const spacing = window.innerWidth > 575 ? 10 : 2;
+        const spacing = xs ? 10 : 2;
         const scrollbarWidth = 6;
         const halfGridPadding = this.props.gridPadding / 2;
         const styles = {
@@ -83,9 +85,9 @@ export class DashboardSection extends React.Component {
             },
             sectionHeader: {
                 margin: '12px 0 13px',
-                paddingLeft: (window.innerWidth > 575) ? `${spacing + halfGridPadding}px` : '12px',
-                paddingRight: (window.innerWidth > 575) ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
-                fontSize: (window.innerWidth > 575) ? '22px' : '18px',
+                paddingLeft: xs ? `${spacing + halfGridPadding}px` : '12px',
+                paddingRight: xs ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
+                fontSize: xs ? '22px' : '18px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase',
@@ -109,12 +111,12 @@ export class DashboardSection extends React.Component {
                 height: 'auto',
                 margin: '0',
                 paddingLeft: `${spacing}px`,
-                paddingRight: (window.innerWidth > 575) ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
+                paddingRight: xs ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
             },
             viewAll: {
                 color: colors.primary,
                 textTransform: 'uppercase',
-                fontSize: (window.innerWidth > 575) ? '14px' : '12px',
+                fontSize: xs ? '14px' : '12px',
                 cursor: 'pointer',
                 marginLeft: '18px',
             },
@@ -284,6 +286,7 @@ DashboardSection.propTypes = {
     ]),
     classes: PropTypes.object,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 DashboardSection.defaultProps = {
@@ -298,4 +301,8 @@ DashboardSection.defaultProps = {
     classes: {},
 };
 
-export default withTheme()(withStyles(jss)(DashboardSection));
+export default
+@withWidth()
+@withTheme()
+@withStyles(jss)
+class Default extends DashboardSection {}

@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown, isWidthUp } from '@material-ui/core/withWidth';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -98,7 +99,7 @@ export class DashboardPage extends React.Component {
     }
 
     getGridPadding() {
-        return window.innerWidth >= 768 ? 6 : 2;
+        return isWidthUp('md', this.props.width) ? 6 : 2;
     }
 
     getGridColumns({ getMax = false } = {}) {
@@ -108,7 +109,7 @@ export class DashboardPage extends React.Component {
             return 5;
         } else if (window.innerWidth > 1024) {
             return 4;
-        } else if (window.innerWidth > 768) {
+        } else if (isWidthUp('md', this.props.width)) {
             return 3;
         }
 
@@ -457,7 +458,7 @@ export class DashboardPage extends React.Component {
                                     name="Featured"
                                     columns={this.getGridWideColumns()}
                                     gridPadding={this.getGridPadding()}
-                                    cellHeight={(window.innerWidth > 768) ? 335 : 435}
+                                    cellHeight={isWidthUp('md', this.props.width) ? 335 : 435}
                                     providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
@@ -468,7 +469,7 @@ export class DashboardPage extends React.Component {
                                             key={`FeaturedDataPack-${run.created_at}`}
                                             gridName="Featured"
                                             index={index}
-                                            height={(window.innerWidth > 768) ? '335px' : '435px'}
+                                            height={isWidthUp('md', this.props.width) ? '335px' : '435px'}
                                         />
                                     ))}
                                 </DashboardSection>
@@ -577,6 +578,7 @@ DashboardPage.propTypes = {
     getGroups: PropTypes.func.isRequired,
     getUsers: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -608,7 +610,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(DashboardPage));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends DashboardPage {}
