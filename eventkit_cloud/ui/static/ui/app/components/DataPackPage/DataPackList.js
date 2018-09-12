@@ -137,7 +137,7 @@ export class DataPackList extends Component {
             return (
                 <CustomScrollbar
                     ref={(instance) => { this.scrollbar = instance; }}
-                    style={{ height: window.innerHeight - 236, width: '100%' }}
+                    style={{ height: 'calc(100vh - 236px)', width: '100%' }}
                 >
                     <div style={styles.root} className="qa-DataPackList-root">
                         <GridList
@@ -288,7 +288,7 @@ export class DataPackList extends Component {
                     </Table>
                     <CustomScrollbar
                         ref={(instance) => { this.scrollbar = instance; }}
-                        style={{ height: window.innerHeight - 287 }}
+                        style={{ height: 'calc(100vh - 287px)' }}
                     >
                         <Table
                             className="qa-DataPackList-Table-item"

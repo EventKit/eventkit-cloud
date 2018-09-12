@@ -14,7 +14,7 @@ export class LoginPage extends React.Component {
         const styles = {
             wholeDiv: {
                 width: '100%',
-                height: window.innerHeight - 95,
+                height: 'calc(100vh - 95px)',
                 backgroundColor: colors.background,
             },
             paper: {
@@ -66,7 +66,7 @@ export class LoginPage extends React.Component {
 
         return (
             <div style={styles.wholeDiv}>
-                <CustomScrollbar style={{ height: window.innerHeight - 95 }}>
+                <CustomScrollbar style={{ height: 'calc(100vh - 95px)' }}>
                     <div style={styles.container} className="qa-LoginPage-container">
                         <div style={styles.paperContainer}>
                             <Paper className="qa-LoginPage-Paper" style={styles.paper}>

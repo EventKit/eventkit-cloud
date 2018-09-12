@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
@@ -887,7 +887,7 @@ export class ExportAOI extends Component {
             backgroundImage: `url(${theme.eventkit.images.topo_light})`,
         };
 
-        if (this.props.drawer === 'open' && !isWidthDown('lg', this.props.width)) {
+        if (this.props.drawer === 'open' && isWidthUp('xl', this.props.width)) {
             mapStyle.left = '200px';
         } else {
             mapStyle.left = '0px';

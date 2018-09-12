@@ -92,7 +92,7 @@ export class ShareBaseDialog extends Component {
                 <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
                 <DialogContent style={styles.body}>
                     <CustomScrollbar
-                        style={{ height: window.innerHeight - marginSubtract - 76 - 80 }}
+                        style={{ height: `calc(100vh - ${marginSubtract + 76 + 80}px)` }}
                     >
                         {this.props.children}
                     </CustomScrollbar>

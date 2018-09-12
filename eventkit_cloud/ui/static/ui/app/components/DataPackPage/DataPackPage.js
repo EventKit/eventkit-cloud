@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
-import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -51,7 +51,7 @@ export class DataPackPage extends React.Component {
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
-            open: !isWidthDown('lg', this.props.width),
+            open: isWidthUp('xl', this.props.width),
             permissions: {
                 value: '',
                 groups: {},
@@ -282,7 +282,7 @@ export class DataPackPage extends React.Component {
 
     handleFilterApply(state) {
         this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
-        if (isWidthDown('lg', this.props.width)) {
+        if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -304,7 +304,7 @@ export class DataPackPage extends React.Component {
             providers: {},
             loading: true,
         }, this.makeRunRequest);
-        if (isWidthDown('lg', this.props.width)) {
+        if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -366,16 +366,16 @@ export class DataPackPage extends React.Component {
                     this.setState({ open: true });
                 }
             }
-            if (data.step.title === 'Filters' && data.type === 'step:after' && isWidthDown('lg', this.props.width)) {
+            if (data.step.title === 'Filters' && data.type === 'step:after' && !isWidthUp('xl', this.props.width)) {
                 this.setState({ open: false });
             }
-            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isWidthDown('lg', this.props.width)) {
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && !isWidthUp('xl', this.props.width)) {
                 this.setState({ open: false });
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
                 && this.props.location.query.view === 'list'
-                && isWidthDown('lg', this.props.width)
+                && !isWidthUp('xl', this.props.width)
             ) {
                 this.setState({ open: false });
             }
@@ -448,13 +448,13 @@ export class DataPackPage extends React.Component {
 
         const styles = {
             wholeDiv: {
-                height: !isWidthDown('xs', this.props.width) ?
-                    window.innerHeight - 231
+                height: isWidthUp('sm', this.props.width) ?
+                    'calc(100vh - 231px)'
                     :
-                    window.innerHeight - 223,
+                    'calc(100vh - 223px)',
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && !isWidthDown('lg', this.props.width) ? '250px' : '0px',
-                marginTop: !isWidthDown('xs', this.props.width) ? '10px' : '2px',
+                marginRight: this.state.open && isWidthUp('xl', this.props.width) ? '250px' : '0px',
+                marginTop: isWidthUp('sm', this.props.width) ? '10px' : '2px',
                 position: 'relative',
             },
             pageTitle: {
@@ -478,14 +478,14 @@ export class DataPackPage extends React.Component {
             containerStyle: {
                 backgroundColor: colors.white,
                 top: '221px',
-                height: window.innerHeight - 221,
+                height: 'calc(100vh - 221px)',
                 overflowY: 'hidden',
                 overflowX: 'hidden',
             },
             backgroundStyle: {
                 backgroundImage: `url(${images.topo_dark})`,
             },
-            range: isWidthDown('sm', this.props.width) ?
+            range: !isWidthUp('md', this.props.width) ?
                 { color: colors.text_primary, lineHeight: '36px', fontSize: '12px' }
                 :
                 {
@@ -568,7 +568,7 @@ export class DataPackPage extends React.Component {
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {this.props.location.query.view === 'list' && !isWidthDown('sm', this.props.width) ?
+                    {this.props.location.query.view === 'list' && isWidthUp('md', this.props.width) ?
                         null
                         :
                         <DataPackSortDropDown

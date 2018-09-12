@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
@@ -394,7 +395,7 @@ export class MapView extends Component {
                 new OverviewMap({
                     className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
-                    collapsed: window.innerWidth < 768,
+                    collapsed: !isWidthUp('md', this.props.width),
                     tipLabel: '',
                 }),
             ],
@@ -820,7 +821,7 @@ export class MapView extends Component {
     render() {
         const { colors } = this.props.theme.eventkit;
 
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -830,7 +831,7 @@ export class MapView extends Component {
                 marginRight: '10px',
                 paddingBottom: '10px',
             },
-            map: window.innerWidth < 768 ?
+            map: !isWidthUp('md', this.props.width) ?
                 {
                     width: '100%',
                     height: '100%',
@@ -842,25 +843,25 @@ export class MapView extends Component {
                 :
                 {
                     width: '70%',
-                    height: window.innerHeight - 241,
+                    height: 'calc(100vh - 241px)',
                     display: 'inline-block',
                     overflow: 'hidden',
                     padding: '0px 10px 0px 3px',
                     position: 'relative',
                 },
-            list: window.innerWidth < 768 ?
+            list: !isWidthUp('md', this.props.width) ?
                 {
                     display: 'none',
                 }
                 :
                 {
-                    height: window.innerHeight - 241,
+                    height: 'calc(100vh - 241px)',
                     width: '30%',
                     display: 'inline-block',
                 },
             popupContainer: {
                 position: 'absolute',
-                width: `calc(100% - ${window.innerWidth < 768 ? 20 : 13}px)`,
+                width: `calc(100% - ${!isWidthUp('md', this.props.width) ? 20 : 13}px)`,
                 bottom: '50px',
                 textAlign: 'center',
                 display: 'relative',
@@ -869,7 +870,7 @@ export class MapView extends Component {
             mapPopup: {
                 margin: '0px auto',
                 width: '70%',
-                maxWidth: window.innerWidth < 768 ? '90%' : '455px',
+                maxWidth: !isWidthUp('md', this.props.width) ? '90%' : '455px',
                 minWidth: '250px',
                 display: 'inline-block',
                 textAlign: 'left',
@@ -898,7 +899,7 @@ export class MapView extends Component {
         const selectedFeature = this.state.selectedFeature ?
             this.source.getFeatureById(this.state.selectedFeature) : null;
         return (
-            <div style={{ height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223 }}>
+            <div style={{ height: 'calc(100vh - 236px)' }}>
                 <CustomScrollbar style={styles.list} ref={(instance) => { this.scrollbar = instance; }}>
                     <div style={styles.root}>
                         <GridList
@@ -1051,6 +1052,10 @@ MapView.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default withTheme()(MapView);
+export default
+@withWidth()
+@withTheme()
+class Default extends MapView {}

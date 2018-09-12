@@ -73,7 +73,7 @@ export class ExportSummary extends Component {
                 justifyContent: 'space-around',
                 display: 'flex',
                 flexWrap: 'wrap',
-                height: window.innerHeight - 191,
+                height: 'calc(100vh - 191px)',
             },
             form: {
                 margin: '0 auto',

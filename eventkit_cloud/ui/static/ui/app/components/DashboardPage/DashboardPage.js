@@ -245,12 +245,12 @@ export class DashboardPage extends React.Component {
         const styles = {
             root: {
                 position: 'relative',
-                height: window.innerHeight - mainAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight}px)`,
                 width: '100%',
                 backgroundImage: `url(${images.topo_dark})`,
             },
             customScrollbar: {
-                height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
             },
             loadingOverlay: {
                 position: 'absolute',

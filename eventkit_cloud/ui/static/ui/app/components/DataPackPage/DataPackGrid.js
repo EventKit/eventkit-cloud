@@ -43,7 +43,7 @@ export class DataPackGrid extends Component {
         return (
             <CustomScrollbar
                 ref={(instance) => { this.scrollbar = instance; }}
-                style={{ height: window.innerHeight - 236, width: '100%' }}
+                style={{ height: 'calc(100vh - 236px)', width: '100%' }}
             >
                 <div style={styles.root} className="qa-div-root">
                     <GridList

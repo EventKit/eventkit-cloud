@@ -480,10 +480,10 @@ export class Application extends Component {
             content: {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: (this.props.drawer === 'open' || this.props.drawer === 'opening')
-                    && isWidthUp('lg', this.props.width) ? 200 : 0,
+                    && isWidthUp('xl', this.props.width) ? 200 : 0,
                 background: 'rgb(17, 24, 35)',
                 backgroundImage: `url(${images.topo_dark})`,
-                height: window.innerHeight - mainAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight}px)`,
             },
         };
 

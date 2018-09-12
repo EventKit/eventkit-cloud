@@ -2,11 +2,6 @@ import topo_light from '../../images/topoBackground.png';
 import topo_dark from '../../images/ek_topo_pattern.png';
 import logo from '../../images/eventkit-logo.1.png';
 
-export const XS_MAX_WIDTH = 576;
-export const S_MAX_WIDTH = 768;
-export const M_MAX_WIDTH = 992;
-export const L_MAX_WIDTH = 1200;
-
 export const breakpoints = {
     values: {
         xs: 0,

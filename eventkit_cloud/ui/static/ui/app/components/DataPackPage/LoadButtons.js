@@ -11,7 +11,7 @@ export class LoadButtons extends React.Component {
         this.setWidth = this.setWidth.bind(this);
         this.self = React.createRef();
         this.state = {
-            width: window.innerWidth,
+            width: '100vw',
         };
     }
 

@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
@@ -41,7 +42,7 @@ export class NotificationsPage extends React.Component {
     }
 
     getGridPadding() {
-        return window.innerWidth >= 768 ? 7 : 2;
+        return isWidthUp('md', this.props.width) ? 7 : 2;
     }
 
     getRange(notifications) {
@@ -75,17 +76,17 @@ export class NotificationsPage extends React.Component {
 
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = isWidthUp('sm') ? '10px' : '2px';
         const styles = {
             root: {
                 position: 'relative',
-                height: window.innerHeight - mainAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight}px)`,
                 width: '100%',
                 backgroundImage: `url(${images.topo_dark})`,
                 color: colors.text_primary,
             },
             customScrollbar: {
-                height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
             },
             content: {
                 marginBottom: '12px',
@@ -161,7 +162,7 @@ export class NotificationsPage extends React.Component {
                                 </Paper>
                                 :
                                 <div className="qa-NotificationsPage-Content-Notifications">
-                                    {(window.innerWidth > 768) ?
+                                    {isWidthUp('md', this.props.width) ?
                                         <NotificationsTable
                                             notifications={this.props.notifications}
                                             notificationsArray={notifications}
@@ -204,6 +205,7 @@ NotificationsPage.propTypes = {
     notifications: PropTypes.object.isRequired,
     getNotifications: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -218,7 +220,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(NotificationsPage));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends NotificationsPage {}

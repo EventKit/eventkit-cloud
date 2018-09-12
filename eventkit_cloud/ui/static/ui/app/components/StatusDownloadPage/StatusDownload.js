@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -134,7 +135,7 @@ export class StatusDownload extends React.Component {
     }
 
     getMarginPadding() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '0px';
         }
         return '30px';
@@ -451,6 +452,7 @@ StatusDownload.propTypes = {
     location: PropTypes.object.isRequired,
     viewedJob: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -534,7 +536,8 @@ function mapDispatchToProps(dispatch) {
 }
 
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(StatusDownload));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends StatusDownload {}
