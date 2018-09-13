@@ -47,15 +47,15 @@ export class DashboardSection extends React.Component {
             pageIndex: 0,
         };
         this.maxPages = 3;
-        this.itemsPerPage = this.props.columns * this.props.rows;
     }
 
     getPages() {
+        const itemsPerPage = this.props.columns * this.props.rows;
         // Group children into pages, each of length maxPages.
         const children = React.Children.toArray(this.props.children);
         const pages = [];
-        for (let i = 0; i < children.length; i += this.itemsPerPage) {
-            pages.push(children.slice(i, i + this.itemsPerPage));
+        for (let i = 0; i < children.length; i += itemsPerPage) {
+            pages.push(children.slice(i, i + itemsPerPage));
             if (pages.length === this.maxPages) {
                 break;
             }
@@ -73,9 +73,9 @@ export class DashboardSection extends React.Component {
     render() {
         const { colors } = this.props.theme.eventkit;
         const { classes } = this.props;
-        const xs = isWidthUp('sm', this.props.width);
+        const md = isWidthUp('md', this.props.width);
 
-        const spacing = xs ? 10 : 2;
+        const spacing = md ? 10 : 2;
         const scrollbarWidth = 6;
         const halfGridPadding = this.props.gridPadding / 2;
         const styles = {
@@ -85,9 +85,9 @@ export class DashboardSection extends React.Component {
             },
             sectionHeader: {
                 margin: '12px 0 13px',
-                paddingLeft: xs ? `${spacing + halfGridPadding}px` : '12px',
-                paddingRight: xs ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
-                fontSize: xs ? '22px' : '18px',
+                paddingLeft: md ? `${spacing + halfGridPadding}px` : '12px',
+                paddingRight: md ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
+                fontSize: md ? '22px' : '18px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase',
@@ -111,12 +111,12 @@ export class DashboardSection extends React.Component {
                 height: 'auto',
                 margin: '0',
                 paddingLeft: `${spacing}px`,
-                paddingRight: xs ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
+                paddingRight: md ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
             },
             viewAll: {
                 color: colors.primary,
                 textTransform: 'uppercase',
-                fontSize: xs ? '14px' : '12px',
+                fontSize: md ? '14px' : '12px',
                 cursor: 'pointer',
                 marginLeft: '18px',
             },

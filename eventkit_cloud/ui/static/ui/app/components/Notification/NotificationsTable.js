@@ -110,8 +110,7 @@ export class NotificationsTable extends React.Component {
         };
 
         let optionsWidth = '60px';
-        if (window.innerWidth > 1600) optionsWidth = '600px';
-        else if (isWidthUp('xl', width)) optionsWidth = '435px';
+        if (isWidthUp('xl', width)) optionsWidth = '435px';
 
         styles = {
             ...styles,
