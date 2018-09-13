@@ -1,7 +1,7 @@
 import values from 'lodash/values';
 import moment from 'moment';
 import initialState from './initialState';
-import types from '../actions/actionTypes';
+import { types } from '../actions/notificationsActions';
 
 
 export function getSortedNotifications(notificationsObj) {

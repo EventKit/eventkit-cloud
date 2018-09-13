@@ -1,4 +1,4 @@
-import types from '../actions/actionTypes';
+import { types } from '../actions/userGroupsActions';
 import initialState from './initialState';
 
 export function userGroupsReducer(state = initialState.groups, action) {

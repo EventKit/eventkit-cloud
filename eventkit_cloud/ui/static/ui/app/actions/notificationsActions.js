@@ -1,6 +1,26 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
-import actions from './actionTypes';
+
+export const types = {
+    FETCHING_NOTIFICATIONS: 'FETCHING_NOTIFICATIONS',
+    RECEIVED_NOTIFICATIONS: 'RECEIVED_NOTIFICATIONS',
+    FETCH_NOTIFICATIONS_ERROR: 'FETCH_NOTIFICATIONS_ERROR',
+    MARKING_NOTIFICATIONS_AS_READ: 'MARKING_NOTIFICATIONS_AS_READ',
+    MARKED_NOTIFICATIONS_AS_READ: 'MARKED_NOTIFICATIONS_AS_READ',
+    MARK_NOTIFICATIONS_AS_READ_ERROR: 'MARK_NOTIFICATIONS_AS_READ_ERROR',
+    MARKING_NOTIFICATIONS_AS_UNREAD: 'MARKING_NOTIFICATIONS_AS_UNREAD',
+    MARKED_NOTIFICATIONS_AS_UNREAD: 'MARKED_NOTIFICATIONS_AS_UNREAD',
+    MARK_NOTIFICATIONS_AS_UNREAD_ERROR: 'MARK_NOTIFICATIONS_AS_UNREAD_ERROR',
+    MARKING_ALL_NOTIFICATIONS_AS_READ: 'MARKING_ALL_NOTIFICATIONS_AS_READ',
+    MARKED_ALL_NOTIFICATIONS_AS_READ: 'MARKED_ALL_NOTIFICATIONS_AS_READ',
+    MARK_ALL_NOTIFICATIONS_AS_READ_ERROR: 'MARK_ALL_NOTIFICATIONS_AS_READ_ERROR',
+    REMOVING_NOTIFICATIONS: 'REMOVING_NOTIFICATIONS',
+    REMOVED_NOTIFICATIONS: 'REMOVE_NOTIFICATIONS',
+    REMOVE_NOTIFICATIONS_ERROR: 'REMOVE_NOTIFICATIONS_ERROR',
+    FETCHING_NOTIFICATIONS_UNREAD_COUNT: 'FETCHING_NOTIFICATIONS_UNREAD_COUNT',
+    RECEIVED_NOTIFICATIONS_UNREAD_COUNT: 'RECEIVED_NOTIFICATIONS_UNREAD_COUNT',
+    FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR: 'FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR',
+};
 
 export function getNotifications(args = {}) {
     return (dispatch, getState) => {
@@ -18,7 +38,7 @@ export function getNotifications(args = {}) {
         const cancelSource = axios.CancelToken.source();
 
         dispatch({
-            type: actions.FETCHING_NOTIFICATIONS,
+            type: types.FETCHING_NOTIFICATIONS,
             cancelSource,
         });
 
@@ -50,7 +70,7 @@ export function getNotifications(args = {}) {
             }
 
             dispatch({
-                type: actions.RECEIVED_NOTIFICATIONS,
+                type: types.RECEIVED_NOTIFICATIONS,
                 notifications: response.data,
                 nextPage,
                 range,
@@ -60,7 +80,7 @@ export function getNotifications(args = {}) {
                 console.log(error.message);
             } else {
                 dispatch({
-                    type: actions.FETCH_NOTIFICATIONS_ERROR,
+                    type: types.FETCH_NOTIFICATIONS_ERROR,
                     error: error.response.data,
                 });
             }
@@ -84,7 +104,7 @@ export function markNotificationsAsRead(notifications) {
         cancelNotificationsSources(getState());
 
         dispatch({
-            type: actions.MARKING_NOTIFICATIONS_AS_READ,
+            type: types.MARKING_NOTIFICATIONS_AS_READ,
             notifications,
         });
 
@@ -104,12 +124,12 @@ export function markNotificationsAsRead(notifications) {
             data,
         }).then(() => {
             dispatch({
-                type: actions.MARKED_NOTIFICATIONS_AS_READ,
+                type: types.MARKED_NOTIFICATIONS_AS_READ,
                 notifications,
             });
         }).catch((error) => {
             dispatch({
-                type: actions.MARK_NOTIFICATIONS_AS_READ_ERROR,
+                type: types.MARK_NOTIFICATIONS_AS_READ_ERROR,
                 error: error.response.data,
             });
         });
@@ -121,7 +141,7 @@ export function markNotificationsAsUnread(notifications) {
         cancelNotificationsSources(getState());
 
         dispatch({
-            type: actions.MARKING_NOTIFICATIONS_AS_UNREAD,
+            type: types.MARKING_NOTIFICATIONS_AS_UNREAD,
             notifications,
         });
 
@@ -141,12 +161,12 @@ export function markNotificationsAsUnread(notifications) {
             data,
         }).then(() => {
             dispatch({
-                type: actions.MARKED_NOTIFICATIONS_AS_UNREAD,
+                type: types.MARKED_NOTIFICATIONS_AS_UNREAD,
                 notifications,
             });
         }).catch((error) => {
             dispatch({
-                type: actions.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
+                type: types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
                 error: error.response.data,
             });
         });
@@ -158,7 +178,7 @@ export function removeNotifications(notifications) {
         cancelNotificationsSources(getState());
 
         dispatch({
-            type: actions.REMOVING_NOTIFICATIONS,
+            type: types.REMOVING_NOTIFICATIONS,
             notifications,
         });
 
@@ -178,12 +198,12 @@ export function removeNotifications(notifications) {
             data,
         }).then(() => {
             dispatch({
-                type: actions.REMOVED_NOTIFICATIONS,
+                type: types.REMOVED_NOTIFICATIONS,
                 notifications,
             });
         }).catch((error) => {
             dispatch({
-                type: actions.REMOVE_NOTIFICATIONS_ERROR,
+                type: types.REMOVE_NOTIFICATIONS_ERROR,
                 error: error.response.data,
             });
         });
@@ -195,7 +215,7 @@ export function markAllNotificationsAsRead() {
         cancelNotificationsSources(getState());
 
         dispatch({
-            type: actions.MARKING_ALL_NOTIFICATIONS_AS_READ,
+            type: types.MARKING_ALL_NOTIFICATIONS_AS_READ,
         });
 
         return axios({
@@ -204,11 +224,11 @@ export function markAllNotificationsAsRead() {
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {
             dispatch({
-                type: actions.MARKED_ALL_NOTIFICATIONS_AS_READ,
+                type: types.MARKED_ALL_NOTIFICATIONS_AS_READ,
             });
         }).catch((error) => {
             dispatch({
-                type: actions.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
+                type: types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
                 error: error.response.data,
             });
         });
@@ -231,7 +251,7 @@ export function getNotificationsUnreadCount(args = {}) {
         const cancelSource = axios.CancelToken.source();
 
         dispatch({
-            type: actions.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
+            type: types.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
             cancelSource,
         });
 
@@ -241,7 +261,7 @@ export function getNotificationsUnreadCount(args = {}) {
             cancelToken: cancelSource.token,
         }).then((response) => {
             dispatch({
-                type: actions.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
+                type: types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
                 unreadCount: response.data.unread,
             });
         }).catch((error) => {
@@ -249,7 +269,7 @@ export function getNotificationsUnreadCount(args = {}) {
                 console.log(error.message);
             } else {
                 dispatch({
-                    type: actions.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
+                    type: types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
                     error: error.response.data,
                 });
             }

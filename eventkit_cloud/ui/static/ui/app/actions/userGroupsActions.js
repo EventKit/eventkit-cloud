@@ -1,6 +1,20 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
-import types from './actionTypes';
+
+export const types = {
+    FETCHING_GROUPS: 'FETCHING_GROUPS',
+    FETCHED_GROUPS: 'FETCHED_GROUPS',
+    FETCH_GROUPS_ERROR: 'FETCH_GROUPS_ERROR',
+    DELETING_GROUP: 'DELETING_GROUP',
+    DELETED_GROUP: 'DELETED_GROUP',
+    DELETE_GROUP_ERROR: 'DELETE_GROUP_ERROR',
+    CREATING_GROUP: 'CREATING_GROUP',
+    CREATED_GROUP: 'CREATED_GROUP',
+    CREATE_GROUP_ERROR: 'CREATE_GROUP_ERROR',
+    UPDATING_GROUP: 'UPDATING_GROUP',
+    UPDATED_GROUP: 'UPDATED_GROUP',
+    UPDATING_GROUP_ERROR: 'UPDATING_GROUP_ERROR',
+};
 
 export function getGroups() {
     return (dispatch, getState) => {
