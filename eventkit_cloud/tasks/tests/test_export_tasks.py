@@ -287,11 +287,10 @@ class TestExportTasks(ExportTaskBase):
         task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
         exception = task.exceptions.all()[0]
-        exc_info = pickle.loads(str(exception.exception)).exc_info
+        exc_info = pickle.loads(eval(exception.exception)).exc_info
         error_type, msg, tb = exc_info[0], exc_info[1], exc_info[2]
         self.assertEqual(error_type, ValueError)
         self.assertEqual('some unexpected error', str(msg))
-        # traceback.print_exception(error_type, msg, tb)
 
     @patch('shutil.copy')
     @patch('os.remove')
@@ -597,7 +596,7 @@ class TestExportTasks(ExportTaskBase):
     @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.get_style_files')
     @patch('eventkit_cloud.tasks.export_tasks.json')
-    @patch('__builtin__.open')
+    @patch('builtins.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('os.path.join', side_effect=lambda *args: args[-1])
     @patch('os.path.isfile')

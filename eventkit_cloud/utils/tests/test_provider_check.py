@@ -103,11 +103,11 @@ class TestProviderCheck(TransactionTestCase):
         pc = WFSProviderCheck(url, layer, self.aoi_geojson)
 
         invalid_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
-                             </WFS_Capabilities>"""
+                             </WFS_Capabilities>""".encode()
         empty_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
                                <FeatureTypeList>
                                </FeatureTypeList>
-                           </WFS_Capabilities>"""
+                           </WFS_Capabilities>""".encode()
         no_intersect_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
                                       <FeatureTypeList>
                                           <FeatureType>
@@ -115,7 +115,7 @@ class TestProviderCheck(TransactionTestCase):
                                               <LatLongBoundingBox maxx="11" maxy="11" minx="10" miny="10"/>
                                           </FeatureType>
                                       </FeatureTypeList>
-                                  </WFS_Capabilities>"""
+                                  </WFS_Capabilities>""".encode()
         valid_content = """<WFS_Capabilities xmlns="http://www.opengis.net/wfs">
                                <FeatureTypeList>
                                    <FeatureType>
@@ -123,7 +123,7 @@ class TestProviderCheck(TransactionTestCase):
                                        <LatLongBoundingBox maxx="1" maxy="1" minx="-1" miny="-1"/>
                                    </FeatureType>
                                </FeatureTypeList>
-                           </WFS_Capabilities>"""
+                           </WFS_Capabilities>""".encode()
 
         self.check_ows(get, 'wfs', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
@@ -133,11 +133,11 @@ class TestProviderCheck(TransactionTestCase):
         coverage = "exampleCoverage"
         pc = WCSProviderCheck(url, coverage, self.aoi_geojson)
 
-        invalid_content = ""
+        invalid_content = "".encode()
         empty_content = """<wcs:WCS_Capabilities xmlns:gml="http://www.opengis.net/gml" xmlns:wcs="http://www.opengis.net/wcs">
                                <wcs:ContentMetadata>
                                </wcs:ContentMetadata>
-                           </wcs:WCS_Capabilities>"""
+                           </wcs:WCS_Capabilities>""".encode()
         no_intersect_content = """<wcs:WCS_Capabilities xmlns:gml="http://www.opengis.net/gml" xmlns:wcs="http://www.opengis.net/wcs">
                                       <wcs:ContentMetadata>
                                           <wcs:CoverageOfferingBrief>
@@ -148,7 +148,7 @@ class TestProviderCheck(TransactionTestCase):
                                                </wcs:lonLatEnvelope>
                                           </wcs:CoverageOfferingBrief>
                                       </wcs:ContentMetadata>
-                                  </wcs:WCS_Capabilities>"""
+                                  </wcs:WCS_Capabilities>""".encode()
         valid_content = """<wcs:WCS_Capabilities xmlns:gml="http://www.opengis.net/gml" xmlns:wcs="http://www.opengis.net/wcs">
                                <wcs:ContentMetadata>
                                    <wcs:CoverageOfferingBrief>
@@ -159,7 +159,7 @@ class TestProviderCheck(TransactionTestCase):
                                         </wcs:lonLatEnvelope>
                                    </wcs:CoverageOfferingBrief>
                                </wcs:ContentMetadata>
-                           </wcs:WCS_Capabilities>"""
+                           </wcs:WCS_Capabilities>""".encode()
 
         self.check_ows(get, 'wcs', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
@@ -169,11 +169,11 @@ class TestProviderCheck(TransactionTestCase):
         layer = "exampleLayer"
         pc = WMSProviderCheck(url, layer, self.aoi_geojson)
 
-        invalid_content = ""
+        invalid_content = "".encode()
         empty_content = """<WMT_MS_Capabilities version="1.1.1">
                                <Capability>
                                </Capability>
-                           </WMT_MS_Capabilities>"""
+                           </WMT_MS_Capabilities>""".encode()
 
         no_intersect_content = """<WMT_MS_Capabilities version="1.1.1">
                                       <Capability>
@@ -184,7 +184,7 @@ class TestProviderCheck(TransactionTestCase):
                                               </Layer>
                                           </Layer>
                                       </Capability>
-                                  </WMT_MS_Capabilities>"""
+                                  </WMT_MS_Capabilities>""".encode()
 
         valid_content = """<WMT_MS_Capabilities version="1.1.1">
                                <Capability>
@@ -193,7 +193,7 @@ class TestProviderCheck(TransactionTestCase):
                                        <LatLonBoundingBox minx="-1" miny="-1" maxx="1" maxy="1"/>
                                    </Layer>
                                </Capability>
-                           </WMT_MS_Capabilities>"""
+                           </WMT_MS_Capabilities>""".encode()
 
         self.check_ows(get, 'wms', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
@@ -203,11 +203,11 @@ class TestProviderCheck(TransactionTestCase):
         layer = "exampleLayer"
         pc = WMTSProviderCheck(url, layer, self.aoi_geojson)
 
-        invalid_content = ""
+        invalid_content = "".encode()
         empty_content = """<Capabilities version="1.0.0">
                                <Contents>
                                </Contents>
-                           </Capabilities>"""
+                           </Capabilities>""".encode()
 
         no_intersect_content = """<Capabilities version="1.0.0">
                                       <Contents>
@@ -221,7 +221,7 @@ class TestProviderCheck(TransactionTestCase):
                                               </Layer>
                                           </Layer>
                                       </Contents>
-                                  </Capabilities>"""
+                                  </Capabilities>""".encode()
 
         valid_content = """<Capabilities version="1.0.0">
                                <Contents>
@@ -233,7 +233,7 @@ class TestProviderCheck(TransactionTestCase):
                                        </WGS84BoundingBox>
                                    </Layer>
                                </Contents>
-                           </Capabilities>"""
+                           </Capabilities>""".encode()
 
         self.check_ows(get, 'wmts', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 

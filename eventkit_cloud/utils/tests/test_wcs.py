@@ -45,7 +45,7 @@ class TestWCSConverter(TransactionTestCase):
             'coverage': layer,
             'params': '&amp;map=testMap.map',
             'userpwd': 'testUser:testPass',
-        })
+        }).encode()
 
         exists.return_value = True
         get_cred.return_value = ("testUser", "testPass")

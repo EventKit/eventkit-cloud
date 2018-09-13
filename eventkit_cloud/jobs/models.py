@@ -75,9 +75,6 @@ class License(TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self,):
-        return '{0}'.format(self.slug)
-
 
 class UserLicense(TimeStampedModelMixin):
     """
@@ -88,9 +85,6 @@ class UserLicense(TimeStampedModelMixin):
 
     def __str__(self):
         return '{0}: {1}'.format(self.user.username, self.license.name)
-
-    def __unicode__(self):
-        return '{0}: {1}'.format(self.user.username, self.license.slug)
 
 
 class ExportFormat(UIDMixin, TimeStampedModelMixin):
@@ -110,9 +104,6 @@ class ExportFormat(UIDMixin, TimeStampedModelMixin):
     def __str__(self):
         return '{0}'.format(self.name)
 
-    def __unicode__(self,):
-        return '{0}'.format(self.slug)
-
 
 class DataProviderType(TimeStampedModelMixin):
     """
@@ -125,9 +116,6 @@ class DataProviderType(TimeStampedModelMixin):
                                                blank=True)
 
     def __str__(self):
-        return '{0}'.format(self.type_name)
-
-    def __unicode__(self,):
         return '{0}'.format(self.type_name)
 
 
@@ -181,9 +169,6 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
         super(DataProvider, self).save(*args, **kwargs)
 
     def __str__(self):
-        return '{0}'.format(self.name)
-
-    def __unicode__(self,):
         return '{0}'.format(self.name)
 
 
@@ -243,10 +228,7 @@ class DataProviderTask(models.Model):
     formats = models.ManyToManyField(ExportFormat, related_name='formats')
 
     def __str__(self):
-        return '{0} - {1}'.format(self.uid, self.provider)
-
-    def __unicode__(self,):
-        return '{0} - {1}'.format(self.uid, self.provider)
+        return '{0} - {1}'.format(str(self.uid), self.provider)
 
 
 class VisibilityState(Enum):

@@ -123,7 +123,7 @@ class TestJobViewSet(APITestCase):
         }
         url = reverse('api:jobs-list')
         response = self.client.post(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        response = json.loads(response.content)
+        response = response.json()
         export_providers = DataProvider.objects.all()
 
         self.assertEqual(len(export_providers), export_providers_start_len + 1)
@@ -281,6 +281,7 @@ class TestJobViewSet(APITestCase):
         self.assertEqual(response['Content-Language'], 'en')
 
         # test significant response content
+
 
         self.assertEqual(response.data['exports'][0]['formats'][0]['slug'],
                          request_data['provider_tasks'][0]['formats'][0])
@@ -1008,7 +1009,7 @@ class TestLicenseViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(expected_data, data)
 
     def test_get_licenses_detail(self):
@@ -1019,7 +1020,7 @@ class TestLicenseViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(expected_data, data)
 
     def test_get_licenses_download(self):
@@ -1029,7 +1030,7 @@ class TestLicenseViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        self.assertEqual(self.licenses[0].text, response.content)
+        self.assertEqual(self.licenses[0].text, response.content.decode())
 
         expected_bad_url = '/api/licenses/test22/download'
         bad_url = reverse('api:licenses-download', args=['test22'])
@@ -1037,7 +1038,7 @@ class TestLicenseViewSet(APITestCase):
         bad_response = self.client.get(bad_url);
         self.assertIsNotNone(bad_response)
         self.assertEqual(400, bad_response.status_code)
-        self.assertEqual(str({'detail': _('Not found')}), bad_response.content)
+        self.assertEqual(str({'detail': _('Not found')}), bad_response.content.decode())
 
 
 class TestUserDataViewSet(APITestCase):
@@ -1061,7 +1062,7 @@ class TestUserDataViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(self.user.username, data[0].get('user').get('username'))
         self.assertIsNotNone(data[0].get('accepted_licenses').get(self.licenses[0].slug))
 
@@ -1072,14 +1073,14 @@ class TestUserDataViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(200, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(self.user.username, data.get('user').get('username'))
         self.assertIsNotNone(data.get('accepted_licenses').get(self.licenses[0].slug))
 
     def test_set_licenses(self):
         url = reverse('api:users-detail', args=[self.user])
         response = self.client.get(url)
-        data = json.loads(response.content)
+        data = response.json()
         # check both licenses are NOT accepted.
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), False)
@@ -1088,7 +1089,7 @@ class TestUserDataViewSet(APITestCase):
         request_data['accepted_licenses'][self.licenses[0].slug] = True
         patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         response = self.client.get(url)
-        data = json.loads(response.content)
+        data = response.json()
         # check that the response body matches a new request
         self.assertEqual(patch_response.data, response.data)
         # check single licenses is accepted.
@@ -1097,13 +1098,13 @@ class TestUserDataViewSet(APITestCase):
         request_data = data
         request_data['accepted_licenses'][self.licenses[1].slug] = True
         patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        data = json.loads(patch_response.content)
+        data = patch_response.json()
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), True)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
         request_data = data
         request_data['accepted_licenses'][self.licenses[0].slug] = False
         patch_response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
-        data = json.loads(patch_response.content)
+        data = patch_response.json()
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[0].slug), False)
         self.assertEqual(data.get('accepted_licenses').get(self.licenses[1].slug), True)
 
@@ -1150,14 +1151,14 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.get(url)
         self.assertIsNotNone(response)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(len(data),2)
 
 
     def test_get_group(self):
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
-        data= json.loads(response.content)
+        data= response.json()
         self.groupid = data["id"]
         self.assertEqual(data["name"], self.testName)
         self.assertEqual(len(data["members"]),0)
@@ -1167,7 +1168,7 @@ class TestGroupDataViewSet(APITestCase):
         url = reverse('api:groups-detail', args=[self.groupid])
         response = self.client.get(url, content_type='application/json; version=1.0')
         self.assertEqual(response.status_code,status.HTTP_200_OK)
-        groupdata = json.loads(response.content)
+        groupdata = response.json()
 
         # add a user to group members and to group administrators
 
@@ -1178,7 +1179,7 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEqual(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
-        groupdata = json.loads(response.content)
+        groupdata = response.json()
         self.assertEqual(len(groupdata["members"]),2)
         self.assertEqual(len(groupdata["administrators"]), 2)
 
@@ -1189,7 +1190,7 @@ class TestGroupDataViewSet(APITestCase):
         response = self.client.patch(url, data=json.dumps(groupdata), content_type='application/json; version=1.0')
         self.assertEqual(response.status_code,status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
-        groupdata = json.loads(response.content)
+        groupdata = response.json()
         self.assertEqual(len(groupdata["members"]),1)
         self.assertEqual(groupdata["members"][0],"user_1")
 
@@ -1206,13 +1207,13 @@ class TestGroupDataViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # check add user_2 as member and only one admin
-        group_data = json.loads(response.content)
+        group_data = response.json()
         group_data['members'] = ['user_1', 'user_2']
         group_data['administrators'] = ['user_2']
         response = self.client.patch(url, data=json.dumps(group_data), content_type='application/json; version=1.0')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = self.client.get(url, content_type='application/json; version=1.0')
-        group_data = json.loads(response.content)
+        group_data = response.json()
         self.assertEqual(len(group_data['members']), 2)
         self.assertEqual(len(group_data['administrators']), 1)
         self.assertEqual(group_data['administrators'][0], 'user_2')
@@ -1222,7 +1223,7 @@ class TestGroupDataViewSet(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # verify the results
         response = self.client.get(url, content_type='application/json; verison=1.0')
-        group_data = json.loads(response.content)
+        group_data = response.json()
         self.assertEqual(len(group_data['members']), 1)
         self.assertEqual(group_data['members'][0], 'user_2')
 
@@ -1261,7 +1262,7 @@ class TestUserJobActivityViewSet(APITestCase):
         response = self.client.get(url + '?activity=viewed&page_size=10')
         self.assertIsNotNone(response)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(len(data), len(self.viewed_jobs))
 
     def test_get_viewed_pagination(self):
@@ -1275,14 +1276,14 @@ class TestUserJobActivityViewSet(APITestCase):
         response = self.client.get(url + '?activity=viewed&page_size=%s' % page_size)
         self.assertIsNotNone(response)
         self.assertEqual(status.HTTP_206_PARTIAL_CONTENT, response.status_code)
-        data = json.loads(response.content)
+        data = response.json()
         self.assertEqual(len(data), page_size)
 
     def test_create_viewed(self):
         # Get our current number of viewed jobs to compare against.
         url = reverse('api:user_job_activity-list')
         response = self.client.get(url + '?activity=viewed&page_size=10')
-        prev_viewed_jobs_count = len(json.loads(response.content))
+        prev_viewed_jobs_count = len(response.json())
 
         # Post a new job view.
         job = self.create_job('UnviewedJob')
@@ -1293,7 +1294,7 @@ class TestUserJobActivityViewSet(APITestCase):
 
         # Get our new number of viewed jobs and compare.
         response = self.client.get(url + '?activity=viewed&page_size=10')
-        viewed_jobs = json.loads(response.content)
+        viewed_jobs = response.json()
         self.assertEqual(len(viewed_jobs), prev_viewed_jobs_count + 1)
 
         # Make sure the first returned viewed job matches what we just viewed.
@@ -1311,14 +1312,14 @@ class TestUserJobActivityViewSet(APITestCase):
         job_b = self.create_job('UnviewedJobB')
         response = self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_b.uid)}),
                                     content_type='application/json; version=1.0')
-        self.assertEqual(json.loads(response.content).get('ignored'), None)
+        self.assertEqual(response.json().get('ignored'), None)
         response = self.client.post(url + '?activity=viewed', data=json.dumps({'job_uid': str(job_b.uid)}),
                                     content_type='application/json; version=1.0')
-        self.assertEqual(json.loads(response.content).get('ignored'), True)
+        self.assertEqual(response.json().get('ignored'), True)
 
         # Make sure we don't see the same job twice in our viewed jobs.
         response = self.client.get(url + '?activity=viewed')
-        viewed_jobs = json.loads(response.content)
+        viewed_jobs = response.json()
         self.assertNotEqual(viewed_jobs[0], viewed_jobs[1])
 
     def test_create_viewed_existing(self):
@@ -1339,7 +1340,7 @@ class TestUserJobActivityViewSet(APITestCase):
 
         # Make sure that job A only shows up once in our viewed jobs.
         response = self.client.get(url + '?activity=viewed')
-        viewed_jobs = json.loads(response.content)
+        viewed_jobs = response.json()
         job_a_count = 0
         for viewed_job in viewed_jobs:
             if viewed_job['job']['uid'] == str(job_a.uid):

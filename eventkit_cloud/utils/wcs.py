@@ -95,7 +95,7 @@ class WCSConverter(object):
             'auth': wcs_xml_auth_string
         })
         logger.debug("Creating temporary WCS XML at %s:\n%s", self.wcs_xml_path, wcs_xml_string)
-        os.write(wcs_xml_fd, wcs_xml_string)
+        os.write(wcs_xml_fd, wcs_xml_string.encode())
         os.close(wcs_xml_fd)
 
         if self.bbox:

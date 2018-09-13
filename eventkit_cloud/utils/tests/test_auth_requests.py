@@ -83,7 +83,7 @@ class TestAuthResult(TransactionTestCase):
             auth_requests.patch_https("test-provider-slug")
             self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, http.client.HTTPSConnection.__init__)
             self.assertEqual("_new_init", http.client.HTTPSConnection.__init__
-                             .__func__.__closure__[1].cell_contents.__name__)  # complicated because decorator
+                             .__closure__[1].cell_contents.__name__)  # complicated because decorator
 
             named_tempfile = MagicMock()
             cert_tempfile = MagicMock()
@@ -121,7 +121,7 @@ class TestAuthResult(TransactionTestCase):
             auth_requests._ORIG_URLOPENERCACHE_CALL = new_orig_call
             # Confirm that the patch is applied
             auth_requests.patch_mapproxy_opener_cache()
-            self.assertEqual("_new_call", _URLOpenerCache.__call__.__func__.__name__)
+            self.assertEqual("_new_call", _URLOpenerCache.__call__.__name__)
             create_url_opener = _URLOpenerCache()
             opener = create_url_opener(None, "example.com", "test_user", "test_password")
             self.assertTrue(any([isinstance(h, urllib.request.HTTPCookieProcessor) for h in opener.handlers]))

@@ -8,7 +8,7 @@ from functools import wraps
 from tempfile import NamedTemporaryFile
 
 import requests
-from mapproxy.client import http
+from mapproxy.client import http as mapproxy_http
 
 logger = logging.getLogger(__name__)
 
@@ -157,7 +157,7 @@ def post(url, **kwargs):
 
 
 _ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
-_ORIG_URLOPENERCACHE_CALL = http._URLOpenerCache.__call__
+_ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 
 
 def patch_https(slug):
@@ -191,7 +191,7 @@ def patch_mapproxy_opener_cache(slug=None):
 
     def _new_call(self, ssl_ca_certs, url, username, password, insecure=False):
         if ssl_ca_certs not in self._opener or slug not in self._opener:
-            https_handler = http.build_https_handler(ssl_ca_certs, insecure)
+            https_handler = mapproxy_http.build_https_handler(ssl_ca_certs, insecure)
             passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             handlers = [urllib.request.HTTPCookieProcessor,
                         urllib.request.HTTPRedirectHandler(),
@@ -200,7 +200,7 @@ def patch_mapproxy_opener_cache(slug=None):
                         urllib.request.HTTPDigestAuthHandler(passman)]
 
             opener = urllib.request.build_opener(*handlers)
-            opener.addheaders = [('User-agent', 'MapProxy-%s' % (http.version,))]
+            opener.addheaders = [('User-agent', 'MapProxy-%s' % (mapproxy_http.version,))]
 
             self._opener[ssl_ca_certs or slug] = (opener, passman)
         else:
@@ -216,11 +216,11 @@ def patch_mapproxy_opener_cache(slug=None):
 
         return opener
 
-    http._URLOpenerCache.__call__ = _new_call
+    mapproxy_http._URLOpenerCache.__call__ = _new_call
 
 
 def unpatch_mapproxy_opener_cache():
-    http._URLOpenerCache.__call__ = _ORIG_URLOPENERCACHE_CALL
+    mapproxy_http._URLOpenerCache.__call__ = _ORIG_URLOPENERCACHE_CALL
 
 
 def unpatch_https():

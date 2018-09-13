@@ -66,11 +66,10 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     def create(validated_data, **kwargs):
         from eventkit_cloud.api.views import get_models
         """Creates an export DataProviderTask."""
-        format_names = validated_data.pop("formats")
-        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
+        formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
-        provider_task.formats.add(*format_models)
+        provider_task.formats.add(*formats)
         provider_task.save()
         return provider_task
 
@@ -129,7 +128,13 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = pickle.loads(str(obj.exception)).exc_info
+        try:
+            exc_info = pickle.loads(obj.exception).exc_info
+        except TypeError:
+            if obj.exception.startswith("b'"):
+                # eval always seems dicey, but I'm not sure of how to handle this better with the data that will already
+                # exist, probably something better than pickling the object could be done here in the future.
+                exc_info = pickle.loads(eval(obj.exception)).exc_info
 
         return str(exc_info[1])
 
@@ -243,7 +248,8 @@ class SimpleJobSerializer(serializers.Serializer):
     def get_permissions(obj):
         return JobPermission.jobpermissions(obj)
 
-    def get_formats(self, obj):
+    @staticmethod
+    def get_formats(obj):
         # Since formats are the same for all provider_tasks (1.1.0) just grab anyone and print them.
         provider_task = obj.provider_tasks.first()
         formats = []
@@ -788,7 +794,8 @@ class NotificationSerializer(serializers.ModelSerializer):
     def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
 
         response = {}
-        if referenced_object_id > 0:
+        referenced_object_id = referenced_object_id or 0
+        if int(referenced_object_id) > 0:
             response['type'] = str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
             response['id'] = referenced_object_id
 

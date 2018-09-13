@@ -11,7 +11,7 @@ from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.util import ProgressLog
-from pysqlite2 import dbapi2 as sqlite3
+import sqlite3
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import get_tile_table_names, set_gpkg_contents_bounds, \

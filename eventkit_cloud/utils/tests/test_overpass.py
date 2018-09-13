@@ -44,17 +44,6 @@ class TestOverpass(TestCase):
         self.osm = self.path + '/files/query.osm'
         self.query = '[maxsize:2147483648][timeout:1600];(node(6.25,-10.85,6.4,-10.62);<;);out body;'
 
-#         parser = presets.PresetParser(self.path + '/files/hdm_presets.xml')
-#         self.assertIsNotNone(tags)
-#         self.job.tags.all().delete()
-#         tags = parser.parse()
-
-        # save all the tags from the preset
-#         for tag_dict in tags:
-#             tag = Tag.objects.create(name=tag_dict['key'], value=tag_dict['value'], job=self.job,
-#                                      data_model='osm', geom_types=tag_dict['geom_types'])
-#         self.assertEquals(259, self.job.tags.all().count())
-
     def test_get_query(self,):
         overpass = Overpass(
             stage_dir=self.path + '/files/',
@@ -79,9 +68,10 @@ class TestOverpass(TestCase):
         q = op.get_query()
         out = self.path + '/files/query.osm'
         mock_response = mock.Mock()
-        expected = ['<osm>some data</osm>']
+        sample_data = ['<osm>some data</osm>'.encode()]
+        expected = sample_data[0].decode()
         mock_response.headers = {'content-length': 20}
-        mock_response.iter_content.return_value = expected
+        mock_response.iter_content.return_value = sample_data
         mock_post.return_value = mock_response
         op.run_query()
         mock_post.assert_called_once_with(self.url,
@@ -93,6 +83,6 @@ class TestOverpass(TestCase):
         mock_close.assert_called()
         f = open(out)
         data = f.read()
-        self.assertEqual(data, expected[0])
+        self.assertEqual(data, expected)
         f.close()
         os.remove(out)

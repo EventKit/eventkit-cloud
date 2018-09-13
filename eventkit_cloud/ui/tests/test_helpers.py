@@ -151,7 +151,7 @@ class TestHelpers(TestCase):
             file_path = '/path/to/file.txt'
             ret = write_uploaded_file(test_file, file_path)
             self.assertTrue(ret)
-            m.assert_called_once_with(file_path, 'w+')
+            m.assert_called_once_with(file_path, 'wb+')
             test_file.chunks.assert_called_once
             self.assertEqual(m.return_value.__enter__.return_value.write.call_count, 5)
 

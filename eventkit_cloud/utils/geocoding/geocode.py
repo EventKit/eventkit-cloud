@@ -183,7 +183,8 @@ class GeoNames(GeocodeAdapter):
             features += [feature]
         return self.get_feature_collection(features=features)
 
-    def get_bbox(self, bbox=None):
+    @staticmethod
+    def get_bbox(bbox=None):
         if not bbox:
             return
         try:
@@ -277,13 +278,10 @@ def is_valid_bbox(bbox):
         return False
 
 
-
-
-
 def expand_bbox(original_bbox, new_bbox):
     """
     Takes two bboxes and returns a new bbox containing the original two.
-    :param bbox: A list representing [west, south, east, north]
+    :param original_bbox: A list representing [west, south, east, north]
     :param new_bbox: A list representing [west, south, east, north]
     :return: A list containing the two original lists.
     """

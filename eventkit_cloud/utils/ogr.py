@@ -8,7 +8,7 @@ from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.tasks.helpers import get_file_paths, cd
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from pysqlite2 import dbapi2 as sqlite3
+import sqlite3
 
 logger = logging.getLogger(__name__)
 

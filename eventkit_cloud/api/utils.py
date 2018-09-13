@@ -24,7 +24,6 @@ def eventkit_exception_handler(exc, context):
     """
     # Call REST framework's default exception handler first,
     # to get the standard error response. Parse the response accordingly.
-
     response = exception_handler(exc, context)
     if response:
 
@@ -69,7 +68,7 @@ def eventkit_exception_handler(exc, context):
         response = Response({'errors': {
             'status': response_status,
             'title': str(exc.__class__.__name__),
-            'detail': exc.message
+            'detail': str(exc)
         }}, status=response_status)
     return response
 

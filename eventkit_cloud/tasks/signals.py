@@ -20,7 +20,7 @@ def exportrun_delete_exports(sender, instance, *args, **kwargs):
     """
     if getattr(settings, 'USE_S3', False):
         delete_from_s3(run_uid=str(instance.uid))
-    run_dir = '{0}/{1}'.format(settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), instance.uid)
+    run_dir = '{0}/{1}'.format(settings.EXPORT_DOWNLOAD_ROOT.rstrip('/'), str(instance.uid))
     try:
         shutil.rmtree(run_dir, ignore_errors=True)
         logger.info("The directory {0} was deleted.".format(run_dir))

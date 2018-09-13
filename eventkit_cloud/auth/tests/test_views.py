@@ -59,7 +59,7 @@ class TestAuthViews(TestCase):
 
         with self.settings(OAUTH_NAME=oauth_name):
             response = self.client.get(reverse('oauth'),{'query':'name'})
-            return_name = json.loads(response.content).get('name')
+            return_name = response.json().get('name')
             self.assertEqual(return_name, oauth_name)
             self.assertEqual(response.status_code, 200)
 

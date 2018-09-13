@@ -8,6 +8,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
+COPY --chown=eventkit ./environment.yml /var/lib/eventkit/environment.yml
 COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 COPY --chown=eventkit ./eventkit_cloud /var/lib/eventkit/eventkit_cloud

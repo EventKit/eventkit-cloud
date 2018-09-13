@@ -15,7 +15,7 @@ Notification.old_str_func = Notification.__str__
 
 
 def normalize_unicode_str(self):
-    return unicodedata.normalize('NFKD', self.old_str_func()).encode('ascii', 'ignore')
+    return str(unicodedata.normalize('NFKD', self.old_str_func()).encode('ascii', 'ignore'))
 
 
 # Modify the Notification model's __str__ method to not return a unicode string, since this seems to cause problems

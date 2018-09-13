@@ -87,7 +87,7 @@ class TestJob(TestCase):
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'referer': self.create_export_url})
         self.assertEqual(200, response.status_code)
-        self.assertEqual({'success': True}, json.loads(response.content))
+        self.assertEqual({'success': True}, response.json())
         self.orm_job = Job.objects.get(uid=job_json.get('uid'))
         self.orm_run = self.orm_job.runs.last()
 

@@ -8,7 +8,7 @@ from mock import Mock, patch, MagicMock
 
 from eventkit_cloud.utils.ogr import OGR, create_zip_file, get_zip_name, enable_spatialite, execute_spatialite_script
 
-from pysqlite2 import dbapi2 as sqlite3
+import sqlite3
 
 logger = logging.getLogger(__name__)
 

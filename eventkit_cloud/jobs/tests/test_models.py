@@ -57,7 +57,7 @@ class TestJob(TestCase):
         self.assertIsNotNone(saved_job.updated_at)
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
-        self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
+        self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
         self.assertEqual('Test description', saved_job.description)
         self.assertEqual(4, len(saved_job.json_tags))
         self.assertEqual(False, saved_job.include_zipfile)  # default
@@ -70,7 +70,7 @@ class TestJob(TestCase):
         self.assertIsNotNone(saved_job.updated_at)
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
-        self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
+        self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
         # attach a configuration to a job
         hdm_preset = DatamodelPreset.objects.get(name='hdm')
         saved_job.preset = hdm_preset
@@ -150,7 +150,6 @@ class TestJob(TestCase):
 class TestExportFormat(TestCase):
     def test_str(self,):
         kml = ExportFormat.objects.get(slug='kml')
-        self.assertEqual(str(kml), 'kml')
         self.assertEqual(str(kml), 'KML Format')
 
 

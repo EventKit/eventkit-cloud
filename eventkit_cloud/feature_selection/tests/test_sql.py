@@ -67,7 +67,7 @@ class TestSQLValidator(unittest.TestCase):
     def test_column_names(self):
         s = SQLValidator("(admin IS NOT NULL and level > 4) AND height is not null")
         self.assertTrue(s.valid)
-        self.assertEqual(s.column_names,['height','level','admin'])
+        self.assertCountEqual(s.column_names,['height','level','admin'])
 
 
 class TestOsmfilterRule(unittest.TestCase):
