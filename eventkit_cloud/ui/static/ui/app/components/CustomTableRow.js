@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 
 export class CustomTableRow extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             container: {
                 display: 'flex',
@@ -15,7 +18,7 @@ export class CustomTableRow extends Component {
                 display: 'flex',
                 flex: '0 0 auto',
                 width: '140px',
-                backgroundColor: '#f8f8f8',
+                backgroundColor: colors.secondary,
                 padding: '10px',
                 marginRight: '5px',
                 ...this.props.titleStyle,
@@ -24,8 +27,8 @@ export class CustomTableRow extends Component {
                 display: 'flex',
                 flex: '1 1 auto',
                 flexWrap: 'wrap',
-                backgroundColor: '#f8f8f8',
-                color: '#8b9396',
+                backgroundColor: colors.secondary,
+                color: colors.text_primary,
                 paddingRight: '10px',
                 paddingBottom: '0px',
                 paddingTop: '10px',
@@ -68,6 +71,7 @@ CustomTableRow.propTypes = {
     containerStyle: PropTypes.object,
     titleStyle: PropTypes.object,
     dataStyle: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default CustomTableRow;
+export default withTheme()(CustomTableRow);

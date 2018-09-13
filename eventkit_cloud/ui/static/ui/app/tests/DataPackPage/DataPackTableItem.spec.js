@@ -1,17 +1,16 @@
 import React from 'react';
 import sinon from 'sinon';
-import { shallow, mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import { Link } from 'react-router';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import AlertError from '@material-ui/icons/Error';
 import Lock from '@material-ui/icons/LockOutlined';
 import SocialGroup from '@material-ui/icons/Group';
-import NavigationMoreVert from '@material-ui/icons/MoreVert';
 import NavigationCheck from '@material-ui/icons/Check';
 import NotificationSync from '@material-ui/icons/Sync';
 import IconMenu from '../../components/common/IconMenu';
-import DataPackTableItem from '../../components/DataPackPage/DataPackTableItem';
+import { DataPackTableItem } from '../../components/DataPackPage/DataPackTableItem';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackTableItem component', () => {
@@ -101,15 +100,10 @@ describe('DataPackTableItem component', () => {
         onRunShare: sinon.spy(),
         providers,
         adminPermissions: true,
+        ...global.eventkit_test_props,
     });
 
-    const getWrapperMount = (props) => {
-        const wrapper = mount(<DataPackTableItem {...props} />);
-        wrapper.instance().iconMenu = { setState: sinon.spy() };
-        return wrapper;
-    };
-
-    const getWrapperShallow = (props) => {
+    const getWrapper = (props) => {
         const wrapper = shallow(<DataPackTableItem {...props} />);
         wrapper.instance().iconMenu = { setState: sinon.spy() };
         return wrapper;
@@ -117,32 +111,31 @@ describe('DataPackTableItem component', () => {
 
     it('should render a table row with the correct table columns', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(TableRow)).toHaveLength(1);
         expect(wrapper.find(TableCell)).toHaveLength(8);
         expect(wrapper.find(Link)).toHaveLength(1);
         expect(wrapper.find(Link).props().to).toEqual(`/status/${run.job.uid}`);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(NavigationMoreVert)).toHaveLength(1);
-        expect(wrapper.find(TableCell).at(0).text()).toEqual(run.job.name);
-        expect(wrapper.find(TableCell).at(1).text()).toEqual(run.job.event);
-        expect(wrapper.find(TableCell).at(2).text()).toEqual('3/10/17');
+        expect(wrapper.find(TableCell).at(0).html()).toContain(run.job.name);
+        expect(wrapper.find(TableCell).at(1).html()).toContain(run.job.event);
+        expect(wrapper.find(TableCell).at(2).html()).toContain('3/10/17');
         expect(wrapper.find(TableCell).at(3).find(NavigationCheck)).toHaveLength(1);
         expect(wrapper.find(TableCell).at(4).find(Lock)).toHaveLength(1);
-        expect(wrapper.find(TableCell).at(5).text()).toEqual('My DataPack');
+        expect(wrapper.find(TableCell).at(5).html()).toContain('My DataPack');
         expect(wrapper.find(DataPackShareDialog)).toHaveLength(1);
     });
 
     it('should render differently when props change', () => {
         const props = getProps();
-        const wrapper = getWrapperMount(props);
+        const wrapper = getWrapper(props);
         props.run.user = 'Not Admin';
         props.run.job.permissions.value = 'PUBLIC';
         props.run.status = 'INCOMPLETE';
         wrapper.setProps(props);
         expect(wrapper.find(TableCell).at(3).find(AlertError)).toHaveLength(1);
         expect(wrapper.find(TableCell).at(4).find(SocialGroup)).toHaveLength(1);
-        expect(wrapper.find(TableCell).at(5).text()).toEqual('Not Admin');
+        expect(wrapper.find(TableCell).at(5).html()).toContain('Not Admin');
         props.run.status = 'SUBMITTED';
         wrapper.setProps(props);
         expect(wrapper.find(TableCell).at(3).find(NotificationSync)).toHaveLength(1);
@@ -151,7 +144,7 @@ describe('DataPackTableItem component', () => {
     it('getOwnerText should return "My DataPack" if run user and logged in user match, else return run user', () => {
         const props = getProps();
         props.run.user = 'admin';
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         let text = wrapper.instance().getOwnerText(run, 'not the admin user');
         expect(text).toEqual('admin');
         text = wrapper.instance().getOwnerText(run, 'admin');
@@ -160,16 +153,16 @@ describe('DataPackTableItem component', () => {
 
     it('getPermissionsIcon should return either Group or Person', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         let icon = wrapper.instance().getPermissionsIcon('SHARED');
-        expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{ color: 'bcdfbb' }} />);
+        expect(icon).toEqual(<SocialGroup className="qa-DataPackTableItem-SocialGroup" style={{ color: '#55ba63' }} />);
         icon = wrapper.instance().getPermissionsIcon('PRIVATE');
-        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-Lock" style={{ color: 'grey' }} />);
+        expect(icon).toEqual(<Lock className="qa-DataPackTableItem-Lock" style={{ color: '#808080' }} />);
     });
 
     it('getStatusIcon should return either a Sync, Error, or Check icon depending on job status', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         let icon = wrapper.instance().getStatusIcon('SUBMITTED');
         expect(icon).toEqual(<NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: '#f4d225' }} />);
         icon = wrapper.instance().getStatusIcon('INCOMPLETE');
@@ -183,14 +176,14 @@ describe('DataPackTableItem component', () => {
         expect(icon).toEqual((
             <NavigationCheck
                 className="qa-DataPackTableItem-NavigationCheck"
-                style={{ color: '#bcdfbb', height: '22px' }}
+                style={{ color: '#55ba63', height: '22px' }}
             />
         ));
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
@@ -201,7 +194,7 @@ describe('DataPackTableItem component', () => {
 
     it('handleProviderOpen should close menu then set provider dialog to open', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
@@ -217,7 +210,7 @@ describe('DataPackTableItem component', () => {
 
     it('showDeleteDialog should close menu then set deleteDialogOpen to true', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
@@ -230,7 +223,7 @@ describe('DataPackTableItem component', () => {
 
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
@@ -243,7 +236,7 @@ describe('DataPackTableItem component', () => {
         const props = getProps();
         props.onRunDelete = sinon.spy();
         const hideSpy = sinon.spy(DataPackTableItem.prototype, 'hideDeleteDialog');
-        const wrapper = getWrapperShallow(props);
+        const wrapper = getWrapper(props);
         expect(props.onRunDelete.called).toBe(false);
         expect(hideSpy.called).toBe(false);
         wrapper.instance().handleDelete();
@@ -253,7 +246,7 @@ describe('DataPackTableItem component', () => {
     });
 
     it('handleShareOpen should close menu and open share dialog', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
@@ -264,7 +257,7 @@ describe('DataPackTableItem component', () => {
     });
 
     it('handleShareClose should close share dialog', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
         wrapper.instance().handleShareClose();
         expect(stateSpy.callCount).toBe(1);
@@ -273,7 +266,7 @@ describe('DataPackTableItem component', () => {
     });
 
     it('handleShareSave should close share dialog and call onRunShare with job id and permissions', () => {
-        const wrapper = getWrapperShallow(getProps());
+        const wrapper = getWrapper(getProps());
         const instance = wrapper.instance();
         instance.handleShareClose = sinon.spy();
         const permissions = { some: 'permissions' };
@@ -284,7 +277,7 @@ describe('DataPackTableItem component', () => {
     });
 
     it('should set share dialog open prop with shareDialogOpen value', () => {
-        const wrapper = getWrapperMount(getProps());
+        const wrapper = getWrapper(getProps());
         expect(wrapper.state().shareDialogOpen).toBe(false);
         expect(wrapper.find(DataPackShareDialog).props().show).toBe(false);
         wrapper.setState({ shareDialogOpen: true });

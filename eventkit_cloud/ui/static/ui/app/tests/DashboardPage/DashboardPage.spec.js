@@ -133,6 +133,7 @@ describe('DashboardPage component', () => {
             getGroups: sinon.spy(),
             getProviders: sinon.spy(),
             getNotifications: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 
@@ -419,17 +420,17 @@ describe('DashboardPage component', () => {
         });
 
         it('does not render Notifications "no data" element', () => {
-            const notificationsSection = wrapper.find('.qa-DashboardSection-Notifications').dive();
+            const notificationsSection = wrapper.find('.qa-DashboardSection-Notifications').shallow();
             expect(notificationsSection.find('.qa-DashboardSection-Notifications-NoData')).toHaveLength(0);
         });
 
         it('does not render Recently Viewed "no data" element', () => {
-            const recentlyViewedSection = wrapper.find('.qa-DashboardSection-RecentlyViewed').dive();
+            const recentlyViewedSection = wrapper.find('.qa-DashboardSection-RecentlyViewed').shallow();
             expect(recentlyViewedSection.find('.qa-DashboardSection-RecentlyViewed-NoData')).toHaveLength(0);
         });
 
         it('does not render My DataPacks "no data" element', () => {
-            const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').dive();
+            const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').shallow();
             expect(myDataPacksSection.find('.qa-DashboardSection-MyDataPacks-NoData')).toHaveLength(0);
         });
     });
@@ -457,21 +458,6 @@ describe('DashboardPage component', () => {
 
         it('renders My DataPacks section', () => {
             expect(wrapper.find('.qa-DashboardSection-MyDataPacks')).toHaveLength(1);
-        });
-
-        it('renders Notifications "no data" element', () => {
-            const notificationsSection = wrapper.find('.qa-DashboardSection-Notifications').dive().dive();
-            expect(notificationsSection.find('.qa-DashboardSection-Notifications-NoData')).toHaveLength(1);
-        });
-
-        it('renders Recently Viewed "no data" element', () => {
-            const recentlyViewedSection = wrapper.find('.qa-DashboardSection-RecentlyViewed').dive().dive();
-            expect(recentlyViewedSection.find('.qa-DashboardSection-RecentlyViewed-NoData')).toHaveLength(1);
-        });
-
-        it('renders My DataPacks "no data" element', () => {
-            const myDataPacksSection = wrapper.find('.qa-DashboardSection-MyDataPacks').dive().dive();
-            expect(myDataPacksSection.find('.qa-DashboardSection-MyDataPacks-NoData')).toHaveLength(1);
         });
     });
 

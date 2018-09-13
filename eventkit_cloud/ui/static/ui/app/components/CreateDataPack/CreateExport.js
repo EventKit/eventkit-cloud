@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
@@ -25,9 +26,11 @@ export class CreateExport extends React.Component {
 
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             tourButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
             },
@@ -85,6 +88,7 @@ CreateExport.propTypes = {
     ]),
     router: PropTypes.object.isRequired,
     routes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default CreateExport;
+export default withTheme()(CreateExport);

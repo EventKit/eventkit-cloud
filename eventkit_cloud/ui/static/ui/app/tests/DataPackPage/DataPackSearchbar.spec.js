@@ -1,16 +1,17 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import TextField from '@material-ui/core/TextField';
-import DataPackSearchbar from '../../components/DataPackPage/DataPackSearchbar';
+import { DataPackSearchbar } from '../../components/DataPackPage/DataPackSearchbar';
 
 describe('DataPackSearchbar component', () => {
     const getProps = () => ({
         onSearchChange: () => {},
         onSearchSubmit: () => {},
+        ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => mount(<DataPackSearchbar {...props} />);
+    const getWrapper = props => shallow(<DataPackSearchbar {...props} />);
 
     it('should render the TextField component', () => {
         const props = getProps();
@@ -24,7 +25,8 @@ describe('DataPackSearchbar component', () => {
         const changeSpy = sinon.spy(DataPackSearchbar.prototype, 'handleChange');
         const wrapper = getWrapper(props);
         expect(changeSpy.called).toBe(false);
-        wrapper.find('input').simulate('change', e);
+        wrapper.find(TextField).simulate('change', e);
+        wrapper.update();
         expect(changeSpy.calledOnce).toBe(true);
         expect(changeSpy.args[0][0].target.value).toEqual(e.target.value);
     });
@@ -36,8 +38,8 @@ describe('DataPackSearchbar component', () => {
         const keySpy = sinon.spy(DataPackSearchbar.prototype, 'handleKeyDown');
         const wrapper = getWrapper(props);
         expect(keySpy.calledOnce).toBe(false);
-        wrapper.find('input').simulate('change', change);
-        wrapper.find('input').simulate('keyDown', enter);
+        wrapper.find(TextField).shallow().simulate('change', change);
+        wrapper.find(TextField).shallow().simulate('keyDown', enter);
         expect(keySpy.calledOnce).toBe(true);
     });
 

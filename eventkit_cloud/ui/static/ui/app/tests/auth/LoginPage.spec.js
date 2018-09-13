@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Paper from '@material-ui/core/Paper';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { LoginPage } from '../../components/auth/LoginPage';
@@ -12,10 +12,10 @@ import * as utils from '../../utils/generic';
 
 describe('LoginPage component', () => {
     const store = fakeStore({});
-    const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer' };
+    const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer', ...global.eventkit_test_props };
 
     function getWrapper(config) {
-        return mount(<LoginPage />, {
+        return shallow(<LoginPage {...global.eventkit_test_props} />, {
             context: { store, config },
             childContextTypes: {
                 store: PropTypes.object,
@@ -60,8 +60,8 @@ describe('LoginPage component', () => {
         expect(wrapper.find(Paper)).toHaveLength(2);
         expect(wrapper.find(LoginForm)).toHaveLength(1);
         expect(wrapper.find(Paper).last().find('strong').text()).toEqual('ATTENTION');
-        expect(wrapper.find(CustomScrollbar).find('.qa-LoginPage-disclaimer')
-            .text()).toEqual('This is a disclaimer');
+        expect(wrapper.find(CustomScrollbar).at(1).dive().find('.qa-LoginPage-disclaimer')
+            .html()).toContain('This is a disclaimer');
         isValidStub.restore();
     });
 });

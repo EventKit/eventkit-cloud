@@ -1,8 +1,12 @@
+import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 
 export class DataPackLinkButton extends React.Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             button: {
                 margin: '0px',
@@ -14,7 +18,7 @@ export class DataPackLinkButton extends React.Component {
                 paddingLeft: '0px',
                 paddingRight: '0px',
                 lineHeight: '35px',
-                color: '#fff',
+                color: colors.white,
             },
         };
 
@@ -32,4 +36,8 @@ export class DataPackLinkButton extends React.Component {
     }
 }
 
-export default DataPackLinkButton;
+DataPackLinkButton.propTypes = {
+    theme: PropTypes.object.isRequired,
+};
+
+export default withTheme()(DataPackLinkButton);

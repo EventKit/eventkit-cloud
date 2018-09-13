@@ -7,6 +7,7 @@ import SaveButton from '../../components/AccountPage/SaveButton';
 
 describe('SaveButton component', () => {
     const getProps = () => ({
+        ...global.eventkit_test_props,
         saved: false,
         saveDisabled: true,
         handleSubmit: () => {},

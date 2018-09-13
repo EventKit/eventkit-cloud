@@ -1,21 +1,24 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from './BaseDialog';
 
 export class ConfirmDialog extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const style = {
-            backgroundColor: 'whitesmoke',
+            backgroundColor: colors.secondary,
             fontWeight: 'bold',
-            color: '#4598bf',
+            color: colors.primary,
         };
 
         const deleteActions = [
             <Button
                 key="confirm"
                 className="qa-ConfirmDialog-Button-ConfirmButton"
-                style={{ ...style, color: this.props.isDestructive ? '#ff0000' : '#4598bf' }}
+                style={{ ...style, color: this.props.isDestructive ? colors.warning : colors.primary }}
                 onClick={this.props.onConfirm}
                 variant="contained"
             >
@@ -59,6 +62,7 @@ ConfirmDialog.propTypes = {
     cancelLabel: PropTypes.string,
     confirmLabel: PropTypes.string,
     isDestructive: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
 ConfirmDialog.defaultProps = {
@@ -68,4 +72,4 @@ ConfirmDialog.defaultProps = {
     children: undefined,
 };
 
-export default ConfirmDialog;
+export default withTheme()(ConfirmDialog);

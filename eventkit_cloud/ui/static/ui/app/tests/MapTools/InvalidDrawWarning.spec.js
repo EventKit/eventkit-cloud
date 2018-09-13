@@ -1,26 +1,33 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import { InvalidDrawWarning } from '../../components/MapTools/InvalidDrawWarning';
 
 describe('InvalidDrawWarning component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const props = {
         show: false,
+        ...global.eventkit_test_props,
     };
 
     it('should always have a div and a span element', () => {
-        const wrapper = mount(<InvalidDrawWarning {...props} />);
+        const wrapper = shallow(<InvalidDrawWarning {...props} />);
         expect(wrapper.find('div')).toHaveLength(1);
         expect(wrapper.find('span')).toHaveLength(1);
         expect(wrapper.find('span').text()).toEqual('You drew an invalid bounding box, please redraw.');
     });
 
     it('should be hidden by default', () => {
-        const wrapper = mount(<InvalidDrawWarning {...props} />);
+        const wrapper = shallow(<InvalidDrawWarning {...props} />);
         expect(wrapper.find('div').props().style.display).toEqual('none');
     });
 
     it('should be visible when new props are passed in', () => {
-        const wrapper = mount(<InvalidDrawWarning {...props} />);
+        const wrapper = shallow(<InvalidDrawWarning {...props} />);
         expect(wrapper.find('div').props().style.display).toEqual('none');
         const newProps = props;
         newProps.show = true;

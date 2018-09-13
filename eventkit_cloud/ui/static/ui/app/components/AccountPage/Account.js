@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import ButtonBase from '@material-ui/core/ButtonBase';
@@ -128,6 +129,8 @@ export class Account extends Component {
     }
 
     render() {
+        const { theme } = this.props;
+
         const { steps, isRunning } = this.state;
         const styles = {
             body: {
@@ -142,13 +145,13 @@ export class Account extends Component {
                 margin: 'auto',
             },
             tourButton: {
-                color: '#4598bf',
+                color: theme.eventkit.colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginRight: '30px',
             },
             tourIcon: {
-                color: '#4598bf',
+                color: theme.eventkit.colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',
@@ -178,7 +181,7 @@ export class Account extends Component {
         });
 
         return (
-            <div style={{ backgroundColor: 'white' }}>
+            <div style={{ backgroundColor: theme.eventkit.colors.white }}>
                 <Joyride
                     callback={this.callback}
                     ref={(instance) => { this.joyride = instance; }}
@@ -245,6 +248,7 @@ Account.propTypes = {
     patchUser: PropTypes.func.isRequired,
     drawer: PropTypes.string.isRequired,
     openDrawer: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -270,7 +274,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(Account);
+)(Account));

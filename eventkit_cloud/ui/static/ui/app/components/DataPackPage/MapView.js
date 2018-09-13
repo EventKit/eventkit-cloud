@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
@@ -60,7 +61,7 @@ export const RED_STYLE = new Style({
 
 export const BLUE_STYLE = new Style({
     stroke: new Stroke({
-        color: '#4498c0',
+        color: '#4598bf',
         width: 4,
     }),
     image: null,
@@ -131,11 +132,11 @@ export class MapView extends Component {
         this.markerLayer.setStyle(new Style({
             image: new Circle({
                 fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-                stroke: new Stroke({ color: '#ce4427', width: 1.25 }),
+                stroke: new Stroke({ color: this.props.theme.eventkit.colors.warning, width: 1.25 }),
                 radius: 5,
             }),
             fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-            stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
+            stroke: new Stroke({ color: this.props.theme.eventkit.colors.primary, width: 1.25 }),
         }));
 
         this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
@@ -572,10 +573,10 @@ export class MapView extends Component {
             image: new Circle({
                 radius: 6,
                 fill: new Fill({
-                    color: '#4598bf',
+                    color: this.props.theme.eventkit.colors.primary,
                 }),
                 stroke: new Stroke({
-                    color: '#fff',
+                    color: this.props.theme.eventkit.colors.white,
                     width: 2,
                 }),
             }),
@@ -596,10 +597,10 @@ export class MapView extends Component {
             image: new Circle({
                 radius: 6,
                 fill: new Fill({
-                    color: '#ce4427',
+                    color: this.props.theme.eventkit.colors.warning,
                 }),
                 stroke: new Stroke({
-                    color: '#fff',
+                    color: this.props.theme.eventkit.colors.white,
                     width: 2,
                 }),
             }),
@@ -817,6 +818,8 @@ export class MapView extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const spacing = window.innerWidth > 575 ? '10px' : '2px';
         const styles = {
             root: {
@@ -873,9 +876,9 @@ export class MapView extends Component {
             },
             dot: {
                 opacity: '0.5',
-                color: '#ce4427',
-                backgroundColor: 'white',
-                border: '1px solid #4598bf',
+                color: colors.warning,
+                backgroundColor: colors.white,
+                border: `1px solid ${colors.primary}`,
                 borderRadius: '100%',
                 height: '14px',
                 width: '14px',
@@ -915,7 +918,7 @@ export class MapView extends Component {
                                         onRunDelete={this.props.onRunDelete}
                                         onRunShare={this.props.onRunShare}
                                         onClick={this.handleClick}
-                                        backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
+                                        backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
                                         providers={this.props.providers}
                                         adminPermission={admin}
                                         users={this.props.users}
@@ -976,7 +979,7 @@ export class MapView extends Component {
                             onKeyPress={this.handleOlPopupClose}
                         />
                         <div className="qa-MapView-div-popupContent" id="popup-content">
-                            <p style={{ color: 'grey' }}>Select One:</p>
+                            <p style={{ color: colors.grey }}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                                 {this.state.groupedFeatures.map(groupFeature => (
                                     <span
@@ -1047,6 +1050,7 @@ MapView.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MapView;
+export default withTheme()(MapView);

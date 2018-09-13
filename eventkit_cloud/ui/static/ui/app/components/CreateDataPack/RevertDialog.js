@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Clear from '@material-ui/icons/Clear';
 import AlertWarning from '@material-ui/icons/Warning';
@@ -33,6 +34,8 @@ export class RevertDialog extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             background: {
                 position: 'absolute',
@@ -48,7 +51,7 @@ export class RevertDialog extends Component {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 width: '355px',
                 borderRadius: '2px',
                 outline: '1px solid rgba(0, 0, 0, 0.1)',
@@ -71,13 +74,13 @@ export class RevertDialog extends Component {
                 textAlign: 'right',
             },
             revert: {
-                color: 'whitesmoke',
-                backgroundColor: '#ce4427',
+                color: colors.secondary,
+                backgroundColor: colors.warning,
                 fontWeight: 'bold',
             },
             clear: {
                 float: 'right',
-                fill: '#4598bf',
+                fill: colors.primary,
                 cursor: 'pointer',
             },
             detailText: {
@@ -94,7 +97,7 @@ export class RevertDialog extends Component {
             description: {
                 paddingLeft: '6px',
                 width: '100%',
-                color: 'grey',
+                color: colors.grey,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -106,7 +109,7 @@ export class RevertDialog extends Component {
                 key="RevertDialog-close"
                 className="qa-RevertDialog-FlatButton-close"
                 variant="flat"
-                style={{ float: 'left', color: '#4598bf', fontWeight: 'bold' }}
+                style={{ float: 'left', color: colors.primary, fontWeight: 'bold' }}
                 onClick={this.props.onRevertClose}
             >
                 close
@@ -153,7 +156,7 @@ export class RevertDialog extends Component {
                                     {this.props.aoiInfo.description || 'No AOI Set'}
                                 </div>
                             </div>
-                            <div style={{ margin: '5px 10px', color: 'grey' }}>+</div>
+                            <div style={{ margin: '5px 10px', color: colors.grey }}>+</div>
                             <div style={{ marginTop: '5px' }}>
                                 <strong>0m Buffer</strong>
                             </div>
@@ -173,6 +176,7 @@ RevertDialog.propTypes = {
     onRevertClick: PropTypes.func.isRequired,
     onRevertClose: PropTypes.func.isRequired,
     aoiInfo: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default RevertDialog;
+export default withTheme()(RevertDialog);

@@ -1,14 +1,20 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from '../../components/DataPackShareDialog/ShareBaseDialog';
 import GroupsBody from '../../components/DataPackShareDialog/GroupsBody';
 import MembersBody from '../../components/DataPackShareDialog/MembersBody';
 import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
-import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
+import { DataPackShareDialog } from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('DataPackPage component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             show: false,
@@ -70,11 +76,12 @@ describe('DataPackPage component', () => {
                 user: { username: 'admin' },
                 groups: [],
             },
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<DataPackShareDialog {...props} />)
+        shallow(<DataPackShareDialog {...props} />)
     );
 
     it('should render all the basic components', () => {
@@ -82,26 +89,23 @@ describe('DataPackPage component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(ShareBaseDialog)).toHaveLength(1);
         wrapper.setProps({ ...props, show: true });
-        const header = mount(wrapper.find(ShareBaseDialog).props().children[0]);
+        const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
         expect(header.find(Button)).toHaveLength(2);
-        const body = mount(wrapper.find(ShareBaseDialog).props().children[1]);
-        expect(body.find(GroupsBody)).toHaveLength(1);
+        expect(wrapper.find(GroupsBody)).toHaveLength(1);
     });
 
     it('should display the ShareInfoBody', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ showShareInfo: true });
-        const body = mount(wrapper.find(ShareBaseDialog).props().children);
-        expect(body.find(ShareInfoBody)).toHaveLength(1);
+        expect(wrapper.find(ShareInfoBody)).toHaveLength(1);
     });
 
     it('should display the MembersBody', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ view: 'members' });
-        const body = mount(wrapper.find(ShareBaseDialog).props().children[1]);
-        expect(body.find(MembersBody)).toHaveLength(1);
+        expect(wrapper.find(MembersBody)).toHaveLength(1);
     });
 
     it('should display the selected count on the header buttons', () => {
@@ -109,9 +113,9 @@ describe('DataPackPage component', () => {
         props.permissions.groups = {};
         props.permissions.members = {};
         const wrapper = getWrapper(props);
-        const header = mount(wrapper.find(ShareBaseDialog).props().children[0]);
-        expect(header.find('.qa-DataPackShareDialog-Button-groups').hostNodes().text()).toEqual('GROUPS (0)');
-        expect(header.find('.qa-DataPackShareDialog-Button-members').hostNodes().text()).toEqual('MEMBERS (0)');
+        const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
+        expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (0)');
+        expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (0)');
     });
 
     it('should display "ALL" as the selected count on the header buttons', () => {
@@ -120,9 +124,9 @@ describe('DataPackPage component', () => {
         props.permissions.groups = { group_one: '', group_two: '', group_three: '' };
         props.permissions.members = { user_one: '', user_two: '', user_three: '' };
         const wrapper = getWrapper(props);
-        const header = mount(wrapper.find(ShareBaseDialog).props().children[0]);
-        expect(header.find('.qa-DataPackShareDialog-Button-groups').hostNodes().text()).toEqual('GROUPS (ALL)');
-        expect(header.find('.qa-DataPackShareDialog-Button-members').hostNodes().text()).toEqual('MEMBERS (ALL)');
+        const header = shallow(wrapper.find(ShareBaseDialog).props().children[0]);
+        expect(header.find('.qa-DataPackShareDialog-Button-groups').html()).toContain('GROUPS (ALL)');
+        expect(header.find('.qa-DataPackShareDialog-Button-members').html()).toContain('MEMBERS (ALL)');
     });
 
     it('getAdjustedPermissions should move the user out of the members list', () => {

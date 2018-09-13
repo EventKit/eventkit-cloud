@@ -15,6 +15,7 @@ COPY ./webpack.config.js /var/lib/eventkit/
 COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
 COPY ./.eslintrc.json /var/lib/eventkit/.eslintrc.json
 COPY ./.eslintignore /var/lib/eventkit/.eslintignore
+COPY ./babel.config.js /var/lib/eventkit/babel.config.js
 COPY ./webpack.config.js /var/lib/eventkit/webpack.config.js
 
 CMD ["npm", "start"]

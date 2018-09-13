@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -21,13 +22,15 @@ export class ImportButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '50px',
                 height: '12px',
-                color: '#4498c0',
+                color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
@@ -39,7 +42,7 @@ export class ImportButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
         };
@@ -48,7 +51,7 @@ export class ImportButton extends Component {
             <div id="default_icon">
                 <FileFileUpload
                     className="qa-ImportButton-FileFileUpload-default"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-ImportButton-div-default" style={styles.buttonName}>IMPORT</div>
             </div>
@@ -58,9 +61,8 @@ export class ImportButton extends Component {
             <div id="inactive_icon">
                 <FileFileUpload
                     className="qa-ImportButton-FileFileUpload-inactive"
-                    style={{
-                        opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0',
-                    }}
+                    style={{ opacity: 0.4 }}
+                    color="primary"
                 />
                 <div className="qa-ImportButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>IMPORT</div>
             </div>
@@ -70,7 +72,7 @@ export class ImportButton extends Component {
             <div id="selected_icon">
                 <ContentClear
                     className="qa-ImportButton-ContentClear"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-ImportButton-div-selected" style={styles.buttonName}>IMPORT</div>
             </div>
@@ -97,6 +99,7 @@ ImportButton.propTypes = {
     setAllButtonsDefault: PropTypes.func.isRequired,
     setImportModalState: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ImportButton;
+export default withTheme()(ImportButton);

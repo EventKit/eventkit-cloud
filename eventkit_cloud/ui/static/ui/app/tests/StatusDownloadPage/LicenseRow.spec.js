@@ -1,18 +1,25 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import BaseDialog from '../../components/Dialog/BaseDialog';
-import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
+import { LicenseRow } from '../../components/StatusDownloadPage/LicenseRow';
 
 describe('LicenseRow component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => ({
         name: 'test name',
         text: 'test text',
+        ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => mount(<LicenseRow {...props} />);
+    const getWrapper = props => shallow(<LicenseRow {...props} />);
 
     it('should render elements', () => {
         const props = getProps();

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Collapse from '@material-ui/core/Collapse';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -21,14 +22,16 @@ export class DropDownListItem extends Component {
     }
 
     render() {
-        const backgroundColor = this.props.alt ? 'white' : 'whitesmoke';
+        const { colors } = this.props.theme.eventkit;
+
+        const backgroundColor = this.props.alt ? colors.white : colors.secondary;
         return ([
             <ListItem
                 key="list-item-title"
                 className="qa-DropDownListItem-title"
                 style={{ backgroundColor, paddingTop: '6px', paddingBottom: '6px' }}
             >
-                <div style={{ flex: '1 1 auto', fontWeight: 'bold', color: '#000' }}>
+                <div style={{ flex: '1 1 auto', fontWeight: 'bold', color: colors.black }}>
                     {this.props.title}
                 </div>
                 <IconButton onClick={this.handleExpand} style={{ width: '36px', height: '36px' }}>
@@ -62,10 +65,11 @@ DropDownListItem.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
     ]).isRequired,
     alt: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
 DropDownListItem.defaultProps = {
     alt: false,
 };
 
-export default DropDownListItem;
+export default withTheme()(DropDownListItem);

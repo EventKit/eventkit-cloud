@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
@@ -24,15 +25,17 @@ export class NotificationGridItem extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             root: {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '15px',
                 fontSize: (window.innerWidth > 575) ? '18px' : '14px',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.text_primary,
                 transition: 'background-color 0.25s',
-                backgroundColor: (this.props.notification.unread) ? '#d5e6f1' : 'white',
+                backgroundColor: (this.props.notification.unread) ? colors.selected_primary : colors.white,
                 ...this.props.paperStyle,
             },
             content: {
@@ -104,6 +107,7 @@ NotificationGridItem.propTypes = {
     onRemove: PropTypes.func,
     onView: PropTypes.func,
     markNotificationsAsRead: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 NotificationGridItem.defaultProps = {
@@ -123,7 +127,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     null,
     mapDispatchToProps,
-)(NotificationGridItem);
+)(NotificationGridItem));

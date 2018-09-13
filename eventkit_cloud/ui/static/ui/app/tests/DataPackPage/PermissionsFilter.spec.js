@@ -1,10 +1,9 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
-import Radio from '@material-ui/core/Radio';
+import { shallow } from 'enzyme';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import PermissionsFilter from '../../components/DataPackPage/PermissionsFilter';
+import { PermissionsFilter } from '../../components/DataPackPage/PermissionsFilter';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 
 describe('PermissionsFilter component', () => {
@@ -40,11 +39,12 @@ describe('PermissionsFilter component', () => {
                     groups: [2],
                 },
             ],
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<PermissionsFilter {...props} />)
+        shallow(<PermissionsFilter {...props} />)
     );
 
     it('should render a title and a RadioGroup with 2 Radios', () => {
@@ -54,11 +54,11 @@ describe('PermissionsFilter component', () => {
         expect(wrapper.find(RadioGroup)).toHaveLength(1);
         expect(wrapper.find(RadioGroup).props().name).toEqual('permissions');
         expect(wrapper.find(RadioGroup).props().value).toEqual('SHARED');
-        expect(wrapper.find(Radio)).toHaveLength(2);
-        expect(wrapper.find(FormControlLabel).at(0).text()).toEqual('Private (only me)');
-        expect(wrapper.find(Radio).at(0).props().value).toEqual('PRIVATE');
-        expect(wrapper.find(FormControlLabel).at(1).text()).toEqual('Shared');
-        expect(wrapper.find(Radio).at(1).props().value).toEqual('SHARED');
+        expect(wrapper.find(FormControlLabel)).toHaveLength(2);
+        expect(wrapper.find(FormControlLabel).at(0).html()).toContain('Private (only me)');
+        expect(wrapper.find(FormControlLabel).at(0).props().value).toEqual('PRIVATE');
+        expect(wrapper.find(FormControlLabel).at(1).html()).toContain('Shared');
+        expect(wrapper.find(FormControlLabel).at(1).props().value).toEqual('SHARED');
     });
 
     it('should render a Share Dialog', () => {
@@ -77,27 +77,33 @@ describe('PermissionsFilter component', () => {
         props.permissions.groups = {};
         props.permissions.members = {};
         const wrapper = getWrapper(props);
-        const button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
+        let button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
 
-        expect(button.hostNodes().text()).toEqual('No Members / No Groups');
+        expect(button.html()).toContain('No Members / No Groups');
 
         let nextProps = { ...props };
         nextProps.permissions.groups = { 1: '' };
         nextProps.permissions.members = { user_one: '' };
         wrapper.setProps(nextProps);
-        expect(button.hostNodes().text()).toEqual('1 Member / 1 Group');
+        wrapper.update();
+        button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
+        expect(button.html()).toContain('1 Member / 1 Group');
 
         nextProps = { ...nextProps };
         nextProps.permissions.groups = { 1: '', 2: '' };
         nextProps.permissions.members = { user_one: '', user_two: '' };
         wrapper.setProps(nextProps);
-        expect(button.hostNodes().text()).toEqual('All Members / All Groups');
+        wrapper.update();
+        button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
+        expect(button.html()).toContain('All Members / All Groups');
 
         nextProps = { ...nextProps };
         nextProps.permissions.groups = { 1: '', 2: '', 3: '' };
         nextProps.permissions.members = { user_one: '', user_two: '', user_three: '' };
         wrapper.setProps(nextProps);
-        expect(button.hostNodes().text()).toEqual('3 Members / 3 Groups');
+        wrapper.update();
+        button = wrapper.find('.qa-PermissionsFilter-MembersAndGroups-button');
+        expect(button.html()).toContain('3 Members / 3 Groups');
     });
 
     it('handleOpen should setState to open', () => {

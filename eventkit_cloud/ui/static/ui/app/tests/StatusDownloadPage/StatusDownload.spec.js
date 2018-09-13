@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
@@ -11,6 +11,12 @@ import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo
 import CustomScrollbar from '../../components/CustomScrollbar';
 
 describe('StatusDownload component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const config = { MAX_DATAPACK_EXPIRATION_DAYS: '30' };
     const providers = [
         {
@@ -151,11 +157,12 @@ describe('StatusDownload component', () => {
             viewedJob: () => {},
             getUsers: () => {},
             getGroups: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<StatusDownload {...props} />, {
+        shallow(<StatusDownload {...props} />, {
             context: { config },
         })
     );
@@ -227,7 +234,7 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
-    it('should call getDatacartDetails, getProviders, joyrideAddSteps and startTimer when mounted', () => {
+    it('should call getDatacartDetails, getProviders, joyrideAddSteps and startTimer when shallowed', () => {
         StatusDownload.prototype.componentDidMount = didMount;
         const props = getProps();
         props.getDatacartDetails = sinon.spy();
@@ -379,6 +386,7 @@ describe('StatusDownload component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
+        wrapper.instance().joyride = { reset: sinon.spy() };
         const stateSpy = sinon.stub(StatusDownload.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
@@ -448,6 +456,7 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         const error = [{ detail: 'one' }, { detail: 'two' }];
         wrapper.setState({ error });
+        wrapper.update();
         const ret = wrapper.instance().getErrorMessage();
         expect(ret).toHaveLength(2);
     });

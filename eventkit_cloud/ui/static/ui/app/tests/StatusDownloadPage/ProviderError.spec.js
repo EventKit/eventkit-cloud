@@ -1,12 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
-import ProviderError from '../../components/StatusDownloadPage/ProviderError';
+import { ProviderError } from '../../components/StatusDownloadPage/ProviderError';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('ProviderError component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const tasks = [
         {
             name: 'OSM Data (.gpkg)',
@@ -56,11 +62,12 @@ describe('ProviderError component', () => {
                 url: 'http://cloud.eventkit.test/api/provider_tasks/e261d619-2a02-4ba5-a58c-be0908f97d04',
                 display: true,
             },
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ProviderError {...props} />)
+        shallow(<ProviderError {...props} />)
     );
 
     it('should render UI elements', () => {
@@ -68,13 +75,13 @@ describe('ProviderError component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find('.qa-ProviderError-error-text').text()).toEqual('ERROR');
-        expect(wrapper.find(Warning)).toHaveLength(1);
+        expect(wrapper.find(Warning)).toHaveLength(3);
     });
 
     it('handleProviderErrorOpen should set provider error dialog to open', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ProviderError.prototype, 'setState');
-        const wrapper = shallow(<ProviderError {...props} />);
+        const wrapper = getWrapper(props);
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderErrorOpen();
         expect(stateSpy.calledOnce).toBe(true);
@@ -116,7 +123,7 @@ describe('ProviderError component', () => {
         const errorSpy = sinon.spy(ProviderError.prototype, 'handleProviderErrorOpen');
         const wrapper = getWrapper(props);
         expect(errorSpy.notCalled).toBe(true);
-        wrapper.find(Warning).simulate('click');
+        wrapper.find(Warning).first().simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ providerErrorDialogOpen: true })).toBe(true);
         errorSpy.restore();

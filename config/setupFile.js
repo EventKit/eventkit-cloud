@@ -3,6 +3,7 @@ import { jsdom } from 'jsdom';
 import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 import 'raf/polyfill';
+import theme from './eventkit_cloud/ui/static/ui/app/styles/eventkit_theme';
 
 // this adds the ability to change the dom size when testing components that render
 // differently for different dom sizes
@@ -15,5 +16,7 @@ global.window.resizeTo = (width, height) => {
     global.window.innerHeight = height || global.window.innerHeight;
     global.window.dispatchEvent(new Event('resize'));
 };
+
+global.eventkit_test_props = { theme: { ...theme } };
 
 Enzyme.configure({ adapter: new Adapter() });

@@ -70,12 +70,12 @@ export class FilterDrawer extends Component {
         this.setState({ providers });
     }
 
-    handleMinDate(e) {
-        this.setState({ minDate: e.target.value });
+    handleMinDate(date) {
+        this.setState({ minDate: date });
     }
 
-    handleMaxDate(e) {
-        this.setState({ maxDate: e.target.value });
+    handleMaxDate(date) {
+        this.setState({ maxDate: date });
     }
 
     render() {

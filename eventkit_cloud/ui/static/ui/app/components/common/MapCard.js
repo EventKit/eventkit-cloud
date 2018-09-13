@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-
+import { withTheme } from '@material-ui/core/styles';
 import Map from 'ol/map';
 import View from 'ol/view';
 import interaction from 'ol/interaction';
@@ -12,7 +12,6 @@ import Tile from 'ol/layer/tile';
 import ScaleLine from 'ol/control/scaleline';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
-
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
@@ -102,6 +101,8 @@ export class MapCard extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const style = {
             mapCard: {
                 padding: '15px 0px 20px',
@@ -114,7 +115,7 @@ export class MapCard extends React.Component {
                 fontWeight: 'normal',
                 verticalAlign: 'top',
                 cursor: 'pointer',
-                color: '#4598bf',
+                color: colors.primary,
             },
         };
 
@@ -128,7 +129,7 @@ export class MapCard extends React.Component {
                     className="qa-MapCard-CardHeader-map"
                     style={{
                         padding: '12px 10px 10px',
-                        backgroundColor: 'rgba(179, 205, 224, .2)',
+                        backgroundColor: colors.secondary,
                         fontWeight: 'bold',
                         fontSize: '16px',
                     }}
@@ -145,7 +146,7 @@ export class MapCard extends React.Component {
                 <Collapse in={this.state.open}>
                     <CardContent
                         className="qa-MapCard-CardText-map"
-                        style={{ padding: '5px', backgroundColor: 'rgba(179, 205, 224, .2)' }}
+                        style={{ padding: '5px', backgroundColor: colors.secondary }}
                     >
                         <div id="infoMap" style={style.map} />
                     </CardContent>
@@ -166,6 +167,7 @@ MapCard.propTypes = {
         PropTypes.arrayOf(PropTypes.node),
     ]).isRequired,
     geojson: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default MapCard;
+export default withTheme()(MapCard);

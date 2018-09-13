@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
@@ -42,25 +43,30 @@ export class DataPackTableItem extends Component {
     }
 
     getPermissionsIcon(visibility) {
+        const { colors } = this.props.theme.eventkit;
+
         return visibility !== 'PRIVATE' ?
             <SocialGroup
                 className="qa-DataPackTableItem-SocialGroup"
-                style={{ color: 'bcdfbb' }}
+                style={{ color: colors.success }}
             />
             :
             <Lock
                 className="qa-DataPackTableItem-Lock"
-                style={{ color: 'grey' }}
+                style={{ color: colors.grey }}
             />;
     }
 
     getStatusIcon(status) {
+        const { colors } = this.props.theme.eventkit;
         if (status === 'SUBMITTED') {
-            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: '#f4d225' }} />;
+            return <NotificationSync className="qa-DataPackTableItem-NotificationSync" style={{ color: colors.running }} />;
         } else if (status === 'INCOMPLETE') {
-            return <AlertError className="qa-DataPackTableItem-AlertError" style={{ color: '#ce4427', opacity: '0.6', height: '22px' }} />;
+            return (
+                <AlertError className="qa-DataPackTableItem-AlertError" style={{ color: colors.warning, opacity: '0.6', height: '22px' }} />
+            );
         }
-        return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: '#bcdfbb', height: '22px' }} />;
+        return <NavigationCheck className="qa-DataPackTableItem-NavigationCheck" style={{ color: colors.success, height: '22px' }} />;
     }
 
     handleMenuButtonClick(e) {
@@ -111,23 +117,24 @@ export class DataPackTableItem extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
         const styles = {
             nameColumn: {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
-                color: '#4598bf',
+                color: colors.primary,
             },
             eventColumn: {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
-                color: 'grey',
+                color: colors.grey,
             },
             startedColumn: {
                 width: '98px',
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
-                color: 'grey',
+                color: colors.grey,
             },
             statusColumn: {
                 width: '70px',
@@ -142,6 +149,7 @@ export class DataPackTableItem extends Component {
             ownerColumn: {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
+                color: colors.grey,
             },
             featuredColumn: {
                 padding: '0px 0px 0px 10px',
@@ -202,7 +210,7 @@ export class DataPackTableItem extends Component {
                     className="qa-DataPackTableItem-TableCell-featured tour-datapack-featured"
                     style={styles.featuredColumn}
                 >
-                    {this.props.run.job.featured ? <Star style={{ fill: 'grey' }} /> : null}
+                    {this.props.run.job.featured ? <Star style={{ fill: colors.grey }} /> : null}
                 </TableCell>
                 <TableCell
                     className="qa-DataPackTableItem-TableCell-iconMenu tour-datapack-options"
@@ -305,7 +313,8 @@ DataPackTableItem.propTypes = {
     adminPermissions: PropTypes.bool.isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackTableItem;
+export default withTheme()(DataPackTableItem);
 

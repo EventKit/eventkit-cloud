@@ -1,6 +1,6 @@
 /* eslint prefer-destructuring: 0 */
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import FlagIcon from '@material-ui/icons/Flag';
@@ -12,6 +12,11 @@ import { NotificationMenu } from '../../components/Notification/NotificationMenu
 describe('NotificationMenu component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -38,6 +43,7 @@ describe('NotificationMenu component', () => {
             markNotificationsAsRead: sinon.spy(),
             markNotificationsAsUnread: sinon.spy(),
             removeNotifications: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 

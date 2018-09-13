@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import Sort from '@material-ui/icons/Sort';
@@ -51,9 +52,11 @@ export class UserHeader extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             header: {
-                color: '#707274',
+                color: colors.text_primary,
                 fontSize: '14px',
                 display: 'flex',
                 alignItems: 'center',
@@ -73,7 +76,7 @@ export class UserHeader extends Component {
         if (this.props.showRemoveButton) {
             removeButton = (
                 <MenuItem
-                    style={{ ...styles.item, color: '#ce4427' }}
+                    style={{ ...styles.item, color: colors.warning }}
                     onClick={this.handleRemoveUsersClick}
                     className="qa-UserHeader-MenuItem-remove"
                 >
@@ -271,6 +274,7 @@ UserHeader.propTypes = {
     handleNewGroup: PropTypes.func.isRequired,
     showRemoveButton: PropTypes.bool,
     showAdminButton: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
-export default UserHeader;
+export default withTheme()(UserHeader);

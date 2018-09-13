@@ -1,10 +1,17 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 describe('ZoomLevelLabel component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => ({
         zoomLevel: 2,
+        ...global.eventkit_test_props,
     });
 
     const getShallowWrapper = (props = getProps()) => shallow(<ZoomLevelLabel {...props} />);

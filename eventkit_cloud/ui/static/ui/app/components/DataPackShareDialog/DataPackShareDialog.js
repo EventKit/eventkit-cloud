@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import ShareBaseDialog from './ShareBaseDialog';
 import GroupsBody from './GroupsBody';
@@ -124,28 +125,30 @@ export class DataPackShareDialog extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             fixedHeader: {
                 position: 'sticky',
                 top: 0,
                 left: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 zIndex: 15,
                 padding: '0px 10px',
             },
             groupsButton: {
                 flex: '1 1 auto',
                 borderRadius: '0px',
-                backgroundColor: this.state.view === 'groups' ? '#4598bf' : 'whitesmoke',
+                backgroundColor: this.state.view === 'groups' ? colors.primary : colors.secondary,
                 boxShadow: 'none',
-                color: this.state.view === 'groups' ? '#fff' : '#4598bf',
+                color: this.state.view === 'groups' ? colors.white : colors.primary,
             },
             membersButton: {
                 flex: '1 1 auto',
                 borderRadius: '0px',
-                backgroundColor: this.state.view === 'members' ? '#4598bf' : 'whitesmoke',
+                backgroundColor: this.state.view === 'members' ? colors.primary : colors.secondary,
                 boxShadow: 'none',
-                color: this.state.view === 'members' ? '#fff' : '#4598bf',
+                color: this.state.view === 'members' ? colors.white : colors.primary,
             },
         };
 
@@ -238,7 +241,7 @@ export class DataPackShareDialog extends Component {
                             style={{
                                 height: '2px',
                                 width: '100%',
-                                backgroundColor: '#4598bf',
+                                backgroundColor: colors.primary,
                                 flex: '0 0 auto',
                             }}
                         />
@@ -253,6 +256,14 @@ export class DataPackShareDialog extends Component {
                         overlayStyle={{ zIndex: 1501 }}
                         actions={[
                             <Button
+                                style={{ margin: '0px' }}
+                                variant="contained"
+                                color="primary"
+                                onClick={this.handleSave}
+                            >
+                                SHARE
+                            </Button>,
+                            <Button
                                 style={{ margin: '0px', float: 'left' }}
                                 variant="flat"
                                 color="primary"
@@ -260,14 +271,6 @@ export class DataPackShareDialog extends Component {
                                 onClick={this.hidePublicWarning}
                             >
                                 CONTINUE EDITING
-                            </Button>,
-                            <Button
-                                style={{ margin: '0px' }}
-                                variant="contained"
-                                color="primary"
-                                onClick={this.handleSave}
-                            >
-                                SHARE
                             </Button>,
                         ]}
                     >
@@ -339,6 +342,7 @@ DataPackShareDialog.propTypes = {
         PropTypes.string,
     ]),
     warnPublic: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackShareDialog;
+export default withTheme()(DataPackShareDialog);

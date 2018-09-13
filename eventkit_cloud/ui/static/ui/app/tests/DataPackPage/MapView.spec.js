@@ -2,7 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import PropTypes from 'prop-types';
 import raf from 'raf';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import GridList from '@material-ui/core/GridList';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
@@ -28,7 +28,7 @@ import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
 import InvalidDrawWarning from '../../components/MapTools/InvalidDrawWarning';
 import DropZone from '../../components/MapTools/DropZone';
 import * as utils from '../../utils/mapUtils';
-import MapView, { RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
+import { MapView, RED_STYLE, BLUE_STYLE } from '../../components/DataPackPage/MapView';
 import ZoomLevelLabel from '../../components/MapTools/ZoomLevelLabel';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
@@ -213,11 +213,12 @@ describe('MapView component', () => {
         resetGeoJSONFile: () => {},
         onMapFilter: () => {},
         providers,
+        ...global.eventkit_test_props,
     });
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
-        return mount(<MapView {...props} />, {
+        return shallow(<MapView {...props} />, {
             context: { config },
             childContextTypes: {
                 config: PropTypes.object,
@@ -276,8 +277,8 @@ describe('MapView component', () => {
         expect(wrapper.find('#popup')).toHaveLength(1);
         expect(wrapper.find('#popup-content')).toHaveLength(1);
         expect(wrapper.find('#popup-content').find('span')).toHaveLength(2);
-        expect(wrapper.find('#popup-content').find('span').first().text()).toEqual(' 1');
-        expect(wrapper.find('#popup-content').find('span').last().text()).toEqual(' 2');
+        expect(wrapper.find('#popup-content').find('span').first().text()).toContain(' 1');
+        expect(wrapper.find('#popup-content').find('span').last().text()).toContain(' 2');
         wrapper.find('#popup-content').find('span').first().simulate('click');
         expect(wrapper.instance().handleClick.calledOnce).toBe(true);
         expect(wrapper.instance().handleClick.calledWith('1')).toBe(true);
@@ -562,7 +563,7 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const updates = updateSpy.args.length;
         const mapUpdate = mapUpdateSpy.args.length;
-        wrapper.instance().forceUpdate();
+        wrapper.instance().componentDidUpdate();
         wrapper.update();
         expect(updateSpy.args.length).toEqual(updates + 1);
         expect(mapUpdateSpy.args.length).toEqual(mapUpdate + 1);

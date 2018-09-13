@@ -1,15 +1,18 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../Dialog/BaseDialog';
 
 export class LeaveGroupDialog extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const leaveActions = [
             <Button
                 variant="contained"
                 className="qa-LeaveGroupDialog-leave"
-                style={{ backgroundColor: '#CE4427', color: 'whitesmoke' }}
+                style={{ backgroundColor: colors.warning, color: colors.secondary }}
                 onClick={this.props.onLeave}
             >
                 LEAVE GROUP
@@ -43,6 +46,7 @@ LeaveGroupDialog.propTypes = {
     onClose: PropTypes.func.isRequired,
     onLeave: PropTypes.func.isRequired,
     groupName: PropTypes.string.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default LeaveGroupDialog;
+export default withTheme()(LeaveGroupDialog);

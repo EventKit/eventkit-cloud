@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { browserHistory } from 'react-router';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
@@ -91,7 +92,7 @@ export class BreadcrumbStepper extends React.Component {
             <div className="BreadcrumbStepper-error-container" key={`${title}-${detail}`}>
                 { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
                 <p className="BreadcrumbStepper-error-title">
-                    <Warning style={{ fill: '#ce4427', verticalAlign: 'bottom', marginRight: '10px' }} />
+                    <Warning style={{ fill: this.props.theme.eventkit.colors.warning, verticalAlign: 'bottom', marginRight: '10px' }} />
                     <strong>
                         {title}
                     </strong>
@@ -105,7 +106,7 @@ export class BreadcrumbStepper extends React.Component {
 
     getStepLabel(stepIndex) {
         const labelStyle = {
-            color: 'white',
+            color: this.props.theme.eventkit.colors.white,
             height: '50px',
             minWidth: '200px',
             display: 'inline-block',
@@ -181,7 +182,7 @@ export class BreadcrumbStepper extends React.Component {
     getPreviousButtonContent(stepIndex) {
         const styles = {
             arrowBack: {
-                fill: stepIndex === 0 ? '#e2e2e2' : '#4598bf',
+                fill: stepIndex === 0 ? this.props.theme.eventkit.colors.secondary_dark : this.props.theme.eventkit.colors.primary,
                 opacity: stepIndex === 0 ? '0.3' : '1',
                 cursor: stepIndex === 0 ? 'default' : 'pointer',
                 verticalAlign: 'middle',
@@ -227,8 +228,9 @@ export class BreadcrumbStepper extends React.Component {
             verticalAlign: 'middle',
             boxShadow: 'none',
             transition: 'none',
-            fill: '#55ba63',
-            backgroundColor: this.props.stepperNextEnabled ? '#55ba63' : 'whitesmoke',
+            fill: this.props.theme.eventkit.colors.success,
+            backgroundColor: this.props.stepperNextEnabled ?
+                this.props.theme.eventkit.colors.success : this.props.theme.eventkit.colors.secondary,
         };
 
         switch (stepIndex) {
@@ -354,6 +356,8 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         let message = [];
         if (this.state.error) {
             const responseError = { ...this.state.error };
@@ -367,7 +371,7 @@ export class BreadcrumbStepper extends React.Component {
         }
 
         return (
-            <div className="qa-BreadcrumbStepper-div-content" style={{ backgroundColor: '#161e2e' }}>
+            <div className="qa-BreadcrumbStepper-div-content" style={{ backgroundColor: colors.background }}>
                 <div className="qa-BreadcrumbStepper-div-stepLabel" style={{ width: '100%', height: '50px' }}>
                     {this.getStepLabel(this.state.stepIndex)}
                     <div className="qa-BreadcrumbStepper-div-buttons" style={{ float: 'right', padding: '5px' }}>
@@ -402,7 +406,7 @@ export class BreadcrumbStepper extends React.Component {
                             left: 0,
                             width: '100%',
                             height: '100%',
-                            backgroundColor: 'rgba(0,0,0,0.2)',
+                            backgroundColor: colors.backdrop,
                         }}
                     >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -448,6 +452,7 @@ BreadcrumbStepper.propTypes = {
     routes: PropTypes.arrayOf(PropTypes.object).isRequired,
     getNotifications: PropTypes.func.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -494,7 +499,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(BreadcrumbStepper);
+)(BreadcrumbStepper));

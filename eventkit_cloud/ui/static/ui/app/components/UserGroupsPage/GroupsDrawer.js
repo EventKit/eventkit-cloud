@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import MenuList from '@material-ui/core/MenuList';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -13,9 +14,11 @@ import CustomScrollbar from '../CustomScrollbar';
 
 export class GroupsDrawer extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             drawer: {
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 top: '130px',
                 height: window.innerHeight - 130,
                 overflow: 'visible',
@@ -26,7 +29,7 @@ export class GroupsDrawer extends Component {
                 lineHeight: '32px',
                 padding: '0px 20px',
                 fontSize: '15px',
-                color: '#4598bf',
+                color: colors.primary,
             },
             heading: {
                 padding: '10px 20px 5px',
@@ -35,11 +38,11 @@ export class GroupsDrawer extends Component {
             },
             subHeading: {
                 padding: '10px 20px 5px',
-                color: '#707274',
+                color: colors.text_primary,
                 display: 'block',
             },
             newGroupIcon: {
-                fill: '#4598bf',
+                fill: colors.primary,
                 height: '24px',
                 width: '17px',
                 marginRight: '5px',
@@ -48,7 +51,7 @@ export class GroupsDrawer extends Component {
             },
             newGroupBtn: {
                 fontSize: '13px',
-                color: '#4598bf',
+                color: colors.primary,
                 float: 'right',
                 lineHeight: '24px',
                 padding: '0px 10px',
@@ -60,7 +63,7 @@ export class GroupsDrawer extends Component {
                 paddingRight: '5px',
             },
             infoIcon: {
-                fill: '#4598bf',
+                fill: colors.primary,
                 height: '20px',
                 width: '17px',
                 marginLeft: '10px',
@@ -158,21 +161,21 @@ export class GroupsDrawer extends Component {
                                 >
                                     <MenuItem
                                         className="qa-GroupsDrawer-group-rename"
-                                        style={{ color: '#707274', fontSize: '14px' }}
+                                        style={{ color: colors.text_primary, fontSize: '14px' }}
                                         onClick={() => { this.props.onRenameGroupClick(group); }}
                                     >
                                         Change Group Name
                                     </MenuItem>
                                     <MenuItem
                                         className="qa-GroupsDrawer-group-leave"
-                                        style={{ color: '#ce4427', opacity: '0.7', fontSize: '14px' }}
+                                        style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
                                         onClick={() => { this.props.onLeaveGroupClick(group); }}
                                     >
                                         Leave Group
                                     </MenuItem>
                                     <MenuItem
                                         className="qa-GroupsDrawer-group-delete"
-                                        style={{ color: '#ce4427', opacity: '0.7', fontSize: '14px' }}
+                                        style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
                                         onClick={() => { this.props.onDeleteGroupClick(group); }}
                                     >
                                         Delete Group
@@ -217,7 +220,7 @@ export class GroupsDrawer extends Component {
                                     <MenuItem
                                         key="leave"
                                         className="qa-GroupsDrawer-group-leave"
-                                        style={{ color: '#ce4427', opacity: '0.7', fontSize: '14px' }}
+                                        style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
                                         onClick={() => { this.props.onLeaveGroupClick(group); }}
                                     >
                                         Leave Group
@@ -297,6 +300,7 @@ GroupsDrawer.propTypes = {
     onLeaveGroupClick: PropTypes.func.isRequired,
     onDeleteGroupClick: PropTypes.func.isRequired,
     onRenameGroupClick: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default GroupsDrawer;
+export default withTheme()(GroupsDrawer);

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
@@ -29,6 +30,8 @@ export class NotificationsDropdown extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             root: {
                 position: 'absolute',
@@ -46,14 +49,14 @@ export class NotificationsDropdown extends React.Component {
                 left: (window.innerWidth > 768) ? '25px' : '89px',
                 width: '25px',
                 height: '25px',
-                background: 'white',
+                background: colors.white,
                 transform: 'rotate(-60deg) skewX(-30deg) scale(1,.866)',
                 borderTopRightRadius: '3px',
             },
             paper: {
                 width: (window.innerWidth > 768) ? '633px' : '100%',
                 paddingBottom: (window.innerWidth > 768) ? '24px' : '18px',
-                color: '#000',
+                color: colors.black,
             },
             header: {
                 display: 'flex',
@@ -67,7 +70,7 @@ export class NotificationsDropdown extends React.Component {
             },
             headerLink: {
                 fontSize: '14px',
-                color: '#337ab7',
+                color: colors.primary,
                 cursor: 'pointer',
             },
             gridList: {
@@ -77,20 +80,20 @@ export class NotificationsDropdown extends React.Component {
             gridItem: {
                 padding: '10px',
                 boxShadow: 'none',
-                borderBottom: '1px solid rgb(224, 224, 224)',
+                borderBottom: `1px solid ${colors.secondary}`,
                 borderRadius: '0',
             },
             noData: {
                 textAlign: 'center',
                 fontSize: '18px',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.text_primary,
             },
             viewAllContainer: {
                 marginTop: (window.innerWidth > 768) ? '24px' : '18px',
                 textAlign: 'center',
             },
             viewAll: {
-                color: '#337ab7',
+                color: colors.primary,
                 fontSize: (window.innerWidth > 768) ? '22px' : '18px',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
@@ -131,7 +134,7 @@ export class NotificationsDropdown extends React.Component {
                             key={`Notification-${notification.id}`}
                             paperStyle={{
                                 ...styles.gridItem,
-                                borderTop: (index === 0) ? '1px solid rgb(224, 224, 224)' : '',
+                                borderTop: (index === 0) ? `1px solid ${colors.secondary}` : '',
                             }}
                             notification={notification}
                             onView={this.props.onNavigate}
@@ -195,6 +198,7 @@ NotificationsDropdown.propTypes = {
     router: PropTypes.object.isRequired,
     onNavigate: PropTypes.func,
     markAllNotificationsAsRead: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 NotificationsDropdown.defaultProps = {
@@ -208,7 +212,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     null,
     mapDispatchToProps,
-)(NotificationsDropdown);
+)(NotificationsDropdown));

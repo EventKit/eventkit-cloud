@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -11,6 +11,12 @@ import CustomScrollbar from '../../components/CustomScrollbar';
 import { AddMembersDialog } from '../../components/UserGroupsPage/Dialogs/AddMembersDialog';
 
 describe('AddMembersDialog component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             show: true,
@@ -27,11 +33,12 @@ describe('AddMembersDialog component', () => {
                 { user: { username: '3' } },
             ],
             classes: {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<AddMembersDialog {...props} />)
+        shallow(<AddMembersDialog {...props} />)
     );
 
     it('should render the basic components', () => {

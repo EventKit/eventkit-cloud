@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
 import Person from '@material-ui/icons/Person';
 import ArrowDown from '@material-ui/icons/ArrowDropDown';
@@ -52,15 +53,17 @@ export class UserRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             row: {
                 ...this.props.style,
-                color: '#707274',
+                color: colors.text_primary,
                 fontSize: '14px',
                 whiteSpace: 'normal',
                 display: 'flex',
-                backgroundColor: this.state.hovered ? '#4598bf33' : '#fff',
-                borderTop: '1px solid #e0e0e0',
+                backgroundColor: this.state.hovered ? colors.selected_primary : colors.white,
+                borderTop: `1px solid ${colors.backdrop}`,
             },
             info: {
                 flexBasis: '100%',
@@ -73,8 +76,8 @@ export class UserRow extends Component {
                 alignItems: 'center',
             },
             admin: {
-                backgroundColor: '#4598bf',
-                color: '#fff',
+                backgroundColor: colors.primary,
+                color: colors.white,
                 padding: '4px 11px',
                 fontSize: '11px',
                 cursor: 'pointer',
@@ -82,7 +85,7 @@ export class UserRow extends Component {
             menuItem: {
                 fontSize: '14px',
                 overflow: 'hidden',
-                color: '#707274',
+                color: colors.text_primary,
             },
         };
 
@@ -111,7 +114,7 @@ export class UserRow extends Component {
         if (this.props.showRemoveButton) {
             removeButton = (
                 <MenuItem
-                    style={{ ...styles.menuItem, color: '#ce4427' }}
+                    style={{ ...styles.menuItem, color: colors.warning }}
                     onClick={this.handleRemoveUserClick}
                     className="qa-UserRow-MenuItem-remove"
                 >
@@ -235,6 +238,7 @@ UserRow.propTypes = {
     showAdminLabel: PropTypes.bool,
     showRemoveButton: PropTypes.bool,
     style: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default UserRow;
+export default withTheme()(UserRow);

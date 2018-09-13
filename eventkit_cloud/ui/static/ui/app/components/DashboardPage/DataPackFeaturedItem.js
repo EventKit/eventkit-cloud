@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { Link } from 'react-router';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -17,7 +18,6 @@ import Tile from 'ol/layer/tile';
 import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 import ScaleLine from 'ol/control/scaleline';
-
 import ol3mapCss from '../../styles/ol3map.css';
 
 export class DataPackFeaturedItem extends Component {
@@ -108,6 +108,8 @@ export class DataPackFeaturedItem extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const cardHeight = this.props.height || 'auto';
         let cardClamp = 2;
         if (window.innerWidth > 1024) cardClamp = 6;
@@ -115,7 +117,7 @@ export class DataPackFeaturedItem extends Component {
 
         const styles = {
             card: {
-                backgroundColor: '#f7f8f8',
+                backgroundColor: colors.secondary,
                 position: 'relative',
                 height: cardHeight,
             },
@@ -152,7 +154,7 @@ export class DataPackFeaturedItem extends Component {
             cardTitle: {
                 display: 'inline-block',
                 width: '100%',
-                color: '#4598bf',
+                color: colors.primary,
                 fontSize: '22px',
             },
             titleLink: {
@@ -170,7 +172,7 @@ export class DataPackFeaturedItem extends Component {
                 display: (window.innerWidth > 768) ? '' : 'none',
                 fontSize: (window.innerWidth > 768) ? '12px' : '10px',
                 fontWeight: 'normal',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.text_primary,
                 marginBottom: '16px',
             },
             cardTextContainer: {
@@ -180,10 +182,10 @@ export class DataPackFeaturedItem extends Component {
                 overflow: 'hidden',
             },
             cardText: {
-                color: '#000',
+                color: colors.black,
                 wordWrap: 'break-word',
                 width: '100%',
-                backgroundColor: '#f7f8f8',
+                backgroundColor: colors.secondary,
                 zIndex: 2,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -264,10 +266,11 @@ DataPackFeaturedItem.propTypes = {
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     height: PropTypes.string,
+    theme: PropTypes.object.isRequired,
 };
 
 DataPackFeaturedItem.defaultProps = {
     height: undefined,
 };
 
-export default DataPackFeaturedItem;
+export default withTheme()(DataPackFeaturedItem);

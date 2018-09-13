@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
@@ -47,7 +48,6 @@ import {
 
 import { getSqKm } from '../../utils/generic';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import background from '../../../images/topoBackground.png';
 import globe from '../../../images/globe-americas.svg';
 import { joyride } from '../../joyride.config';
 
@@ -399,16 +399,16 @@ export class ExportAOI extends Component {
 
         this.markerLayer.setStyle(new Style({
             image: new Circle({
-                fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-                stroke: new Stroke({ color: '#ce4427', width: 1.25 }),
+                fill: new Fill({ color: this.props.theme.eventkit.colors.text_primary }),
+                stroke: new Stroke({ color: this.props.theme.eventkit.colors.warning, width: 1.25 }),
                 radius: 5,
             }),
-            fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
+            fill: new Fill({ color: this.props.theme.eventkit.colors.text_primary }),
             stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
         }));
         this.bufferLayer.setStyle(new Style({
             stroke: new Stroke({
-                color: '#4598bf',
+                color: this.props.theme.eventkit.colors.primary,
                 width: 3,
             }),
         }));
@@ -878,11 +878,12 @@ export class ExportAOI extends Component {
     }
 
     render() {
+        const { theme } = this.props;
         const { steps, isRunning } = this.state;
 
         const mapStyle = {
             right: '0px',
-            backgroundImage: `url(${background})`,
+            backgroundImage: `url(${theme.eventkit.images.topo_light})`,
         };
 
         if (this.props.drawer === 'open' && window.innerWidth >= 1200) {
@@ -1011,6 +1012,7 @@ ExportAOI.propTypes = {
     clearExportInfo: PropTypes.func.isRequired,
     walkthroughClicked: PropTypes.bool.isRequired,
     onWalkthroughReset: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -1051,7 +1053,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     mapDispatchToProps,
-)(ExportAOI);
+)(ExportAOI));

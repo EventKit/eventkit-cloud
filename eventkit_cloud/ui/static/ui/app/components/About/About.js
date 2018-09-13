@@ -24,14 +24,6 @@ export class About extends Component {
 
     render() {
         const styles = {
-            header: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                lineHeight: '35px',
-                padding: '0px 34px',
-                display: 'flex',
-                justifyContent: 'space-between',
-            },
             body: {
                 height: window.innerHeight - 130,
                 width: '100%',

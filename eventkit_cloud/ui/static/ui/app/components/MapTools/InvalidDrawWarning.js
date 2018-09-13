@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 
 export class InvalidDrawWarning extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const style = {
             display: this.props.show ? 'initial' : 'none',
             position: 'absolute',
@@ -11,9 +14,9 @@ export class InvalidDrawWarning extends Component {
             width: '200px',
             border: '1px solid transparent',
             padding: '5px 5px 5px 10px',
-            backgroundColor: '#d9534f',
-            borderColor: '#d43f3a',
-            color: '#fff',
+            backgroundColor: colors.warning,
+            borderColor: colors.warning,
+            color: colors.white,
             zIndex: 2,
             opacity: 0.7,
             fontSize: '12px',
@@ -29,6 +32,7 @@ export class InvalidDrawWarning extends Component {
 
 InvalidDrawWarning.propTypes = {
     show: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default InvalidDrawWarning;
+export default withTheme()(InvalidDrawWarning);

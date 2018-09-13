@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import { Link, browserHistory } from 'react-router';
 import Card from '@material-ui/core/Card';
@@ -81,6 +82,8 @@ export class DataPackListItem extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
         const width = window.innerWidth;
         const subtitleFontSize = width < 576 ? '10px' : '14px';
@@ -91,9 +94,9 @@ export class DataPackListItem extends Component {
                 ...this.props.style,
             },
             card: {
-                backgroundColor: this.props.backgroundColor || '#f7f8f8',
+                backgroundColor: this.props.backgroundColor || colors.secondary,
                 borderRadius: '0px',
-                borderTop: 'grey 1px solid',
+                borderTop: `${colors.grey} 1px solid`,
                 paddingBottom: '0px',
                 position: 'relative',
             },
@@ -108,35 +111,35 @@ export class DataPackListItem extends Component {
             completeIcon: {
                 height: '18px',
                 float: 'right',
-                color: '#bcdfbb',
+                color: colors.success,
                 opacity: '0.6',
             },
             errorIcon: {
                 height: '18px',
                 float: 'right',
-                color: '#ce4427',
+                color: colors.warning,
                 opacity: '0.6',
             },
             runningIcon: {
                 height: '18px',
                 float: 'right',
-                color: '#f4D225',
+                color: colors.running,
             },
             unpublishedIcon: {
                 height: '18px',
                 float: 'right',
-                color: 'grey',
+                color: colors.grey,
                 marginRight: '5px',
             },
             publishedIcon: {
                 height: '18px',
                 float: 'right',
-                color: 'grey',
+                color: colors.grey,
                 marginRight: '5px',
             },
             ownerLabel: {
                 float: 'right',
-                color: 'grey',
+                color: colors.grey,
             },
             eventText: {
                 height: '18px',
@@ -151,7 +154,7 @@ export class DataPackListItem extends Component {
                 height: '36px',
                 lineHeight: '36px',
                 fontSize: '21px',
-                color: '#4598bf',
+                color: colors.primary,
             },
             titleLink: {
                 overflow: 'hidden',
@@ -338,6 +341,7 @@ DataPackListItem.propTypes = {
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     style: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackListItem;
+export default withTheme()(DataPackListItem);

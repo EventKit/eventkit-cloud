@@ -1,12 +1,18 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Button from '@material-ui/core/Button';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import DeleteDataPackDialog from '../../components/Dialog/DeleteDataPackDialog';
-import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
+import { DataPackOptions } from '../../components/StatusDownloadPage/DataPackOptions';
 
 describe('DataPackOptions component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             rerunDisabled: false,
@@ -23,18 +29,19 @@ describe('DataPackOptions component', () => {
                     { slug: 'test2', display: false },
                 ],
             },
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<DataPackOptions {...props} />)
+        shallow(<DataPackOptions {...props} />)
     );
 
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Button)).toHaveLength(3);
-        expect(wrapper.find(BaseDialog)).toHaveLength(3);
+        expect(wrapper.find(BaseDialog)).toHaveLength(2);
         expect(wrapper.find(DeleteDataPackDialog)).toHaveLength(1);
     });
 
