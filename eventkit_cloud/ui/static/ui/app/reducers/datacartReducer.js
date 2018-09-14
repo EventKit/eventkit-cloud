@@ -1,6 +1,33 @@
 
-import types from '../actions/actionTypes';
-import initialState from './initialState';
+import { types } from '../actions/datacartActions';
+
+const initialState = {
+    aoiInfo: {
+        geojson: {},
+        originalGeojson: {},
+        geomType: null,
+        title: null,
+        description: null,
+        selectionType: null,
+        buffer: 0,
+    },
+    drawer: 'closed',
+    submitJob: {
+        fetching: false,
+        fetched: false,
+        jobuid: '',
+        error: null,
+    },
+    exportInfo: {
+        exportName: '',
+        datapackDescription: '',
+        projectName: '',
+        providers: [],
+        areaStr: '',
+        formats: ['gpkg'],
+    },
+    stepperNextEnabled: false,
+};
 
 export function drawerMenuReducer(state = initialState.drawer, action) {
     switch (action.type) {
@@ -71,28 +98,6 @@ export function exportInfoReducer(state = initialState.exportInfo, action) {
                 areaStr: '',
                 formats: ['gpkg'],
             };
-        default:
-            return state;
-    }
-}
-
-export function getProvidersReducer(state = initialState.providers, action) {
-    switch (action.type) {
-        case types.GETTING_PROVIDERS:
-            return [];
-        case types.PROVIDERS_RECEIVED:
-            return action.providers;
-        default:
-            return state;
-    }
-}
-
-export function getFormatsReducer(state = initialState.formats, action) {
-    switch (action.type) {
-        case types.GETTING_FORMATS:
-            return [];
-        case types.FORMATS_RECEIVED:
-            return action.formats;
         default:
             return state;
     }

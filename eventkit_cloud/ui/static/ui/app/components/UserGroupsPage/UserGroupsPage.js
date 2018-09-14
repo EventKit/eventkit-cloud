@@ -26,9 +26,9 @@ import MemberInfoDialog from './Dialogs/MemberInfoDialog';
 import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
-import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/userGroupsActions';
-import { getUsers } from '../../actions/userActions';
-import { DrawerTimeout } from '../../actions/exportsActions';
+import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/groupActions';
+import { getUsers } from '../../actions/usersActions';
+import { DrawerTimeout } from '../../actions/datacartActions';
 import { isViewportXS, isViewportS } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
 

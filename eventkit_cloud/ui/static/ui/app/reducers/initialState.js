@@ -1,7 +1,5 @@
-import { userState, usersState } from './userReducer';
 
 export default {
-    auth: userState,
     aoiInfo: {
         geojson: {},
         originalGeojson: {},
@@ -10,20 +8,6 @@ export default {
         description: null,
         selectionType: null,
         buffer: 0,
-    },
-    geocode: {
-        fetching: false,
-        fetched: false,
-        data: [],
-        error: null,
-    },
-    user: userState,
-    importGeom: {
-        processing: false,
-        processed: false,
-        featureCollection: {},
-        error: null,
-        filename: '',
     },
     drawer: 'closed',
     runsList: {
@@ -65,7 +49,6 @@ export default {
         areaStr: '',
         formats: ['gpkg'],
     },
-    providers: [],
     stepperNextEnabled: false,
     datacartDetails: {
         fetching: false,
@@ -84,12 +67,6 @@ export default {
         data: [],
         error: null,
     },
-    licenses: {
-        fetching: false,
-        fetched: false,
-        licenses: [],
-        error: null,
-    },
     cancelProviderTask: {
         canceling: false,
         canceled: false,
@@ -104,42 +81,5 @@ export default {
         updating: false,
         updated: false,
         error: null,
-    },
-    formats: [],
-    groups: {
-        groups: [],
-        cancelSource: null,
-        fetching: false,
-        fetched: false,
-        creating: false,
-        created: false,
-        deleting: false,
-        deleted: false,
-        updating: false,
-        updated: false,
-        error: null,
-    },
-    users: usersState,
-    userActivity: {
-        viewedJobs: {
-            fetching: false,
-            fetched: false,
-            viewedJobs: [],
-            error: null,
-        },
-    },
-    notifications: {
-        fetching: false,
-        fetched: false,
-        notifications: {},
-        notificationsSorted: [],
-        error: null,
-        cancelSource: null,
-        unreadCount: {
-            fetching: false,
-            fetched: false,
-            unreadCount: 0,
-            cancelSource: null,
-        },
     },
 };

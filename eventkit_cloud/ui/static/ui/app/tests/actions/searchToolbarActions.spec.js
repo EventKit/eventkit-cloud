@@ -2,7 +2,7 @@ import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import * as actions from '../../actions/searchToolbarActions';
+import * as actions from '../../actions/geocodeActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);

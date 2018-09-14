@@ -1,7 +1,20 @@
-import { types } from '../actions/userGroupsActions';
-import initialState from './initialState';
+import { types } from '../actions/groupActions';
 
-export function userGroupsReducer(state = initialState.groups, action) {
+export const initialState = {
+    groups: [],
+    cancelSource: null,
+    fetching: false,
+    fetched: false,
+    creating: false,
+    created: false,
+    deleting: false,
+    deleted: false,
+    updating: false,
+    updated: false,
+    error: null,
+};
+
+export function userGroupsReducer(state = initialState, action) {
     switch (action.type) {
         case types.FETCHING_GROUPS:
             return {

@@ -17,10 +17,11 @@ import {
     getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
     clearReRunInfo, cancelProviderTask, updateExpiration, updateDataCartPermissions,
 } from '../../actions/statusDownloadActions';
-import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
+import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions';
+import { getProviders } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
-import { getUsers } from '../../actions/userActions';
-import { getGroups } from '../../actions/userGroupsActions';
+import { getUsers } from '../../actions/usersActions';
+import { getGroups } from '../../actions/groupActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';

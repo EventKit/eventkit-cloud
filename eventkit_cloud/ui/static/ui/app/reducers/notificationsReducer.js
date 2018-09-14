@@ -1,8 +1,22 @@
 import values from 'lodash/values';
 import moment from 'moment';
-import initialState from './initialState';
 import { types } from '../actions/notificationsActions';
 
+
+const initialState = {
+    fetching: false,
+    fetched: false,
+    notifications: {},
+    notificationsSorted: [],
+    error: null,
+    cancelSource: null,
+    unreadCount: {
+        fetching: false,
+        fetched: false,
+        unreadCount: 0,
+        cancelSource: null,
+    },
+};
 
 export function getSortedNotifications(notificationsObj) {
     const notificationsSorted = values(notificationsObj);
@@ -10,7 +24,7 @@ export function getSortedNotifications(notificationsObj) {
     return notificationsSorted;
 }
 
-export function notificationsReducer(state = initialState.notifications, action) {
+export function notificationsReducer(state = initialState, action) {
     switch (action.type) {
         case types.FETCHING_NOTIFICATIONS:
             return {
@@ -183,7 +197,7 @@ export function notificationsReducer(state = initialState.notifications, action)
                 },
             };
         case types.USER_LOGGED_OUT:
-            return initialState.notifications;
+            return initialState;
         default:
             return state;
     }

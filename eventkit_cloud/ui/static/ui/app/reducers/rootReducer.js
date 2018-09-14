@@ -1,18 +1,19 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
-import { userReducer, usersReducer } from './userReducer';
+import { userReducer } from './userReducer';
+import { usersReducer } from './usersReducer';
 import {
     exportAoiInfoReducer,
     exportInfoReducer,
-    getProvidersReducer,
     drawerMenuReducer,
     stepperReducer,
     submitJobReducer,
-    getFormatsReducer,
-} from './exportsReducer';
-import { getGeocodeReducer } from './searchToolbarReducer';
+} from './datacartReducer';
+import { getProvidersReducer } from './providerReducer';
+import { getFormatsReducer } from './formatReducer';
+import { geocodeReducer } from './geocodeReducer';
 import { dataPackReducer, featuredRunsReducer, DeleteRunsReducer } from './dataPackReducer';
-import { importGeomReducer } from './mapToolReducer';
+import { importGeomReducer } from './fileReducer';
 import { licenseReducer } from './licenseReducer';
 import authReducer from './authReducer';
 import {
@@ -22,7 +23,7 @@ import {
     updateExpirationReducer,
     updatePermissionReducer,
 } from './statusDownloadReducer';
-import { userGroupsReducer } from './userGroupsReducer';
+import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
 import { userActivityReducer } from './userActivityReducer';
 
@@ -32,7 +33,7 @@ const rootReducer = combineReducers({
     auth: authReducer,
     aoiInfo: exportAoiInfoReducer,
     exportInfo: exportInfoReducer,
-    geocode: getGeocodeReducer,
+    geocode: geocodeReducer,
     importGeom: importGeomReducer,
     user: userReducer,
     routing: routerReducer,

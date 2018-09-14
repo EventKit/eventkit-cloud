@@ -1,14 +1,22 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import actions from './actionTypes';
 
+export const types = {
+    USER_LOGGING_IN: 'USER_LOGGING_IN',
+    USER_LOGGED_IN: 'USER_LOGGED_IN',
+    USER_LOGGED_OUT: 'USER_LOGGED_OUT',
+    PATCHING_USER: 'PATCHING_USER',
+    PATCHED_USER: 'PATCHED_USER',
+    PATCHING_USER_ERROR: 'PATCHING_USER_ERROR',
+    USER_ACTIVE: 'USER_ACTIVE',
+};
 
 export function logout() {
     return dispatch => (
         axios('/logout', { method: 'GET' }).then((response) => {
             dispatch({
-                type: actions.USER_LOGGED_OUT,
+                type: types.USER_LOGGED_OUT,
             });
             if (response.data.OAUTH_LOGOUT_URL) {
                 window.location.assign(response.data.OAUTH_LOGOUT_URL);
@@ -26,7 +34,7 @@ export function login(data) {
         const csrftoken = cookie.load('csrftoken');
 
         dispatch({
-            type: actions.USER_LOGGING_IN,
+            type: types.USER_LOGGING_IN,
         });
 
         const formData = new FormData();
@@ -45,17 +53,17 @@ export function login(data) {
         }).then((response) => {
             if (response.data) {
                 dispatch({
-                    type: actions.USER_LOGGED_IN,
+                    type: types.USER_LOGGED_IN,
                     payload: response.data,
                 });
             } else {
                 dispatch({
-                    type: actions.USER_LOGGED_OUT,
+                    type: types.USER_LOGGED_OUT,
                 });
             }
         }).catch(() => {
             dispatch({
-                type: actions.USER_LOGGED_OUT,
+                type: types.USER_LOGGED_OUT,
             });
         });
     };
@@ -66,7 +74,7 @@ export function patchUser(acceptedLicenses, username) {
         const csrftoken = cookie.load('csrftoken');
 
         dispatch({
-            type: actions.PATCHING_USER,
+            type: types.PATCHING_USER,
         });
 
         return axios({
@@ -76,12 +84,12 @@ export function patchUser(acceptedLicenses, username) {
             headers: { 'X-CSRFToken': csrftoken },
         }).then((response) => {
             dispatch({
-                type: actions.PATCHED_USER,
+                type: types.PATCHED_USER,
                 payload: response.data || { ERROR: 'No user response data' },
             });
         }).catch((error) => {
             dispatch({
-                type: actions.PATCHING_USER_ERROR,
+                type: types.PATCHING_USER_ERROR,
                 error: error.response.data,
             });
         });
@@ -95,7 +103,7 @@ export function userActive() {
             const autoLogoutWarningat = response.data.auto_logout_warning_at;
 
             dispatch({
-                type: actions.USER_ACTIVE,
+                type: types.USER_ACTIVE,
                 payload: {
                     autoLogoutAt: (autoLogoutAt) ? new Date(autoLogoutAt) : null,
                     autoLogoutWarningAt: (autoLogoutWarningat) ?
@@ -106,35 +114,4 @@ export function userActive() {
             console.error(error.message);
         })
     );
-}
-
-export function getUsers(params) {
-    return (dispatch) => {
-        dispatch({ type: actions.FETCHING_USERS });
-
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
-
-        return axios({
-            url: '/api/users',
-            params,
-            method: 'GET',
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        }).then((response) => {
-            // get the total, new, and ungrouped counts from the header
-            const totalUsers = Number(response.headers['total-users']);
-            const newUsers = Number(response.headers['new-users']);
-            const ungroupedUsers = Number(response.headers['not-grouped-users']);
-
-            const users = response.data;
-            dispatch({
-                type: actions.FETCHED_USERS,
-                users,
-                total: totalUsers,
-                new: newUsers,
-                ungrouped: ungroupedUsers,
-            });
-        }).catch((error) => {
-            dispatch({ type: actions.FETCH_USERS_ERROR, error: error.response.data });
-        });
-    };
 }

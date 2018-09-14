@@ -1,6 +1,13 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
-import types from './mapToolActionTypes';
+
+export const types = {
+    FILE_PROCESSING: 'FILE_PROCESSING',
+    FILE_PROCESSED: 'FILE_PROCESSED',
+    FILE_ERROR: 'FILE_ERROR',
+    FILE_RESET: 'FILE_RESET',
+};
+
 
 export function resetGeoJSONFile() {
     return {

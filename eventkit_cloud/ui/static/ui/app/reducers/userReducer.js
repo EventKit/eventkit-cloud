@@ -1,6 +1,6 @@
-import types from '../actions/actionTypes';
+import { types } from '../actions/userActions';
 
-export const userState = {
+export const initialState = {
     data: null,
     isLoading: false,
     patching: false,
@@ -10,7 +10,7 @@ export const userState = {
     autoLogoutWarningAt: null,
 };
 
-export function userReducer(state = userState, { type, payload, error }) {
+export function userReducer(state = initialState, { type, payload, error }) {
     switch (type) {
         case types.USER_LOGGING_IN:
             return { ...state, isLoading: true };
@@ -31,50 +31,6 @@ export function userReducer(state = userState, { type, payload, error }) {
             return { ...state, patching: false, error };
         case types.USER_ACTIVE:
             return { ...state, ...payload };
-        default:
-            return state;
-    }
-}
-
-export const usersState = {
-    users: [],
-    fetching: false,
-    fetched: false,
-    error: null,
-    total: 0,
-    new: 0,
-    ungrouped: 0,
-};
-
-export function usersReducer(state = usersState, action) {
-    switch (action.type) {
-        case types.FETCHING_USERS:
-            return {
-                ...state,
-                error: null,
-                fetching: true,
-                fetched: false,
-            };
-        case types.FETCHED_USERS:
-            return {
-                ...state,
-                fetching: false,
-                fetched: true,
-                users: action.users,
-                total: action.total,
-                new: action.new,
-                ungrouped: action.ungrouped,
-            };
-        case types.FETCH_USERS_ERROR:
-            return {
-                ...state,
-                fetching: false,
-                fetched: false,
-                error: action.error,
-                total: 0,
-                new: 0,
-                ungrouped: 0,
-            };
         default:
             return state;
     }

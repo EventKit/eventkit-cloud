@@ -1,6 +1,22 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
-import types from './actionTypes';
+
+export const types = {
+    UPDATE_AOI_INFO: 'UPDATE_AOI_INFO',
+    CLEAR_AOI_INFO: 'CLEAR_AOI_INFO',
+    UPDATE_EXPORT_INFO: 'UPDATE_EXPORT_INFO',
+    CLEAR_EXPORT_INFO: 'CLEAR_EXPORT_INFO',
+    CLOSING_DRAWER: 'CLOSING_DRAWER',
+    CLOSED_DRAWER: 'CLOSED_DRAWER',
+    OPENING_DRAWER: 'OPENING_DRAWER',
+    OPENED_DRAWER: 'OPENED_DRAWER',
+    MAKE_STEPPER_ACTIVE: 'MAKE_STEPPER_ACTIVE',
+    MAKE_STEPPER_INACTIVE: 'MAKE_STEPPER_INACTIVE',
+    SUBMITTING_JOB: 'SUBMITTING_JOB',
+    JOB_SUBMITTED_SUCCESS: 'JOB_SUBMITTED_SUCCESS',
+    JOB_SUBMITTED_ERROR: 'JOB_SUBMITTED_ERROR',
+    CLEAR_JOB_INFO: 'CLEAR_JOB_INFO',
+};
 
 export function updateAoiInfo(aoiInfo) {
     return {
@@ -65,46 +81,6 @@ export function submitJob(data) {
             dispatch({
                 type: types.JOB_SUBMITTED_ERROR, error: error.response.data,
             });
-        });
-    };
-}
-
-export function getProviders() {
-    return (dispatch) => {
-        dispatch({
-            type: types.GETTING_PROVIDERS,
-        });
-
-        return axios({
-            url: '/api/providers',
-            method: 'GET',
-        }).then((response) => {
-            dispatch({
-                type: types.PROVIDERS_RECEIVED,
-                providers: response.data,
-            });
-        }).catch((error) => {
-            console.log(error);
-        });
-    };
-}
-
-export function getFormats() {
-    return (dispatch) => {
-        dispatch({
-            type: types.GETTING_FORMATS,
-        });
-
-        return axios({
-            url: '/api/formats',
-            method: 'GET',
-        }).then((response) => {
-            dispatch({
-                type: types.FORMATS_RECEIVED,
-                formats: response.data,
-            });
-        }).catch((error) => {
-            console.log(error);
         });
     };
 }

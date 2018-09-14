@@ -13,15 +13,15 @@ import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActi
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
 import CustomScrollbar from '../CustomScrollbar';
-import { getProviders } from '../../actions/exportsActions';
+import { getProviders } from '../../actions/providerActions';
 import DashboardSection from './DashboardSection';
 import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
-import { getGroups } from '../../actions/userGroupsActions';
-import { getUsers } from '../../actions/userActions';
+import { getGroups } from '../../actions/groupActions';
+import { getUsers } from '../../actions/usersActions';
 import { joyride } from '../../joyride.config';
 
 export class DashboardPage extends React.Component {
