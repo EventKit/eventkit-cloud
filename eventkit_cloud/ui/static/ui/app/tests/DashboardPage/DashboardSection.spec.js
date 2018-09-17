@@ -56,7 +56,7 @@ describe('DashboardSection component', () => {
         }, {
             children: generateChildren(10),
         });
-        expect(wrapper.find('.qa-DashboardSection-Page-Item')).toHaveLength(instance.itemsPerPage * instance.maxPages);
+        expect(wrapper.find('.qa-DashboardSection-Page-Item')).toHaveLength(3);
     });
 
     it('constructs the correct number of pages, each with the correct number of children', () => {

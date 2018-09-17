@@ -25,7 +25,7 @@ export class About extends Component {
     render() {
         const styles = {
             body: {
-                height: window.innerHeight - 130,
+                height: 'calc(100vh - 130px)',
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
@@ -63,7 +63,7 @@ export class About extends Component {
                     {version}
                 </PageHeader>
                 <div style={styles.body}>
-                    <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
+                    <CustomScrollbar style={{ height: 'calc(100vh - 130px)', width: '100%' }}>
                         {contactUrl ?
                             <div style={styles.contact} className="qa-About-contact">
                                 <i>Have an issue or suggestion?</i>

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableHead from '@material-ui/core/TableHead';
@@ -63,14 +64,9 @@ export class ProviderRow extends Component {
     }
 
     getTextFontSize() {
-        if (window.innerWidth <= 575) {
-            return '10px';
-        } else if (window.innerWidth <= 767) {
-            return '11px';
-        } else if (window.innerWidth <= 991) {
+        const { width } = this.props;
+        if (!isWidthUp('md', width)) {
             return '12px';
-        } else if (window.innerWidth <= 1199) {
-            return '13px';
         }
         return '14px';
     }
@@ -216,7 +212,7 @@ export class ProviderRow extends Component {
     }
 
     getTableCellWidth() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '80px';
         }
         return '120px';
@@ -475,6 +471,10 @@ ProviderRow.propTypes = {
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     backgroundColor: PropTypes.string.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default withTheme()(ProviderRow);
+export default
+@withWidth()
+@withTheme()
+class Default extends ProviderRow {}

@@ -289,11 +289,11 @@ export class ExportInfo extends React.Component {
                 left: '5px',
             },
             window: {
-                height: window.innerHeight - 180,
+                height: 'calc(100vh - 180px)',
             },
             root: {
                 width: '100%',
-                height: window.innerHeight - 180,
+                height: 'calc(100vh - 180px)',
                 backgroundImage: `url(${theme.eventkit.images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
@@ -303,7 +303,7 @@ export class ExportInfo extends React.Component {
             form: {
                 margin: '0 auto',
                 width: '90%',
-                height: window.innerHeight - 180,
+                height: 'calc(100vh - 180px)',
             },
             paper: {
                 margin: '0px auto',

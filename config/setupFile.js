@@ -17,6 +17,9 @@ global.window.resizeTo = (width, height) => {
     global.window.dispatchEvent(new Event('resize'));
 };
 
-global.eventkit_test_props = { theme: { ...theme } };
+global.eventkit_test_props = {
+    theme: { ...theme },
+    width: 'xl',
+};
 
 Enzyme.configure({ adapter: new Adapter() });

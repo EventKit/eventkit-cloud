@@ -77,26 +77,6 @@ describe('AoiInfobar component', () => {
         expect(wrapper.find('.qa-AoiInfobar-icon-polygon')).toHaveLength(1);
     });
 
-    it('should add an event listener on mount', () => {
-        const props = getProps();
-        const addStub = sinon.stub(window, 'addEventListener');
-        const wrapper = getWrapper(props);
-        expect(addStub.called).toBe(true);
-        expect(addStub.calledWith('resize', wrapper.instance().update)).toBe(true);
-        addStub.restore();
-    });
-
-    it('should remove an event listener on unmount', () => {
-        const props = getProps();
-        const removeSpy = sinon.spy(window, 'addEventListener');
-        const wrapper = getWrapper(props);
-        const { update } = wrapper.instance();
-        wrapper.instance().componentWillUnmount();
-        expect(removeSpy.called).toBe(true);
-        expect(removeSpy.calledWith('resize', update)).toBe(true);
-        removeSpy.restore();
-    });
-
     it('clicking on zoom button should call clickZoomToSelection', () => {
         const props = getProps();
         props.clickZoomToSelection = sinon.spy();

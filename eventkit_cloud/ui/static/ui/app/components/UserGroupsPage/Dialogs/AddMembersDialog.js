@@ -394,9 +394,16 @@ export class AddMembersDialog extends Component {
         const footerHeight = 80;
 
         // subract the sum of heights from our total window height to get the needed scrollbar height
-        const scrollbarHeight = window.innerHeight - (
-            margin + titleHeight + tabHeight + searchHeight + infoHeight + sortHeight + footerHeight + 20
-        );
+        const scrollbarHeight = `calc(100vh - ${
+            margin +
+            titleHeight +
+            tabHeight +
+            searchHeight +
+            infoHeight +
+            sortHeight +
+            footerHeight +
+            20
+        }px)`;
 
         const { classes } = this.props;
 

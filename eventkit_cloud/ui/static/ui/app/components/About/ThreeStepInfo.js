@@ -16,7 +16,7 @@ export class ThreeStepInfo extends Component {
             table: {
                 borderCollapse: 'collapse',
                 marginBottom: '30px',
-                fontSize: window.innerWidth > 991 ? '16px' : '14px',
+                fontSize: '14px',
                 ...this.props.tableStyle,
             },
         };

@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
@@ -31,22 +32,23 @@ export class NotificationsDropdown extends React.Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
 
         const styles = {
             root: {
                 position: 'absolute',
                 top: '80px',
-                left: (window.innerWidth > 768) ? '-2px' : '-67px',
-                width: (window.innerWidth > 768) ? 'auto' : `${window.innerWidth - 6}px`,
+                left: isWidthUp('md', width) ? '-2px' : '-67px',
+                width: isWidthUp('md', width) ? 'auto' : 'calc(100vw - 6px)',
                 zIndex: '100',
                 transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                transformOrigin: (window.innerWidth > 768) ? '37px -21px' : '101px -21px',
+                transformOrigin: isWidthUp('md', width) ? '37px -21px' : '101px -21px',
                 ...this.props.style,
             },
             pointer: {
                 position: 'absolute',
                 top: '-12px',
-                left: (window.innerWidth > 768) ? '25px' : '89px',
+                left: isWidthUp('md', width) ? '25px' : '89px',
                 width: '25px',
                 height: '25px',
                 background: colors.white,
@@ -54,14 +56,14 @@ export class NotificationsDropdown extends React.Component {
                 borderTopRightRadius: '3px',
             },
             paper: {
-                width: (window.innerWidth > 768) ? '633px' : '100%',
-                paddingBottom: (window.innerWidth > 768) ? '24px' : '18px',
+                width: isWidthUp('md', width) ? '633px' : '100%',
+                paddingBottom: isWidthUp('md', width) ? '24px' : '18px',
                 color: colors.black,
             },
             header: {
                 display: 'flex',
                 alignItems: 'center',
-                padding: (window.innerWidth > 768) ? '28px 28px 20px' : '18px 18px 18px',
+                padding: isWidthUp('md', width) ? '28px 28px 20px' : '18px 18px 18px',
             },
             headerTitle: {
                 fontSize: '22px',
@@ -75,7 +77,7 @@ export class NotificationsDropdown extends React.Component {
             },
             gridList: {
                 width: '100%',
-                padding: (window.innerWidth > 768) ? '0 18px' : '0 4px',
+                padding: isWidthUp('md', width) ? '0 18px' : '0 4px',
             },
             gridItem: {
                 padding: '10px',
@@ -89,18 +91,18 @@ export class NotificationsDropdown extends React.Component {
                 color: colors.text_primary,
             },
             viewAllContainer: {
-                marginTop: (window.innerWidth > 768) ? '24px' : '18px',
+                marginTop: isWidthUp('md', width) ? '24px' : '18px',
                 textAlign: 'center',
             },
             viewAll: {
                 color: colors.primary,
-                fontSize: (window.innerWidth > 768) ? '22px' : '18px',
+                fontSize: isWidthUp('md', width) ? '22px' : '18px',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
             },
         };
 
-        const maxNotifications = (window.innerHeight > 768) ? 10 : 8;
+        const maxNotifications = isWidthUp('md', width) ? 10 : 8;
         const notifications = this.props.notifications.notificationsSorted.slice(0, maxNotifications);
 
         let body = (
@@ -199,6 +201,7 @@ NotificationsDropdown.propTypes = {
     onNavigate: PropTypes.func,
     markAllNotificationsAsRead: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 NotificationsDropdown.defaultProps = {
@@ -212,7 +215,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    null,
-    mapDispatchToProps,
-)(NotificationsDropdown));
+export default
+@withWidth()
+@withTheme()
+@connect(null, mapDispatchToProps)
+class Default extends NotificationsDropdown {}

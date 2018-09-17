@@ -148,4 +148,6 @@ CustomTextField.defaultProps = {
     InputProps: {},
 };
 
-export default withTheme()(CustomTextField);
+export default
+@withTheme()
+class Default extends CustomTextField {}

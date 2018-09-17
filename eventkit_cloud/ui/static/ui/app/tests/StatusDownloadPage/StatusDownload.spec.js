@@ -431,15 +431,11 @@ describe('StatusDownload component', () => {
 
     it('getMarginPadding should return 0px if window size is <= 767', () => {
         const props = getProps();
+        props.width = 'xs';
         const wrapper = getWrapper(props);
-        window.resizeTo(600, 700);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
         let padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('0px');
-        window.resizeTo(800, 900);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
+        wrapper.setProps({ width: 'lg' });
         padding = wrapper.instance().getMarginPadding();
         expect(padding).toEqual('30px');
     });

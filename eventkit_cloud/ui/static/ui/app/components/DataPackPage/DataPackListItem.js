@@ -85,8 +85,7 @@ export class DataPackListItem extends Component {
         const { colors } = this.props.theme.eventkit;
 
         const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
-        const width = window.innerWidth;
-        const subtitleFontSize = width < 576 ? '10px' : '14px';
+        const subtitleFontSize = 12;
 
         const styles = {
             gridItem: {
@@ -344,4 +343,6 @@ DataPackListItem.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(DataPackListItem);
+export default
+@withTheme()
+class Default extends DataPackListItem {}

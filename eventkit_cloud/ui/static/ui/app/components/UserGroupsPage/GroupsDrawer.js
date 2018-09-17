@@ -20,7 +20,7 @@ export class GroupsDrawer extends Component {
             drawer: {
                 backgroundColor: colors.white,
                 top: '130px',
-                height: window.innerHeight - 130,
+                height: 'calc(100vh - 130px)',
                 overflow: 'visible',
                 width: '250px',
             },
