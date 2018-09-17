@@ -240,7 +240,11 @@ export class ExportInfo extends React.Component {
             // is populated, but if it's not, return false
             const providerState = this.state.providers.find(p => p.slug === provider.slug);
             if (!providerState) return false;
-            return providerState.availability && providerState.availability.status.toUpperCase() === 'FATAL';
+            const { availability } = providerState;
+            if (availability && availability.status) {
+                return availability.status.toUpperCase() === 'FATAL';
+            }
+            return false;
         });
     }
 
