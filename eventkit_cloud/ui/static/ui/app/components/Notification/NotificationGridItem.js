@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
@@ -26,13 +27,14 @@ export class NotificationGridItem extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
 
         const styles = {
             root: {
                 display: 'flex',
                 alignItems: 'center',
                 padding: '15px',
-                fontSize: (window.innerWidth > 575) ? '18px' : '14px',
+                fontSize: isWidthUp('sm', width) ? '18px' : '14px',
                 color: colors.text_primary,
                 transition: 'background-color 0.25s',
                 backgroundColor: (this.props.notification.unread) ? colors.selected_primary : colors.white,
@@ -49,7 +51,7 @@ export class NotificationGridItem extends Component {
             },
             date: {
                 margin: '0 10px',
-                fontSize: (window.innerWidth > 575) ? '12px' : '10px',
+                fontSize: isWidthUp('sm', width) ? '12px' : '10px',
                 display: 'flex',
                 alignItems: 'center',
                 flex: '0 0 auto',
@@ -61,7 +63,7 @@ export class NotificationGridItem extends Component {
                 verticalAlign: 'middle',
             },
             menuItem: {
-                fontSize: (window.innerWidth < 768) ? 10 : 12,
+                fontSize: !isWidthUp('md', width) ? 10 : 12,
             },
         };
 
@@ -108,6 +110,7 @@ NotificationGridItem.propTypes = {
     onView: PropTypes.func,
     markNotificationsAsRead: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 NotificationGridItem.defaultProps = {
@@ -127,7 +130,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    null,
-    mapDispatchToProps,
-)(NotificationGridItem));
+export default
+@withWidth()
+@withTheme()
+@connect(null, mapDispatchToProps)
+class Default extends NotificationGridItem {}

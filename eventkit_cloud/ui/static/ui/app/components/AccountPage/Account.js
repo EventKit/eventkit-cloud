@@ -134,7 +134,7 @@ export class Account extends Component {
         const { steps, isRunning } = this.state;
         const styles = {
             body: {
-                height: window.innerHeight - 130,
+                height: 'calc(100vh - 130px)',
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
@@ -211,7 +211,7 @@ export class Account extends Component {
                     />
                 </PageHeader>
                 <div style={styles.body}>
-                    <CustomScrollbar style={{ height: window.innerHeight - 130, width: '100%' }}>
+                    <CustomScrollbar style={{ height: 'calc(100vh - 130px)', width: '100%' }}>
                         <div style={styles.bodyContent} className="qa-Account-body">
                             {this.props.licenses.licenses.length > 0 ?
                                 <div style={{ marginBottom: '34px' }} className="qa-Account-licenses">

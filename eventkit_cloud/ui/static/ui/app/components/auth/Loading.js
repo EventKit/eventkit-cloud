@@ -6,8 +6,8 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 export function Loading(props) {
     const constainerStyle = {
         backgroundImage: `url(${props.theme.eventkit.images.topo_dark})`,
-        height: window.innerHeight - 95,
-        width: window.innerWidth,
+        height: 'calc(100vh - 95px)',
+        width: '100vw',
         display: 'inline-flex',
     };
     return (

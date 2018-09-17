@@ -64,7 +64,7 @@ export function getNotificationMessage({
         text: {
             ...textStyle,
             whiteSpace: 'nowrap',
-            fontSize: (window.innerWidth >= 512) ? '16px' : '12px',
+            fontSize: '14px',
         },
         link: {
             ...textStyle,
@@ -72,7 +72,7 @@ export function getNotificationMessage({
             color: colors.primary,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: (window.innerWidth >= 512) ? '16px' : '12px',
+            fontSize: '14px',
         },
     };
 
