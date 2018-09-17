@@ -32,17 +32,13 @@ describe('DataPackFilterButton component', () => {
     });
 
     it('should display differently on small vs large screens', () => {
-        global.window.resizeTo(1000, 900);
-        expect(global.window.innerWidth).toBe(1000);
         const props = getProps();
+        props.width = 'lg';
         const wrapper = shallow(<DataPackFilterButton {...props} />);
         expect(wrapper.find(Button).props().style.width).toEqual('90px');
         expect(wrapper.find(Button).props().style.fontSize).toEqual('12px');
 
-        global.window.resizeTo(400, 500);
-        expect(global.window.innerWidth).toBe(400);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
+        wrapper.setProps({ width: 'xs' });
         expect(wrapper.find(Button).props().style.width).toEqual('40px');
         expect(wrapper.find(Button).props().style.fontSize).toEqual('10px');
     });

@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
@@ -24,7 +25,6 @@ import { allHaveArea } from '../../utils/mapUtils';
 export class AoiInfobar extends Component {
     constructor(props) {
         super(props);
-        this.update = this.update.bind(this);
         this.showAlert = this.showAlert.bind(this);
         this.closeAlert = this.closeAlert.bind(this);
         this.handleMenuClose = this.handleMenuClose.bind(this);
@@ -33,18 +33,6 @@ export class AoiInfobar extends Component {
             showAlert: true,
             menuAnchor: null,
         };
-    }
-
-    // we need a resize listener because the application level forceUpdate is
-    // not working on this component.
-    // When we get to React v16 we should just pass width and height to all components
-    // via the application context.
-    componentDidMount() {
-        window.addEventListener('resize', this.update);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.update);
     }
 
     getIcon(geomType, source) {
@@ -75,10 +63,6 @@ export class AoiInfobar extends Component {
         this.setState({ menuAnchor: e.currentTarget });
     }
 
-    update() {
-        this.forceUpdate();
-    }
-
     showAlert() {
         this.setState({ showAlert: true });
     }
@@ -89,6 +73,7 @@ export class AoiInfobar extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
 
         const styles = {
             wrapper: {
@@ -97,13 +82,13 @@ export class AoiInfobar extends Component {
                 width: '100%',
                 bottom: '40px',
                 display: 'flex',
-                justifyContent: (window.innerHeight < 737 && window.innerWidth < 500) ? 'start' : 'center',
+                justifyContent: (window.innerHeight < 737 && isWidthDown('xs', width)) ? 'start' : 'center',
                 pointerEvents: 'none',
             },
             infobar: {
                 backgroundColor: colors.white,
                 display: 'flex',
-                margin: (window.innerHeight < 737 && window.innerWidth < 500) ? '0 70px 0 10px' : '0 10px',
+                margin: (window.innerHeight < 737 && isWidthDown('xs', width)) ? '0 70px 0 10px' : '0 10px',
                 pointerEvents: 'auto',
             },
             body: {
@@ -278,7 +263,7 @@ export class AoiInfobar extends Component {
             </div>
         );
 
-        const sidebar = window.innerWidth < 768 ? mobileSidebar : fullSidebar;
+        const sidebar = isWidthDown('sm', width) ? mobileSidebar : fullSidebar;
 
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
@@ -522,6 +507,10 @@ AoiInfobar.propTypes = {
     clickZoomToSelection: PropTypes.func.isRequired,
     handleBufferClick: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default withTheme()(AoiInfobar);
+export default
+@withWidth()
+@withTheme()
+class Default extends AoiInfobar {}

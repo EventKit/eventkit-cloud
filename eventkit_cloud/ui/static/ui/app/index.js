@@ -3,12 +3,16 @@ import React from 'react';
 import 'raf/polyfill';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux';
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
 import { connectedReduxRedirect } from 'redux-auth-wrapper/history3/redirect';
 import { browserHistory, Router, Route, Redirect } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
 import { login } from './actions/userActions';
+import ekTheme from './styles/eventkit_theme';
+
+const theme = createMuiTheme(ekTheme);
 
 const Loading = (args) => {
     if (args.pastDelay) {
@@ -135,21 +139,23 @@ const NotificationsPage = Loadable({
 
 render(
     <Provider store={store}>
-        <Router history={history}>
-            <Redirect from="/" to="/dashboard" />
-            <Route path="/" component={Application} onEnter={checkAuth(store)}>
-                <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
-                <Route path="/logout" component={Logout} />
-                <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
-                <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
-                <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
-                <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))} />
-                <Route path="/about" component={UserIsAuthenticated(About)} />
-                <Route path="/account" component={UserIsAuthenticated(Account)} />
-                <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
-                <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
-            </Route>
-        </Router>
+        <MuiThemeProvider theme={theme}>
+            <Router history={history}>
+                <Redirect from="/" to="/dashboard" />
+                <Route path="/" component={Application} onEnter={checkAuth(store)}>
+                    <Route path="/login" component={UserIsNotAuthenticated(LoginPage)} />
+                    <Route path="/logout" component={Logout} />
+                    <Route path="/dashboard" component={UserIsAuthenticated(UserHasAgreed(DashboardPage))} />
+                    <Route path="/exports" component={UserIsAuthenticated(UserHasAgreed(DataPackPage))} />
+                    <Route path="/create" component={UserIsAuthenticated(UserHasAgreed(CreateExport))} />
+                    <Route path="/status/:jobuid" component={UserIsAuthenticated(UserHasAgreed(StatusDownload))} />
+                    <Route path="/about" component={UserIsAuthenticated(About)} />
+                    <Route path="/account" component={UserIsAuthenticated(Account)} />
+                    <Route path="/groups" component={UserIsAuthenticated(UserGroupsPage)} />
+                    <Route path="/notifications" component={UserIsAuthenticated(NotificationsPage)} />
+                </Route>
+            </Router>
+        </MuiThemeProvider>
     </Provider>,
     document.getElementById('root'),
 );

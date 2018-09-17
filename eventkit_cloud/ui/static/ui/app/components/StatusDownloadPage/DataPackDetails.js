@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
@@ -66,20 +67,21 @@ export class DataPackDetails extends Component {
     }
 
     getTextFontSize() {
-        if (window.innerWidth <= 575) {
+        const { width } = this.props;
+        if (!isWidthUp('sm', width)) {
             return '10px';
-        } else if (window.innerWidth <= 767) {
+        } else if (!isWidthUp('md', width)) {
             return '11px';
-        } else if (window.innerWidth <= 991) {
+        } else if (!isWidthUp('lg', width)) {
             return '12px';
-        } else if (window.innerWidth <= 1199) {
+        } else if (!isWidthUp('xl', width)) {
             return '13px';
         }
         return '14px';
     }
 
     getTableCellWidth() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '80px';
         }
         return '120px';
@@ -210,6 +212,10 @@ DataPackDetails.propTypes = {
     zipFileProp: PropTypes.string,
     classes: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default withStyles(jss, { withTheme: true })(DataPackDetails);
+export default
+@withWidth()
+@withStyles(jss, { withTheme: true })
+class Default extends DataPackDetails {}

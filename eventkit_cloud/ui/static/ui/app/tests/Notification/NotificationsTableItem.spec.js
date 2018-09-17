@@ -284,8 +284,8 @@ describe('NotificationsTableItem component', () => {
 
     describe('below a window width of 1280', () => {
         beforeEach(() => {
-            window.resizeTo(1024, 768);
             setup();
+            wrapper.setProps({ width: 'sm' });
         });
 
         it('does not render buttons', () => {

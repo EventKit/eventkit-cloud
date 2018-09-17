@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
 import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
@@ -10,8 +9,9 @@ export class LoadButtons extends React.Component {
     constructor(props) {
         super(props);
         this.setWidth = this.setWidth.bind(this);
+        this.self = React.createRef();
         this.state = {
-            width: window.innerWidth,
+            width: '100vw',
         };
     }
 
@@ -24,8 +24,7 @@ export class LoadButtons extends React.Component {
     }
 
     setWidth() {
-        // eslint-disable-next-line react/no-find-dom-node
-        const width = ReactDOM.findDOMNode(this).offsetWidth;
+        const width = this.self.current.clientWidth;
         if (width !== this.state.width) {
             this.setState({ width });
         }
@@ -62,7 +61,7 @@ export class LoadButtons extends React.Component {
         };
 
         return (
-            <div style={inlineStyles.container}>
+            <div style={inlineStyles.container} ref={this.self}>
                 <div style={{ display: 'inline-block' }}>
                     {this.props.handleLoadLess ?
                         <Button

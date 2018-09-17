@@ -1,8 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import sinon from 'sinon';
-import PropTypes from 'prop-types';
-import { mount, shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import configureMockStore from 'redux-mock-store';
 import AppBar from '@material-ui/core/AppBar';
 import Drawer from '@material-ui/core/Drawer';
@@ -26,6 +25,14 @@ const mockStore = configureMockStore();
 const store = mockStore({});
 
 describe('Application component', () => {
+    let shallow;
+    let mock;
+
+    beforeAll(() => {
+        shallow = createShallow();
+        mock = new MockAdapter(axios, { delayResponse: 100 });
+    });
+
     const getProps = () => ({
         userData: {},
         drawer: 'open',
@@ -52,66 +59,52 @@ describe('Application component', () => {
         userActive: () => {},
         getNotifications: sinon.spy(),
         getNotificationsUnreadCount: () => {},
+        ...global.eventkit_test_props,
     });
 
-    const getMountedWrapper = props => mount(<Application {...props} />, {
-        context: { store },
-        childContextTypes: { store: PropTypes.object },
-    });
-
-    const getShallowWrapper = props => shallow(<Application {...props} />);
-
-    const mountFunc = Application.prototype.componentDidMount;
-
-    beforeAll(() => {
-        Application.prototype.componentDidMount = sinon.spy();
-    });
-
-    afterAll(() => {
-        Application.prototype.componentDidMount = mountFunc;
-    });
+    const getWrapper = props => shallow(<Application {...props} />);
 
     it('should render the basic elements', () => {
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         expect(wrapper.find(Banner)).toHaveLength(1);
-        expect(wrapper.find('header')).toHaveLength(1);
         expect(wrapper.find(AppBar)).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-MenuButton').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-NotificationsButton').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
+        expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
         expect(wrapper.find(NotificationsDropdown)).toHaveLength(1);
         expect(wrapper.find(Drawer)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(3);
+        expect(wrapper.find(BaseDialog)).toHaveLength(2);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(7);
-        expect(wrapper.find(MenuItem).at(0).text()).toEqual('Dashboard');
-        expect(wrapper.find(MenuItem).at(0).find(Dashboard)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(0).find(IndexLink)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(1).text()).toEqual('DataPack Library');
-        expect(wrapper.find(MenuItem).at(1).find(AVLibraryBooks)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(1).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(2).text()).toEqual('Create DataPack');
-        expect(wrapper.find(MenuItem).at(2).find(ContentAddBox)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(2).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(3).text()).toEqual('Members and Groups');
-        expect(wrapper.find(MenuItem).at(3).find(SocialGroup)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(3).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(4).text()).toEqual('About EventKit');
-        expect(wrapper.find(MenuItem).at(4).find(ActionInfoOutline)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(4).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(5).text()).toEqual('Account Settings');
-        expect(wrapper.find(MenuItem).at(5).find(SocialPerson)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(5).find(Link)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(6).text()).toEqual('Log Out');
-        expect(wrapper.find(MenuItem).at(6).find(ActionExitToApp)).toHaveLength(1);
-        expect(wrapper.find(MenuItem).at(6).find(Link)).toHaveLength(1);
+        const drawer = wrapper.find(Drawer).dive();
+        expect(drawer.find(MenuItem)).toHaveLength(7);
+        expect(drawer.find(MenuItem).at(0).html()).toContain('Dashboard');
+        expect(drawer.find(MenuItem).at(0).find(Dashboard)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(0).find(IndexLink)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(1).html()).toContain('DataPack Library');
+        expect(drawer.find(MenuItem).at(1).find(AVLibraryBooks)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(1).find(Link)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(2).html()).toContain('Create DataPack');
+        expect(drawer.find(MenuItem).at(2).find(ContentAddBox)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(2).find(Link)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(3).html()).toContain('Members and Groups');
+        expect(drawer.find(MenuItem).at(3).find(SocialGroup)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(3).find(Link)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(4).html()).toContain('About EventKit');
+        expect(drawer.find(MenuItem).at(4).find(ActionInfoOutline)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(4).find(Link)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(5).html()).toContain('Account Settings');
+        expect(drawer.find(MenuItem).at(5).find(SocialPerson)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(5).find(Link)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(6).html()).toContain('Log Out');
+        expect(drawer.find(MenuItem).at(6).find(ActionExitToApp)).toHaveLength(1);
+        expect(drawer.find(MenuItem).at(6).find(Link)).toHaveLength(1);
     });
 
     it('the menu items should call handleMouseOver with the route name', () => {
         const props = getProps();
         const handleSpy = sinon.spy();
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().handleMouseOver = handleSpy;
         expect(handleSpy.called).toBe(false);
         wrapper.find('.qa-Application-Link-dashboard').simulate('mouseEnter');
@@ -139,15 +132,14 @@ describe('Application component', () => {
         expect(handleSpy.calledWith('/logout')).toBe(true);
     });
 
-    it('should call openDrawer when user data is added and window width is >= 1200', () => {
+    it('should call openDrawer when user data is added and window width is xl', () => {
         const props = getProps();
         props.userData = null;
         props.openDrawer = sinon.spy();
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.userData = { data: {} };
-        window.resizeTo(1200, 1000);
-        expect(window.innerWidth).toEqual(1200);
+        nextProps.width = 'xl';
         const spy = sinon.spy(Application.prototype, 'componentWillReceiveProps');
         wrapper.setProps(nextProps);
         expect(spy.calledOnce).toBe(true);
@@ -156,40 +148,12 @@ describe('Application component', () => {
     });
 
     it('should call getConfig, getNotifications, and addEventListener on mount', () => {
-        Application.prototype.componentDidMount = mountFunc;
         const getStub = sinon.stub(Application.prototype, 'getConfig');
-        const eventSpy = sinon.spy(window, 'addEventListener');
         const props = getProps();
-        const wrapper = getMountedWrapper(props);
+        getWrapper(props);
         expect(getStub.calledOnce).toBe(true);
         expect(props.getNotifications.callCount).toBe(1);
-        expect(eventSpy.called).toBe(true);
-        expect(eventSpy.calledWith('resize', wrapper.instance().handleResize)).toBe(true);
         getStub.restore();
-        eventSpy.restore();
-        Application.prototype.componentDidMount = sinon.spy();
-    });
-
-    it('should remove event listener on unmount', () => {
-        const props = getProps();
-        const wrapper = getMountedWrapper(props);
-        const resize = wrapper.instance().handleResize;
-        const eventSpy = sinon.spy(window, 'removeEventListener');
-        expect(eventSpy.called).toBe(false);
-        wrapper.unmount();
-        expect(eventSpy.called).toBe(true);
-        expect(eventSpy.calledWith('resize', resize)).toBe(true);
-        eventSpy.restore();
-    });
-
-    it('handleResize should call forceUpdate', () => {
-        const updateSpy = sinon.spy(Application.prototype, 'forceUpdate');
-        const props = getProps();
-        const wrapper = getShallowWrapper(props);
-        expect(updateSpy.called).toBe(false);
-        wrapper.instance().handleResize();
-        expect(updateSpy.calledOnce).toBe(true);
-        updateSpy.restore();
     });
 
     it('handleToggle should open and close the drawer', () => {
@@ -197,7 +161,7 @@ describe('Application component', () => {
         props.openDrawer = sinon.spy();
         props.closeDrawer = sinon.spy();
         props.drawer = 'open';
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().handleToggle();
         expect(props.closeDrawer.callCount).toBe(1);
         wrapper.setProps({ ...props, drawer: 'closed' });
@@ -207,14 +171,12 @@ describe('Application component', () => {
 
     it('onMenuItemClick should call handleToggle if screen size is smaller than 1200', () => {
         const props = getProps();
+        props.width = 'xl';
         const toggleSpy = sinon.spy(Application.prototype, 'handleToggle');
-        const wrapper = getShallowWrapper(props);
-        window.resizeTo(1300, 900);
-        expect(window.innerWidth).toEqual(1300);
+        const wrapper = getWrapper(props);
         wrapper.instance().onMenuItemClick();
         expect(toggleSpy.notCalled).toBe(true);
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
+        wrapper.setProps({ width: 'md' });
         wrapper.instance().onMenuItemClick();
         expect(toggleSpy.calledOnce).toBe(true);
         toggleSpy.restore();
@@ -222,7 +184,7 @@ describe('Application component', () => {
 
     it('getChildContext should return config', () => {
         const props = getProps();
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.setState({ config: { key: 'value' } });
         const context = wrapper.instance().getChildContext();
         expect(context).toEqual({ config: { key: 'value' } });
@@ -230,12 +192,11 @@ describe('Application component', () => {
 
     it('getConfig should update the state when config is received', async () => {
         const props = getProps();
-        const mock = new MockAdapter(axios, { delayResponse: 100 });
         mock.onGet('/configuration').reply(200, {
             LOGIN_DISCLAIMER: 'Test string',
         });
         const stateSpy = sinon.spy(Application.prototype, 'setState');
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         await wrapper.instance().getConfig();
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ config: { LOGIN_DISCLAIMER: 'Test string' } })).toBe(true);
@@ -245,7 +206,7 @@ describe('Application component', () => {
     it('handleMouseOver should set the passed in route as the hovered state', () => {
         const props = getProps();
         const stateSpy = sinon.spy();
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().setState = stateSpy;
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleMouseOver('test string');
@@ -256,7 +217,7 @@ describe('Application component', () => {
     it('handleMouseOut should set the hovered state to an empty string', () => {
         const props = getProps();
         const stateSpy = sinon.spy();
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().setState = stateSpy;
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleMouseOut();
@@ -270,7 +231,7 @@ describe('Application component', () => {
         // Set auto logout time to 5 minutes from now.
         props.autoLogoutAt = new Date(Date.now() + (5 * 60 * 1000));
         props.autoLogoutWarningAt = new Date(Date.now() - 1000);
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
@@ -283,7 +244,7 @@ describe('Application component', () => {
         // Set auto logout time to 60 seconds from now.
         props.autoLogoutAt = new Date(Date.now() + (60 * 1000));
         props.autoLogoutWarningAt = new Date(Date.now() - 1000);
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLogoutWarningDialog).toBe(true);
@@ -296,21 +257,21 @@ describe('Application component', () => {
         // Set auto logout time to 1 second in the past.
         props.autoLogoutAt = new Date(Date.now() - 1000);
         props.autoLogoutWarningAt = new Date(Date.now());
-        const wrapper = getShallowWrapper(props);
+        const wrapper = getWrapper(props);
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLoggedOutDialog).toBe(true);
     });
 
     it('handleLogoutClick should set showLogoutDialog to true', () => {
-        const wrapper = getShallowWrapper(getProps());
+        const wrapper = getWrapper(getProps());
         expect(wrapper.state().showLogoutDialog).toBe(false);
         wrapper.instance().handleLogoutClick();
         expect(wrapper.state().showLogoutDialog).toBe(true);
     });
 
     it('handleLogoutDialogCancel should set showLogoutDialog to false', () => {
-        const wrapper = getShallowWrapper(getProps());
+        const wrapper = getWrapper(getProps());
         wrapper.setState({
             showLogoutDialog: true,
         });
@@ -320,7 +281,7 @@ describe('Application component', () => {
 
     it('handleLogoutDialogConfirm() should set showLogoutDialog to false and call logout()', () => {
         const logoutSpy = sinon.spy(Application.prototype, 'logout');
-        const wrapper = getShallowWrapper(getProps());
+        const wrapper = getWrapper(getProps());
         wrapper.setState({
             showLogoutDialog: true,
         });
@@ -336,7 +297,7 @@ describe('Application component', () => {
             ...getProps(),
             userData: null,
         };
-        const wrapper = getMountedWrapper(props);
+        const wrapper = getWrapper(props);
         const instance = wrapper.instance();
         expect(startListeningForNotificationsSpy.callCount).toBe(0);
         expect(instance.notificationsRefreshIntervalId).toBe(null);
@@ -352,7 +313,7 @@ describe('Application component', () => {
 
     it('should stop listening for notifications on user logout', () => {
         const stopListeningForNotificationsSpy = sinon.spy(Application.prototype, 'stopListeningForNotifications');
-        const wrapper = getMountedWrapper(getProps());
+        const wrapper = getWrapper(getProps());
         const instance = wrapper.instance();
         instance.loggedIn = true;
         wrapper.setProps({
@@ -365,7 +326,7 @@ describe('Application component', () => {
     });
 
     it('should change notifications button background color when viewing notifications page', () => {
-        const wrapper = getMountedWrapper(getProps());
+        const wrapper = getWrapper(getProps());
         let button = wrapper.find('.qa-Application-AppBar-NotificationsButton').at(0);
         expect(button.props().style.backgroundColor).toBe('');
         wrapper.setProps({
@@ -389,7 +350,7 @@ describe('Application component', () => {
     });
 
     it('should scale the notifications indicator up/down when unread count is positive/zero', () => {
-        const wrapper = getMountedWrapper(getProps());
+        const wrapper = getWrapper(getProps());
         let indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(0)');
         wrapper.setProps({
@@ -417,17 +378,18 @@ describe('Application component', () => {
     });
 
     it('should open/close notifications dropdown when notifications button is clicked', () => {
-        const wrapper = getMountedWrapper(getProps());
+        const wrapper = getWrapper(getProps());
+        const e = { preventDefault: sinon.spy(), stopPropagation: sinon.spy() };
         let dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown.props().style.opacity).toBe('0');
         expect(dropdown.props().style.pointerEvents).toBe('none');
         expect(dropdown.props().style.transform).toBe('scale(0)');
-        wrapper.find('.qa-Application-AppBar-NotificationsButton').hostNodes().simulate('click');
+        wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click', e);
         dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown.props().style.opacity).toBe('1');
         expect(dropdown.props().style.pointerEvents).toBe('auto');
         expect(dropdown.props().style.transform).toBe('scale(1)');
-        wrapper.find('.qa-Application-AppBar-NotificationsButton').hostNodes().simulate('click');
+        wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click', e);
         dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown.props().style.opacity).toBe('0');
         expect(dropdown.props().style.pointerEvents).toBe('none');

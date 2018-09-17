@@ -36,7 +36,7 @@ class Logout extends React.Component {
                 justifyContent: 'space-around',
                 display: 'flex',
                 flexWrap: 'wrap',
-                height: window.innerHeight - 95,
+                height: 'calc(100vh - 95px)',
             },
         };
         return (

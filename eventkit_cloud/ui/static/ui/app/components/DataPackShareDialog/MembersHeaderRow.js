@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import Menu from '@material-ui/core/Menu';
@@ -109,7 +110,7 @@ export class MembersHeaderRow extends Component {
         }
 
         let countText = '';
-        if (window.innerWidth < 576) {
+        if (!isWidthUp('sm', this.props.width)) {
             countText = `(${this.props.selectedCount}/${this.props.memberCount})`;
         } else {
             countText = `Shared with ${this.props.selectedCount} of ${this.props.memberCount}`;
@@ -255,6 +256,10 @@ MembersHeaderRow.propTypes = {
     handleUncheckAll: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default withTheme()(MembersHeaderRow);
+export default
+@withWidth()
+@withTheme()
+class Default extends MembersHeaderRow {}
