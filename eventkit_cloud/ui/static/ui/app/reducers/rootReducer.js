@@ -5,24 +5,24 @@ import { usersReducer } from './usersReducer';
 import {
     exportAoiInfoReducer,
     exportInfoReducer,
-    drawerMenuReducer,
-    stepperReducer,
     submitJobReducer,
+    updatePermissionReducer,
+    rerunExportReducer,
 } from './datacartReducer';
+import { drawerMenuReducer, stepperReducer } from './uiReducer';
 import { getProvidersReducer } from './providerReducer';
 import { getFormatsReducer } from './formatReducer';
 import { geocodeReducer } from './geocodeReducer';
-import { dataPackReducer, featuredRunsReducer, DeleteRunsReducer } from './dataPackReducer';
+import {
+    dataPackReducer,
+    featuredRunsReducer,
+    deleteRunReducer,
+    updateExpirationReducer,
+    getDatacartDetailsReducer,
+} from './datapackReducer';
 import { importGeomReducer } from './fileReducer';
 import { licenseReducer } from './licenseReducer';
 import authReducer from './authReducer';
-import {
-    getDatacartDetailsReducer,
-    deleteRunReducer,
-    rerunExportReducer,
-    updateExpirationReducer,
-    updatePermissionReducer,
-} from './statusDownloadReducer';
 import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
 import { userActivityReducer } from './userActivityReducer';
@@ -43,7 +43,6 @@ const rootReducer = combineReducers({
     providers: getProvidersReducer,
     stepperNextEnabled: stepperReducer,
     submitJob: submitJobReducer,
-    runsDeletion: DeleteRunsReducer,
     datacartDetails: getDatacartDetailsReducer,
     runDeletion: deleteRunReducer,
     exportReRun: rerunExportReducer,

@@ -1,7 +1,7 @@
 
 import { types } from '../actions/datacartActions';
 
-const initialState = {
+export const initialState = {
     aoiInfo: {
         geojson: {},
         originalGeojson: {},
@@ -11,7 +11,6 @@ const initialState = {
         selectionType: null,
         buffer: 0,
     },
-    drawer: 'closed',
     submitJob: {
         fetching: false,
         fetched: false,
@@ -26,34 +25,18 @@ const initialState = {
         areaStr: '',
         formats: ['gpkg'],
     },
-    stepperNextEnabled: false,
+    updatePermission: {
+        updating: false,
+        updated: false,
+        error: null,
+    },
+    exportReRun: {
+        fetching: false,
+        fetched: false,
+        data: [],
+        error: null,
+    },
 };
-
-export function drawerMenuReducer(state = initialState.drawer, action) {
-    switch (action.type) {
-        case types.OPENING_DRAWER:
-            return 'opening';
-        case types.OPENED_DRAWER:
-            return 'open';
-        case types.CLOSING_DRAWER:
-            return 'closing';
-        case types.CLOSED_DRAWER:
-            return 'closed';
-        default:
-            return state;
-    }
-}
-
-export function stepperReducer(state = initialState.stepperNextEnabled, action) {
-    switch (action.type) {
-        case types.MAKE_STEPPER_ACTIVE:
-            return true;
-        case types.MAKE_STEPPER_INACTIVE:
-            return false;
-        default:
-            return state;
-    }
-}
 
 export function exportAoiInfoReducer(state = initialState.aoiInfo, action) {
     switch (action.type) {
@@ -120,6 +103,42 @@ export function submitJobReducer(state = initialState.submitJob, action) {
         case types.CLEAR_JOB_INFO:
             return {
                 fetching: false, fetched: false, jobuid: '', error: null,
+            };
+        default:
+            return state;
+    }
+}
+
+export function updatePermissionReducer(state = initialState.updatePermission, action) {
+    switch (action.type) {
+        case types.UPDATING_PERMISSION:
+            return { updating: true, updated: false, error: null };
+        case types.UPDATE_PERMISSION_SUCCESS:
+            return { updating: false, updated: true, error: null };
+        case types.UPDATE_PERMISSION_ERROR:
+            return { updating: false, updated: false, error: action.error };
+        default:
+            return state;
+    }
+}
+
+export function rerunExportReducer(state = initialState.exportReRun, action) {
+    switch (action.type) {
+        case types.RERUNNING_EXPORT:
+            return {
+                fetching: true, fetched: false, data: '', error: null,
+            };
+        case types.RERUN_EXPORT_SUCCESS:
+            return {
+                fetching: false, fetched: true, data: action.exportReRun.data, error: null,
+            };
+        case types.RERUN_EXPORT_ERROR:
+            return {
+                fetching: false, fetched: false, data: '', error: action.error,
+            };
+        case types.CLEAR_RERUN_INFO:
+            return {
+                fetching: false, fetched: false, data: '', error: null,
             };
         default:
             return state;

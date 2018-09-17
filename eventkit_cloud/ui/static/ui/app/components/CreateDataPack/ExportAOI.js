@@ -36,7 +36,8 @@ import InvalidDrawWarning from '../MapTools/InvalidDrawWarning';
 import DropZone from '../MapTools/DropZone';
 import BufferDialog from './BufferDialog';
 import RevertDialog from './RevertDialog';
-import { updateAoiInfo, clearAoiInfo, stepperNextDisabled, stepperNextEnabled, clearExportInfo } from '../../actions/datacartActions';
+import { updateAoiInfo, clearAoiInfo, clearExportInfo } from '../../actions/datacartActions';
+import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
 import { getGeocode } from '../../actions/geocodeActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
 import {

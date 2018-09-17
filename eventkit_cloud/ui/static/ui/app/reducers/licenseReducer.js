@@ -1,6 +1,6 @@
 import { types } from '../actions/licenseActions';
 
-const initialState = {
+export const initialState = {
     fetching: false,
     fetched: false,
     licenses: [],

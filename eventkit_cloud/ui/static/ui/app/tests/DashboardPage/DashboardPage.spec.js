@@ -90,7 +90,7 @@ describe('DashboardPage component', () => {
                 fetched: false,
                 runs: [],
             },
-            runsDeletion: {
+            runDeletion: {
                 deleted: false,
             },
             userActivity: {
@@ -534,7 +534,7 @@ describe('DashboardPage component', () => {
                 loadData();
                 instance.refresh = sinon.spy();
                 wrapper.setProps({
-                    runsDeletion: {
+                    runDeletion: {
                         deleting: true,
                         deleted: false,
                     },
@@ -551,7 +551,7 @@ describe('DashboardPage component', () => {
             beforeEach(() => {
                 setupA();
                 wrapper.setProps({
-                    runsDeletion: {
+                    runDeletion: {
                         deleting: false,
                         deleted: true,
                     },

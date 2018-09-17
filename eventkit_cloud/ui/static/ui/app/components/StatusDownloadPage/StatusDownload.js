@@ -14,11 +14,14 @@ import ErrorOutline from '@material-ui/icons/ErrorOutlined';
 import PageHeader from '../common/PageHeader';
 import DataCartDetails from './DataCartDetails';
 import {
-    getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
-    clearReRunInfo, cancelProviderTask, updateExpiration, updateDataCartPermissions,
-} from '../../actions/statusDownloadActions';
-import { updateAoiInfo, updateExportInfo } from '../../actions/exportsActions';
-import { getProviders } from '../../actions/providerActions';
+    updateAoiInfo,
+    updateExportInfo,
+    updateDataCartPermissions,
+    rerunExport,
+    clearReRunInfo,
+} from '../../actions/datacartActions';
+import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
+import { getProviders, cancelProviderTask } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
 import { getUsers } from '../../actions/usersActions';
 import { getGroups } from '../../actions/groupActions';

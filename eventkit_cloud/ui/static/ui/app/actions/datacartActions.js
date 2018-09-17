@@ -6,16 +6,17 @@ export const types = {
     CLEAR_AOI_INFO: 'CLEAR_AOI_INFO',
     UPDATE_EXPORT_INFO: 'UPDATE_EXPORT_INFO',
     CLEAR_EXPORT_INFO: 'CLEAR_EXPORT_INFO',
-    CLOSING_DRAWER: 'CLOSING_DRAWER',
-    CLOSED_DRAWER: 'CLOSED_DRAWER',
-    OPENING_DRAWER: 'OPENING_DRAWER',
-    OPENED_DRAWER: 'OPENED_DRAWER',
-    MAKE_STEPPER_ACTIVE: 'MAKE_STEPPER_ACTIVE',
-    MAKE_STEPPER_INACTIVE: 'MAKE_STEPPER_INACTIVE',
     SUBMITTING_JOB: 'SUBMITTING_JOB',
     JOB_SUBMITTED_SUCCESS: 'JOB_SUBMITTED_SUCCESS',
     JOB_SUBMITTED_ERROR: 'JOB_SUBMITTED_ERROR',
     CLEAR_JOB_INFO: 'CLEAR_JOB_INFO',
+    UPDATING_PERMISSION: 'UPDATING_PERMISSION',
+    UPDATE_PERMISSION_ERROR: 'UPDATE_PERMISSION_ERROR',
+    UPDATE_PERMISSION_SUCCESS: 'UPDATE_PERMISSION_SUCCESS',
+    RERUNNING_EXPORT: 'RERUNNING_EXPORT',
+    RERUN_EXPORT_ERROR: 'RERUN_EXPORT_ERROR',
+    RERUN_EXPORT_SUCCESS: 'RERUN_EXPORT_SUCCESS',
+    CLEAR_RERUN_INFO: 'CLEAR_RERUN_INFO',
 };
 
 export function updateAoiInfo(aoiInfo) {
@@ -41,20 +42,6 @@ export function updateExportInfo(exportInfo) {
 export function clearExportInfo() {
     return {
         type: types.CLEAR_EXPORT_INFO,
-    };
-}
-
-export function stepperNextDisabled() {
-    return {
-        type: types.MAKE_STEPPER_INACTIVE,
-        stepperNextEnabled: false,
-    };
-}
-
-export function stepperNextEnabled() {
-    return {
-        type: types.MAKE_STEPPER_ACTIVE,
-        stepperNextEnabled: true,
     };
 }
 
@@ -97,57 +84,57 @@ export function clearJobInfo() {
     };
 }
 
-// This is probably not the correct way to cancel async actions... but it works.
-// We are using a class so that this works in the running application and is test-able
-export class DrawerTimeout {
-    constructor(closeDrawerTimeout, openDrawerTimeout) {
-        this.closeDrawerTimeout = closeDrawerTimeout || null;
-        this.openDrawerTimeout = openDrawerTimeout || null;
-    }
-
-    closeDrawer() {
-        return (dispatch) => {
-            if (this.openDrawerTimeout !== null) {
-                clearTimeout(this.openDrawerTimeout);
-                this.openDrawerTimeout = null;
-            }
-
-            dispatch({
-                type: types.CLOSING_DRAWER,
-            });
-
-            return new Promise((resolve) => {
-                this.closeDrawerTimeout = setTimeout(() => {
-                    this.closeDrawerTimeout = null;
-                    dispatch({
-                        type: types.CLOSED_DRAWER,
-                    });
-                    resolve();
-                }, 450);
-            });
+export function updateDataCartPermissions(uid, permissions) {
+    return (dispatch) => {
+        dispatch({ type: types.UPDATING_PERMISSION });
+        const csrftoken = cookie.load('csrftoken');
+        const data = {};
+        data.permissions = {
+            groups: permissions.groups,
+            users: permissions.members,
         };
-    }
+        data.visibility = permissions.value;
 
-    openDrawer() {
-        return (dispatch) => {
-            if (this.closeDrawerTimeout !== null) {
-                clearTimeout(this.closeDrawerTimeout);
-                this.closeDrawerTimeout = null;
-            }
+        return axios({
+            url: `/api/jobs/${uid}`,
+            method: 'PATCH',
+            data,
+            headers: { 'X-CSRFToken': csrftoken },
+        }).then(() => (
+            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS })
+        )).catch(error => (
+            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data })
+        ));
+    };
+}
 
-            dispatch({
-                type: types.OPENING_DRAWER,
-            });
+export const rerunExport = jobuid => (dispatch) => {
+    dispatch({
+        type: types.RERUNNING_EXPORT,
+    });
 
-            return new Promise((resolve) => {
-                this.openDrawerTimeout = setTimeout(() => {
-                    this.openDrawerTimeout = null;
-                    dispatch({
-                        type: types.OPENED_DRAWER,
-                    });
-                    resolve();
-                }, 450);
-            });
-        };
-    }
+    const csrfmiddlewaretoken = cookie.load('csrftoken');
+    return axios({
+        url: `/api/jobs/${jobuid}/run`,
+        method: 'POST',
+        contentType: 'application/json; version=1.0',
+        headers: { 'X-CSRFToken': csrfmiddlewaretoken },
+    }).then((response) => {
+        dispatch({
+            type: types.RERUN_EXPORT_SUCCESS,
+            exportReRun: {
+                data: response.data,
+            },
+        });
+    }).catch((error) => {
+        dispatch({
+            type: types.RERUN_EXPORT_ERROR, error: error.response.data,
+        });
+    });
+};
+
+export function clearReRunInfo() {
+    return {
+        type: types.CLEAR_RERUN_INFO,
+    };
 }

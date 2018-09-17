@@ -3,7 +3,7 @@ import moment from 'moment';
 import { types } from '../actions/notificationsActions';
 
 
-const initialState = {
+export const initialState = {
     fetching: false,
     fetched: false,
     notifications: {},

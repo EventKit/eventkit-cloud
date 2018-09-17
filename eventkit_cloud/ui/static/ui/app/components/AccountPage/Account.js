@@ -12,7 +12,7 @@ import SaveButton from './SaveButton';
 import getLicenses from '../../actions/licenseActions';
 import { patchUser } from '../../actions/userActions';
 import CustomScrollbar from '../CustomScrollbar';
-import { DrawerTimeout } from '../../actions/exportsActions';
+import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 
 

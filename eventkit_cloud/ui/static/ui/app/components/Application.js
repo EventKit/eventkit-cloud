@@ -20,7 +20,7 @@ import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import ekTheme from '../styles/eventkit_theme';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
-import { DrawerTimeout } from '../actions/exportsActions';
+import { DrawerTimeout } from '../actions/uiActions';
 import { userActive } from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';

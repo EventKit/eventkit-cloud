@@ -5,7 +5,7 @@ import axios from 'axios';
 import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
 import types from '../../actions/actionTypes';
-import * as actions from '../../actions/exportsActions';
+import * as actions from '../../actions/datacartActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);

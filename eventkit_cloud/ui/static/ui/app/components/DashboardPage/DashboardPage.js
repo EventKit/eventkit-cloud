@@ -9,7 +9,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
-import { deleteRuns, getFeaturedRuns, getRuns } from '../../actions/dataPackActions';
+import { deleteRun, getFeaturedRuns, getRuns } from '../../actions/datapackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
 import CustomScrollbar from '../CustomScrollbar';
@@ -19,7 +19,7 @@ import DataPackGridItem from '../DataPackPage/DataPackGridItem';
 import DataPackFeaturedItem from './DataPackFeaturedItem';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import { userIsDataPackAdmin } from '../../utils/generic';
-import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
+import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { getGroups } from '../../actions/groupActions';
 import { getUsers } from '../../actions/usersActions';
 import { joyride } from '../../joyride.config';
@@ -82,7 +82,7 @@ export class DashboardPage extends React.Component {
         }
 
         // Deleted datapack.
-        if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
             this.refresh();
         }
 
@@ -185,7 +185,7 @@ export class DashboardPage extends React.Component {
     isLoading() {
         return (
             this.state.loadingPage ||
-            this.props.runsDeletion.deleting ||
+            this.props.runDeletion.deleting ||
             this.props.updatePermission.updating
         );
     }
@@ -430,7 +430,7 @@ export class DashboardPage extends React.Component {
                                             run={run}
                                             user={this.props.user}
                                             key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
-                                            onRunDelete={this.props.deleteRuns}
+                                            onRunDelete={this.props.deleteRun}
                                             onRunShare={this.props.updateDataCartPermissions}
                                             providers={this.props.providers}
                                             adminPermission={userIsDataPackAdmin(
@@ -505,7 +505,7 @@ export class DashboardPage extends React.Component {
                                         run={run}
                                         user={this.props.user}
                                         key={`MyDataPacksDataPack-${run.created_at}`}
-                                        onRunDelete={this.props.deleteRuns}
+                                        onRunDelete={this.props.deleteRun}
                                         onRunShare={this.props.updateDataCartPermissions}
                                         providers={this.props.providers}
                                         adminPermission={userIsDataPackAdmin(
@@ -539,7 +539,7 @@ DashboardPage.propTypes = {
     }).isRequired,
     notifications: PropTypes.object.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    runsDeletion: PropTypes.object.isRequired,
+    runDeletion: PropTypes.object.isRequired,
     runsList: PropTypes.shape({
         cancelSource: PropTypes.object,
         error: PropTypes.string,
@@ -564,7 +564,7 @@ DashboardPage.propTypes = {
     getFeaturedRuns: PropTypes.func.isRequired,
     getViewedJobs: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
-    deleteRuns: PropTypes.func.isRequired,
+    deleteRun: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
     updatePermission: PropTypes.shape({
         updating: PropTypes.bool,
@@ -585,7 +585,7 @@ function mapStateToProps(state) {
         userActivity: state.userActivity,
         notifications: state.notifications,
         providers: state.providers,
-        runsDeletion: state.runsDeletion,
+        runDeletion: state.runDeletion,
         runsList: state.runsList,
         featuredRunsList: state.featuredRunsList,
         updatePermission: state.updatePermission,
@@ -600,7 +600,7 @@ function mapDispatchToProps(dispatch) {
         getFeaturedRuns: args => dispatch(getFeaturedRuns(args)),
         getViewedJobs: args => dispatch(getViewedJobs(args)),
         getProviders: () => dispatch(getProviders()),
-        deleteRuns: uid => dispatch(deleteRuns(uid)),
+        deleteRun: uid => dispatch(deleteRun(uid)),
         getNotifications: args => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
         getUsers: () => dispatch(getUsers()),
