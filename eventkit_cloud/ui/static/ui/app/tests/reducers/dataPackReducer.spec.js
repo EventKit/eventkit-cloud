@@ -1,4 +1,4 @@
-import * as reducers from '../../reducers/dataPackReducer';
+import * as reducers from '../../reducers/datapackReducer';
 
 describe('DataPackList reducer', () => {
     it('it should return the initial state', () => {
@@ -100,60 +100,6 @@ describe('DataPackList reducer', () => {
             order: '',
             view: '',
             cancelSource: null,
-        });
-    });
-
-    it('should handle SET_PAGE_ORDER', () => {
-        expect(reducers.dataPackReducer(
-            {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                order: '',
-                view: '',
-            },
-            {
-                type: 'SET_PAGE_ORDER', order: 'featured',
-            },
-        )).toEqual({
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
-            range: '',
-            order: 'featured',
-            view: '',
-        });
-    });
-
-    it('should handle SET_PAGE_VIEW', () => {
-        expect(reducers.dataPackReducer(
-            {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                order: '',
-                view: '',
-            },
-            {
-                type: 'SET_PAGE_VIEW', view: 'map',
-            },
-        )).toEqual({
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
-            range: '',
-            order: '',
-            view: 'map',
         });
     });
 });

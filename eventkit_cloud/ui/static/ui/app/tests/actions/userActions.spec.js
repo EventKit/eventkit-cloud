@@ -3,8 +3,7 @@ import thunk from 'redux-thunk';
 import sinon from 'sinon';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import * as userActions from '../../actions/userActions';
-import types from '../../actions/actionTypes';
+import * as actions from '../../actions/userActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -19,7 +18,7 @@ describe('userActions actions', () => {
         });
 
         const expectedActions = [
-            { type: types.USER_LOGGED_OUT },
+            { type: actions.types.USER_LOGGED_OUT },
             {
                 payload: {
                     args: [{ pathname: '/login', search: undefined }],
@@ -30,7 +29,7 @@ describe('userActions actions', () => {
         ];
         const store = mockStore({ user: { username: 'ExampleUser' } });
 
-        return store.dispatch(userActions.logout())
+        return store.dispatch(actions.logout())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -41,11 +40,11 @@ describe('userActions actions', () => {
         mock.onGet('/logout').reply(200, { OAUTH_LOGOUT_URL: 'www.oauth.com' });
 
         const expectedActions = [
-            { type: types.USER_LOGGED_OUT },
+            { type: actions.types.USER_LOGGED_OUT },
         ];
         const store = mockStore({ user: { username: '' } });
         const assignStub = sinon.stub(global.window.location, 'assign');
-        return store.dispatch(userActions.logout())
+        return store.dispatch(actions.logout())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
                 expect(assignStub.calledOnce).toBe(true);
@@ -59,10 +58,10 @@ describe('userActions actions', () => {
 
         mock.onGet('/auth').reply(200, {});
 
-        const expectedActions = [{ type: types.USER_LOGGING_IN }, { payload: {}, type: 'USER_LOGGED_IN' }];
+        const expectedActions = [{ type: actions.types.USER_LOGGING_IN }, { payload: {}, type: 'USER_LOGGED_IN' }];
 
         const store = mockStore({ user: { username: 'ExampleUser' } });
-        return store.dispatch(userActions.login())
+        return store.dispatch(actions.login())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -73,10 +72,10 @@ describe('userActions actions', () => {
 
         mock.onPost('/auth').reply(200, {});
 
-        const expectedActions = [{ type: types.USER_LOGGING_IN }, { payload: {}, type: 'USER_LOGGED_IN' }];
+        const expectedActions = [{ type: actions.types.USER_LOGGING_IN }, { payload: {}, type: 'USER_LOGGED_IN' }];
 
         const store = mockStore({ user: { username: 'ExampleUser' } });
-        return store.dispatch(userActions.login({ username: 'username', password: 'password' }))
+        return store.dispatch(actions.login({ username: 'username', password: 'password' }))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -88,10 +87,10 @@ describe('userActions actions', () => {
         mock.onGet('/auth').reply(401, {});
         mock.onGet('/logout').reply(200, {});
 
-        const expectedActions = [{ type: types.USER_LOGGING_IN }, { type: types.USER_LOGGED_OUT }];
+        const expectedActions = [{ type: actions.types.USER_LOGGING_IN }, { type: actions.types.USER_LOGGED_OUT }];
 
         const store = mockStore({ user: { username: 'ExampleUser' } });
-        return store.dispatch(userActions.login())
+        return store.dispatch(actions.login())
             .catch(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -103,10 +102,10 @@ describe('userActions actions', () => {
         mock.onPost('/auth/').reply(401, {});
         mock.onGet('/logout').reply(200, {});
 
-        const expectedActions = [{ type: types.USER_LOGGING_IN }, { type: types.USER_LOGGED_OUT }];
+        const expectedActions = [{ type: actions.types.USER_LOGGING_IN }, { type: actions.types.USER_LOGGED_OUT }];
 
         const store = mockStore({ user: { username: 'ExampleUser' } });
-        return store.dispatch(userActions.login({ username: 'username', password: 'bad_password' }))
+        return store.dispatch(actions.login({ username: 'username', password: 'bad_password' }))
             .catch(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -118,12 +117,12 @@ describe('userActions actions', () => {
         mock.onPost('/auth').reply(200, null);
 
         const expectedActions = [
-            { type: types.USER_LOGGING_IN },
-            { type: types.USER_LOGGED_OUT },
+            { type: actions.types.USER_LOGGING_IN },
+            { type: actions.types.USER_LOGGED_OUT },
         ];
 
         const store = mockStore({ user: {} });
-        return store.dispatch(userActions.login({ username: 'username', password: 'password' }))
+        return store.dispatch(actions.login({ username: 'username', password: 'password' }))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -134,11 +133,11 @@ describe('userActions actions', () => {
         const user = { username: 'user1', name: 'user1' };
         mock.onPatch(`/api/users/${user.username}`).reply(200, user);
         const expectedActions = [
-            { type: types.PATCHING_USER },
-            { type: types.PATCHED_USER, payload: user },
+            { type: actions.types.PATCHING_USER },
+            { type: actions.types.PATCHED_USER, payload: user },
         ];
         const store = mockStore({});
-        return store.dispatch(userActions.patchUser([], user.username))
+        return store.dispatch(actions.patchUser([], user.username))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -150,11 +149,11 @@ describe('userActions actions', () => {
         const error = 'oh no an error';
         mock.onPatch(`/api/users/${user.username}`).reply(400, error);
         const expectedActions = [
-            { type: types.PATCHING_USER },
-            { type: types.PATCHING_USER_ERROR, error },
+            { type: actions.types.PATCHING_USER },
+            { type: actions.types.PATCHING_USER_ERROR, error },
         ];
         const store = mockStore({});
-        return store.dispatch(userActions.patchUser([], user.username))
+        return store.dispatch(actions.patchUser([], user.username))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -171,7 +170,7 @@ describe('userActions actions', () => {
         });
 
         const expectedActions = [{
-            type: types.USER_ACTIVE,
+            type: actions.types.USER_ACTIVE,
             payload: {
                 autoLogoutAt: new Date(autoLogoutAtMS),
                 autoLogoutWarningAt: new Date(autoLogoutWarningAtMS),
@@ -185,7 +184,7 @@ describe('userActions actions', () => {
             },
         });
 
-        return store.dispatch(userActions.userActive())
+        return store.dispatch(actions.userActive())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -200,7 +199,7 @@ describe('userActions actions', () => {
 
         const store = mockStore({});
 
-        return store.dispatch(userActions.userActive())
+        return store.dispatch(actions.userActive())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -227,9 +226,9 @@ describe('userActions actions', () => {
         ];
 
         const expectedActions = [
-            { type: types.FETCHING_USERS },
+            { type: actions.types.FETCHING_USERS },
             {
-                type: types.FETCHED_USERS,
+                type: actions.types.FETCHED_USERS,
                 users: expectedUsers,
                 total: 3,
                 new: 2,
@@ -245,7 +244,7 @@ describe('userActions actions', () => {
             },
         });
 
-        return store.dispatch(userActions.getUsers())
+        return store.dispatch(actions.getUsers())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
@@ -256,14 +255,14 @@ describe('userActions actions', () => {
         const error = 'Oh no an error';
         mock.onGet('/api/users').reply(400, error);
         const expectedActions = [
-            { type: types.FETCHING_USERS },
-            { type: types.FETCH_USERS_ERROR, error },
+            { type: actions.types.FETCHING_USERS },
+            { type: actions.types.FETCH_USERS_ERROR, error },
         ];
         const store = mockStore({
             user: { data: { user: {} } },
         });
 
-        return store.dispatch(userActions.getUsers())
+        return store.dispatch(actions.getUsers())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });

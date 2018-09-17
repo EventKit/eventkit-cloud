@@ -4,7 +4,6 @@ import axios from 'axios';
 import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
 import * as actions from '../../actions/datapackActions';
-import types from '../../actions/actionTypes';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -45,9 +44,9 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCHING_RUNS, cancelSource: testSource },
             {
-                type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24',
+                type: actions.types.RECEIVED_RUNS, runs: expectedRuns, nextPage: true, range: '12/24',
             },
         ];
 
@@ -69,9 +68,9 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCHING_RUNS, cancelSource: testSource },
             {
-                type: types.RECEIVED_RUNS, runs: expectedRuns, nextPage: false, range: '',
+                type: actions.types.RECEIVED_RUNS, runs: expectedRuns, nextPage: false, range: '',
             },
         ];
 
@@ -122,7 +121,7 @@ describe('DataPackList actions', () => {
         const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
 
         const expectedActions = [
-            { type: types.FETCHING_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCHING_RUNS, cancelSource: testSource },
         ];
 
         const store = mockStore({ runsList: {} });
@@ -144,8 +143,8 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_RUNS, cancelSource: testSource },
-            { type: types.FETCH_RUNS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCH_RUNS_ERROR, error: 'oh no an error' },
         ];
 
         const store = mockStore({ runsList: {} });
@@ -168,9 +167,9 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
             {
-                type: types.RECEIVED_FEATURED_RUNS,
+                type: actions.types.RECEIVED_FEATURED_RUNS,
                 runs: expectedRuns,
                 nextPage: true,
                 range: '6/24',
@@ -195,8 +194,8 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
-            { type: types.FETCH_FEATURED_RUNS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCH_FEATURED_RUNS_ERROR, error: 'oh no an error' },
         ];
 
         const store = mockStore({ featuredRunsList: {} });
@@ -213,8 +212,8 @@ describe('DataPackList actions', () => {
 
         mock.onDelete('/api/runs/123456789').reply(204);
         const expectedActions = [
-            { type: types.DELETING_RUN },
-            { type: types.DELETED_RUN },
+            { type: actions.types.DELETING_RUN },
+            { type: actions.types.DELETED_RUN },
         ];
 
         const store = mockStore({ deleteRuns: {} });
@@ -230,8 +229,8 @@ describe('DataPackList actions', () => {
 
         mock.onDelete('/api/runs/12233').reply(400, 'oh no an error');
         const expectedActions = [
-            { type: types.DELETING_RUN },
-            { type: types.DELETE_RUN_ERROR, error: 'oh no an error' },
+            { type: actions.types.DELETING_RUN },
+            { type: actions.types.DELETE_RUN_ERROR, error: 'oh no an error' },
         ];
         const store = mockStore({ deleteRuns: {} });
         return store.dispatch(actions.deleteRuns('12233'))
@@ -243,7 +242,7 @@ describe('DataPackList actions', () => {
     it('setPageOrder should return type SET_PAGE_ORDER and the order', () => {
         const order = 'featured';
         expect(actions.setPageOrder(order)).toEqual({
-            type: types.SET_PAGE_ORDER,
+            type: actions.types.SET_PAGE_ORDER,
             order,
         });
     });
@@ -251,9 +250,129 @@ describe('DataPackList actions', () => {
     it('setPageView should return type SET_PAGE_VIEW and the view', () => {
         const view = 'map';
         expect(actions.setPageView(view)).toEqual({
-            type: types.SET_PAGE_VIEW,
+            type: actions.types.SET_PAGE_VIEW,
             view,
         });
+    });
+
+    it('getDatacartDetails should return a specific run from "api/runs"', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        mock.onGet('/api/runs?job_uid=123456789').reply(200, expectedRuns);
+        const expectedActions = [
+            { type: actions.types.GETTING_DATACART_DETAILS },
+            { type: actions.types.DATACART_DETAILS_RECEIVED, datacartDetails: { data: expectedRuns } },
+        ];
+
+        const store = mockStore({ datacartDetails: {} });
+
+        return store.dispatch(actions.getDatacartDetails('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('getDatacartDetails should return an empty array if there are no results', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        mock.onGet('/api/runs?job_uid=123456789').reply(200, []);
+        const expectedActions = [
+            { type: actions.types.GETTING_DATACART_DETAILS },
+            { type: actions.types.DATACART_DETAILS_RECEIVED, datacartDetails: { data: [] } },
+        ];
+
+        const store = mockStore({ datacartDetails: {} });
+
+        return store.dispatch(actions.getDatacartDetails('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('getDatacartDetails should dispatch an error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        mock.onGet('/api/runs?job_uid=123').reply(400, 'oh no an error');
+        const expectedActions = [
+            { type: actions.types.GETTING_DATACART_DETAILS },
+            { type: actions.types.DATACART_DETAILS_ERROR, error: 'oh no an error' },
+        ];
+
+        const store = mockStore({ datacartDetails: {} });
+
+        return store.dispatch(actions.getDatacartDetails('123'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('clearDataCartDetails should return CLEAR_DATACART_DETAILS', () => {
+        expect(actions.clearDataCartDetails()).toEqual({ type: actions.types.CLEAR_DATACART_DETAILS });
+    });
+
+    it('deleteRun should dispatch deleting and deleted actions', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+
+        mock.onDelete('/api/runs/123456789').reply(204);
+        const expectedActions = [
+            { type: actions.types.DELETING_RUN },
+            { type: actions.types.DELETED_RUN },
+        ];
+
+        const store = mockStore({ deleteRuns: {} });
+
+        return store.dispatch(actions.deleteRun('123456789'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('deleteRun should dispatch an error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+
+        mock.onDelete('/api/runs/123').reply(400, 'oh no an error');
+        const expectedActions = [
+            { type: actions.types.DELETING_RUN },
+            { type: actions.types.DELETE_RUN_ERROR, error: 'oh no an error' },
+        ];
+
+        const store = mockStore({ deleteRuns: {} });
+
+        return store.dispatch(actions.deleteRun('123'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('updateExpiration should dispatch a patch and update the expiration date', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+
+        mock.onPatch('/api/runs/123456789').reply(204);
+        const expectedActions = [
+            { type: actions.types.UPDATING_EXPIRATION },
+            { type: actions.types.UPDATE_EXPIRATION_SUCCESS },
+        ];
+
+        const store = mockStore({ updateExpiration: {} });
+
+        return store.dispatch(actions.updateExpiration('123456789', '2021/2/1'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('updateExpiration should dispatch and error', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+
+        mock.onPatch('/api/runs/123').reply(400, 'oh no an error');
+        const expectedActions = [
+            { type: actions.types.UPDATING_EXPIRATION },
+            { type: actions.types.UPDATE_EXPIRATION_ERROR, error: 'oh no an error' },
+        ];
+
+        const store = mockStore({});
+
+        return store.dispatch(actions.updateExpiration('123', '2021/2/1'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
     });
 });
 
