@@ -207,7 +207,7 @@ describe('DataPackList actions', () => {
             });
     });
 
-    it('deleteRuns should dispatch deleting and deleted actions', () => {
+    it('deleteRun should dispatch deleting and deleted actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
 
         mock.onDelete('/api/runs/123456789').reply(204);
@@ -216,15 +216,15 @@ describe('DataPackList actions', () => {
             { type: actions.types.DELETED_RUN },
         ];
 
-        const store = mockStore({ deleteRuns: {} });
+        const store = mockStore({ deleteRun: {} });
 
-        return store.dispatch(actions.deleteRuns('123456789'))
+        return store.dispatch(actions.deleteRun('123456789'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
 
-    it('deleteRuns should dispatch deleting and error', () => {
+    it('deleteRun should dispatch deleting and error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
 
         mock.onDelete('/api/runs/12233').reply(400, 'oh no an error');
@@ -232,27 +232,11 @@ describe('DataPackList actions', () => {
             { type: actions.types.DELETING_RUN },
             { type: actions.types.DELETE_RUN_ERROR, error: 'oh no an error' },
         ];
-        const store = mockStore({ deleteRuns: {} });
-        return store.dispatch(actions.deleteRuns('12233'))
+        const store = mockStore({ deleteRun: {} });
+        return store.dispatch(actions.deleteRun('12233'))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
-    });
-
-    it('setPageOrder should return type SET_PAGE_ORDER and the order', () => {
-        const order = 'featured';
-        expect(actions.setPageOrder(order)).toEqual({
-            type: actions.types.SET_PAGE_ORDER,
-            order,
-        });
-    });
-
-    it('setPageView should return type SET_PAGE_VIEW and the view', () => {
-        const view = 'map';
-        expect(actions.setPageView(view)).toEqual({
-            type: actions.types.SET_PAGE_VIEW,
-            view,
-        });
     });
 
     it('getDatacartDetails should return a specific run from "api/runs"', () => {
@@ -316,7 +300,7 @@ describe('DataPackList actions', () => {
             { type: actions.types.DELETED_RUN },
         ];
 
-        const store = mockStore({ deleteRuns: {} });
+        const store = mockStore({ deleteRun: {} });
 
         return store.dispatch(actions.deleteRun('123456789'))
             .then(() => {
@@ -333,7 +317,7 @@ describe('DataPackList actions', () => {
             { type: actions.types.DELETE_RUN_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore({ deleteRuns: {} });
+        const store = mockStore({ deleteRun: {} });
 
         return store.dispatch(actions.deleteRun('123'))
             .then(() => {

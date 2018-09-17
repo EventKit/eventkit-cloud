@@ -4,8 +4,9 @@ import sinon from 'sinon';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import * as actions from '../../actions/userActivityActions';
-import { initialState } from '../../reducers/userActivityReducer';
+import { initialState as state } from '../../reducers/userActivityReducer';
 
+const initialState = { userActivity: state };
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 

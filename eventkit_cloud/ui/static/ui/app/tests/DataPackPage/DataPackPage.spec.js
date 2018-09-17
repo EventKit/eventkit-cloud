@@ -63,7 +63,7 @@ describe('DataPackPage component', () => {
         },
         user: { data: { user: { username: 'admin' } } },
         getRuns: () => {},
-        deleteRuns: () => {},
+        deleteRun: () => {},
         getProviders: () => {},
         runDeletion: {
             deleting: false,
@@ -672,7 +672,7 @@ describe('DataPackPage component', () => {
         const commonProps = {
             runs: props.runsList.runs,
             user: props.user,
-            onRunDelete: props.deleteRuns,
+            onRunDelete: props.deleteRun,
             onRunShare: props.updateDataCartPermissions,
             range: props.runsList.range,
             handleLoadLess: wrapper.instance().loadLess,

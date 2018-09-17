@@ -127,7 +127,7 @@ describe('DashboardPage component', () => {
             getRuns: sinon.spy(),
             getFeaturedRuns: sinon.spy(),
             getViewedJobs: sinon.spy(),
-            deleteRuns: sinon.spy(),
+            deleteRun: sinon.spy(),
             getUsers: sinon.spy(),
             updateDataCartPermissions: sinon.spy(),
             getGroups: sinon.spy(),

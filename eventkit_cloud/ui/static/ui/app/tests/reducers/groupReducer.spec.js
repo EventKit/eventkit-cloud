@@ -1,10 +1,7 @@
-import { userGroupsReducer } from '../../reducers/userGroupsReducer';
-import initialState from '../../reducers/initialState';
-import types from '../../actions/actionTypes';
+import { initialState as state, userGroupsReducer } from '../../reducers/groupReducer';
+import { types } from '../../actions/groupActions';
 
 describe('userGroupsReducer', () => {
-    const state = initialState.groups;
-
     it('should return initialState', () => {
         expect(userGroupsReducer(undefined, {})).toEqual(state);
     });

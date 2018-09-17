@@ -137,49 +137,6 @@ describe('exportInfo reducer', () => {
     });
 });
 
-describe('getProvidersReducer', () => {
-    it('should return initial state', () => {
-        expect(reducers.getProvidersReducer(undefined, {})).toEqual([]);
-    });
-
-    it('should handle GETTING_PROVIDERS', () => {
-        expect(reducers.getProvidersReducer(
-            ['one', 'two', 'three'],
-            { type: 'GETTING_PROVIDERS' },
-        )).toEqual([]);
-    });
-
-    it('should handle PROVIDERS RECEIVED', () => {
-        expect(reducers.getProvidersReducer(
-            [],
-            { type: 'PROVIDERS_RECEIVED', providers: ['one', 'two', 'three'] },
-        )).toEqual(['one', 'two', 'three']);
-    });
-});
-
-describe('getFormatsReducer', () => {
-    it('should return the initial state', () => {
-        expect(reducers.getFormatsReducer(undefined, {})).toEqual([]);
-    });
-
-    it('should handle GETTING_FORMATS', () => {
-        expect(reducers.getFormatsReducer(
-            { formats: [{ id: 'fakeformat' }] },
-            { type: 'GETTING_FORMATS' },
-        )).toEqual([]);
-    });
-
-    it('should handle FORMATS_RECEIVED', () => {
-        expect(reducers.getFormatsReducer(
-            { formats: [] },
-            {
-                type: 'FORMATS_RECEIVED',
-                formats: [{ id: 'fakeformat' }],
-            },
-        )).toEqual([{ id: 'fakeformat' }]);
-    });
-});
-
 describe('submitJobReducer', () => {
     it('should return the intial state', () => {
         expect(reducers.submitJobReducer(undefined, {})).toEqual({
@@ -261,6 +218,157 @@ describe('submitJobReducer', () => {
             fetched: false,
             jobuid: '',
             error: null,
+        });
+    });
+});
+
+describe('rerunExport Reducer', () => {
+    it('it should return the initial state', () => {
+        expect(reducers.rerunExportReducer(undefined, {})).toEqual({
+            fetching: false,
+            fetched: false,
+            data: [],
+            error: null,
+        });
+    });
+
+    it('should handle RERUNNING_EXPORT', () => {
+        expect(reducers.rerunExportReducer(
+            {
+                fetching: false,
+                fetched: false,
+                data: [],
+                error: null,
+            },
+            {
+                type: 'RERUNNING_EXPORT',
+            },
+        )).toEqual({
+            fetching: true,
+            fetched: false,
+            data: '',
+            error: null,
+        });
+    });
+
+    it('should handle RERUN_EXPORT_SUCCESS', () => {
+        expect(reducers.rerunExportReducer(
+            {
+                fetching: false,
+                fetched: false,
+                data: [],
+                error: null,
+            },
+            {
+                type: 'RERUN_EXPORT_SUCCESS', exportReRun: { data: [{ thisIs: 'a fake export rerun' }] },
+            },
+        )).toEqual({
+            fetching: false,
+            fetched: true,
+            data: [{ thisIs: 'a fake export rerun' }],
+            error: null,
+        });
+    });
+
+    it('should handle RERUN_EXPORT_ERROR', () => {
+        expect(reducers.rerunExportReducer(
+            {
+                fetching: false,
+                fetched: false,
+                data: [],
+                error: null,
+            },
+            {
+                type: 'RERUN_EXPORT_ERROR',
+                error: 'This is an error',
+            },
+        )).toEqual({
+            fetching: false,
+            fetched: false,
+            data: '',
+            error: 'This is an error',
+        });
+    });
+
+    it('should handle CLEAR_RERUN_INFO', () => {
+        expect(reducers.rerunExportReducer(
+            {
+                fetching: false,
+                fetched: false,
+                data: [],
+                error: null,
+            },
+            {
+                type: 'CLEAR_RERUN_INFO',
+
+            },
+        )).toEqual({
+            fetching: false,
+            fetched: false,
+            data: '',
+            error: null,
+        });
+    });
+});
+
+describe('updatePermissions Reducer', () => {
+    it('it should return the initial state', () => {
+        expect(reducers.updatePermissionReducer(undefined, {})).toEqual({
+            updating: false,
+            updated: false,
+            error: null,
+        });
+    });
+
+    it('should handle UPDATING_PERMISSION', () => {
+        expect(reducers.updatePermissionReducer(
+            {
+                updating: false,
+                updated: false,
+                error: null,
+            },
+            {
+                type: 'UPDATING_PERMISSION',
+            },
+        )).toEqual({
+            updating: true,
+            updated: false,
+            error: null,
+        });
+    });
+
+    it('should handle UPDATE_PERMISSION_SUCCESS', () => {
+        expect(reducers.updatePermissionReducer(
+            {
+                updating: false,
+                updated: false,
+                error: null,
+            },
+            {
+                type: 'UPDATE_PERMISSION_SUCCESS',
+            },
+        )).toEqual({
+            updating: false,
+            updated: true,
+            error: null,
+        });
+    });
+
+    it('should handle UPDATE_PERMISSION_ERROR', () => {
+        expect(reducers.updatePermissionReducer(
+            {
+                updating: true,
+                updated: false,
+                error: null,
+            },
+            {
+                type: 'UPDATE_PERMISSION_ERROR',
+                error: 'This is an error',
+            },
+        )).toEqual({
+            updating: false,
+            updated: false,
+            error: 'This is an error',
         });
     });
 });

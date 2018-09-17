@@ -100,4 +100,20 @@ describe('async searchToolbar actions', () => {
                 expect(store.getActions()).toEqual(expectedActions);
             });
     });
+
+    it('should handle unknown errors', () => {
+        store = mockStore({ geocode: [] });
+        const fail = new MockAdapter(axios, { delayResponse: 10 });
+        fail.onGet('/search').reply(400, '');
+
+        const expectedActions = [
+            { type: 'FETCHING_GEOCODE' },
+            { type: 'FETCH_GEOCODE_ERROR', error: 'An unknown error has occured' },
+        ];
+
+        return store.dispatch(actions.getGeocode('18SJT9710003009'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
 });
