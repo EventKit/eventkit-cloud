@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Link } from 'react-router';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
@@ -109,11 +110,13 @@ export class DataPackFeaturedItem extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const mdUp = isWidthUp('md', this.props.width);
+        const lgUp = isWidthUp('lg', this.props.width);
 
         const cardHeight = this.props.height || 'auto';
         let cardClamp = 2;
-        if (window.innerWidth > 1024) cardClamp = 6;
-        else if (window.innerWidth > 768) cardClamp = 7;
+        if (lgUp) cardClamp = 6;
+        else if (mdUp) cardClamp = 7;
 
         const styles = {
             card: {
@@ -125,23 +128,23 @@ export class DataPackFeaturedItem extends Component {
                 display: 'flex',
                 flexWrap: 'nowrap',
                 height: cardHeight,
-                flexDirection: (window.innerWidth > 768) ? 'row' : 'column',
+                flexDirection: mdUp ? 'row' : 'column',
             },
             map: {
                 flex: '67',
-                maxWidth: (window.innerWidth > 768) ? '67%' : '',
-                maxHeight: (window.innerWidth > 768) ? '' : '67%',
+                maxWidth: mdUp ? '67%' : '',
+                maxHeight: mdUp ? '' : '67%',
                 boxSizing: 'border-box',
                 backgroundColor: 'none',
-                order: (window.innerWidth > 768) ? '1' : '2',
+                order: mdUp ? '1' : '2',
             },
             info: {
                 flex: '33',
-                maxWidth: (window.innerWidth > 768) ? '33%' : '100%',
-                maxHeight: (window.innerWidth > 768) ? '' : '33%',
+                maxWidth: mdUp ? '33%' : '100%',
+                maxHeight: mdUp ? '' : '33%',
                 boxSizing: 'border-box',
-                padding: (window.innerWidth > 768) ? '17px 24px 20px' : '12px 16px 14px',
-                order: (window.innerWidth > 768) ? '2' : '1',
+                padding: mdUp ? '17px 24px 20px' : '12px 16px 14px',
+                order: mdUp ? '2' : '1',
             },
             cardHeader: {
                 wordWrap: 'break-word',
@@ -169,8 +172,8 @@ export class DataPackFeaturedItem extends Component {
                 wordWrap: 'break-word',
             },
             cardSubtitle: {
-                display: (window.innerWidth > 768) ? '' : 'none',
-                fontSize: (window.innerWidth > 768) ? '12px' : '10px',
+                display: mdUp ? '' : 'none',
+                fontSize: mdUp ? '12px' : '10px',
                 fontWeight: 'normal',
                 color: colors.text_primary,
                 marginBottom: '16px',
@@ -192,8 +195,8 @@ export class DataPackFeaturedItem extends Component {
                 WebkitLineClamp: cardClamp,
                 display: '-webkit-box',
                 WebkitBoxOrient: 'vertical',
-                fontSize: (window.innerWidth > 1024) ? '16px' : '14px',
-                lineHeight: (window.innerWidth > 1024) ? '1.5' : 'inherit',
+                fontSize: lgUp ? '16px' : '14px',
+                lineHeight: lgUp ? '1.5' : 'inherit',
             },
         };
 
@@ -267,10 +270,14 @@ DataPackFeaturedItem.propTypes = {
     index: PropTypes.number.isRequired,
     height: PropTypes.string,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 DataPackFeaturedItem.defaultProps = {
     height: undefined,
 };
 
-export default withTheme()(DataPackFeaturedItem);
+export default
+@withWidth()
+@withTheme()
+class Default extends DataPackFeaturedItem {}

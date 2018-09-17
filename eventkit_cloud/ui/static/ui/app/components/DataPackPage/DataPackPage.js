@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -28,7 +29,6 @@ import { getUsers } from '../../actions/usersActions';
 import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { setPageOrder, setPageView } from '../../actions/uiActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { isViewportL } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
 
 export class DataPackPage extends React.Component {
@@ -52,7 +52,7 @@ export class DataPackPage extends React.Component {
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
-            open: window.innerWidth >= 1200,
+            open: isWidthUp('xl', this.props.width),
             permissions: {
                 value: '',
                 groups: {},
@@ -283,7 +283,7 @@ export class DataPackPage extends React.Component {
 
     handleFilterApply(state) {
         this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
+        if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -305,7 +305,7 @@ export class DataPackPage extends React.Component {
             providers: {},
             loading: true,
         }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
+        if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -367,16 +367,16 @@ export class DataPackPage extends React.Component {
                     this.setState({ open: true });
                 }
             }
-            if (data.step.title === 'Filters' && data.type === 'step:after' && isViewportL()) {
+            if (data.step.title === 'Filters' && data.type === 'step:after' && !isWidthUp('xl', this.props.width)) {
                 this.setState({ open: false });
             }
-            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isViewportL()) {
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && !isWidthUp('xl', this.props.width)) {
                 this.setState({ open: false });
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
                 && this.props.location.query.view === 'list'
-                && isViewportL()
+                && !isWidthUp('xl', this.props.width)
             ) {
                 this.setState({ open: false });
             }
@@ -449,13 +449,13 @@ export class DataPackPage extends React.Component {
 
         const styles = {
             wholeDiv: {
-                height: window.innerWidth > 575 ?
-                    window.innerHeight - 231
+                height: isWidthUp('sm', this.props.width) ?
+                    'calc(100vh - 231px)'
                     :
-                    window.innerHeight - 223,
+                    'calc(100vh - 223px)',
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && window.innerWidth >= 1200 ? '250px' : '0px',
-                marginTop: window.innerWidth > 575 ? '10px' : '2px',
+                marginRight: this.state.open && isWidthUp('xl', this.props.width) ? '250px' : '0px',
+                marginTop: isWidthUp('sm', this.props.width) ? '10px' : '2px',
                 position: 'relative',
             },
             pageTitle: {
@@ -479,14 +479,14 @@ export class DataPackPage extends React.Component {
             containerStyle: {
                 backgroundColor: colors.white,
                 top: '221px',
-                height: window.innerHeight - 221,
+                height: 'calc(100vh - 221px)',
                 overflowY: 'hidden',
                 overflowX: 'hidden',
             },
             backgroundStyle: {
                 backgroundImage: `url(${images.topo_dark})`,
             },
-            range: window.innerWidth < 768 ?
+            range: !isWidthUp('md', this.props.width) ?
                 { color: colors.text_primary, lineHeight: '36px', fontSize: '12px' }
                 :
                 {
@@ -569,7 +569,7 @@ export class DataPackPage extends React.Component {
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {this.props.location.query.view === 'list' && window.innerWidth >= 768 ?
+                    {this.props.location.query.view === 'list' && isWidthUp('md', this.props.width) ?
                         null
                         :
                         <DataPackSortDropDown
@@ -686,6 +686,7 @@ DataPackPage.propTypes = {
         }),
     }).isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -741,7 +742,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(DataPackPage));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends DataPackPage {}

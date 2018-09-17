@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
@@ -887,7 +888,7 @@ export class ExportAOI extends Component {
             backgroundImage: `url(${theme.eventkit.images.topo_light})`,
         };
 
-        if (this.props.drawer === 'open' && window.innerWidth >= 1200) {
+        if (this.props.drawer === 'open' && isWidthUp('xl', this.props.width)) {
             mapStyle.left = '200px';
         } else {
             mapStyle.left = '0px';
@@ -1014,6 +1015,7 @@ ExportAOI.propTypes = {
     walkthroughClicked: PropTypes.bool.isRequired,
     onWalkthroughReset: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -1054,7 +1056,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(ExportAOI));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends ExportAOI {}

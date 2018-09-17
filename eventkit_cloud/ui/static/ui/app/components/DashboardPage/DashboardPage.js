@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import debounce from 'lodash/debounce';
 import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
@@ -24,9 +25,17 @@ import { getGroups } from '../../actions/groupActions';
 import { getUsers } from '../../actions/usersActions';
 import { joyride } from '../../joyride.config';
 
+export const CUSTOM_BREAKPOINTS = {
+    xl: 1920,
+    lg: 1600,
+    md: 1024,
+    sm: 768,
+};
+
 export class DashboardPage extends React.Component {
     constructor(props) {
         super(props);
+        this.setScreenSize = this.setScreenSize.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getGridColumns = this.getGridColumns.bind(this);
         this.getGridWideColumns = this.getGridWideColumns.bind(this);
@@ -47,12 +56,15 @@ export class DashboardPage extends React.Component {
             loadingPage: true,
             steps: [],
             isRunning: false,
+            width: 'xl',
         };
         this.autoRefreshIntervalId = null;
         this.autoRefreshInterval = 10000;
+        this.onResize = debounce(this.setScreenSize, 166);
     }
 
     componentDidMount() {
+        this.setScreenSize();
         this.props.getUsers();
         this.props.getGroups();
         this.props.getProviders();
@@ -63,6 +75,7 @@ export class DashboardPage extends React.Component {
         this.autoRefreshIntervalId = setInterval(this.autoRefresh, this.autoRefreshInterval);
         const steps = joyride.DashboardPage;
         this.joyrideAddSteps(steps);
+        window.addEventListener('resize', this.onResize);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -95,20 +108,40 @@ export class DashboardPage extends React.Component {
     componentWillUnmount() {
         clearInterval(this.autoRefreshIntervalId);
         this.autoRefreshIntervalId = null;
+        window.removeEventListener('resize', this.onResize);
+    }
+
+    setScreenSize() {
+        const width = window.innerWidth;
+        let value = 'xs';
+        if (width >= CUSTOM_BREAKPOINTS.xl) {
+            value = 'xl';
+        } else if (width >= CUSTOM_BREAKPOINTS.lg) {
+            value = 'lg';
+        } else if (width >= CUSTOM_BREAKPOINTS.md) {
+            value = 'md';
+        } else if (width >= CUSTOM_BREAKPOINTS.sm) {
+            value = 'sm';
+        }
+
+        if (value !== this.state.width) {
+            this.setState({ width: value });
+        }
     }
 
     getGridPadding() {
-        return window.innerWidth >= 768 ? 6 : 2;
+        return this.state.width !== 'xs' ? 6 : 2;
     }
 
     getGridColumns({ getMax = false } = {}) {
-        if (window.innerWidth > 1920 || getMax) {
+        const { width } = this.state;
+        if (width === 'xl' || getMax) {
             return 6;
-        } else if (window.innerWidth > 1600) {
+        } else if (width === 'lg') {
             return 5;
-        } else if (window.innerWidth > 1024) {
+        } else if (width === 'md') {
             return 4;
-        } else if (window.innerWidth > 768) {
+        } else if (width === 'sm') {
             return 3;
         }
 
@@ -116,7 +149,7 @@ export class DashboardPage extends React.Component {
     }
 
     getGridWideColumns({ getMax = false } = {}) {
-        if (window.innerWidth > 1600 || getMax) {
+        if (this.state.width === 'lg' || this.state.width === 'xl' || getMax) {
             return 2;
         }
 
@@ -124,9 +157,9 @@ export class DashboardPage extends React.Component {
     }
 
     getNotificationsColumns({ getMax = false } = {}) {
-        if (window.innerWidth > 1600 || getMax) {
+        if (this.state.width === 'lg' || this.state.width === 'xl' || getMax) {
             return 3;
-        } else if (window.innerWidth > 1024) {
+        } else if (this.state.width === 'md') {
             return 2;
         }
 
@@ -244,12 +277,12 @@ export class DashboardPage extends React.Component {
         const styles = {
             root: {
                 position: 'relative',
-                height: window.innerHeight - mainAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight}px)`,
                 width: '100%',
                 backgroundImage: `url(${images.topo_dark})`,
             },
             customScrollbar: {
-                height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
             },
             loadingOverlay: {
                 position: 'absolute',
@@ -457,7 +490,7 @@ export class DashboardPage extends React.Component {
                                     name="Featured"
                                     columns={this.getGridWideColumns()}
                                     gridPadding={this.getGridPadding()}
-                                    cellHeight={(window.innerWidth > 768) ? 335 : 435}
+                                    cellHeight={this.state.width !== 'xs' ? 335 : 435}
                                     providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
@@ -468,7 +501,7 @@ export class DashboardPage extends React.Component {
                                             key={`FeaturedDataPack-${run.created_at}`}
                                             gridName="Featured"
                                             index={index}
-                                            height={(window.innerWidth > 768) ? '335px' : '435px'}
+                                            height={this.state.width !== 'xs' ? '335px' : '435px'}
                                         />
                                     ))}
                                 </DashboardSection>
@@ -608,7 +641,7 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(DashboardPage));
+export default
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends DashboardPage {}

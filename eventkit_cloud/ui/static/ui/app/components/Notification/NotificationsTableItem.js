@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Checkbox from '@material-ui/core/Checkbox';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import TableRow from '@material-ui/core/TableRow';
@@ -51,6 +52,7 @@ export class NotificationsTableItem extends React.Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
 
         let styles = {
             tableRow: {
@@ -60,14 +62,14 @@ export class NotificationsTableItem extends React.Component {
             cell: {
                 padding: '0 15px',
                 color: colors.text_primary,
-                fontSize: '18px',
+                fontSize: '16px',
                 height: '48px',
                 borderBottom: 'none',
             },
             optionsButtonsContainer: {
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: (window.innerWidth > 1280) ? 'center' : 'flex-end',
+                justifyContent: isWidthUp('xl', width) ? 'center' : 'flex-end',
             },
             button: {
                 fontSize: '14px',
@@ -80,8 +82,7 @@ export class NotificationsTableItem extends React.Component {
         };
 
         let optionsWidth = '60px';
-        if (window.innerWidth > 1600) optionsWidth = '600px';
-        else if (window.innerWidth > 1280) optionsWidth = '435px';
+        if (isWidthUp('xl', width)) optionsWidth = '435px';
 
         styles = {
             ...styles,
@@ -96,7 +97,7 @@ export class NotificationsTableItem extends React.Component {
             },
             dateRowColumn: {
                 ...styles.cell,
-                width: (window.innerWidth > 768) ? '200px' : '150px',
+                width: isWidthUp('md') ? '200px' : '150px',
             },
             optionsRowColumn: {
                 ...styles.cell,
@@ -153,7 +154,7 @@ export class NotificationsTableItem extends React.Component {
                     style={styles.optionsRowColumn}
                 >
                     <div style={styles.optionsButtonsContainer}>
-                        {(window.innerWidth > 1280) ?
+                        {(isWidthUp('xl', width)) ?
                             <div
                                 className="qa-NotificationsTableItem-ActionButtons"
                                 style={{ display: 'flex', flex: '1' }}
@@ -244,6 +245,7 @@ NotificationsTableItem.propTypes = {
     markNotificationsAsUnread: PropTypes.func.isRequired,
     removeNotifications: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 NotificationsTableItem.defaultProps = {
@@ -261,7 +263,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    null,
-    mapDispatchToProps,
-)(NotificationsTableItem));
+export default
+@withWidth()
+@withTheme()
+@connect(null, mapDispatchToProps)
+class Default extends NotificationsTableItem {}

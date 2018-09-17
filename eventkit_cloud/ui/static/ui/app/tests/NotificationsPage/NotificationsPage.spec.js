@@ -195,8 +195,8 @@ describe('NotificationsPage component', () => {
 
         describe('and window width is <= 768', () => {
             beforeEach(() => {
-                window.resizeTo(768, 600);
                 setup();
+                wrapper.setProps({ width: 'sm' });
                 loadNotifications();
             });
 

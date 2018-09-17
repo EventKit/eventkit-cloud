@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -29,7 +30,6 @@ import BaseDialog from '../Dialog/BaseDialog';
 import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/groupActions';
 import { getUsers } from '../../actions/usersActions';
 import { DrawerTimeout } from '../../actions/uiActions';
-import { isViewportXS, isViewportS } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
 
 export class UserGroupsPage extends Component {
@@ -82,7 +82,7 @@ export class UserGroupsPage extends Component {
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
-            drawerOpen: !(isViewportS()),
+            drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
             showAddUsers: false,
             showCreate: false,
@@ -532,7 +532,7 @@ export class UserGroupsPage extends Component {
 
         if (!newSteps.length) return;
 
-        if (isViewportXS()) {
+        if (isWidthDown('xs', this.props.width)) {
             const ix = newSteps.findIndex(step => (
                 step.selector === '.qa-UserGroupsPage-Button-create'
             ));
@@ -567,7 +567,7 @@ export class UserGroupsPage extends Component {
             this.setState({ isRunning: false, stepIndex: 0 });
             this.joyride.reset(true);
         } else {
-            if (step.selector === '.qa-GroupsDrawer-addGroup' && isViewportS() && !this.state.drawerOpen) {
+            if (step.selector === '.qa-GroupsDrawer-addGroup' && isWidthDown('sm', this.props.width) && !this.state.drawerOpen) {
                 // because the next step will render immediately after (before the drawer is fully open)
                 // we need to wait till the drawer is open and then update the placement of the step items
                 await this.toggleDrawer();
@@ -586,7 +586,7 @@ export class UserGroupsPage extends Component {
                         };
                         this.props.users.users.push(fakeUser);
                     }
-                } else if (type === 'step:after' && isViewportS()) {
+                } else if (type === 'step:after' && isWidthDown('sm', this.props.width)) {
                     this.toggleDrawer();
                 }
             } else if (step.selector === '.qa-UserHeader-checkbox' && type === 'tooltip:before') {
@@ -605,7 +605,7 @@ export class UserGroupsPage extends Component {
     }
 
     handleJoyride() {
-        if (this.state.drawerOpen && isViewportS()) {
+        if (this.state.drawerOpen && isWidthDown('sm', this.props.width)) {
             this.toggleDrawer();
         }
         if (this.state.isRunning === true) {
@@ -619,10 +619,10 @@ export class UserGroupsPage extends Component {
     render() {
         const { colors } = this.props.theme.eventkit;
         const { steps, isRunning } = this.state;
-        const smallViewport = isViewportS();
-        const xsmallViewport = isViewportXS();
+        const smallViewport = isWidthDown('sm', this.props.width);
+        const xsmallViewport = isWidthDown('xs', this.props.width);
         const bodyWidth = !smallViewport ? 'calc(100% - 250px)' : '100%';
-        const bodyHeight = window.innerHeight - 130;
+        const bodyHeight = 'calc(100vh - 130px)';
         const styles = {
             header: {
                 backgroundColor: colors.background,
@@ -943,7 +943,7 @@ export class UserGroupsPage extends Component {
                     </div>
                     <div style={{ maxWidth: '1000px', margin: 'auto', position: 'relative' }}>
                         <CustomScrollbar
-                            style={{ height: bodyHeight - 155, width: '100%' }}
+                            style={{ height: 'calc(100vh - 130px - 155px)', width: '100%' }}
                             className="qa-UserGroupsPage-CustomScrollbar"
                             ref={(instance) => { this.scrollbar = instance; }}
                         >
@@ -1146,6 +1146,7 @@ UserGroupsPage.propTypes = {
     getUsers: PropTypes.func.isRequired,
     location: PropTypes.object.isRequired,
     theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -1180,7 +1181,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(UserGroupsPage));
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends UserGroupsPage {}
