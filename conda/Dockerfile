@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y groff groff-base && \
     echo 'root=$(pwd -P)' >> /root/.bashrc && \
     export root=$root && \
     echo "y" | conda install python=3.5 && \
-    conda install conda-build && conda update conda-build && \
+    # because there is a bug in
+    echo "y" | conda install --force "conda-build=3.0.9" && \
     conda config --add channels local && \
     conda config --add channels conda-forge && \
     conda config --add channels bioconda && \
