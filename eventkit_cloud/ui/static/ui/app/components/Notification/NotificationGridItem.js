@@ -6,7 +6,9 @@ import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
-import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
+import { getNotificationViewPath } from '../../utils/notificationUtils';
+import NotificationMessage from './NotificationMessage';
+import NotificationIcon from './NotificationIcon';
 import NotificationMenu from './NotificationMenu';
 
 
@@ -67,17 +69,14 @@ export class NotificationGridItem extends Component {
             },
         };
 
-        const icon = getNotificationIcon({ notification: this.props.notification });
-        const message = getNotificationMessage({
-            notification: this.props.notification,
-            onLinkClick: this.handleView,
-        });
-
         return (
             <div style={this.props.style}>
                 <Paper style={styles.root}>
-                    {icon}
-                    {message}
+                    <NotificationIcon notification={this.props.notification} />
+                    <NotificationMessage
+                        notification={this.props.notification}
+                        onLinkClick={this.handleView}
+                    />
                     <div style={{ flex: '1' }} />
                     <div
                         className="qa-NotificationGridItem-Date"

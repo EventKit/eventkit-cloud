@@ -5,6 +5,8 @@ import moment from 'moment';
 import Paper from '@material-ui/core/Paper';
 import { NotificationGridItem } from '../../components/Notification/NotificationGridItem';
 import NotificationMenu from '../../components/Notification/NotificationMenu';
+import NotificationIcon from '../../components/Notification/NotificationIcon';
+import NotificationMessage from '../../components/Notification/NotificationMessage';
 import { getNotificationViewPath } from '../../utils/notificationUtils';
 
 describe('NotificationGridItem component', () => {
@@ -60,16 +62,12 @@ describe('NotificationGridItem component', () => {
         expect(wrapper.find(Paper)).toHaveLength(1);
     });
 
-    it('renders an icon', () => {
-        expect(wrapper.find('.qa-NotificationIcon')).toHaveLength(1);
+    it('renders a icon', () => {
+        expect(wrapper.find(NotificationIcon)).toHaveLength(1);
     });
 
-    it('renders message text', () => {
-        expect(wrapper.find('.qa-NotificationMessage-Text')).toHaveLength(1);
-    });
-
-    it('renders message link', () => {
-        expect(wrapper.find('.qa-NotificationMessage-Link')).toHaveLength(1);
+    it('renders a message', () => {
+        expect(wrapper.find(NotificationMessage)).toHaveLength(1);
     });
 
     it('renders a date', () => {
