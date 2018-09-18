@@ -1,6 +1,6 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import Checkbox from '@material-ui/core/Checkbox';
 import { ProvidersFilter } from '../../components/DataPackPage/ProvidersFilter';
 
@@ -32,18 +32,19 @@ describe('ProvidersFilter component', () => {
             providers,
             selected: {},
             onChange: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ProvidersFilter {...props} />)
+        shallow(<ProvidersFilter {...props} />)
     );
 
     it('should have checkboxes', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('p').first().text()).toEqual('Sources');
-        expect(wrapper.find('.qa-ProvidersFilter-name').at(0).text()).toEqual(providers[0].name);
+        expect(wrapper.find('p').first().html()).toContain('Sources');
+        expect(wrapper.find('.qa-ProvidersFilter-name').at(0).html()).toContain(providers[0].name);
         expect(wrapper.find(Checkbox).at(0).props().checked).toEqual(false);
     });
 
@@ -58,7 +59,7 @@ describe('ProvidersFilter component', () => {
         const props = getProps();
         props.onChange = sinon.spy();
         const wrapper = getWrapper(props);
-        const input = wrapper.find(Checkbox).at(0).find('input');
+        const input = wrapper.find(Checkbox).at(0);
         input.simulate('change', { target: { checked: true } });
         wrapper.update();
         expect(props.onChange.calledOnce).toEqual(true);
@@ -67,12 +68,12 @@ describe('ProvidersFilter component', () => {
     it('should set source as checked', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        let input = wrapper.find(Checkbox).at(0).find('input');
+        let input = wrapper.find(Checkbox).at(0);
         expect(input.props().checked).toEqual(false);
         const nextProps = getProps();
         nextProps.selected[providers[0].slug] = true;
         wrapper.setProps(nextProps);
-        input = wrapper.find(Checkbox).at(0).find('input');
+        input = wrapper.find(Checkbox).at(0);
         expect(input.props().checked).toEqual(true);
     });
 });

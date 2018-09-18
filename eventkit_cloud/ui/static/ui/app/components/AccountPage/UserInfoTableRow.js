@@ -1,21 +1,24 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 
 export class UserInfoTableRow extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             tr: {
                 lineHeight: '35px',
             },
             title: {
                 padding: '0px 15px',
-                backgroundColor: 'whitesmoke',
+                backgroundColor: colors.secondary,
                 whiteSpace: 'nowrap',
             },
             data: {
                 padding: '0px 15px',
-                backgroundColor: 'whitesmoke',
-                color: 'grey',
+                backgroundColor: colors.secondary,
+                color: colors.grey,
                 width: '99%',
             },
         };
@@ -41,6 +44,7 @@ UserInfoTableRow.defaultProps = {
 UserInfoTableRow.propTypes = {
     title: PropTypes.string,
     data: PropTypes.string,
+    theme: PropTypes.object.isRequired,
 };
 
-export default UserInfoTableRow;
+export default withTheme()(UserInfoTableRow);

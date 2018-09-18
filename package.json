@@ -4,14 +4,13 @@
   "description": "Eventkit-cloud is based on the HOT OSM Export Tool 2. It allows the user to select data from different sources to export into a variety of formats.",
   "main": "webpack.config.js",
   "dependencies": {
+    "@babel/polyfill": "~7.0.0",
     "@material-ui/core": "~3.0.0",
     "@material-ui/icons": "~3.0.0",
     "@material-ui/lab": "~1.0.0-alpha.12",
     "axios": "~0.15.3",
-    "babel-polyfill": "~6.23.0",
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
-    "material-ui": "~0.20.1",
     "moment": "~2.20.1",
     "numeral": "~2.0.4",
     "ol": "~4.4.2",
@@ -21,6 +20,7 @@
     "react-bootstrap-typeahead": "~2.4.0",
     "react-cookie": "~1.0.4",
     "react-custom-scrollbars": "~4.2.1",
+    "react-day-picker": "~7.2.1",
     "react-dom": "~16.4.1",
     "react-dropzone": "~4.2.13",
     "react-joyride": "~1.11.4",
@@ -35,25 +35,30 @@
     "redux-thunk": "~2.1.0"
   },
   "devDependencies": {
+    "@babel/cli": "~7.0.0",
+    "@babel/core": "~7.0.0",
+    "@babel/plugin-proposal-class-properties": "~7.0.0",
+    "@babel/plugin-proposal-decorators": "~7.0.0",
+    "@babel/plugin-proposal-function-bind": "~7.0.0",
+    "@babel/plugin-syntax-dynamic-import": "~7.0.0",
+    "@babel/plugin-transform-async-to-generator": "~7.0.0",
+    "@babel/preset-env": "~7.0.0",
+    "@babel/preset-react": "~7.0.0",
     "axios-mock-adapter": "~1.7.1",
-    "babel-core": "~6.26.3",
-    "babel-eslint": "~8.2.5",
-    "babel-jest": "17.0.2",
-    "babel-loader": "~7.0.0",
-    "babel-plugin-transform-class-properties": "~6.19.0",
-    "babel-preset-react": "~6.16.0",
-    "babel-preset-env": "~1.7.0",
-    "babel-preset-stage-0": "~6.16.0",
+    "babel-core": "~7.0.0-bridge.0",
+    "babel-eslint": "~9.0.0",
+    "babel-jest": "~23.4.2",
+    "babel-loader": "^8.0.0",
     "canvas": "~1.6.7",
     "compression-webpack-plugin": "~1.1.11",
     "css-loader": "~0.28.0",
     "enzyme": "~3.3.0",
     "enzyme-adapter-react-16": "~1.1.1",
     "eslint": "~4.9.0",
-    "eslint-plugin-import": "~2.7.0",
-    "eslint-plugin-react": "~7.4.0",
-    "eslint-plugin-jsx-a11y": "~6.0.2",
     "eslint-config-airbnb": "~16.1.0",
+    "eslint-plugin-import": "~2.7.0",
+    "eslint-plugin-jsx-a11y": "~6.0.2",
+    "eslint-plugin-react": "~7.4.0",
     "extract-text-webpack-plugin": "~4.0.0-beta.0",
     "file-loader": "~1.1.11",
     "identity-obj-proxy": "~3.0.0",
@@ -74,18 +79,8 @@
     "webpack-bundle-analyzer": "~2.13.1",
     "webpack-cli": "~2.1.4",
     "webpack-dev-server": "~3.1.4",
-    "write-file-webpack-plugin": "~4.3.2"
-  },
-  "babel": {
-    "plugins": [
-      "transform-class-properties",
-      "transform-async-to-generator"
-    ],
-    "presets": [
-      "react",
-      "env",
-      "stage-0"
-    ]
+    "write-file-webpack-plugin": "~4.3.2",
+    "@babel/preset-flow": "^7.0.0"
   },
   "jest": {
     "testURL": "http://localhost",
@@ -124,8 +119,12 @@
       "./setupFile.js"
     ],
     "transformIgnorePatterns": [
-      "/node_modules/(?!(jsts|ol))"
-    ]
+      "/node_modules/(?!(jsts|ol)/).+\\.js$"
+    ],
+    "transform": {
+        "^.+\\.jsx$": "babel-jest",
+        "^.+\\.js$": "babel-jest"
+    }
   },
   "scripts": {
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",

@@ -2,7 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import raf from 'raf';
 import { browserHistory } from 'react-router';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Help from '@material-ui/icons/Help';
@@ -133,10 +133,11 @@ describe('DataPackPage component', () => {
                 page_size: '12',
             },
         },
+        ...global.eventkit_test_props,
     });
 
     const getWrapper = props => (
-        mount(<DataPackPage {...props} />)
+        shallow(<DataPackPage {...props} />)
     );
 
     beforeAll(() => {
@@ -151,7 +152,6 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(PageHeader)).toHaveLength(1);
-        expect(wrapper.find(PageHeader).find('div').at(2).text()).toEqual('DataPack Library');
         expect(wrapper.find(DataPackLinkButton)).toHaveLength(1);
         expect(wrapper.find(Toolbar)).toHaveLength(2);
         expect(wrapper.find(DataPackSearchbar)).toHaveLength(1);
@@ -337,8 +337,6 @@ describe('DataPackPage component', () => {
         props.setOrder = sinon.spy();
         props.setView = sinon.spy();
         const wrapper = getWrapper(props);
-        expect(wrapper.props().runsList.order).toEqual('');
-        expect(wrapper.props().runsList.view).toEqual('');
         wrapper.unmount();
         expect(props.setOrder.calledOnce).toBe(true);
         expect(props.setOrder.calledWith('-job__featured')).toBe(true);
@@ -534,6 +532,7 @@ describe('DataPackPage component', () => {
 
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
+        props.width = 'md';
         const wrapper = shallow(<DataPackPage {...props} />);
         const currentState = { ...wrapper.state() };
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
@@ -546,8 +545,6 @@ describe('DataPackPage component', () => {
                 incomplete: false,
             },
         };
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterApply(newState);
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith(
@@ -564,10 +561,9 @@ describe('DataPackPage component', () => {
 
     it('handleFilterClear should setState then re-apply search and sort', () => {
         const props = getProps();
+        props.width = 'lg';
         const wrapper = shallow(<DataPackPage {...props} />);
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({
@@ -685,7 +681,6 @@ describe('DataPackPage component', () => {
             openShare: wrapper.instance().handleShareOpen,
             users: props.users,
             groups: props.groups,
-            ref: wrapper.instance().getViewRef,
         };
 
         expect(wrapper.instance().getView('list')).toEqual(
@@ -693,6 +688,7 @@ describe('DataPackPage component', () => {
                 {...commonProps}
                 onSort={wrapper.instance().handleSortChange}
                 order={wrapper.state().order}
+                innerRef={wrapper.instance().getViewRef}
             />),
             sinon.match({ ref: commonProps.ref }),
         );
@@ -701,6 +697,7 @@ describe('DataPackPage component', () => {
             <DataPackGrid
                 {...commonProps}
                 name="DataPackLibrary"
+                ref={wrapper.instance().getViewRef}
             />
         ));
 
@@ -713,6 +710,7 @@ describe('DataPackPage component', () => {
                 processGeoJSONFile={props.processGeoJSONFile}
                 resetGeoJSONFile={props.resetGeoJSONFile}
                 onMapFilter={wrapper.instance().handleSpatialFilter}
+                innerRef={wrapper.instance().getViewRef}
             />
         ));
         expect(wrapper.instance().getView('bad case')).toEqual(null);
@@ -787,6 +785,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         const wrapper = getWrapper(props);
+        wrapper.instance().joyride = { reset: sinon.spy() };
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();

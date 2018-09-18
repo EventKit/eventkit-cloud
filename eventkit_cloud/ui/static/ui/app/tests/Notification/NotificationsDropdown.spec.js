@@ -1,5 +1,5 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { NotificationsDropdown } from '../../components/Notification/NotificationsDropdown';
@@ -36,6 +36,11 @@ const mockNotifications = {
 describe('NotificationsDropdown component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -49,6 +54,7 @@ describe('NotificationsDropdown component', () => {
             },
             onNavigate: sinon.spy(),
             markAllNotificationsAsRead: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 

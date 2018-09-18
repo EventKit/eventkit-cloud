@@ -1,16 +1,17 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import moment from 'moment';
 import DataPackDetails from '../../components/StatusDownloadPage/DataPackDetails';
 import DataPackStatusTable from '../../components/StatusDownloadPage/DataPackStatusTable';
 import DataPackOptions from '../../components/StatusDownloadPage/DataPackOptions';
 import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
 import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
-import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
-import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
+import { DataCartDetails } from '../../components/StatusDownloadPage/DataCartDetails';
 
 describe('DataCartDetails component', () => {
+    let shallow;
+
     const run = {
         uid: '12345',
         url: 'http://cloud.eventkit.test/api/runs/123455',
@@ -77,18 +78,8 @@ describe('DataCartDetails component', () => {
         },
     ];
 
-    const didMount = DataCartDetails.prototype.componentDidMount;
-
     beforeAll(() => {
-        DataCartDetails.prototype.componentDidMount = sinon.spy();
-        DataPackAoiInfo.prototype.render = sinon.spy(() => null);
-        DataPackAoiInfo.prototype.initializeOpenLayers = sinon.spy();
-    });
-
-    afterAll(() => {
-        DataCartDetails.prototype.componentDidMount = didMount;
-        DataPackAoiInfo.prototype.render.restore();
-        DataPackAoiInfo.prototype.initializeOpenLayers.restore();
+        shallow = createShallow();
     });
 
     const getProps = () => (
@@ -106,11 +97,12 @@ describe('DataCartDetails component', () => {
             user: { data: { user: { username: 'admin' } } },
             members: [],
             groups: [],
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<DataCartDetails {...props} />)
+        shallow(<DataCartDetails {...props} />)
     );
 
     it('should render elements', () => {
@@ -133,36 +125,34 @@ describe('DataCartDetails component', () => {
         const props = getProps();
         props.cartDetails.status = 'COMPLETED';
         const wrapper = getWrapper(props);
-        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('rgba(188,223,187, 0.4)');
+        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('#55ba6333');
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#55ba63');
 
         const nextProps = getProps();
         nextProps.cartDetails.status = 'SUBMITTED';
         wrapper.setProps(nextProps);
-        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('rgba(250,233,173, 0.4)');
+        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('#f4d22533');
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#f4d225');
 
         const lastProps = getProps();
         lastProps.cartDetails.status = 'INCOMPLETE';
         wrapper.setProps(lastProps);
-        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('rgba(232,172,144, 0.4)');
+        expect(wrapper.find(DataPackStatusTable).props().statusColor).toEqual('#ce442733');
         expect(wrapper.find(DataPackStatusTable).props().statusFontColor).toEqual('#ce4427');
     });
 
-    it('should call setMaxDate set on mount', () => {
+    it('should call setMaxDate set on shallow', () => {
         const props = getProps();
         const dateStub = sinon.stub(DataCartDetails.prototype, 'setDates');
-        DataCartDetails.prototype.componentDidMount = didMount;
         getWrapper(props);
         expect(dateStub.calledOnce).toBe(true);
         dateStub.restore();
-        DataCartDetails.prototype.componentDidMount = sinon.spy();
     });
 
     it('setMaxDate should set the min and max dates', () => {
         const props = getProps();
-        const stateStub = sinon.stub(DataCartDetails.prototype, 'setState');
         const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const minDate = new Date();
         const clock = sinon.useFakeTimers(minDate.getTime());
         const today = new Date();
@@ -173,7 +163,6 @@ describe('DataCartDetails component', () => {
         wrapper.instance().setDates();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ minDate, maxDate })).toBe(true);
-        stateStub.restore();
         clock.restore();
     });
 
@@ -195,7 +184,7 @@ describe('DataCartDetails component', () => {
         const props = getProps();
         props.onUpdateExpiration = sinon.spy();
         const wrapper = getWrapper(props);
-        wrapper.instance().handleExpirationChange({}, 'today');
+        wrapper.instance().handleExpirationChange('today');
         expect(props.onUpdateExpiration.calledOnce).toBe(true);
         expect(props.onUpdateExpiration.calledWith(props.cartDetails.uid, 'today')).toBe(true);
     });

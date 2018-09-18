@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { MenuItem } from 'react-bootstrap-typeahead';
 import ActionRoom from '@material-ui/icons/Room';
 import IrregularPolygon from '../icons/IrregularPolygon';
@@ -15,25 +16,27 @@ export class TypeaheadMenuItem extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             icon: {
                 height: '40px',
                 width: '40px',
                 padding: '0px',
                 verticalAlign: 'middle',
-                color: '#707274',
+                color: colors.text_primary,
             },
             iconDiv: {
                 width: '45px',
             },
             text: {
-                color: '#707274',
+                color: colors.text_primary,
                 minHeight: '20px',
                 whiteSpace: 'normal',
             },
             source: {
-                color: '#707274',
-                background: '#e1e1e1',
+                color: colors.text_primary,
+                background: colors.secondary,
                 padding: '1px 4px',
                 borderRadius: '2px',
             },
@@ -79,6 +82,7 @@ export class TypeaheadMenuItem extends Component {
 TypeaheadMenuItem.propTypes = {
     result: PropTypes.object.isRequired,
     index: PropTypes.number.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default TypeaheadMenuItem;
+export default withTheme()(TypeaheadMenuItem);

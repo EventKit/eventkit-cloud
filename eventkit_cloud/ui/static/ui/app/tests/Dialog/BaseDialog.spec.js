@@ -5,13 +5,14 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
-import BaseDialog from '../../components/Dialog/BaseDialog';
+import { BaseDialog } from '../../components/Dialog/BaseDialog';
 
 describe('BaseDialog component', () => {
     const getProps = () => ({
         show: true,
         onClose: () => {},
         title: '',
+        ...global.eventkit_test_props,
     });
 
     const getWrapper = props => mount(<BaseDialog {...props} />);
@@ -42,5 +43,13 @@ describe('BaseDialog component', () => {
         props.actions = actions;
         const wrapper = getWrapper(props);
         expect(wrapper.find(DialogActions).props().children).toEqual(actions);
+    });
+
+    it('should give the dialog the passed in title', () => {
+        const title = 'hello';
+        const props = getProps();
+        props.title = title;
+        const wrapper = getWrapper(props);
+        expect(wrapper.find(DialogTitle).text()).toEqual(title);
     });
 });

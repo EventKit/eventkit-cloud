@@ -1,20 +1,22 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 
 export class ThreeStepInfo extends Component {
     render() {
+        const { theme } = this.props;
         const styles = {
             threeStepCaption: {
-                backgroundColor: '#4598bf',
+                backgroundColor: theme.eventkit.colors.primary,
                 padding: '5px',
-                color: '#fff',
+                color: theme.eventkit.colors.white,
                 minHeight: '50px',
                 width: '95%',
             },
             table: {
                 borderCollapse: 'collapse',
                 marginBottom: '30px',
-                fontSize: window.innerWidth > 991 ? '16px' : '14px',
+                fontSize: '14px',
                 ...this.props.tableStyle,
             },
         };
@@ -74,6 +76,7 @@ ThreeStepInfo.propTypes = {
         caption: PropTypes.string,
     })).isRequired,
     tableStyle: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ThreeStepInfo;
+export default withTheme()(ThreeStepInfo);

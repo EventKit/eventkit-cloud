@@ -1,10 +1,16 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import IconMenu from '../../components/common/IconMenu';
-import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
+import { OwnUserRow } from '../../components/UserGroupsPage/OwnUserRow';
 
 describe('OwnUserRow component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             user: {
@@ -16,11 +22,12 @@ describe('OwnUserRow component', () => {
                 },
                 groups: [1],
             },
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<OwnUserRow {...props} />)
+        shallow(<OwnUserRow {...props} />)
     );
 
     it('should render the basic components', () => {

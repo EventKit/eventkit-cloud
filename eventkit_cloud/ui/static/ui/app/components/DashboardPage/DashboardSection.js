@@ -1,13 +1,14 @@
 /* eslint react/no-array-index-key: 0 */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { withStyles } from '@material-ui/core/styles';
+import { withStyles, withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import SwipeableViews from 'react-swipeable-views';
 
-const jss = () => ({
+const jss = theme => ({
     tabsRoot: {
         height: '16px',
         minHeight: '16px',
@@ -19,8 +20,8 @@ const jss = () => ({
         borderRadius: '50%',
         width: '16px',
         height: '16px',
-        backgroundColor: 'white',
-        border: '3px solid rgb(69, 152, 191)',
+        backgroundColor: theme.eventkit.colors.white,
+        border: `3px solid ${theme.eventkit.colors.primary}`,
         margin: '0px 4px',
         transition: 'border 0.25s',
         minWidth: '16px',
@@ -28,11 +29,11 @@ const jss = () => ({
         opacity: '1',
     },
     tabSelected: {
-        border: '8px solid #4598bf',
+        border: `8px solid ${theme.eventkit.colors.primary}`,
     },
     tabDisabled: {
-        backgroundColor: 'lightgray',
-        border: '3px solid gray',
+        backgroundColor: theme.eventkit.colors.secondary_dark,
+        border: `3px solid ${theme.eventkit.colors.grey}`,
         opacity: '0.5',
     },
 });
@@ -46,15 +47,15 @@ export class DashboardSection extends React.Component {
             pageIndex: 0,
         };
         this.maxPages = 3;
-        this.itemsPerPage = this.props.columns * this.props.rows;
     }
 
     getPages() {
+        const itemsPerPage = this.props.columns * this.props.rows;
         // Group children into pages, each of length maxPages.
         const children = React.Children.toArray(this.props.children);
         const pages = [];
-        for (let i = 0; i < children.length; i += this.itemsPerPage) {
-            pages.push(children.slice(i, i + this.itemsPerPage));
+        for (let i = 0; i < children.length; i += itemsPerPage) {
+            pages.push(children.slice(i, i + itemsPerPage));
             if (pages.length === this.maxPages) {
                 break;
             }
@@ -70,9 +71,11 @@ export class DashboardSection extends React.Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const { classes } = this.props;
+        const md = isWidthUp('md', this.props.width);
 
-        const spacing = window.innerWidth > 575 ? 10 : 2;
+        const spacing = md ? 10 : 2;
         const scrollbarWidth = 6;
         const halfGridPadding = this.props.gridPadding / 2;
         const styles = {
@@ -82,14 +85,15 @@ export class DashboardSection extends React.Component {
             },
             sectionHeader: {
                 margin: '12px 0 13px',
-                paddingLeft: (window.innerWidth > 575) ? `${spacing + halfGridPadding}px` : '12px',
-                paddingRight: (window.innerWidth > 575) ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
-                fontSize: (window.innerWidth > 575) ? '22px' : '18px',
+                paddingLeft: md ? `${spacing + halfGridPadding}px` : '12px',
+                paddingRight: md ? `${spacing + halfGridPadding + scrollbarWidth}px` : '12px',
+                fontSize: md ? '22px' : '18px',
                 fontWeight: 'bold',
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
+                color: colors.white,
             },
             sectionHeaderLeft: {
                 flex: '1',
@@ -107,12 +111,12 @@ export class DashboardSection extends React.Component {
                 height: 'auto',
                 margin: '0',
                 paddingLeft: `${spacing}px`,
-                paddingRight: (window.innerWidth > 575) ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
+                paddingRight: md ? `${spacing + scrollbarWidth}px` : `${spacing}px`,
             },
             viewAll: {
-                color: 'rgb(69, 152, 191)',
+                color: colors.primary,
                 textTransform: 'uppercase',
-                fontSize: (window.innerWidth > 575) ? '14px' : '12px',
+                fontSize: md ? '14px' : '12px',
                 cursor: 'pointer',
                 marginLeft: '18px',
             },
@@ -281,6 +285,8 @@ DashboardSection.propTypes = {
         PropTypes.string,
     ]),
     classes: PropTypes.object,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 DashboardSection.defaultProps = {
@@ -295,4 +301,8 @@ DashboardSection.defaultProps = {
     classes: {},
 };
 
-export default withStyles(jss)(DashboardSection);
+export default
+@withWidth()
+@withTheme()
+@withStyles(jss)
+class Default extends DashboardSection {}

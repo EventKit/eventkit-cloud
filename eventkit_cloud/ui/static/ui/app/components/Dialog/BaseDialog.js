@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -10,6 +11,8 @@ import CustomScrollbar from '../CustomScrollbar';
 
 export class BaseDialog extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         // default styling with the option for overriding with custom props
         const styles = {
             dialog: {
@@ -29,7 +32,7 @@ export class BaseDialog extends Component {
             body: {
                 padding: '0px 24px',
                 fontSize: '16px',
-                color: '#707274',
+                color: colors.text_primary,
                 ...this.props.bodyStyle,
             },
             actions: {
@@ -43,7 +46,7 @@ export class BaseDialog extends Component {
                 cursor: 'pointer',
             },
             button: {
-                color: 'whitesmoke',
+                color: colors.secondary,
                 fontWeight: 'bold',
                 ...this.props.buttonStyle,
             },
@@ -129,6 +132,7 @@ BaseDialog.propTypes = {
     actionsStyle: PropTypes.object,
     buttonStyle: PropTypes.object,
     overlayStyle: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default BaseDialog;
+export default withTheme()(BaseDialog);

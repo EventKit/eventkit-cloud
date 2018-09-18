@@ -6,6 +6,7 @@ import ErrorIcon from '@material-ui/icons/Error';
 import AddCircleIcon from '@material-ui/icons/AddCircle';
 import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 import { Link } from 'react-router';
+import { colors } from '../styles/eventkit_theme';
 
 const verbs = {
     runStarted: 'run_started',
@@ -63,15 +64,15 @@ export function getNotificationMessage({
         text: {
             ...textStyle,
             whiteSpace: 'nowrap',
-            fontSize: (window.innerWidth >= 512) ? '16px' : '12px',
+            fontSize: '14px',
         },
         link: {
             ...textStyle,
             ...linkStyle,
-            color: '#337ab7',
+            color: colors.primary,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            fontSize: (window.innerWidth >= 512) ? '16px' : '12px',
+            fontSize: '14px',
         },
     };
 
@@ -96,7 +97,7 @@ export function getNotificationMessage({
         return [
             <span
                 key={`${notification.id}-error`}
-                style={{ ...styles.text, color: '#CE4427', whiteSpace: 'normal' }}
+                style={{ ...styles.text, color: colors.warning, whiteSpace: 'normal' }}
                 className="qa-NotificationMessage-error"
             >
                 Uh oh! Sorry, this notification&apos;s details are no longer available.
@@ -338,7 +339,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#1F2738',
+                        fill: colors.background_light,
                     }}
                 />
             );
@@ -348,7 +349,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#55BA63',
+                        fill: colors.success,
                     }}
                 />
             );
@@ -359,7 +360,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#55BA63',
+                        fill: colors.success,
                     }}
                 />
             );
@@ -371,7 +372,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#CE4427',
+                        fill: colors.warning,
                     }}
                 />
             );
@@ -381,7 +382,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#F4D225',
+                        fill: colors.running,
                     }}
                 />
             );
@@ -391,7 +392,7 @@ export function getNotificationIcon({ notification, iconStyle }) {
                     className="qa-NotificationIcon"
                     style={{
                         ...styles.icon,
-                        fill: '#CE4427',
+                        fill: colors.warning,
                     }}
                 />
             );

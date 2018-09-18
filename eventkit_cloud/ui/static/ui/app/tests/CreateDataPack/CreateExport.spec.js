@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import Help from '@material-ui/icons/Help';
 import initialState from '../../reducers/initialState';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';
-import { BreadcrumbStepper } from '../../components/CreateDataPack/BreadcrumbStepper';
-import { ConfirmDialog } from '../../components/Dialog/ConfirmDialog';
+import BreadcrumbStepper from '../../components/CreateDataPack/BreadcrumbStepper';
 import PageHeader from '../../components/common/PageHeader';
 
 describe('CreateExport component', () => {
@@ -18,12 +17,13 @@ describe('CreateExport component', () => {
                 setRouteLeaveHook: () => {},
             },
             routes: [],
+            ...global.eventkit_test_props,
         };
     }
 
-    function getMountedWrapper(props = getProps()) {
+    function getWrapper(props = getProps()) {
         const store = fakeStore(initialState);
-        return mount(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
+        return shallow(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
             context: { store },
             childContextTypes: {
                 store: PropTypes.object,
@@ -36,10 +36,9 @@ describe('CreateExport component', () => {
         const content = BreadcrumbStepper.prototype.getStepContent;
         BreadcrumbStepper.prototype.getStepContent = () => <div />;
 
-        const wrapper = getMountedWrapper();
+        const wrapper = getWrapper();
         expect(wrapper.find(PageHeader)).toHaveLength(1);
         expect(wrapper.find(BreadcrumbStepper)).toHaveLength(1);
-        expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
         expect(wrapper.find('#my-child-element')).toHaveLength(1);
 
@@ -48,7 +47,7 @@ describe('CreateExport component', () => {
     });
 
     it('handleWalkthroughReset should set state', () => {
-        const wrapper = shallow(<CreateExport />);
+        const wrapper = getWrapper();
         const stateSpy = sinon.spy(CreateExport.prototype, 'setState');
         wrapper.instance().handleWalkthroughReset();
         expect(stateSpy.calledOnce).toBe(true);
@@ -57,7 +56,7 @@ describe('CreateExport component', () => {
     });
 
     it('handleWalkthroughClick should set state', () => {
-        const wrapper = shallow(<CreateExport />);
+        const wrapper = getWrapper();
         const stateSpy = sinon.spy(CreateExport.prototype, 'setState');
         wrapper.instance().handleWalkthroughClick();
         expect(stateSpy.calledOnce).toBe(true);

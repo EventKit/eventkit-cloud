@@ -1,14 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import { connect } from 'react-redux';
 import Joyride from 'react-joyride';
-
 import Paper from '@material-ui/core/Paper';
 import MapCard from '../common/MapCard';
 import CustomScrollbar from '../CustomScrollbar';
 import CustomTableRow from '../CustomTableRow';
 import { joyride } from '../../joyride.config';
-import background from '../../../images/topoBackground.png';
 
 export class ExportSummary extends Component {
     constructor(props) {
@@ -63,17 +62,18 @@ export class ExportSummary extends Component {
     }
 
     render() {
+        const { colors, images } = this.props.theme.eventkit;
         const { steps, isRunning } = this.state;
 
         const styles = {
             root: {
                 width: '100%',
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 justifyContent: 'space-around',
                 display: 'flex',
                 flexWrap: 'wrap',
-                height: window.innerHeight - 191,
+                height: 'calc(100vh - 191px)',
             },
             form: {
                 margin: '0 auto',
@@ -91,20 +91,20 @@ export class ExportSummary extends Component {
             heading: {
                 fontSize: '18px',
                 fontWeight: 'bold',
-                color: 'black',
+                color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
             },
             subHeading: {
                 fontSize: '16px',
                 alignContent: 'flex-start',
-                color: '#8b9396',
+                color: colors.text_primary,
                 paddingBottom: '10px',
             },
             exportHeading: {
                 fontSize: '16px',
                 alignContent: 'flex-start',
-                color: 'black',
+                color: colors.black,
                 fontWeight: 'bold',
                 paddingTop: '25px',
                 paddingBottom: '10px',
@@ -221,9 +221,10 @@ ExportSummary.propTypes = {
     areaStr: PropTypes.string.isRequired,
     walkthroughClicked: PropTypes.bool.isRequired,
     onWalkthroughReset: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default connect(
+export default withTheme()(connect(
     mapStateToProps,
     null,
-)(ExportSummary);
+)(ExportSummary));

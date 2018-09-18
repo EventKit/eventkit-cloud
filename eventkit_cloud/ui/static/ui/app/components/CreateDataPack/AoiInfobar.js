@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import numeral from 'numeral';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
@@ -23,7 +25,6 @@ import { allHaveArea } from '../../utils/mapUtils';
 export class AoiInfobar extends Component {
     constructor(props) {
         super(props);
-        this.update = this.update.bind(this);
         this.showAlert = this.showAlert.bind(this);
         this.closeAlert = this.closeAlert.bind(this);
         this.handleMenuClose = this.handleMenuClose.bind(this);
@@ -32,18 +33,6 @@ export class AoiInfobar extends Component {
             showAlert: true,
             menuAnchor: null,
         };
-    }
-
-    // we need a resize listener because the application level forceUpdate is
-    // not working on this component.
-    // When we get to React v16 we should just pass width and height to all components
-    // via the application context.
-    componentDidMount() {
-        window.addEventListener('resize', this.update);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.update);
     }
 
     getIcon(geomType, source) {
@@ -74,10 +63,6 @@ export class AoiInfobar extends Component {
         this.setState({ menuAnchor: e.currentTarget });
     }
 
-    update() {
-        this.forceUpdate();
-    }
-
     showAlert() {
         this.setState({ showAlert: true });
     }
@@ -87,6 +72,9 @@ export class AoiInfobar extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
+
         const styles = {
             wrapper: {
                 zIndex: 2,
@@ -94,13 +82,13 @@ export class AoiInfobar extends Component {
                 width: '100%',
                 bottom: '40px',
                 display: 'flex',
-                justifyContent: (window.innerHeight < 737 && window.innerWidth < 500) ? 'start' : 'center',
+                justifyContent: (window.innerHeight < 737 && isWidthDown('xs', width)) ? 'start' : 'center',
                 pointerEvents: 'none',
             },
             infobar: {
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 display: 'flex',
-                margin: (window.innerHeight < 737 && window.innerWidth < 500) ? '0 70px 0 10px' : '0 10px',
+                margin: (window.innerHeight < 737 && isWidthDown('xs', width)) ? '0 70px 0 10px' : '0 10px',
                 pointerEvents: 'auto',
             },
             body: {
@@ -111,7 +99,7 @@ export class AoiInfobar extends Component {
                 flex: '0 0 auto',
                 flexWrap: 'wrap',
                 padding: '15px',
-                backgroundColor: 'rgba(68, 152, 192, 0.2)',
+                backgroundColor: colors.selected_primary,
             },
             mobileSidebar: {
                 flex: '0 0 auto',
@@ -140,7 +128,7 @@ export class AoiInfobar extends Component {
             },
             maxSize: {
                 fontSize: '12px',
-                color: 'grey',
+                color: colors.grey,
                 display: 'flex',
                 flexWrap: 'wrap',
             },
@@ -162,7 +150,7 @@ export class AoiInfobar extends Component {
             alert: {
                 height: '20px',
                 width: '20px',
-                fill: '#CE4427',
+                fill: colors.warning,
                 verticalAlign: 'middle',
                 cursor: 'pointer',
             },
@@ -171,20 +159,20 @@ export class AoiInfobar extends Component {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 width: '220px',
-                color: '#ce4427',
+                color: colors.warning,
             },
             button: {
                 fontSize: '10px',
                 background: 'none',
                 border: 'none',
-                color: '#4498c0',
+                color: colors.primary,
                 outline: 'none',
                 padding: '0px',
             },
             searchIcon: {
                 height: '20px',
                 width: '20px',
-                fill: '#4498c0',
+                fill: colors.primary,
                 verticalAlign: 'middle',
             },
             bufferButton: {
@@ -266,7 +254,7 @@ export class AoiInfobar extends Component {
                         onClick={this.props.onRevertClick}
                         style={{
                             ...styles.menuItem,
-                            ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: 'grey' } : {}),
+                            ...(!this.props.showRevert ? { pointerEvents: 'none', cursor: 'default', color: colors.grey } : {}),
                         }}
                     >
                         REVERT
@@ -275,7 +263,7 @@ export class AoiInfobar extends Component {
             </div>
         );
 
-        const sidebar = window.innerWidth < 768 ? mobileSidebar : fullSidebar;
+        const sidebar = isWidthDown('sm', width) ? mobileSidebar : fullSidebar;
 
         const noArea = !allHaveArea(this.props.aoiInfo.geojson);
         const originalArea = getSqKmString(this.props.aoiInfo.originalGeojson);
@@ -327,7 +315,7 @@ export class AoiInfobar extends Component {
                          If you plan to include raster data in your DataPack you need to reduce the size of your polygon and/or buffer.
                     </p>
                 }
-                style={{ ...styles.alertCalloutTop, color: '#000' }}
+                style={{ ...styles.alertCalloutTop, color: colors.black }}
             />
         );
 
@@ -344,7 +332,7 @@ export class AoiInfobar extends Component {
                          If you plan to include vector data in your DataPack you need to reduce the size of your polygon and/or buffer.
                     </p>
                 }
-                style={{ ...styles.alertCalloutTop, color: '#000' }}
+                style={{ ...styles.alertCalloutTop, color: colors.black }}
             />
         );
 
@@ -385,7 +373,7 @@ export class AoiInfobar extends Component {
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
                         className="qa-AoiInfobar-alert-icon"
-                        style={{ ...styles.alert, fill: '#FAA619' }}
+                        style={{ ...styles.alert, fill: colors.over }}
                         onClick={this.showAlert}
                     />
                     {this.state.showAlert ?
@@ -400,7 +388,7 @@ export class AoiInfobar extends Component {
                 <div style={{ position: 'relative', display: 'inline-block', marginLeft: '10px' }}>
                     <AlertWarning
                         className="qa-AoiInfobar-alert-icon"
-                        style={{ ...styles.alert, fill: '#FAA619' }}
+                        style={{ ...styles.alert, fill: colors.over }}
                         onClick={this.showAlert}
                     />
                     {this.state.showAlert ?
@@ -441,7 +429,7 @@ export class AoiInfobar extends Component {
                                     </div>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
                                     <div>
-                                        <strong style={{ color: over ? '#CE4427' : 'initial' }}>
+                                        <strong style={{ color: over ? colors.warning : 'initial' }}>
                                             {totalArea}
                                         </strong>
                                     </div>
@@ -459,7 +447,7 @@ export class AoiInfobar extends Component {
                                                 style={{ flex: '1 1 auto', wordBreak: 'break-word' }}
                                                 className="qa-AoiInfobar-infoDescription"
                                             >
-                                                <span className="qa-AoiInfobar-description" style={{ color: 'grey' }}>
+                                                <span className="qa-AoiInfobar-description" style={{ color: colors.grey }}>
                                                     {this.props.aoiInfo.description}
                                                 </span>
                                             </div>
@@ -481,7 +469,7 @@ export class AoiInfobar extends Component {
                                     </div>
                                     <Divider style={{ marginTop: '10px', marginBottom: '10px' }} />
                                     <div style={{ position: 'relative' }}>
-                                        <strong style={{ color: over ? '#CE4427' : 'initial' }}>
+                                        <strong style={{ color: over ? colors.warning : 'initial' }}>
                                              TOTAL AOI
                                         </strong>
                                         {sizeWarning}
@@ -518,6 +506,11 @@ AoiInfobar.propTypes = {
     onRevertClick: PropTypes.func.isRequired,
     clickZoomToSelection: PropTypes.func.isRequired,
     handleBufferClick: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default AoiInfobar;
+export default
+@withWidth()
+@withTheme()
+class Default extends AoiInfobar {}

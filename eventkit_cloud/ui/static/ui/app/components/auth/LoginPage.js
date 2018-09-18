@@ -1,22 +1,25 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import Paper from '@material-ui/core/Paper';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../CustomScrollbar';
-import backgroundImage from '../../../images/topoBackground.png';
 
 export class LoginPage extends React.Component {
     render() {
-        const mobile = window.innerWidth < 768;
+        const { colors, images } = this.props.theme.eventkit;
+
+        const mobile = isWidthDown('sm', this.props.width);
         const styles = {
             wholeDiv: {
                 width: '100%',
-                height: window.innerHeight - 95,
-                backgroundColor: '#111823',
+                height: 'calc(100vh - 95px)',
+                backgroundColor: colors.background,
             },
             paper: {
                 display: 'inline-block',
-                backgroundImage: `url(${backgroundImage})`,
+                backgroundImage: `url(${images.topo_light})`,
                 backgroundRepeat: 'repeat repeat',
                 padding: '30px',
                 height: '390px',
@@ -36,13 +39,13 @@ export class LoginPage extends React.Component {
                 alignSelf: 'center',
             },
             disclaimerHeading: {
-                color: '#fff',
+                color: colors.white,
                 fontSize: '16px',
                 marginBottom: '5px',
                 textAlign: 'center',
             },
             footerText: {
-                color: 'grey',
+                color: colors.grey,
                 padding: '5px 10px 5px',
                 opacity: 0.5,
                 fontSize: '9px',
@@ -63,7 +66,7 @@ export class LoginPage extends React.Component {
 
         return (
             <div style={styles.wholeDiv}>
-                <CustomScrollbar style={{ height: window.innerHeight - 95 }}>
+                <CustomScrollbar style={{ height: 'calc(100vh - 95px)' }}>
                     <div style={styles.container} className="qa-LoginPage-container">
                         <div style={styles.paperContainer}>
                             <Paper className="qa-LoginPage-Paper" style={styles.paper}>
@@ -80,7 +83,7 @@ export class LoginPage extends React.Component {
                                         </div>
                                         <div
                                             className="qa-LoginPage-disclaimer"
-                                            style={{ color: '#fff', paddingRight: '10px' }}
+                                            style={{ color: colors.white, paddingRight: '10px' }}
                                             // eslint-disable-next-line react/no-danger
                                             dangerouslySetInnerHTML={
                                                 { __html: this.context.config.LOGIN_DISCLAIMER }
@@ -113,8 +116,16 @@ export class LoginPage extends React.Component {
     }
 }
 
+LoginPage.propTypes = {
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
+};
+
 LoginPage.contextTypes = {
     config: PropTypes.object,
 };
 
-export default LoginPage;
+export default
+@withWidth()
+@withTheme()
+class Default extends LoginPage {}

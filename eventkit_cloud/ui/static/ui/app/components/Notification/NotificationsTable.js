@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Checkbox from '@material-ui/core/Checkbox';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -78,7 +80,10 @@ export class NotificationsTable extends React.Component {
     }
 
     render() {
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
+
+        const spacing = isWidthUp('sm') ? '10px' : '2px';
         let styles = {
             root: {
                 display: 'flex',
@@ -90,12 +95,12 @@ export class NotificationsTable extends React.Component {
             },
             tableHeader: {
                 height: '50px',
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
             },
             cell: {
                 padding: '0 15px',
                 textAlign: 'left',
-                color: '#9e9e9e',
+                color: colors.text_primary,
             },
             contentHeaderColumnWrapper: {
                 display: 'flex',
@@ -105,8 +110,7 @@ export class NotificationsTable extends React.Component {
         };
 
         let optionsWidth = '60px';
-        if (window.innerWidth > 1600) optionsWidth = '600px';
-        else if (window.innerWidth > 1280) optionsWidth = '435px';
+        if (isWidthUp('xl', width)) optionsWidth = '435px';
 
         styles = {
             ...styles,
@@ -121,11 +125,11 @@ export class NotificationsTable extends React.Component {
             dateHeaderColumn: {
                 ...styles.cell,
                 textAlign: 'center',
-                width: (window.innerWidth > 768) ? '200px' : '150px',
+                width: isWidthUp('md', width) ? '200px' : '150px',
             },
             optionsHeaderColumn: {
                 ...styles.cell,
-                textAlign: (window.innerWidth > 1280) ? 'center' : 'right',
+                textAlign: isWidthUp('xl', width) ? 'center' : 'right',
                 width: optionsWidth,
                 padding: '0 15px 0 0',
             },
@@ -136,8 +140,6 @@ export class NotificationsTable extends React.Component {
                 <Table selectable={false} style={{ tableLayout: 'fixed' }}>
                     <TableBody
                         style={styles.tableHeader}
-                        displaySelectAll={false}
-                        adjustForCheckbox={false}
                     >
                         <TableRow>
                             <TableCell
@@ -145,7 +147,6 @@ export class NotificationsTable extends React.Component {
                                 style={styles.checkboxHeaderColumn}
                             >
                                 <Checkbox
-                                    style={{ width: '24px', height: '24px' }}
                                     color="primary"
                                     className="qa-NotificationsTable-SelectAllCheckbox"
                                     checked={this.getSelectedCount() > 0}
@@ -194,7 +195,7 @@ export class NotificationsTable extends React.Component {
                                 onMarkAsUnread={this.props.onMarkAsUnread}
                                 onRemove={this.props.onRemove}
                                 onView={this.props.onView}
-                                fullSize={window.innerWidth > 1280} // trigger component update on resize
+                                fullSize={isWidthUp('xl', width)} // trigger component update on resize
                             />
                         ))}
                     </TableBody>
@@ -213,6 +214,8 @@ NotificationsTable.propTypes = {
     onRemove: PropTypes.func,
     onMarkAllAsRead: PropTypes.func,
     onView: PropTypes.func,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 NotificationsTable.defaultProps = {
@@ -223,4 +226,7 @@ NotificationsTable.defaultProps = {
     onView: undefined,
 };
 
-export default NotificationsTable;
+export default
+@withWidth()
+@withTheme()
+class Default extends NotificationsTable {}

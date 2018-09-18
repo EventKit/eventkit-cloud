@@ -1,6 +1,7 @@
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import ImageCropSquare from '@material-ui/icons/CropSquare';
 import ContentClear from '@material-ui/icons/Clear';
 
@@ -21,13 +22,15 @@ export class DrawBoxButton extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '50px',
                 height: '12px',
-                color: '#4498c0',
+                color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
@@ -39,7 +42,7 @@ export class DrawBoxButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 outline: 'none',
             },
         };
@@ -48,7 +51,7 @@ export class DrawBoxButton extends Component {
             <div id="default_icon">
                 <ImageCropSquare
                     className="qa-DrawBoxButton-ImageCropSquare-default"
-                    style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }}
+                    color="primary"
                 />
                 <div className="qa-DrawBoxButton-div-default" style={styles.buttonName}>BOX</div>
             </div>
@@ -58,9 +61,8 @@ export class DrawBoxButton extends Component {
             <div id="inactive_icon">
                 <ImageCropSquare
                     className="qa-DrawBoxButton-ImageCropSquare-inactive"
-                    style={{
-                        opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0',
-                    }}
+                    style={{ opacity: 0.4 }}
+                    color="primary"
                 />
                 <div className="qa-DrawBoxButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>BOX</div>
             </div>
@@ -68,7 +70,10 @@ export class DrawBoxButton extends Component {
 
         const SELECTED_ICON = ((
             <div id="selected_icon">
-                <ContentClear className="qa-DrawBoxButton-ContentClear" style={{ fontSize: '1.3em', padding: '0px', fill: '#4498c0' }} />
+                <ContentClear
+                    className="qa-DrawBoxButton-ContentClear"
+                    color="primary"
+                />
                 <div className="qa-DrawBoxButton-div-selected" style={styles.buttonName}>BOX</div>
             </div>
         ));
@@ -94,7 +99,8 @@ DrawBoxButton.propTypes = {
     setBoxButtonSelected: PropTypes.func.isRequired,
     setAllButtonsDefault: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DrawBoxButton;
+export default withTheme()(DrawBoxButton);
 

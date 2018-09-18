@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withStyles } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
@@ -8,6 +9,22 @@ import TableCell from '@material-ui/core/TableCell';
 import Button from '@material-ui/core/Button';
 import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
+
+const jss = theme => ({
+    root: {
+        backgroundColor: theme.eventkit.colors.selected_primary,
+        color: theme.eventkit.colors.primary,
+        fontWeight: 'bold',
+        '&:hover': {
+            backgroundColor: theme.eventkit.colors.selected_primary_dark,
+            color: theme.eventkit.colors.primary,
+        },
+        '&:disabled': {
+            backgroundColor: theme.eventkit.colors.secondary_dark,
+            color: theme.eventkit.colors.grey,
+        },
+    },
+});
 
 export class DataPackDetails extends Component {
     constructor(props) {
@@ -32,37 +49,39 @@ export class DataPackDetails extends Component {
     }
 
     getCloudDownloadIcon() {
+        const { colors } = this.props.theme.eventkit;
         if (!this.props.zipFileProp) {
             return (
                 <CloudDownload
                     className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{ fill: 'grey', verticalAlign: 'middle', marginRight: '5px' }}
+                    style={{ fill: colors.grey, verticalAlign: 'middle', marginRight: '5px' }}
                 />
             );
         }
         return (
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{ fill: '#4598bf', verticalAlign: 'middle', marginRight: '5px' }}
+                style={{ fill: colors.primary, verticalAlign: 'middle', marginRight: '5px' }}
             />
         );
     }
 
     getTextFontSize() {
-        if (window.innerWidth <= 575) {
+        const { width } = this.props;
+        if (!isWidthUp('sm', width)) {
             return '10px';
-        } else if (window.innerWidth <= 767) {
+        } else if (!isWidthUp('md', width)) {
             return '11px';
-        } else if (window.innerWidth <= 991) {
+        } else if (!isWidthUp('lg', width)) {
             return '12px';
-        } else if (window.innerWidth <= 1199) {
+        } else if (!isWidthUp('xl', width)) {
             return '13px';
         }
         return '14px';
     }
 
     getTableCellWidth() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '80px';
         }
         return '120px';
@@ -80,6 +99,8 @@ export class DataPackDetails extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
         const textFontSize = this.getTextFontSize();
@@ -90,7 +111,7 @@ export class DataPackDetails extends Component {
             subHeading: {
                 fontSize: '16px',
                 fontWeight: 'bold',
-                color: 'black',
+                color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
             },
@@ -164,7 +185,7 @@ export class DataPackDetails extends Component {
                 <div className="qa-DataPackDetails-providers" id="Providers">
                     {providers.map((provider, ix) => (
                         <ProviderRow
-                            backgroundColor={ix % 2 === 0 ? 'whitesmoke' : 'white'}
+                            backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
                             key={provider.uid}
                             onSelectionToggle={this.onSelectionToggle}
                             onProviderCancel={this.props.onProviderCancel}
@@ -190,22 +211,11 @@ DataPackDetails.propTypes = {
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     zipFileProp: PropTypes.string,
     classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-const classStyles = {
-    root: {
-        backgroundColor: 'rgba(179, 205, 224, 0.5)',
-        color: '#4598bf',
-        fontWeight: 'bold',
-        '&:hover': {
-            backgroundColor: 'rgba(179, 205, 224, 0.8)',
-            color: '#4598bf',
-        },
-        '&:disabled': {
-            backgroundColor: '#e5e5e5',
-            color: 'rgba(0, 0, 0, 0.3)',
-        },
-    },
-};
-
-export default withStyles(classStyles)(DataPackDetails);
+export default
+@withWidth()
+@withStyles(jss, { withTheme: true })
+class Default extends DataPackDetails {}

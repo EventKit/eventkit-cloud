@@ -3,7 +3,7 @@ import sinon from 'sinon';
 import PropTypes from 'prop-types';
 import raf from 'raf';
 import Joyride from 'react-joyride';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import MapCard from '../../components/common/MapCard';
 import { ExportSummary } from '../../components/CreateDataPack/ExportSummary';
 import CustomScrollbar from '../../components/CustomScrollbar';
@@ -57,11 +57,12 @@ describe('Export Summary Component', () => {
         ],
         walkthroughClicked: false,
         onWalkthroughReset: () => {},
+        ...global.eventkit_test_props,
     });
 
     const getWrapper = (props) => {
         const config = { BASEMAP_URL: 'http://my-osm-tile-service/{z}/{x}/{y}.png' };
-        return mount(<ExportSummary {...props} />, {
+        return shallow(<ExportSummary {...props} />, {
             context: { config },
             childContextTypes: {
                 config: PropTypes.object,
@@ -129,6 +130,7 @@ describe('Export Summary Component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
+        wrapper.instance().joyride = { reset: sinon.spy() };
         const stateSpy = sinon.stub(ExportSummary.prototype, 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));

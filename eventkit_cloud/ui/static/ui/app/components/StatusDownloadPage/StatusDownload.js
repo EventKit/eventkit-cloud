@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -21,10 +23,8 @@ import { viewedJob } from '../../actions/userActivityActions';
 import { getUsers } from '../../actions/userActions';
 import { getGroups } from '../../actions/userGroupsActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
-
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
-import background from '../../../images/ek_topo_pattern.png';
 
 export class StatusDownload extends React.Component {
     constructor(props) {
@@ -135,7 +135,7 @@ export class StatusDownload extends React.Component {
     }
 
     getMarginPadding() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '0px';
         }
         return '30px';
@@ -150,7 +150,7 @@ export class StatusDownload extends React.Component {
             <div className="StatusDownload-error-container" key={error.detail}>
                 { ix > 0 ? <Divider style={{ marginBottom: '10px' }} /> : null }
                 <p className="StatusDownload-error-title">
-                    <Warning style={{ fill: '#ce4427', verticalAlign: 'bottom', marginRight: '10px' }} />
+                    <Warning style={{ fill: this.props.theme.eventkit.colors.warning, verticalAlign: 'bottom', marginRight: '10px' }} />
                     <strong>
                         ERROR
                     </strong>
@@ -211,17 +211,19 @@ export class StatusDownload extends React.Component {
     }
 
     render() {
+        const { colors, images } = this.props.theme.eventkit;
+
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>Status & Download </div>;
 
         const marginPadding = this.getMarginPadding();
         const styles = {
             root: {
-                height: window.innerHeight - 95,
+                height: 'calc(100vh - 95px)',
                 width: '100%',
                 margin: 'auto',
                 overflowY: 'hidden',
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${images.topo_dark})`,
                 backgroundRepeat: 'repeat repeat',
             },
             content: {
@@ -235,7 +237,7 @@ export class StatusDownload extends React.Component {
             heading: {
                 fontSize: '18px',
                 fontWeight: 'bold',
-                color: 'black',
+                color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
             },
@@ -245,22 +247,22 @@ export class StatusDownload extends React.Component {
                 width: '100%',
                 height: '100%',
                 display: 'inline-flex',
-                backgroundColor: 'rgba(0,0,0,0.3)',
+                backgroundColor: colors.backdrop,
             },
             notFoundIcon: {
-                color: '#ce4427',
+                color: colors.warning,
                 height: '22px',
                 width: '22px',
                 verticalAlign: 'bottom',
             },
             notFoundText: {
                 fontSize: '16px',
-                color: '#ce4427',
+                color: colors.warning,
                 fontWeight: 800,
                 marginLeft: '5px',
             },
             tourButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginLeft: '10px',
@@ -269,7 +271,7 @@ export class StatusDownload extends React.Component {
                 lineHeight: '30px',
             },
             tourIcon: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',
@@ -357,7 +359,7 @@ export class StatusDownload extends React.Component {
                 }
                 <CustomScrollbar
                     ref={(instance) => { this.scrollbar = instance; }}
-                    style={{ height: window.innerHeight - 130, width: '100%' }}
+                    style={{ height: 'calc(100vh - 130px)', width: '100%' }}
                 >
                     <div className="qa-StatusDownload-div-content" style={styles.content}>
                         <Joyride
@@ -449,6 +451,8 @@ StatusDownload.propTypes = {
     router: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
     viewedJob: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -532,7 +536,8 @@ function mapDispatchToProps(dispatch) {
 }
 
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(StatusDownload);
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends StatusDownload {}

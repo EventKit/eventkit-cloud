@@ -1,13 +1,16 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import MenuItem from '@material-ui/core/MenuItem';
-import DatePicker from 'material-ui/DatePicker';
 import ButtonBase from '@material-ui/core/ButtonBase';
+import Popover from '@material-ui/core/Popover';
 import SocialGroup from '@material-ui/icons/Group';
 import Check from '@material-ui/icons/Check';
 import Edit from '@material-ui/icons/Edit';
 import Lock from '@material-ui/icons/LockOutlined';
 import moment from 'moment';
+import DayPicker from 'react-day-picker';
+import 'react-day-picker/lib/style.css';
 import DropDownMenu from '../common/DropDownMenu';
 import CustomTableRow from '../CustomTableRow';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
@@ -19,9 +22,26 @@ export class DataPackStatusTable extends Component {
         this.handleShareDialogClose = this.handleShareDialogClose.bind(this);
         this.handleShareDialogSave = this.handleShareDialogSave.bind(this);
         this.handleDropDownChange = this.handleDropDownChange.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+        this.handleDayClick = this.handleDayClick.bind(this);
         this.state = {
             shareDialogOpen: false,
+            anchor: null,
         };
+    }
+
+    handleDayClick(date) {
+        this.handleClose();
+        this.props.handleExpirationChange(date);
+    }
+
+    handleClick(e) {
+        this.setState({ anchor: e.currentTarget });
+    }
+
+    handleClose() {
+        this.setState({ anchor: null });
     }
 
     handleShareDialogOpen() {
@@ -54,33 +74,24 @@ export class DataPackStatusTable extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             textField: {
                 fontSize: '14px',
                 height: '36px',
                 width: '0px',
-                display: 'inlineBlock',
             },
             dropDown: {
                 height: '24px',
                 margin: '0px 5px 0px 0px',
                 lineHeight: '24px',
                 flex: '0 0 auto',
-                color: '#8b9396',
+                color: colors.text_primary,
                 backgroundColor: 'transparent',
                 fontSize: '14px',
                 fontWeight: 'bold',
                 textTransform: 'capitalize',
-            },
-            icon: {
-                height: '24px',
-                width: '24px',
-                padding: '0px',
-                fill: '#4498c0',
-                position: 'relative',
-                top: '0px',
-                right: '0px',
-                verticalAlign: 'top',
             },
             underline: {
                 display: 'none',
@@ -91,24 +102,23 @@ export class DataPackStatusTable extends Component {
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
-                fill: '#4598bf',
+                fill: colors.primary,
                 verticalAlign: 'middle',
             },
             checkIcon: {
-                fill: '#8b9396',
+                fill: colors.text_primary,
                 height: '24px',
                 verticalAlign: 'middle',
                 marginLeft: '30px',
             },
             permissionsIcon: {
-                fill: '#8b9396',
+                fill: colors.text_primary,
                 height: '24px',
                 verticalAlign: 'middle',
                 marginRight: '5px',
             },
             item: {
-                color: '#8b9396',
+                color: colors.text_primary,
                 fontSize: '14px',
                 padding: '6px 16px',
             },
@@ -131,22 +141,34 @@ export class DataPackStatusTable extends Component {
             expirationData = (
                 <div>
                     {expiration}
-                    <DatePicker
-                        ref={(instance) => { this.dp = instance; }}
-                        style={{ height: '0px', display: '-webkit-inline-box', width: '0px' }}
-                        autoOk
-                        minDate={this.props.minDate}
-                        maxDate={this.props.maxDate}
-                        id="datePicker"
-                        onChange={this.props.handleExpirationChange}
-                        textFieldStyle={styles.textField}
-                        underlineStyle={{ display: 'none' }}
-                        disabled
-                    />
                     <Edit
-                        onClick={() => { this.dp.focus(); }}
+                        onClick={this.handleClick}
                         style={styles.tableRowInfoIcon}
                     />
+                    <Popover
+                        className="qa-DataPackStatusTable-Popover"
+                        open={Boolean(this.state.anchor)}
+                        anchorEl={this.state.anchor}
+                        onClose={this.handleClose}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'center',
+                        }}
+                    >
+                        <style>{'.DayPicker-Day { width: 34px; } .DayPicker { font-size: 14px; } '}</style>
+                        <DayPicker
+                            onDayClick={this.handleDayClick}
+                            selectedDays={new Date(this.props.expiration)}
+                            month={new Date(this.props.expiration)}
+                            modifiers={{ disabled: { before: this.props.minDate, after: this.props.maxDate } }}
+                            modifiersStyles={{ selected: { backgroundColor: colors.primary } }}
+                            className="qa-DataPackStatusTable-DayPicker"
+                        />
+                    </Popover>
                 </div>
             );
 
@@ -185,7 +207,7 @@ export class DataPackStatusTable extends Component {
                         className="qa-DataPackStatusTable-MembersAndGroups-button"
                         key="membersAndGroupsButton"
                         onClick={this.handleShareDialogOpen}
-                        style={{ color: '#4598bf', textDecoration: 'underline', padding: '0px 5px' }}
+                        style={{ color: colors.primary, textDecoration: 'underline', padding: '0px 5px' }}
                         disabled={!this.props.adminPermissions}
                     >
                         {memberText} / {groupText}
@@ -319,6 +341,7 @@ DataPackStatusTable.propTypes = {
         user: PropTypes.object,
         groups: PropTypes.arrayOf(PropTypes.number),
     }).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackStatusTable;
+export default withTheme()(DataPackStatusTable);

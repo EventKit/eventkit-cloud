@@ -1,5 +1,5 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import moment from 'moment';
 import TableRow from '@material-ui/core/TableRow';
@@ -9,6 +9,11 @@ import { NotificationsTableItem } from '../../components/Notification/Notificati
 describe('NotificationsTableItem component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -37,6 +42,7 @@ describe('NotificationsTableItem component', () => {
             markNotificationsAsRead: sinon.spy(),
             markNotificationsAsUnread: sinon.spy(),
             removeNotifications: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 
@@ -278,8 +284,8 @@ describe('NotificationsTableItem component', () => {
 
     describe('below a window width of 1280', () => {
         beforeEach(() => {
-            window.resizeTo(1024, 768);
             setup();
+            wrapper.setProps({ width: 'sm' });
         });
 
         it('does not render buttons', () => {
@@ -312,7 +318,7 @@ describe('NotificationsTableItem component', () => {
         });
 
         it('renders a non-white background color', () => {
-            expect(wrapper.find(TableRow).at(0).props().style.backgroundColor).not.toBe('white');
+            expect(wrapper.find(TableRow).at(0).props().style.backgroundColor).not.toBe('#fff');
         });
     });
 
@@ -327,7 +333,7 @@ describe('NotificationsTableItem component', () => {
         });
 
         it('renders a white background color', () => {
-            expect(wrapper.find(TableRow).at(0).props().style.backgroundColor).toBe('white');
+            expect(wrapper.find(TableRow).at(0).props().style.backgroundColor).toBe('#fff');
         });
     });
 });

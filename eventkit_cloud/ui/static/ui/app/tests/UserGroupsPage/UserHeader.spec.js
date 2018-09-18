@@ -1,11 +1,17 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import IconMenu from '../../components/common/IconMenu';
 import ConfirmDialog from '../../components/Dialog/ConfirmDialog';
-import UserHeader from '../../components/UserGroupsPage/UserHeader';
+import { UserHeader } from '../../components/UserGroupsPage/UserHeader';
 
 describe('UserHeader component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             selected: false,
@@ -26,11 +32,12 @@ describe('UserHeader component', () => {
                 members: ['user1', 'user2'],
             },
             handleNewGroup: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<UserHeader {...props} />)
+        shallow(<UserHeader {...props} />)
     );
 
     it('should render the basic components', () => {
@@ -47,7 +54,7 @@ describe('UserHeader component', () => {
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-UserHeader-options')).toHaveLength(0);
         wrapper.setProps({ selectedUsers: getProps().selectedUsers });
-        expect(wrapper.find('.qa-UserHeader-options').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserHeader-options')).toHaveLength(1);
     });
 
     it('should render the admin and remove buttons', () => {

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import Menu from '@material-ui/core/Menu';
@@ -53,15 +54,17 @@ export class GroupsHeaderRow extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             card: {
                 boxShadow: 'none',
-                color: '#707274',
+                color: colors.text_primary,
             },
             cardHeader: {
                 display: 'flex',
                 fontSize: '12px',
-                color: '#707274',
+                color: colors.text_primary,
                 lineHeight: '28px',
             },
             group: {
@@ -78,12 +81,12 @@ export class GroupsHeaderRow extends Component {
                 float: 'right',
                 marginRight: '39px',
                 cursor: 'pointer',
-                color: '#4598bf',
+                color: colors.primary,
             },
             menuItem: {
                 fontSize: '12px',
                 height: 'auto',
-                color: '#707274',
+                color: colors.text_primary,
             },
         };
 
@@ -142,7 +145,10 @@ export class GroupsHeaderRow extends Component {
                             <div style={styles.group} className="qa-GroupsHeaderRow-CardHeader-text">
                                 <ButtonBase
                                     onClick={this.handleGroupChange}
-                                    style={{ marginRight: '10px', color: this.props.activeOrder.includes('group') ? '#4598bf' : '#707274' }}
+                                    style={{
+                                        marginRight: '10px',
+                                        color: this.props.activeOrder.includes('group') ? colors.primary : colors.text_primary,
+                                    }}
                                     disableTouchRipple
                                 >
                                     GROUP
@@ -159,7 +165,7 @@ export class GroupsHeaderRow extends Component {
                                     style={{
                                         marginRight: '10px',
                                         color: !this.props.activeOrder.includes('group') ?
-                                            '#4598bf' : '#707274',
+                                            colors.primary : colors.text_primary,
                                     }}
                                     disableTouchRipple
                                 >
@@ -241,6 +247,7 @@ GroupsHeaderRow.propTypes = {
     handleCheckAll: PropTypes.func.isRequired,
     handleUncheckAll: PropTypes.func.isRequired,
     canUpdateAdmin: PropTypes.bool,
+    theme: PropTypes.object.isRequired,
 };
 
-export default GroupsHeaderRow;
+export default withTheme()(GroupsHeaderRow);

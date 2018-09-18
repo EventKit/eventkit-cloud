@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Dropzone from 'react-dropzone';
 import Button from '@material-ui/core/Button';
 import FileFileUpload from '@material-ui/icons/CloudUpload';
@@ -31,6 +32,8 @@ export class DropZoneDialog extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             drop: {
                 margin: '0px auto',
@@ -39,11 +42,11 @@ export class DropZoneDialog extends Component {
                 textAlign: 'center',
                 border: '1px dashed',
                 fontSize: '1em',
-                color: '#4498c0',
+                color: colors.primary,
             },
             text: {
                 verticalAlign: 'center',
-                color: 'grey',
+                color: colors.grey,
                 height: '100px',
                 marginTop: '30px',
             },
@@ -96,6 +99,7 @@ DropZoneDialog.propTypes = {
     setAllButtonsDefault: PropTypes.func.isRequired,
     setImportModalState: PropTypes.func.isRequired,
     processGeoJSONFile: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DropZoneDialog;
+export default withTheme()(DropZoneDialog);

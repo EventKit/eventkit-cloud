@@ -1,43 +1,43 @@
+import { colors } from './styles/eventkit_theme';
+
 export const JoyRideStyles = {
     tooltipStyle: {
-        backgroundColor: 'white',
+        backgroundColor: colors.white,
         borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
+        color: colors.black,
         textAlign: 'left',
         header: {
             textAlign: 'left',
             fontSize: '20px',
-            borderColor: '#4598bf',
+            borderColor: colors.primary,
         },
         main: {
             paddingTop: '20px',
             paddingBottom: '20px',
         },
         button: {
-            color: 'white',
-            backgroundColor: '#4598bf',
+            color: colors.white,
+            backgroundColor: colors.primary,
         },
         skip: {
             display: 'none',
         },
         back: {
-            color: '#8b9396',
+            color: colors.text_primary,
         },
         hole: {
             backgroundColor: 'rgba(226,226,226, 0.2)',
         },
     },
     welcomeTooltipStyle: {
-        backgroundColor: 'white',
+        backgroundColor: colors.white,
         borderRadius: '0',
-        color: 'black',
-        mainColor: '#ff4456',
+        color: colors.black,
         textAlign: 'left',
         header: {
             textAlign: 'left',
             fontSize: '20px',
-            borderColor: '#4598bf',
+            borderColor: colors.primary,
         },
         arrow: {
             display: 'none',
@@ -48,14 +48,14 @@ export const JoyRideStyles = {
         },
 
         button: {
-            color: 'white',
-            backgroundColor: '#4598bf',
+            color: colors.white,
+            backgroundColor: colors.primary,
         },
         skip: {
             display: 'none',
         },
         back: {
-            color: '#8b9396',
+            color: colors.text_primary,
         },
         hole: {
             display: 'none',

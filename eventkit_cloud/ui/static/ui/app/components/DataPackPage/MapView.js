@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import Dot from '@material-ui/icons/FiberManualRecord';
 import axios from 'axios';
@@ -60,7 +62,7 @@ export const RED_STYLE = new Style({
 
 export const BLUE_STYLE = new Style({
     stroke: new Stroke({
-        color: '#4498c0',
+        color: '#4598bf',
         width: 4,
     }),
     image: null,
@@ -131,11 +133,11 @@ export class MapView extends Component {
         this.markerLayer.setStyle(new Style({
             image: new Circle({
                 fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-                stroke: new Stroke({ color: '#ce4427', width: 1.25 }),
+                stroke: new Stroke({ color: this.props.theme.eventkit.colors.warning, width: 1.25 }),
                 radius: 5,
             }),
             fill: new Fill({ color: 'rgba(255,255,255,0.4)' }),
-            stroke: new Stroke({ color: '#3399CC', width: 1.25 }),
+            stroke: new Stroke({ color: this.props.theme.eventkit.colors.primary, width: 1.25 }),
         }));
 
         this.drawBoxInteraction = generateDrawBoxInteraction(this.drawLayer);
@@ -393,7 +395,7 @@ export class MapView extends Component {
                 new OverviewMap({
                     className: ['ol-overviewmap', css['ol-custom-overviewmap']].join(' '),
                     collapsible: true,
-                    collapsed: window.innerWidth < 768,
+                    collapsed: !isWidthUp('md', this.props.width),
                     tipLabel: '',
                 }),
             ],
@@ -572,10 +574,10 @@ export class MapView extends Component {
             image: new Circle({
                 radius: 6,
                 fill: new Fill({
-                    color: '#4598bf',
+                    color: this.props.theme.eventkit.colors.primary,
                 }),
                 stroke: new Stroke({
-                    color: '#fff',
+                    color: this.props.theme.eventkit.colors.white,
                     width: 2,
                 }),
             }),
@@ -596,10 +598,10 @@ export class MapView extends Component {
             image: new Circle({
                 radius: 6,
                 fill: new Fill({
-                    color: '#ce4427',
+                    color: this.props.theme.eventkit.colors.warning,
                 }),
                 stroke: new Stroke({
-                    color: '#fff',
+                    color: this.props.theme.eventkit.colors.white,
                     width: 2,
                 }),
             }),
@@ -817,7 +819,9 @@ export class MapView extends Component {
     }
 
     render() {
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const { colors } = this.props.theme.eventkit;
+
+        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -827,7 +831,7 @@ export class MapView extends Component {
                 marginRight: '10px',
                 paddingBottom: '10px',
             },
-            map: window.innerWidth < 768 ?
+            map: !isWidthUp('md', this.props.width) ?
                 {
                     width: '100%',
                     height: '100%',
@@ -839,25 +843,25 @@ export class MapView extends Component {
                 :
                 {
                     width: '70%',
-                    height: window.innerHeight - 241,
+                    height: 'calc(100vh - 241px)',
                     display: 'inline-block',
                     overflow: 'hidden',
                     padding: '0px 10px 0px 3px',
                     position: 'relative',
                 },
-            list: window.innerWidth < 768 ?
+            list: !isWidthUp('md', this.props.width) ?
                 {
                     display: 'none',
                 }
                 :
                 {
-                    height: window.innerHeight - 241,
+                    height: 'calc(100vh - 241px)',
                     width: '30%',
                     display: 'inline-block',
                 },
             popupContainer: {
                 position: 'absolute',
-                width: `calc(100% - ${window.innerWidth < 768 ? 20 : 13}px)`,
+                width: `calc(100% - ${!isWidthUp('md', this.props.width) ? 20 : 13}px)`,
                 bottom: '50px',
                 textAlign: 'center',
                 display: 'relative',
@@ -866,16 +870,16 @@ export class MapView extends Component {
             mapPopup: {
                 margin: '0px auto',
                 width: '70%',
-                maxWidth: window.innerWidth < 768 ? '90%' : '455px',
+                maxWidth: !isWidthUp('md', this.props.width) ? '90%' : '455px',
                 minWidth: '250px',
                 display: 'inline-block',
                 textAlign: 'left',
             },
             dot: {
                 opacity: '0.5',
-                color: '#ce4427',
-                backgroundColor: 'white',
-                border: '1px solid #4598bf',
+                color: colors.warning,
+                backgroundColor: colors.white,
+                border: `1px solid ${colors.primary}`,
                 borderRadius: '100%',
                 height: '14px',
                 width: '14px',
@@ -895,7 +899,7 @@ export class MapView extends Component {
         const selectedFeature = this.state.selectedFeature ?
             this.source.getFeatureById(this.state.selectedFeature) : null;
         return (
-            <div style={{ height: window.innderWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 223 }}>
+            <div style={{ height: 'calc(100vh - 236px)' }}>
                 <CustomScrollbar style={styles.list} ref={(instance) => { this.scrollbar = instance; }}>
                     <div style={styles.root}>
                         <GridList
@@ -915,7 +919,7 @@ export class MapView extends Component {
                                         onRunDelete={this.props.onRunDelete}
                                         onRunShare={this.props.onRunShare}
                                         onClick={this.handleClick}
-                                        backgroundColor={this.state.selectedFeature === run.uid ? '#dedfdf' : null}
+                                        backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
                                         providers={this.props.providers}
                                         adminPermission={admin}
                                         users={this.props.users}
@@ -976,7 +980,7 @@ export class MapView extends Component {
                             onKeyPress={this.handleOlPopupClose}
                         />
                         <div className="qa-MapView-div-popupContent" id="popup-content">
-                            <p style={{ color: 'grey' }}>Select One:</p>
+                            <p style={{ color: colors.grey }}>Select One:</p>
                             <CustomScrollbar autoHeight autoHeightMin={20} autoHeightMax={200}>
                                 {this.state.groupedFeatures.map(groupFeature => (
                                     <span
@@ -1047,6 +1051,11 @@ MapView.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default MapView;
+export default
+@withWidth()
+@withTheme()
+class Default extends MapView {}

@@ -1,11 +1,11 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import TextField from '@material-ui/core/TextField';
 import Slider from '@material-ui/lab/Slider';
 import Clear from '@material-ui/icons/Clear';
 import AlertCallout from '../../components/CreateDataPack/AlertCallout';
-import BufferDialog from '../../components/CreateDataPack/BufferDialog';
+import { BufferDialog } from '../../components/CreateDataPack/BufferDialog';
 
 describe('AlertCallout component', () => {
     const getProps = () => (
@@ -17,11 +17,12 @@ describe('AlertCallout component', () => {
             handleBufferChange: () => {},
             closeBufferDialog: () => {},
             aoi: {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<BufferDialog {...props} />)
+        shallow(<BufferDialog {...props} />)
     );
 
     it('should render the basic elements', () => {
@@ -36,9 +37,7 @@ describe('AlertCallout component', () => {
         expect(wrapper.find(Slider)).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footnote')).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footer')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-Button-close').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-Button-buffer').hostNodes()).toHaveLength(1);
-        expect(wrapper.find(TextField).props().style.color).toEqual('grey');
+        expect(wrapper.find(TextField).props().style.color).toEqual('#808080');
     });
 
     it('should not render anything if show is false', () => {
@@ -63,22 +62,6 @@ describe('AlertCallout component', () => {
         expect(wrapper.find(AlertCallout)).toHaveLength(0);
         wrapper.setState({ showAlert: true });
         expect(wrapper.find(AlertCallout)).toHaveLength(1);
-    });
-
-    it('Close buttons should call closeBufferDialog', () => {
-        const props = getProps();
-        props.closeBufferDialog = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.find('.qa-BufferDialog-Button-close').hostNodes().simulate('click');
-        expect(props.closeBufferDialog.calledOnce).toBe(true);
-    });
-
-    it('Update button should call handleBufferClick', () => {
-        const props = getProps();
-        props.handleBufferClick = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.find('.qa-BufferDialog-Button-buffer').hostNodes().simulate('click');
-        expect(props.handleBufferClick.calledOnce).toBe(true);
     });
 
     it('Clear icon should call closeBufferDialog on click', () => {

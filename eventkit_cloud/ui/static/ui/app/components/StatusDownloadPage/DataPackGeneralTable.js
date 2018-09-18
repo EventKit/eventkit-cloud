@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 import Info from '@material-ui/icons/Info';
 import CustomTableRow from '../CustomTableRow';
 import BaseDialog from '../Dialog/BaseDialog';
 
-export class DataCartGeneralTable extends Component {
+export class DataPackGeneralTable extends Component {
     constructor(props) {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
@@ -39,6 +40,8 @@ export class DataCartGeneralTable extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
             task.display
         ));
@@ -49,8 +52,7 @@ export class DataCartGeneralTable extends Component {
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
-                fill: '#4598bf',
+                fill: colors.primary,
                 verticalAlign: 'middle',
                 marginRight: '10px',
             },
@@ -108,7 +110,7 @@ export class DataCartGeneralTable extends Component {
                                 style={styles.tableRowInfoIcon}
                             />
                             <BaseDialog
-                                className="qa-DataCartGeneralTable-BaseDialog-projection"
+                                className="qa-DataPackGeneralTable-BaseDialog-projection"
                                 show={this.state.projectionsDialogOpen}
                                 title="Projection Information"
                                 onClose={this.handleProjectionsClose}
@@ -128,7 +130,7 @@ export class DataCartGeneralTable extends Component {
     }
 }
 
-DataCartGeneralTable.propTypes = {
+DataPackGeneralTable.propTypes = {
     dataPack: PropTypes.shape({
         job: PropTypes.shape({
             description: PropTypes.string,
@@ -138,6 +140,7 @@ DataCartGeneralTable.propTypes = {
         provider_tasks: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataCartGeneralTable;
+export default withTheme()(DataPackGeneralTable);

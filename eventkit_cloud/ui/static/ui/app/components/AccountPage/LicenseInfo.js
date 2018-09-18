@@ -48,7 +48,7 @@ export class LicenseInfo extends Component {
                         checked={allAgreedUnsaved}
                         onChange={this.props.onAllCheck}
                     />
-                    <span className="qa-LicenseInof-All">ALL</span>
+                    <span className="qa-LicenseInfo-All">ALL</span>
                 </div>
                 {this.props.licenses.licenses.map(license => (
                     <UserLicense

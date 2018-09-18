@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
@@ -10,7 +12,6 @@ import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
 import LoadButtons from '../DataPackPage/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
-import background from '../../../images/ek_topo_pattern.png';
 
 export class NotificationsPage extends React.Component {
     constructor(props) {
@@ -41,7 +42,7 @@ export class NotificationsPage extends React.Component {
     }
 
     getGridPadding() {
-        return window.innerWidth >= 768 ? 7 : 2;
+        return isWidthUp('md', this.props.width) ? 7 : 2;
     }
 
     getRange(notifications) {
@@ -71,19 +72,21 @@ export class NotificationsPage extends React.Component {
     }
 
     render() {
+        const { colors, images } = this.props.theme.eventkit;
+
         const mainAppBarHeight = 95;
         const pageAppBarHeight = 35;
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = isWidthUp('sm') ? '10px' : '2px';
         const styles = {
             root: {
                 position: 'relative',
-                height: window.innerHeight - mainAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight}px)`,
                 width: '100%',
-                backgroundImage: `url(${background})`,
-                color: 'rgba(0, 0, 0, 0.54)',
+                backgroundImage: `url(${images.topo_dark})`,
+                color: colors.text_primary,
             },
             customScrollbar: {
-                height: window.innerHeight - mainAppBarHeight - pageAppBarHeight,
+                height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
             },
             content: {
                 marginBottom: '12px',
@@ -110,7 +113,7 @@ export class NotificationsPage extends React.Component {
                 margin: `0 ${10 + (this.getGridPadding() / 2)}px`,
                 padding: '22px',
                 fontSize: '18px',
-                color: 'rgba(0, 0, 0, 0.54)',
+                color: colors.text_primary,
             },
         };
 
@@ -129,7 +132,7 @@ export class NotificationsPage extends React.Component {
                             position: 'absolute',
                             width: '100%',
                             height: '100%',
-                            backgroundColor: 'rgba(0,0,0,0.2)',
+                            backgroundColor: colors.backdrop,
                         }}
                     >
                         <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -159,7 +162,7 @@ export class NotificationsPage extends React.Component {
                                 </Paper>
                                 :
                                 <div className="qa-NotificationsPage-Content-Notifications">
-                                    {(window.innerWidth > 768) ?
+                                    {isWidthUp('md', this.props.width) ?
                                         <NotificationsTable
                                             notifications={this.props.notifications}
                                             notificationsArray={notifications}
@@ -201,6 +204,8 @@ NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,
     notifications: PropTypes.object.isRequired,
     getNotifications: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -215,7 +220,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(NotificationsPage);
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends NotificationsPage {}

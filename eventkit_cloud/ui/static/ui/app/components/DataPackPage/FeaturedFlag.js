@@ -1,11 +1,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
 
 export class FeaturedFlag extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const style = {
-            backgroundColor: '#4498c0',
-            color: '#fff',
+            backgroundColor: colors.primary,
+            color: colors.white,
             textAlign: 'center',
             fontSize: '11px',
             position: 'absolute',
@@ -35,6 +38,7 @@ FeaturedFlag.defaultProps = {
 FeaturedFlag.propTypes = {
     show: PropTypes.bool.isRequired,
     style: PropTypes.object,
+    theme: PropTypes.object.isRequired,
 };
 
-export default FeaturedFlag;
+export default withTheme()(FeaturedFlag);

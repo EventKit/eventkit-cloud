@@ -1,12 +1,13 @@
 import React from 'react';
 import { mount } from 'enzyme';
-import ThreeStepInfo from '../../components/About/ThreeStepInfo';
+import { ThreeStepInfo } from '../../components/About/ThreeStepInfo';
 import create from '../../../images/AboutPage/three_step_1.png';
 import manage from '../../../images/AboutPage/three_step_2.png';
 import use from '../../../images/AboutPage/three_step_3.png';
 
 describe('ThreeStepInfo component', () => {
     const getProps = () => ({
+        ...global.eventkit_test_props,
         steps: [
             { img: create, caption: 'Create DataPacks' },
             { img: manage, caption: 'Manage DataPacks' },
@@ -32,7 +33,7 @@ describe('ThreeStepInfo component', () => {
     });
 
     it('should return null if there are no steps', () => {
-        const props = { steps: [] };
+        const props = { steps: [], ...global.eventkit_test_props };
         const wrapper = getWrapper(props);
         expect(wrapper.find('table')).toHaveLength(0);
     });
@@ -42,25 +43,5 @@ describe('ThreeStepInfo component', () => {
         props.tableStyle = { color: 'red' };
         const wrapper = getWrapper(props);
         expect(wrapper.find('table').props().style.color).toEqual('red');
-    });
-
-    it('should set table fontsize to 14px', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
-        expect(wrapper.find('table').props().style.fontSize).toEqual('14px');
-    });
-
-    it('should set table fontSize to 16px', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        window.resizeTo(1300, 1000);
-        expect(window.innerWidth).toEqual(1300);
-        wrapper.instance().forceUpdate();
-        wrapper.update();
-        expect(wrapper.find('table').props().style.fontSize).toEqual('16px');
     });
 });

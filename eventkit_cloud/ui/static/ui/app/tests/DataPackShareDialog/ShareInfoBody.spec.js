@@ -1,7 +1,7 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import ShareInfoBody from '../../components/DataPackShareDialog/ShareInfoBody';
+import { ShareInfoBody } from '../../components/DataPackShareDialog/ShareInfoBody';
 
 
 describe('MembersHeaderRow component', () => {
@@ -9,11 +9,12 @@ describe('MembersHeaderRow component', () => {
         {
             view: 'groups',
             onReturn: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ShareInfoBody {...props} />)
+        shallow(<ShareInfoBody {...props} />)
     );
 
     it('should render the basic components', () => {

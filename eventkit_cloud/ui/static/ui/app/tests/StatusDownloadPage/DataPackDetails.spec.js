@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import Table from '@material-ui/core/Table';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
@@ -9,6 +9,12 @@ import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDet
 import ProviderRow from '../../components/StatusDownloadPage/ProviderRow';
 
 describe('DataPackDetails component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const providerTasks = [
         {
             name: 'OpenStreetMap Data (Themes)',
@@ -70,67 +76,53 @@ describe('DataPackDetails component', () => {
         zipFileProp: null,
         onProviderCancel: () => {},
         classes: { root: {} },
+        ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => mount(<DataPackDetails {...props} />);
+    const getWrapper = props => shallow(<DataPackDetails {...props} />);
 
     it('should render elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('div').at(1).text()).toEqual('Download Options');
-        expect(wrapper.find(Table)).toHaveLength(2);
-        const table = wrapper.find(Table).first();
+        expect(wrapper.find(Table)).toHaveLength(1);
+        const table = wrapper.find(Table).dive();
         expect(table.find(TableRow)).toHaveLength(1);
         expect(table.find(TableCell)).toHaveLength(4);
-        expect(table.find(TableCell).at(0).text()).toEqual('CREATING DATAPACK ZIP');
-        expect(table.find(TableCell).at(0).find(Button)).toHaveLength(1);
-        expect(table.find(TableCell).at(1).text()).toEqual('FILE SIZE');
-        expect(table.find(TableCell).at(2).text()).toEqual('PROGRESS');
+        expect(table.find(TableCell).at(0).dive()
+            .html()).toContain('CREATING DATAPACK ZIP');
+        expect(table.find(TableCell).at(0).dive().find(Button)).toHaveLength(1);
+        expect(table.find(TableCell).at(1).dive().html()).toContain('FILE SIZE');
+        expect(table.find(TableCell).at(2).dive().html()).toContain('PROGRESS');
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
     });
     it('getTextFontSize should return the font string for table text based on window width', () => {
         const props = getProps();
+        props.width = 'xs';
         const wrapper = getWrapper(props);
-
-        window.resizeTo(500, 600);
-        expect(window.innerWidth).toEqual(500);
         expect(wrapper.instance().getTextFontSize()).toEqual('10px');
 
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
+        wrapper.setProps({ width: 'sm' });
         expect(wrapper.instance().getTextFontSize()).toEqual('11px');
 
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
+        wrapper.setProps({ width: 'md' });
         expect(wrapper.instance().getTextFontSize()).toEqual('12px');
 
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
+        wrapper.setProps({ width: 'lg' });
         expect(wrapper.instance().getTextFontSize()).toEqual('13px');
 
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
+        wrapper.setProps({ width: 'xl' });
         expect(wrapper.instance().getTextFontSize()).toEqual('14px');
     });
 
     it('getTableCellWidth should return the pixel string for table width based on window width', () => {
         const props = getProps();
+        props.width = 'sm';
         const wrapper = getWrapper(props);
 
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
         expect(wrapper.instance().getTableCellWidth()).toEqual('80px');
 
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
-
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
+        wrapper.setProps({ width: 'md' });
         expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
@@ -155,7 +147,7 @@ describe('DataPackDetails component', () => {
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-disabled"
-                style={{ fill: 'grey', marginRight: '5px', verticalAlign: 'middle' }}
+                style={{ fill: '#808080', marginRight: '5px', verticalAlign: 'middle' }}
             />
         ));
         const nextProps = { ...props };

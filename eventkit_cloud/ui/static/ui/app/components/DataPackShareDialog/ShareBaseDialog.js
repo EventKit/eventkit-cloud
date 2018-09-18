@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -7,33 +9,16 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import Clear from '@material-ui/icons/Clear';
 import CustomScrollbar from '../CustomScrollbar';
-import { isViewportS } from '../../utils/viewport';
 
 export class ShareBaseDialog extends Component {
-    constructor(props) {
-        super(props);
-        this.handleResize = this.handleResize.bind(this);
-        this.state = {
-            mobile: isViewportS(),
-        };
-    }
-
-    componentDidMount() {
-        window.addEventListener('resize', this.handleResize);
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.handleResize);
-    }
-
-    handleResize() {
-        if (this.state.mobile !== isViewportS()) {
-            this.setState({ mobile: !this.state.mobile });
-        }
-    }
-
     render() {
-        const marginSubtract = this.state.mobile ? 32 : 96;
+        if (!this.props.show) {
+            return null;
+        }
+
+        const { colors } = this.props.theme.eventkit;
+        const { width } = this.props;
+        const marginSubtract = isWidthDown('sm', width) ? 32 : 96;
         const styles = {
             dialog: {
                 width: 'calc(100% - 32px)',
@@ -52,7 +37,7 @@ export class ShareBaseDialog extends Component {
             body: {
                 padding: '0px 24px',
                 fontSize: '16px',
-                color: '#707274',
+                color: colors.text_primary,
                 position: 'relative',
             },
             actions: {
@@ -99,7 +84,7 @@ export class ShareBaseDialog extends Component {
         return (
             <Dialog
                 className="qa-ShareBaseDialog-Dialog"
-                style={{ zIndex: 1500 }}
+                style={{ zIndex: 1501 }}
                 open={this.props.show}
                 onClose={this.props.onClose}
                 PaperProps={{ style: styles.dialog }}
@@ -107,7 +92,7 @@ export class ShareBaseDialog extends Component {
                 <DialogTitle style={styles.title} disableTypography>{title}</DialogTitle>
                 <DialogContent style={styles.body}>
                     <CustomScrollbar
-                        style={{ height: window.innerHeight - marginSubtract - 76 - 80 }}
+                        style={{ height: `calc(100vh - ${marginSubtract + 76 + 80}px)` }}
                     >
                         {this.props.children}
                     </CustomScrollbar>
@@ -137,6 +122,11 @@ ShareBaseDialog.propTypes = {
         PropTypes.node,
     ]),
     submitButtonLabel: PropTypes.string,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default ShareBaseDialog;
+export default
+@withWidth()
+@withTheme()
+class Default extends ShareBaseDialog {}

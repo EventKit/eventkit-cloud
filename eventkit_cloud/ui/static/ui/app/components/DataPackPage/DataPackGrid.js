@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
@@ -8,9 +9,9 @@ import { userIsDataPackAdmin } from '../../utils/generic';
 
 export class DataPackGrid extends Component {
     getColumns() {
-        if (window.innerWidth <= 800) {
+        if (!isWidthUp('md', this.props.width)) {
             return 2;
-        } else if (window.innerWidth > 1200) {
+        } else if (isWidthUp('xl', this.props.width)) {
             return 4;
         }
         return 3;
@@ -21,7 +22,7 @@ export class DataPackGrid extends Component {
     }
 
     render() {
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -42,14 +43,14 @@ export class DataPackGrid extends Component {
         return (
             <CustomScrollbar
                 ref={(instance) => { this.scrollbar = instance; }}
-                style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}
+                style={{ height: 'calc(100vh - 236px)', width: '100%' }}
             >
                 <div style={styles.root} className="qa-div-root">
                     <GridList
                         className="qa-DataPackGrid-GridList"
                         cellHeight="auto"
                         style={styles.gridList}
-                        spacing={window.innerWidth >= 768 ? 7 : 2}
+                        spacing={isWidthUp('md', this.props.width) ? 7 : 2}
                         cols={this.getColumns()}
                     >
                         {this.props.runs.map((run, index) => {
@@ -104,6 +105,9 @@ DataPackGrid.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     name: PropTypes.string.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default DataPackGrid;
+export default
+@withWidth()
+class Default extends DataPackGrid {}

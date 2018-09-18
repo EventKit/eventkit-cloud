@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
@@ -13,9 +13,14 @@ import UserRow from '../../components/UserGroupsPage/UserRow';
 import OwnUserRow from '../../components/UserGroupsPage/OwnUserRow';
 import UserHeader from '../../components/UserGroupsPage/UserHeader';
 import { UserGroupsPage } from '../../components/UserGroupsPage/UserGroupsPage';
-import * as viewport from '../../utils/viewport';
 
 describe('UserGroupsPage component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             location: {
@@ -99,11 +104,12 @@ describe('UserGroupsPage component', () => {
             createGroup: () => {},
             updateGroup: () => {},
             getUsers: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<UserGroupsPage {...props} />)
+        shallow(<UserGroupsPage {...props} />)
     );
 
     beforeAll(() => {
@@ -119,10 +125,9 @@ describe('UserGroupsPage component', () => {
     it('should render its basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-PageHeader').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-Button-create').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar').hostNodes()).toHaveLength(1);
-        expect(wrapper.find('.qa-UserGroupsPage-search').hostNodes()).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-Button-create')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-CustomScrollbar')).toHaveLength(1);
+        expect(wrapper.find('.qa-UserGroupsPage-search')).toHaveLength(1);
         expect(wrapper.find(UserHeader)).toHaveLength(1);
         expect(wrapper.find(OwnUserRow)).toHaveLength(1);
         expect(wrapper.find(UserRow)).toHaveLength(2);
@@ -130,7 +135,7 @@ describe('UserGroupsPage component', () => {
         expect(wrapper.find(CreateGroupDialog)).toHaveLength(1);
         expect(wrapper.find(LeaveGroupDialog)).toHaveLength(1);
         expect(wrapper.find(DeleteGroupDialog)).toHaveLength(1);
-        expect(wrapper.find(BaseDialog)).toHaveLength(6);
+        expect(wrapper.find(BaseDialog)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
     });
@@ -954,15 +959,13 @@ describe('UserGroupsPage component', () => {
             },
             type: 'step:fake',
         };
-        const viewStub = sinon.stub(viewport, 'isViewportS').returns(true);
         const props = getProps();
+        props.width = 'sm';
         const wrapper = getWrapper(props);
         wrapper.setState({ drawerOpen: false });
         const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer').returns(Promise.resolve(true));
         wrapper.instance().callback(data);
-        expect(viewStub.called).toBe(true);
         expect(toggleStub.calledOnce).toBe(true);
-        viewStub.restore();
         toggleStub.restore();
     });
 
@@ -977,7 +980,8 @@ describe('UserGroupsPage component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
-        const scrollStub = sinon.stub(wrapper.instance().scrollbar, 'scrollToTop');
+        const scrollStub = sinon.stub();
+        wrapper.instance().scrollbar = { scrollToTop: scrollStub };
         wrapper.instance().callback(data);
         expect(scrollStub.calledOnce).toBe(true);
     });
@@ -991,17 +995,15 @@ describe('UserGroupsPage component', () => {
             },
             type: 'step:after',
         };
-        const viewStub = sinon.stub(viewport, 'isViewportS').returns(true);
         const props = getProps();
+        props.width = 'sm';
         const wrapper = getWrapper(props);
         const toggleStub = sinon.stub(wrapper.instance(), 'toggleDrawer');
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().callback(data);
-        expect(viewStub.called).toBe(true);
         expect(toggleStub.calledOnce).toBe(true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ stepIndex: 3 }));
-        viewStub.restore();
     });
 
     it('callback should selectAll', () => {

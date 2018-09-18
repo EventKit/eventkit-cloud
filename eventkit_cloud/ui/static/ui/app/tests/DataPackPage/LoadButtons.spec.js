@@ -2,7 +2,6 @@ import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
-import ReactDOM from 'react-dom';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
 import { LoadButtons } from '../../components/DataPackPage/LoadButtons';
@@ -15,6 +14,7 @@ describe('LoadButtons component', () => {
         loadLessDisabled: true,
         loadMoreDisabled: false,
         classes: { root: {} },
+        ...global.eventkit_test_props,
     });
     const getWrapper = props => mount(<LoadButtons {...props} />);
 
@@ -22,12 +22,12 @@ describe('LoadButtons component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Button)).toHaveLength(2);
-        expect(wrapper.find(Button).first().text()).toEqual('Show Less');
-        expect(wrapper.find(Button).last().text()).toEqual('Show More');
+        expect(wrapper.find(Button).first().html()).toContain('Show Less');
+        expect(wrapper.find(Button).last().html()).toContain('Show More');
         expect(wrapper.find(KeyboardArrowDown)).toHaveLength(1);
         expect(wrapper.find(KeyboardArrowUp)).toHaveLength(1);
         expect(wrapper.find('#range')).toHaveLength(1);
-        expect(wrapper.find('#range').text()).toEqual('12 of 26');
+        expect(wrapper.find('#range').html()).toContain('12 of 26');
     });
 
     it('should enable or disable buttons based on props', () => {
@@ -74,10 +74,9 @@ describe('LoadButtons component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         stateSpy.reset();
-        ReactDOM.findDOMNode = () => ({ offsetWidth: 12 });
-        wrapper.instance().forceUpdate();
-        wrapper.update();
-        expect(stateSpy.calledWith({ width: 12 })).toBe(true);
+        const width = wrapper.instance().self.current.clientWidth;
+        wrapper.setState({ width: '100vw' });
+        expect(stateSpy.calledWith({ width })).toBe(true);
         updateSpy.restore();
         stateSpy.restore();
     });

@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { withTheme } from '@material-ui/core/styles';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import BaseDialog from '../Dialog/BaseDialog';
@@ -14,22 +16,8 @@ export class LicenseRow extends Component {
         };
     }
 
-    getTextFontSize() {
-        if (window.innerWidth <= 575) {
-            return '10px';
-        } else if (window.innerWidth <= 767) {
-            return '11px';
-        } else if (window.innerWidth <= 991) {
-            return '12px';
-        } else if (window.innerWidth <= 1199) {
-            return '13px';
-        }
-
-        return '14px';
-    }
-
     getTableCellWidth() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '80px';
         }
 
@@ -46,7 +34,8 @@ export class LicenseRow extends Component {
 
 
     render() {
-        const textFontSize = this.getTextFontSize();
+        const { colors } = this.props.theme.eventkit;
+
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = '50px';
 
@@ -71,7 +60,7 @@ export class LicenseRow extends Component {
                             tabIndex={0}
                             onKeyPress={this.setLicenseOpen}
                             onClick={this.setLicenseOpen}
-                            style={{ cursor: 'pointer', color: '#4598bf' }}
+                            style={{ cursor: 'pointer', color: colors.primary }}
                         >
                             {name}
                         </span>
@@ -90,8 +79,6 @@ export class LicenseRow extends Component {
                         width: tableCellWidth,
                         paddingRight: '0px',
                         paddingLeft: '0px',
-                        textAlign: 'center',
-                        fontSize: textFontSize,
                     }}
                 />
                 <TableCell
@@ -99,9 +86,6 @@ export class LicenseRow extends Component {
                         width: tableCellWidth,
                         paddingRight: '10px',
                         paddingLeft: '10px',
-                        textAlign: 'center',
-                        fontSize: textFontSize,
-                        fontWeight: 'bold',
                     }}
                 />
                 <TableCell
@@ -109,8 +93,6 @@ export class LicenseRow extends Component {
                         paddingRight: '0px',
                         paddingLeft: '0px',
                         width: '36px',
-                        textAlign: 'center',
-                        fontSize: textFontSize,
                     }}
                 />
                 <TableCell
@@ -118,8 +100,6 @@ export class LicenseRow extends Component {
                         paddingRight: '0px',
                         paddingLeft: '0px',
                         width: toggleCellWidth,
-                        textAlign: 'center',
-                        fontSize: textFontSize,
                     }}
                 />
             </TableRow>
@@ -130,7 +110,11 @@ export class LicenseRow extends Component {
 LicenseRow.propTypes = {
     name: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default LicenseRow;
-
+export default
+@withWidth()
+@withTheme()
+class Default extends LicenseRow {}

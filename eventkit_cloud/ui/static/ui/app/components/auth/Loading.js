@@ -1,12 +1,13 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import { withTheme } from '@material-ui/core/styles';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import background from '../../../images/ek_topo_pattern.png';
 
-export default function Loading() {
+export function Loading(props) {
     const constainerStyle = {
-        backgroundImage: `url(${background})`,
-        height: window.innerHeight - 95,
-        width: window.innerWidth,
+        backgroundImage: `url(${props.theme.eventkit.images.topo_dark})`,
+        height: 'calc(100vh - 95px)',
+        width: '100vw',
         display: 'inline-flex',
     };
     return (
@@ -22,3 +23,9 @@ export default function Loading() {
         </div>
     );
 }
+
+Loading.propTypes = {
+    theme: PropTypes.object.isRequired,
+};
+
+export default withTheme()(Loading);

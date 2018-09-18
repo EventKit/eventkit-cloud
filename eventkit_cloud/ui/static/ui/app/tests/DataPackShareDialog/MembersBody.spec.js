@@ -1,11 +1,11 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import CustomTextField from '../../components/CustomTextField';
 import MembersHeaderRow from '../../components/DataPackShareDialog/MembersHeaderRow';
 import MemberRow from '../../components/DataPackShareDialog/MemberRow';
 import MembersBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTooltip';
-import MembersBody from '../../components/DataPackShareDialog/MembersBody';
+import { MembersBody } from '../../components/DataPackShareDialog/MembersBody';
 
 describe('GroupBody component', () => {
     const getProps = () => (
@@ -35,11 +35,12 @@ describe('GroupBody component', () => {
             onMembersUpdate: () => {},
             canUpdateAdmin: false,
             handleShowShareInfo: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<MembersBody {...props} />)
+        shallow(<MembersBody {...props} />)
     );
 
     it('should render the basic components', () => {

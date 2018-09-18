@@ -1,6 +1,6 @@
 import React from 'react';
-import { mount } from 'enzyme';
-import ShareBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTooltip';
+import { shallow } from 'enzyme';
+import { ShareBodyTooltip } from '../../components/DataPackShareDialog/ShareBodyTooltip';
 
 
 describe('MembersHeaderRow component', () => {
@@ -9,11 +9,12 @@ describe('MembersHeaderRow component', () => {
             text: 'test text',
             target: { getBoundingClientRect: () => ({ left: 0, top: 0, height: 0 }) },
             body: { getBoundingClientRect: () => ({ left: 0, top: 0, height: 0 }) },
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ShareBodyTooltip {...props} />)
+        shallow(<ShareBodyTooltip {...props} />)
     );
 
     it('should render the basic components', () => {

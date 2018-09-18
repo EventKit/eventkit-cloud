@@ -27,6 +27,7 @@ describe('DataPackFeaturedItem component', () => {
             },
             gridName: 'test',
             index: 0,
+            ...global.eventkit_test_props,
         };
     }
 

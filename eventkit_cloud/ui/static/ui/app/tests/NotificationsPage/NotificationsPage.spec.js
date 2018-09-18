@@ -1,5 +1,5 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { NotificationsPage } from '../../components/NotificationsPage/NotificationsPage';
@@ -39,6 +39,11 @@ const mockNotifications = {
 describe('NotificationsPage component', () => {
     let wrapper;
     let instance;
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     function defaultProps() {
         return {
@@ -53,6 +58,7 @@ describe('NotificationsPage component', () => {
                 push: sinon.spy(),
             },
             getNotifications: sinon.spy(),
+            ...global.eventkit_test_props,
         };
     }
 
@@ -189,8 +195,8 @@ describe('NotificationsPage component', () => {
 
         describe('and window width is <= 768', () => {
             beforeEach(() => {
-                window.resizeTo(768, 600);
                 setup();
+                wrapper.setProps({ width: 'sm' });
                 loadNotifications();
             });
 

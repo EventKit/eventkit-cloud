@@ -1,13 +1,19 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import CustomTextField from '../../components/CustomTextField';
 import GroupRow from '../../components/DataPackShareDialog/GroupRow';
 import GroupsHeaderRow from '../../components/DataPackShareDialog/GroupsHeaderRow';
 import GroupBodyTooltip from '../../components/DataPackShareDialog/ShareBodyTooltip';
-import GroupBody, { GroupsBody } from '../../components/DataPackShareDialog/GroupsBody';
+import { GroupsBody } from '../../components/DataPackShareDialog/GroupsBody';
 
 describe('GroupBody component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             groups: [
@@ -49,11 +55,12 @@ describe('GroupBody component', () => {
             onGroupsUpdate: () => {},
             canUpdateAdmin: false,
             handleShowShareInfo: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<GroupBody {...props} />)
+        shallow(<GroupsBody {...props} />)
     );
 
     it('should render the basic components', () => {
@@ -85,7 +92,7 @@ describe('GroupBody component', () => {
 
     it('should sort groups by shared', () => {
         const props = getProps();
-        const sortSpy = sinon.spy(GroupBody.prototype, 'sortByShared');
+        const sortSpy = sinon.spy(GroupsBody.prototype, 'sortByShared');
         const wrapper = getWrapper(props);
         wrapper.setState({ activeOrder: 'shared' });
         expect(sortSpy.calledOnce).toBe(true);

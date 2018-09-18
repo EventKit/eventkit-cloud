@@ -1,11 +1,16 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
+import { createShallow } from '@material-ui/core/test-utils';
 import CustomTableRow from '../../components/CustomTableRow';
-import BaseDialog from '../../components/Dialog/BaseDialog';
-import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
+import { DataPackGeneralTable } from '../../components/StatusDownloadPage/DataPackGeneralTable';
 
 describe('DataPackGeneralTable component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             dataPack: {
@@ -43,25 +48,26 @@ describe('DataPackGeneralTable component', () => {
                     service_description: 'number two service',
                 },
             ],
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<DataPackGeneralTable {...props} />)
+        shallow(<DataPackGeneralTable {...props} />)
     );
 
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(CustomTableRow)).toHaveLength(4);
-        expect(wrapper.find(BaseDialog)).toHaveLength(2);
     });
 
     it('Source Info icon should call handleProviderOpen on click', () => {
         const props = getProps();
         const openStub = sinon.stub(DataPackGeneralTable.prototype, 'handleProviderOpen');
         const wrapper = getWrapper(props);
-        wrapper.find('.qa-DataPackGeneralTable-Info-source').first().simulate('click');
+        shallow(wrapper.find(CustomTableRow).at(2).props().data[0])
+            .find('.qa-DataPackGeneralTable-Info-source').simulate('click');
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
     });

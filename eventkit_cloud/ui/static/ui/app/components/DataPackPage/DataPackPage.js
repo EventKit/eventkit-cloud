@@ -1,6 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
+import { withTheme } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -26,9 +28,7 @@ import { getGroups } from '../../actions/userGroupsActions';
 import { getUsers } from '../../actions/userActions';
 import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { isViewportL } from '../../utils/viewport';
 import { joyride } from '../../joyride.config';
-import background from '../../../images/ek_topo_pattern.png';
 
 export class DataPackPage extends React.Component {
     constructor(props) {
@@ -51,7 +51,7 @@ export class DataPackPage extends React.Component {
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
         this.state = {
-            open: window.innerWidth >= 1200,
+            open: isWidthUp('xl', this.props.width),
             permissions: {
                 value: '',
                 groups: {},
@@ -196,7 +196,6 @@ export class DataPackPage extends React.Component {
             providers: this.props.providers,
             users: this.props.users,
             groups: this.props.groups,
-            ref: this.getViewRef,
         };
         switch (view) {
             case 'list':
@@ -205,6 +204,7 @@ export class DataPackPage extends React.Component {
                         {...commonProps}
                         onSort={this.handleSortChange}
                         order={this.props.location.query.order}
+                        innerRef={this.getViewRef}
                     />
                 );
             case 'grid':
@@ -212,6 +212,7 @@ export class DataPackPage extends React.Component {
                     <DataPackGrid
                         {...commonProps}
                         name="DataPackLibrary"
+                        ref={this.getViewRef}
                     />
                 );
             case 'map':
@@ -224,6 +225,7 @@ export class DataPackPage extends React.Component {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                         onMapFilter={this.handleSpatialFilter}
+                        innerRef={this.getViewRef}
                     />
                 );
             default: return null;
@@ -280,7 +282,7 @@ export class DataPackPage extends React.Component {
 
     handleFilterApply(state) {
         this.setState({ ...this.state, ...state, loading: true }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
+        if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -302,7 +304,7 @@ export class DataPackPage extends React.Component {
             providers: {},
             loading: true,
         }, this.makeRunRequest);
-        if (window.innerWidth < 1200) {
+        if (!isWidthUp('xl', this.props.width)) {
             this.setState({ open: false });
         }
     }
@@ -364,16 +366,16 @@ export class DataPackPage extends React.Component {
                     this.setState({ open: true });
                 }
             }
-            if (data.step.title === 'Filters' && data.type === 'step:after' && isViewportL()) {
+            if (data.step.title === 'Filters' && data.type === 'step:after' && !isWidthUp('xl', this.props.width)) {
                 this.setState({ open: false });
             }
-            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && isViewportL()) {
+            if (data.step.title === 'Featured DataPacks' && data.type === 'step:before' && !isWidthUp('xl', this.props.width)) {
                 this.setState({ open: false });
             }
             if (data.step.title === 'Menu Options'
                 && data.type === 'step:before'
                 && this.props.location.query.view === 'list'
-                && isViewportL()
+                && !isWidthUp('xl', this.props.width)
             ) {
                 this.setState({ open: false });
             }
@@ -381,6 +383,8 @@ export class DataPackPage extends React.Component {
     }
 
     handleJoyride() {
+        const { colors } = this.props.theme.eventkit;
+
         if (this.state.isRunning === true) {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
@@ -397,29 +401,29 @@ export class DataPackPage extends React.Component {
                 text: 'Popular or sought after DataPacks can be tagged as “Featured” and will be prominently displayed in each view',
                 selector: '.tour-datapack-featured',
                 style: {
-                    backgroundColor: 'white',
+                    backgroundColor: colors.white,
                     borderRadius: '0',
-                    color: 'black',
-                    mainColor: '#ff4456',
+                    color: colors.black,
+                    mainColor: colors.primary,
                     textAlign: 'left',
                     header: {
                         textAlign: 'left',
                         fontSize: '20px',
-                        borderColor: '#4598bf',
+                        borderColor: colors.primary,
                     },
                     main: {
                         paddingTop: '20px',
                         paddingBottom: '20px',
                     },
                     button: {
-                        color: 'white',
-                        backgroundColor: '#4598bf',
+                        color: colors.white,
+                        backgroundColor: colors.primary,
                     },
                     skip: {
                         display: 'none',
                     },
                     back: {
-                        color: '#8b9396',
+                        color: colors.text_primary,
                     },
                     hole: {
                         backgroundColor: 'rgba(226,226,226, 0.2)',
@@ -437,18 +441,20 @@ export class DataPackPage extends React.Component {
     }
 
     render() {
+        const { colors, images } = this.props.theme.eventkit;
+
         const { steps, isRunning } = this.state;
         const pageTitle = <div style={{ display: 'inline-block', paddingRight: '10px' }}>DataPack Library</div>;
 
         const styles = {
             wholeDiv: {
-                height: window.innerWidth > 575 ?
-                    window.innerHeight - 231
+                height: isWidthUp('sm', this.props.width) ?
+                    'calc(100vh - 231px)'
                     :
-                    window.innerHeight - 223,
+                    'calc(100vh - 223px)',
                 backgroundRepeat: 'repeat repeat',
-                marginRight: this.state.open && window.innerWidth >= 1200 ? '250px' : '0px',
-                marginTop: window.innerWidth > 575 ? '10px' : '2px',
+                marginRight: this.state.open && isWidthUp('xl', this.props.width) ? '250px' : '0px',
+                marginTop: isWidthUp('sm', this.props.width) ? '10px' : '2px',
                 position: 'relative',
             },
             pageTitle: {
@@ -460,44 +466,44 @@ export class DataPackPage extends React.Component {
             toolbarSearch: {
                 height: '56px',
                 minHeight: '56px',
-                backgroundColor: '#253447',
+                backgroundColor: colors.background_light,
             },
             toolbarSort: {
-                backgroundColor: '#253447',
+                backgroundColor: colors.background_light,
                 height: '35px',
                 minHeight: '35px',
                 display: 'inline-block',
                 width: '100%',
             },
             containerStyle: {
-                backgroundColor: '#fff',
+                backgroundColor: colors.white,
                 top: '221px',
-                height: window.innerHeight - 221,
+                height: 'calc(100vh - 221px)',
                 overflowY: 'hidden',
                 overflowX: 'hidden',
             },
             backgroundStyle: {
-                backgroundImage: `url(${background})`,
+                backgroundImage: `url(${images.topo_dark})`,
             },
-            range: window.innerWidth < 768 ?
-                { color: '#a59c9c', lineHeight: '36px', fontSize: '12px' }
+            range: !isWidthUp('md', this.props.width) ?
+                { color: colors.text_primary, lineHeight: '36px', fontSize: '12px' }
                 :
                 {
                     display: 'inline-block',
                     position: 'absolute',
-                    color: '#a59c9c',
+                    color: colors.text_primary,
                     lineHeight: '36px',
                     right: '10px',
                     fontSize: '12px',
                 },
             tourButton: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 display: 'inline-block',
                 marginRight: '15px',
             },
             tourIcon: {
-                color: '#4598bf',
+                color: colors.primary,
                 cursor: 'pointer',
                 height: '18px',
                 width: '18px',
@@ -562,7 +568,7 @@ export class DataPackPage extends React.Component {
                         handleToggle={this.handleToggle}
                         active={this.state.open}
                     />
-                    {this.props.location.query.view === 'list' && window.innerWidth >= 768 ?
+                    {this.props.location.query.view === 'list' && isWidthUp('md', this.props.width) ?
                         null
                         :
                         <DataPackSortDropDown
@@ -606,7 +612,7 @@ export class DataPackPage extends React.Component {
                                         position: 'absolute',
                                         width: '100%',
                                         height: '100%',
-                                        backgroundColor: 'rgba(0,0,0,0.2)',
+                                        backgroundColor: colors.backdrop,
                                     }}
                                 >
                                     <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
@@ -678,6 +684,8 @@ DataPackPage.propTypes = {
             page_size: PropTypes.string,
         }),
     }).isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
 function mapStateToProps(state) {
@@ -733,7 +741,8 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(
-    mapStateToProps,
-    mapDispatchToProps,
-)(DataPackPage);
+export default
+@withWidth()
+@withTheme()
+@connect(mapStateToProps, mapDispatchToProps)
+class Default extends DataPackPage {}

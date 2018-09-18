@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ConfirmDialog from './ConfirmDialog';
 
-export class DeleteDialog extends Component {
+export class DeleteDataPackDialog extends Component {
     render() {
         return (
             <ConfirmDialog
@@ -20,10 +20,10 @@ export class DeleteDialog extends Component {
     }
 }
 
-DeleteDialog.propTypes = {
+DeleteDataPackDialog.propTypes = {
     show: PropTypes.bool.isRequired,
     onCancel: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
 };
 
-export default DeleteDialog;
+export default DeleteDataPackDialog;
