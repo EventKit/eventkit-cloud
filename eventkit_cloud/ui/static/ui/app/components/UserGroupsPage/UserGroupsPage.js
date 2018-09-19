@@ -583,6 +583,7 @@ export class UserGroupsPage extends Component {
                                 username: 'Example User',
                                 email: 'example_user@example.com',
                             },
+                            groups: [],
                         };
                         this.props.users.users.push(fakeUser);
                     }
