@@ -1,5 +1,4 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as React from 'react';
 import PageHeader from '../common/PageHeader';
 import CustomScrollbar from '../CustomScrollbar';
 import InfoParagraph from './InfoParagraph';
@@ -8,7 +7,21 @@ import InfoGrid from './InfoGrid';
 import { about } from '../../about.config';
 
 const COMPONENT_MAPPING = { InfoParagraph, ThreeStepInfo, InfoGrid };
-export class About extends Component {
+
+interface Props {
+    context: {
+        config: {
+            VERSION: string,
+            CONTACT_URL: string,
+        },
+    },
+}
+
+interface State {
+    pageInfo: Object[],
+}
+
+export class About extends React.Component<Props, State> {
     constructor(props) {
         super(props);
         this.state = {
@@ -28,13 +41,13 @@ export class About extends Component {
                 height: 'calc(100vh - 130px)',
                 width: '100%',
                 margin: 'auto',
-                overflowY: 'hidden',
+                overflowY: 'hidden' as 'hidden',
             },
             contact: {
                 padding: '10px 34px',
                 maxWidth: '1000px',
                 margin: 'auto',
-                textAlign: 'right',
+                textAlign: 'right' as 'right',
             },
             bodyContent: {
                 padding: '10px 34px 30px',
@@ -49,9 +62,9 @@ export class About extends Component {
 
         let version = '';
         let contactUrl = '';
-        if (this.context.config) {
-            version = this.context.config.VERSION;
-            contactUrl = this.context.config.CONTACT_URL;
+        if (this.props.context.config) {
+            version = this.props.context.config.VERSION;
+            contactUrl = this.props.context.config.CONTACT_URL;
         }
 
         return (
@@ -84,9 +97,5 @@ export class About extends Component {
         );
     }
 }
-
-About.contextTypes = {
-    config: PropTypes.object,
-};
 
 export default About;

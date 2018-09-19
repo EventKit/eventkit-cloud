@@ -1,13 +1,14 @@
 {
     "compilerOptions": {
-        "useBabel": true,
-        "sourceMap": true,          // allow sourcemap support
-        "strictNullChecks": true,   // enable strict null checks as a best practice
-        "module": "es6",            // specify module code generation
-        "jsx": "react",             // use typescript to transpile jsx to js
-        "target": "es6",            // specify ECMAScript target version
-        "allowJs": true             // allow a partial TypeScript and JavaScript codebase
-
+        "sourceMap": true,
+        "strictNullChecks": true,
+        "module": "esNext",
+        "moduleResolution": "node",
+        "jsx": "preserve",
+        "target": "es6",
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
     },
     "include": [
         "./eventkit_cloud/ui/static/ui/app/"

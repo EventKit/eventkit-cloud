@@ -45,9 +45,10 @@
     "@babel/preset-env": "~7.0.0",
     "@babel/preset-react": "~7.0.0",
     "@babel/preset-typescript": "~7.1.0",
+    "@types/enzyme": "~3.1.14",
+    "@types/jest": "~23.3.2",
     "@types/react": "~16.4.14",
     "@types/react-dom": "~16.0.7",
-    "awesome-typescript-loader": "~5.2.1",
     "axios-mock-adapter": "~1.7.1",
     "babel-core": "~7.0.0-bridge.0",
     "babel-eslint": "~9.0.0",
@@ -75,10 +76,14 @@
     "pngjs": "~3.3.0",
     "react-addons-test-utils": "~15.4.0",
     "react-hot-loader": "~3.0.0-beta.6",
+    "react-test-renderer": "~16.5.2",
     "redux-mock-store": "~1.5.3",
     "sinon": "~3.2.0",
     "source-map-loader": "~0.2.4",
     "style-loader": "~0.21.0",
+    "ts-jest": "~23.1.4",
+    "ts-lint": "~4.5.1",
+    "ts-loader": "~5.1.1",
     "typescript": "~3.0.3",
     "url-loader": "~1.0.1",
     "webpack": "~4.12.1",
@@ -89,6 +94,12 @@
     "@babel/preset-flow": "^7.0.0"
   },
   "jest": {
+    "globals": {
+        "ts-jest": {
+            "tsConfig": true,
+            "babelConfig": true
+        }
+    },
     "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
     "collectCoverageFrom": [
@@ -104,7 +115,9 @@
     ],
     "moduleFileExtensions": [
       "js",
-      "jsx"
+      "jsx",
+      "ts",
+      "tsx"
     ],
     "moduleDirectories": [
       "node_modules",
@@ -118,7 +131,7 @@
     "modulePathIgnorePatterns": [
       "staticfiles/",
       "rootReducer.js",
-      "index.js",
+      "index.tsx",
       "store/"
     ],
     "setupFiles": [
@@ -129,7 +142,9 @@
     ],
     "transform": {
         "^.+\\.jsx$": "babel-jest",
-        "^.+\\.js$": "babel-jest"
+        "^.+\\.js$": "babel-jest",
+        "^.+\\.ts$": "ts-jest",
+        "^.+\\.tsx$": "ts-jest"
     }
   },
   "scripts": {

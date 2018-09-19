@@ -193,6 +193,7 @@ services:
     - ./.eslintignore:/var/lib/eventkit/.eslintignore
     - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
     - ./babel.config.js:/var/lib/eventkit/babel.config.js
+    - ./tsconfig.json:/var/lib/eventkit/tsconfig.json
     - ./config/setupFile.js:/var/lib/eventkit/setupFile.js
     - ./.git:/var/lib/eventkit/.git
     ports:

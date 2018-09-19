@@ -77,7 +77,7 @@ function checkAuth(storeObj) {
     return (nextState) => {
         const { user } = storeObj.getState();
         if (!user.data) {
-            storeObj.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
+            storeObj.dispatch(login(null));
         }
     };
 }
