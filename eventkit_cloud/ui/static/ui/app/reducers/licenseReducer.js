@@ -1,7 +1,13 @@
-import types from '../actions/actionTypes';
-import initialState from './initialState';
+import { types } from '../actions/licenseActions';
 
-export function licenseReducer(state = initialState.licenses, action) {
+export const initialState = {
+    fetching: false,
+    fetched: false,
+    licenses: [],
+    error: null,
+};
+
+export function licenseReducer(state = initialState, action) {
     switch (action.type) {
         case types.FETCHING_LICENSES:
             return { ...state, fetching: true, fetched: false };

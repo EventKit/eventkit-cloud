@@ -1,8 +1,5 @@
-import { licenseReducer } from '../../reducers/licenseReducer';
-import types from '../../actions/actionTypes';
-import initialState from '../../reducers/initialState';
-
-const state = initialState.licenses;
+import { licenseReducer, initialState as state } from '../../reducers/licenseReducer';
+import { types } from '../../actions/licenseActions';
 
 describe('License Reducer', () => {
     it('should return the initialState', () => {

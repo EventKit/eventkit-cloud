@@ -1,6 +1,7 @@
 import * as reducers from '../../reducers/userActivityReducer';
-import initialState from '../../reducers/initialState';
-import types from '../../actions/actionTypes';
+import { types } from '../../actions/userActivityActions';
+
+const initialState = { userActivity: reducers.initialState };
 
 describe('userActivityReducer', () => {
     it('it should return the initial state', () => {

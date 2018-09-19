@@ -1,8 +1,8 @@
-import * as reducers from '../../reducers/searchToolbarReducer';
+import * as reducers from '../../reducers/geocodeReducer';
 
 describe('getGeocode reducer', () => {
     it('should return initial state', () => {
-        expect(reducers.getGeocodeReducer(undefined, {})).toEqual({
+        expect(reducers.geocodeReducer(undefined, {})).toEqual({
             fetching: false,
             fetched: false,
             data: [],
@@ -11,7 +11,7 @@ describe('getGeocode reducer', () => {
     });
 
     it('should handle FETCHING_GEOCODE', () => {
-        expect(reducers.getGeocodeReducer(
+        expect(reducers.geocodeReducer(
             {
                 fetching: false,
                 fetched: false,
@@ -28,7 +28,7 @@ describe('getGeocode reducer', () => {
     });
 
     it('should handle RECEIVED_GEOCODE', () => {
-        expect(reducers.getGeocodeReducer(
+        expect(reducers.geocodeReducer(
             {
                 fetching: false,
                 fetched: false,
@@ -45,7 +45,7 @@ describe('getGeocode reducer', () => {
     });
 
     it('should handle FETCH_GEOCODE_ERROR', () => {
-        expect(reducers.getGeocodeReducer(
+        expect(reducers.geocodeReducer(
             {
                 fetching: false,
                 fetched: false,

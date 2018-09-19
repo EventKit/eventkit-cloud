@@ -1,6 +1,64 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
-import types from './actionTypes';
+
+export const types = {
+    FETCHING_RUNS: 'FETCHING_RUNS',
+    RECEIVED_RUNS: 'RECEIVED_RUNS',
+    FETCH_RUNS_ERROR: 'FETCH_RUNS_ERROR',
+    FETCHING_FEATURED_RUNS: 'FETCHING_FEATURED_RUNS',
+    RECEIVED_FEATURED_RUNS: 'RECEIVED_FEATURED_RUNS',
+    FETCH_FEATURED_RUNS_ERROR: 'FETCH_FEATURED_RUNS_ERROR',
+    DELETING_RUN: 'DELETING_RUN',
+    DELETED_RUN: 'DELETED_RUN',
+    DELETE_RUN_ERROR: 'DELETE_RUN_ERROR',
+    UPDATING_EXPIRATION: 'UPDATING_EXPIRATION',
+    UPDATE_EXPIRATION_ERROR: 'UPDATE_EXPIRATION_ERROR',
+    UPDATE_EXPIRATION_SUCCESS: 'UPDATE_EXPIRATION_SUCCESS',
+    GETTING_DATACART_DETAILS: 'GETTING_DATACART_DETAILS',
+    CLEAR_DATACART_DETAILS: 'CLEAR_DATACART_DETAILS',
+    DATACART_DETAILS_RECEIVED: 'DATACART_DETAILS_RECEIVED',
+    DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
+};
+
+export const getDatacartDetails = jobuid => (dispatch) => {
+    dispatch({
+        type: types.GETTING_DATACART_DETAILS,
+    });
+    return axios({
+        url: `/api/runs?job_uid=${jobuid}`,
+        method: 'GET',
+    }).then((response) => {
+        // get the list of runs (DataPacks) that are associated with the job UID.
+        // We take only the first one for now since multiples are currently disabled.
+        // However we leave it in an array for future proofing.
+        const data = [];
+        if (response.data.length) {
+            data.push({ ...response.data[0] });
+            if (!data[0].deleted) {
+                data[0].job.permissions = {
+                    value: data[0].job.visibility,
+                    groups: data[0].job.permissions.groups,
+                    members: data[0].job.permissions.users,
+                };
+            }
+        }
+
+        dispatch({
+            type: types.DATACART_DETAILS_RECEIVED,
+            datacartDetails: {
+                data,
+            },
+        });
+    }).catch((error) => {
+        dispatch({
+            type: types.DATACART_DETAILS_ERROR, error: error.response.data,
+        });
+    });
+};
+
+export function clearDataCartDetails() {
+    return { type: types.CLEAR_DATACART_DETAILS };
+}
 
 export function getRuns(args = {}) {
     return (dispatch, getState) => {
@@ -189,12 +247,11 @@ export function getFeaturedRuns(args) {
     };
 }
 
-export function deleteRuns(uid) {
+export function deleteRun(uid) {
     return (dispatch) => {
         dispatch({ type: types.DELETING_RUN });
 
         const csrftoken = cookie.load('csrftoken');
-
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', csrftoken);
 
@@ -211,16 +268,19 @@ export function deleteRuns(uid) {
     };
 }
 
-export function setPageOrder(order) {
-    return {
-        type: types.SET_PAGE_ORDER,
-        order,
-    };
-}
-
-export function setPageView(view) {
-    return {
-        type: types.SET_PAGE_VIEW,
-        view,
+export function updateExpiration(uid, expiration) {
+    return (dispatch) => {
+        dispatch({ type: types.UPDATING_EXPIRATION });
+        const csrftoken = cookie.load('csrftoken');
+        return axios({
+            url: `/api/runs/${uid}`,
+            method: 'PATCH',
+            data: { expiration },
+            headers: { 'X-CSRFToken': csrftoken },
+        }).then(() => {
+            dispatch({ type: types.UPDATE_EXPIRATION_SUCCESS });
+        }).catch((error) => {
+            dispatch({ type: types.UPDATE_EXPIRATION_ERROR, error: error.response.data });
+        });
     };
 }

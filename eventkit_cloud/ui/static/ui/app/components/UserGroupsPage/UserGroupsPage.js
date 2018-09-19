@@ -27,9 +27,9 @@ import MemberInfoDialog from './Dialogs/MemberInfoDialog';
 import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
-import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/userGroupsActions';
-import { getUsers } from '../../actions/userActions';
-import { DrawerTimeout } from '../../actions/exportsActions';
+import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/groupActions';
+import { getUsers } from '../../actions/usersActions';
+import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 
 export class UserGroupsPage extends Component {

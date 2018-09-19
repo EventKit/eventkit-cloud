@@ -1,8 +1,14 @@
 import axios from 'axios';
 
+export const types = {
+    FETCHING_GEOCODE: 'FETCHING_GEOCODE',
+    RECEIVED_GEOCODE: 'RECEIVED_GEOCODE',
+    FETCH_GEOCODE_ERROR: 'FETCH_GEOCODE_ERROR',
+};
+
 export function getGeocode(query) {
     return (dispatch) => {
-        dispatch({ type: 'FETCHING_GEOCODE' });
+        dispatch({ type: types.FETCHING_GEOCODE });
         return axios.get('/search', {
             params: {
                 query,
@@ -21,14 +27,14 @@ export function getGeocode(query) {
                         data.push(featureCopy);
                     }
                 });
-                dispatch({ type: 'RECEIVED_GEOCODE', data });
+                dispatch({ type: types.RECEIVED_GEOCODE, data });
             })
             .catch((e) => {
                 let error = e.response.data;
                 if (!error) {
                     error = 'An unknown error has occured';
                 }
-                dispatch({ type: 'FETCH_GEOCODE_ERROR', error });
+                dispatch({ type: types.FETCH_GEOCODE_ERROR, error });
             });
     };
 }

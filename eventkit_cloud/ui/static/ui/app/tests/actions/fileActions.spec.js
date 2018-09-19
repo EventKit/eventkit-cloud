@@ -2,14 +2,13 @@ import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import * as actions from '../../actions/mapToolActions';
-import types from '../../actions/mapToolActionTypes';
+import * as actions from '../../actions/fileActions';
 
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
-describe('mapTool actions', () => {
+describe('file actions', () => {
     it('resetGeoJSONFile should return type FILE_RESET', () => {
         expect(actions.resetGeoJSONFile()).toEqual({
             type: 'FILE_RESET',
@@ -49,8 +48,8 @@ describe('mapTool actions', () => {
         );
 
         const expectedPayload = [
-            { type: types.FILE_PROCESSING, filename: 'test.geojson' },
-            { type: types.FILE_PROCESSED, featureCollection: geojson },
+            { type: actions.types.FILE_PROCESSING, filename: 'test.geojson' },
+            { type: actions.types.FILE_PROCESSED, featureCollection: geojson },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))
             .then(() => {
@@ -70,8 +69,8 @@ describe('mapTool actions', () => {
         );
 
         const expectedPayload = [
-            { type: types.FILE_PROCESSING, filename: 'test.geojson' },
-            { type: types.FILE_ERROR, error: 'No data returned from the api.' },
+            { type: actions.types.FILE_PROCESSING, filename: 'test.geojson' },
+            { type: actions.types.FILE_ERROR, error: 'No data returned from the api.' },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))
             .then(() => {
@@ -91,8 +90,8 @@ describe('mapTool actions', () => {
         );
 
         const expectedPayload = [
-            { type: types.FILE_PROCESSING, filename: 'test.geojson' },
-            { type: types.FILE_ERROR, error: 'whoops' },
+            { type: actions.types.FILE_PROCESSING, filename: 'test.geojson' },
+            { type: actions.types.FILE_ERROR, error: 'whoops' },
         ];
         return store.dispatch(actions.processGeoJSONFile(file))
             .then(() => {

@@ -2,7 +2,7 @@ import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import * as actions from '../../actions/searchToolbarActions';
+import * as actions from '../../actions/geocodeActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -93,6 +93,22 @@ describe('async searchToolbar actions', () => {
         const expectedActions = [
             { type: 'FETCHING_GEOCODE' },
             { type: 'FETCH_GEOCODE_ERROR', error: 'Request failed with status code 400' },
+        ];
+
+        return store.dispatch(actions.getGeocode('18SJT9710003009'))
+            .then(() => {
+                expect(store.getActions()).toEqual(expectedActions);
+            });
+    });
+
+    it('should handle unknown errors', () => {
+        store = mockStore({ geocode: [] });
+        const fail = new MockAdapter(axios, { delayResponse: 10 });
+        fail.onGet('/search').reply(400, '');
+
+        const expectedActions = [
+            { type: 'FETCHING_GEOCODE' },
+            { type: 'FETCH_GEOCODE_ERROR', error: 'An unknown error has occured' },
         ];
 
         return store.dispatch(actions.getGeocode('18SJT9710003009'))
