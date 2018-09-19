@@ -27,7 +27,7 @@ def content_to_file(content):
                              ", ".join([str(arg) for arg in args]),
                              ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]))
                 with NamedTemporaryFile() as certfile:
-                    certfile.write(content)
+                    certfile.write(content.encode())
                     certfile.flush()
                     return func(cert=certfile.name, *args, **kwargs)
             else:

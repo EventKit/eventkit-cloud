@@ -248,9 +248,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
                 'xmax': boundary[2],
                 'ymax': boundary[3]
             })
-            logger.error(temp_boundfile.name)
-            logger.error(geojson)
-            temp_boundfile.write(geojson)
+            temp_boundfile.write(geojson.encode())
             temp_boundfile.flush()
             boundary = temp_boundfile.name
 
