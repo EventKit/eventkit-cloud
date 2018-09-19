@@ -14,7 +14,8 @@ import NavigationRefresh from '@material-ui/icons/Refresh';
 import CustomScrollbar from '../CustomScrollbar';
 import DataProvider from './DataProvider';
 import MapCard from '../common/MapCard';
-import { updateExportInfo, stepperNextEnabled, stepperNextDisabled } from '../../actions/exportsActions';
+import { updateExportInfo } from '../../actions/datacartActions';
+import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
@@ -239,7 +240,11 @@ export class ExportInfo extends React.Component {
             // is populated, but if it's not, return false
             const providerState = this.state.providers.find(p => p.slug === provider.slug);
             if (!providerState) return false;
-            return providerState.availability && providerState.availability.status.toUpperCase() === 'FATAL';
+            const { availability } = providerState;
+            if (availability && availability.status) {
+                return availability.status.toUpperCase() === 'FATAL';
+            }
+            return false;
         });
     }
 

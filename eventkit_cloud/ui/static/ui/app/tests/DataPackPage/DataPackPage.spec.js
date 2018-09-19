@@ -63,9 +63,9 @@ describe('DataPackPage component', () => {
         },
         user: { data: { user: { username: 'admin' } } },
         getRuns: () => {},
-        deleteRuns: () => {},
+        deleteRun: () => {},
         getProviders: () => {},
-        runsDeletion: {
+        runDeletion: {
             deleting: false,
             deleted: false,
             error: null,
@@ -255,7 +255,7 @@ describe('DataPackPage component', () => {
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
-        nextProps.runsDeletion.deleting = true;
+        nextProps.runDeletion.deleting = true;
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
@@ -451,7 +451,7 @@ describe('DataPackPage component', () => {
         const wrapper = getWrapper(props);
         expect(makeRequestSpy.calledOnce).toBe(true);
         const nextProps = getProps();
-        nextProps.runsDeletion.deleted = true;
+        nextProps.runDeletion.deleted = true;
         wrapper.setProps(nextProps);
         expect(stateSpy.calledWith({ loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
         expect(makeRequestSpy.calledTwice).toBe(true);
@@ -670,7 +670,7 @@ describe('DataPackPage component', () => {
         const commonProps = {
             runs: props.runsList.runs,
             user: props.user,
-            onRunDelete: props.deleteRuns,
+            onRunDelete: props.deleteRun,
             onRunShare: props.updateDataCartPermissions,
             range: props.runsList.range,
             handleLoadLess: wrapper.instance().loadLess,

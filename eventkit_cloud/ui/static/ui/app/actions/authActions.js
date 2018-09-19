@@ -1,11 +1,13 @@
-import actions from './actionTypes';
-
+export const types = {
+    SET_TOKEN: 'SET_TOKEN',
+    CLEAR_TOKEN: 'CLEAR_TOKEN',
+};
 
 export const setToken = token => ({
-    type: actions.SET_TOKEN,
+    type: types.SET_TOKEN,
     payload: { token },
 });
 
 export const clearToken = () => ({
-    type: actions.CLEAR_TOKEN,
+    type: types.CLEAR_TOKEN,
 });

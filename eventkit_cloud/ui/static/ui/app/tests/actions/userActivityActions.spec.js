@@ -4,9 +4,9 @@ import sinon from 'sinon';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 import * as actions from '../../actions/userActivityActions';
-import types from '../../actions/actionTypes';
-import initialState from '../../reducers/initialState';
+import { initialState as state } from '../../reducers/userActivityReducer';
 
+const initialState = { userActivity: state };
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
@@ -58,9 +58,9 @@ describe('userActivityActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
+            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
             {
-                type: types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: true, range: '12/24',
+                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: true, range: '12/24',
             },
         ];
 
@@ -82,9 +82,9 @@ describe('userActivityActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
+            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
             {
-                type: types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: false, range: '',
+                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: false, range: '',
             },
         ];
 
@@ -155,7 +155,7 @@ describe('userActivityActions', () => {
         const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
 
         const expectedActions = [
-            { type: types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
+            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
         ];
 
         const store = mockStore(initialState);
@@ -177,8 +177,8 @@ describe('userActivityActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
-            { type: types.FETCH_VIEWED_JOBS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
+            { type: actions.types.FETCH_VIEWED_JOBS_ERROR, error: 'oh no an error' },
         ];
 
         const store = mockStore(initialState);
