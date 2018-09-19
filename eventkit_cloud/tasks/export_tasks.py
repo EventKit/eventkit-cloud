@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
-import pickle
 import json
 import logging
 import os
@@ -34,7 +32,7 @@ from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
-    get_human_readable_metadata_document
+    get_human_readable_metadata_document, pickle_exception
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, external_service, wcs, geopackage, gdalutils
@@ -316,8 +314,7 @@ class ExportTask(UserDetailsBase):
             logger.error(traceback.format_exc())
             logger.error('Cannot update the status of ExportTaskRecord object: no such object has been created for '
                          'this task yet.')
-        exception = pickle.dumps(einfo)
-        ete = ExportTaskException(task=task, exception=str(exception))
+        ete = ExportTaskException(task=task, exception=pickle_exception(einfo))
         ete.save()
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
@@ -1337,7 +1334,7 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
-            ExportTaskException.objects.create(task=export_task, exception=str(pickle.dumps(einfo)))
+            ExportTaskException.objects.create(task=export_task, exception=pickle_exception(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
         task_result = export_task.result
@@ -1488,3 +1485,4 @@ def make_dirs(path):
     except OSError:
         if not os.path.isdir(path):
             raise
+

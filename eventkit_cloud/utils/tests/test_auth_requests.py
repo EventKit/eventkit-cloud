@@ -53,7 +53,7 @@ class TestAuthResult(TransactionTestCase):
 
         getenv.assert_any_call("test_slug_CRED")
         getenv.assert_any_call("test_slug_CERT")
-        cert_tempfile.write.assert_called_once_with("test cert content")
+        cert_tempfile.write.assert_called_once_with("test cert content".encode())
         cert_tempfile.flush.assert_called()
         req_patch.assert_called_with(self.url, data=42, cert="temp filename")
         self.assertEqual("test", result.content)
@@ -98,13 +98,13 @@ class TestAuthResult(TransactionTestCase):
                 conn = http.client.HTTPSConnection()
                 getenv.assert_called_with("test_provider_slug_CERT")
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
-                cert_tempfile.write.assert_called_once_with("key and cert contents")
+                cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
 
                 # Confirm that a MapProxy VerifiedHTTPSConnection picks up key and cert files
                 cert_tempfile.write.reset_mock()
                 conn = VerifiedHTTPSConnection()
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
-                cert_tempfile.write.assert_called_once_with("key and cert contents")
+                cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
 
                 # Test removing the patch
                 auth_requests.unpatch_https()

@@ -287,7 +287,7 @@ class TestExportTasks(ExportTaskBase):
         task = ExportTaskRecord.objects.get(celery_uid=celery_uid)
         self.assertIsNotNone(task)
         exception = task.exceptions.all()[0]
-        exc_info = pickle.loads(eval(exception.exception)).exc_info
+        exc_info = pickle.loads(exception.exception.encode()).exc_info
         error_type, msg, tb = exc_info[0], exc_info[1], exc_info[2]
         self.assertEqual(error_type, ValueError)
         self.assertEqual('some unexpected error', str(msg))

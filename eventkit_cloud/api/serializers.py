@@ -131,14 +131,9 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
         # set a default (incase not found)
         exc_info = ["","Exception info not found or unreadable."]
         try:
-            exc_info = pickle.loads(obj.exception).exc_info
-        except TypeError as te:
-            if obj.exception.startswith("b'"):
-                # eval always seems dicey, but I'm not sure of how to handle this better with the data that will already
-                # exist, probably something better than pickling the object could be done here in the future.
-                exc_info = pickle.loads(eval(obj.exception)).exc_info
-            else:
-                logger.error(str(te))
+            exc_info = pickle.loads(obj.exception.encode()).exc_info
+        except Exception as te:
+            logger.error(str(te))
 
         return str(exc_info[1])
 

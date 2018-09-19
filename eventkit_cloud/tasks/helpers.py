@@ -1,6 +1,7 @@
 import os
 import re
 
+import codecs
 from contextlib import contextmanager
 
 from django.conf import settings
@@ -13,6 +14,7 @@ from numpy import linspace
 from eventkit_cloud.ui.helpers import logger
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
+import pickle
 import logging
 from time import sleep
 import signal
@@ -356,3 +358,7 @@ def progressive_kill(pid):
 
     except OSError:
         logger.info("{0} PID no longer exists.".format(pid))
+
+
+def pickle_exception(exception):
+    return pickle.dumps(exception, 0).decode()
