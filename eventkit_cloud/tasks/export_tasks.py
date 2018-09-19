@@ -389,7 +389,6 @@ def osm_data_collection_pipeline(
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
     # --- Overpass Query
-    raise Exception("THIS IS A TEST! REMOVE ME!")
     op = overpass.Overpass(
         bbox=bbox, stage_dir=stage_dir, slug=slug, url=url,
         job_name=job_name, task_uid=export_task_record_uid,
