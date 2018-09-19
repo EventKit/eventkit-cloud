@@ -3,7 +3,6 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import Help from '@material-ui/icons/Help';
-import initialState from '../../reducers/initialState';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { CreateExport } from '../../components/CreateDataPack/CreateExport';
 import BreadcrumbStepper from '../../components/CreateDataPack/BreadcrumbStepper';
@@ -22,7 +21,7 @@ describe('CreateExport component', () => {
     }
 
     function getWrapper(props = getProps()) {
-        const store = fakeStore(initialState);
+        const store = fakeStore({});
         return shallow(<CreateExport {...props}><div id="my-child-element" /></CreateExport>, {
             context: { store },
             childContextTypes: {

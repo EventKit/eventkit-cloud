@@ -26,7 +26,7 @@ except Exception:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SUPPORTED_VERSIONS = ["10.5.1"]
-VERSIONS = ["10.5.1", "10.5", "10.4.1", "10.4"]
+VERSIONS = ["10.6", "10.5.1", "10.5", "10.4.1", "10.4"]
 
 try:
     import arcpy
@@ -97,7 +97,9 @@ def get_mxd_template(version):
     :param version: A version for the correct arcgis MapDocument template.
     :return: A file path to the correct arcgis MapDocument template.
     """
-    if '10.5' in version:
+    if '10.6' in version:
+        template_file_name = "template-10-6.mxd"
+    elif '10.5' in version:
         template_file_name = "template-10-5.mxd"
     elif '10.4' in version:
         template_file_name = "template-10-4.mxd"

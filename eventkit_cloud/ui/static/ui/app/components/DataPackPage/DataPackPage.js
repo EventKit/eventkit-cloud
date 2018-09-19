@@ -20,13 +20,14 @@ import DataPackFilterButton from './DataPackFilterButton';
 import DataPackOwnerSort from './DataPackOwnerSort';
 import DataPackLinkButton from './DataPackLinkButton';
 import FilterDrawer from './FilterDrawer';
-import { getRuns, deleteRuns, setPageOrder, setPageView } from '../../actions/dataPackActions';
-import { getProviders } from '../../actions/exportsActions';
-import { getGeocode } from '../../actions/searchToolbarActions';
-import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/mapToolActions';
-import { getGroups } from '../../actions/userGroupsActions';
-import { getUsers } from '../../actions/userActions';
-import { updateDataCartPermissions } from '../../actions/statusDownloadActions';
+import { getRuns, deleteRun } from '../../actions/datapackActions';
+import { getProviders } from '../../actions/providerActions';
+import { getGeocode } from '../../actions/geocodeActions';
+import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
+import { getGroups } from '../../actions/groupActions';
+import { getUsers } from '../../actions/usersActions';
+import { updateDataCartPermissions } from '../../actions/datacartActions';
+import { setPageOrder, setPageView } from '../../actions/uiActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
 
@@ -113,7 +114,7 @@ export class DataPackPage extends React.Component {
                 this.setState({ loading: false });
             }
         }
-        if (nextProps.runsDeletion.deleted && !this.props.runsDeletion.deleted) {
+        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
             this.setState({ loading: true }, this.makeRunRequest);
         }
         if (nextProps.updatePermissions.updated && !this.props.updatePermissions.updated) {
@@ -186,7 +187,7 @@ export class DataPackPage extends React.Component {
         const commonProps = {
             runs: this.props.runsList.runs,
             user: this.props.user,
-            onRunDelete: this.props.deleteRuns,
+            onRunDelete: this.props.deleteRun,
             onRunShare: this.props.updateDataCartPermissions,
             range: this.props.runsList.range,
             handleLoadLess: this.loadLess,
@@ -603,7 +604,7 @@ export class DataPackPage extends React.Component {
                         :
                         <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
                             {this.state.loading ||
-                            this.props.runsDeletion.deleting ||
+                            this.props.runDeletion.deleting ||
                             this.props.updatePermissions.updating ||
                             this.props.importGeom.processing ?
                                 <div
@@ -648,9 +649,9 @@ DataPackPage.propTypes = {
     }).isRequired,
     user: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,
-    deleteRuns: PropTypes.func.isRequired,
+    deleteRun: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
-    runsDeletion: PropTypes.object.isRequired,
+    runDeletion: PropTypes.object.isRequired,
     drawer: PropTypes.string.isRequired,
     importGeom: PropTypes.object.isRequired,
     geocode: PropTypes.object.isRequired,
@@ -692,7 +693,7 @@ function mapStateToProps(state) {
     return {
         runsList: state.runsList,
         user: state.user,
-        runsDeletion: state.runsDeletion,
+        runDeletion: state.runDeletion,
         drawer: state.drawer,
         providers: state.providers,
         importGeom: state.importGeom,
@@ -708,8 +709,8 @@ function mapDispatchToProps(dispatch) {
         getRuns: args => (
             dispatch(getRuns(args))
         ),
-        deleteRuns: (uid) => {
-            dispatch(deleteRuns(uid));
+        deleteRun: (uid) => {
+            dispatch(deleteRun(uid));
         },
         getProviders: () => {
             dispatch(getProviders());

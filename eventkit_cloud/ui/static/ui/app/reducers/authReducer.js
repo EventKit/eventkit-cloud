@@ -1,4 +1,4 @@
-import types from '../actions/actionTypes';
+import { types } from '../actions/authActions';
 
 export const initialState = {
     token: null,
