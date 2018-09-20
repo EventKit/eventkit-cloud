@@ -6,7 +6,7 @@ Used by the View classes api/views.py to serialize API responses as JSON or HTML
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
 # -*- coding: utf-8 -*-
-import cPickle
+import pickle
 import json
 import logging
 
@@ -18,7 +18,7 @@ from notifications.models import Notification
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
 
-import validators
+from . import validators
 from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
 from eventkit_cloud.jobs.models import (
     ExportFormat,
@@ -66,11 +66,10 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     def create(validated_data, **kwargs):
         from eventkit_cloud.api.views import get_models
         """Creates an export DataProviderTask."""
-        format_names = validated_data.pop("formats")
-        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
+        formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
-        provider_task.formats.add(*format_models)
+        provider_task.formats.add(*formats)
         provider_task.save()
         return provider_task
 
@@ -129,7 +128,12 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = cPickle.loads(str(obj.exception)).exc_info
+        # set a default (incase not found)
+        exc_info = ["","Exception info not found or unreadable."]
+        try:
+            exc_info = pickle.loads(obj.exception.encode()).exc_info
+        except Exception as te:
+            logger.error(str(te))
 
         return str(exc_info[1])
 
@@ -243,7 +247,8 @@ class SimpleJobSerializer(serializers.Serializer):
     def get_permissions(obj):
         return JobPermission.jobpermissions(obj)
 
-    def get_formats(self, obj):
+    @staticmethod
+    def get_formats(obj):
         # Since formats are the same for all provider_tasks (1.1.0) just grab anyone and print them.
         provider_task = obj.provider_tasks.first()
         formats = []
@@ -454,7 +459,7 @@ class UserDataSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
-            for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
+            for slug, selected in self.context.get('request').data.get('accepted_licenses').items():
                 user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()
@@ -788,7 +793,8 @@ class NotificationSerializer(serializers.ModelSerializer):
     def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
 
         response = {}
-        if referenced_object_id > 0:
+        referenced_object_id = referenced_object_id or 0
+        if int(referenced_object_id) > 0:
             response['type'] = str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
             response['id'] = referenced_object_id
 

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from django.apps import AppConfig
 
@@ -8,4 +8,4 @@ class EventKitJobs(AppConfig):
     verbose_name = "Eventkit-Cloud Jobs"
 
     def ready(self):
-        from eventkit_cloud.jobs.signals import *  # NOQA
+        from eventkit_cloud.jobs.signals import user_post_save, job_post_save

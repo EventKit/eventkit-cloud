@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import unittest
 
@@ -42,7 +42,7 @@ class TestSQLValidator(unittest.TestCase):
     def test_colons_etc(self):
         s = SQLValidator("addr:housenumber IS NOT NULL")
         self.assertFalse(s.valid)
-        self.assertEquals(s.errors,['identifier with colon : must be in double quotes.'])
+        self.assertEqual(s.errors,['identifier with colon : must be in double quotes.'])
         s = SQLValidator("admin_level IS NOT NULL")
         self.assertTrue(s.valid)
         s = SQLValidator('"addr:housenumber" IS NOT NULL')
@@ -53,21 +53,21 @@ class TestSQLValidator(unittest.TestCase):
     def test_invalid_sql(self):
         s = SQLValidator("drop table planet_osm_polygon")
         self.assertFalse(s.valid)
-        self.assertEquals(s.errors,['SQL could not be parsed.'])
+        self.assertEqual(s.errors,['SQL could not be parsed.'])
         s = SQLValidator("(drop table planet_osm_polygon)")
         self.assertFalse(s.valid)
-        self.assertEquals(s.errors,['SQL could not be parsed.'])
+        self.assertEqual(s.errors,['SQL could not be parsed.'])
         s = SQLValidator ("")
         self.assertFalse(s.valid)
-        self.assertEquals(s.errors,['SQL could not be parsed.'])
+        self.assertEqual(s.errors,['SQL could not be parsed.'])
         s = SQLValidator("name = 'a name'; blah")
         self.assertFalse(s.valid)
-        self.assertEquals(s.errors,['SQL could not be parsed.'])
+        self.assertEqual(s.errors,['SQL could not be parsed.'])
 
     def test_column_names(self):
         s = SQLValidator("(admin IS NOT NULL and level > 4) AND height is not null")
         self.assertTrue(s.valid)
-        self.assertEquals(s.column_names,['height','level','admin'])
+        self.assertCountEqual(s.column_names,['height','level','admin'])
 
 
 class TestOsmfilterRule(unittest.TestCase):

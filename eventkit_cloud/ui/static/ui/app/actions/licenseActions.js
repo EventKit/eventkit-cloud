@@ -1,10 +1,15 @@
 import axios from 'axios';
-import actions from './actionTypes';
+
+export const types = {
+    FETCHING_LICENSES: 'FETCHING_LICENSES',
+    RECEIVED_LICENSES: 'RECEIVED_LICENSES',
+    FETCH_LICENSES_ERROR: 'FETCH_LICENSES_ERROR',
+};
 
 export function getLicenses() {
     return (dispatch) => {
         dispatch({
-            type: actions.FETCHING_LICENSES,
+            type: types.FETCHING_LICENSES,
         });
 
         return axios({
@@ -12,12 +17,12 @@ export function getLicenses() {
             method: 'GET',
         }).then((response) => {
             dispatch({
-                type: actions.RECEIVED_LICENSES,
+                type: types.RECEIVED_LICENSES,
                 licenses: response.data,
             });
         }).catch((error) => {
             dispatch({
-                type: actions.FETCH_LICENSES_ERROR,
+                type: types.FETCH_LICENSES_ERROR,
                 error: error.response.data,
             });
         });

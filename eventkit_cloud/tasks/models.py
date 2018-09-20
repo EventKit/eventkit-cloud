@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 import logging
 
@@ -113,7 +113,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
         verbose_name_plural = 'ExportRuns (DataPacks)'
 
     def __str__(self):
-        return '{0}'.format(self.uid)
+        return '{0}'.format(str(self.uid))
 
     def soft_delete(self, user=None, *args, **kwargs):
         from eventkit_cloud.tasks.export_tasks import cancel_run
@@ -124,7 +124,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
             self.delete_user = user
             username = user.username
         self.deleted = True
-        logger.info("Deleting run {0} by user {1}".format(self.uid, user))
+        logger.info("Deleting run {0} by user {1}".format(str(self.uid), user))
         cancel_run(export_run_uid=self.uid, canceling_username=username, delete=True)
         self.save()
         self.soft_delete_notifications(*args, **kwargs)
@@ -146,7 +146,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
         db_table = 'data_provider_task_records'
 
     def __str__(self):
-        return 'DataProviderTaskRecord uid: {0}'.format(self.uid)
+        return 'DataProviderTaskRecord uid: {0}'.format(str(self.uid))
 
 
 class UserDownload(UIDMixin):
@@ -196,7 +196,7 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
         db_table = 'export_task_records'
 
     def __str__(self):
-        return 'ExportTaskRecord uid: {0}'.format(self.uid)
+        return 'ExportTaskRecord uid: {0}'.format(str(self.uid))
 
 
 class ExportTaskException(TimeStampedModelMixin):
@@ -210,3 +210,5 @@ class ExportTaskException(TimeStampedModelMixin):
     class Meta:
         managed = True
         db_table = 'export_task_exceptions'
+
+

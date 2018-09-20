@@ -9,13 +9,11 @@ from eventkit_cloud.utils.geocoding.geocode_auth import get_auth_headers, authen
 logger = logging.getLogger(__name__)
 
 
-class GeocodeAdapter:
+class GeocodeAdapter(metaclass=ABCMeta):
     """
     An abstract class to implement a new geocoding service.  Note that the UI will expect,
     each feature to have a name, countryName, adminName1, adminName2, and the bbox only
     """
-
-    __metaclass__ = ABCMeta
 
     _properties = ['name', 'province', 'region', 'country']
 
@@ -165,7 +163,7 @@ class GeocodeAdapter:
     def map_properties(self, feature, properties=None):
         props = properties or feature.get('properties')
         if props:
-            for key, value in self.property_map().iteritems():
+            for key, value in self.property_map().items():
                 props[key] = props.get(value)
         feature['properties'] = props
         return feature
@@ -185,7 +183,8 @@ class GeoNames(GeocodeAdapter):
             features += [feature]
         return self.get_feature_collection(features=features)
 
-    def get_bbox(self, bbox=None):
+    @staticmethod
+    def get_bbox(bbox=None):
         if not bbox:
             return
         try:
@@ -279,13 +278,10 @@ def is_valid_bbox(bbox):
         return False
 
 
-
-
-
 def expand_bbox(original_bbox, new_bbox):
     """
     Takes two bboxes and returns a new bbox containing the original two.
-    :param bbox: A list representing [west, south, east, north]
+    :param original_bbox: A list representing [west, south, east, north]
     :param new_bbox: A list representing [west, south, east, north]
     :return: A list containing the two original lists.
     """

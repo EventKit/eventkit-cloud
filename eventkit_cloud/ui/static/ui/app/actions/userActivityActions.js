@@ -1,11 +1,19 @@
 import axios from 'axios/index';
 import cookie from 'react-cookie';
-import actions from './actionTypes';
+
+export const types = {
+    VIEWED_JOB: 'VIEWED_JOB',
+    VIEWED_JOB_SUCCESS: 'VIEWED_JOB_SUCCESS',
+    VIEWED_JOB_ERROR: 'VIEWED_JOB_ERROR',
+    FETCHING_VIEWED_JOBS: 'FETCHING_VIEWED_JOBS',
+    RECEIVED_VIEWED_JOBS: 'RECEIVED_VIEWED_JOBS',
+    FETCH_VIEWED_JOBS_ERROR: 'FETCH_VIEWED_JOBS_ERROR',
+};
 
 export function viewedJob(jobuid) {
     return (dispatch) => {
         dispatch({
-            type: actions.VIEWED_JOB,
+            type: types.VIEWED_JOB,
             jobuid,
         });
 
@@ -16,13 +24,13 @@ export function viewedJob(jobuid) {
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {
             dispatch({
-                type: actions.VIEWED_JOB_SUCCESS,
+                type: types.VIEWED_JOB_SUCCESS,
                 jobuid,
             });
         }).catch((error) => {
             console.error(error.message);
             dispatch({
-                type: actions.VIEWED_JOB_ERROR,
+                type: types.VIEWED_JOB_ERROR,
                 jobuid,
             });
         });
@@ -45,7 +53,7 @@ export function getViewedJobs(args = {}) {
         const cancelSource = axios.CancelToken.source();
 
         dispatch({
-            type: actions.FETCHING_VIEWED_JOBS,
+            type: types.FETCHING_VIEWED_JOBS,
             cancelSource,
         });
 
@@ -90,7 +98,7 @@ export function getViewedJobs(args = {}) {
             });
 
             dispatch({
-                type: actions.RECEIVED_VIEWED_JOBS,
+                type: types.RECEIVED_VIEWED_JOBS,
                 viewedJobs,
                 nextPage,
                 range,
@@ -100,7 +108,7 @@ export function getViewedJobs(args = {}) {
                 console.log(error.message);
             } else {
                 dispatch({
-                    type: actions.FETCH_VIEWED_JOBS_ERROR,
+                    type: types.FETCH_VIEWED_JOBS_ERROR,
                     error: error.response.data,
                 });
             }

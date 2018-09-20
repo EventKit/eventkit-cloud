@@ -24,7 +24,7 @@ class TestReverseGeoCode(TestCase):
         reverseGeocode = ReverseGeocode()
         result = reverseGeocode.search({"lat": 38.960327927982796, "lon": -77.422182})
         self.assertIsNotNone(result.get("features"))
-        self.assertEquals(result.get("type"), "FeatureCollection")
+        self.assertEqual(result.get("type"), "FeatureCollection")
         self.assertIsInstance(result.get("bbox"), list)
 
         for feature in result.get("features"):
@@ -120,9 +120,9 @@ class TestReverseGeoCode(TestCase):
         expected_bbox = api_response.get('bbox')
         reverse_geocode = ReverseGeocode()
         result = reverse_geocode.add_bbox(in_result)
-        self.assertEquals(result.get('type'), 'Feature')
-        self.assertEquals(result.get('bbox'), expected_bbox)
-        self.assertEquals(result.get('properties').get('bbox'), expected_bbox)
+        self.assertEqual(result.get('type'), 'Feature')
+        self.assertEqual(result.get('bbox'), expected_bbox)
+        self.assertEqual(result.get('properties').get('bbox'), expected_bbox)
 
     @override_settings(GEOCODING_API_URL=mockURL,
                        GEOCODING_API_TYPE="pelias",
@@ -141,7 +141,7 @@ class TestReverseGeoCode(TestCase):
         }
         reverse_geocode = ReverseGeocode()
         result = reverse_geocode.add_bbox(in_result)
-        self.assertEquals(result, in_result)
+        self.assertEqual(result, in_result)
 
     @override_settings(GEOCODING_API_URL="",
                        GEOCODING_API_TYPE="")

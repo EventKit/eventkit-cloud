@@ -1,8 +1,8 @@
 {% set name = "python-ldap" %}
-{% set version = "2.4.39" %}
+{% set version = "3.1.0" %}
 {% set file_ext = "tar.gz" %}
 {% set hash_type = "sha256" %}
-{% set hash_value = "3fb75108d27e8091de80dffa2ba3bf45c7a3bdc357e2959006aed52fa58bb2f3" %}
+{% set hash_value = "41975e79406502c092732c57ef0c2c2eb318d91e8e765f81f5d4ab6c1db727c5" %}
 
 package:
   name: '{{ name|lower }}'
@@ -20,10 +20,14 @@ requirements:
   build:
     - python
     - setuptools
+    - pyasn1
+    - pyasn1-modules
     - openldap ==2.4.45-0
     - cyrus-sasl ==2.1.26
   run:
     - python
+    - pyasn1
+    - pyasn1-modules
     - openldap ==2.4.45-0
     - cyrus-sasl ==2.1.26
 test:

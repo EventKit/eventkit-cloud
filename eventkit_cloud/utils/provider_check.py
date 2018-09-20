@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import json
 import logging
 import re
 import xml.etree.ElementTree as ET
-from StringIO import StringIO
+from io import StringIO
 
 import requests
 from django.conf import settings
@@ -98,7 +98,7 @@ class ProviderCheck(object):
     Once returned, the information is displayed via an icon and tooltip in the EventKit UI.
     """
 
-    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=None):
+    def __init__(self, service_url, layer, aoi_geojson=None, slug=None, max_area=0):
         """
         Initialize this ProviderCheck object with a service URL and layer.
         :param service_url: URL of provider, if applicable. Query string parameters are ignored.
@@ -139,7 +139,7 @@ class ProviderCheck(object):
         :return: True if AOI is lower than area limit
         """
 
-        if self.aoi is None or self.max_area <= 0:
+        if self.aoi is None or int(self.max_area) <= 0:
             return True
 
         geom = self.aoi.transform(3857, clone=True)
@@ -182,12 +182,12 @@ class ProviderCheck(object):
             return None
 
         except requests.exceptions.SSLError as ex:
-            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("SSL connection failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.SSL_EXCEPTION
             return None
 
         except requests.exceptions.ConnectionError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return None
 
@@ -259,12 +259,12 @@ class OverpassProviderCheck(ProviderCheck):
             return
 
         except requests.exceptions.SSLError as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.SSL_EXCEPTION
             return
 
         except (requests.exceptions.ConnectionError, requests.exceptions.MissingSchema) as ex:
-            logger.error("Provider check failed for URL {}: {}".format(self.service_url, ex.message))
+            logger.error("Provider check failed for URL {}: {}".format(self.service_url, str(ex)))
             self.result = CheckResults.CONNECTION
             return
 
@@ -314,7 +314,7 @@ class OWSProviderCheck(ProviderCheck):
     def validate_response(self, response):
 
         try:
-            xml = response.content
+            xml = response.content.decode()
             xmll = xml.lower()
 
             doctype = re.search(r"<!DOCTYPE[^>[]*(\[[^]]*\])?>", xml)
@@ -340,7 +340,7 @@ class OWSProviderCheck(ProviderCheck):
                 self.check_intersection(bbox)
 
         except ET.ParseError as ex:
-            logger.error("Provider check failed to parse GetCapabilities XML: {}".format(ex.message))
+            logger.error("Provider check failed to parse GetCapabilities XML: {}".format(str(ex)))
             self.result = CheckResults.UNKNOWN_FORMAT
             return
 
@@ -392,8 +392,8 @@ class WCSProviderCheck(OWSProviderCheck):
         if not pos or not all("pos" in p.tag and re.match(coord_pattern, p.text) for p in pos):
             return None
 
-        x1, y1 = map(float, pos[0].text.split(' '))
-        x2, y2 = map(float, pos[1].text.split(' '))
+        x1, y1 = list(map(float, pos[0].text.split(' ')))
+        x2, y2 = list(map(float, pos[1].text.split(' ')))
 
         minx, maxx = sorted([x1, x2])
         miny, maxy = sorted([y1, y2])
@@ -545,7 +545,7 @@ class WMTSProviderCheck(OWSProviderCheck):
         southwest = bbox_element.find("lowercorner").text.split()[::-1]
         northeast = bbox_element.find("uppercorner").text.split()[::-1]
 
-        bbox = map(float, southwest + northeast)
+        bbox = list(map(float, southwest + northeast))
         return bbox
 
 

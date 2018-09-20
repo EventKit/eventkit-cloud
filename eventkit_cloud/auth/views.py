@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from logging import getLogger
 
 from django.conf import settings
@@ -26,7 +26,7 @@ def oauth(request):
                                 content_type="application/json",
                                 status=200)
         else:
-            params = urllib.urlencode((
+            params = urllib.parse.urlencode((
                 ('client_id', settings.OAUTH_CLIENT_ID),
                 ('redirect_uri', settings.OAUTH_REDIRECT_URI),
                 ('response_type', settings.OAUTH_RESPONSE_TYPE),

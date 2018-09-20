@@ -1,6 +1,7 @@
 import os
 import re
 
+import codecs
 from contextlib import contextmanager
 
 from django.conf import settings
@@ -13,6 +14,7 @@ from numpy import linspace
 from eventkit_cloud.ui.helpers import logger
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
+import pickle
 import logging
 from time import sleep
 import signal
@@ -149,8 +151,8 @@ def create_license_file(provider_task):
     license_file_path = os.path.join(get_provider_staging_dir(provider_task.run.uid, provider_task.slug),
                                      '{0}.txt'.format(normalize_name(data_provider_license.name)))
 
-    with open(license_file_path, 'w') as license_file:
-        license_file.write(data_provider_license.text.encode('utf-8'))
+    with open(license_file_path, 'wb') as license_file:
+        license_file.write(data_provider_license.text.encode())
 
     return license_file_path
 
@@ -217,7 +219,7 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
                         provider_details[provider_task.slug]["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
                         steps = linspace(band_stats[0], band_stats[1], num=16)
-                        provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
+                        provider_details[provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
 
     if data_provider_task_record:
         style_file_name =  '{0}-{1}-{2}.qgs'.format(normalize_name(job_name), normalize_name(data_provider_task_record.slug),
@@ -226,10 +228,10 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
         style_file_name = '{0}-{1}.qgs'.format(normalize_name(job_name), default_format_time(timezone.now()))
     style_file = os.path.join(stage_dir, style_file_name)
 
-    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.iteritems()]
+    provider_details = [provider_detail for provider_slug, provider_detail in provider_details.items()]
     logger.error(provider_details)
 
-    with open(style_file, 'w') as open_file:
+    with open(style_file, 'wb') as open_file:
         open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),
                                                                       'job_date_time': '{0}'.format(
                                                                           timezone.now().strftime("%Y%m%d%H%M%S%f")[
@@ -237,7 +239,7 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
                                                                       'provider_details': provider_details,
                                                                       'bbox': run.job.extents,
                                                                       'has_raster': has_raster,
-                                                                      'has_elevation': has_elevation}).encode('utf-8'))
+                                                                      'has_elevation': has_elevation}).encode())
     return style_file
 
 
@@ -258,7 +260,8 @@ def get_human_readable_metadata_document(run_uid):
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         data_provider_metadata = {'name': data_provider.name,
-                                  'description': data_provider.service_description.encode('utf-8').replace('\r\n', '\n').replace('\n', '\r\n\t'),
+                                  'description': str(data_provider.service_description).replace('\r\n', '\n').replace('\n', '\r\n\t'),
+                                  # 'description': data_provider.service_description,
                                   'last_update': get_last_update(data_provider.url,
                                                                  provider_type,
                                                                  slug=data_provider.slug),
@@ -277,8 +280,8 @@ def get_human_readable_metadata_document(run_uid):
 
     metadata_file = os.path.join(stage_dir, '{0}_ReadMe.txt'.format(normalize_name(run.job.name)))
 
-    with open(metadata_file, 'w') as open_file:
-        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).encode('utf-8').replace('\r\n', '\n').replace('\n', '\r\n'))
+    with open(metadata_file, 'wb') as open_file:
+        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).replace('\r\n', '\n').replace('\n', '\r\n').encode())
 
     return metadata_file
 
@@ -355,3 +358,7 @@ def progressive_kill(pid):
 
     except OSError:
         logger.info("{0} PID no longer exists.".format(pid))
+
+
+def pickle_exception(exception):
+    return pickle.dumps(exception, 0).decode()

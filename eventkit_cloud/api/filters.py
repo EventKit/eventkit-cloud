@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ListFilter(django_filters.Filter):
     def filter(self, qs, value):
-        value_list = value.split(u',')
+        value_list = value.split(',')
         return super(ListFilter, self).filter(qs, django_filters.fields.Lookup(value_list, 'in')).distinct()
 
 
