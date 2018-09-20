@@ -11,7 +11,7 @@ import os
 import shutil
 from string import Template
 
-from pysqlite2 import dbapi2 as sqlite3
+import sqlite3
 
 from eventkit_cloud.jobs.models import Job
 
@@ -62,7 +62,7 @@ def run(*script_args):
     # create and execute thematic sql statements
     sql_tmpl = Template('CREATE TABLE $tablename AS SELECT osm_id, $osm_way_id $columns, Geometry FROM $planet_table WHERE $select_clause')
     recover_geom_tmpl = Template("SELECT RecoverGeometryColumn($tablename, 'GEOMETRY', 4326, $geom_type, 'XY')")
-    for layer, spec in thematic_spec.iteritems():
+    for layer, spec in thematic_spec.items():
         layer_type = layer.split('_')[-1]
         isPoly = layer_type == 'polygons'
         osm_way_id = ''
@@ -75,12 +75,12 @@ def run(*script_args):
                   'columns': ', '.join(tags[layer_type]),
                   'planet_table': spec['table'], 'select_clause': spec['select_clause']}
         sql = sql_tmpl.safe_substitute(params)
-        print sql
+        print(sql)
         cur.execute(sql)
         geom_type = geom_types[layer_type]
 
         recover_geom_sql = recover_geom_tmpl.safe_substitute({'tablename': "'" + layer + "'", 'geom_type': "'" + geom_type + "'"})
-        print recover_geom_sql
+        print(recover_geom_sql)
         conn.commit()
         cur.execute(recover_geom_sql)
         cur.execute("SELECT CreateSpatialIndex({0}, 'GEOMETRY')".format("'" + layer + "'"))

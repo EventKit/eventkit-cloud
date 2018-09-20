@@ -26,7 +26,7 @@ def authenticate():
     try:
         cert = getattr(settings, 'GEOCODING_AUTH_CERT', '')
         with tempfile.NamedTemporaryFile(suffix='.crt', delete=False) as temp_file:
-            temp_file.write(cert.replace('\\n', '\n'))
+            temp_file.write(cert.replace('\\n', '\n').encode())
             temp_file.flush()
             public_cert = ('').join(cert.partition('-----END CERTIFICATE-----')[:-1])
             # clean line endings, the service wants the public cert without line returns.

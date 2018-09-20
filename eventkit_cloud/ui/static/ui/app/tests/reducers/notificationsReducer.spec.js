@@ -1,8 +1,8 @@
 import moment from 'moment';
-import * as reducers from '../../reducers/notificationsReducer';
-import initialState from '../../reducers/initialState';
-import types from '../../actions/actionTypes';
+import { notificationsReducer, getSortedNotifications, initialState as initial } from '../../reducers/notificationsReducer';
+import { types } from '../../actions/notificationsActions';
 
+const initialState = { notifications: initial };
 const mockNotifications = {
     1: {
         id: '1',
@@ -30,7 +30,7 @@ const mockNotificationsArray = [
 const mockState = {
     ...initialState.notifications,
     notifications: mockNotifications,
-    notificationsSorted: reducers.getSortedNotifications(mockNotifications),
+    notificationsSorted: getSortedNotifications(mockNotifications),
     unreadCount: {
         ...initialState.notifications.unreadCount,
         unreadCount: 2,
@@ -39,7 +39,7 @@ const mockState = {
 
 describe('notificationsReducer', () => {
     it('it should return the initial state', () => {
-        expect(reducers.notificationsReducer(undefined, {})).toEqual(initialState.notifications);
+        expect(notificationsReducer(undefined, {})).toEqual(initialState.notifications);
     });
 
     it('should handle FETCHING_NOTIFICATIONS', () => {
@@ -48,7 +48,7 @@ describe('notificationsReducer', () => {
             cancelSource: 'test',
         };
 
-        expect(reducers.notificationsReducer(initialState.notifications, action)).toEqual({
+        expect(notificationsReducer(initialState.notifications, action)).toEqual({
             ...initialState.notifications,
             fetching: true,
             fetched: false,
@@ -70,12 +70,12 @@ describe('notificationsReducer', () => {
             range: '12/24',
         };
 
-        expect(reducers.notificationsReducer(state, action)).toEqual({
+        expect(notificationsReducer(state, action)).toEqual({
             ...state,
             fetching: false,
             fetched: true,
             notifications: mockNotifications,
-            notificationsSorted: reducers.getSortedNotifications(mockNotifications),
+            notificationsSorted: getSortedNotifications(mockNotifications),
             nextPage: action.nextPage,
             range: action.range,
             error: null,
@@ -94,7 +94,7 @@ describe('notificationsReducer', () => {
             error: 'oh no an error',
         };
 
-        expect(reducers.notificationsReducer(state, action)).toEqual({
+        expect(notificationsReducer(state, action)).toEqual({
             ...state,
             fetching: false,
             fetched: false,
@@ -125,10 +125,10 @@ describe('notificationsReducer', () => {
             },
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             notifications: expectedNotifications,
-            notificationsSorted: reducers.getSortedNotifications(expectedNotifications),
+            notificationsSorted: getSortedNotifications(expectedNotifications),
             unreadCount: {
                 ...mockState.unreadCount,
                 unreadCount: 0,
@@ -143,7 +143,7 @@ describe('notificationsReducer', () => {
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
-        expect(reducers.notificationsReducer(mockState, action)).toEqual(mockState);
+        expect(notificationsReducer(mockState, action)).toEqual(mockState);
     });
 
     it('should handle MARK_NOTIFICATIONS_AS_READ_ERROR', () => {
@@ -152,7 +152,7 @@ describe('notificationsReducer', () => {
             error: 'oh no an error',
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             error: action.error,
         });
@@ -180,10 +180,10 @@ describe('notificationsReducer', () => {
             },
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             notifications: expectedNotifications,
-            notificationsSorted: reducers.getSortedNotifications(expectedNotifications),
+            notificationsSorted: getSortedNotifications(expectedNotifications),
             unreadCount: {
                 ...mockState.unreadCount,
                 unreadCount: 3,
@@ -198,7 +198,7 @@ describe('notificationsReducer', () => {
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
-        expect(reducers.notificationsReducer(mockState, action)).toEqual(mockState);
+        expect(notificationsReducer(mockState, action)).toEqual(mockState);
     });
 
     it('should handle MARK_NOTIFICATIONS_AS_UNREAD_ERROR', () => {
@@ -207,7 +207,7 @@ describe('notificationsReducer', () => {
             error: 'oh no an error',
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             error: action.error,
         });
@@ -234,10 +234,10 @@ describe('notificationsReducer', () => {
             },
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             notifications: expectedNotifications,
-            notificationsSorted: reducers.getSortedNotifications(expectedNotifications),
+            notificationsSorted: getSortedNotifications(expectedNotifications),
             unreadCount: {
                 ...mockState.unreadCount,
                 unreadCount: 0,
@@ -252,7 +252,7 @@ describe('notificationsReducer', () => {
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
-        expect(reducers.notificationsReducer(mockState, action)).toEqual(mockState);
+        expect(notificationsReducer(mockState, action)).toEqual(mockState);
     });
 
     it('should handle MARK_ALL_NOTIFICATIONS_AS_READ_ERROR', () => {
@@ -261,7 +261,7 @@ describe('notificationsReducer', () => {
             error: 'oh no an error',
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             error: action.error,
         });
@@ -273,7 +273,7 @@ describe('notificationsReducer', () => {
             notifications: mockNotificationsArray,
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             notifications: {},
             notificationsSorted: [],
@@ -291,7 +291,7 @@ describe('notificationsReducer', () => {
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
-        expect(reducers.notificationsReducer(mockState, action)).toEqual(mockState);
+        expect(notificationsReducer(mockState, action)).toEqual(mockState);
     });
 
     it('should handle REMOVE_NOTIFICATIONS_ERROR', () => {
@@ -300,7 +300,7 @@ describe('notificationsReducer', () => {
             error: 'oh no an error',
         };
 
-        expect(reducers.notificationsReducer(mockState, action)).toEqual({
+        expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
             error: action.error,
         });
@@ -311,7 +311,7 @@ describe('notificationsReducer', () => {
             type: types.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
         };
 
-        expect(reducers.notificationsReducer(initialState.notifications, action)).toEqual({
+        expect(notificationsReducer(initialState.notifications, action)).toEqual({
             ...initialState.notifications,
             unreadCount: {
                 ...initialState.notifications.unreadCount,
@@ -337,7 +337,7 @@ describe('notificationsReducer', () => {
             unreadCount: 3,
         };
 
-        expect(reducers.notificationsReducer(state, action)).toEqual({
+        expect(notificationsReducer(state, action)).toEqual({
             ...state,
             unreadCount: {
                 ...state.unreadCount,
@@ -363,7 +363,7 @@ describe('notificationsReducer', () => {
             error: 'oh no an error',
         };
 
-        expect(reducers.notificationsReducer(state, action)).toEqual({
+        expect(notificationsReducer(state, action)).toEqual({
             ...state,
             unreadCount: {
                 ...state.unreadCount,
@@ -380,11 +380,11 @@ describe('notificationsReducer', () => {
             type: types.USER_LOGGED_OUT,
         };
 
-        expect(reducers.notificationsReducer(mockNotifications, action)).toEqual(initialState.notifications);
+        expect(notificationsReducer(mockNotifications, action)).toEqual(initialState.notifications);
     });
 
     it('should sort notifications by descending date', () => {
-        const notificationsSorted = reducers.getSortedNotifications(mockNotifications);
+        const notificationsSorted = getSortedNotifications(mockNotifications);
         for (let i = 0; i < notificationsSorted.length; i += 1) {
             if (i !== 0) {
                 const notification = notificationsSorted[i];

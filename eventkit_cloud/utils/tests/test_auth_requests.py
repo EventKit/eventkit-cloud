@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import httplib
+import http.client
 import logging
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 import requests
 from django.test import TransactionTestCase
@@ -53,7 +53,7 @@ class TestAuthResult(TransactionTestCase):
 
         getenv.assert_any_call("test_slug_CRED")
         getenv.assert_any_call("test_slug_CERT")
-        cert_tempfile.write.assert_called_once_with("test cert content")
+        cert_tempfile.write.assert_called_once_with("test cert content".encode())
         cert_tempfile.flush.assert_called()
         req_patch.assert_called_with(self.url, data=42, cert="temp filename")
         self.assertEqual("test", result.content)
@@ -81,9 +81,9 @@ class TestAuthResult(TransactionTestCase):
             # Confirm that the patch is applied
             getenv.return_value = "key and cert contents"
             auth_requests.patch_https("test-provider-slug")
-            self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, httplib.HTTPSConnection.__init__)
-            self.assertEqual("_new_init", httplib.HTTPSConnection.__init__
-                             .__func__.func_closure[1].cell_contents.__name__)  # complicated because decorator
+            self.assertNotEqual(auth_requests._ORIG_HTTPSCONNECTION_INIT, http.client.HTTPSConnection.__init__)
+            self.assertEqual("_new_init", http.client.HTTPSConnection.__init__
+                             .__closure__[1].cell_contents.__name__)  # complicated because decorator
 
             named_tempfile = MagicMock()
             cert_tempfile = MagicMock()
@@ -95,20 +95,20 @@ class TestAuthResult(TransactionTestCase):
             with patch('eventkit_cloud.utils.auth_requests.NamedTemporaryFile', return_value=named_tempfile,
                        create=True):
                 # Confirm that a base HTTPSConnection picks up key and cert files
-                conn = httplib.HTTPSConnection()
+                conn = http.client.HTTPSConnection()
                 getenv.assert_called_with("test_provider_slug_CERT")
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
-                cert_tempfile.write.assert_called_once_with("key and cert contents")
+                cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
 
                 # Confirm that a MapProxy VerifiedHTTPSConnection picks up key and cert files
                 cert_tempfile.write.reset_mock()
                 conn = VerifiedHTTPSConnection()
                 new_orig_init.assert_called_with(ANY, key_file="temp filename", cert_file="temp filename")
-                cert_tempfile.write.assert_called_once_with("key and cert contents")
+                cert_tempfile.write.assert_called_once_with("key and cert contents".encode())
 
                 # Test removing the patch
                 auth_requests.unpatch_https()
-                self.assertEqual(httplib.HTTPSConnection.__init__, new_orig_init)
+                self.assertEqual(http.client.HTTPSConnection.__init__, new_orig_init)
 
         finally:
             auth_requests._ORIG_HTTPSCONNECTION_INIT = orig_init
@@ -121,10 +121,10 @@ class TestAuthResult(TransactionTestCase):
             auth_requests._ORIG_URLOPENERCACHE_CALL = new_orig_call
             # Confirm that the patch is applied
             auth_requests.patch_mapproxy_opener_cache()
-            self.assertEqual("_new_call", _URLOpenerCache.__call__.__func__.__name__)
+            self.assertEqual("_new_call", _URLOpenerCache.__call__.__name__)
             create_url_opener = _URLOpenerCache()
             opener = create_url_opener(None, "example.com", "test_user", "test_password")
-            self.assertTrue(any([isinstance(h, urllib2.HTTPCookieProcessor) for h in opener.handlers]))
+            self.assertTrue(any([isinstance(h, urllib.request.HTTPCookieProcessor) for h in opener.handlers]))
 
             # Test removing the patch
             auth_requests.unpatch_mapproxy_opener_cache()

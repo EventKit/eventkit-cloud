@@ -48,7 +48,7 @@ class TestExpireRunsTask(TestCase):
 
             mock_time.return_value = now_time
 
-            self.assertEquals('Expire Runs', expire_runs.name)
+            self.assertEqual('Expire Runs', expire_runs.name)
             expire_runs.run()
             site_url = getattr(settings, "SITE_URL", "cloud.eventkit.test")
             expected_url = '{0}/status/{1}'.format(site_url.rstrip('/'), job.uid)

@@ -15,8 +15,12 @@ import ExportAOI from './ExportAOI';
 import ExportInfo from './ExportInfo';
 import ExportSummary from './ExportSummary';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
-import { getProviders, stepperNextDisabled,
-    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo, getFormats } from '../../actions/exportsActions';
+import {
+    submitJob, clearAoiInfo, clearExportInfo, clearJobInfo,
+} from '../../actions/datacartActions';
+import { stepperNextDisabled } from '../../actions/uiActions';
+import { getFormats } from '../../actions/formatActions';
+import { getProviders } from '../../actions/providerActions';
 import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';

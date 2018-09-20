@@ -378,7 +378,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 status_code = status.HTTP_400_BAD_REQUEST
                 error_data = {"errors": [{"status": status_code,
                                           "title": _('Invalid License'),
-                                          "detail": _(il.message)
+                                          "detail": _(str(il))
                                           }]}
                 return Response(error_data, status=status_code)
                 # Run is passed to celery to start the tasks.
@@ -386,7 +386,7 @@ class JobViewSet(viewsets.ModelViewSet):
                 status_code = status.HTTP_403_FORBIDDEN
                 error_data = {"errors": [{"status": status_code,
                                           "title": _('Invalid License'),
-                                          "detail": _(ua.message)
+                                          "detail": _(str(ua))
                                           }]}
                 return Response(error_data, status=status_code)
 
@@ -424,7 +424,7 @@ class JobViewSet(viewsets.ModelViewSet):
             # run needs to be created so that the UI can be updated with the task list.
             run_uid = create_run(job_uid=uid, user=request.user)
         except (InvalidLicense, Error) as err:
-            return Response([{'detail': _(err.message)}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': _(str(err))}], status.HTTP_400_BAD_REQUEST)
         # Run is passed to celery to start the tasks.
         except Unauthorized:
             return Response([{'detail': 'ADMIN permission is required to run this DataPack.'}], status.HTTP_403_FORBIDDEN)
@@ -479,7 +479,7 @@ class JobViewSet(viewsets.ModelViewSet):
         response = {}
         payload = request.data
 
-        for attribute, value in payload.iteritems():
+        for attribute, value in payload.items():
             if attribute == 'visibility' and value not in VisibilityState.__members__:
                 msg = "unknown visibility value - %s" % value
                 return Response([{'detail': msg}], status.HTTP_400_BAD_REQUEST)
@@ -719,7 +719,7 @@ class DataProviderViewSet(viewsets.ReadOnlyModelViewSet):
 
         except Exception as e:
             logger.error(e)
-            logger.error(e.message)
+            logger.error(str(e))
             return Response([{'detail': _('Internal Server Error')}], status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def list(self, request, slug=None, *args, **kwargs):
@@ -867,7 +867,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': _(str(il))}], status.HTTP_400_BAD_REQUEST)
         serializer = self.get_serializer(queryset, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -902,7 +902,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
         try:
             self.validate_licenses(queryset, user=request.user)
         except InvalidLicense as il:
-            return Response([{'detail': _(il.message)}], status.HTTP_400_BAD_REQUEST)
+            return Response([{'detail': _(str(il))}], status.HTTP_400_BAD_REQUEST)
         # This is to display deleted runs on the status and download
         if not request.query_params.get('job_uid'):
             queryset = queryset.filter(deleted=False)
@@ -1590,15 +1590,15 @@ class NotificationViewSet(viewsets.GenericViewSet):
 
     def serialize_records(self, notifications, request):
         payload = []
-        for n in notifications:
-            serializer = NotificationSerializer(n)
+        for notification in notifications:
+            serializer = NotificationSerializer(notification)
             item = serializer.data
             item['actor'] = serializer.serialize_referenced_object(
-                n, n.actor_content_type_id,n.actor_object_id, n.actor, request)
+                notification, notification.actor_content_type_id,notification.actor_object_id, notification.actor, request)
             item['target'] = serializer.serialize_referenced_object(
-                n, n.target_content_type_id,n.target_object_id, n.target, request)
+                notification, notification.target_content_type_id,notification.target_object_id, notification.target, request)
             item['action_object'] = serializer.serialize_referenced_object(
-                n, n.action_object_content_type_id,n.action_object_object_id, n.action_object, request)
+                notification, notification.action_object_content_type_id,notification.action_object_object_id, notification.action_object, request)
             payload.append(item)
         return payload
 
