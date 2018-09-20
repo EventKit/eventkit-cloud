@@ -48,7 +48,7 @@ class TestValidators(TestCase):
     def test_get_geodesic_area(self,):
         bbox = GEOSGeometry(Polygon.from_bbox(self.extents), srid=4326)
         area = get_geodesic_area(bbox)
-        self.assertEquals(2006874.9259034647, area / 1000000)
+        self.assertEqual(2006874.9259034647, area / 1000000)
 
     def test_validate_original_selection(self):
         geojson = {
@@ -82,7 +82,7 @@ class TestValidators(TestCase):
         data = {'original_selection': {}}
         collection = validate_original_selection(data)
         self.assertIsInstance(collection, GeometryCollection)
-        self.assertEquals(collection.length, 0)
+        self.assertEqual(collection.length, 0)
 
     def test_validate_selection(self):
         data = {'selection': self.selection}

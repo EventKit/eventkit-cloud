@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
         logging.disable(logging.NOTSET)
 
-        print("Testing completed in {0} seconds".format(round(end_time-start_time, 2)))
+        print(("Testing completed in {0} seconds".format(round(end_time-start_time, 2))))
 
     else:
         os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")

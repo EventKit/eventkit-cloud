@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import json
 import math
@@ -131,7 +131,7 @@ def write_uploaded_file(in_memory_file, write_path):
     :return: True if successful
     """
     try:
-        with open(write_path, 'w+') as temp_file:
+        with open(write_path, 'wb+') as temp_file:
             for chunk in in_memory_file.chunks():
                 temp_file.write(chunk)
         return True

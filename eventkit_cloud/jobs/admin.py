@@ -125,7 +125,7 @@ class DataProviderForm(forms.ModelForm):
             try:
                 service.get_check_config()
             except ConfigurationError as e:
-                raise forms.ValidationError(e.message)
+                raise forms.ValidationError(str(e))
 
         elif service_type in ['osm', 'osm-generic']:
             if not config:

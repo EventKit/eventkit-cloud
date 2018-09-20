@@ -71,7 +71,7 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T  eventkit pytest -n 4"
+            sh "docker-compose run --rm -T  eventkit python manage.py test eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
         }catch(Exception e) {
              sh "docker-compose logs --tail=50 eventkit webpack"

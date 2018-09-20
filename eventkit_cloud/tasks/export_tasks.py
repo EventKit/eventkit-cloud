@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-import cPickle
 import json
 import logging
 import os
@@ -34,7 +32,7 @@ from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
-    get_human_readable_metadata_document
+    get_human_readable_metadata_document, pickle_exception
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, external_service, wcs, geopackage, gdalutils
@@ -226,10 +224,10 @@ class ExportTask(UserDetailsBase):
                 6. create the export task result
                 7. update the export task status and save it
                 """
-            # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks
-            # should just return.
-            if not retval:
-                return
+            # If a task is skipped it will be successfully completed but it won't have a return value.
+            # Something needs to be populated to notify the user and to skip the following steps.
+            if not (retval and retval.get('result')):
+                raise Exception("This task was skipped due to previous failures/cancellations.")
             # update the task
             finished = timezone.now()
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
@@ -316,8 +314,7 @@ class ExportTask(UserDetailsBase):
             logger.error(traceback.format_exc())
             logger.error('Cannot update the status of ExportTaskRecord object: no such object has been created for '
                          'this task yet.')
-        exception = cPickle.dumps(einfo)
-        ete = ExportTaskException(task=task, exception=exception)
+        ete = ExportTaskException(task=task, exception=pickle_exception(einfo))
         ete.save()
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
@@ -586,13 +583,14 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
 
     geojson_file = os.path.join(stage_dir, "{0}_selection.geojson".format(provider_slug))
     if selection:
+
         # Test if json.
         json.loads(selection)
 
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
         with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
-            open_file.write(selection.encode('utf-8'))
+            open_file.write(selection)
         result['selection'] = geojson_file
         result['result'] = geojson_file
 
@@ -737,7 +735,7 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
                                     name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
                                     user_details=user_details)
-        wcs_conv.convert()
+        out = wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out
         return result
@@ -1031,7 +1029,7 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
 
     with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
-            for absolute_file_path, relative_file_path in static_files.iteritems():
+            for absolute_file_path, relative_file_path in static_files.items():
                 filename = relative_file_path
                 # Support files should go in the correct directory.  It might make sense to break these files up
                 # by directory and then just put each directory in the correct location so that we don't have to
@@ -1336,14 +1334,14 @@ def cancel_export_provider_task(result=None, data_provider_task_uid=None, cancel
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
-            ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
+            ExportTaskException.objects.create(task=export_task, exception=pickle_exception(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
         task_result = export_task.result
         if task_result:
             task_result.soft_delete()
 
-        if export_task.pid > 0 and export_task.worker:
+        if int(export_task.pid) > 0 and export_task.worker:
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                 queue="{0}.cancel".format(export_task.worker),
@@ -1388,11 +1386,11 @@ def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     if celery_uid:
         try:
             # Ensure the task is still running otherwise the wrong process will be killed
-            if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
+            if AsyncResult(str(celery_uid), app=app).state == celery.states.STARTED:
                 # If the task finished prior to receiving this kill message it could throw an OSError.
                 logger.info("Attempting to kill {0}".format(task_pid))
                 # Don't kill tasks with default pid.
-                if task_pid > 0:
+                if int(task_pid) > 0:
                     progressive_kill(task_pid)
             else:
                 logger.info("The celery_uid {0} has the status of {1}.".format(celery_uid,
@@ -1487,3 +1485,4 @@ def make_dirs(path):
     except OSError:
         if not os.path.isdir(path):
             raise
+

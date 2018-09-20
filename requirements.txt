@@ -5,7 +5,7 @@ celery==4.2.1
 certifi==2018.1.18
 dj-database-url==0.4.2
 Django==1.10.8
-git+https://github.com/venicegeo/django-audit-logging.git@v0.1.8#egg=django-audit-logging
+git+https://github.com/venicegeo/django-audit-logging.git@v0.2.0#egg=django-audit-logging
 django-auth-ldap==1.2.12
 django-celery-beat==1.1.1
 django-celery-results==1.0.1
@@ -30,7 +30,7 @@ PyJWT==1.4.2
 pyparsing==2.1.10
 pysqlite==2.8.3
 python-dateutil==2.7.2
-python-ldap==2.4.39
+python-ldap==3.1.0
 python-magic==0.4.12
 pytz==2017.2
 PyYAML==3.12

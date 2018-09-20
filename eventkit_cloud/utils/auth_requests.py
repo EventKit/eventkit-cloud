@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import httplib
+import http.client
 import logging
 import os
 import re
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 from functools import wraps
 from tempfile import NamedTemporaryFile
 
 import requests
-from mapproxy.client import http
+from mapproxy.client import http as mapproxy_http
 
 logger = logging.getLogger(__name__)
 
@@ -25,9 +25,9 @@ def content_to_file(content):
                 logger.debug("Content found for %s(%s, %s)",
                              func.__name__,
                              ", ".join([str(arg) for arg in args]),
-                             ", ".join(["%s=%s" % (k, v) for k, v in kwargs.iteritems()]))
+                             ", ".join(["%s=%s" % (k, v) for k, v in kwargs.items()]))
                 with NamedTemporaryFile() as certfile:
-                    certfile.write(content)
+                    certfile.write(content.encode())
                     certfile.flush()
                     return func(cert=certfile.name, *args, **kwargs)
             else:
@@ -123,7 +123,7 @@ def handle_basic_auth(func):
         cred = get_cred(slug=kwargs.pop("slug", None), url=url, params=kwargs.get("params", None))
         if cred:
             kwargs["auth"] = tuple(cred)
-        logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.iteritems()]))
+        logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.items()]))
         response = func(url, **kwargs)
         return response
 
@@ -156,8 +156,8 @@ def post(url, **kwargs):
     return requests.post(url, **kwargs)
 
 
-_ORIG_HTTPSCONNECTION_INIT = httplib.HTTPSConnection.__init__
-_ORIG_URLOPENERCACHE_CALL = http._URLOpenerCache.__call__
+_ORIG_HTTPSCONNECTION_INIT = http.client.HTTPSConnection.__init__
+_ORIG_URLOPENERCACHE_CALL = mapproxy_http._URLOpenerCache.__call__
 
 
 def patch_https(slug):
@@ -179,7 +179,7 @@ def patch_https(slug):
         logger.debug("Initializing new HTTPSConnection with provider=%s, certfile=%s", slug, certfile)
         _ORIG_HTTPSCONNECTION_INIT(_self, *args, **kwargs)
 
-    httplib.HTTPSConnection.__init__ = _new_init
+    http.client.HTTPSConnection.__init__ = _new_init
 
 
 def patch_mapproxy_opener_cache(slug=None):
@@ -191,16 +191,16 @@ def patch_mapproxy_opener_cache(slug=None):
 
     def _new_call(self, ssl_ca_certs, url, username, password, insecure=False):
         if ssl_ca_certs not in self._opener or slug not in self._opener:
-            https_handler = http.build_https_handler(ssl_ca_certs, insecure)
-            passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            handlers = [urllib2.HTTPCookieProcessor,
-                        urllib2.HTTPRedirectHandler(),
+            https_handler = mapproxy_http.build_https_handler(ssl_ca_certs, insecure)
+            passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+            handlers = [urllib.request.HTTPCookieProcessor,
+                        urllib.request.HTTPRedirectHandler(),
                         https_handler,
-                        urllib2.HTTPBasicAuthHandler(passman),
-                        urllib2.HTTPDigestAuthHandler(passman)]
+                        urllib.request.HTTPBasicAuthHandler(passman),
+                        urllib.request.HTTPDigestAuthHandler(passman)]
 
-            opener = urllib2.build_opener(*handlers)
-            opener.addheaders = [('User-agent', 'MapProxy-%s' % (http.version,))]
+            opener = urllib.request.build_opener(*handlers)
+            opener.addheaders = [('User-agent', 'MapProxy-%s' % (mapproxy_http.version,))]
 
             self._opener[ssl_ca_certs or slug] = (opener, passman)
         else:
@@ -216,11 +216,11 @@ def patch_mapproxy_opener_cache(slug=None):
 
         return opener
 
-    http._URLOpenerCache.__call__ = _new_call
+    mapproxy_http._URLOpenerCache.__call__ = _new_call
 
 
 def unpatch_mapproxy_opener_cache():
-    http._URLOpenerCache.__call__ = _ORIG_URLOPENERCACHE_CALL
+    mapproxy_http._URLOpenerCache.__call__ = _ORIG_URLOPENERCACHE_CALL
 
 
 def unpatch_https():
@@ -228,4 +228,4 @@ def unpatch_https():
     Remove the patch applied by patch_https, restoring the original initializer for HTTPSConnection.
     :return: None
     """
-    httplib.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT
+    http.client.HTTPSConnection.__init__ = _ORIG_HTTPSCONNECTION_INIT
