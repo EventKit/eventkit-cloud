@@ -3,8 +3,7 @@ import thunk from 'redux-thunk';
 import axios from 'axios';
 import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
-import * as actions from '../../actions/userGroupsActions';
-import types from '../../actions/actionTypes';
+import * as actions from '../../actions/groupActions';
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -22,8 +21,8 @@ describe('userGroups actions', () => {
         mock.onGet('/api/groups').reply(200, groups);
 
         const expectedActions = [
-            { type: types.FETCHING_GROUPS, cancelSource },
-            { type: types.FETCHED_GROUPS, groups },
+            { type: actions.types.FETCHING_GROUPS, cancelSource },
+            { type: actions.types.FETCHED_GROUPS, groups },
         ];
         const store = mockStore({
             groups: {
@@ -49,8 +48,8 @@ describe('userGroups actions', () => {
         mock.onGet('/api/groups').reply(400, error);
 
         const expectedActions = [
-            { type: types.FETCHING_GROUPS, cancelSource },
-            { type: types.FETCH_GROUPS_ERROR, error },
+            { type: actions.types.FETCHING_GROUPS, cancelSource },
+            { type: actions.types.FETCH_GROUPS_ERROR, error },
         ];
         const store = mockStore({
             groups: {
@@ -101,7 +100,7 @@ describe('userGroups actions', () => {
         mock.onGet('/api/groups').reply(400, error);
 
         const expectedActions = [
-            { type: types.FETCHING_GROUPS, cancelSource },
+            { type: actions.types.FETCHING_GROUPS, cancelSource },
         ];
         const store = mockStore({
             groups: {
@@ -125,8 +124,8 @@ describe('userGroups actions', () => {
         mock.onDelete(`/api/groups/${groupId}`).reply(200);
 
         const expectedActions = [
-            { type: types.DELETING_GROUP },
-            { type: types.DELETED_GROUP },
+            { type: actions.types.DELETING_GROUP },
+            { type: actions.types.DELETED_GROUP },
         ];
         const store = mockStore({});
 
@@ -144,8 +143,8 @@ describe('userGroups actions', () => {
         mock.onDelete(`/api/groups/${groupId}`).reply(400, error);
 
         const expectedActions = [
-            { type: types.DELETING_GROUP },
-            { type: types.DELETE_GROUP_ERROR, error },
+            { type: actions.types.DELETING_GROUP },
+            { type: actions.types.DELETE_GROUP_ERROR, error },
         ];
         const store = mockStore({});
 
@@ -161,8 +160,8 @@ describe('userGroups actions', () => {
         mock.onPost('/api/groups').reply(200);
 
         const expectedActions = [
-            { type: types.CREATING_GROUP },
-            { type: types.CREATED_GROUP },
+            { type: actions.types.CREATING_GROUP },
+            { type: actions.types.CREATED_GROUP },
         ];
         const store = mockStore({});
 
@@ -179,8 +178,8 @@ describe('userGroups actions', () => {
         mock.onPost('/api/groups').reply(400, error);
 
         const expectedActions = [
-            { type: types.CREATING_GROUP },
-            { type: types.CREATE_GROUP_ERROR, error },
+            { type: actions.types.CREATING_GROUP },
+            { type: actions.types.CREATE_GROUP_ERROR, error },
         ];
         const store = mockStore({});
 
@@ -197,8 +196,8 @@ describe('userGroups actions', () => {
         mock.onPatch(`/api/groups/${group.id}`).reply(200);
 
         const expectedActions = [
-            { type: types.UPDATING_GROUP },
-            { type: types.UPDATED_GROUP },
+            { type: actions.types.UPDATING_GROUP },
+            { type: actions.types.UPDATED_GROUP },
         ];
         const store = mockStore({});
 
@@ -222,8 +221,8 @@ describe('userGroups actions', () => {
         mock.onPatch(`/api/groups/${group.id}`).reply(400, error);
 
         const expectedActions = [
-            { type: types.UPDATING_GROUP },
-            { type: types.UPDATING_GROUP_ERROR, error },
+            { type: actions.types.UPDATING_GROUP },
+            { type: actions.types.UPDATING_GROUP_ERROR, error },
         ];
         const store = mockStore({});
 

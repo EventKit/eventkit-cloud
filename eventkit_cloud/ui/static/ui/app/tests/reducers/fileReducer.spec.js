@@ -1,4 +1,4 @@
-import * as reducers from '../../reducers/mapToolReducer';
+import * as reducers from '../../reducers/fileReducer';
 
 describe('importGeom reducer', () => {
     it('should handle default', () => {

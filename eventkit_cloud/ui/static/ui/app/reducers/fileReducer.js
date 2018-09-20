@@ -1,7 +1,14 @@
-import types from '../actions/mapToolActionTypes';
-import initialState from './initialState';
+import { types } from '../actions/fileActions';
 
-export function importGeomReducer(state = initialState.importGeom, action) {
+export const initialState = {
+    processing: false,
+    processed: false,
+    featureCollection: {},
+    error: null,
+    filename: '',
+};
+
+export function importGeomReducer(state = initialState, action) {
     switch (action.type) {
         case types.FILE_PROCESSING:
             return {

@@ -15,13 +15,17 @@ import ErrorOutline from '@material-ui/icons/ErrorOutlined';
 import PageHeader from '../common/PageHeader';
 import DataCartDetails from './DataCartDetails';
 import {
-    getDatacartDetails, clearDataCartDetails, deleteRun, rerunExport,
-    clearReRunInfo, cancelProviderTask, updateExpiration, updateDataCartPermissions,
-} from '../../actions/statusDownloadActions';
-import { updateAoiInfo, updateExportInfo, getProviders } from '../../actions/exportsActions';
+    updateAoiInfo,
+    updateExportInfo,
+    updateDataCartPermissions,
+    rerunExport,
+    clearReRunInfo,
+} from '../../actions/datacartActions';
+import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
+import { getProviders, cancelProviderTask } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
-import { getUsers } from '../../actions/userActions';
-import { getGroups } from '../../actions/userGroupsActions';
+import { getUsers } from '../../actions/usersActions';
+import { getGroups } from '../../actions/groupActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
