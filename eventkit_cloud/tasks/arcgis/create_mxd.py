@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 # This file is used to create an MXD file based on a datapack.  It needs to be run via the python application that is
 # packaged with arcgis.  For many users this is the default python, for other users they may have to specify this location
@@ -32,7 +32,7 @@ try:
     import arcpy
 except Exception as e:
     print(e)
-    raw_input(
+    input(
         "Could not import ArcPY.  ArcGIS 10.4 or 10.5 is required to run this script. "
         "Please ensure that it is installed and activated. "
         "If multiple versions of python are installed ensure that you are using python that came bundled with ArcGIS. "
@@ -41,10 +41,10 @@ except Exception as e:
 
 version = arcpy.GetInstallInfo().get('Version')
 if arcpy.GetInstallInfo().get('Version') not in SUPPORTED_VERSIONS:
-    print(
+    print((
         "This script only supports versions {0}.  "
         "It might work for {1} but it will likely not support all of the datasets.".format(
-            SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS]))
+            SUPPORTED_VERSIONS, [version for version in VERSIONS if version not in SUPPORTED_VERSIONS])))
 
 
 def update_mxd_from_metadata(file_name, metadata, verify=False):
@@ -56,24 +56,24 @@ def update_mxd_from_metadata(file_name, metadata, verify=False):
     mxd = arcpy.mapping.MapDocument(os.path.abspath(file_name))
     df = mxd.activeDataFrame
     version = get_version()
-    for layer_name, layer_info in metadata['data_sources'].iteritems():
+    for layer_name, layer_info in metadata['data_sources'].items():
         file_path = os.path.abspath(os.path.join(BASE_DIR, layer_info['file_path']))
         # If possible calculate the statistics now so that they are correct when opening arcmap.
         try:
-            print("Calculating statistics for the file {0}...".format(file_path))
+            print(("Calculating statistics for the file {0}...".format(file_path)))
             arcpy.CalculateStatistics_management(file_path)
         except Exception as e:
-            print e
+            print(e)
         layer_file = get_layer_file(layer_info['type'], version)
         if not layer_file:
-            print(
-                "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(layer_name, version))
+            print((
+                "Skipping layer {0} because the file type is not supported for ArcMap {1}".format(layer_name, version)))
             if version == '10.5':
                 print("However with your version of ArcMap you can still drag and drop this layer onto the Map.")
             continue
         layer_from_file = arcpy.mapping.Layer(layer_file)
         layer_from_file.name = layer_info['name']
-        print('Adding layer: {0}...'.format(layer_from_file.name))
+        print(('Adding layer: {0}...'.format(layer_from_file.name)))
         arcpy.mapping.AddLayer(df, layer_from_file, "TOP")
         # Get instance of layer from MXD, not the template file.
         del layer_from_file
@@ -119,7 +119,7 @@ def get_layer_file(type, version):
     """
     layer_basename = "{0}-{1}.lyr".format(type, version.replace('.', '-'))
     layer_file = os.path.abspath(os.path.join(BASE_DIR, "arcgis", "templates", layer_basename))
-    print("Fetching layer template: {0}".format(layer_file))
+    print(("Fetching layer template: {0}".format(layer_file)))
     if os.path.isfile(layer_file):
         return layer_file
     return None
@@ -136,8 +136,8 @@ def get_version():
             return version
         raise Exception("UNSUPPORTED VERSION")
     except:
-        print('Unable to determine ArcGIS version.  This script only supports versions {0}'.format(
-            str(SUPPORTED_VERSIONS)))
+        print(('Unable to determine ArcGIS version.  This script only supports versions {0}'.format(
+            str(SUPPORTED_VERSIONS))))
         raise
 
 
@@ -184,7 +184,7 @@ def create_mxd(mxd=None, metadata=None, verify=False):
     # with get_temp_mxd(metadata, verify=verify) as temp_mxd_file:
         # copy temp file to permanent file if specified.
     if mxd:
-        print("writing file to {0}".format(mxd))
+        print(("writing file to {0}".format(mxd)))
         shutil.copy(template_file, mxd)
         # return mxd
     update_mxd_from_metadata(mxd, metadata, verify=verify)
@@ -224,10 +224,10 @@ if __name__ == "__main__":
         mxd_output = os.path.join(os.path.dirname(__file__), '{0}.mxd'.format(metadata['name']))
         create_mxd(mxd=mxd_output, metadata=metadata, verify=True)
 
-        raw_input("Press enter to exit.")
+        input("Press enter to exit.")
     except Exception as e:
-        print e
+        print(e)
         try:
-            raw_input("Press enter to exit.")
-        except Exception:
             input("Press enter to exit.")
+        except Exception:
+            eval(input("Press enter to exit."))

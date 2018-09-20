@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import dj_database_url
 
@@ -37,7 +37,7 @@ EXPORT_TASKS = {
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None
 if os.getenv("VCAP_SERVICES"):
-    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if 'nfs' in service:
             try:
                 EXPORT_STAGING_ROOT = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'eventkit_stage')
@@ -220,13 +220,13 @@ if os.environ.get('VCAP_SERVICES'):
     if os.environ.get('DATABASE_URL'):
         DATABASES = {'default': dj_database_url.config()}
     if not DATABASES:
-        for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
+        for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).items():
             try:
                 if ('pg_95' in service) or ('postgres' in service):
                     DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
                     DATABASES['default']['CONN_MAX_AGE'] = 180
             except (KeyError, TypeError) as e:
-                print("Could not configure information for service: {0}".format(service))
+                print(("Could not configure information for service: {0}".format(service)))
                 print(e)
                 continue
             if DATABASES:
@@ -309,7 +309,7 @@ else:
 
 AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
 if os.getenv("VCAP_SERVICES"):
-    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if 's3' in service.lower():
             try:
                 AWS_BUCKET_NAME = listings[0]['credentials']['bucket']

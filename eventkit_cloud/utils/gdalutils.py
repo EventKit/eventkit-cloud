@@ -38,8 +38,8 @@ def open_ds(ds_path):
         if gdal_dataset:
             return gdal_dataset
     except RuntimeError as ex:
-        if ('not recognized as a supported file format' not in ex.message) or \
-                ('Error browsing database for PostGIS Raster tables' in ex.message):
+        if ('not recognized as a supported file format' not in str(ex)) or \
+                ('Error browsing database for PostGIS Raster tables' in str(ex)):
             raise ex
     finally:
         if not use_exceptions:
@@ -242,17 +242,17 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
             bounds_template = Template('{"type":"MultiPolygon","coordinates":[[[[$xmin,$ymin],'
                                        '[$xmax,$ymin],[$xmax,$y'
                                        'max],[$xmin,$ymax],[$xmin,$ymin]]]]}')
-            temp_boundfile.write(bounds_template.safe_substitute({
+            geojson = bounds_template.safe_substitute({
                 'xmin': boundary[0],
                 'ymin': boundary[1],
                 'xmax': boundary[2],
                 'ymax': boundary[3]
-            }))
+            })
+            temp_boundfile.write(geojson.encode())
             temp_boundfile.flush()
             boundary = temp_boundfile.name
 
     try:
-
         if meta.get('nodata') is None and not is_envelope(in_dataset):
             dstalpha = "-dstalpha"
         else:

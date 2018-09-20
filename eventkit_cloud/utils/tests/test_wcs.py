@@ -45,7 +45,7 @@ class TestWCSConverter(TransactionTestCase):
             'coverage': layer,
             'params': '&amp;map=testMap.map',
             'userpwd': 'testUser:testPass',
-        })
+        }).encode()
 
         exists.return_value = True
         get_cred.return_value = ("testUser", "testPass")
@@ -62,7 +62,7 @@ class TestWCSConverter(TransactionTestCase):
                                    'maxX': bbox[2], 'maxY': bbox[3], 'type': ''})
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/sh', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, geotiff)
+        self.assertEqual(out, geotiff)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):
@@ -90,7 +90,7 @@ class TestWCSConverter(TransactionTestCase):
                                    'maxX': bbox[2], 'maxY': bbox[3], 'type': '-ot byte'})
         self.task_process().start_process.assert_called_once_with(cmd, executable='/bin/sh', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, geotiff)
+        self.assertEqual(out, geotiff)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 import os
 # from django.test import TestCase
@@ -57,7 +57,7 @@ def test_shutdown_celery_workers_mgmt_cmd():
     if app.control.inspect().ping() is None:
         return (100, 'No worker nodes found running prior to test')
 
-    worker_nodename = [n for n in app.control.inspect().ping().keys() if 'worker' in n][0]
+    worker_nodename = [n for n in list(app.control.inspect().ping().keys()) if 'worker' in n][0]
     worker_hostname = worker_nodename.split('@')[1]
 
     # Fire off a number of tasks & wait for them to be picked up

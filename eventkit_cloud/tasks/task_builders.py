@@ -88,7 +88,7 @@ class TaskChainBuilder(object):
                                                                           status=TaskStates.PENDING.value,
                                                                           display=True)
 
-        for format, task in export_tasks.iteritems():
+        for format, task in export_tasks.items():
             export_task = create_export_task_record(
                 task_name=task.get('obj').name,
                 export_provider_task=data_provider_task_record, worker=worker,
@@ -105,7 +105,7 @@ class TaskChainBuilder(object):
                     run_uid=run.uid, stage_dir=stage_dir, job_name=job_name, task_uid=task.get('task_uid'),
                     user_details=user_details, locking_task_key=data_provider_task_record.uid
                 ).set(queue=worker, routing_key=worker)
-                for format_ignored, task in export_tasks.iteritems()
+                for format_ignored, task in export_tasks.items()
             )
         else:
             format_tasks = None

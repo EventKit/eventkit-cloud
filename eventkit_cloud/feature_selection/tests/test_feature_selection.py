@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import unittest
 
@@ -91,13 +91,13 @@ class TestFeatureSelection(unittest.TestCase):
             where: building IS NOT NULL
         '''
         f = FeatureSelection(y)
-        self.assertEquals(f.themes,['buildings','waterways'])
-        self.assertEquals(f.geom_types('waterways'),['lines','polygons'])
-        self.assertEquals(f.key_selections('waterways'),['name','waterway'])
-        self.assertEquals(f.filter_clause('waterways'),'"name" IS NOT NULL OR "waterway" IS NOT NULL')
-        self.assertEquals(f.key_union(), ['building','name','waterway'])
-        self.assertEquals(f.key_union('points'), ['building','name'])
-        self.assertEquals(f.filter_clause('buildings'),'building IS NOT NULL')
+        self.assertCountEqual(f.themes,['buildings','waterways'])
+        self.assertCountEqual(f.geom_types('waterways'),['lines','polygons'])
+        self.assertCountEqual(f.key_selections('waterways'),['name','waterway'])
+        self.assertEqual(f.filter_clause('waterways'),'"name" IS NOT NULL OR "waterway" IS NOT NULL')
+        self.assertCountEqual(f.key_union(), ['building','name','waterway'])
+        self.assertCountEqual(f.key_union('points'), ['building','name'])
+        self.assertEqual(f.filter_clause('buildings'),'building IS NOT NULL')
 
     def test_sql_list(self):
         y = '''
@@ -111,7 +111,7 @@ class TestFeatureSelection(unittest.TestCase):
                 - name = 'some building'
         '''
         f = FeatureSelection(y)
-        self.assertEquals(f.filter_clause('waterways'),"name IS NOT NULL OR name = 'some building'")
+        self.assertEqual(f.filter_clause('waterways'),"name IS NOT NULL OR name = 'some building'")
 
     def test_sqls(self):
         y = '''
@@ -125,8 +125,8 @@ class TestFeatureSelection(unittest.TestCase):
         '''
         f = FeatureSelection(y)
         create_sqls, index_sqls = f.sqls
-        self.assertEquals(create_sqls[0],'CREATE TABLE buildings_points(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom POINT,\nosm_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\nINSERT INTO buildings_points(geom, osm_id,"name","addr:housenumber") select geom, osm_id,"name","addr:housenumber" from points WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
-        self.assertEquals(create_sqls[1],'CREATE TABLE buildings_polygons(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom MULTIPOLYGON,\nosm_id TEXT,osm_way_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\nINSERT INTO buildings_polygons(geom, osm_id,osm_way_id,"name","addr:housenumber") select geom, osm_id,osm_way_id,"name","addr:housenumber" from multipolygons WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
+        self.assertEqual(create_sqls[0],'CREATE TABLE buildings_points(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom POINT,\nosm_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\nINSERT INTO buildings_points(geom, osm_id,"name","addr:housenumber") select geom, osm_id,"name","addr:housenumber" from points WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
+        self.assertEqual(create_sqls[1],'CREATE TABLE buildings_polygons(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom MULTIPOLYGON,\nosm_id TEXT,osm_way_id TEXT,"name" TEXT,"addr:housenumber" TEXT\n);\nINSERT INTO buildings_polygons(geom, osm_id,osm_way_id,"name","addr:housenumber") select geom, osm_id,osm_way_id,"name","addr:housenumber" from multipolygons WHERE ("name" IS NOT NULL OR "addr:housenumber" IS NOT NULL);\n')
 
     def test_zindex(self):
         y = '''
@@ -138,7 +138,7 @@ class TestFeatureSelection(unittest.TestCase):
         '''
         f = FeatureSelection(y)
         create_sqls, index_sqls = f.sqls
-        self.assertEquals(create_sqls[0],'CREATE TABLE roads_lines(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom MULTILINESTRING,\nosm_id TEXT,"highway" TEXT,"z_index" TEXT\n);\nINSERT INTO roads_lines(geom, osm_id,"highway","z_index") select geom, osm_id,"highway","z_index" from lines WHERE ("highway" IS NOT NULL);\n')
+        self.assertEqual(create_sqls[0],'CREATE TABLE roads_lines(\nfid INTEGER PRIMARY KEY AUTOINCREMENT,\ngeom MULTILINESTRING,\nosm_id TEXT,"highway" TEXT,"z_index" TEXT\n);\nINSERT INTO roads_lines(geom, osm_id,"highway","z_index") select geom, osm_id,"highway","z_index" from lines WHERE ("highway" IS NOT NULL);\n')
 
 
     def test_unsafe_yaml(self):
@@ -243,7 +243,7 @@ class TestFeatureSelection(unittest.TestCase):
         '''
         f = FeatureSelection(y)
         self.assertFalse(f.valid)
-        self.assertEquals(f.errors[0], "SQL WHERE Invalid: identifier with colon : must be in double quotes.")
+        self.assertEqual(f.errors[0], "SQL WHERE Invalid: identifier with colon : must be in double quotes.")
 
     def test_enforces_subset_columns(self):
         y = '''
@@ -261,8 +261,8 @@ class TestFeatureSelection(unittest.TestCase):
         '''
         f = FeatureSelection(y)
         self.assertTrue(f.valid)
-        self.assertEquals(f.key_union(), ['column1','column2','column3'])
-        self.assertEquals(f.key_union('points'), ['column3'])
+        self.assertEqual(f.key_union(), ['column1','column2','column3'])
+        self.assertEqual(f.key_union('points'), ['column3'])
 
     def test_zip_readme(self):
         y = '''

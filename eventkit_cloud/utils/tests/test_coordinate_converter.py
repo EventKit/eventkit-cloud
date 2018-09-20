@@ -25,12 +25,12 @@ class TestConvert(TestCase):
         convert = CoordinateConverter()
         result = convert.get("18S TJ 97100 03003")
         self.assertIsNotNone(result.get("geometry"))
-        self.assertEquals(result.get("type"), "Feature")
+        self.assertEqual(result.get("type"), "Feature")
         properties = result.get("properties")
         geometry = result.get("geometry")
         self.assertIsInstance(properties, dict)
         self.assertIsInstance(geometry, dict)
-        self.assertEquals(geometry.get("type"), "Point")
+        self.assertEqual(geometry.get("type"), "Point")
         self.assertIsInstance(geometry.get("coordinates"), list)
 
     def test_convert_success(self):

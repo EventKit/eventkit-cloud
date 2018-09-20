@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 import json
 import os
 
@@ -48,13 +46,13 @@ CELERYD_GROUP = os.getenv("CELERYD_GROUP", CELERYD_GROUP)
 
 BROKER_URL = None
 if os.getenv("VCAP_SERVICES"):
-    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         try:
             if 'rabbitmq' in service:
                 BROKER_URL = listings[0]['credentials']['protocols']['amqp']['uri']
             if 'cloudamqp' in service:
                 BROKER_URL = listings[0]['credentials']['uri']
-        except KeyError, TypeError:
+        except KeyError as TypeError:
             continue
         if BROKER_URL:
             break

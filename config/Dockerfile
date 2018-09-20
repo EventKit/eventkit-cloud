@@ -8,6 +8,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
+COPY --chown=eventkit ./environment.yml /var/lib/eventkit/environment.yml
 COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 COPY --chown=eventkit ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
@@ -15,16 +16,16 @@ COPY --chown=eventkit ./scripts /var/lib/eventkit/scripts
 COPY --chown=eventkit ./manage.py /var/lib/eventkit/manage.py
 COPY --chown=eventkit ./pytest.ini /var/lib/eventkit/pytest.ini
 
-ENV PATH="/home/eventkit/miniconda2/bin:$PATH"
+ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
-RUN curl -L https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -o miniconda.sh && \
-    /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda2" && \
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh && \
+    /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
     rm miniconda.sh && \
     echo "y" | conda update -n root --all && \
     conda config --add channels local && \
     conda config --add channels file://var/lib/eventkit/conda/repo
 
-RUN conda env create --file environment-dev.yml
+RUN conda env create --file environment-dev.yml python=3.5
 
 COPY --chown=eventkit ./scripts/wait-for-postgis.sh /var/lib/eventkit/scripts/wait-for-postgis.sh
 

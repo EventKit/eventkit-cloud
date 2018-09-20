@@ -18,7 +18,7 @@ def get_size_estimate(provider, bbox, srs='3857'):
         provider = DataProvider.objects.get(name=provider)
     except ObjectDoesNotExist:
         return None
-    levels = range(provider.level_from, provider.level_to+1)
+    levels = list(range(provider.level_from, provider.level_to+1))
     req_srs = mapproxy_srs.SRS(srs)
     bbox = mapproxy_grid.grid_bbox(bbox, mapproxy_srs.SRS(4326), req_srs)
 
