@@ -12,11 +12,13 @@
         "member-ordering": [true, {
             "order": ["public-before-private", "variables-before-functions"]
         }],
-        "quotemark": [true, "single", "jsx-double"],
+        "quotemark": false,
         "interface-name": [true, "never-prefix"],
         "object-literal-sort-keys": false,
         "ordered-imports": false,
-        "jsx-no-multiline-js": false
+        "jsx-boolean-value": false,
+        "jsx-no-multiline-js": false,
+        "trailing-comma": false
     },
     "rulesDirectory": []
 }

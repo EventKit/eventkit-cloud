@@ -332,7 +332,7 @@ describe('DashboardPage component', () => {
             });
 
             it('stops auto refreshing', () => {
-                expect(instance.autoRefreshIntervalId).toBe(null);
+                expect(instance.autoRefreshIntervalId).toBe(undefined);
                 expect(refreshSpy.callCount).toBe(2);
                 jest.runOnlyPendingTimers();
                 expect(refreshSpy.callCount).toBe(3);
