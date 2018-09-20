@@ -194,6 +194,7 @@ services:
     - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
     - ./babel.config.js:/var/lib/eventkit/babel.config.js
     - ./tsconfig.json:/var/lib/eventkit/tsconfig.json
+    - ./tslint.json:/var/lib/eventkit/tslint.json
     - ./config/setupFile.js:/var/lib/eventkit/setupFile.js
     - ./.git:/var/lib/eventkit/.git
     ports:

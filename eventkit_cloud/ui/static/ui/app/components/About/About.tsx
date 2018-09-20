@@ -14,11 +14,11 @@ interface Props {
             VERSION: string,
             CONTACT_URL: string,
         },
-    },
+    };
 }
 
 interface State {
-    pageInfo: Object[],
+    pageInfo: Array<object>;
 }
 
 export class About extends React.Component<Props, State> {
@@ -29,8 +29,8 @@ export class About extends React.Component<Props, State> {
         };
     }
 
-    getComponent(obj) {
-        if (!obj.type) return null;
+    private getComponent(obj) {
+        if (!obj.type) { return null; }
         const InfoComponent = COMPONENT_MAPPING[obj.type];
         return <InfoComponent {...obj} key={`${obj.type}_${obj.title}`} />;
     }

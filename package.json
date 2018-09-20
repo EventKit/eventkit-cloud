@@ -44,7 +44,6 @@
     "@babel/plugin-transform-async-to-generator": "~7.0.0",
     "@babel/preset-env": "~7.0.0",
     "@babel/preset-react": "~7.0.0",
-    "@babel/preset-typescript": "~7.1.0",
     "@types/enzyme": "~3.1.14",
     "@types/jest": "~23.3.2",
     "@types/react": "~16.4.14",
@@ -79,10 +78,10 @@
     "react-test-renderer": "~16.5.2",
     "redux-mock-store": "~1.5.3",
     "sinon": "~3.2.0",
-    "source-map-loader": "~0.2.4",
     "style-loader": "~0.21.0",
     "ts-jest": "~23.1.4",
-    "ts-lint": "~4.5.1",
+    "tslint": "~4.5.1",
+    "tslint-react": "~3.6.0",
     "ts-loader": "~5.1.1",
     "typescript": "~3.0.3",
     "url-loader": "~1.0.1",
@@ -154,7 +153,8 @@
     "test": "node_modules/jest-cli/bin/jest.js --silent",
     "e2e": "node_modules/nightwatch/bin/nightwatch",
     "install-linter": "npm install eslint@4.9.0 eslint-plugin-import@2.7.0 eslint-plugin-react@7.4.0 eslint-plugin-jsx-a11y@6.0.2 eslint-config-airbnb@16.1.0",
-    "lint": "node_modules/eslint/bin/eslint.js '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.js'"
+    "eslint": "node_modules/eslint/bin/eslint.js '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.js'",
+    "tslint": "node_modules/tslint/bin/tslint '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.ts?(x)'"
   },
   "repository": {
     "type": "git",

@@ -61,7 +61,7 @@ END
     stage("Run linter"){
         try{
             postStatus(getPendingStatus("Running the linters..."))
-            sh "docker-compose run --rm -T  webpack npm run lint"
+            sh "docker-compose run --rm -T  webpack npm run eslint"
         }catch(Exception e) {
             sh "docker-compose logs --tail=50 webpack"
             handleErrors("Lint checks failed.")
