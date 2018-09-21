@@ -33,84 +33,26 @@ export const CUSTOM_BREAKPOINTS = {
 
 interface Props {
     router: object;
-    user: {
-        data: {
-            user: {
-                username: string;
-            };
-        };
-    };
-    userActivity: {
-        viewedJobs: {
-            fetched: boolean;
-            viewedJobs: [{
-                last_export_run: { job: { permissions: object; created_at: string }};
-                created_at: string;
-            }];
-        },
-    };
-    notifications: {
-        notificationsSorted: [{ id: string; }];
-    };
-    providers: Array<object>;
-    runDeletion: {
-        deleted: boolean;
-        deleting: boolean;
-    };
-    runsList: {
-        cancelSource: object;
-        error: string;
-        fetched: boolean;
-        fetching: boolean;
-        nextPage: boolean;
-        order: string;
-        range: string;
-        runs: [{ job: { permissions: string; created_at: string; }; created_at: string; }];
-        view: string;
-    };
-    featuredRunsList: {
-        cancelSource: object;
-        error: string;
-        fetched: boolean;
-        fetching: boolean;
-        nextPage: boolean;
-        range: string;
-        runs: Array<{ created_at: string }>;
-    };
+    user: Eventkit.Store.User;
+    userActivity: Eventkit.Store.UserActivity;
+    notifications: Eventkit.Store.Notifications;
+    providers: Eventkit.Provider[];
+    runDeletion: Eventkit.Store.RunDeletion;
+    runsList: Eventkit.Store.RunsList;
+    featuredRunsList: Eventkit.Store.RunsList;
     getRuns: (options?: object) => void;
     getFeaturedRuns: (options?: object) => void;
     getViewedJobs: (options?: object) => void;
     getProviders: (options?: object) => void;
     deleteRun: (options?: object) => void;
     getNotifications: (options?: object) => void;
-    updatePermission: {
-        updating: boolean;
-        updated: boolean;
-        error: Array<object>;
-    };
-    users: {
-        users: Array<object>;
-    };
-    groups: {
-        groups: Array<object>;
-    };
+    updatePermission: Eventkit.Store.UpdatePermissions;
+    users: Eventkit.Store.Users;
+    groups: Eventkit.Store.Groups;
     updateDataCartPermissions: () => void;
     getGroups: () => void;
     getUsers: () => void;
-    theme: {
-        eventkit: {
-            colors: {
-                primary: string;
-                backdrop: string;
-                white: string;
-                black: string;
-                grey: string;
-            };
-            images: {
-                topo_dark: string;
-            };
-        };
-    };
+    theme: Eventkit.Theme;
 }
 
 interface State {
