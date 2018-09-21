@@ -11,9 +11,11 @@ import OpenInNewIcon from '@material-ui/icons/OpenInNew';
 import FlagIcon from '@material-ui/icons/Flag';
 import CloseIcon from '@material-ui/icons/Close';
 import moment from 'moment';
-import { getNotificationIcon, getNotificationMessage, getNotificationViewPath } from '../../utils/notificationUtils';
+import { getNotificationViewPath } from '../../utils/notificationUtils';
 import { markNotificationsAsRead, markNotificationsAsUnread, removeNotifications } from '../../actions/notificationsActions';
 import NotificationMenu from './NotificationMenu';
+import NotificationIcon from './NotificationIcon';
+import NotificationMessage from './NotificationMessage';
 
 export class NotificationsTableItem extends React.Component {
     constructor(props) {
@@ -105,8 +107,6 @@ export class NotificationsTableItem extends React.Component {
             },
         };
 
-        const icon = getNotificationIcon({ notification: this.props.notification });
-        const message = getNotificationMessage({ notification: this.props.notification });
         const viewPath = getNotificationViewPath(this.props.notification);
 
         return (
@@ -134,8 +134,8 @@ export class NotificationsTableItem extends React.Component {
                     style={styles.contentRowColumn}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                        {icon}
-                        {message}
+                        <NotificationIcon notification={this.props.notification} />
+                        <NotificationMessage notification={this.props.notification} />
                     </div>
                 </TableCell>
                 <TableCell
