@@ -1630,7 +1630,7 @@ class NotificationViewSet(viewsets.GenericViewSet):
     @list_route(methods=['get'])
     def counts(self, request, *args, **kwargs):
         payload = {
-            "read" : len(request.user.notifications.read()),
+            "read": len(request.user.notifications.read()),
             "unread": len(request.user.notifications.unread())
         }
 
