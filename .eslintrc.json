@@ -12,10 +12,10 @@
         "no-console": "off",
         "import/no-named-as-default": "off",
         "import/prefer-default-export": "off",
+        "import/extensions": [2, { "js": "never", "ts": "never", "jsx": "never", "tsx": "never" }],
         "indent": [2, 4, { "SwitchCase": 1 }],
         "linebreak-style": 0,
 
-        // Allow for-of loops.
         "no-restricted-syntax": [
             "error",
             "ForInStatement",
@@ -29,5 +29,17 @@
         "react/jsx-indent-props": [2, 4],
         "react/prefer-stateless-function": "off",
 		"react/forbid-prop-types": ["error", { "forbid": ["any", "array"] }]
+    },
+    "settings": {
+        "import/resolver": {
+            "node": {
+                "extensions": [
+                    ".js",
+                    ".jsx",
+                    ".ts",
+                    ".tsx"
+                ]
+            }
+        }
     }
 }
