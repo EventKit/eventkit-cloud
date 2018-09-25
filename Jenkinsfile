@@ -61,7 +61,7 @@ END
     stage("Run linter"){
         try{
             postStatus(getPendingStatus("Running the linters..."))
-            sh "docker-compose run --rm -T  webpack npm run lint"
+            sh "docker-compose run --rm -T  webpack npm run eslint"
         }catch(Exception e) {
             sh "docker-compose logs --tail=50 webpack"
             handleErrors("Lint checks failed.")
@@ -71,7 +71,7 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T  eventkit python manage.py test eventkit_cloud"
+            sh "docker-compose run --rm -T  eventkit python manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
         }catch(Exception e) {
              sh "docker-compose logs --tail=50 eventkit webpack"

@@ -14,7 +14,7 @@ import ekTheme from './styles/eventkit_theme';
 
 const theme = createMuiTheme(ekTheme);
 
-const Loading = (args) => {
+const Loading = args => {
     if (args.pastDelay) {
         return (
             <div
@@ -74,10 +74,10 @@ const UserHasAgreed = connectedReduxRedirect({
 });
 
 function checkAuth(storeObj) {
-    return (nextState) => {
+    return nextState => {
         const { user } = storeObj.getState();
         if (!user.data) {
-            storeObj.dispatch(login(null, (nextState.location ? nextState.location.query : '')));
+            storeObj.dispatch(login(null));
         }
     };
 }

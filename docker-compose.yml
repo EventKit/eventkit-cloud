@@ -194,6 +194,8 @@ services:
     - ./config/ui/webpack.config.js:/var/lib/eventkit/webpack.config.js
     - ./config/ui/babel.config.js:/var/lib/eventkit/babel.config.js
     - ./config/ui/setupFile.js:/var/lib/eventkit/setupFile.js
+    - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
+    - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
     - ./.git:/var/lib/eventkit/.git
     ports:
     - "8080:8080"
