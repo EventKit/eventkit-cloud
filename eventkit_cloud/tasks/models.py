@@ -92,8 +92,8 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     Many DataProviderTasks can map to an ExportRun.
     Many ExportTasks can map to an DataProviderTaskRecord.
     """
-    job = models.ForeignKey(Job, related_name='runs')
-    user = models.ForeignKey(User, related_name="runs", default=0)
+    job = models.ForeignKey(Job, related_name='runs', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name="runs", default=0, on_delete=models.CASCADE)
     worker = models.CharField(max_length=50, editable=False, default='', null=True)
     status = models.CharField(
         blank=True,
@@ -104,7 +104,7 @@ class ExportRun(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin, Notific
     expiration = models.DateTimeField(default=timezone.now, editable=True)
     notified = models.DateTimeField(default=None, blank=True, null=True)
     deleted = models.BooleanField(default=False)
-    delete_user = models.ForeignKey(User, null=True, blank=True, editable=False)
+    delete_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
 
     class Meta:
         managed = True
@@ -136,7 +136,7 @@ class DataProviderTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelM
     """
     name = models.CharField(max_length=50, blank=True)
     slug = LowerCaseCharField(max_length=40, default='')
-    run = models.ForeignKey(ExportRun, related_name='provider_tasks')
+    run = models.ForeignKey(ExportRun, related_name='provider_tasks', on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     display = models.BooleanField(default=False)
 
@@ -180,15 +180,15 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     """
     celery_uid = models.UUIDField(null=True)  # celery task uid
     name = models.CharField(max_length=50)
-    export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks')
+    export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks', on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
     progress = models.IntegerField(default=0, editable=False, null=True)
     estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
-    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False)
+    cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
     display = models.BooleanField(default=False)
-    result = models.OneToOneField('FileProducingTaskResult', null=True, blank=True, related_name='export_task')
+    result = models.OneToOneField('FileProducingTaskResult', on_delete=models.CASCADE, null=True, blank=True, related_name='export_task')
 
     class Meta:
         ordering = ['created_at']
@@ -204,7 +204,7 @@ class ExportTaskException(TimeStampedModelMixin):
     Model to store ExportTaskRecord exceptions for auditing.
     """
     id = models.AutoField(primary_key=True, editable=False)
-    task = models.ForeignKey(ExportTaskRecord, related_name='exceptions')
+    task = models.ForeignKey(ExportTaskRecord, related_name='exceptions', on_delete=models.CASCADE)
     exception = models.TextField(editable=False)
 
     class Meta:

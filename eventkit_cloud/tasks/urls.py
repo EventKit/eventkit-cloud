@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from django.conf.urls import url
+from django.urls import re_path
 
 from eventkit_cloud.tasks.views import download
 
@@ -9,6 +9,6 @@ urlpatterns = []
 
 
 urlpatterns += [
-    url(r'^download', download)
+    re_path(r'^download', download)
 ]
 

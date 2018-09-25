@@ -13,10 +13,11 @@ from eventkit_cloud.tasks.helpers import generate_qgs_style
 
 class TestStyles(TestCase):
 
-    @patch('eventkit_cloud.ui.helpers.os.path.isfile')
+    @patch('eventkit_cloud.tasks.helpers.render_to_string')
+    @patch('eventkit_cloud.tasks.helpers.os.path.isfile')
     @patch('builtins.open')
     @patch('eventkit_cloud.tasks.models.ExportRun')
-    def test_generate_qgs_style(self, ExportRun, mock_open, mock_isfile):
+    def test_generate_qgs_style(self, ExportRun, mock_open, mock_isfile, mock_render_to_string):
         run_uid = 1234
         stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
 
@@ -50,6 +51,7 @@ class TestStyles(TestCase):
         style_file = os.path.join(stage_dir,
                                   mocked_run.job.name + "-" + mocked_provider_task.slug + "-" + datestamp + ".qgs")
         mock_open.assert_called_once_with(style_file, 'wb')
+        mock_render_to_string.assert_called_once()
         self.assertEqual(returnvalue, style_file)
 
         # test 2 - without a provider task

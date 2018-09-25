@@ -79,7 +79,7 @@ class TestJob(TestCase):
     def test_spatial_fields(self,):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # in africa
         the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326), srid=4326)
-        the_geog = MultiPolygon(GEOSGeometry(bbox))
+        the_geog = MultiPolygon(GEOSGeometry(bbox), srid=4326)
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         job = Job.objects.all()[0]
         self.assertIsNotNone(job)
@@ -221,29 +221,13 @@ class TestJobRegionIntersection(TestCase):
         self.assertEqual('Africa', africa.name)
         self.assertTrue(asia.intersection > africa.intersection)
 
-        # use the_geom
-        regions = Region.objects.filter(the_geom__intersects=job.the_geom).intersection(job.the_geom,
-                                                                                        field_name='the_geom').order_by(
-            '-intersection')
-        # logger.debug('Geometry lookup took: %s' % geom_time)
-        self.assertEqual(2, len(regions))
-        asia = regions[0]
-        africa = regions[1]
-        self.assertIsNotNone(asia)
-        self.assertIsNotNone(africa)
-        self.assertEqual('Central Asia/Middle East', asia.name)
-        self.assertEqual('Africa', africa.name)
-        self.assertTrue(asia.intersection.area > africa.intersection.area)
-
     def test_job_outside_region(self,):
         job = Job.objects.all()[0]
         bbox = Polygon.from_bbox((2.74, 47.66, 21.61, 60.24))  # outside any region
         the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326))
         job.the_geom = the_geom
         job.save()
-        regions = Region.objects.filter(the_geom__intersects=job.the_geom).intersection(job.the_geom,
-                                                                                        field_name='the_geom').order_by(
-            '-intersection')
+        regions = Region.objects.filter(the_geom__intersects=job.the_geom)
         self.assertEqual(0, len(regions))
 
 
