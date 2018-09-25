@@ -19,8 +19,10 @@ logger = logging.getLogger(__name__)
 
 
 def get_all_users_by_permissions(permissions):
-    return User.objects.filter(models.Q(groups__name=permissions['groups']) | models.Q(username__in=permissions['users']))
-
+    return User.objects.filter(
+        models.Q(groups__name=permissions['groups']) |
+        models.Q(username__in=permissions['users'])
+    ).distinct()
 
 def notification_delete(instance):
     for notification in Notification.objects.filter(actor_object_id=instance.id):
