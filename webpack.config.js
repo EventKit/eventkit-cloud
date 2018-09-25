@@ -24,7 +24,7 @@ var plugins = [
     }),
     new ExtractTextPlugin({ filename: '[name].css' })
 ];
-var app = [APP_DIR + '/index.js'];
+var app = [APP_DIR + '/index.tsx'];
 var config = {
     mode: PROD ? 'production' : 'development',
     devtool: devtool,
@@ -38,21 +38,23 @@ var config = {
         publicPath: '/static/ui/build/'
     },
     resolve: {
-        extensions: ['.js', '.jsx']
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
     },
     module: {
         rules: [
+            {
+                test: /\.tsx?$/,
+                exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
+                use: [
+                    { loader: 'babel-loader' },
+                    { loader: 'ts-loader' },
+                ]
+            },
             {
                 test: /\.js?$/,
                 exclude: [/node_modules\/(?!jsts)/, /staticfiles/],
                 use: {
                     loader: 'babel-loader',
-                    options: {
-                        presets: [
-                            "@babel/preset-react",
-                            "@babel/preset-env",
-                        ],
-                    },
                 },
             },
             {

@@ -20,7 +20,7 @@ before_script:
     - docker-compose build webpack
 
 script:
-    - docker-compose run --rm -T webpack npm run lint
+    - docker-compose run --rm -T webpack npm run eslint
     - docker-compose run --rm -T webpack npm test
     # The backend tests take too long to build and run here.
 
