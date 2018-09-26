@@ -1,5 +1,5 @@
 
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
@@ -15,8 +15,8 @@ import Lock from '@material-ui/icons/LockOutlined';
 import NotificationSync from '@material-ui/icons/Sync';
 import NavigationCheck from '@material-ui/icons/Check';
 import AlertError from '@material-ui/icons/Error';
-import isUndefined from 'lodash/isUndefined';
-import moment from 'moment';
+import * as isUndefined from 'lodash/isUndefined';
+import * as moment from 'moment';
 
 import Map from 'ol/map';
 import View from 'ol/view';
@@ -39,11 +39,18 @@ import DropDownListItem from '../common/DropDownListItem';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
 const jss = (theme: any) => createStyles({
-    title: {
+    cardTitle: {
+        backgroundColor: theme.eventkit.colors.secondary,
+        color: theme.eventkit.colors.primary,
+        display: 'flex',
+        width: '100%',
+        position: 'absolute',
+        zIndex: 15,
+    },
+    name: {
         color: theme.eventkit.colors.primary,
         display: 'block',
         width: '100%',
-        height: '36px',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
@@ -53,18 +60,55 @@ const jss = (theme: any) => createStyles({
             overflow: 'visible',
             wordWrap: 'break-word',
             whiteSpace: 'normal',
-            margin: '0px 0px 8px',
+            padding: '5px',
             backgroundColor: theme.eventkit.colors.secondary,
         },
     },
-    titleContainer: {
+    nameContainer: {
         fontSize: '22px',
-        display: 'inline-block',
+        display: 'flex',
         width: 'calc(100% - 36px)',
-        position: 'absolute',
         lineHeight: '36px',
-        backgroundColor: theme.eventkit.colors.secondary,
     },
+    title: {
+        minHeight: '36px',
+    },
+    header: {
+        padding: '15px 10px 10px',
+        position: 'relative',
+        wordWrap: 'break-word',
+    },
+    headerContent: {
+        width: '100%',
+        position: 'relative',
+    },
+    textContainer: {
+        backgroundColor: theme.eventkit.colors.secondary,
+        fontSize: '12px',
+        padding: '0px',
+        marginBottom: '10px',
+        height: '51px',
+        overflow: 'hidden',
+        position: 'relative' as 'relative',
+        zIndex: 10,
+        '&:hover': {
+            overflow: 'visible',
+        },
+    },
+    text: {
+        wordWrap: 'break-word',
+        width: '100%',
+        backgroundColor: theme.eventkit.colors.secondary,
+        padding: '0px 10px 5px',
+        position: 'absolute',
+        '&:not(:hover)': {
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            textOverflow: 'ellipsis',
+            height: '56px',
+        }
+    }
 });
 
 interface Props {
@@ -86,7 +130,6 @@ interface Props {
 
 interface State {
     expanded: boolean;
-    overflowText: boolean;
     providerDescs: object;
     providerDialogOpen: boolean;
     deleteDialogOpen: boolean;
@@ -120,7 +163,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
         this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             expanded: true,
-            overflowText: false,
             providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
@@ -143,7 +185,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
         }
     }
 
-    getMapId() {
+    private getMapId() {
         let mapId = '';
         if (!isUndefined(this.props.gridName)) {
             mapId += `_${this.props.gridName}`;
@@ -157,7 +199,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
         return mapId;
     }
 
-    initMap() {
+    private initMap() {
         this.map = new Map({
             target: this.getMapId(),
             layers: [
@@ -207,11 +249,11 @@ export class DataPackGridItem extends React.Component<Props, State> {
         this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
-    handleProviderClose() {
+    private handleProviderClose() {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen() {
+    private handleProviderOpen() {
         const runProviders = this.props.run.provider_tasks
             .filter(provider => (provider.display !== false));
         const providerDescs = {};
@@ -225,24 +267,24 @@ export class DataPackGridItem extends React.Component<Props, State> {
         });
     }
 
-    toggleExpanded() {
+    private toggleExpanded() {
         this.setState({ expanded: !this.state.expanded });
     }
 
-    showDeleteDialog() {
+    private showDeleteDialog() {
         this.setState({ deleteDialogOpen: true });
     }
 
-    hideDeleteDialog() {
+    private hideDeleteDialog() {
         this.setState({ deleteDialogOpen: false });
     }
 
-    handleDelete() {
+    private handleDelete() {
         this.hideDeleteDialog();
         this.props.onRunDelete(this.props.run.uid);
     }
 
-    mapContainerRef(element) {
+    private mapContainerRef(element) {
         if (!element) {
             return;
         }
@@ -253,15 +295,15 @@ export class DataPackGridItem extends React.Component<Props, State> {
         });
     }
 
-    handleShareOpen() {
+    private handleShareOpen() {
         this.setState({ shareDialogOpen: true });
     }
 
-    handleShareClose() {
+    private handleShareClose() {
         this.setState({ shareDialogOpen: false });
     }
 
-    handleShareSave(perms) {
+    private handleShareSave(perms) {
         this.handleShareClose();
         const permissions = { ...perms };
         this.props.onRunShare(this.props.run.job.uid, permissions);
@@ -269,88 +311,49 @@ export class DataPackGridItem extends React.Component<Props, State> {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-
         const cardTextFontSize = 12;
-        const titleFontSize = 22;
-        const styles = {
+
+        const styles: { [s: string]: React.CSSProperties } = {
             gridItem: {
-                position: 'relative' as 'relative',
+                position: 'relative',
                 ...this.props.style,
             },
-            cardTitle: {
-                backgroundColor: colors.secondary,
-                color: colors.primary,
-                display: 'flex',
-                width: '100%',
-                height: '36px',
-                position: 'relative' as 'relative',
-                zIndex: 15,
-            },
             completeIcon: {
-                float: 'left' as 'left',
+                float: 'left',
                 color: colors.success,
                 fontSize: '20px',
             },
             errorIcon: {
-                float: 'left' as 'left',
+                float: 'left',
                 color: colors.warning,
                 fontSize: '20px',
                 opacity: 0.6,
             },
             runningIcon: {
-                float: 'left' as 'left',
+                float: 'left',
                 color: colors.running,
                 fontSize: '22px',
             },
             unpublishedIcon: {
-                float: 'right' as 'right',
+                float: 'right',
                 color: colors.grey,
                 fontSize: '18px',
                 marginRight: '5px',
             },
             publishedIcon: {
-                float: 'right' as 'right',
+                float: 'right',
                 color: colors.grey,
                 fontSize: '20px',
                 marginRight: '5px',
             },
             ownerLabel: {
-                float: 'right' as 'right',
+                float: 'right',
                 color: colors.grey,
                 margin: '0px',
                 fontSize: cardTextFontSize,
             },
-            cardTextMinimized: {
-                wordWrap: 'break-word' as 'break-word',
-                width: '100%',
-                backgroundColor: colors.secondary,
-                padding: '0px 10px 5px',
-                display: '-webkit-box',
-                WebkitBoxOrient: 'vertical',
-                textOverflow: 'ellipsis',
-                WebkitLineClamp: 3,
-                height: '56px',
-                position: 'absolute' as 'absolute',
-            },
-            cardText: {
-                wordWrap: 'break-word' as 'break-word',
-                width: '100%',
-                backgroundColor: colors.secondary,
-                padding: '0px 10px 5px',
-                position: 'absolute' as 'absolute',
-            },
-            cardTextContainer: {
-                backgroundColor: colors.secondary,
-                fontSize: cardTextFontSize,
-                padding: '0px',
-                marginBottom: '10px',
-                height: '51px',
-                overflow: this.state.overflowText ? 'visible' : 'hidden',
-                position: 'relative' as 'relative',
-                zIndex: 10,
-            },
             iconMenu: {
-                position: 'absolute' as 'absolute',
+                position: 'absolute',
                 right: '0px',
             },
         };
@@ -370,18 +373,19 @@ export class DataPackGridItem extends React.Component<Props, State> {
                 >
                     <CardHeader
                         className="qa-DataPackGridItem-CardTitle"
-                        style={{ padding: '15px 10px 10px', position: 'relative', wordWrap: 'break-word' as 'break-word' }}
+                        classes={{
+                            root: this.props.classes.header,
+                            title: this.props.classes.title,
+                            content: this.props.classes.headerContent,
+                        }}
                         title={
-                            <div style={styles.cardTitle}>
+                            <div className={this.props.classes.cardTitle}>
                                 <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                                 <div
-                                    // className="qa-DataPackGridItem-name"
-                                    // style={styles.titleName}
-                                    className={this.props.classes.titleContainer}
+                                    className={`${this.props.classes.nameContainer} qa-DataPackGridItem-name`}
                                 >
                                     <Link
-                                        // className={`qa-DataPackGridItem-Link ${this.props.classes.title}`}
-                                        className={this.props.classes.title}
+                                        className={`${this.props.classes.name} qa-DataPackGridItem-Link`}
                                         to={`/status/${this.props.run.job.uid}`}
                                         href={`/status/${this.props.run.job.uid}`}
                                     >
@@ -390,6 +394,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                 </div>
                                 <IconMenu className="qa-DataPackGridItem-IconMenu tour-datapack-options" style={styles.iconMenu}>
                                     <MenuItem
+                                        key="map"
                                         className="qa-DataPackGridItem-MenuItem-showHideMap"
                                         style={{ fontSize: cardTextFontSize }}
                                         onClick={this.toggleExpanded}
@@ -397,6 +402,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         {this.state.expanded ? 'Hide Map' : 'Show Map'}
                                     </MenuItem>
                                     <MenuItem
+                                        key="status"
                                         className="qa-DataPackGridItem-MenuItem-goToStatus"
                                         style={{ fontSize: cardTextFontSize }}
                                         onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
@@ -404,6 +410,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         Status & Download
                                     </MenuItem>
                                     <MenuItem
+                                        key="providers"
                                         className="qa-DataPackGridItem-MenuItem-viewProviders"
                                         style={{ fontSize: cardTextFontSize }}
                                         onClick={this.handleProviderOpen}
@@ -472,15 +479,10 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         }
                     />
                     <CardContent
-                        className="qa-DataPackGridItem-CardText"
-                        style={styles.cardTextContainer}
-                        onMouseEnter={() => { this.setState({ overflowText: true }); }}
-                        onMouseLeave={() => { this.setState({ overflowText: false }); }}
-                        onClick={() => { this.setState({ overflowText: !this.state.overflowText }); }}
+                        className={`${this.props.classes.textContainer} qa-DataPackGridItem-CardText`}
                     >
                         <span
-                            className="qa-DataPackGridItem-span-description"
-                            style={this.state.overflowText ? styles.cardText : styles.cardTextMinimized}
+                            className={`${this.props.classes.text} qa-DataPackGridItem-span-description`}
                         >
                             {this.props.run.job.description}
                         </span>

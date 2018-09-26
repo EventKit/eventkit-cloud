@@ -8,6 +8,7 @@ export class CreateGroupDialog extends Component {
     render() {
         const createActions = [
             <Button
+                key="save"
                 className="qa-CreateGroupDialog-save"
                 variant="contained"
                 color="primary"
@@ -17,6 +18,7 @@ export class CreateGroupDialog extends Component {
                 SAVE
             </Button>,
             <Button
+                key="cancel"
                 className="qa-CreateGroupDialog-cancel"
                 variant="flat"
                 color="primary"

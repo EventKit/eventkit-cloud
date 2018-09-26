@@ -39,6 +39,7 @@ export class DataPackOwnerSort extends React.Component {
                 style={{ height: '30px', lineHeight: '30px' }}
             >
                 <MenuItem
+                    key="all"
                     className="qa-DataPackOwnerSort-MenuItem-allDatapacks"
                     style={styles.item}
                     selected={value === 'all'}
@@ -47,6 +48,7 @@ export class DataPackOwnerSort extends React.Component {
                     All DataPacks
                 </MenuItem>
                 <MenuItem
+                    key="mine"
                     className="qa-DataPackOwnerSort-Menuitem-myDatapacks"
                     style={styles.item}
                     selected={value === owner}

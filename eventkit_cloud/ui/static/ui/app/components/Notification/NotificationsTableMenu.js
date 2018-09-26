@@ -98,6 +98,7 @@ export class NotificationsTableMenu extends React.Component {
             >
                 {showMarkAsRead ?
                     <MenuItem
+                        key="markRead"
                         className="qa-NotificationsTableMenu-MarkAsRead"
                         style={styles.item}
                         onClick={this.handleMarkAsRead}
@@ -110,6 +111,7 @@ export class NotificationsTableMenu extends React.Component {
                 }
                 {showMarkAsUnread ?
                     <MenuItem
+                        key="markUnread"
                         className="qa-NotificationsTableMenu-MarkAsUnread"
                         style={styles.item}
                         onClick={this.handleMarkAsUnread}
@@ -122,6 +124,7 @@ export class NotificationsTableMenu extends React.Component {
                 }
                 {(selectedNotificationsKeys.length > 0) ?
                     <MenuItem
+                        key="remove"
                         className="qa-NotificationsTableMenu-Remove"
                         style={styles.item}
                         onClick={this.handleRemove}
@@ -138,6 +141,7 @@ export class NotificationsTableMenu extends React.Component {
                     null
                 }
                 <MenuItem
+                    key="markAll"
                     className="qa-NotificationsTableMenu-MarkAllAsRead"
                     onClick={this.handleMarkAllAsRead}
                     style={styles.markAllAsRead}

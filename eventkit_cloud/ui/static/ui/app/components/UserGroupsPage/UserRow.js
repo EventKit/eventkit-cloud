@@ -183,6 +183,7 @@ export class UserRow extends Component {
                         }
                     >
                         <MenuItem
+                            key="edit"
                             style={styles.menuItem}
                             onClick={this.handleAddUserClick}
                             className="qa-UserRow-MenuItem-editGroups"
@@ -190,6 +191,7 @@ export class UserRow extends Component {
                             Add to Existing Group
                         </MenuItem>
                         <MenuItem
+                            key="new"
                             style={styles.menuItem}
                             onClick={this.handleNewGroupClick}
                             className="qa-UserRow-MenuItem-newGroup"

@@ -228,6 +228,7 @@ export class DataPackStatusTable extends Component {
                     underlineStyle={styles.underline}
                 >
                     <MenuItem
+                        key="private"
                         className="qa-DataPackStatusTable-MenuItem-permissionPrivate"
                         style={styles.item}
                         onClick={() => this.handleDropDownChange('PRIVATE')}
@@ -239,6 +240,7 @@ export class DataPackStatusTable extends Component {
                         </div>
                     </MenuItem>
                     <MenuItem
+                        key="members"
                         className="qa-DataPackStatusTable-MenuItem-permissionMembers"
                         style={styles.item}
                         onClick={() => this.handleDropDownChange(this.props.permissions.value === 'PUBLIC' ? 'PUBLIC' : 'SHARED')}
