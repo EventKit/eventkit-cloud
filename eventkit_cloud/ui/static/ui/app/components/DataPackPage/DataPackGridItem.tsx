@@ -1,6 +1,7 @@
+
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Collapse from '@material-ui/core/Collapse';
 import Card from '@material-ui/core/Card';
@@ -37,7 +38,74 @@ import ol3mapCss from '../../styles/ol3map.css';
 import DropDownListItem from '../common/DropDownListItem';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 
-export class DataPackGridItem extends Component {
+const jss = (theme: any) => createStyles({
+    title: {
+        color: theme.eventkit.colors.primary,
+        display: 'block',
+        width: '100%',
+        height: '36px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        margin: '0px',
+        '&:hover': {
+            color: theme.eventkit.colors.primary,
+            overflow: 'visible',
+            wordWrap: 'break-word',
+            whiteSpace: 'normal',
+            margin: '0px 0px 8px',
+            backgroundColor: theme.eventkit.colors.secondary,
+        },
+    },
+    titleContainer: {
+        fontSize: '22px',
+        display: 'inline-block',
+        width: 'calc(100% - 36px)',
+        position: 'absolute',
+        lineHeight: '36px',
+        backgroundColor: theme.eventkit.colors.secondary,
+    },
+});
+
+interface Props {
+    run: Eventkit.Run;
+    user: Eventkit.Store.User;
+    onRunDelete: (uid) => void;
+    onRunShare: (uid, permissions) => void;
+    providers: Eventkit.Provider[];
+    gridName: string;
+    index: number;
+    showFeaturedFlag: boolean;
+    adminPermission: boolean;
+    users: Eventkit.User[];
+    groups: Eventkit.Group[];
+    style: object | undefined;
+    theme: Eventkit.Theme;
+    classes: any;
+}
+
+interface State {
+    expanded: boolean;
+    overflowText: boolean;
+    providerDescs: object;
+    providerDialogOpen: boolean;
+    deleteDialogOpen: boolean;
+    shareDialogOpen: boolean;
+}
+
+export class DataPackGridItem extends React.Component<Props, State> {
+    static defaultProps = {
+        showFeaturedFlag: false,
+    };
+
+    static contextTypes = {
+        config: PropTypes.shape({
+            BASEMAP_URL: PropTypes.string,
+            BASEMAP_COPYRIGHT: PropTypes.string,
+        }),
+    };
+
+    private map;
     constructor(props) {
         super(props);
         this.initMap = this.initMap.bind(this);
@@ -52,7 +120,6 @@ export class DataPackGridItem extends Component {
         this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
             expanded: true,
-            overflowTitle: false,
             overflowText: false,
             providerDescs: {},
             providerDialogOpen: false,
@@ -148,7 +215,7 @@ export class DataPackGridItem extends Component {
         const runProviders = this.props.run.provider_tasks
             .filter(provider => (provider.display !== false));
         const providerDescs = {};
-        runProviders.forEach((runProvider) => {
+        runProviders.forEach(runProvider => {
             const a = this.props.providers.find(x => x.slug === runProvider.slug);
             providerDescs[a.name] = a.service_description;
         });
@@ -181,7 +248,7 @@ export class DataPackGridItem extends Component {
         }
 
         // Absorb touch move events.
-        element.addEventListener('touchmove', (e) => {
+        element.addEventListener('touchmove', e => {
             e.stopPropagation();
         });
     }
@@ -207,7 +274,7 @@ export class DataPackGridItem extends Component {
         const titleFontSize = 22;
         const styles = {
             gridItem: {
-                position: 'relative',
+                position: 'relative' as 'relative',
                 ...this.props.style,
             },
             cardTitle: {
@@ -216,71 +283,45 @@ export class DataPackGridItem extends Component {
                 display: 'flex',
                 width: '100%',
                 height: '36px',
-                position: 'relative',
-            },
-            titleName: {
-                fontSize: titleFontSize,
-                display: 'inline-block',
-                width: 'calc(100% - 24px)',
-                position: 'absolute',
-                lineHeight: '24px',
-                backgroundColor: colors.secondary,
-            },
-            titleLink: {
-                color: 'inherit',
-                display: 'block',
-                width: '100%',
-                height: '36px',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                margin: '0px',
-            },
-            titleLinkExpanded: {
-                color: 'inherit',
-                display: 'block',
-                width: '100%',
-                overflow: 'visible',
-                whiteSpace: 'normal',
-                wordWrap: 'break-word',
-                margin: '0px 0px 8px',
+                position: 'relative' as 'relative',
+                zIndex: 15,
             },
             completeIcon: {
-                float: 'left',
+                float: 'left' as 'left',
                 color: colors.success,
                 fontSize: '20px',
             },
             errorIcon: {
-                float: 'left',
+                float: 'left' as 'left',
                 color: colors.warning,
                 fontSize: '20px',
-                opacity: '0.6',
+                opacity: 0.6,
             },
             runningIcon: {
-                float: 'left',
+                float: 'left' as 'left',
                 color: colors.running,
                 fontSize: '22px',
             },
             unpublishedIcon: {
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.grey,
                 fontSize: '18px',
                 marginRight: '5px',
             },
             publishedIcon: {
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.grey,
                 fontSize: '20px',
                 marginRight: '5px',
             },
             ownerLabel: {
-                float: 'right',
+                float: 'right' as 'right',
                 color: colors.grey,
                 margin: '0px',
                 fontSize: cardTextFontSize,
             },
             cardTextMinimized: {
-                wordWrap: 'break-word',
+                wordWrap: 'break-word' as 'break-word',
                 width: '100%',
                 backgroundColor: colors.secondary,
                 padding: '0px 10px 5px',
@@ -289,14 +330,14 @@ export class DataPackGridItem extends Component {
                 textOverflow: 'ellipsis',
                 WebkitLineClamp: 3,
                 height: '56px',
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
             },
             cardText: {
-                wordWrap: 'break-word',
+                wordWrap: 'break-word' as 'break-word',
                 width: '100%',
                 backgroundColor: colors.secondary,
                 padding: '0px 10px 5px',
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
             },
             cardTextContainer: {
                 backgroundColor: colors.secondary,
@@ -305,11 +346,11 @@ export class DataPackGridItem extends Component {
                 marginBottom: '10px',
                 height: '51px',
                 overflow: this.state.overflowText ? 'visible' : 'hidden',
-                position: 'relative',
+                position: 'relative' as 'relative',
                 zIndex: 10,
             },
             iconMenu: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 right: '0px',
             },
         };
@@ -329,21 +370,20 @@ export class DataPackGridItem extends Component {
                 >
                     <CardHeader
                         className="qa-DataPackGridItem-CardTitle"
-                        style={{ padding: '15px 10px 10px', position: 'relative', wordWrap: 'break-word' }}
+                        style={{ padding: '15px 10px 10px', position: 'relative', wordWrap: 'break-word' as 'break-word' }}
                         title={
                             <div style={styles.cardTitle}>
                                 <FeaturedFlag show={this.props.showFeaturedFlag && this.props.run.job.featured} />
                                 <div
-                                    className="qa-DataPackGridItem-name"
-                                    style={styles.titleName}
-                                    onMouseEnter={() => { this.setState({ overflowTitle: true }); }}
-                                    onMouseLeave={() => { this.setState({ overflowTitle: false }); }}
+                                    // className="qa-DataPackGridItem-name"
+                                    // style={styles.titleName}
+                                    className={this.props.classes.titleContainer}
                                 >
                                     <Link
-                                        className="qa-DataPackGridItem-Link"
+                                        // className={`qa-DataPackGridItem-Link ${this.props.classes.title}`}
+                                        className={this.props.classes.title}
                                         to={`/status/${this.props.run.job.uid}`}
                                         href={`/status/${this.props.run.job.uid}`}
-                                        style={this.state.overflowTitle ? styles.titleLinkExpanded : styles.titleLink}
                                     >
                                         {this.props.run.job.name}
                                     </Link>
@@ -490,29 +530,4 @@ export class DataPackGridItem extends Component {
     }
 }
 
-DataPackGridItem.contextTypes = {
-    config: PropTypes.object,
-};
-
-DataPackGridItem.propTypes = {
-    run: PropTypes.object.isRequired,
-    user: PropTypes.object.isRequired,
-    onRunDelete: PropTypes.func.isRequired,
-    onRunShare: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    gridName: PropTypes.string.isRequired,
-    index: PropTypes.number.isRequired,
-    showFeaturedFlag: PropTypes.bool,
-    adminPermission: PropTypes.bool.isRequired,
-    users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    groups: PropTypes.arrayOf(PropTypes.object).isRequired,
-    style: PropTypes.object,
-    theme: PropTypes.object.isRequired,
-};
-
-DataPackGridItem.defaultProps = {
-    showFeaturedFlag: true,
-    style: {},
-};
-
-export default withTheme()(DataPackGridItem);
+export default withStyles(jss)(withTheme()(DataPackGridItem));

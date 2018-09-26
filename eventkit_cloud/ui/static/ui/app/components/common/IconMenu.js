@@ -70,12 +70,13 @@ export class IconMenu extends Component {
                     if (!React.isValidElement(child)) { return null; }
 
                     return React.cloneElement(child, {
+                        key: `${child.type}-${ix}`,
+                        ...child.props,
                         onClick: (e, ...args) => {
                             e.stopPropagation();
                             this.handleClose();
                             child.props.onClick(e, ...args);
                         },
-                        key: child.props.key || `${child.type}-${ix}`,
                     });
                 })}
             </Menu>,

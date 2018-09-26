@@ -101,6 +101,7 @@ export class DataPackListItem extends Component {
             },
             cardTitle: {
                 wordWrap: 'break-word',
+                display: 'block',
                 padding: '8px 15px 15px',
             },
             cardTitleFeatured: {
