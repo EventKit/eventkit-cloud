@@ -1030,6 +1030,8 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
     with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
             for absolute_file_path, relative_file_path in static_files.items():
+                if '__pycache__' in absolute_file_path:
+                    continue
                 filename = relative_file_path
                 # Support files should go in the correct directory.  It might make sense to break these files up
                 # by directory and then just put each directory in the correct location so that we don't have to

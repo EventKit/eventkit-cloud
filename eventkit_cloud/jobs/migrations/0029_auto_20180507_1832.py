@@ -51,12 +51,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userjobactivity',
             name='job',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='jobs.Job'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.Job'),
         ),
         migrations.AddField(
             model_name='userjobactivity',
             name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
         ),
         migrations.RunPython(forwards_func, reverse_func),
     ]

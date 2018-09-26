@@ -64,7 +64,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='finalizerunhooktaskrecord',
             name='run',
-            field=models.ForeignKey(null=True, on_delete=models.deletion.SET_NULL, to='tasks.ExportRun'),
+            field=models.ForeignKey(null=True, on_delete=models.deletion.CASCADE, to='tasks.ExportRun'),
         ),
         migrations.RunPython(move_run_hook_to_export_tasks, reverse_code=move_export_tasks_to_run_hook),
         migrations.RemoveField(

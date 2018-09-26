@@ -213,7 +213,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='job',
             name='region',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='jobs.Region'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.Region'),
         ),
         migrations.AddField(
             model_name='job',

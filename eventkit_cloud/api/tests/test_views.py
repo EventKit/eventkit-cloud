@@ -33,7 +33,6 @@ from eventkit_cloud.tasks.task_factory import InvalidLicense
 
 logger = logging.getLogger(__name__)
 
-
 class TestJobViewSet(APITestCase):
     fixtures = ('insert_provider_types.json', 'osm_provider.json', 'datamodel_presets.json',)
 
@@ -50,7 +49,7 @@ class TestJobViewSet(APITestCase):
     def setUp(self,):
         self.path = os.path.dirname(os.path.realpath(__file__))
         self.group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
-        self.user = User.objects.create_user( username='demo', email='demo@demo.com', password='demo' )
+        self.user = User.objects.create_user(username='demo', email='demo@demo.com', password='demo' )
         extents = (-3.9, 16.1, 7.0, 27.6)
         bbox = Polygon.from_bbox(extents)
         original_selection = GeometryCollection(Point(1,1), LineString((5.625, 48.458),(0.878, 44.339)))
@@ -63,7 +62,7 @@ class TestJobViewSet(APITestCase):
         provider_task = DataProviderTask.objects.create(provider=provider)
         provider_task.formats.add(*formats)
 
-        self.job.provider_tasks.add(provider_task)
+        self.job.provider_tasks.add(*[provider_task])
 
         token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key,
@@ -982,7 +981,8 @@ class TestStaticFunctions(APITestCase):
         # Get a DataProviderTask object to ensure that it is only trying to process
         # what it actually supports (1).
         provider_task = get_provider_task(export_provider, requested_types)
-        assert len(provider_task.formats.all()) == 1
+
+        assert len(provider_task.formats.all()) == 2
 
 
 class TestLicenseViewSet(APITestCase):

@@ -95,8 +95,8 @@ class GroupPermission(TimeStampedModelMixin):
     Model associates users with groups.  Note this REPLACES the django.auth provided groupmembership
     """
 
-    user = models.ForeignKey(User)
-    group = models.ForeignKey(Group)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
     permission = models.CharField(
         choices=[('NONE', 'None'), ('MEMBER', 'Member'), ('ADMIN', 'Admin')],
         max_length=10)
@@ -125,8 +125,8 @@ class JobPermission(TimeStampedModelMixin):
     Model associates users or groups with jobs
     """
 
-    job = models.ForeignKey(Job)
-    content_type = models.ForeignKey(ContentType)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 

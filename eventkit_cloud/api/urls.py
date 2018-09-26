@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """API url configuration."""
 
+from django.urls import include, re_path
 
 from rest_framework.routers import DefaultRouter
 
@@ -10,6 +11,11 @@ from eventkit_cloud.api.views import (
     DataProviderTaskViewSet, UserDataViewSet, GroupViewSet, LicenseViewSet,
     UserJobActivityViewSet, NotificationViewSet
 )
+
+import notifications.urls
+
+
+app_name = "api"
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'jobs', JobViewSet, base_name='jobs')
@@ -26,3 +32,10 @@ router.register(r'groups', GroupViewSet, base_name='groups')
 router.register(r'notifications', NotificationViewSet, base_name='notifications')
 
 schema_view = SwaggerSchemaView.as_view()
+
+urlpatterns = [
+    re_path(r'^api/docs$', schema_view),
+    re_path(r'^api/', include(router.urls)),
+    re_path(r'^api/', include('rest_framework.urls')),
+    re_path(r'^api/', include(notifications.urls))
+]

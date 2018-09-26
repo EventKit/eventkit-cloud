@@ -663,10 +663,6 @@ class TestExportTasks(ExportTaskBase):
         mock_json.dump.assert_called_once()
         self.assertEqual(returned_zip, {'result': expected_zip})
 
-
-
-        sys.stdout.flush()
-
     def test_zip_file_task_invalid_params(self):
 
         with self.assertRaises(Exception):

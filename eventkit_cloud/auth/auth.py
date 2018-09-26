@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def auto_logout(get_response):
     def middleware(request):
         # Only check for auto logout if we're logged in.
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return get_response(request)
 
         last_active_at_iso = request.session.get(settings.SESSION_USER_LAST_ACTIVE_AT)

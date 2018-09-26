@@ -6,10 +6,10 @@ import logging
 import uuid
 
 from django.contrib.auth.models import Group, User
-from django.contrib.gis.db import models
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Polygon, MultiPolygon
 from django.contrib.postgres.fields.jsonb import JSONField
 from django.core.serializers import serialize
+from django.contrib.gis.db import models
 from django.db.models.fields import CharField
 from django.utils import timezone
 from enum import Enum
@@ -80,8 +80,8 @@ class UserLicense(TimeStampedModelMixin):
     """
     Model to hold which licenses a User acknowledges.
     """
-    user = models.ForeignKey(User)
-    license = models.ForeignKey(License)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    license = models.ForeignKey(License, on_delete=models.CASCADE)
 
     def __str__(self):
         return '{0}: {1}'.format(self.user.username, self.license.name)
@@ -138,7 +138,7 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
     service_description = models.TextField(verbose_name="Description", null=True, default='', blank=True,
                                            help_text="This information is used to provide information about the service.")
     layer = models.CharField(verbose_name="Service Layer", max_length=100, null=True, blank=True)
-    export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True)
+    export_provider_type = models.ForeignKey(DataProviderType, verbose_name="Service Type", null=True, on_delete=models.CASCADE)
     max_selection = models.DecimalField(verbose_name="Max selection area", default=250, max_digits=12, decimal_places=3,
                                         help_text="This is the maximum area in square kilometers that can be exported "
                                                   "from this provider in a single DataPack.")
@@ -152,8 +152,8 @@ class DataProvider(UIDMixin, TimeStampedModelMixin):
                               with a Sources key of imagery and a Service Layer name of imagery; the validator also
                               requires a layers section, but this isn't used.
                               OSM Services also require a YAML configuration.""")
-    user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True)
-    license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None)
+    user = models.ForeignKey(User, related_name='+', null=True, default=None, blank=True, on_delete=models.CASCADE)
+    license = models.ForeignKey(License, related_name='+', null=True, blank=True, default=None, on_delete=models.CASCADE)
     zip = models.BooleanField(default=False)
     display = models.BooleanField(default=False)
 
@@ -202,7 +202,6 @@ class Region(UIDMixin, TimeStampedModelMixin):
     the_geom = models.MultiPolygonField(verbose_name='HOT Export Region', srid=4326, default='')
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export region', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export region', geography=True, default='')
-    objects = models.GeoManager()
 
     class Meta:  # pragma: no cover
         managed = True
@@ -224,7 +223,7 @@ class DataProviderTask(models.Model):
     """
     id = models.AutoField(primary_key=True, editable=False)
     uid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, db_index=True)
-    provider = models.ForeignKey(DataProvider, related_name='provider')
+    provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='provider')
     formats = models.ManyToManyField(ExportFormat, related_name='formats')
 
     def __str__(self):
@@ -253,13 +252,13 @@ class Job(UIDMixin, TimeStampedModelMixin):
         kwargs['the_geog'] = convert_polygon(kwargs.get('the_geog')) or ''
         super(Job, self).__init__(*args, **kwargs)
 
-    user = models.ForeignKey(User, related_name='owner')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='owner')
     name = models.CharField(max_length=100, db_index=True)
     description = models.CharField(max_length=1000, db_index=True)
     event = models.CharField(max_length=100, db_index=True, default='', blank=True)
-    region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.SET_NULL)
+    region = models.ForeignKey(Region, null=True, blank=True, on_delete=models.CASCADE)
     provider_tasks = models.ManyToManyField(DataProviderTask, related_name='provider_tasks')
-    preset = models.ForeignKey(DatamodelPreset, null=True, blank=True)
+    preset = models.ForeignKey(DatamodelPreset, on_delete=models.CASCADE, null=True, blank=True)
     published = models.BooleanField(default=False, db_index=True)  # publish export
     visibility = models.CharField(max_length=10, choices=visibility_choices, default=VisibilityState.PRIVATE.value)
     featured = models.BooleanField(default=False, db_index=True)  # datapack is featured
@@ -267,10 +266,9 @@ class Job(UIDMixin, TimeStampedModelMixin):
     the_geom_webmercator = models.MultiPolygonField(verbose_name='Mercator extent for export', srid=3857, default='')
     the_geog = models.MultiPolygonField(verbose_name='Geographic extent for export', geography=True, default='')
     original_selection = models.GeometryCollectionField(verbose_name='The original map selection', srid=4326, default=GeometryCollection(), null=True, blank=True)
-    objects = models.GeoManager()
     include_zipfile = models.BooleanField(default=False)
     json_tags = JSONField(default=dict)
-    last_export_run = models.ForeignKey('tasks.ExportRun', null=True, related_name='last_export_run')
+    last_export_run = models.ForeignKey('tasks.ExportRun', on_delete=models.CASCADE, null=True, related_name='last_export_run')
 
     class Meta:  # pragma: no cover
         managed = True
@@ -363,7 +361,7 @@ class ExportProfile(models.Model):
     Model to hold Group export profile.
     """
     name = models.CharField(max_length=100, blank=False, default='')
-    group = models.OneToOneField(Group, related_name='export_profile')
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name='export_profile')
     max_extent = models.IntegerField()
 
     class Meta:  # pragma: no cover
@@ -380,22 +378,10 @@ class UserJobActivity(models.Model):
     UPDATED = 'updated'
     DELETED = 'deleted'
 
-    user = models.ForeignKey(User)
-    job = models.ForeignKey(Job)
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, null=True, on_delete=models.CASCADE)
     type = models.CharField(max_length=100, blank=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-
-#
-# class Downloadable(UIDMixin, TimeStampedModelMixin):
-#     """
-#     Model that stores each DataPack or DataPack component that can be downloaded.
-#     """
-#     creator = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='+', null=True)
-#     provider = models.ForeignKey(DataProvider, on_delete=models.CASCADE, related_name='+', null=True)
-#     job = models.ForeignKey(Job, related_name='downloads')
-#     url = models.URLField(verbose_name='URL to download result', max_length=254)
-#     size = models.DecimalField(verbose_name="Download size (MB)", default=0, max_digits=12, decimal_places=3,
-#                                editable=False, null=True)
 
 
 def convert_polygon(geom=None):
