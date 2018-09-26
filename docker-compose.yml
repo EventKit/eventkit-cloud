@@ -189,13 +189,13 @@ services:
     - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
     - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
     - ./package.json:/var/lib/eventkit/package.json
-    - ./.eslintrc.json:/var/lib/eventkit/.eslintrc.json
-    - ./.eslintignore:/var/lib/eventkit/.eslintignore
-    - ./webpack.config.js:/var/lib/eventkit/webpack.config.js
-    - ./babel.config.js:/var/lib/eventkit/babel.config.js
-    - ./tsconfig.json:/var/lib/eventkit/tsconfig.json
-    - ./tslint.json:/var/lib/eventkit/tslint.json
-    - ./config/setupFile.js:/var/lib/eventkit/setupFile.js
+    - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
+    - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
+    - ./config/ui/webpack.config.js:/var/lib/eventkit/webpack.config.js
+    - ./config/ui/babel.config.js:/var/lib/eventkit/babel.config.js
+    - ./config/ui/setupFile.js:/var/lib/eventkit/setupFile.js
+    - ./config/ui/tsconfig.json:/var/lib/eventkit/tsconfig.json
+    - ./config/ui/tslint.json:/var/lib/eventkit/tslint.json
     - ./.git:/var/lib/eventkit/.git
     ports:
     - "8080:8080"

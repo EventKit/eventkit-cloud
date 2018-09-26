@@ -6,7 +6,7 @@ from django.contrib.sessions.models import Session
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
 from django.core.signing import BadSignature
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template

@@ -5,6 +5,7 @@ import codecs
 from contextlib import contextmanager
 
 from django.conf import settings
+from django.template import Context
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q

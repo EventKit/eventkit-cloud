@@ -7,7 +7,7 @@ from logging import getLogger
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponse
 from django.shortcuts import redirect, render_to_response
 from django.template import RequestContext
@@ -70,7 +70,7 @@ def view_export(request, uuid=None):  # NOQA
 
 
 def auth(request):
-    if request.method == 'GET' and request.user.is_authenticated():
+    if (request.method == 'GET') and request.user.is_authenticated:
         # If the user is already authenticated we want to return the user data (required for oauth).
         return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
                             content_type="application/json",

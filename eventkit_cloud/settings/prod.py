@@ -7,7 +7,7 @@ from eventkit_cloud.settings.celery import *  # NOQA
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", "django_filters")
 
 # Project apps
 INSTALLED_APPS += (
@@ -246,7 +246,7 @@ else:
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['api/templates/', 'ui/templates', 'ui/static/ui/js'],
+        'DIRS': ['api/templates/', 'ui/templates', 'tasks/templates', 'ui/static/ui/js'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -364,4 +364,4 @@ if AUTO_LOGOUT_SECONDS:
 
 EVENTKIT_ARCGIS_SERVICE = os.getenv('EVENTKIT_ARCGIS_SERVICE')
 
-NOTIFICATIONS_SOFT_DELETE=True
+DJANGO_NOTIFICATIONS_CONFIG = {'SOFT_DELETE': True}

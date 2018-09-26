@@ -10,6 +10,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSException, GEOSGeometry
 from django.db import transaction
 from django.db.models import Q, Prefetch
+from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import ugettext as _
 from notifications.models import Notification
 from rest_framework import exceptions
@@ -86,7 +87,7 @@ class JobViewSet(viewsets.ModelViewSet):
     parser_classes = (JSONParser,)
     lookup_field = 'uid'
     pagination_class = LinkHeaderPagination
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filter_class = JobFilter
     search_fields = ('name', 'description', 'visibility', 'event', 'user__username', 'region__name')
 
@@ -308,7 +309,7 @@ class JobViewSet(viewsets.ModelViewSet):
                         )
                         try:
                             provider_serializer.is_valid(raise_exception=True)
-                            job.provider_tasks = provider_serializer.save()
+                            job.provider_tasks.add(*provider_serializer.save())
                             job.save()
                         except ValidationError:
                             status_code = status.HTTP_400_BAD_REQUEST
@@ -824,7 +825,7 @@ class ExportRunViewSet(viewsets.ModelViewSet):
     serializer_class = ExportRunSerializer
     permission_classes = (permissions.IsAuthenticated,)
     pagination_class = LinkHeaderPagination
-    filter_backends = (filters.DjangoFilterBackend, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filter_class = ExportRunFilter
     lookup_field = 'uid'
     search_fields = ('user__username', 'status', 'job__uid', 'min_date',
@@ -1183,7 +1184,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
     filter_class = UserFilter
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     lookup_field = 'username'
     lookup_value_regex = '[^/]+'
     search_fields = ('username', 'last_name', 'first_name', 'email')
@@ -1427,7 +1428,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         groupadmin = GroupPermission.objects.create(user=user, group=group,
                                                     permission=GroupPermissionLevel.ADMIN.value)
         groupadmin.save()
-        groupmember = GroupPermission.objects.create(user=user, group=group,
+        GroupPermission.objects.create(user=user, group=group,
                                                      permission=GroupPermissionLevel.MEMBER.value)
 
         if "members" in request.data:
@@ -1585,7 +1586,7 @@ class NotificationViewSet(viewsets.GenericViewSet):
     """
 
     serializer_class = NotificationSerializer
-    filter_backends = (filters.DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     pagination_class = LinkHeaderPagination
 
     def serialize_records(self, notifications, request):
@@ -1708,8 +1709,7 @@ def get_provider_task(export_provider, export_formats):
     for export_format in export_formats:
         supported_formats = \
             export_provider.export_provider_type.supported_formats.all()
-        if export_format in supported_formats:
-            provider_task.formats.add(export_format)
+        provider_task.formats.add(*supported_formats)
     provider_task.save()
     return provider_task
 

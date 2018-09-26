@@ -282,7 +282,7 @@ describe('ProviderRow component', () => {
                     className="qa-ProviderRow-Warning-providerStatus"
                     style={{
                         marginLeft: '10px',
-                        fill: '#ce4427',
+                        fill: '#f4d225',
                         verticalAlign: 'bottom',
                     }}
                 />
