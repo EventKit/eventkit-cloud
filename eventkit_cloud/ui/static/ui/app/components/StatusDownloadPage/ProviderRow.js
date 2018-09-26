@@ -142,7 +142,7 @@ export class ProviderRow extends Component {
                             className="qa-ProviderRow-Warning-providerStatus"
                             style={{
                                 marginLeft: '10px',
-                                fill: colors.warning,
+                                fill: colors.running,
                                 verticalAlign: 'bottom',
                             }}
                         />

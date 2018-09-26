@@ -17,9 +17,10 @@ class ListFilter(django_filters.Filter):
     def filter(self, qs, value):
         if value:
             value_list = value.split(',')
-            return super(ListFilter, self).filter(qs, django_filters.fields.Lookup(value_list, 'in'))
+            return super(ListFilter, self).filter(qs, django_filters.fields.Lookup(value_list, 'in')).distinct()
         else:
             return qs
+          
 
 class JobFilter(django_filters.FilterSet):
     """Filter export results according to a range of critera."""

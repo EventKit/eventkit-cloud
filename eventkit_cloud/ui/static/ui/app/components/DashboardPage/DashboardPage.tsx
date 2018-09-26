@@ -1,7 +1,6 @@
-import PropTypes from 'prop-types';
-import React from 'react';
+import * as React from 'react';
 import { connect } from 'react-redux';
-import debounce from 'lodash/debounce';
+import * as debounce from 'lodash/debounce';
 import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
@@ -32,7 +31,43 @@ export const CUSTOM_BREAKPOINTS = {
     sm: 768,
 };
 
-export class DashboardPage extends React.Component {
+interface Props {
+    router: object;
+    user: Eventkit.Store.User;
+    userActivity: Eventkit.Store.UserActivity;
+    notifications: Eventkit.Store.Notifications;
+    providers: Eventkit.Provider[];
+    runDeletion: Eventkit.Store.RunDeletion;
+    runsList: Eventkit.Store.RunsList;
+    featuredRunsList: Eventkit.Store.RunsList;
+    getRuns: (options?: object) => void;
+    getFeaturedRuns: (options?: object) => void;
+    getViewedJobs: (options?: object) => void;
+    getProviders: (options?: object) => void;
+    deleteRun: (options?: object) => void;
+    getNotifications: (options?: object) => void;
+    updatePermission: Eventkit.Store.UpdatePermissions;
+    users: Eventkit.Store.Users;
+    groups: Eventkit.Store.Groups;
+    updateDataCartPermissions: () => void;
+    getGroups: () => void;
+    getUsers: () => void;
+    theme: Eventkit.Theme;
+}
+
+interface State {
+    loadingPage: boolean;
+    steps: Array<object>;
+    isRunning: boolean;
+    width: string;
+}
+
+export class DashboardPage extends React.Component<Props, State> {
+    private autoRefreshIntervalId: number | undefined = undefined;
+    private autoRefreshInterval: number = 10000;
+    private onResize: () => void;
+    private joyride;
+
     constructor(props) {
         super(props);
         this.setScreenSize = this.setScreenSize.bind(this);
@@ -58,8 +93,6 @@ export class DashboardPage extends React.Component {
             isRunning: false,
             width: 'xl',
         };
-        this.autoRefreshIntervalId = null;
-        this.autoRefreshInterval = 10000;
         this.onResize = debounce(this.setScreenSize, 166);
     }
 
@@ -72,7 +105,7 @@ export class DashboardPage extends React.Component {
             pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
         });
         this.refresh();
-        this.autoRefreshIntervalId = setInterval(this.autoRefresh, this.autoRefreshInterval);
+        this.autoRefreshIntervalId = window.setInterval(this.autoRefresh, this.autoRefreshInterval);
         const steps = joyride.DashboardPage;
         this.joyrideAddSteps(steps);
         window.addEventListener('resize', this.onResize);
@@ -106,12 +139,12 @@ export class DashboardPage extends React.Component {
     }
 
     componentWillUnmount() {
-        clearInterval(this.autoRefreshIntervalId);
-        this.autoRefreshIntervalId = null;
+        window.clearInterval(this.autoRefreshIntervalId);
+        this.autoRefreshIntervalId = undefined;
         window.removeEventListener('resize', this.onResize);
     }
 
-    setScreenSize() {
+    private setScreenSize() {
         const width = window.innerWidth;
         let value = 'xs';
         if (width >= CUSTOM_BREAKPOINTS.xl) {
@@ -129,11 +162,11 @@ export class DashboardPage extends React.Component {
         }
     }
 
-    getGridPadding() {
+    private getGridPadding() {
         return this.state.width !== 'xs' ? 6 : 2;
     }
 
-    getGridColumns({ getMax = false } = {}) {
+    private getGridColumns({ getMax = false } = {}) {
         const { width } = this.state;
         if (width === 'xl' || getMax) {
             return 6;
@@ -148,7 +181,7 @@ export class DashboardPage extends React.Component {
         return 2;
     }
 
-    getGridWideColumns({ getMax = false } = {}) {
+    private getGridWideColumns({ getMax = false } = {}) {
         if (this.state.width === 'lg' || this.state.width === 'xl' || getMax) {
             return 2;
         }
@@ -156,7 +189,7 @@ export class DashboardPage extends React.Component {
         return 1;
     }
 
-    getNotificationsColumns({ getMax = false } = {}) {
+    private getNotificationsColumns({ getMax = false } = {}) {
         if (this.state.width === 'lg' || this.state.width === 'xl' || getMax) {
             return 3;
         } else if (this.state.width === 'md') {
@@ -166,11 +199,11 @@ export class DashboardPage extends React.Component {
         return 1;
     }
 
-    getNotificationsRows() {
+    private getNotificationsRows() {
         return 3;
     }
 
-    refreshMyDataPacks({ isAuto = false } = {}) {
+    private refreshMyDataPacks({ isAuto = false } = {}) {
         this.props.getRuns({
             pageSize: this.getGridColumns({ getMax: true }) * 3,
             ordering: '-started_at',
@@ -179,43 +212,43 @@ export class DashboardPage extends React.Component {
         });
     }
 
-    refreshFeatured({ isAuto = false } = {}) {
+    private refreshFeatured({ isAuto = false } = {}) {
         this.props.getFeaturedRuns({
             pageSize: this.getGridWideColumns({ getMax: true }) * 3,
             isAuto,
         });
     }
 
-    refreshRecentlyViewed({ isAuto = false } = {}) {
+    private refreshRecentlyViewed({ isAuto = false } = {}) {
         this.props.getViewedJobs({
             pageSize: this.getGridColumns({ getMax: true }) * 3,
             isAuto,
         });
     }
 
-    refresh({ isAuto = false } = {}) {
+    private refresh({ isAuto = false } = {}) {
         this.refreshMyDataPacks({ isAuto });
         this.refreshFeatured({ isAuto });
         this.refreshRecentlyViewed({ isAuto });
     }
 
-    autoRefresh() {
+    private autoRefresh() {
         this.refresh({ isAuto: true });
     }
 
-    handleNotificationsViewAll() {
+    private handleNotificationsViewAll() {
         browserHistory.push('/notifications');
     }
 
-    handleFeaturedViewAll() {
+    private handleFeaturedViewAll() {
         browserHistory.push('/exports');
     }
 
-    handleMyDataPacksViewAll() {
+    private handleMyDataPacksViewAll() {
         browserHistory.push(`/exports?collection=${this.props.user.data.user.username}`);
     }
 
-    isLoading() {
+    private isLoading() {
         return (
             this.state.loadingPage ||
             this.props.runDeletion.deleting ||
@@ -223,23 +256,23 @@ export class DashboardPage extends React.Component {
         );
     }
 
-    joyrideAddSteps(steps) {
+    private joyrideAddSteps(steps) {
         let newSteps = steps;
 
         if (!Array.isArray(newSteps)) {
             newSteps = [newSteps];
         }
 
-        if (!newSteps.length) return;
+        if (!newSteps.length) { return; }
 
-        this.setState((currentState) => {
+        this.setState(currentState => {
             const nextState = { ...currentState };
             nextState.steps = nextState.steps.concat(newSteps);
             return nextState;
         });
     }
 
-    callback(data) {
+    private callback(data) {
         const { action, step, type } = data;
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
@@ -252,7 +285,7 @@ export class DashboardPage extends React.Component {
         }
     }
 
-    handleWalkthroughClick() {
+    private handleWalkthroughClick() {
         if (this.state.isRunning) {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
@@ -276,7 +309,7 @@ export class DashboardPage extends React.Component {
         const pageAppBarHeight = 35;
         const styles = {
             root: {
-                position: 'relative',
+                position: 'relative' as 'relative',
                 height: `calc(100vh - ${mainAppBarHeight}px)`,
                 width: '100%',
                 backgroundImage: `url(${images.topo_dark})`,
@@ -285,7 +318,7 @@ export class DashboardPage extends React.Component {
                 height: `calc(100vh - ${mainAppBarHeight + pageAppBarHeight}px)`,
             },
             loadingOverlay: {
-                position: 'absolute',
+                position: 'absolute' as 'absolute',
                 height: '100%',
                 width: '100%',
                 background: colors.backdrop,
@@ -372,21 +405,26 @@ export class DashboardPage extends React.Component {
                 }
                 <CustomScrollbar
                     style={styles.customScrollbar}
-                    ref={(instance) => { this.scrollbar = instance; }}
                 >
                     <Joyride
                         callback={this.callback}
-                        ref={(instance) => { this.joyride = instance; }}
+                        ref={instance => { this.joyride = instance; }}
+                        // @ts-ignore
                         steps={this.state.steps}
                         autoStart
                         type="continuous"
                         showSkipButton
                         showStepsProgress
                         locale={{
+                            // @ts-ignore
                             back: (<span>Back</span>),
+                            // @ts-ignore
                             close: (<span>Close</span>),
+                            // @ts-ignore
                             last: (<span>Done</span>),
+                            // @ts-ignore
                             next: (<span>Next</span>),
+                            // @ts-ignore
                             skip: (<span>Skip</span>),
                         }}
                         run={this.state.isRunning}
@@ -561,57 +599,6 @@ export class DashboardPage extends React.Component {
     }
 }
 
-DashboardPage.propTypes = {
-    router: PropTypes.object.isRequired,
-    user: PropTypes.object.isRequired,
-    userActivity: PropTypes.shape({
-        viewedJobs: PropTypes.shape({
-            fetched: PropTypes.bool,
-            viewedJobs: PropTypes.arrayOf(PropTypes.object),
-        }),
-    }).isRequired,
-    notifications: PropTypes.object.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    runDeletion: PropTypes.object.isRequired,
-    runsList: PropTypes.shape({
-        cancelSource: PropTypes.object,
-        error: PropTypes.string,
-        fetched: PropTypes.bool,
-        fetching: PropTypes.bool,
-        nextPage: PropTypes.bool,
-        order: PropTypes.string,
-        range: PropTypes.string,
-        runs: PropTypes.arrayOf(PropTypes.object),
-        view: PropTypes.string,
-    }).isRequired,
-    featuredRunsList: PropTypes.shape({
-        cancelSource: PropTypes.object,
-        error: PropTypes.string,
-        fetched: PropTypes.bool,
-        fetching: PropTypes.bool,
-        nextPage: PropTypes.bool,
-        range: PropTypes.string,
-        runs: PropTypes.arrayOf(PropTypes.object),
-    }).isRequired,
-    getRuns: PropTypes.func.isRequired,
-    getFeaturedRuns: PropTypes.func.isRequired,
-    getViewedJobs: PropTypes.func.isRequired,
-    getProviders: PropTypes.func.isRequired,
-    deleteRun: PropTypes.func.isRequired,
-    getNotifications: PropTypes.func.isRequired,
-    updatePermission: PropTypes.shape({
-        updating: PropTypes.bool,
-        updated: PropTypes.bool,
-        error: PropTypes.array,
-    }).isRequired,
-    users: PropTypes.object.isRequired,
-    groups: PropTypes.object.isRequired,
-    updateDataCartPermissions: PropTypes.func.isRequired,
-    getGroups: PropTypes.func.isRequired,
-    getUsers: PropTypes.func.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
 function mapStateToProps(state) {
     return {
         user: state.user,
@@ -641,7 +628,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withTheme()
-@connect(mapStateToProps, mapDispatchToProps)
-class Default extends DashboardPage {}
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
