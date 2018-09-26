@@ -10,6 +10,7 @@ services:
       - ./recipes:/root/recipes
       - ./build.sh:/root/build.sh
       - ./recipes.txt:/root/recipes.txt
+      - ../:/eventkit-cloud
     environment:
       version:
       branch:
