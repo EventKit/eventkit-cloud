@@ -151,7 +151,7 @@ services:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
   flower:
-    image: eventkit-base:1.2.0
+    image: eventkit-base:1.2.0.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
