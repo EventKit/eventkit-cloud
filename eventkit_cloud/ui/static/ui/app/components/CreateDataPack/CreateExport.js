@@ -24,7 +24,6 @@ export class CreateExport extends React.Component {
         this.setState({ walkthroughClicked: true });
     }
 
-
     render() {
         const { colors } = this.props.theme.eventkit;
 

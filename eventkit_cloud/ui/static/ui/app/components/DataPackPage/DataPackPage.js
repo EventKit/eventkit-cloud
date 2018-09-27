@@ -91,7 +91,7 @@ export class DataPackPage extends React.Component {
 
     componentDidMount() {
         this.props.getGroups();
-        this.props.getUsers();
+        this.props.getUsers({ exclude_self: true });
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.autoRunRequest, 10000);
@@ -699,7 +699,7 @@ function mapStateToProps(state) {
         importGeom: state.importGeom,
         geocode: state.geocode,
         groups: state.groups.groups,
-        users: state.users.users.filter(user => user.user.username !== state.user.data.user.username),
+        users: state.users.users,
         updatePermissions: state.updatePermission,
     };
 }
@@ -733,8 +733,8 @@ function mapDispatchToProps(dispatch) {
         getGroups: () => {
             dispatch(getGroups());
         },
-        getUsers: () => {
-            dispatch(getUsers());
+        getUsers: (params) => {
+            dispatch(getUsers(params));
         },
         updateDataCartPermissions: (uid, permissions) => {
             dispatch(updateDataCartPermissions(uid, permissions));

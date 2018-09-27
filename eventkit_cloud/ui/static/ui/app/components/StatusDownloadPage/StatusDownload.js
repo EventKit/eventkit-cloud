@@ -54,7 +54,7 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.router.params.jobuid);
         this.props.viewedJob(this.props.router.params.jobuid);
         this.props.getProviders();
-        this.props.getUsers();
+        this.props.getUsers({ exclude_self: true });
         this.props.getGroups();
         this.startTimer();
 
@@ -470,7 +470,7 @@ function mapStateToProps(state) {
         cancelProviderTask: state.cancelProviderTask,
         providers: state.providers,
         user: state.user,
-        users: state.users.users.filter(user => user.user.username !== state.user.data.user.username),
+        users: state.users.users,
         groups: state.groups.groups,
     };
 }
@@ -530,8 +530,8 @@ function mapDispatchToProps(dispatch) {
         viewedJob: (jobuid) => {
             dispatch(viewedJob(jobuid));
         },
-        getUsers: () => {
-            dispatch(getUsers());
+        getUsers: (params) => {
+            dispatch(getUsers(params));
         },
         getGroups: () => {
             dispatch(getGroups());

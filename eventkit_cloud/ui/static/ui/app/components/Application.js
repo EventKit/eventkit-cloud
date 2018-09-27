@@ -60,7 +60,7 @@ export class Application extends Component {
         this.setNotificationsDropdownContainerRef = this.setNotificationsDropdownContainerRef.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
-            config: {},
+            childContext: { config: {} },
             hovered: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
@@ -77,9 +77,7 @@ export class Application extends Component {
     }
 
     getChildContext() {
-        return {
-            config: this.state.config,
-        };
+        return this.state.childContext;
     }
 
     componentDidMount() {
@@ -126,7 +124,7 @@ export class Application extends Component {
         return axios.get('/configuration')
             .then((response) => {
                 if (response.data) {
-                    this.setState({ config: response.data });
+                    this.setState({ childContext: { config: response.data } });
                 }
             }).catch((error) => {
                 console.log(error.response.data);
@@ -489,7 +487,7 @@ export class Application extends Component {
 
         const childrenWithContext = React.Children.map(this.props.children, child => (
             React.cloneElement(child, {
-                context: { config: this.state.config },
+                context: this.state.childContext,
             })
         ));
 
