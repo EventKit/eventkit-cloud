@@ -82,7 +82,7 @@ END
     stage("Run integration tests"){
         try{
             postStatus(getPendingStatus("Running the integration tests..."))
-            sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
+            sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded"
             postStatus(getSuccessStatus("All tests passed!"))
         }catch(Exception e) {
             sh "docker-compose logs --tail=50"
