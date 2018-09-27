@@ -48,11 +48,13 @@ END
 
     stage("Build"){
         try{
-            postStatus(getPendingStatus("Building the docker containers..."))
-            sh "docker-compose down || exit 0"
-            sh "docker-compose build"
-            sh "docker-compose run --rm eventkit python manage.py runinitial setup || exit 0"
-            sh "docker-compose up -d"
+            withEnv(["SITE_IP=httpd"]) {
+                postStatus(getPendingStatus("Building the docker containers..."))
+                sh "docker-compose down || exit 0"
+                sh "docker-compose build"
+                sh "docker-compose run --rm eventkit python manage.py runinitial setup"
+                sh "docker-compose up -d"
+            }
         }catch(Exception e) {
            handleErrors("Failed to build the docker containers.")
         }
@@ -81,9 +83,11 @@ END
 
     stage("Run integration tests"){
         try{
-            postStatus(getPendingStatus("Running the integration tests..."))
-            sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded"
-            postStatus(getSuccessStatus("All tests passed!"))
+            withEnv(["SITE_IP=httpd"]) {
+                postStatus(getPendingStatus("Running the integration tests..."))
+                sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded"
+                postStatus(getSuccessStatus("All tests passed!"))
+            }
         }catch(Exception e) {
             sh "docker-compose logs --tail=50"
             handleErrors("Integration tests failed.")
