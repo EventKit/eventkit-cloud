@@ -65,16 +65,14 @@ export class BreadcrumbStepper extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (this.props.jobFetched !== nextProps.jobFetched) {
-            if (nextProps.jobFetched) {
-                this.hideLoading();
-                browserHistory.push(`/status/${nextProps.jobuid}`);
-                this.props.clearJobInfo();
-                this.props.getNotifications();
-                this.props.getNotificationsUnreadCount();
-            }
+        if (nextProps.jobFetched && !this.props.jobFetched) {
+            this.hideLoading();
+            browserHistory.push(`/status/${nextProps.jobuid}`);
+            this.props.clearJobInfo();
+            this.props.getNotifications();
+            this.props.getNotificationsUnreadCount();
         }
-        if (nextProps.jobError) {
+        if (nextProps.jobError && !this.props.jobError) {
             this.hideLoading();
             this.showError(nextProps.jobError);
         }

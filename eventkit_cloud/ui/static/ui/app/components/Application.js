@@ -721,7 +721,7 @@ Application.defaultProps = {
     children: null,
     autoLogoutAt: null,
     autoLogoutWarningAt: null,
-    userData: {},
+    userData: null,
 };
 
 Application.propTypes = {
