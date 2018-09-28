@@ -1,8 +1,0 @@
-Overview of structure of Export Run Tasks,
-(potentially) multiple providers complete, then the finalize chain runs.
-
-Export Providers                                 Finalize Chain (HT = Hook Task)
-
-EP1 -> ST-1 -> ST-2 -> ST-3 -> Finalize EP1 |
-EP2 -> ST-1 -> ST-2 -> ST-3 -> Finalize EP2 |--> HT1 -> HT2 -> HT3 -> Prep Zip -> Zip -> Finalize Run
-EP3 -> ST-1 -> ST-2 -> ST-3 -> Finalize EP3 |
