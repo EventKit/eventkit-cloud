@@ -35,7 +35,8 @@ interface Props {
     router: object;
     user: Eventkit.Store.User;
     userActivity: Eventkit.Store.UserActivity;
-    notifications: Eventkit.Store.Notifications;
+    notificationsData: any;
+    notificationsStatus: any;
     providers: Eventkit.Provider[];
     runDeletion: Eventkit.Store.RunDeletion;
     runsList: Eventkit.Store.RunsList;
@@ -117,7 +118,7 @@ export class DashboardPage extends React.Component<Props, State> {
         if (loadingPage) {
             this.setState({
                 loadingPage: (
-                    !nextProps.notifications.fetched ||
+                    !nextProps.notificationsStatus.fetched ||
                     !nextProps.runsList.fetched ||
                     !nextProps.featuredRunsList.fetched ||
                     !nextProps.userActivity.viewedJobs.fetched ||
@@ -460,7 +461,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                 }
                                 rowMajor={false}
                             >
-                                {this.props.notifications.notificationsSorted.map(notification => (
+                                {this.props.notificationsData.notificationsSorted.map(notification => (
                                     <NotificationGridItem
                                         key={`Notification-${notification.id}`}
                                         notification={notification}
@@ -603,7 +604,8 @@ function mapStateToProps(state) {
     return {
         user: state.user,
         userActivity: state.userActivity,
-        notifications: state.notifications,
+        notificationsData: state.notifications.data,
+        notificationsStatus: state.notifications.status,
         providers: state.providers,
         runDeletion: state.runDeletion,
         runsList: state.runsList,

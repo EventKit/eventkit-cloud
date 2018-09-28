@@ -86,6 +86,26 @@ export class Application extends Component {
         window.addEventListener('click', this.handleClick);
     }
 
+    componentDidUpdate() {
+        console.log('updated');
+    }
+
+    shouldComponentUpdate(p, s) {
+        const pk = Object.keys(p);
+        pk.forEach(k => {
+            if (p[k] !== this.props[k]) {
+                console.log(k);
+            }
+        });
+        const sk = Object.keys(s);
+        sk.forEach(k => {
+            if (s[k] !== this.state[k]) {
+                console.log(k);
+            }
+        });
+        return true;
+    }
+
     componentWillReceiveProps(nextProps) {
         if (this.loggedIn && nextProps.width !== this.props.width) {
             if (nextProps.width === 'xl') {
@@ -530,7 +550,7 @@ export class Application extends Component {
                                 style={{
                                     ...styles.notificationsIndicator,
                                     transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                    transform: (this.props.notifications.unreadCount.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
+                                    transform: (this.props.notificationsCount.data.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
                                 }}
                             />
                             <div ref={this.setNotificationsDropdownContainerRef}>
@@ -540,7 +560,8 @@ export class Application extends Component {
                                         pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
                                         transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
                                     }}
-                                    notifications={this.props.notifications}
+                                    notifications={this.props.notificationsData}
+                                    status={this.props.notificationsStatus}
                                     router={this.props.router}
                                     onNavigate={this.handleNotificationsDropdownNavigate}
                                 />
@@ -749,7 +770,8 @@ Application.propTypes = {
     }),
     autoLogoutAt: PropTypes.instanceOf(Date),
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
-    notifications: PropTypes.object.isRequired,
+    notificationsData: PropTypes.object.isRequired,
+    notificationsStatus: PropTypes.object.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
     width: PropTypes.string.isRequired,
@@ -777,7 +799,9 @@ function mapStateToProps(state) {
         userData: state.user.data,
         autoLogoutAt: state.user.autoLogoutAt,
         autoLogoutWarningAt: state.user.autoLogoutWarningAt,
-        notifications: state.notifications,
+        notificationsStatus: state.notifications.status,
+        notificationsData: state.notifications.data,
+        notificationsCount: state.notifications.unreadCount,
     };
 }
 
