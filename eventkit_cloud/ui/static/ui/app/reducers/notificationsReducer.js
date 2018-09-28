@@ -55,7 +55,7 @@ export function notificationsReducer(state = initialState, action) {
                 cancelSource: null,
             };
 
-            let changed = state.data.notifications.length !== action.notifications.length;
+            let changed = Object.keys(state.data.notifications).length !== action.notifications.length;
 
             const old = { ...state.data.notifications };
             const updated = {};
@@ -103,7 +103,7 @@ export function notificationsReducer(state = initialState, action) {
             };
         case types.MARKING_NOTIFICATIONS_AS_READ: {
             const notifications = { ...state.data.notifications };
-            let { unreadCount } = state.unreadCount.data.unreadCount;
+            let { unreadCount } = state.unreadCount.data;
             action.notifications.forEach((notification) => {
                 if (notifications[notification.id].unread) {
                     unreadCount -= 1;
@@ -137,7 +137,7 @@ export function notificationsReducer(state = initialState, action) {
             };
         case types.MARKING_NOTIFICATIONS_AS_UNREAD: {
             const notifications = { ...state.data.notifications };
-            let { unreadCount } = state.unreadCount.data.unreadCount;
+            let { unreadCount } = state.unreadCount.data;
             action.notifications.forEach((notification) => {
                 if (!notifications[notification.id].unread) {
                     unreadCount += 1;
@@ -203,7 +203,7 @@ export function notificationsReducer(state = initialState, action) {
             };
         case types.REMOVING_NOTIFICATIONS: {
             const notifications = { ...state.data.notifications };
-            let { unreadCount } = state.unreadCount.data.unreadCount;
+            let { unreadCount } = state.unreadCount.data;
             action.notifications.forEach((notification) => {
                 if (notifications[notification.id].unread) {
                     unreadCount -= 1;

@@ -86,26 +86,6 @@ export class Application extends Component {
         window.addEventListener('click', this.handleClick);
     }
 
-    componentDidUpdate() {
-        console.log('updated');
-    }
-
-    shouldComponentUpdate(p, s) {
-        const pk = Object.keys(p);
-        pk.forEach(k => {
-            if (p[k] !== this.props[k]) {
-                console.log(k);
-            }
-        });
-        const sk = Object.keys(s);
-        sk.forEach(k => {
-            if (s[k] !== this.state[k]) {
-                console.log(k);
-            }
-        });
-        return true;
-    }
-
     componentWillReceiveProps(nextProps) {
         if (this.loggedIn && nextProps.width !== this.props.width) {
             if (nextProps.width === 'xl') {
@@ -128,6 +108,41 @@ export class Application extends Component {
             this.stopSendingUserActivePings();
             this.stopListeningForNotifications();
         }
+    }
+
+    shouldComponentUpdate(p, s) {
+        const pk = Object.keys(p);
+        pk.forEach((k) => {
+            if (p[k] !== this.props[k]) {
+                console.log(k);
+            }
+        });
+        const sk = Object.keys(s);
+        sk.forEach((k) => {
+            if (s[k] !== this.state[k]) {
+                console.log(k);
+            }
+        });
+
+        const status = p.notificationsStatus;
+        const oldStatus = this.props.notificationsStatus;
+
+        if (status !== oldStatus) {
+            if (status.error !== oldStatus.error) {
+                return true;
+            }
+            // if (status.fetched && !oldStatus.fetched && !oldStatus.fetching)
+            if (status.fetched && p.notificationsData !== this.props.notificationsData) {
+                return true;
+            }
+            // return false;
+        }
+
+        return true;
+    }
+
+    componentDidUpdate() {
+        console.log('updated');
     }
 
     componentWillUnmount() {
@@ -550,7 +565,7 @@ export class Application extends Component {
                                 style={{
                                     ...styles.notificationsIndicator,
                                     transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                    transform: (this.props.notificationsCount.data.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
+                                    transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
                                 }}
                             />
                             <div ref={this.setNotificationsDropdownContainerRef}>
@@ -772,6 +787,7 @@ Application.propTypes = {
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
     notificationsData: PropTypes.object.isRequired,
     notificationsStatus: PropTypes.object.isRequired,
+    notificationsCount: PropTypes.number.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
     width: PropTypes.string.isRequired,
@@ -801,7 +817,7 @@ function mapStateToProps(state) {
         autoLogoutWarningAt: state.user.autoLogoutWarningAt,
         notificationsStatus: state.notifications.status,
         notificationsData: state.notifications.data,
-        notificationsCount: state.notifications.unreadCount,
+        notificationsCount: state.notifications.unreadCount.data.unreadCount,
     };
 }
 
