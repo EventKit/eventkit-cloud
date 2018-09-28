@@ -8,7 +8,8 @@ from time import sleep
 
 import requests
 from django.conf import settings
-from django.urls import reversefrom django.test import TestCase
+from django.urls import reverse
+from django.test import TestCase
 from django.utils import timezone
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
