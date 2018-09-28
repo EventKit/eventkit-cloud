@@ -51,8 +51,10 @@ END
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
             sh "docker-compose build"
-            sh "docker-compose run --rm eventkit python manage.py runinitial setup || exit 0"
-            sh "docker-compose up -d"
+            // Exit 0 provided for when setup has already ran on a previous build.
+            // This could hide errors at this step but they will show up again during the tests.
+            sh "docker-compose run --rm -T eventkit python manage.py runinitial setup || exit 0"
+            sh "docker-compose up --force-recreate -d"
         }catch(Exception e) {
            handleErrors("Failed to build the docker containers.")
         }
@@ -73,22 +75,26 @@ END
             postStatus(getPendingStatus("Running the unit tests..."))
             sh "docker-compose run --rm -T  eventkit python manage.py test -v=2 --noinput eventkit_cloud"
             sh "docker-compose run --rm -T  webpack npm test"
+            postStatus(getSuccessStatus("All tests passed!"))
+            sh "docker-compose down"
         }catch(Exception e) {
              sh "docker-compose logs --tail=50 eventkit webpack"
              handleErrors("Unit tests failed.")
         }
     }
 
-    stage("Run integration tests"){
-        try{
-            postStatus(getPendingStatus("Running the integration tests..."))
-            sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded || docker-compose down"
-            postStatus(getSuccessStatus("All tests passed!"))
-        }catch(Exception e) {
-            sh "docker-compose logs --tail=50"
-            handleErrors("Integration tests failed.")
-        }
-    }
+// TODO: get integrations tests to run in jenkins, should the SITE_IP be discovered from the host or should docker try to
+// communicate on an internal network?
+//    stage("Run integration tests"){
+//        try{
+//                postStatus(getPendingStatus("Running the integration tests..."))
+//                sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded"
+//                postStatus(getSuccessStatus("All tests passed!"))
+//        }catch(Exception e) {
+//            sh "docker-compose logs --tail=50"
+//            handleErrors("Integration tests failed.")
+//        }
+//    }
 }
 
 
