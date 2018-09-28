@@ -124,11 +124,13 @@ export class DataPackTableItem extends Component {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
                 color: colors.primary,
+                wordBreak: 'break-word',
             },
             eventColumn: {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
                 color: colors.grey,
+                wordBreak: 'break-word',
             },
             startedColumn: {
                 width: '98px',
@@ -150,6 +152,7 @@ export class DataPackTableItem extends Component {
                 padding: '0px 0px 0px 10px',
                 textAlign: 'left',
                 color: colors.grey,
+                wordBreak: 'break-word',
             },
             featuredColumn: {
                 padding: '0px 0px 0px 10px',
