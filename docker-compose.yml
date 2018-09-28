@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit-base:1.2.0
+    image: eventkit-base:1.2.0.2
     volumes:
     - ./:/var/lib/eventkit/
     - /var/lib/eventkit/node_modules/
@@ -53,7 +53,7 @@ services:
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit-base:1.2.0
+    image: eventkit-base:1.2.0.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -86,7 +86,7 @@ services:
     - "${SITE_NAME}:${SITE_IP}"
     command: sh /var/lib/eventkit/scripts/celery-start.sh
   celery-beat:
-    image: eventkit-base:1.2.0
+    image: eventkit-base:1.2.0.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -151,7 +151,7 @@ services:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
   flower:
-    image: eventkit-base:1.2.0
+    image: eventkit-base:1.2.0.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
