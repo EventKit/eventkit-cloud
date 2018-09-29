@@ -1,0 +1,48 @@
+{% set name = "django-notifications-hq" %}
+{% set version = "1.5.0" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: https://github.com/django-notifications/django-notifications/archive/{{ version }}.tar.gz
+  sha256: 81c94f633f323ff990f43b999a71ae3c457e30676e4baabf23efaaf3c11adf5d
+
+build:
+  number: 0
+  script: "python setup.py install --single-version-externally-managed --record=record.txt"
+
+requirements:
+  host:
+    - django >=1.7
+    - django-model-utils >=2.0.3
+    - jsonfield >=1.0.3
+    - pip
+    - python
+    - pytz
+  run:
+    - django >=1.7
+    - django-model-utils >=2.0.3
+    - jsonfield >=1.0.3
+    - python
+    - pytz
+
+test:
+  imports:
+    - notifications
+    - notifications.migrations
+    - notifications.templatetags
+
+about:
+  home: http://github.com/django-notifications/django-notifications
+  license: BSD
+  license_family: BSD
+  license_file: 
+  summary: GitHub notifications alike app for Django.
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here
