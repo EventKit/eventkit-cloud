@@ -42,7 +42,7 @@ dependencies:
  - pytz=2017.2
  - PyYAML=3.12
  - requests=2.18.4
- - Shapely=1.6.3
+ - Shapely=1.6.4
  - simplejson=3.10.0
  - whitenoise=3.3.0
  - pip:

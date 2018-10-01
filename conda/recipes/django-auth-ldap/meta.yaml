@@ -1,5 +1,5 @@
 {% set name = "django-auth-ldap" %}
-{% set version = "1.2.12" %}
+{% set version = "1.7.0" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,11 +7,11 @@ package:
 
 source:
   url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
-  sha256: 25dc2b4302039c1d246f166c98cd23f3260bdb13b01fdd36c9fe184c0d777b0f
+  sha256: 9f117850248ed575231bc36bf740137f57a86b5f778d421f871e41d7c6a09b33
 
 build:
   number: 0
-  script: "python setup.py install"
+  script: "python setup.py install --single-version-externally-managed --record=record.txt"
 
 requirements:
   host:
