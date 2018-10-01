@@ -34,7 +34,7 @@ if [ -z "$1" ]; then
         echo "***Building  $recipe ...***"
         NAME=$(echo "$recipe" | tr -d '\r')
         for i in 1 2 3; do conda build $NAME && \
-        conda install echo "y" | $NAME && s=0 && break || sleep 15; done; (exit $s)
+        echo "y" | conda install $NAME && s=0 && break || sleep 15; done; (exit $s)
     done < /root/recipes.txt
 else
  echo "***Building $@...***"
