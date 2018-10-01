@@ -112,3 +112,8 @@ screenshots/*
 conda/repo
 *_jb_*
 
+conda/repo/linux-64/.about.json
+conda/repo/linux-64/.index.json
+conda/repo/noarch/repodata.json
+conda/repo/linux-64/.paths.json
+conda/repo/linux-64/repodata.json
