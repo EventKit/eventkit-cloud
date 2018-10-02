@@ -91,7 +91,7 @@ Used for providing a location and getting the names of locations in the search b
 Used in EventKit to seach up the heirarchy to assist in zooming to locations.
 <pre>GEOCODING_UPDATE_URL='http://my-pelias.com/api/v1/place'</pre>
 
-###### Covert
+###### Convert
 Used with a [custom version](https://github.com/venicegeo/pelias-api) of the API to convert coordinates. 
 <pre>CONVERT_URL='http://my-pelias.com/api/v1/convert'</pre>
 

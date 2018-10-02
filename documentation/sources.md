@@ -55,7 +55,7 @@ MapProxy configuration can be fairly complicated.  The `Configuration` section i
 
 In general you need a Layers, Sources, and Grids section. 
 
-Whatever you have has Service Layer needs to be listed as a Source in the Sources section.
+Whatever you have as the Service Layer needs to be listed as a Source in the Sources section.
 You need to also list that Layer in the layers section. The source for that layer MUST be `cache`. 
 This is because EventKit will configure the cache for you.
 
