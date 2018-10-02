@@ -11,7 +11,7 @@ dependencies:
  - openldap=2.4.45
  - proj4=4.9.3
  - python-ldap=3.1.0
-   amqp=2.3.2
+ - amqp=2.3.2
  - billiard=3.5.0.4
  - boto3=1.7.48
  - celery=4.2.1
