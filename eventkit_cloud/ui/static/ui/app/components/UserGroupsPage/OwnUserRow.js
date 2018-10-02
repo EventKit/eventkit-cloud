@@ -98,6 +98,7 @@ export class OwnUserRow extends Component {
         if (this.props.showRemoveButton) {
             removeButton = (
                 <MenuItem
+                    key="remove"
                     style={styles.menuItem}
                     onClick={this.handleRemoveUserClick}
                     className="qa-OwnUserRow-MenuItem-remove"

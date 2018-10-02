@@ -101,6 +101,7 @@ export class DataPackListItem extends Component {
             },
             cardTitle: {
                 wordWrap: 'break-word',
+                display: 'block',
                 padding: '8px 15px 15px',
             },
             cardTitleFeatured: {
@@ -203,6 +204,7 @@ export class DataPackListItem extends Component {
                                 </div>
                                 <IconMenu className="qa-DataPackListItem-IconMenu tour-datapack-options">
                                     <MenuItem
+                                        key="link"
                                         className="qa-DataPackListItem-MenuItem-statusDownloadLink"
                                         style={{ fontSize: subtitleFontSize }}
                                         onClick={() => { browserHistory.push(`/status/${this.props.run.job.uid}`); }}
@@ -210,6 +212,7 @@ export class DataPackListItem extends Component {
                                         Status & Download
                                     </MenuItem>
                                     <MenuItem
+                                        key="sources"
                                         className="qa-DataPackListItem-MenuItem-viewDataSources"
                                         style={{ fontSize: subtitleFontSize }}
                                         onClick={() => this.handleProviderOpen(runProviders)}

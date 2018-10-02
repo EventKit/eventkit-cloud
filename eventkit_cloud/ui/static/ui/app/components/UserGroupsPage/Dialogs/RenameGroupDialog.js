@@ -11,6 +11,7 @@ export class RenameGroupDialog extends Component {
 
         const createActions = [
             <Button
+                key="save"
                 className="qa-RenameGroupDialog-save"
                 onClick={this.props.onSave}
                 disabled={!this.props.value || !this.props.valid}
@@ -20,6 +21,7 @@ export class RenameGroupDialog extends Component {
                 RENAME
             </Button>,
             <Button
+                key="cancel"
                 className="qa-RenameGroupDialog-cancel"
                 onClick={this.props.onClose}
                 variant="flat"

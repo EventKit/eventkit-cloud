@@ -67,16 +67,16 @@ export class DropDownMenu extends React.Component {
                     anchorOrigin={this.props.anchorOrigin}
                     transformOrigin={this.props.transformOrigin}
                 >
-                    {this.props.children.map((child, ix) => {
+                    {this.props.children.map((child) => {
                         // we need to add in our handle close function for every child onClick
                         if (!React.isValidElement(child)) { return null; }
 
                         return React.cloneElement(child, {
+                            ...child.props,
                             onClick: (...args) => {
                                 this.handleClose();
                                 child.props.onClick(args);
                             },
-                            key: child.props.key || `${child.type}-${ix}`,
                         });
                     })}
                 </Menu>

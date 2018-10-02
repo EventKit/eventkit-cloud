@@ -50,7 +50,7 @@ export class ProvidersFilter extends Component {
                     <strong>Sources</strong>
                 </p>
                 {providers.map(provider => (
-                    <div style={styles.provider}>
+                    <div style={styles.provider} key={provider.slug}>
                         <Checkbox
                             className="qa-ProvidersFilter-Checkbox"
                             key={provider.slug}
