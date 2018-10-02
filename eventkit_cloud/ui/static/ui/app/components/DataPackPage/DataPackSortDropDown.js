@@ -37,6 +37,7 @@ export class DataPackSortDropDown extends React.Component {
                 style={{ height: '30px', lineHeight: '30px' }}
             >
                 <MenuItem
+                    key="featured"
                     className="qa-DataPackSortDropDown-MenuItem-featured"
                     style={styles.item}
                     selected={this.props.value === '-job__featured'}
@@ -45,6 +46,7 @@ export class DataPackSortDropDown extends React.Component {
                     Featured
                 </MenuItem>
                 <MenuItem
+                    key="newest"
                     className="qa-DataPackSortDropDown-MenuItem-newest"
                     style={styles.item}
                     selected={this.props.value === '-started_at'}
@@ -53,6 +55,7 @@ export class DataPackSortDropDown extends React.Component {
                     Newest
                 </MenuItem>
                 <MenuItem
+                    key="oldest"
                     className="qa-DataPackSortDropDown-MenuItem-oldest"
                     style={styles.item}
                     selected={this.props.value === 'started_at'}
@@ -61,6 +64,7 @@ export class DataPackSortDropDown extends React.Component {
                     Oldest
                 </MenuItem>
                 <MenuItem
+                    key="nameAZ"
                     className="qa-DataPackSortDropDown-MenuItem-nameAZ"
                     style={styles.item}
                     selected={this.props.value === 'job__name'}
@@ -69,6 +73,7 @@ export class DataPackSortDropDown extends React.Component {
                     Name (A-Z)
                 </MenuItem>
                 <MenuItem
+                    key="nameZA"
                     className="qa-DataPackSortDropDown-MenuItem-nameZA"
                     style={styles.item}
                     onClick={() => this.handleChange('-job__name')}

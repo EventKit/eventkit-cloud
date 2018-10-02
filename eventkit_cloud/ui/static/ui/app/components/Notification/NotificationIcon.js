@@ -105,7 +105,7 @@ export class NotificationIcon extends Component {
 
 NotificationIcon.propTypes = {
     notification: PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         verb: PropTypes.string,
         actor: PropTypes.shape({
             details: PropTypes.object,

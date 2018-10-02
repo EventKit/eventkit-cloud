@@ -160,6 +160,7 @@ export class GroupsDrawer extends Component {
                                     style={{ height: '32px', width: '32px' }}
                                 >
                                     <MenuItem
+                                        key="rename"
                                         className="qa-GroupsDrawer-group-rename"
                                         style={{ color: colors.text_primary, fontSize: '14px' }}
                                         onClick={() => { this.props.onRenameGroupClick(group); }}
@@ -167,6 +168,7 @@ export class GroupsDrawer extends Component {
                                         Change Group Name
                                     </MenuItem>
                                     <MenuItem
+                                        key="leave"
                                         className="qa-GroupsDrawer-group-leave"
                                         style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
                                         onClick={() => { this.props.onLeaveGroupClick(group); }}
@@ -174,6 +176,7 @@ export class GroupsDrawer extends Component {
                                         Leave Group
                                     </MenuItem>
                                     <MenuItem
+                                        key="delete"
                                         className="qa-GroupsDrawer-group-delete"
                                         style={{ color: colors.warning, opacity: '0.7', fontSize: '14px' }}
                                         onClick={() => { this.props.onDeleteGroupClick(group); }}
