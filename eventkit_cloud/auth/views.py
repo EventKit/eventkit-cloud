@@ -26,14 +26,16 @@ def oauth(request):
                                 content_type="application/json",
                                 status=200)
         else:
-            params = urllib.parse.urlencode((
+            params = [
                 ('client_id', settings.OAUTH_CLIENT_ID),
                 ('redirect_uri', settings.OAUTH_REDIRECT_URI),
                 ('response_type', settings.OAUTH_RESPONSE_TYPE),
-                ('scope', settings.OAUTH_SCOPE),
-                ('state', request.META.get('HTTP_REFERER'))
-            ))
-            return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), params))
+                ('scope', settings.OAUTH_SCOPE)
+            ]
+            if request.META.get('HTTP_REFERER'):
+                    params += [('state', request.META.get('HTTP_REFERER'))]
+            encoded_params = urllib.parse.urlencode(params)
+            return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), encoded_params))
     else:
         return HttpResponse(status=400)
 
