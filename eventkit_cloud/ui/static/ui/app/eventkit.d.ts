@@ -1,3 +1,4 @@
+
 declare namespace Eventkit {
     interface License {
         slug: string;
@@ -52,6 +53,7 @@ declare namespace Eventkit {
         featured: boolean;
         formats: string[];
         permissions: {
+            value: string;
             users: { [s: string]: string };
             groups: { [s: string]: string };
         };
@@ -167,30 +169,6 @@ declare namespace Eventkit {
                 topo_light: string;
                 logo: string;
             };
-        };
-        palette: {
-            primary: {
-                light: string;
-                main: string;
-                dark: string;
-            };
-            secondary: {
-                light: string;
-                main: string;
-                dark: string;
-            };
-        };
-        breakpoints: {
-            values: {
-                xs: number;
-                sm: number;
-                md: number;
-                lg: number;
-                xl: number;
-            }
-        };
-        overrides: {
-            [s: string]: object;
         };
     }
 
