@@ -31,7 +31,7 @@ def oauth(request):
                 ('redirect_uri', settings.OAUTH_REDIRECT_URI),
                 ('response_type', settings.OAUTH_RESPONSE_TYPE),
                 ('scope', settings.OAUTH_SCOPE),
-                ('state', request.path)
+                ('state', request.META.get('HTTP_REFERER'))
             ))
             return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), params))
     else:
