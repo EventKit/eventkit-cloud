@@ -31,6 +31,7 @@ def oauth(request):
                 ('redirect_uri', settings.OAUTH_REDIRECT_URI),
                 ('response_type', settings.OAUTH_RESPONSE_TYPE),
                 ('scope', settings.OAUTH_SCOPE),
+                ('state', request.path)
             ))
             return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), params))
     else:
@@ -40,9 +41,12 @@ def oauth(request):
 def callback(request):
     access_token = request_access_token(request.GET.get('code'))
     user = fetch_user_from_token(access_token)
+    state = request.GET.get('state')
     if user:
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
+        if state:
+            return redirect(state)
         return redirect('dashboard')
     else:
         logger.error('User could not be logged in.')
