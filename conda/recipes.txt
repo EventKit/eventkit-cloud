@@ -2,5 +2,11 @@ berkeleydb
 openldap
 python-ldap
 osmctools
+python-magic
 django-audit-logging
+django-auth-ldap
+django-celery-beat
+django-celery-results
+django-notifications-hq
+mapproxy
 eventkit-cloud
