@@ -9,7 +9,6 @@ import TableRow from '@material-ui/core/TableRow';
 import GridList from '@material-ui/core/GridList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from './LoadButtons';
@@ -148,7 +147,6 @@ export class DataPackList extends Component {
                             style={{ width: '100%', minWidth: '360px' }}
                         >
                             {this.props.runs.map((run) => {
-                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
                                 return (
                                     <DataPackListItem
                                         run={run}
@@ -157,7 +155,6 @@ export class DataPackList extends Component {
                                         onRunDelete={this.props.onRunDelete}
                                         onRunShare={this.props.onRunShare}
                                         providers={this.props.providers}
-                                        adminPermission={admin}
                                         users={this.props.users}
                                         groups={this.props.groups}
                                     />
@@ -296,7 +293,6 @@ export class DataPackList extends Component {
                         >
                             <TableBody>
                                 {this.props.runs.map((run) => {
-                                    const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
                                     return (
                                         <DataPackTableItem
                                             run={run}
@@ -305,7 +301,6 @@ export class DataPackList extends Component {
                                             onRunDelete={this.props.onRunDelete}
                                             onRunShare={this.props.onRunShare}
                                             providers={this.props.providers}
-                                            adminPermissions={admin}
                                             users={this.props.users}
                                             groups={this.props.groups}
                                         />

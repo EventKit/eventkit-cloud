@@ -54,7 +54,6 @@ export class DataPackGrid extends Component {
                         cols={this.getColumns()}
                     >
                         {this.props.runs.map((run, index) => {
-                            const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
                             return (
                                 <DataPackGridItem
                                     className="qa-DataPackGrid-GridListItem"
@@ -64,7 +63,6 @@ export class DataPackGrid extends Component {
                                     onRunDelete={this.props.onRunDelete}
                                     onRunShare={this.props.onRunShare}
                                     providers={this.props.providers}
-                                    adminPermission={admin}
                                     gridName={this.props.name}
                                     index={index}
                                     users={this.props.users}

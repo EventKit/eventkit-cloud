@@ -75,8 +75,8 @@ export class DataPackPage extends React.Component {
 
         this.defaultQuery = {
             collection: 'all',
-            order: this.props.runsList.order || '-job__featured',
-            view: this.props.runsList.view || 'map',
+            order: this.props.runsList.data.order || '-job__featured',
+            view: this.props.runsList.data.view || 'map',
             page_size: '12',
         };
     }
@@ -106,7 +106,7 @@ export class DataPackPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.runsList.fetched && !this.props.runsList.fetched) {
+        if (nextProps.runsList.status.fetched && !this.props.runsList.status.fetched) {
             if (this.state.pageLoading) {
                 this.setState({ pageLoading: false });
             }
@@ -122,7 +122,25 @@ export class DataPackPage extends React.Component {
         }
     }
 
+    shouldComponentUpdate(p, s) {
+        const pk = Object.keys(p);
+        pk.forEach((k) => {
+            if (p[k] !== this.props[k]) {
+                console.log(k);
+            }
+        });
+        const sk = Object.keys(s);
+        sk.forEach((k) => {
+            if (s[k] !== this.state[k]) {
+                console.log(k);
+            }
+        });
+
+        return true;
+    }
+
     componentDidUpdate(prevProps) {
+        console.log('UPDATED');
         let changedQuery = false;
         if (Object.keys(this.props.location.query).length
                 !== Object.keys(prevProps.location.query).length) {
@@ -151,10 +169,10 @@ export class DataPackPage extends React.Component {
     componentWillUnmount() {
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
-        if (this.props.runsList.order !== this.props.location.query.order) {
+        if (this.props.runsList.data.order !== this.props.location.query.order) {
             this.props.setOrder(this.props.location.query.order);
         }
-        if (this.props.runsList.view !== this.props.location.query.view) {
+        if (this.props.runsList.data.view !== this.props.location.query.view) {
             this.props.setView(this.props.location.query.view);
         }
     }
@@ -185,15 +203,15 @@ export class DataPackPage extends React.Component {
 
     getView(view) {
         const commonProps = {
-            runs: this.props.runsList.runs,
+            runs: this.props.runsList.data.runs,
             user: this.props.user,
             onRunDelete: this.props.deleteRun,
             onRunShare: this.props.updateDataCartPermissions,
-            range: this.props.runsList.range,
+            range: this.props.runsList.data.range,
             handleLoadLess: this.loadLess,
             handleLoadMore: this.loadMore,
-            loadLessDisabled: this.props.runsList.runs.length <= 12,
-            loadMoreDisabled: !this.props.runsList.nextPage,
+            loadLessDisabled: this.props.runsList.data.runs.length <= 12,
+            loadMoreDisabled: !this.props.runsList.data.nextPage,
             providers: this.props.providers,
             users: this.props.users,
             groups: this.props.groups,
@@ -332,7 +350,7 @@ export class DataPackPage extends React.Component {
     }
 
     loadMore() {
-        if (this.props.runsList.nextPage) {
+        if (this.props.runsList.data.nextPage) {
             this.updateLocationQuery({ page_size: Number(this.props.location.query.page_size) + 12 });
         }
     }
@@ -394,7 +412,7 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: true, steps: [] });
             const steps = this.getJoyRideSteps();
 
-            const hasFeatured = this.props.runsList.runs.some(run => run.job.featured);
+            const hasFeatured = this.props.runsList.data.runs.some(run => run.job.featured);
             const stepsIncludeFeatured = steps.find(step => step.title === 'Featured DataPacks');
 
             const newStep = {
@@ -637,15 +655,20 @@ export class DataPackPage extends React.Component {
 
 DataPackPage.propTypes = {
     runsList: PropTypes.shape({
-        cancelSource: PropTypes.object,
-        error: PropTypes.object,
-        fetched: PropTypes.bool,
-        fetching: PropTypes.bool,
-        nextPage: PropTypes.bool,
-        order: PropTypes.string,
-        range: PropTypes.string,
-        runs: PropTypes.arrayOf(PropTypes.object),
-        view: PropTypes.string,
+        status: PropTypes.shape({
+            cancelSource: PropTypes.object,
+            error: PropTypes.object,
+            fetched: PropTypes.bool,
+            fetching: PropTypes.bool,
+        }),
+        data: PropTypes.shape({
+            nextPage: PropTypes.bool,
+            order: PropTypes.string,
+            range: PropTypes.string,
+            runs: PropTypes.arrayOf(PropTypes.object),
+            view: PropTypes.string,
+        }),
+
     }).isRequired,
     user: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,

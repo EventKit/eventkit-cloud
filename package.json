@@ -12,6 +12,7 @@
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
     "moment": "~2.20.1",
+    "normalizr": "^3.2.4",
     "numeral": "~2.0.4",
     "ol": "~4.4.2",
     "prop-types": "~15.6.2",
@@ -32,7 +33,8 @@
     "redux": "~3.6.0",
     "redux-auth-wrapper": "~2.0.3",
     "redux-logger": "~2.7.4",
-    "redux-thunk": "~2.1.0"
+    "redux-thunk": "~2.1.0",
+    "reselect": "^4.0.0"
   },
   "devDependencies": {
     "@babel/cli": "~7.0.0",
@@ -96,10 +98,10 @@
   },
   "jest": {
     "globals": {
-        "ts-jest": {
-            "tsConfig": true,
-            "babelConfig": true
-        }
+      "ts-jest": {
+        "tsConfig": true,
+        "babelConfig": true
+      }
     },
     "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
@@ -142,10 +144,10 @@
       "/node_modules/(?!(jsts|ol)/).+\\.js$"
     ],
     "transform": {
-        "^.+\\.jsx$": "babel-jest",
-        "^.+\\.js$": "babel-jest",
-        "^.+\\.ts$": "ts-jest",
-        "^.+\\.tsx$": "ts-jest"
+      "^.+\\.jsx$": "babel-jest",
+      "^.+\\.js$": "babel-jest",
+      "^.+\\.ts$": "ts-jest",
+      "^.+\\.tsx$": "ts-jest"
     }
   },
   "scripts": {

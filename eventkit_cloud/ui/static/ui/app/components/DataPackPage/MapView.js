@@ -921,7 +921,6 @@ export class MapView extends Component {
                                         onClick={this.handleClick}
                                         backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
                                         providers={this.props.providers}
-                                        adminPermission={admin}
                                         users={this.props.users}
                                         groups={this.props.groups}
                                     />

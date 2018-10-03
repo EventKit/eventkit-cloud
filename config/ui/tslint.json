@@ -17,7 +17,8 @@
         "jsx-boolean-value": false,
         "jsx-no-multiline-js": false,
         "trailing-comma": false,
-        "no-namespace": false
+        "no-namespace": false,
+        "no-console": false,
     },
     "rulesDirectory": []
 }

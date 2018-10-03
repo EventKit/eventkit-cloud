@@ -13,6 +13,7 @@ import Star from '@material-ui/icons/Star';
 import NotificationSync from '@material-ui/icons/Sync';
 import List from '@material-ui/core/List';
 import moment from 'moment';
+import { userIsDataPackAdmin } from '../../utils/generic';
 import IconMenu from '../common/IconMenu';
 import DropDownListItem from '../common/DropDownListItem';
 import BaseDialog from '../Dialog/BaseDialog';
@@ -162,6 +163,8 @@ export class DataPackTableItem extends Component {
             },
         };
 
+        const adminPermissions = userIsDataPackAdmin(this.props.user.data.user, this.props.run.job.permissions, this.props.groups);
+
         return (
             <TableRow className="qa-DataPackTableItem-TableRow">
                 <TableCell
@@ -236,7 +239,7 @@ export class DataPackTableItem extends Component {
                         >
                             View Data Sources
                         </MenuItem>
-                        {this.props.adminPermissions ?
+                        {adminPermissions ?
                             <MenuItem
                                 key="delete"
                                 className="qa-DataPackTableItem-MenuItem-deleteExport"
@@ -247,7 +250,7 @@ export class DataPackTableItem extends Component {
                             </MenuItem>
                             : null
                         }
-                        {this.props.adminPermissions ?
+                        {adminPermissions ?
                             <MenuItem
                                 key="share"
                                 className="qa-DataPackTableItem-MenuItem-share"
@@ -310,7 +313,6 @@ DataPackTableItem.propTypes = {
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    adminPermissions: PropTypes.bool.isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     theme: PropTypes.object.isRequired,

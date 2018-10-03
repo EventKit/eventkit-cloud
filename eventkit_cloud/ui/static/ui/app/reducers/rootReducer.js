@@ -19,6 +19,7 @@ import {
     deleteRunReducer,
     updateExpirationReducer,
     getDatacartDetailsReducer,
+    runsReducer,
 } from './datapackReducer';
 import { importGeomReducer } from './fileReducer';
 import { licenseReducer } from './licenseReducer';
@@ -54,6 +55,7 @@ const rootReducer = combineReducers({
     users: usersReducer,
     userActivity: userActivityReducer,
     notifications: notificationsReducer,
+    exports: runsReducer,
 });
 
 export default rootReducer;

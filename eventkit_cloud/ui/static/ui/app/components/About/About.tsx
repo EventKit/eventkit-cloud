@@ -31,7 +31,7 @@ export class About extends React.Component<Props, State> {
 
     shouldComponentUpdate(nextProps, nextState) {
         return (
-            nextProps.context.config.VERSION != this.props.context.config.VERSION
+            nextProps.context.config.VERSION !== this.props.context.config.VERSION
             ||
             nextProps.context.config.CONTACT_URL !== this.props.context.config.CONTACT_URL
         );

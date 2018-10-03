@@ -110,39 +110,26 @@ export class Application extends Component {
         }
     }
 
-    shouldComponentUpdate(p, s) {
-        const pk = Object.keys(p);
-        pk.forEach((k) => {
-            if (p[k] !== this.props[k]) {
-                console.log(k);
-            }
-        });
-        const sk = Object.keys(s);
-        sk.forEach((k) => {
-            if (s[k] !== this.state[k]) {
-                console.log(k);
-            }
-        });
-
+    shouldComponentUpdate(p) {
         const status = p.notificationsStatus;
         const oldStatus = this.props.notificationsStatus;
 
+        // if the status object has changed we need to inspect
         if (status !== oldStatus) {
+            // if there is a error change we need to update
             if (status.error !== oldStatus.error) {
                 return true;
             }
-            // if (status.fetched && !oldStatus.fetched && !oldStatus.fetching)
+            // if a fetch has completed AND the data has changed we need to update
             if (status.fetched && p.notificationsData !== this.props.notificationsData) {
                 return true;
             }
-            // return false;
+            // any other status change can be ignored
+            return false;
         }
 
+        // if the status is not the update we can default to true
         return true;
-    }
-
-    componentDidUpdate() {
-        console.log('updated');
     }
 
     componentWillUnmount() {

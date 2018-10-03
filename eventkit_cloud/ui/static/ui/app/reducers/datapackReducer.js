@@ -1,26 +1,216 @@
+import { combineReducers } from 'redux';
+import isEqual from 'lodash/isEqual';
 import { types } from '../actions/datapackActions';
 import { types as uiTypes } from '../actions/uiActions';
 
-export const initialState = {
-    runsList: {
-        fetching: false,
-        fetched: false,
-        runs: [],
-        error: null,
+
+const datapacks = {
+    data: {
+        runs: {},
+        jobs: {},
+        provider_tasks: {},
+        tasks: {},
+        runIds: [],
+        featuredIds: [],
+    },
+    meta: {
         nextPage: false,
         range: '',
         order: '',
         view: '',
-        cancelSource: null,
     },
-    featuredRunsList: {
+    status: {
         fetching: false,
         fetched: false,
-        runs: [],
         error: null,
-        nextPage: false,
-        range: '',
         cancelSource: null,
+    },
+};
+
+const addRuns = (state, runs) => {
+    if (isEqual(state, runs)) {
+        return state;
+    }
+    console.log('not equal');
+    return runs;
+};
+
+const addJobs = (state, jobs) => {
+    if (isEqual(state, jobs)) {
+        return state;
+    }
+    console.log('not equal');
+    return jobs;
+};
+
+const addProviderTasks = (state, providerTasks) => {
+    if (isEqual(state, providerTasks)) {
+        return state;
+    }
+    console.log('not equal');
+    return providerTasks;
+};
+
+const addTasks = (state, tasks) => {
+    if (isEqual(state, tasks)) {
+        return state;
+    }
+    console.log('not equal');
+    return tasks;
+};
+
+const addRunIds = (state, ids) => {
+    if (isEqual(state, ids)) {
+        return state;
+    }
+    console.log('not equal');
+    return ids;
+};
+
+const addFeaturedIds = (state, jobs) => {
+    const ids = Object.keys(jobs);
+    const featuredIds = ids.filter(id => jobs[id].featured);
+    if (isEqual(state, featuredIds)) {
+        return state;
+    }
+    console.log('not equal');
+    return featuredIds;
+};
+
+const runsById = (state = datapacks.data.runs, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS: return addRuns(state, action.payload.runs);
+        default: return state;
+    }
+};
+
+const jobsById = (state = datapacks.data.jobs, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS: return addJobs(state, action.payload.jobs);
+        default: return state;
+    }
+};
+
+const providerTasksById = (state = datapacks.data.provider_tasks, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS: return addProviderTasks(state, action.payload.provider_tasks);
+        default: return state;
+    }
+};
+
+const tasksById = (state = datapacks.data.tasks, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS: return addTasks(state, action.payload.tasks);
+        default: return state;
+    }
+};
+
+const allRunIds = (state = datapacks.data.runIds, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS: return addRunIds(state, action.payload.runIds);
+        default: return state;
+    }
+};
+
+const allFeaturedIds = (state = datapacks.data.featuredIds, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS: return addFeaturedIds(state, action.payload.jobs);
+        default: return state;
+    }
+};
+
+export const statusReducer = (state = datapacks.status, action) => {
+    switch (action.type) {
+        case types.FETCHING_RUNS:
+            return {
+                fetching: true,
+                fetched: false,
+                error: null,
+                cancelSource: action.cancelSource,
+            };
+        case types.RECEIVED_RUNS:
+            return {
+                fetching: false,
+                fetched: true,
+                error: null,
+                cancelSource: null,
+            };
+        case types.FETCH_RUNS_ERROR:
+            return {
+                fetching: false,
+                fetched: false,
+                error: action.error,
+                cancelSource: null,
+            };
+        default: return state;
+    }
+};
+
+export const metaReducer = (state = datapacks.meta, action) => {
+    switch (action.type) {
+        case types.RECEIVED_RUNS:
+            return {
+                ...state,
+                nextPage: action.nextPage,
+                range: action.range,
+            };
+        case uiTypes.SET_PAGE_ORDER:
+            return {
+                ...state,
+                order: action.order,
+            };
+        case uiTypes.SET_PAGE_VIEW:
+            return {
+                ...state,
+                view: action.view,
+            };
+        default: return state;
+    }
+};
+
+export const dataReducer = combineReducers({
+    runs: runsById,
+    jobs: jobsById,
+    provider_tasks: providerTasksById,
+    tasks: tasksById,
+    runIds: allRunIds,
+    featuredIds: allFeaturedIds,
+});
+
+export const runsReducer = combineReducers({
+    data: dataReducer,
+    meta: metaReducer,
+    status: statusReducer,
+});
+
+export const initialState = {
+    runsList: {
+        data: {
+            runs: [],
+            nextPage: false,
+            range: '',
+            order: '',
+            view: '',
+        },
+        status: {
+            fetching: false,
+            fetched: false,
+            error: null,
+            cancelSource: null,
+        },
+    },
+    featuredRunsList: {
+        data: {
+            runs: [],
+            nextPage: false,
+            range: '',
+        },
+        status: {
+            fetching: false,
+            fetched: false,
+            error: null,
+            cancelSource: null,
+        },
     },
     runDeletion: {
         deleting: false,
@@ -79,27 +269,60 @@ export function dataPackReducer(state = initialState.runsList, action) {
     switch (action.type) {
         case types.FETCHING_RUNS:
             return {
-                ...state, fetching: true, fetched: false, error: null, cancelSource: action.cancelSource,
+                ...state,
+                status: {
+                    fetching: true,
+                    fetched: false,
+                    error: null,
+                    cancelSource: action.cancelSource,
+                },
             };
         case types.RECEIVED_RUNS:
             return {
                 ...state,
-                fetching: false,
-                fetched: true,
-                runs: action.runs,
-                error: null,
-                nextPage: action.nextPage,
-                range: action.range,
-                cancelSource: null,
+                status: {
+                    fetching: false,
+                    fetched: true,
+                    error: null,
+                    cancelSource: null,
+                },
+                data: {
+                    ...state.data,
+                    runs: action.runs,
+                    nextPage: action.nextPage,
+                    range: action.range,
+                },
             };
         case types.FETCH_RUNS_ERROR:
             return {
-                ...state, fetching: false, fetched: false, runs: [], error: action.error, cancelSource: null,
+                ...state,
+                status: {
+                    fetching: false,
+                    fetched: false,
+                    error: action.error,
+                    cancelSource: null,
+                },
+                data: {
+                    ...state.data,
+                    runs: [],
+                },
             };
         case uiTypes.SET_PAGE_ORDER:
-            return { ...state, order: action.order };
+            return {
+                ...state,
+                data: {
+                    ...state.data,
+                    order: action.order,
+                },
+            };
         case uiTypes.SET_PAGE_VIEW:
-            return { ...state, view: action.view };
+            return {
+                ...state,
+                data: {
+                    ...state.data,
+                    view: action.view,
+                },
+            };
         default:
             return state;
     }
@@ -109,22 +332,43 @@ export function featuredRunsReducer(state = initialState.featuredRunsList, actio
     switch (action.type) {
         case types.FETCHING_FEATURED_RUNS:
             return {
-                ...state, fetching: true, fetched: false, error: null, cancelSource: action.cancelSource,
+                ...state,
+                status: {
+                    fetching: true,
+                    fetched: false,
+                    error: null,
+                    cancelSource: action.cancelSource,
+                },
             };
         case types.RECEIVED_FEATURED_RUNS:
             return {
                 ...state,
-                fetching: false,
-                fetched: true,
-                runs: action.runs,
-                error: null,
-                nextPage: action.nextPage,
-                range: action.range,
-                cancelSource: null,
+                status: {
+                    fetching: false,
+                    fetched: true,
+                    error: null,
+                    cancelSource: null,
+                },
+                data: {
+                    ...state.data,
+                    runs: action.runs,
+                    nextPage: action.nextPage,
+                    range: action.range,
+                },
             };
         case types.FETCH_FEATURED_RUNS_ERROR:
             return {
-                ...state, fetching: false, fetched: false, runs: [], error: action.error, cancelSource: null,
+                ...state,
+                status: {
+                    fetching: false,
+                    fetched: false,
+                    error: action.error,
+                    cancelSource: null,
+                },
+                data: {
+                    ...state.data,
+                    runs: [],
+                },
             };
         default:
             return state;

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
+import Normalizer from '../utils/normalizers';
 
 export const types = {
     FETCHING_RUNS: 'FETCHING_RUNS',
@@ -62,16 +63,16 @@ export function clearDataCartDetails() {
 
 export function getRuns(args = {}) {
     return (dispatch, getState) => {
-        const { runsList } = getState();
+        const { exports } = getState();
         // if there is already a request in process we need to cancel it
         // before executing the current request
-        if (runsList.fetching && runsList.cancelSource) {
+        if (exports.status.fetching && exports.status.cancelSource) {
             // if this is not a direct request from the user, dont cancel ongoing requests
             if (args.isAuto) {
                 return null;
             }
             // if this is a direct user action, it is safe to cancel ongoing requests
-            runsList.cancelSource.cancel('Request is no longer valid, cancelling');
+            exports.status.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 
         const { CancelToken } = axios;
@@ -162,11 +163,18 @@ export function getRuns(args = {}) {
                 return newRun;
             });
 
+            const norm = new Normalizer();
+            const { entities, result } = norm.normalizeRuns(runs);
+
             dispatch({
                 type: types.RECEIVED_RUNS,
                 runs,
                 nextPage,
                 range,
+                payload: {
+                    ...entities,
+                    runIds: result,
+                },
             });
         }).catch((error) => {
             if (axios.isCancel(error)) {
@@ -181,14 +189,14 @@ export function getRuns(args = {}) {
 export function getFeaturedRuns(args) {
     return (dispatch, getState) => {
         const { featuredRunsList } = getState();
-        if (featuredRunsList.fetching && featuredRunsList.cancelSource) {
+        if (featuredRunsList.status.fetching && featuredRunsList.status.cancelSource) {
             // if this is not a direct request from the user, dont cancel ongoing requests
             if (args.isAuto) {
                 return null;
             }
             // if there is already a request in process we need to cancel it
             // before executing the current request
-            featuredRunsList.cancelSource.cancel('Request is no longer valid, cancelling');
+            featuredRunsList.status.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 
         const { CancelToken } = axios;
@@ -231,11 +239,18 @@ export function getFeaturedRuns(args) {
 
             const runs = [...response.data];
 
+            const norm = new Normalizer();
+            const { entities, result } = norm.normalizeRuns(runs);
+
             dispatch({
                 type: types.RECEIVED_FEATURED_RUNS,
                 runs,
                 nextPage,
                 range,
+                payload: {
+                    ...entities,
+                    runIds: result,
+                },
             });
         }).catch((error) => {
             if (axios.isCancel(error)) {

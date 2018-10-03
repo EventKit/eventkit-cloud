@@ -218,10 +218,11 @@ declare namespace Eventkit {
         }
 
         interface RunsList {
-            cancelSource: object;
-            error: any;
-            fetched: boolean;
-            fetching: boolean;
+            data: RunsListData;
+            status: RunsListStatus;
+        }
+
+        interface RunsListData {
             nextPage: boolean;
             order: string;
             range: string;
@@ -229,22 +230,45 @@ declare namespace Eventkit {
             view: string;
         }
 
-        interface Notifications {
+        interface RunsListStatus {
             cancelSource: object;
             error: any;
             fetched: boolean;
             fetching: boolean;
-            nextPage: boolean;
+        }
+
+        interface Notifications {
+            status: NotificationsStatus;
+            data: NotificationsData;
+            unreadCount: {
+                status: UnreadCountStatus;
+                data: UnreadCountData;
+            };
+        }
+
+        interface NotificationsStatus {
+            cancelSource: object;
+            error: any;
+            fetched: boolean;
+            fetching: boolean;
+        }
+
+        interface NotificationsData {
             notifications: Eventkit.Notification[];
             notificationsSorted: Eventkit.Notification[];
+            nextPage: boolean;
             range: string;
-            unreadCount: {
-                cancelSource: object;
-                error: any;
-                fetched: boolean;
-                fetching: boolean;
-                unreadCount: number;
-            };
+        }
+
+        interface UnreadCountStatus {
+            cancelSource: object;
+            error: any;
+            fetched: boolean;
+            fetching: boolean;
+        }
+
+        interface UnreadCountData {
+            unreadCount: number;
         }
 
         interface Users {

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Collapse from '@material-ui/core/Collapse';
@@ -36,6 +37,8 @@ import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
 import DropDownListItem from '../common/DropDownListItem';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
+import { userIsDataPackAdmin } from '../../utils/generic';
+import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackGridItem extends Component {
     constructor(props) {
@@ -65,7 +68,24 @@ export class DataPackGridItem extends Component {
         this.initMap();
     }
 
+    shouldComponentUpdate(p, s) {
+        const pk = Object.keys(p);
+        pk.forEach((k) => {
+            if (p[k] !== this.props[k]) {
+                console.log(k);
+            }
+        });
+        const sk = Object.keys(s);
+        sk.forEach((k) => {
+            if (s[k] !== this.state[k]) {
+                console.log(k);
+            }
+        });
+        return true;
+    }
+
     componentDidUpdate(prevProps, prevState) {
+        console.log('I UPDATED GRID BOII', this.props.runId);
         if (prevState.expanded !== this.state.expanded) {
             if (this.state.expanded) {
                 this.initMap();
@@ -321,6 +341,12 @@ export class DataPackGridItem extends Component {
             status = <AlertError style={styles.errorIcon} />;
         }
 
+        const adminPermission = userIsDataPackAdmin(
+            this.props.user.data.user,
+            this.props.run.job.permissions,
+            this.props.groups,
+        );
+
         return (
             <div style={styles.gridItem} key={this.props.run.uid}>
                 <Card
@@ -370,7 +396,7 @@ export class DataPackGridItem extends Component {
                                     >
                                         View Data Sources
                                     </MenuItem>
-                                    {this.props.adminPermission ?
+                                    {adminPermission ?
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackGridItem-MenuItem-delete"
@@ -381,7 +407,7 @@ export class DataPackGridItem extends Component {
                                         </MenuItem>
                                         : null
                                     }
-                                    {this.props.adminPermission ?
+                                    {adminPermission ?
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackGridItem-MenuItem-share"
@@ -496,6 +522,7 @@ DataPackGridItem.contextTypes = {
 
 DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
+    runId: PropTypes.string.isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,
@@ -503,7 +530,6 @@ DataPackGridItem.propTypes = {
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     showFeaturedFlag: PropTypes.bool,
-    adminPermission: PropTypes.bool.isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     style: PropTypes.object,
@@ -515,4 +541,14 @@ DataPackGridItem.defaultProps = {
     style: {},
 };
 
-export default withTheme()(DataPackGridItem);
+const makeMapStateToProps = () => {
+    const getFullRun = makeFullRunSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            run: getFullRun(state, props),
+        }
+    );
+    return mapStateToProps;
+};
+
+export default withTheme()(connect(makeMapStateToProps, undefined)(DataPackGridItem));
