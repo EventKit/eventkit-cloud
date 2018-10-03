@@ -10,6 +10,7 @@ export class LeaveGroupDialog extends Component {
 
         const leaveActions = [
             <Button
+                key="leave"
                 variant="contained"
                 className="qa-LeaveGroupDialog-leave"
                 style={{ backgroundColor: colors.warning, color: colors.secondary }}
@@ -18,6 +19,7 @@ export class LeaveGroupDialog extends Component {
                 LEAVE GROUP
             </Button>,
             <Button
+                key="cancel"
                 className="qa-LeaveGroupDialog-cancel"
                 variant="flat"
                 color="primary"

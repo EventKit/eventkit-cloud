@@ -64,18 +64,18 @@ export class IconMenu extends Component {
                 }}
                 style={this.props.menuStyle}
             >
-                {this.props.children.map((child, ix) => {
+                {this.props.children.map((child) => {
                     // we need to add in our handle close function for every child onClick
 
                     if (!React.isValidElement(child)) { return null; }
 
                     return React.cloneElement(child, {
+                        ...child.props,
                         onClick: (e, ...args) => {
                             e.stopPropagation();
                             this.handleClose();
                             child.props.onClick(e, ...args);
                         },
-                        key: child.props.key || `${child.type}-${ix}`,
                     });
                 })}
             </Menu>,
