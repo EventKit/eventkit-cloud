@@ -765,7 +765,9 @@ class JobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_permissions(obj):
-        return JobPermission.jobpermissions(obj)
+        permissions = Job.Permisssion.jobpermissions(obj)
+        permissions['value'] = obj.visibility
+        return permissions
 
 
 class UserJobActivitySerializer(serializers.ModelSerializer):

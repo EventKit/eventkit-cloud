@@ -32,16 +32,18 @@ export const CUSTOM_BREAKPOINTS = {
 
 interface Props {
     router: object;
-    user: Eventkit.Store.User;
+    // user: Eventkit.Store.User;
     // userActivity: Eventkit.Store.UserActivity;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
     providers: Eventkit.Provider[];
     runDeletion: Eventkit.Store.RunDeletion;
-    // featuredRunsListData: Eventkit.Store.RunsListData;
-    // featuredRunsListStatus: Eventkit.Store.RunsListStatus;
+    featuredRunIds: any;
+    featuredRunsFetched: boolean;
+
     runIds: any;
     runsFetched: boolean;
+
     getRuns: (options?: object) => void;
     getFeaturedRuns: (options?: object) => void;
     getViewedJobs: (options?: object) => void;
@@ -55,6 +57,8 @@ interface Props {
     getGroups: () => void;
     getUsers: () => void;
     theme: Eventkit.Theme;
+
+    userData: any;
 }
 
 interface State {
@@ -72,6 +76,7 @@ export class DashboardPage extends React.Component<Props, State> {
 
     constructor(props) {
         super(props);
+        this.getWidth = this.getWidth.bind(this);
         this.setScreenSize = this.setScreenSize.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getGridColumns = this.getGridColumns.bind(this);
@@ -93,13 +98,12 @@ export class DashboardPage extends React.Component<Props, State> {
             loadingPage: true,
             steps: [],
             isRunning: false,
-            width: 'xl',
+            width: this.getWidth(),
         };
         this.onResize = debounce(this.setScreenSize, 166);
     }
 
     componentDidMount() {
-        this.setScreenSize();
         this.props.getUsers();
         this.props.getGroups();
         this.props.getProviders();
@@ -121,7 +125,7 @@ export class DashboardPage extends React.Component<Props, State> {
                 loadingPage: (
                     !nextProps.notificationsStatus.fetched ||
                     !nextProps.runsFetched ||
-                    // !nextProps.featuredRunsListStatus.fetched ||
+                    !nextProps.featuredRunsFetched ||
                     // !nextProps.userActivity.viewedJobs.fetched ||
                     !nextProps.users.fetched ||
                     !nextProps.groups.fetched
@@ -168,11 +172,11 @@ export class DashboardPage extends React.Component<Props, State> {
                 return true;
             }
             // any other status change can be ignored
-            console.log('we can ignore the status update');
+            // console.log('we can ignore the status update');
             return false;
         }
 
-        if (p.runsFetched !== this.props.runsFetched) {
+        if (p.runsFetched !== this.props.runsFetched || p.featuredRunsFetched !== this.props.featuredRunsFetched) {
             return this.state.loadingPage;
         }
 
@@ -190,7 +194,7 @@ export class DashboardPage extends React.Component<Props, State> {
         window.removeEventListener('resize', this.onResize);
     }
 
-    private setScreenSize() {
+    private getWidth() {
         const width = window.innerWidth;
         let value = 'xs';
         if (width >= CUSTOM_BREAKPOINTS.xl) {
@@ -203,8 +207,14 @@ export class DashboardPage extends React.Component<Props, State> {
             value = 'sm';
         }
 
-        if (value !== this.state.width) {
-            this.setState({ width: value });
+        return value;
+    }
+
+    private setScreenSize() {
+        const width = this.getWidth();
+
+        if (width !== this.state.width) {
+            this.setState({ width });
         }
     }
 
@@ -253,7 +263,7 @@ export class DashboardPage extends React.Component<Props, State> {
         this.props.getRuns({
             pageSize: this.getGridColumns({ getMax: true }) * 3,
             ordering: '-started_at',
-            ownerFilter: this.props.user.data.user.username,
+            ownerFilter: this.props.userData.user.username,
             isAuto,
         });
     }
@@ -291,7 +301,7 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     private handleMyDataPacksViewAll() {
-        browserHistory.push(`/exports?collection=${this.props.user.data.user.username}`);
+        browserHistory.push(`/exports?collection=${this.props.userData.user.username}`);
     }
 
     private isLoading() {
@@ -332,20 +342,20 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     private handleWalkthroughClick() {
-        // if (this.state.isRunning) {
-        //     this.setState({ isRunning: false });
-        //     this.joyride.reset(true);
-        // } else {
-        //     const [...steps] = joyride.DashboardPage;
-        //     this.setState({ isRunning: true, steps: [] });
-        //     if (this.props.featuredRunsListData.runs.length === 0) {
-        //         const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
-        //         if (ix > -1) {
-        //             steps.splice(ix, 1);
-        //         }
-        //     }
-        //     this.joyrideAddSteps(steps);
-        // }
+        if (this.state.isRunning) {
+            this.setState({ isRunning: false });
+            this.joyride.reset(true);
+        } else {
+            const [...steps] = joyride.DashboardPage;
+            this.setState({ isRunning: true, steps: [] });
+            if (this.props.featuredRunIds.length === 0) {
+                const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
+                if (ix > -1) {
+                    steps.splice(ix, 1);
+                }
+            }
+            this.joyrideAddSteps(steps);
+        }
     }
 
     render() {
@@ -544,8 +554,8 @@ export class DashboardPage extends React.Component<Props, State> {
                                     return (
                                         <DataPackGridItem
                                             className="qa-DashboardSection-RecentlyViewedGrid-Item"
-                                            run={run}
-                                            user={this.props.user}
+                                            runId={run.uid}
+                                            userData={this.props.userData}
                                             key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
                                             onRunDelete={this.props.deleteRun}
                                             onRunShare={this.props.updateDataCartPermissions}
@@ -561,7 +571,7 @@ export class DashboardPage extends React.Component<Props, State> {
                             </DashboardSection>
 
                             {/* Featured */}
-                            {/* {this.props.featuredRunsListData.runs.length === 0 ?
+                            {this.props.featuredRunIds.length === 0 ?
                                 null
                                 :
                                 <DashboardSection
@@ -574,18 +584,18 @@ export class DashboardPage extends React.Component<Props, State> {
                                     providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
-                                    {this.props.featuredRunsListData.runs.map((run, index) => (
+                                    {this.props.featuredRunIds.map((id, index) => (
                                         <DataPackFeaturedItem
                                             className="qa-DashboardSection-FeaturedGrid-WideItem"
-                                            run={run}
-                                            key={`FeaturedDataPack-${run.created_at}`}
+                                            runId={id}
+                                            key={`FeaturedDataPack-${id}`}
                                             gridName="Featured"
                                             index={index}
                                             height={this.state.width !== 'xs' ? '335px' : '435px'}
                                         />
                                     ))}
                                 </DashboardSection>
-                            } */}
+                            }
 
                             {/* My DataPacks */}
                             <DashboardSection
@@ -616,7 +626,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                     <DataPackGridItem
                                         className="qa-DashboardSection-MyDataPacksGrid-Item"
                                         runId={id}
-                                        user={this.props.user}
+                                        userData={this.props.userData}
                                         key={`MyDataPacksDataPack-${id}`}
                                         onRunDelete={this.props.deleteRun}
                                         onRunShare={this.props.updateDataCartPermissions}
@@ -639,14 +649,18 @@ export class DashboardPage extends React.Component<Props, State> {
 
 function mapStateToProps(state) {
     return {
-        user: state.user,
+        userData: state.userrr.data,
         // userActivity: state.userActivity,
         notificationsData: state.notifications.data,
         notificationsStatus: state.notifications.status,
         providers: state.providers,
         runDeletion: state.runDeletion,
+
         // featuredRunsListData: state.featuredRunsList.data,
         // featuredRunsListStatus: state.featuredRunsList.status,
+
+        featuredRunIds: state.featuredExports.data.runIds,
+        featuredRunsFetched: state.featuredExports.status.fetched,
         runIds: state.exports.data.runIds,
         runsFetched: state.exports.status.fetched,
         updatePermission: state.updatePermission,

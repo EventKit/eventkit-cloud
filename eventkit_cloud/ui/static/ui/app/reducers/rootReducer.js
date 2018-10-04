@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
-import { userReducer } from './userReducer';
+import { userReducer, userrrReducer } from './userReducer';
 import { usersReducer } from './usersReducer';
 import {
     exportAoiInfoReducer,
@@ -20,6 +20,7 @@ import {
     updateExpirationReducer,
     getDatacartDetailsReducer,
     runsReducer,
+    featuredReducer,
 } from './datapackReducer';
 import { importGeomReducer } from './fileReducer';
 import { licenseReducer } from './licenseReducer';
@@ -56,6 +57,8 @@ const rootReducer = combineReducers({
     userActivity: userActivityReducer,
     notifications: notificationsReducer,
     exports: runsReducer,
+    featuredExports: featuredReducer,
+    userrr: userrrReducer,
 });
 
 export default rootReducer;

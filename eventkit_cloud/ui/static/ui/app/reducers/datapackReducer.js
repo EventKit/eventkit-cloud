@@ -3,15 +3,25 @@ import isEqual from 'lodash/isEqual';
 import { types } from '../actions/datapackActions';
 import { types as uiTypes } from '../actions/uiActions';
 
+const status = {
+    fetching: false,
+    fetched: false,
+    error: null,
+    cancelSource: null,
+};
 
-const datapacks = {
+const exports = {
     data: {
         runs: {},
         jobs: {},
         provider_tasks: {},
         tasks: {},
-        runIds: [],
         featuredIds: [],
+        ownIds: [],
+        allIds: [],
+        viewedIds: [],
+
+        runIds: [], // support old
     },
     meta: {
         nextPage: false,
@@ -19,52 +29,94 @@ const datapacks = {
         order: '',
         view: '',
     },
-    status: {
-        fetching: false,
-        fetched: false,
-        error: null,
-        cancelSource: null,
+    allStatus: {
+        ...status,
     },
+    featuredStatus: {
+        ...status,
+    },
+    ownStatus: {
+        ...status,
+    },
+    viewedStatus: {
+        ...status,
+    },
+
+    status: { ...status }, // support old
 };
 
-const addRuns = (state, runs) => {
-    if (isEqual(state, runs)) {
+const addRun = (state, run) => {
+    if (isEqual(state[run.uid], run)) {
         return state;
     }
-    console.log('not equal');
-    return runs;
+
+    return { ...state, [run.uid]: run };
 };
 
-const addJobs = (state, jobs) => {
-    if (isEqual(state, jobs)) {
+const addJob = (state, job) => {
+    if (isEqual(state[job.uid], job)) {
         return state;
     }
-    console.log('not equal');
-    return jobs;
+
+    return { ...state, [job.uid]: job };
 };
 
-const addProviderTasks = (state, providerTasks) => {
-    if (isEqual(state, providerTasks)) {
+const addProviderTask = (state, providerTask) => {
+    if (isEqual(state[providerTask.uid], providerTask)) {
         return state;
     }
-    console.log('not equal');
-    return providerTasks;
+
+    return { ...state, [providerTask.uid]: providerTask };
 };
 
-const addTasks = (state, tasks) => {
-    if (isEqual(state, tasks)) {
+const addTask = (state, task) => {
+    if (isEqual(state[task.uid], task)) {
         return state;
     }
-    console.log('not equal');
-    return tasks;
+
+    return { ...state, [task.uid]: task };
 };
+
+// const addRuns = (state, runs) => {
+//     if (isEqual(state, runs)) {
+//         return state;
+//     }
+//     return runs;
+// };
+
+// const addJobs = (state, jobs) => {
+//     if (isEqual(state, jobs)) {
+//         return state;
+//     }
+//     return jobs;
+// };
+
+// const addProviderTasks = (state, providerTasks) => {
+//     if (isEqual(state, providerTasks)) {
+//         return state;
+//     }
+//     return providerTasks;
+// };
+
+// const addTasks = (state, tasks) => {
+//     if (isEqual(state, tasks)) {
+//         return state;
+//     }
+//     return tasks;
+// };
 
 const addRunIds = (state, ids) => {
     if (isEqual(state, ids)) {
         return state;
     }
-    console.log('not equal');
     return ids;
+};
+
+const addRunId = (state, id) => {
+    if (state.indexOf(id) > -1) {
+        return state;
+    }
+    return [...state, id];
 };
 
 const addFeaturedIds = (state, jobs) => {
@@ -77,49 +129,80 @@ const addFeaturedIds = (state, jobs) => {
     return featuredIds;
 };
 
-const runsById = (state = datapacks.data.runs, action) => {
+const runsById = (state = exports.data.runs, action) => {
     switch (action.type) {
-        case types.RECEIVED_RUNS: return addRuns(state, action.payload.runs);
+        // case types.RECEIVED_RUNS: return addRuns(state, action.payload.runs);
+        case 'ADD_RUN': {
+            return addRun(
+                state,
+                Object.values(action.payload.runs)[0],
+            );
+        }
         default: return state;
     }
 };
 
-const jobsById = (state = datapacks.data.jobs, action) => {
+const jobsById = (state = exports.data.jobs, action) => {
     switch (action.type) {
-        case types.RECEIVED_RUNS: return addJobs(state, action.payload.jobs);
+        // case types.RECEIVED_RUNS: return addJobs(state, action.payload.jobs);
+        case 'ADD_RUN': {
+            return addJob(
+                state,
+                Object.values(action.payload.jobs)[0],
+            );
+        }
         default: return state;
     }
 };
 
-const providerTasksById = (state = datapacks.data.provider_tasks, action) => {
+const providerTasksById = (state = exports.data.provider_tasks, action) => {
     switch (action.type) {
-        case types.RECEIVED_RUNS: return addProviderTasks(state, action.payload.provider_tasks);
+        // case types.RECEIVED_RUNS: return addProviderTasks(state, action.payload.provider_tasks);
+        case 'ADD_RUN': {
+            return addProviderTask(
+                state,
+                Object.values(action.payload.provider_tasks)[0],
+            );
+        }
         default: return state;
     }
 };
 
-const tasksById = (state = datapacks.data.tasks, action) => {
+const tasksById = (state = exports.data.tasks, action) => {
     switch (action.type) {
-        case types.RECEIVED_RUNS: return addTasks(state, action.payload.tasks);
+        // case types.RECEIVED_RUNS: return addTasks(state, action.payload.tasks);
+        case 'ADD_RUN': {
+            return addTask(
+                state,
+                Object.values(action.payload.tasks)[0],
+            );
+        }
         default: return state;
     }
 };
 
-const allRunIds = (state = datapacks.data.runIds, action) => {
+const allRunIds = (state = exports.data.runIds, action) => {
     switch (action.type) {
         case types.RECEIVED_RUNS: return addRunIds(state, action.payload.runIds);
         default: return state;
     }
 };
 
-const allFeaturedIds = (state = datapacks.data.featuredIds, action) => {
+const allRunIdsss = (state = exports.data.allIds, action) => {
+    switch (action.type) {
+        case 'ADD_RUN': return addRunId(state, action.payload.id);
+        default: return state;
+    }
+};
+
+const allFeaturedIds = (state = exports.data.featuredIds, action) => {
     switch (action.type) {
         case types.RECEIVED_RUNS: return addFeaturedIds(state, action.payload.jobs);
         default: return state;
     }
 };
 
-export const statusReducer = (state = datapacks.status, action) => {
+export const statusReducer = (state = exports.status, action) => {
     switch (action.type) {
         case types.FETCHING_RUNS:
             return {
@@ -146,7 +229,7 @@ export const statusReducer = (state = datapacks.status, action) => {
     }
 };
 
-export const metaReducer = (state = datapacks.meta, action) => {
+export const metaReducer = (state = exports.meta, action) => {
     switch (action.type) {
         case types.RECEIVED_RUNS:
             return {
@@ -174,6 +257,7 @@ export const dataReducer = combineReducers({
     provider_tasks: providerTasksById,
     tasks: tasksById,
     runIds: allRunIds,
+    allIds: allRunIdsss,
     featuredIds: allFeaturedIds,
 });
 
@@ -400,3 +484,134 @@ export function updateExpirationReducer(state = initialState.updateExpiration, a
             return state;
     }
 }
+
+const featuredDatapacks = {
+    data: {
+        runs: {},
+        jobs: {},
+        provider_tasks: {},
+        tasks: {},
+        featuredIds: [],
+        ownIds: [],
+        allIds: [],
+        viewedIds: [],
+
+        runIds: [], // support old
+    },
+    meta: {
+        nextPage: false,
+        range: '',
+        order: '',
+        view: '',
+    },
+    allStatus: {
+        ...status,
+    },
+    featuredStatus: {
+        ...status,
+    },
+    ownStatus: {
+        ...status,
+    },
+    viewedStatus: {
+        ...status,
+    },
+
+    status: { ...status }, // support old
+};
+
+const featuredRunsById = (state = featuredDatapacks.data.runs, action) => {
+    switch (action.type) {
+        case 'ADD_FEATURED_RUN': return addRun(state, Object.values(action.payload.runs)[0]);
+        default: return state;
+    }
+};
+
+const featuredJobsById = (state = featuredDatapacks.data.jobs, action) => {
+    switch (action.type) {
+        case 'ADD_FEATURED_RUN': return addJob(state, Object.values(action.payload.jobs)[0]);
+        default: return state;
+    }
+};
+
+const featuredProviderTasksById = (state = featuredDatapacks.data.provider_tasks, action) => {
+    switch (action.type) {
+        case 'ADD_FEATURED_RUN': return addProviderTask(state, Object.values(action.payload.provider_tasks)[0]);
+        default: return state;
+    }
+};
+
+const featuredTasksById = (state = featuredDatapacks.data.tasks, action) => {
+    switch (action.type) {
+        case 'ADD_FEATURED_RUN': return addTask(state, Object.values(action.payload.tasks)[0]);
+        default: return state;
+    }
+};
+
+const allFeaturedRunIds = (state = featuredDatapacks.data.runIds, action) => {
+    switch (action.type) {
+        case types.RECEIVED_FEATURED_RUNS: return addRunIds(state, action.payload.runIds);
+        default: return state;
+    }
+};
+
+const allFeaturedRunIdsss = (state = exports.data.allIds, action) => {
+    switch (action.type) {
+        case 'ADD_FEATURED_RUN': return addRunId(state, action.payload.id);
+        default: return state;
+    }
+};
+
+export const featuredStatusReducer = (state = featuredDatapacks.status, action) => {
+    switch (action.type) {
+        case types.FETCHING_FEATURED_RUNS:
+            return {
+                fetching: true,
+                fetched: false,
+                error: null,
+                cancelSource: action.cancelSource,
+            };
+        case types.RECEIVED_FEATURED_RUNS:
+            return {
+                fetching: false,
+                fetched: true,
+                error: null,
+                cancelSource: null,
+            };
+        case types.FETCH_FEATURED_RUNS_ERROR:
+            return {
+                fetching: false,
+                fetched: false,
+                error: action.error,
+                cancelSource: null,
+            };
+        default: return state;
+    }
+};
+
+export const featuredMetaReducer = (state = featuredDatapacks.meta, action) => {
+    switch (action.type) {
+        case types.RECEIVED_FEATURED_RUNS:
+            return {
+                ...state,
+                nextPage: action.nextPage,
+                range: action.range,
+            };
+        default: return state;
+    }
+};
+
+export const featuredDataReducer = combineReducers({
+    runs: featuredRunsById,
+    jobs: featuredJobsById,
+    provider_tasks: featuredProviderTasksById,
+    tasks: featuredTasksById,
+    runIds: allFeaturedRunIds,
+    allIds: allFeaturedRunIdsss,
+});
+
+export const featuredReducer = combineReducers({
+    data: featuredDataReducer,
+    meta: featuredMetaReducer,
+    status: featuredStatusReducer,
+});

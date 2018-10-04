@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Link } from 'react-router';
@@ -20,6 +21,7 @@ import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 import ScaleLine from 'ol/control/scaleline';
 import ol3mapCss from '../../styles/ol3map.css';
+import { makeFullFeaturedRunSelector } from '../../selectors/featuredRunSelector';
 
 export class DataPackFeaturedItem extends Component {
     constructor(props) {
@@ -31,6 +33,22 @@ export class DataPackFeaturedItem extends Component {
 
     componentDidMount() {
         this.initMap();
+    }
+
+    shouldComponentUpdate(p) {
+        const pk = Object.keys(p);
+        pk.forEach((k) => {
+            if (p[k] !== this.props[k]) {
+                console.log(k);
+            }
+        });
+        return true;
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
+            this.map.updateSize();
+        }
     }
 
     getMapId() {
@@ -48,7 +66,7 @@ export class DataPackFeaturedItem extends Component {
     }
 
     initMap() {
-        const map = new Map({
+        this.map = new Map({
             target: this.getMapId(),
             layers: [
                 new Tile({
@@ -93,8 +111,8 @@ export class DataPackFeaturedItem extends Component {
         const layer = new VectorLayer({
             source,
         });
-        map.addLayer(layer);
-        map.getView().fit(source.getExtent(), map.getSize());
+        this.map.addLayer(layer);
+        this.map.getView().fit(source.getExtent(), this.map.getSize());
     }
 
     mapContainerRef(element) {
@@ -266,6 +284,7 @@ DataPackFeaturedItem.contextTypes = {
 
 DataPackFeaturedItem.propTypes = {
     run: PropTypes.object.isRequired,
+    runId: PropTypes.string.isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,
     height: PropTypes.string,
@@ -277,7 +296,18 @@ DataPackFeaturedItem.defaultProps = {
     height: undefined,
 };
 
+const makeMapStateToProps = () => {
+    const getFullRun = makeFullFeaturedRunSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            run: getFullRun(state, props),
+        }
+    );
+    return mapStateToProps;
+};
+
 export default
 @withWidth()
 @withTheme()
-class Default extends DataPackFeaturedItem {}
+@connect(makeMapStateToProps, undefined)
+class DefaultDataPackFeaturedItem extends DataPackFeaturedItem {}

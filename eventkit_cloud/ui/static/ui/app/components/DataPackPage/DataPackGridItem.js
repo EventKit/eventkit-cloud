@@ -342,7 +342,7 @@ export class DataPackGridItem extends Component {
         }
 
         const adminPermission = userIsDataPackAdmin(
-            this.props.user.data.user,
+            this.props.userData.user,
             this.props.run.job.permissions,
             this.props.groups,
         );
@@ -483,7 +483,7 @@ export class DataPackGridItem extends Component {
                     <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px', padding: '8px' }}>
                         <div style={{ width: '100%' }}>
                             {status}
-                            {this.props.run.user === this.props.user.data.user.username ?
+                            {this.props.run.user === this.props.userData.user.username ?
                                 <p style={styles.ownerLabel}>My DataPack</p>
                                 :
                                 <p style={styles.ownerLabel}>{this.props.run.user}</p>
@@ -499,7 +499,7 @@ export class DataPackGridItem extends Component {
                         show={this.state.shareDialogOpen}
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
-                        user={this.props.user.data}
+                        user={this.props.userData}
                         groups={this.props.groups}
                         members={this.props.users}
                         permissions={this.props.run.job.permissions}
@@ -523,7 +523,7 @@ DataPackGridItem.contextTypes = {
 DataPackGridItem.propTypes = {
     run: PropTypes.object.isRequired,
     runId: PropTypes.string.isRequired,
-    user: PropTypes.object.isRequired,
+    userData: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,

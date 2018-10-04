@@ -48,7 +48,6 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isViewOutsideValidExtent, goToValidExtent, unwrapCoordinates, unwrapExtent,
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import globe from '../../../images/globe-americas.svg';
 
 export const RED_STYLE = new Style({
@@ -909,23 +908,20 @@ export class MapView extends Component {
                             spacing={0}
                             style={{ width: '100%' }}
                         >
-                            {this.props.runs.map((run) => {
-                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
-                                return (
-                                    <DataPackListItem
-                                        run={run}
-                                        user={this.props.user}
-                                        key={run.uid}
-                                        onRunDelete={this.props.onRunDelete}
-                                        onRunShare={this.props.onRunShare}
-                                        onClick={this.handleClick}
-                                        backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
-                                        providers={this.props.providers}
-                                        users={this.props.users}
-                                        groups={this.props.groups}
-                                    />
-                                );
-                            })}
+                            {this.props.runs.map(run => (
+                                <DataPackListItem
+                                    run={run}
+                                    user={this.props.user}
+                                    key={run.uid}
+                                    onRunDelete={this.props.onRunDelete}
+                                    onRunShare={this.props.onRunShare}
+                                    onClick={this.handleClick}
+                                    backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
+                                    providers={this.props.providers}
+                                    users={this.props.users}
+                                    groups={this.props.groups}
+                                />
+                            ))}
                         </GridList>
                     </div>
                     {load}

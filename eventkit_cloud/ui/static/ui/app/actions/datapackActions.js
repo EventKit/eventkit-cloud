@@ -164,18 +164,33 @@ export function getRuns(args = {}) {
             });
 
             const norm = new Normalizer();
-            const { entities, result } = norm.normalizeRuns(runs);
-
-            dispatch({
-                type: types.RECEIVED_RUNS,
-                runs,
-                nextPage,
-                range,
-                payload: {
-                    ...entities,
-                    runIds: result,
-                },
+            const actions = runs.map((run) => {
+                console.log(norm.normalizeRun(run));
+                const { result, entities } = norm.normalizeRun(run);
+                return {
+                    type: 'ADD_RUN',
+                    payload: {
+                        id: result,
+                        ...entities,
+                    },
+                };
             });
+            const { entities, result } = norm.normalizeRuns(runs);
+            dispatch([
+                ...actions,
+                {
+                    type: types.RECEIVED_RUNS,
+                    runs,
+                    nextPage,
+                    range,
+                    payload: {
+                        ...entities,
+                        runIds: result,
+                    },
+                },
+            ]);
+
+            // dispatch();
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -239,19 +254,46 @@ export function getFeaturedRuns(args) {
 
             const runs = [...response.data];
 
-            const norm = new Normalizer();
-            const { entities, result } = norm.normalizeRuns(runs);
+            // const norm = new Normalizer();
+            // const { entities, result } = norm.normalizeRuns(runs);
 
-            dispatch({
-                type: types.RECEIVED_FEATURED_RUNS,
-                runs,
-                nextPage,
-                range,
-                payload: {
-                    ...entities,
-                    runIds: result,
-                },
+            // dispatch({
+            //     type: types.RECEIVED_FEATURED_RUNS,
+            //     runs,
+            //     nextPage,
+            //     range,
+            //     payload: {
+            //         ...entities,
+            //         runIds: result,
+            //     },
+            // });
+
+            const norm = new Normalizer();
+            const actions = runs.map((run) => {
+                console.log(norm.normalizeRun(run));
+                const { result, entities } = norm.normalizeRun(run);
+                return {
+                    type: 'ADD_FEATURED_RUN',
+                    payload: {
+                        id: result,
+                        ...entities,
+                    },
+                };
             });
+            const { entities, result } = norm.normalizeRuns(runs);
+            dispatch([
+                ...actions,
+                {
+                    type: types.RECEIVED_FEATURED_RUNS,
+                    runs,
+                    nextPage,
+                    range,
+                    payload: {
+                        ...entities,
+                        runIds: result,
+                    },
+                },
+            ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
