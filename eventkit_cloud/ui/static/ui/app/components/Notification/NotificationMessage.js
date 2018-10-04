@@ -156,7 +156,7 @@ export class NotificationMessage extends Component {
 
 NotificationMessage.propTypes = {
     notification: PropTypes.shape({
-        id: PropTypes.string,
+        id: PropTypes.number,
         verb: PropTypes.string,
         actor: PropTypes.shape({
             details: PropTypes.object,

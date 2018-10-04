@@ -73,6 +73,7 @@ export class NotificationMenu extends React.Component {
             >
                 {viewPath ?
                     <MenuItem
+                        key="view"
                         className="qa-NotificationMenu-MenuItem-View"
                         style={styles.menuItem}
                         onClick={this.handleView}
@@ -84,6 +85,7 @@ export class NotificationMenu extends React.Component {
                 }
                 {this.props.notification.unread ?
                     <MenuItem
+                        key="markRead"
                         className="qa-NotificationMenu-MenuItem-MarkAsRead"
                         style={styles.menuItem}
                         onClick={this.handleMarkAsRead}
@@ -92,6 +94,7 @@ export class NotificationMenu extends React.Component {
                     </MenuItem>
                     :
                     <MenuItem
+                        key="markUnread"
                         className="qa-NotificationMenu-MenuItem-MarkAsUnread"
                         style={styles.menuItem}
                         onClick={this.handleMarkAsUnread}
@@ -100,6 +103,7 @@ export class NotificationMenu extends React.Component {
                     </MenuItem>
                 }
                 <MenuItem
+                    key="remove"
                     className="qa-NotificationMenu-MenuItem-Remove"
                     style={styles.menuItem}
                     onClick={this.handleRemove}

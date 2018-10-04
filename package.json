@@ -50,6 +50,7 @@
     "@types/enzyme": "~3.1.14",
     "@types/geojson": "~7946.0.4",
     "@types/jest": "~23.3.2",
+    "@types/material-ui": "~0.21.5",
     "@types/react": "~16.4.14",
     "@types/react-dom": "~16.0.7",
     "@types/react-joyride": "~2.0.0",
@@ -107,7 +108,8 @@
     "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
     "collectCoverageFrom": [
-      "**/app/**.{js,jsx}",
+      "**/app/**.{js,jsx,ts,tsx}",
+      "!**/*.d.ts",
       "!**/icons/**",
       "!**/config.js",
       "!**/*.config.{js, jsx}",
@@ -159,7 +161,7 @@
     "e2e": "node_modules/nightwatch/bin/nightwatch",
     "install-linter": "npm install eslint@4.9.0 eslint-plugin-import@2.7.0 eslint-plugin-react@7.4.0 eslint-plugin-jsx-a11y@6.0.2 eslint-config-airbnb@16.1.0",
     "eslint": "node_modules/eslint/bin/eslint.js '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.js'",
-    "tslint": "node_modules/tslint/bin/tslint '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.ts?(x)'"
+    "tslint": "node_modules/tslint/bin/tslint '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.{ts,tsx}'"
   },
   "repository": {
     "type": "git",

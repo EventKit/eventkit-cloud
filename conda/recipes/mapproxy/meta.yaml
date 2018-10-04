@@ -1,0 +1,72 @@
+{% set name = "mapproxy" %}
+{% set version = "1.11.0" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: https://github.com/{{ name }}/{{ name }}/archive/{{ version }}.tar.gz
+  sha256: f051ee400b50f9a4f20467e04c736c442e0bed71cf25f7c5e878a2603114cc5f
+
+build:
+  number: 0
+  entry_points:
+    - mapproxy-seed = mapproxy.seed.script:main
+    - mapproxy-util = mapproxy.script.util:main
+  script: "python setup.py install --single-version-externally-managed --record=record.txt"
+
+requirements:
+  host:
+    - pillow !=2.4.0
+    - pip
+    - python
+    - pyyaml >=3.0,<3.99
+    - setuptools
+    - proj4
+  run:
+    - pillow !=2.4.0
+    - python
+    - pyyaml >=3.0,<3.99
+    - setuptools
+    - proj4
+
+test:
+  imports:
+    - mapproxy
+    - mapproxy.cache
+    - mapproxy.client
+    - mapproxy.compat
+    - mapproxy.config
+    - mapproxy.config_template
+    - mapproxy.image
+    - mapproxy.image.fonts
+    - mapproxy.request
+    - mapproxy.request.wms
+    - mapproxy.script
+    - mapproxy.script.conf
+    - mapproxy.seed
+    - mapproxy.service
+    - mapproxy.source
+    - mapproxy.util
+    - mapproxy.util.ext
+    - mapproxy.util.ext.dictspec
+    - mapproxy.util.ext.dictspec.test
+    - mapproxy.util.ext.tempita
+    - mapproxy.util.ext.wmsparse
+    - mapproxy.util.ext.wmsparse.test
+  commands:
+    - mapproxy-seed --help
+
+about:
+  home: https://mapproxy.org
+  license: Apache Software
+  license_family: APACHE
+  license_file: 
+  summary: An accelerating proxy for tile and web map services
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here

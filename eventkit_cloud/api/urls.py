@@ -36,6 +36,5 @@ schema_view = SwaggerSchemaView.as_view()
 urlpatterns = [
     re_path(r'^api/docs$', schema_view),
     re_path(r'^api/', include(router.urls)),
-    re_path(r'^api/', include('rest_framework.urls')),
     re_path(r'^api/', include(notifications.urls))
 ]

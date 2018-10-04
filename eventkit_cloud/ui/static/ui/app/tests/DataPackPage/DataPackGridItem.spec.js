@@ -160,6 +160,7 @@ describe('DataPackGridItem component', () => {
             providers,
             onRunDelete: () => {},
             onRunShare: sinon.spy(),
+            classes: {},
             ...global.eventkit_test_props,
         }
     );
@@ -222,57 +223,6 @@ describe('DataPackGridItem component', () => {
         expect(wrapper.instance().map).toBe(null);
         expect(wrapper.instance().initMap.called).toBe(false);
         updateSpy.restore();
-    });
-
-    it('should set overflowText true when mouse enters card text div', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        wrapper.find(CardContent).first().simulate('mouseEnter');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ overflowText: true })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('should set overflowText false when mouse leaves card text div', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        wrapper.find(CardContent).first().simulate('mouseLeave');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ overflowText: false })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('should negate overflowText state on touchTap of card text div', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const expectedBool = !wrapper.state().overflow;
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
-        wrapper.find(CardContent).first().simulate('click');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ overflowText: expectedBool })).toBe(true);
-        stateSpy.restore();
-    });
-
-    it('should set overflowTitle to true when mouse enters name div', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        (shallow(wrapper.find(CardHeader).props().title).find('.qa-DataPackGridItem-name').simulate('mouseEnter'));
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ overflowTitle: true })).toBe(true);
-        stateStub.restore();
-    });
-
-    it('should set overflowTitle to false when mouse leaves the name div', () => {
-        const props = getProps();
-        const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        (shallow(wrapper.find(CardHeader).props().title).find('.qa-DataPackGridItem-name').simulate('mouseLeave'));
-        expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ overflowTitle: false })).toBe(true);
-        stateStub.restore();
     });
 
     it('toggleExpanded should set expanded state to its negatation', () => {

@@ -10,6 +10,7 @@ export class DeleteGroupDialog extends Component {
 
         const deleteActions = [
             <Button
+                key="delete"
                 className="qa-DeleteGroupDialog-delete"
                 variant="contained"
                 style={{ color: colors.secondary, backgroundColor: colors.warning }}
@@ -18,6 +19,7 @@ export class DeleteGroupDialog extends Component {
                 DELETE GROUP
             </Button>,
             <Button
+                key="cancel"
                 className="qa-DeleteGroupDialog-cancel"
                 variant="flat"
                 color="primary"

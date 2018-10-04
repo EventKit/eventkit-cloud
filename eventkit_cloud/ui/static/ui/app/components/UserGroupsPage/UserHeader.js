@@ -157,6 +157,7 @@ export class UserHeader extends Component {
                                 }}
                             >
                                 <MenuItem
+                                    key="edit"
                                     style={styles.item}
                                     onClick={this.handleAddUsersClick}
                                     className="qa-UserHeader-MenuItem-editGroups"
@@ -164,6 +165,7 @@ export class UserHeader extends Component {
                                     Add to Existing Group
                                 </MenuItem>
                                 <MenuItem
+                                    key="new"
                                     style={styles.item}
                                     onClick={this.handleNewGroupClick}
                                     className="qa-UserHeader-MenuItem-newGroup"
@@ -188,6 +190,7 @@ export class UserHeader extends Component {
                         className="qa-UserHeader-sort"
                     >
                         <MenuItem
+                            key="username"
                             value="username"
                             style={styles.item}
                             onClick={() => this.props.handleOrderingChange('username')}
@@ -197,6 +200,7 @@ export class UserHeader extends Component {
                             Username A-Z
                         </MenuItem>
                         <MenuItem
+                            key="-username"
                             value="-username"
                             style={styles.item}
                             onClick={() => this.props.handleOrderingChange('-username')}
@@ -206,6 +210,7 @@ export class UserHeader extends Component {
                             Username Z-A
                         </MenuItem>
                         <MenuItem
+                            key="-date_joined"
                             value="-date_joined"
                             style={styles.item}
                             onClick={() => this.props.handleOrderingChange('-date_joined')}
@@ -215,6 +220,7 @@ export class UserHeader extends Component {
                             Newest
                         </MenuItem>
                         <MenuItem
+                            key="date_joined"
                             value="date_joined"
                             style={styles.item}
                             onClick={() => this.props.handleOrderingChange('date_joined')}
@@ -224,6 +230,7 @@ export class UserHeader extends Component {
                             Oldest
                         </MenuItem>
                         <MenuItem
+                            key="admin"
                             value="admin"
                             style={styles.item}
                             onClick={() => this.props.handleOrderingChange('admin')}

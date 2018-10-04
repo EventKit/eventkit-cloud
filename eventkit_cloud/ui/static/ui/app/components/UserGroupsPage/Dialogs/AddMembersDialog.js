@@ -362,6 +362,7 @@ export class AddMembersDialog extends Component {
 
         const actions = [
             <Button
+                key="cancel"
                 className="qa-AddMembersDialog-cancel"
                 onClick={this.handleClose}
                 variant="flat"
@@ -370,6 +371,7 @@ export class AddMembersDialog extends Component {
                 CANCEL
             </Button>,
             <Button
+                key="save"
                 className="qa-AddMembersDialog-save"
                 onClick={this.handleSave}
                 variant="contained"
