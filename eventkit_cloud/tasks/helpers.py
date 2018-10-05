@@ -329,9 +329,8 @@ def get_osm_last_update(url, slug=None):
     :param slug: Optionally a slug if credentials are needed
     :return: The default timestamp as a string (2018-06-18T13:09:59Z)
     """
-
-    timestamp_url = "{0}timestamp".format(url.rstrip('/').rstrip('interpreter'))
     try:
+        timestamp_url = "{0}timestamp".format(url.rstrip('/').rstrip('interpreter'))
         response = auth_requests.get(timestamp_url, slug=slug)
         if response:
             return response.content
