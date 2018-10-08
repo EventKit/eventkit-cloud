@@ -123,7 +123,6 @@ export class DataPackPage extends React.Component {
         // must wrap it in a conditional and be cautious
         // https://reactjs.org/docs/react-component.html#componentdidupdate
         // eslint-disable-next-line react/no-did-update-set-state
-        console.log('UPDATED');
 
         // if fetched WAS null but now TRUE we can show the page
         if (prevProps.runsFetched === null && this.props.runsFetched) {

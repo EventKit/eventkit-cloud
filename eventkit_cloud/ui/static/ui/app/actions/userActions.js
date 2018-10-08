@@ -53,7 +53,6 @@ export function login(data) {
             headers: { 'X-CSRFToken': csrftoken },
         }).then((response) => {
             if (response.data) {
-                console.log(response.data);
                 const norm = new Normalizer();
                 const { entities, result } = norm.normalizeUserData(response.data);
 

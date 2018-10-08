@@ -32,7 +32,6 @@ export const CUSTOM_BREAKPOINTS = {
 
 interface Props {
     router: object;
-    // user: Eventkit.Store.User;
     userActivity: Eventkit.Store.UserActivity;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
@@ -104,7 +103,6 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     componentDidMount() {
-        console.log(this.state.loadingPage);
         this.props.getUsers();
         this.props.getGroups();
         this.props.getProviders();
@@ -119,19 +117,6 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     shouldComponentUpdate(p, s) {
-        const pk = Object.keys(p);
-        pk.forEach((k) => {
-            if (p[k] !== this.props[k]) {
-                console.log(k);
-            }
-        });
-        const sk = Object.keys(s);
-        sk.forEach((k) => {
-            if (s[k] !== this.state[k]) {
-                console.log(k);
-            }
-        });
-
         const status = p.notificationsStatus;
         const oldStatus = this.props.notificationsStatus;
 
@@ -160,7 +145,6 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     componentDidUpdate(prevProps) {
-        console.log('DASHBOARD UPDATE');
         // Only show page loading once, before all sections have initially loaded.
         const { loadingPage } = this.state;
         if (loadingPage && !this.isLoading()) {

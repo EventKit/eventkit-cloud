@@ -188,7 +188,6 @@ const allViewedIds = (state = exports.viewedInfo.ids, action) => {
 const orderedIdReducer = (state = exports.orderedIds, action) => {
     switch (action.type) {
         case types.RECEIVED_RUNS: {
-            console.log(state, action.payload.orderedIds);
             return isEqual(state, action.payload.orderedIds) ? state : action.payload.orderedIds;
         }
         default: return state;

@@ -128,7 +128,6 @@ interface OwnProps {
     groups: Eventkit.Group[];
     style: object | undefined;
     theme: Eventkit.Theme;
-    // classes: any;
     runId: string;
 }
 
@@ -186,24 +185,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
         this.initMap();
     }
 
-    shouldComponentUpdate(p, s) {
-        const pk = Object.keys(p);
-        pk.forEach((k) => {
-            if (p[k] !== this.props[k]) {
-                console.log(k);
-            }
-        });
-        const sk = Object.keys(s);
-        sk.forEach((k) => {
-            if (s[k] !== this.state[k]) {
-                console.log(k);
-            }
-        });
-        return true;
-    }
-
     componentDidUpdate(prevProps, prevState) {
-        console.log('I UPDATED GRID BOII', this.props.runId);
         if (prevState.expanded !== this.state.expanded) {
             if (this.state.expanded) {
                 this.initMap();

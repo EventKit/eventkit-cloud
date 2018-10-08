@@ -9,11 +9,7 @@ export default class Normalizer {
     private run: schema.Entity;
     private runs: schema.Array;
     private user: schema.Entity;
-    private userLicenses: schema.Entity;
-    private groupList: schema.Entity;
-    private userGroupList: schema.Array;
     private userData: schema.Entity;
-    private fullUser: schema.Entity;
 
     public constructor() {
         this.idOption = { idAttribute: 'uid' };
@@ -28,13 +24,9 @@ export default class Normalizer {
 
         // user schemas
         this.user = new schema.Entity('user', {}, { idAttribute: 'username'});
-        // this.userLicenses = new schema.Entity('accepted_licenses');
-        // this.groupList = new schema.Entity('groups');
-        // this.userGroupList = new schema.Array(new schema.Entity('group'));
         this.userData = new schema.Entity('user', {
             user: this.user,
         });
-        // this.fullUser = new schema.Entity('user', { data: this.userData });
 
     }
 

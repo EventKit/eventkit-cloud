@@ -264,7 +264,6 @@ export function getFeaturedRuns(args) {
 
             const norm = new Normalizer();
             const actions = runs.map((run) => {
-                console.log(norm.normalizeRun(run));
                 const { result, entities } = norm.normalizeRun(run);
                 return {
                     type: 'ADD_FEATURED_RUN',

@@ -1,13 +1,4 @@
 
-// declare module '@material-ui/core/styles/createMuiTheme' {
-//     interface Theme extends MuiThemeProviderProps {
-//         eventkit: Eventkit.Theme;
-//         palette: object;
-//         breakpoints: object
-//         overrides: object;
-//     }
-// }
-
 declare namespace Eventkit {
     interface License {
         slug: string;

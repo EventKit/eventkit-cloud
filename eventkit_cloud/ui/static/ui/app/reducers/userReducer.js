@@ -2,21 +2,6 @@ import { combineReducers } from 'redux';
 import { types } from '../actions/userActions';
 
 const user = {
-    // data: {
-    //     accepted_licenses: {},
-    //     groups: [],
-    //     user: {
-    //         commonname: undefined,
-    //         date_joined: '',
-    //         email: '',
-    //         first_name: '',
-    //         identification: undefined,
-    //         last_login: '',
-    //         last_name: '',
-    //         username: '',
-    //     },
-
-    // },
     data: null,
     meta: {
         autoLogoutAt: null,

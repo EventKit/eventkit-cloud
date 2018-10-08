@@ -35,16 +35,6 @@ export class DataPackFeaturedItem extends Component {
         this.initMap();
     }
 
-    shouldComponentUpdate(p) {
-        const pk = Object.keys(p);
-        pk.forEach((k) => {
-            if (p[k] !== this.props[k]) {
-                console.log(k);
-            }
-        });
-        return true;
-    }
-
     componentDidUpdate(prevProps) {
         if (prevProps.width !== this.props.width || prevProps.height !== this.props.height) {
             this.map.updateSize();
