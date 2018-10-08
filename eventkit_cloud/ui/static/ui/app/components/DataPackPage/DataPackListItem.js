@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import { Link, browserHistory } from 'react-router';
@@ -19,6 +20,7 @@ import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { userIsDataPackAdmin } from '../../utils/generic';
+import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackListItem extends Component {
     constructor(props) {
@@ -352,6 +354,14 @@ DataPackListItem.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default
-@withTheme()
-class Default extends DataPackListItem {}
+const makeMapStateToProps = () => {
+    const getFullRun = makeFullRunSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            run: getFullRun(state, props),
+        }
+    );
+    return mapStateToProps;
+};
+
+export default withTheme()(connect(makeMapStateToProps)(DataPackListItem));

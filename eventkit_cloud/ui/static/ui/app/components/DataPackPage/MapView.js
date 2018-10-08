@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
@@ -49,6 +50,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
+import { makeAllRunsSelector } from '../../selectors/runSelector';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -908,15 +910,15 @@ export class MapView extends Component {
                             spacing={0}
                             style={{ width: '100%' }}
                         >
-                            {this.props.runs.map(run => (
+                            {this.props.runIds.map(id => (
                                 <DataPackListItem
-                                    run={run}
+                                    runId={id}
                                     user={this.props.user}
-                                    key={run.uid}
+                                    key={id}
                                     onRunDelete={this.props.onRunDelete}
                                     onRunShare={this.props.onRunShare}
                                     onClick={this.handleClick}
-                                    backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
+                                    backgroundColor={this.state.selectedFeature === id ? colors.secondary : null}
                                     providers={this.props.providers}
                                     users={this.props.users}
                                     groups={this.props.groups}
@@ -1023,6 +1025,7 @@ MapView.contextTypes = {
 };
 
 MapView.propTypes = {
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     runs: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
@@ -1050,7 +1053,14 @@ MapView.propTypes = {
     width: PropTypes.string.isRequired,
 };
 
-export default
-@withWidth()
-@withTheme()
-class Default extends MapView {}
+const makeMapStateToProps = () => {
+    const getRuns = makeAllRunsSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            runs: getRuns(state, props),
+        }
+    );
+    return mapStateToProps;
+};
+
+export default withWidth()(withTheme()(connect(makeMapStateToProps)(MapView)));

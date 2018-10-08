@@ -5,7 +5,6 @@ import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from './LoadButtons';
-import { userIsDataPackAdmin } from '../../utils/generic';
 
 export class DataPackGrid extends Component {
     getColumns() {
@@ -53,13 +52,13 @@ export class DataPackGrid extends Component {
                         spacing={isWidthUp('md', this.props.width) ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runs.map((run, index) => {
+                        {this.props.runIds.map((id, index) => {
                             return (
                                 <DataPackGridItem
                                     className="qa-DataPackGrid-GridListItem"
-                                    run={run}
-                                    user={this.props.user}
-                                    key={run.uid}
+                                    runId={id}
+                                    userData={this.props.user.data}
+                                    key={id}
                                     onRunDelete={this.props.onRunDelete}
                                     onRunShare={this.props.onRunShare}
                                     providers={this.props.providers}
@@ -85,7 +84,7 @@ export class DataPackGrid extends Component {
 }
 
 DataPackGrid.propTypes = {
-    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,

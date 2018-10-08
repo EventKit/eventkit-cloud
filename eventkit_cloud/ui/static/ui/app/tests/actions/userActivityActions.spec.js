@@ -35,17 +35,6 @@ const mockViewedJobs = [
     },
 ];
 
-const processedViewedJobs = mockViewedJobs.map((viewedJob) => {
-    const newViewedJob = { ...viewedJob };
-    const run = newViewedJob.last_export_run;
-    run.job.permissions = {
-        value: run.job.visibility,
-        groups: run.job.permissions.groups,
-        members: run.job.permissions.users,
-    };
-    return newViewedJob;
-});
-
 describe('userActivityActions', () => {
     it('getViewedJobs() should send the received array of viewed jobs to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
@@ -60,7 +49,7 @@ describe('userActivityActions', () => {
         const expectedActions = [
             { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
             {
-                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: true, range: '12/24',
+                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: mockViewedJobs, nextPage: true, range: '12/24',
             },
         ];
 
@@ -84,7 +73,7 @@ describe('userActivityActions', () => {
         const expectedActions = [
             { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
             {
-                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: processedViewedJobs, nextPage: false, range: '',
+                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: mockViewedJobs, nextPage: false, range: '',
             },
         ];
 

@@ -146,12 +146,12 @@ export class DataPackList extends Component {
                             spacing={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
-                            {this.props.runs.map((run) => {
+                            {this.props.runIds.map((id) => {
                                 return (
                                     <DataPackListItem
-                                        run={run}
+                                        runId={id}
                                         user={this.props.user}
-                                        key={run.uid}
+                                        key={id}
                                         onRunDelete={this.props.onRunDelete}
                                         onRunShare={this.props.onRunShare}
                                         providers={this.props.providers}
@@ -292,12 +292,12 @@ export class DataPackList extends Component {
                             style={{ backgroundColor: colors.white, fontSize: '12px', tableLayout: 'fixed' }}
                         >
                             <TableBody>
-                                {this.props.runs.map((run) => {
+                                {this.props.runIds.map((id) => {
                                     return (
                                         <DataPackTableItem
-                                            run={run}
+                                            runId={id}
                                             user={this.props.user}
-                                            key={run.uid}
+                                            key={id}
                                             onRunDelete={this.props.onRunDelete}
                                             onRunShare={this.props.onRunShare}
                                             providers={this.props.providers}
@@ -317,7 +317,7 @@ export class DataPackList extends Component {
 }
 
 DataPackList.propTypes = {
-    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,

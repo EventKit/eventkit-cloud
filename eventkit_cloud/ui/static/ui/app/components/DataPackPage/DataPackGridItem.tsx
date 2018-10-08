@@ -2,7 +2,7 @@
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
+import { withTheme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Collapse from '@material-ui/core/Collapse';
 import Card from '@material-ui/core/Card';
@@ -114,8 +114,8 @@ const jss = (theme: any) => createStyles({
     }
 });
 
-interface Props {
-    run: Eventkit.Run;
+interface OwnProps {
+    className: string | undefined;
     userData: any;
     onRunDelete: (uid) => void;
     onRunShare: (uid, permissions) => void;
@@ -128,7 +128,7 @@ interface Props {
     groups: Eventkit.Group[];
     style: object | undefined;
     theme: Eventkit.Theme;
-    classes: any;
+    // classes: any;
     runId: string;
 }
 
@@ -139,6 +139,14 @@ interface State {
     deleteDialogOpen: boolean;
     shareDialogOpen: boolean;
 }
+
+interface DispatchProps {}
+
+interface StateProps {
+    run: Eventkit.Run;
+}
+
+type Props = Eventkit.Theme & StyledComponentProps & StateProps & DispatchProps & OwnProps;
 
 export class DataPackGridItem extends React.Component<Props, State> {
     static defaultProps = {
@@ -569,4 +577,7 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withStyles(jss)(withTheme()(connect(makeMapStateToProps, undefined)(DataPackGridItem)));
+export default
+    withTheme()<any>(
+        withStyles<any>(jss)(
+            connect<StateProps, DispatchProps, OwnProps>(makeMapStateToProps)(DataPackGridItem)));

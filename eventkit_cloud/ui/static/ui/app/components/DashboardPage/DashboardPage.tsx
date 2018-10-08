@@ -33,17 +33,17 @@ export const CUSTOM_BREAKPOINTS = {
 interface Props {
     router: object;
     // user: Eventkit.Store.User;
-    // userActivity: Eventkit.Store.UserActivity;
+    userActivity: Eventkit.Store.UserActivity;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
     providers: Eventkit.Provider[];
     runDeletion: Eventkit.Store.RunDeletion;
-    featuredRunIds: any;
-    featuredRunsFetched: boolean;
-
-    runIds: any;
+    ownIds: string[];
+    featuredIds: string[];
+    viewedIds: string[];
     runsFetched: boolean;
-
+    featuredRunsFetched: boolean;
+    viewedRunsFetched: boolean;
     getRuns: (options?: object) => void;
     getFeaturedRuns: (options?: object) => void;
     getViewedJobs: (options?: object) => void;
@@ -95,7 +95,7 @@ export class DashboardPage extends React.Component<Props, State> {
         this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
         this.callback = this.callback.bind(this);
         this.state = {
-            loadingPage: true,
+            loadingPage: this.isLoading(),
             steps: [],
             isRunning: false,
             width: this.getWidth(),
@@ -104,6 +104,7 @@ export class DashboardPage extends React.Component<Props, State> {
     }
 
     componentDidMount() {
+        console.log(this.state.loadingPage);
         this.props.getUsers();
         this.props.getGroups();
         this.props.getProviders();
@@ -115,33 +116,6 @@ export class DashboardPage extends React.Component<Props, State> {
         const steps = joyride.DashboardPage;
         this.joyrideAddSteps(steps);
         window.addEventListener('resize', this.onResize);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        // Only show page loading once, before all sections have initially loaded.
-        const { loadingPage } = this.state;
-        if (loadingPage) {
-            this.setState({
-                loadingPage: (
-                    !nextProps.notificationsStatus.fetched ||
-                    !nextProps.runsFetched ||
-                    !nextProps.featuredRunsFetched ||
-                    // !nextProps.userActivity.viewedJobs.fetched ||
-                    !nextProps.users.fetched ||
-                    !nextProps.groups.fetched
-                ),
-            });
-        }
-
-        // Deleted datapack.
-        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
-            this.refresh();
-        }
-
-        // Updated permissions.
-        if (nextProps.updatePermission.updated && !this.props.updatePermission.updated) {
-            this.refresh();
-        }
     }
 
     shouldComponentUpdate(p, s) {
@@ -172,20 +146,36 @@ export class DashboardPage extends React.Component<Props, State> {
                 return true;
             }
             // any other status change can be ignored
-            // console.log('we can ignore the status update');
             return false;
         }
 
-        if (p.runsFetched !== this.props.runsFetched || p.featuredRunsFetched !== this.props.featuredRunsFetched) {
-            return this.state.loadingPage;
+        if (p.runsFetched !== this.props.runsFetched ||
+            p.featuredRunsFetched !== this.props.featuredRunsFetched ||
+            p.viewedRunsFetched !== this.props.viewedRunsFetched
+        ) {
+                return this.state.loadingPage;
         }
-
         // if the status is not the update we can default to true
         return true;
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps) {
         console.log('DASHBOARD UPDATE');
+        // Only show page loading once, before all sections have initially loaded.
+        const { loadingPage } = this.state;
+        if (loadingPage && !this.isLoading()) {
+            this.setState({ loadingPage: false });
+        }
+
+        // Deleted datapack.
+        if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
+            this.refresh();
+        }
+
+        // Updated permissions.
+        if (this.props.updatePermission.updated && !prevProps.updatePermission.updated) {
+            this.refresh();
+        }
     }
 
     componentWillUnmount() {
@@ -306,7 +296,12 @@ export class DashboardPage extends React.Component<Props, State> {
 
     private isLoading() {
         return (
-            this.state.loadingPage ||
+            this.props.notificationsStatus === null ||
+            this.props.runsFetched === null ||
+            this.props.featuredRunsFetched === null ||
+            this.props.viewedRunsFetched === null ||
+            this.props.users.fetched === null ||
+            this.props.groups.fetched === null ||
             this.props.runDeletion.deleting ||
             this.props.updatePermission.updating
         );
@@ -348,7 +343,7 @@ export class DashboardPage extends React.Component<Props, State> {
         } else {
             const [...steps] = joyride.DashboardPage;
             this.setState({ isRunning: true, steps: [] });
-            if (this.props.featuredRunIds.length === 0) {
+            if (this.props.featuredIds.length === 0) {
                 const ix = steps.findIndex(s => s.selector === '.qa-DashboardSection-Featured');
                 if (ix > -1) {
                     steps.splice(ix, 1);
@@ -549,14 +544,13 @@ export class DashboardPage extends React.Component<Props, State> {
                                     </Paper>
                                 }
                             >
-                                {/* {this.props.userActivity.viewedJobs.viewedJobs.map((viewedJob, index) => {
-                                    const run = viewedJob.last_export_run;
+                                {this.props.viewedIds.map((id, index) => {
                                     return (
                                         <DataPackGridItem
                                             className="qa-DashboardSection-RecentlyViewedGrid-Item"
-                                            runId={run.uid}
+                                            runId={id}
                                             userData={this.props.userData}
-                                            key={`RecentlyViewedDataPack-${viewedJob.created_at}`}
+                                            key={`RecentlyViewedDataPack-${id}`}
                                             onRunDelete={this.props.deleteRun}
                                             onRunShare={this.props.updateDataCartPermissions}
                                             providers={this.props.providers}
@@ -567,11 +561,11 @@ export class DashboardPage extends React.Component<Props, State> {
                                             groups={this.props.groups.groups}
                                         />
                                     );
-                                })} */}
+                                })}
                             </DashboardSection>
 
                             {/* Featured */}
-                            {this.props.featuredRunIds.length === 0 ?
+                            {this.props.featuredIds.length === 0 ?
                                 null
                                 :
                                 <DashboardSection
@@ -584,7 +578,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                     providers={this.props.providers}
                                     onViewAll={this.handleFeaturedViewAll}
                                 >
-                                    {this.props.featuredRunIds.map((id, index) => (
+                                    {this.props.featuredIds.map((id, index) => (
                                         <DataPackFeaturedItem
                                             className="qa-DashboardSection-FeaturedGrid-WideItem"
                                             runId={id}
@@ -622,7 +616,7 @@ export class DashboardPage extends React.Component<Props, State> {
                                     </Paper>
                                 }
                             >
-                                {this.props.runIds.map((id, index) => (
+                                {this.props.ownIds.map((id, index) => (
                                     <DataPackGridItem
                                         className="qa-DashboardSection-MyDataPacksGrid-Item"
                                         runId={id}
@@ -650,19 +644,17 @@ export class DashboardPage extends React.Component<Props, State> {
 function mapStateToProps(state) {
     return {
         userData: state.userrr.data,
-        // userActivity: state.userActivity,
+        userActivity: state.userActivity,
         notificationsData: state.notifications.data,
         notificationsStatus: state.notifications.status,
         providers: state.providers,
         runDeletion: state.runDeletion,
-
-        // featuredRunsListData: state.featuredRunsList.data,
-        // featuredRunsListStatus: state.featuredRunsList.status,
-
-        featuredRunIds: state.featuredExports.data.runIds,
-        featuredRunsFetched: state.featuredExports.status.fetched,
-        runIds: state.exports.data.runIds,
-        runsFetched: state.exports.status.fetched,
+        ownIds: state.exports.ownInfo.ids,
+        featuredIds: state.exports.featuredInfo.ids,
+        viewedIds: state.exports.viewedInfo.ids,
+        runsFetched: state.exports.allInfo.status.fetched,
+        featuredRunsFetched: state.exports.featuredInfo.status.fetched,
+        viewedRunsFetched: state.exports.viewedInfo.status.fetched,
         updatePermission: state.updatePermission,
         users: state.users,
         groups: state.groups,

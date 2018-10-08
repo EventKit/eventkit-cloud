@@ -63,16 +63,16 @@ export function clearDataCartDetails() {
 
 export function getRuns(args = {}) {
     return (dispatch, getState) => {
-        const { exports } = getState();
+        const { exports, user } = getState();
         // if there is already a request in process we need to cancel it
         // before executing the current request
-        if (exports.status.fetching && exports.status.cancelSource) {
+        if (exports.allInfo.status.fetching && exports.allInfo.status.cancelSource) {
             // if this is not a direct request from the user, dont cancel ongoing requests
             if (args.isAuto) {
                 return null;
             }
             // if this is a direct user action, it is safe to cancel ongoing requests
-            exports.status.cancelSource.cancel('Request is no longer valid, cancelling');
+            exports.allInfo.status.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 
         const { CancelToken } = axios;
@@ -153,41 +153,41 @@ export function getRuns(args = {}) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
+            const orderedIds = [];
             const runs = response.data.map((run) => {
                 const newRun = { ...run };
+                orderedIds.push(newRun.uid);
                 newRun.job.permissions = {
-                    value: newRun.job.visibility,
+                    value: newRun.job.permissions.value,
                     groups: newRun.job.permissions.groups,
                     members: newRun.job.permissions.users,
                 };
                 return newRun;
             });
 
-            const norm = new Normalizer();
+            const normalizer = new Normalizer();
+
             const actions = runs.map((run) => {
-                console.log(norm.normalizeRun(run));
-                const { result, entities } = norm.normalizeRun(run);
+                const { result, entities } = normalizer.normalizeRun(run);
                 return {
                     type: 'ADD_RUN',
                     payload: {
                         id: result,
+                        username: user.data.user.username,
                         ...entities,
                     },
                 };
             });
-            const { entities, result } = norm.normalizeRuns(runs);
             dispatch([
-                ...actions,
                 {
                     type: types.RECEIVED_RUNS,
-                    runs,
-                    nextPage,
-                    range,
                     payload: {
-                        ...entities,
-                        runIds: result,
+                        range,
+                        nextPage,
+                        orderedIds,
                     },
                 },
+                ...actions,
             ]);
 
             // dispatch();
@@ -203,15 +203,15 @@ export function getRuns(args = {}) {
 
 export function getFeaturedRuns(args) {
     return (dispatch, getState) => {
-        const { featuredRunsList } = getState();
-        if (featuredRunsList.status.fetching && featuredRunsList.status.cancelSource) {
+        const { exports, user } = getState();
+        if (exports.featuredInfo.status.fetching && exports.featuredInfo.status.cancelSource) {
             // if this is not a direct request from the user, dont cancel ongoing requests
             if (args.isAuto) {
                 return null;
             }
             // if there is already a request in process we need to cancel it
             // before executing the current request
-            featuredRunsList.status.cancelSource.cancel('Request is no longer valid, cancelling');
+            exports.featuredInfo.status.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 
         const { CancelToken } = axios;
@@ -252,21 +252,15 @@ export function getFeaturedRuns(args) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
-            const runs = [...response.data];
-
-            // const norm = new Normalizer();
-            // const { entities, result } = norm.normalizeRuns(runs);
-
-            // dispatch({
-            //     type: types.RECEIVED_FEATURED_RUNS,
-            //     runs,
-            //     nextPage,
-            //     range,
-            //     payload: {
-            //         ...entities,
-            //         runIds: result,
-            //     },
-            // });
+            const runs = response.data.map((run) => {
+                const newRun = { ...run };
+                newRun.job.permissions = {
+                    value: newRun.job.permissions.value,
+                    groups: newRun.job.permissions.groups,
+                    members: newRun.job.permissions.users,
+                };
+                return newRun;
+            });
 
             const norm = new Normalizer();
             const actions = runs.map((run) => {
@@ -276,23 +270,22 @@ export function getFeaturedRuns(args) {
                     type: 'ADD_FEATURED_RUN',
                     payload: {
                         id: result,
+                        range,
+                        nextPage,
+                        username: user.data.user.username,
                         ...entities,
                     },
                 };
             });
-            const { entities, result } = norm.normalizeRuns(runs);
             dispatch([
-                ...actions,
                 {
                     type: types.RECEIVED_FEATURED_RUNS,
-                    runs,
-                    nextPage,
-                    range,
                     payload: {
-                        ...entities,
-                        runIds: result,
+                        range,
+                        nextPage,
                     },
                 },
+                ...actions,
             ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {

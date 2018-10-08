@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import TableRow from '@material-ui/core/TableRow';
@@ -19,6 +20,7 @@ import DropDownListItem from '../common/DropDownListItem';
 import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
+import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackTableItem extends Component {
     constructor(props) {
@@ -321,5 +323,14 @@ DataPackTableItem.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(DataPackTableItem);
+const makeMapStateToProps = () => {
+    const getFullRun = makeFullRunSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            run: getFullRun(state, props),
+        }
+    );
+    return mapStateToProps;
+};
 
+export default withTheme()(connect(makeMapStateToProps)(DataPackTableItem));

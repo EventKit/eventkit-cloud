@@ -5,8 +5,8 @@ import { types } from '../actions/notificationsActions';
 
 export const initialState = {
     status: {
-        fetching: false,
-        fetched: false,
+        fetching: null,
+        fetched: null,
         error: null,
         cancelSource: null,
     },
@@ -16,8 +16,8 @@ export const initialState = {
     },
     unreadCount: {
         status: {
-            fetching: false,
-            fetched: false,
+            fetching: null,
+            fetched: null,
             error: null,
             cancelSource: null,
         },

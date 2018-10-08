@@ -21,7 +21,7 @@ import Attribution from 'ol/control/attribution';
 import Zoom from 'ol/control/zoom';
 import ScaleLine from 'ol/control/scaleline';
 import ol3mapCss from '../../styles/ol3map.css';
-import { makeFullFeaturedRunSelector } from '../../selectors/featuredRunSelector';
+import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackFeaturedItem extends Component {
     constructor(props) {
@@ -297,7 +297,7 @@ DataPackFeaturedItem.defaultProps = {
 };
 
 const makeMapStateToProps = () => {
-    const getFullRun = makeFullFeaturedRunSelector();
+    const getFullRun = makeFullRunSelector();
     const mapStateToProps = (state, props) => (
         {
             run: getFullRun(state, props),

@@ -1,5 +1,6 @@
 import axios from 'axios/index';
 import cookie from 'react-cookie';
+import Normalizer from '../utils/normalizers';
 
 export const types = {
     VIEWED_JOB: 'VIEWED_JOB',
@@ -41,13 +42,13 @@ export function getViewedJobs(args = {}) {
     return (dispatch, getState) => {
         // Check if we should cancel the previous request due to a user action.
         const state = getState();
-        if (state.userActivity.viewedJobs.fetching && state.userActivity.viewedJobs.cancelSource) {
+        if (state.exports.viewedInfo.status.fetching && state.exports.viewedInfo.status.cancelSource) {
             if (args.isAuto) {
                 // Just ignore this request.
                 return null;
             }
             // Cancel the last request.
-            state.userActivity.viewedJobs.cancelSource.cancel('Request is no longer valid, cancelling.');
+            state.exports.viewedInfo.status.cancelSource.cancel('Request is no longer valid, cancelling.');
         }
 
         const cancelSource = axios.CancelToken.source();
@@ -86,23 +87,41 @@ export function getViewedJobs(args = {}) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
-            const viewedJobs = response.data.map((job) => {
-                const newViewedJob = { ...job };
-                const run = newViewedJob.last_export_run;
+            const runs = response.data.map((entry) => {
+                const run = entry.last_export_run;
                 run.job.permissions = {
-                    value: run.job.visibility,
+                    value: run.job.permissions.value,
                     groups: run.job.permissions.groups,
                     members: run.job.permissions.users,
                 };
-                return newViewedJob;
+                return run;
             });
 
-            dispatch({
-                type: types.RECEIVED_VIEWED_JOBS,
-                viewedJobs,
-                nextPage,
-                range,
+            const normalizer = new Normalizer();
+
+            const actions = runs.map((run) => {
+                const { result, entities } = normalizer.normalizeRun(run);
+                return {
+                    type: 'ADD_VIEWED_RUN',
+                    payload: {
+                        id: result,
+                        username: state.user.data.user.username,
+                        ...entities,
+                    },
+                };
             });
+
+            dispatch([
+                {
+                    type: types.RECEIVED_VIEWED_JOBS,
+                    viewedJobs: runs,
+                    payload: {
+                        nextPage,
+                        range,
+                    },
+                },
+                ...actions,
+            ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);

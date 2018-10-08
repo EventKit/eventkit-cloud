@@ -1,4 +1,13 @@
 
+// declare module '@material-ui/core/styles/createMuiTheme' {
+//     interface Theme extends MuiThemeProviderProps {
+//         eventkit: Eventkit.Theme;
+//         palette: object;
+//         breakpoints: object
+//         overrides: object;
+//     }
+// }
+
 declare namespace Eventkit {
     interface License {
         slug: string;
@@ -52,6 +61,7 @@ declare namespace Eventkit {
         visibility: string;
         featured: boolean;
         formats: string[];
+        created_at: string;
         permissions: {
             value: string;
             users: { [s: string]: string };
@@ -281,7 +291,7 @@ declare namespace Eventkit {
                 range: string;
                 cancelSource: object;
                 error: any;
-                viewedJobs: Eventkit.UserJobActivity[];
+                viewedJobs: Eventkit.Run[];
             };
         }
     }

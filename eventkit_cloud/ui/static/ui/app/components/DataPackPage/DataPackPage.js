@@ -66,7 +66,7 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            pageLoading: true,
+            pageLoading: this.props.runsFetched === null,
             loading: false,
             geojson_geometry: null,
             steps: [],
@@ -75,8 +75,8 @@ export class DataPackPage extends React.Component {
 
         this.defaultQuery = {
             collection: 'all',
-            order: this.props.runsList.data.order || '-job__featured',
-            view: this.props.runsList.data.view || 'map',
+            order: this.props.runsMeta.order || '-job__featured',
+            view: this.props.runsMeta.view || 'map',
             page_size: '12',
         };
     }
@@ -105,42 +105,44 @@ export class DataPackPage extends React.Component {
         });
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.runsList.status.fetched && !this.props.runsList.status.fetched) {
-            if (this.state.pageLoading) {
-                this.setState({ pageLoading: false });
-            }
-            if (this.state.loading) {
-                this.setState({ loading: false });
-            }
-        }
-        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
-            this.setState({ loading: true }, this.makeRunRequest);
-        }
-        if (nextProps.updatePermissions.updated && !this.props.updatePermissions.updated) {
-            this.setState({ loading: true }, this.makeRunRequest);
-        }
-    }
-
     shouldComponentUpdate(p, s) {
-        const pk = Object.keys(p);
-        pk.forEach((k) => {
-            if (p[k] !== this.props[k]) {
-                console.log(k);
+        if (p.runsFetching !== this.props.runsFetching) {
+            if (s.loading !== this.state.loading ||
+                this.state.loading ||
+                p.runIds !== this.props.runIds
+            ) {
+                return true;
             }
-        });
-        const sk = Object.keys(s);
-        sk.forEach((k) => {
-            if (s[k] !== this.state[k]) {
-                console.log(k);
-            }
-        });
-
+            return false;
+        }
         return true;
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps) { /* eslint-disable react/no-did-update-set-state */
+        // setState is permitted in componentDidUpdate, but you
+        // must wrap it in a conditional and be cautious
+        // https://reactjs.org/docs/react-component.html#componentdidupdate
+        // eslint-disable-next-line react/no-did-update-set-state
         console.log('UPDATED');
+
+        // if fetched WAS null but now TRUE we can show the page
+        if (prevProps.runsFetched === null && this.props.runsFetched) {
+            if (this.state.pageLoading) {
+                this.setState({ pageLoading: false });
+            }
+        }
+
+        // if a run was just deleted we need to update our state
+        if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
+            this.setState({ loading: true }, this.makeRunRequest);
+        }
+
+        // if a run was just updated we need to update our state
+        if (this.props.updatePermissions.updated && !prevProps.updatePermissions.updated) {
+            this.setState({ loading: true }, this.makeRunRequest);
+        }
+
+        // if the location query has changed we need to update our state
         let changedQuery = false;
         if (Object.keys(this.props.location.query).length
                 !== Object.keys(prevProps.location.query).length) {
@@ -151,13 +153,17 @@ export class DataPackPage extends React.Component {
                 changedQuery = true;
             }
         }
+
         if (changedQuery) {
-            // setState is permitted in componentDidUpdate, but you
-            // must wrap it in a conditional and be cautious
-            // https://reactjs.org/docs/react-component.html#componentdidupdate
-            // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({ pageLoading: true });
+            this.setState({ loading: true });
             this.makeRunRequest();
+        }
+
+        // if loading is active and we just received updated runs we can stop the loading view
+        if (this.state.loading) {
+            if (prevProps.runsFetching && !this.props.runsFetching) {
+                this.setState({ loading: false });
+            }
         }
 
         if (prevProps.location.query.view !== this.props.location.query.view) {
@@ -169,10 +175,10 @@ export class DataPackPage extends React.Component {
     componentWillUnmount() {
         clearInterval(this.fetch);
         // save view and order to redux state so it can be set next time the page is visited
-        if (this.props.runsList.data.order !== this.props.location.query.order) {
+        if (this.props.runsMeta.order !== this.props.location.query.order) {
             this.props.setOrder(this.props.location.query.order);
         }
-        if (this.props.runsList.data.view !== this.props.location.query.view) {
+        if (this.props.runsMeta.view !== this.props.location.query.view) {
             this.props.setView(this.props.location.query.view);
         }
     }
@@ -203,15 +209,15 @@ export class DataPackPage extends React.Component {
 
     getView(view) {
         const commonProps = {
-            runs: this.props.runsList.data.runs,
+            runIds: this.props.runIds,
             user: this.props.user,
             onRunDelete: this.props.deleteRun,
             onRunShare: this.props.updateDataCartPermissions,
-            range: this.props.runsList.data.range,
+            range: this.props.runsMeta.range,
             handleLoadLess: this.loadLess,
             handleLoadMore: this.loadMore,
-            loadLessDisabled: this.props.runsList.data.runs.length <= 12,
-            loadMoreDisabled: !this.props.runsList.data.nextPage,
+            loadLessDisabled: this.props.runIds.length <= 12,
+            loadMoreDisabled: !this.props.runsMeta.nextPage,
             providers: this.props.providers,
             users: this.props.users,
             groups: this.props.groups,
@@ -249,6 +255,10 @@ export class DataPackPage extends React.Component {
                 );
             default: return null;
         }
+    }
+
+    isPageLoading() {
+        return this.props.runsFetched === null;
     }
 
     updateLocationQuery(query) {
@@ -350,7 +360,7 @@ export class DataPackPage extends React.Component {
     }
 
     loadMore() {
-        if (this.props.runsList.data.nextPage) {
+        if (this.props.runsMeta.nextPage) {
             this.updateLocationQuery({ page_size: Number(this.props.location.query.page_size) + 12 });
         }
     }
@@ -412,7 +422,8 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: true, steps: [] });
             const steps = this.getJoyRideSteps();
 
-            const hasFeatured = this.props.runsList.data.runs.some(run => run.job.featured);
+            const hasFeatured = this.props.runIds.some(id => (this.props.featuredIds.indexOf(id) >= 0));
+
             const stepsIncludeFeatured = steps.find(step => step.title === 'Featured DataPacks');
 
             const newStep = {
@@ -654,22 +665,16 @@ export class DataPackPage extends React.Component {
 }
 
 DataPackPage.propTypes = {
-    runsList: PropTypes.shape({
-        status: PropTypes.shape({
-            cancelSource: PropTypes.object,
-            error: PropTypes.object,
-            fetched: PropTypes.bool,
-            fetching: PropTypes.bool,
-        }),
-        data: PropTypes.shape({
-            nextPage: PropTypes.bool,
-            order: PropTypes.string,
-            range: PropTypes.string,
-            runs: PropTypes.arrayOf(PropTypes.object),
-            view: PropTypes.string,
-        }),
-
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    runsFetched: PropTypes.bool.isRequired,
+    runsFetching: PropTypes.bool.isRequired,
+    runsMeta: PropTypes.shape({
+        range: PropTypes.string,
+        nextPage: PropTypes.bool,
+        order: PropTypes.string,
+        view: PropTypes.string,
     }).isRequired,
+    featuredIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     user: PropTypes.object.isRequired,
     getRuns: PropTypes.func.isRequired,
     deleteRun: PropTypes.func.isRequired,
@@ -714,7 +719,11 @@ DataPackPage.propTypes = {
 
 function mapStateToProps(state) {
     return {
-        runsList: state.runsList,
+        runIds: state.exports.orderedIds,
+        runsFetched: state.exports.allInfo.status.fetched,
+        runsFetching: state.exports.allInfo.status.fetching,
+        runsMeta: state.exports.allInfo.meta,
+        featuredIds: state.exports.featuredInfo.ids,
         user: state.user,
         runDeletion: state.runDeletion,
         drawer: state.drawer,

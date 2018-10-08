@@ -245,7 +245,9 @@ class SimpleJobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_permissions(obj):
-        return JobPermission.jobpermissions(obj)
+        permissions = JobPermission.jobpermissions(obj)
+        permissions['value'] = obj.visibility
+        return permissions
 
     @staticmethod
     def get_formats(obj):
@@ -625,7 +627,9 @@ class ListJobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_permissions(obj):
-        return JobPermission.jobpermissions(obj)
+        permissions = JobPermission.jobpermissions(obj)
+        permissions['value'] = obj.visibility
+        return permissions
 
 
 class JobSerializer(serializers.Serializer):
@@ -765,7 +769,7 @@ class JobSerializer(serializers.Serializer):
 
     @staticmethod
     def get_permissions(obj):
-        permissions = Job.Permisssion.jobpermissions(obj)
+        permissions = JobPermission.jobpermissions(obj)
         permissions['value'] = obj.visibility
         return permissions
 
