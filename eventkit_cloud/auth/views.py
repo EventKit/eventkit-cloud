@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import json
-import urllib.request, urllib.parse, urllib.error
 from logging import getLogger
 
 from django.conf import settings
@@ -12,6 +11,8 @@ from django.shortcuts import redirect
 
 from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token
 from eventkit_cloud.core.helpers import get_id
+
+from urllib.parse import urlparse, parse_qs
 
 logger = getLogger(__name__)
 
@@ -33,7 +34,7 @@ def oauth(request):
                 ('scope', settings.OAUTH_SCOPE)
             ]
             if request.META.get('HTTP_REFERER'):
-                    params += [('state', request.META.get('HTTP_REFERER'))]
+                    params += [('state', get_next(request.META.get('HTTP_REFERER')))]
             encoded_params = urllib.parse.urlencode(params)
             return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), encoded_params))
     else:
@@ -41,6 +42,7 @@ def oauth(request):
 
 
 def callback(request):
+    logger.info("HIT CALLBACK!")
     access_token = request_access_token(request.GET.get('code'))
     user = fetch_user_from_token(access_token)
     state = request.GET.get('state')
@@ -73,3 +75,12 @@ def logout(request):
     response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
 
     return response
+
+
+def get_next(url):
+    return get_redirect_url(url) or urlparse(url).path
+
+
+def get_redirect_url(url):
+    query = parse_qs(urlparse(url).query)
+    return query.get('redirect') or query.get('next')
