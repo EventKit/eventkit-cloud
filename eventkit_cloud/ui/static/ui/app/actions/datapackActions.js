@@ -296,6 +296,7 @@ export function getFeaturedRuns(args) {
                 {
                     type: types.RECEIVED_FEATURED_RUNS,
                     payload: {
+                        ids: runs.map(run => run.uid),
                         range,
                         nextPage,
                     },
@@ -314,7 +315,7 @@ export function getFeaturedRuns(args) {
 
 export function deleteRun(uid) {
     return (dispatch) => {
-        dispatch({ type: types.DELETING_RUN });
+        dispatch({ type: types.DELETING_RUN, payload: { id: uid } });
 
         const csrftoken = cookie.load('csrftoken');
         const formData = new FormData();
@@ -326,7 +327,7 @@ export function deleteRun(uid) {
             data: formData,
             headers: { 'X-CSRFToken': csrftoken },
         }).then(() => {
-            dispatch({ type: types.DELETED_RUN });
+            dispatch({ type: types.DELETED_RUN, payload: { id: uid } });
         }).catch((error) => {
             dispatch({ type: types.DELETE_RUN_ERROR, error: error.response.data });
         });

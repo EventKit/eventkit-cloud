@@ -800,8 +800,8 @@ function mapStateToProps(state) {
     return {
         drawer: state.drawer,
         userData: state.user.data,
-        autoLogoutAt: state.user.autoLogoutAt,
-        autoLogoutWarningAt: state.user.autoLogoutWarningAt,
+        autoLogoutAt: state.user.meta.autoLogoutAt,
+        autoLogoutWarningAt: state.user.meta.autoLogoutWarningAt,
         notificationsStatus: state.notifications.status,
         notificationsData: state.notifications.data,
         notificationsCount: state.notifications.unreadCount.data.unreadCount,

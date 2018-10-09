@@ -69,7 +69,7 @@ interface State {
 
 export class DashboardPage extends React.Component<Props, State> {
     private autoRefreshIntervalId: number | undefined = undefined;
-    private autoRefreshInterval: number = 20000;
+    private autoRefreshInterval: number = 10000;
     private onResize: () => void;
     private joyride;
 
@@ -627,7 +627,7 @@ export class DashboardPage extends React.Component<Props, State> {
 
 function mapStateToProps(state) {
     return {
-        userData: state.userrr.data,
+        userData: state.user.data,
         userActivity: state.userActivity,
         notificationsData: state.notifications.data,
         notificationsStatus: state.notifications.status,

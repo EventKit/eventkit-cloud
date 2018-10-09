@@ -1,6 +1,6 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
-import { userReducer, userrrReducer } from './userReducer';
+import { userReducer } from './userReducer';
 import { usersReducer } from './usersReducer';
 import {
     exportAoiInfoReducer,
@@ -49,7 +49,6 @@ const rootReducer = combineReducers({
     users: usersReducer,
     notifications: notificationsReducer,
     exports: runsReducer,
-    userrr: userrrReducer,
 });
 
 export default rootReducer;

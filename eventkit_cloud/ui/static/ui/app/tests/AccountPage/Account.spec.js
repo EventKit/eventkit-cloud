@@ -149,7 +149,7 @@ describe('Account Component', () => {
         const wrapper = getWrapper(props);
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
         const nextProps = getProps();
-        nextProps.user.patched = true;
+        nextProps.user.status.patched = true;
         wrapper.setProps(nextProps);
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(true);
         expect(stateSpy.calledWith({ showSavedMessage: false })).toBe(false);

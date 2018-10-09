@@ -13,8 +13,8 @@ const getAllProviderTasks = state => state.exports.data.provider_tasks;
 const getAllExportTasks = state => state.exports.data.tasks;
 
 const getPropsProviderTasks = () => createSelector(
-    [getPropsRun, getAllProviderTasks],
-    (run, providerTasks) => run ? run.provider_tasks.map(id => providerTasks[id]) : null,
+    [getPropsRun, getAllProviderTasks, getAllExportTasks],
+    (run, providerTasks, exportTasks) => run ? run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks)) : null,
 );
 
 const getPropsJob = createSelector(
@@ -31,6 +31,9 @@ const toFullProviderTask = (providerTask, exportTasks) => {
 };
 
 const toFullRun = (run, jobs, providerTasks, exportTasks) => {
+    if (!run.provider_tasks) {
+        return run;
+    }
     const runJob = jobs[run.job];
     const runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
     return {

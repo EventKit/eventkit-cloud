@@ -67,7 +67,7 @@ export class DataPackPage extends React.Component {
             },
             providers: {},
             pageLoading: this.props.runsFetched === null,
-            loading: false,
+            loading: true,
             geojson_geometry: null,
             steps: [],
             isRunning: false,
@@ -123,7 +123,6 @@ export class DataPackPage extends React.Component {
         // must wrap it in a conditional and be cautious
         // https://reactjs.org/docs/react-component.html#componentdidupdate
         // eslint-disable-next-line react/no-did-update-set-state
-
         // if fetched WAS null but now TRUE we can show the page
         if (prevProps.runsFetched === null && this.props.runsFetched) {
             if (this.state.pageLoading) {
@@ -607,7 +606,7 @@ export class DataPackPage extends React.Component {
                     }
                     <DataPackViewButtons
                         handleViewChange={this.changeView}
-                        view={this.props.location.query.view}
+                        view={this.props.location.query.view || 'map'}
                     />
                 </Toolbar>
 
@@ -663,10 +662,15 @@ export class DataPackPage extends React.Component {
     }
 }
 
+DataPackPage.defaultProps = {
+    runsFetched: false,
+    runsFetching: false,
+};
+
 DataPackPage.propTypes = {
     runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
-    runsFetched: PropTypes.bool.isRequired,
-    runsFetching: PropTypes.bool.isRequired,
+    runsFetched: PropTypes.bool,
+    runsFetching: PropTypes.bool,
     runsMeta: PropTypes.shape({
         range: PropTypes.string,
         nextPage: PropTypes.bool,

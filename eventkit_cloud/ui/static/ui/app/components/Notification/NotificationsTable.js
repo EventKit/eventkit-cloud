@@ -137,7 +137,7 @@ export class NotificationsTable extends React.Component {
 
         return (
             <div style={styles.root}>
-                <Table selectable={false} style={{ tableLayout: 'fixed' }}>
+                <Table style={{ tableLayout: 'fixed' }}>
                     <TableBody
                         style={styles.tableHeader}
                     >
@@ -183,7 +183,7 @@ export class NotificationsTable extends React.Component {
                             </TableCell>
                         </TableRow>
                     </TableBody>
-                    <TableBody displayRowCheckbox={false}>
+                    <TableBody>
                         {this.props.notificationsArray.map(notification => (
                             <NotificationsTableItem
                                 key={`NotificationsTableItem-${notification.id}`}

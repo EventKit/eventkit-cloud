@@ -114,10 +114,10 @@ export function getViewedJobs(args = {}) {
             dispatch([
                 {
                     type: types.RECEIVED_VIEWED_JOBS,
-                    viewedJobs: runs,
                     payload: {
                         nextPage,
                         range,
+                        ids: runs.map(run => run.uid),
                     },
                 },
                 ...actions,

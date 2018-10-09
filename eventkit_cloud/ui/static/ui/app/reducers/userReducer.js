@@ -15,16 +15,6 @@ const user = {
     },
 };
 
-export const initialState = {
-    data: null,
-    isLoading: false,
-    patching: false,
-    patched: false,
-    error: null,
-    autoLogoutAt: null,
-    autoLogoutWarningAt: null,
-};
-
 export const userStatusReducer = (state = user.status, action) => {
     switch (action.type) {
         case types.USER_LOGGING_IN:
@@ -85,34 +75,8 @@ export const userDataReducer = (state = user.data, action) => {
     }
 };
 
-export const userrrReducer = combineReducers({
+export const userReducer = combineReducers({
     data: userDataReducer,
     status: userStatusReducer,
     meta: userMetaReducer,
 });
-
-export function userReducer(state = initialState, { type, payload, error }) {
-    switch (type) {
-        case types.USER_LOGGING_IN:
-            return { ...state, isLoading: true };
-        case types.USER_LOGGED_IN:
-            if (payload) {
-                return { ...state, data: payload, isLoading: false };
-            }
-            return { ...state, data: null, isLoading: false };
-        case types.USER_LOGGED_OUT:
-            return { ...state, data: null, isLoading: false };
-        case types.PATCHING_USER:
-            return { ...state, patching: true, patched: false };
-        case types.PATCHED_USER:
-            return {
-                ...state, patching: false, patched: true, data: payload,
-            };
-        case types.PATCHING_USER_ERROR:
-            return { ...state, patching: false, error };
-        case types.USER_ACTIVE:
-            return { ...state, ...payload };
-        default:
-            return state;
-    }
-}

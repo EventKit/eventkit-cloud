@@ -96,21 +96,20 @@ const addOwnId = (state, run, username) => {
     return state;
 };
 
-const addFeaturedId = (state, job, runId) => {
-    if (job.featured) {
-        if (state.indexOf(runId) < 0) {
-            return [...state, runId];
-        }
+const removeRunId = (state, id) => {
+    if (state.indexOf(id) >= 0) {
+        return state.filter(uid => uid !== id);
     }
     return state;
 };
 
-const addViewedId = (state, id) => {
-    if (state.indexOf(id) < 0) {
-        return [...state, id];
-    }
-    return state;
-};
+const addFeaturedIds = (state, ids) => (
+    isEqual(state, ids) ? state : ids
+);
+
+const addViewedIds = (state, ids) => (
+    isEqual(state, ids) ? state : ids
+);
 
 const runsById = (state = exports.data.runs, action) => {
     switch (action.type) {
@@ -119,7 +118,7 @@ const runsById = (state = exports.data.runs, action) => {
         case 'ADD_FEATURED_RUN': {
             return addRun(
                 state,
-                Object.values(action.payload.runs)[0],
+                Object.values(action.payload.runs || {})[0],
             );
         }
         default: return state;
@@ -133,7 +132,7 @@ const jobsById = (state = exports.data.jobs, action) => {
         case 'ADD_FEATURED_RUN': {
             return addJob(
                 state,
-                Object.values(action.payload.jobs)[0],
+                Object.values(action.payload.jobs || {})[0],
             );
         }
         default: return state;
@@ -147,7 +146,7 @@ const providerTasksById = (state = exports.data.provider_tasks, action) => {
         case 'ADD_FEATURED_RUN': {
             return addProviderTasks(
                 state,
-                Object.values(action.payload.provider_tasks),
+                Object.values(action.payload.provider_tasks || []),
             );
         }
         default: return state;
@@ -161,7 +160,7 @@ const tasksById = (state = exports.data.tasks, action) => {
         case 'ADD_FEATURED_RUN': {
             return addTasks(
                 state,
-                Object.values(action.payload.tasks),
+                Object.values(action.payload.tasks || {}),
             );
         }
         default: return state;
@@ -174,15 +173,19 @@ const allRunIds = (state = exports.allInfo.ids, action) => {
         case 'ADD_VIEWED_RUN':
         case 'ADD_FEATURED_RUN':
             return addRunId(state, action.payload.id);
+        case types.DELETED_RUN: {
+            return removeRunId(state, action.payload.id);
+        }
         default: return state;
     }
 };
 
 const allFeaturedIds = (state = exports.featuredInfo.ids, action) => {
     switch (action.type) {
-        case 'ADD_RUN':
-        case 'ADD_VIEWED_RUN':
-        case 'ADD_FEATURED_RUN': return addFeaturedId(state, Object.values(action.payload.jobs)[0], action.payload.id);
+        case types.RECEIVED_FEATURED_RUNS: return addFeaturedIds(state, action.payload.ids);
+        case types.DELETED_RUN: {
+            return removeRunId(state, action.payload.id);
+        }
         default: return state;
     }
 };
@@ -192,13 +195,19 @@ const allOwnIds = (state = exports.ownInfo.ids, action) => {
         case 'ADD_RUN':
         case 'ADD_VIEWED_RUN':
         case 'ADD_FEATURED_RUN': return addOwnId(state, Object.values(action.payload.runs)[0], action.payload.username);
+        case types.DELETED_RUN: {
+            return removeRunId(state, action.payload.id);
+        }
         default: return state;
     }
 };
 
 const allViewedIds = (state = exports.viewedInfo.ids, action) => {
     switch (action.type) {
-        case 'ADD_VIEWED_RUN': return addViewedId(state, action.payload.id);
+        case activityTypes.RECEIVED_VIEWED_JOBS: return addViewedIds(state, action.payload.ids);
+        case types.DELETED_RUN: {
+            return removeRunId(state, action.payload.id);
+        }
         default: return state;
     }
 };
@@ -207,6 +216,9 @@ const orderedIdReducer = (state = exports.orderedIds, action) => {
     switch (action.type) {
         case types.RECEIVED_RUNS: {
             return isEqual(state, action.payload.orderedIds) ? state : action.payload.orderedIds;
+        }
+        case types.DELETED_RUN: {
+            return removeRunId(state, action.payload.id);
         }
         default: return state;
     }
