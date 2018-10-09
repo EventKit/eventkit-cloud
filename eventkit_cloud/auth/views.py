@@ -12,7 +12,7 @@ from django.shortcuts import redirect
 from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token
 from eventkit_cloud.core.helpers import get_id
 
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode
 
 logger = getLogger(__name__)
 
@@ -35,7 +35,7 @@ def oauth(request):
             ]
             if request.META.get('HTTP_REFERER'):
                     params += [('state', get_next(request.META.get('HTTP_REFERER')))]
-            encoded_params = urllib.parse.urlencode(params)
+            encoded_params = urlencode(params)
             return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), encoded_params))
     else:
         return HttpResponse(status=400)
