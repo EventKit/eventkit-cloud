@@ -48,18 +48,36 @@ const addJob = (state, job) => {
     return { ...state, [job.uid]: job };
 };
 
-const addProviderTask = (state, providerTask) => {
-    if (isEqual(state[providerTask.uid], providerTask)) {
-        return state;
+const addProviderTasks = (state, providerTasks) => {
+    const different = providerTasks.some(task => (
+        state[task.uid] === undefined || !isEqual(task, state[task.uid])
+    ));
+
+    if (different) {
+        const nextState = { ...state };
+        providerTasks.forEach((task) => {
+            nextState[task.uid] = task;
+        });
+        return nextState;
     }
-    return { ...state, [providerTask.uid]: providerTask };
+
+    return state;
 };
 
-const addTask = (state, task) => {
-    if (isEqual(state[task.uid], task)) {
-        return state;
+const addTasks = (state, tasks) => {
+    const different = tasks.some(task => (
+        state[task.uid] === undefined || !isEqual(task, state[task.uid])
+    ));
+
+    if (different) {
+        const nextState = { ...state };
+        tasks.forEach((task) => {
+            nextState[task.uid] = task;
+        });
+        return nextState;
     }
-    return { ...state, [task.uid]: task };
+
+    return state;
 };
 
 const addRunId = (state, id) => {
@@ -127,9 +145,9 @@ const providerTasksById = (state = exports.data.provider_tasks, action) => {
         case 'ADD_RUN':
         case 'ADD_VIEWED_RUN':
         case 'ADD_FEATURED_RUN': {
-            return addProviderTask(
+            return addProviderTasks(
                 state,
-                Object.values(action.payload.provider_tasks)[0],
+                Object.values(action.payload.provider_tasks),
             );
         }
         default: return state;
@@ -141,9 +159,9 @@ const tasksById = (state = exports.data.tasks, action) => {
         case 'ADD_RUN':
         case 'ADD_VIEWED_RUN':
         case 'ADD_FEATURED_RUN': {
-            return addTask(
+            return addTasks(
                 state,
-                Object.values(action.payload.tasks)[0],
+                Object.values(action.payload.tasks),
             );
         }
         default: return state;
@@ -349,18 +367,31 @@ export const initialState = {
         error: null,
     },
     datacartDetails: {
-        fetching: false,
-        fetched: false,
-        data: [],
-        error: null,
+        status: {
+            fetching: false,
+            fetched: false,
+            error: null,
+        },
+        ids: [],
     },
 };
 
-export function getDatacartDetailsReducer(state = initialState.datacartDetails, action) {
+export function datacartDetailsIdsReducer(state = initialState.datacartDetails.ids, action) {
+    switch (action.type) {
+        case types.DATACART_DETAILS_RECEIVED:
+            return isEqual(state, action.ids) ? state : action.ids;
+        case types.DATACART_DETAILS_ERROR:
+        case types.CLEAR_DATACART_DETAILS:
+            return [];
+        default:
+            return state;
+    }
+}
+
+export function datacartDetailsStatusReducer(state = initialState.datacartDetails.status, action) {
     switch (action.type) {
         case types.GETTING_DATACART_DETAILS:
             return {
-                ...state,
                 fetching: true,
                 fetched: false,
                 error: null,
@@ -369,27 +400,29 @@ export function getDatacartDetailsReducer(state = initialState.datacartDetails, 
             return {
                 fetching: false,
                 fetched: true,
-                data: action.datacartDetails.data,
                 error: null,
             };
         case types.DATACART_DETAILS_ERROR:
             return {
                 fetching: false,
                 fetched: false,
-                data: [],
                 error: action.error,
             };
         case types.CLEAR_DATACART_DETAILS:
             return {
                 fetching: false,
                 fetched: false,
-                data: [],
                 error: null,
             };
         default:
             return state;
     }
 }
+
+export const getDatacartDetailsReducer = combineReducers({
+    status: datacartDetailsStatusReducer,
+    ids: datacartDetailsIdsReducer,
+});
 
 export function deleteRunReducer(state = initialState.runDeletion, action) {
     switch (action.type) {

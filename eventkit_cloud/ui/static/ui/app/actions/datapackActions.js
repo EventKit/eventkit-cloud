@@ -21,7 +21,7 @@ export const types = {
     DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
 };
 
-export const getDatacartDetails = jobuid => (dispatch) => {
+export const getDatacartDetails = jobuid => (dispatch, getState) => {
     dispatch({
         type: types.GETTING_DATACART_DETAILS,
     });
@@ -32,24 +32,40 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         // get the list of runs (DataPacks) that are associated with the job UID.
         // We take only the first one for now since multiples are currently disabled.
         // However we leave it in an array for future proofing.
-        const data = [];
+        const runs = [];
         if (response.data.length) {
-            data.push({ ...response.data[0] });
-            if (!data[0].deleted) {
-                data[0].job.permissions = {
-                    value: data[0].job.visibility,
-                    groups: data[0].job.permissions.groups,
-                    members: data[0].job.permissions.users,
+            runs.push({ ...response.data[0] });
+            if (!runs[0].deleted) {
+                runs[0].job.permissions = {
+                    value: runs[0].job.visibility,
+                    groups: runs[0].job.permissions.groups,
+                    members: runs[0].job.permissions.users,
                 };
             }
         }
 
-        dispatch({
-            type: types.DATACART_DETAILS_RECEIVED,
-            datacartDetails: {
-                data,
-            },
+        const { user } = getState();
+
+        const normalizer = new Normalizer();
+        const actions = runs.map((run) => {
+            const { result, entities } = normalizer.normalizeRun(run);
+            return {
+                type: 'ADD_RUN',
+                payload: {
+                    id: result,
+                    username: user.data.user.username,
+                    ...entities,
+                },
+            };
         });
+
+        dispatch([
+            {
+                type: types.DATACART_DETAILS_RECEIVED,
+                ids: runs.map(run => run.uid),
+            },
+            ...actions,
+        ]);
     }).catch((error) => {
         dispatch({
             type: types.DATACART_DETAILS_ERROR, error: error.response.data,

@@ -1,42 +1,69 @@
 import { createSelector } from 'reselect';
 
-const getState = state => state;
+const getAllRuns = state => state.exports.data.runs;
 
-const getProps = (state, props) => props;
+const getPropsRun = (state, props) => state.exports.data.runs[props.runId];
 
-const getRun = (state, props) => state.exports.data.runs[props.runId];
+const getDatacartIds = state => state.datacartDetails.ids;
 
-const getRunIds = state => state.exports.allInfo.ids;
+const getAllJobs = state => state.exports.data.jobs;
 
-const getJobs = state => state.exports.data.jobs;
+const getAllProviderTasks = state => state.exports.data.provider_tasks;
 
-const getProviderTasks = state => state.exports.data.provider_tasks;
+const getAllExportTasks = state => state.exports.data.tasks;
 
-const getExportTasks = state => state.exports.data.tasks;
-
-const getRunProviderTasks = () => createSelector(
-    [getRun, getProviderTasks],
+const getPropsProviderTasks = () => createSelector(
+    [getPropsRun, getAllProviderTasks],
     (run, providerTasks) => run ? run.provider_tasks.map(id => providerTasks[id]) : null,
 );
 
-const getJob = createSelector(
-    [getRun, getJobs],
+const getPropsJob = createSelector(
+    [getPropsRun, getAllJobs],
     (run, jobs) => run ? jobs[run.job] : null,
 );
 
+const toFullProviderTask = (providerTask, exportTasks) => {
+    const tasks = providerTask.tasks.map(id => exportTasks[id]);
+    return {
+        ...providerTask,
+        tasks,
+    };
+};
+
+const toFullRun = (run, jobs, providerTasks, exportTasks) => {
+    const runJob = jobs[run.job];
+    const runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
+    return {
+        ...run,
+        job: runJob,
+        provider_tasks: runTasks,
+    };
+};
+
 export const makeFullRunSelector = () => createSelector(
-    [getRun, getJob, getRunProviderTasks()],
+    [getPropsRun, getPropsJob, getPropsProviderTasks()],
     (run, job, providerTasks) => run ? ({
         ...run,
         job,
-        provider_task: providerTasks,
+        provider_tasks: providerTasks,
     }) : null,
 );
 
 export const makeAllRunsSelector = () => createSelector(
-    [getState, getProps, getRunIds],
-    (state, props, runIds) => {
-        const getFullRun = makeFullRunSelector();
-        return runIds.map(id => getFullRun(state, { ...props, runId: id }));
+    [getAllRuns, getAllJobs, getAllProviderTasks, getAllExportTasks],
+    (runs, jobs, providerTasks, exportTasks) => {
+        return Object.values(runs).map(run => toFullRun(run, jobs, providerTasks, exportTasks));
+    }
+);
+
+const getDatacarts = createSelector(
+    [getDatacartIds, getAllRuns],
+    (ids, runs) => ids.map(id => runs[id]),
+);
+
+export const makeDatacartSelector = () => createSelector(
+    [getDatacarts, getAllJobs, getAllProviderTasks, getAllExportTasks],
+    (runs, jobs, providerTasks, exportTasks) => {
+        return runs.map(run => toFullRun(run, jobs, providerTasks, exportTasks));
     }
 );

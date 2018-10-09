@@ -29,6 +29,7 @@ import { getGroups } from '../../actions/groupActions';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import BaseDialog from '../../components/Dialog/BaseDialog';
 import { joyride } from '../../joyride.config';
+import { makeDatacartSelector } from '../../selectors/runSelector';
 
 export class StatusDownload extends React.Component {
     constructor(props) {
@@ -79,19 +80,19 @@ export class StatusDownload extends React.Component {
         if (nextProps.permissionState.updated && !this.props.permissionState.updated) {
             this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
-        if (nextProps.datacartDetails.fetched && !this.props.datacartDetails.fetched) {
+        if (nextProps.detailsFetched && !this.props.detailsFetched) {
             if (this.state.isLoading) {
                 this.setState({ isLoading: false });
             }
 
             // If no data returned from API we stop here
-            if (!nextProps.datacartDetails.data.length) {
+            if (!nextProps.runIds.length) {
                 return;
             }
 
-            const datacart = nextProps.datacartDetails.data;
+            const datacart = nextProps.runs;
             let clearTimer = true;
-            if (nextProps.datacartDetails.data[0].zipfile_url == null) {
+            if (nextProps.runs[0].zipfile_url == null) {
                 clearTimer = false;
             }
 
@@ -128,6 +129,17 @@ export class StatusDownload extends React.Component {
             this.setState(this.getInitialState());
             this.componentDidMount();
         }
+    }
+
+    shouldComponentUpdate(p, s) {
+        if (p.detailsFetched !== this.props.detailsFetched) {
+            if (p.runs !== this.props.runs || this.state.isLoading) {
+                return true;
+            }
+            return false;
+        }
+
+        return true;
     }
 
     componentWillUnmount() {
@@ -297,7 +309,7 @@ export class StatusDownload extends React.Component {
 
         const errorMessage = this.getErrorMessage();
 
-        const details = this.props.datacartDetails.data.map((cartDetails) => {
+        const details = this.props.runs.map((cartDetails) => {
             if (cartDetails.deleted) {
                 return (
                     <div
@@ -419,7 +431,9 @@ StatusDownload.contextTypes = {
 };
 
 StatusDownload.propTypes = {
-    datacartDetails: PropTypes.object.isRequired,
+    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    detailsFetched: PropTypes.bool.isRequired,
     getDatacartDetails: PropTypes.func.isRequired,
     clearDataCartDetails: PropTypes.func.isRequired,
     deleteRun: PropTypes.func.isRequired,
@@ -459,21 +473,26 @@ StatusDownload.propTypes = {
     width: PropTypes.string.isRequired,
 };
 
-function mapStateToProps(state) {
-    return {
-        jobuid: state.submitJob.jobuid,
-        datacartDetails: state.datacartDetails,
-        runDeletion: state.runDeletion,
-        expirationState: state.updateExpiration,
-        permissionState: state.updatePermission,
-        exportReRun: state.exportReRun,
-        cancelProviderTask: state.cancelProviderTask,
-        providers: state.providers,
-        user: state.user,
-        users: state.users.users,
-        groups: state.groups.groups,
-    };
-}
+const makeMapStateToProps = () => {
+    const getDatacart = makeDatacartSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            runIds: state.datacartDetails.ids,
+            detailsFetched: state.datacartDetails.status.fetched,
+            runDeletion: state.runDeletion,
+            expirationState: state.updateExpiration,
+            permissionState: state.updatePermission,
+            exportReRun: state.exportReRun,
+            cancelProviderTask: state.cancelProviderTask,
+            providers: state.providers,
+            user: state.user,
+            users: state.users.users,
+            groups: state.groups.groups,
+            runs: getDatacart(state, props),
+        }
+    );
+    return mapStateToProps;
+};
 
 function mapDispatchToProps(dispatch) {
     return {
@@ -543,5 +562,5 @@ function mapDispatchToProps(dispatch) {
 export default
 @withWidth()
 @withTheme()
-@connect(mapStateToProps, mapDispatchToProps)
+@connect(makeMapStateToProps, mapDispatchToProps)
 class Default extends StatusDownload {}
