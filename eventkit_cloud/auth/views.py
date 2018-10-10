@@ -44,7 +44,6 @@ def oauth(request):
 
 
 def callback(request):
-    logger.info("HIT CALLBACK!")
     access_token = request_access_token(request.GET.get('code'))
     user = fetch_user_from_token(access_token)
     state = request.GET.get('state')

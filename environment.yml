@@ -16,7 +16,7 @@ dependencies:
  - boto3=1.7.48
  - celery=4.2.1
  - certifi=2018.8.24
- - django=2.0.5
+ - django=2.0.8
  - dj-database-url=0.4.2
  - django-auth-ldap=1.7.0
  - django-celery-beat=1.1.1
@@ -39,7 +39,7 @@ dependencies:
  - pyparsing=2.1.10
  - python-dateutil=2.7.2
  - python-magic=0.4.12
- - pytz=2017.2
+ - pytz=2018.5
  - PyYAML=3.12
  - requests=2.18.4
  - Shapely=1.6.4
