@@ -15,6 +15,8 @@ from mock import patch, Mock, MagicMock
 from eventkit_cloud.auth.models import OAuth
 from eventkit_cloud.auth.views import callback, oauth
 
+import base64
+
 logger = logging.getLogger(__name__)
 
 
@@ -51,13 +53,13 @@ class TestAuthViews(TestCase):
             self.assertRedirects(response, '/dashboard', fetch_redirect_response=False)
 
             mock_login.reset_mock()
-            example_state = "/status/12345"
+            example_state = base64.b64encode("/status/12345".encode())
             request = Mock(GET={'code': "1234", 'state': example_state})
             mock_get_token.return_value = example_token
             mock_get_user.return_value = user
             response = callback(request)
             mock_login.assert_called_once_with(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            self.assertRedirects(response, example_state, fetch_redirect_response=False)
+            self.assertRedirects(response, base64.b64decode(example_state).decode(), fetch_redirect_response=False)
 
     def test_oauth(self):
         # Test GET to ensure a provider name is returned for dynamically naming oauth login.
@@ -101,7 +103,7 @@ class TestAuthViews(TestCase):
                 ('redirect_uri', redirect_uri),
                 ('response_type', response_type),
                 ('scope', scope),
-                ('state', referer)
+                ('state', base64.b64encode(referer.encode()))
             ))
             self.assertRedirects(response, '{url}?{params}'.format(url=authorization_url.rstrip('/'),
                                                                    params=params),
