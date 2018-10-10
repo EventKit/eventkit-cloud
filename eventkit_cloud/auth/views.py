@@ -83,4 +83,6 @@ def get_next(url):
 
 def get_redirect_url(url):
     query = parse_qs(urlparse(url).query)
-    return query.get('redirect') or query.get('next')
+    redirect_query = query.get('redirect') or query.get('next')
+    if redirect_query:
+        return redirect_query[0]
