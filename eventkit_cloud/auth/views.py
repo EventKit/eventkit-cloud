@@ -14,12 +14,14 @@ from eventkit_cloud.core.helpers import get_id
 
 from urllib.parse import urlparse, parse_qs, urlencode
 
+import base64
+
 logger = getLogger(__name__)
 
 
 def oauth(request):
     """
-    :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings 
+    :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings
     """
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         if request.GET.get('query'):
@@ -34,7 +36,7 @@ def oauth(request):
                 ('scope', settings.OAUTH_SCOPE)
             ]
             if request.META.get('HTTP_REFERER'):
-                    params += [('state', get_next(request.META.get('HTTP_REFERER')))]
+                    params += [('state', base64.b64encode(request.META.get('HTTP_REFERER').encode()))]
             encoded_params = urlencode(params)
             return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), encoded_params))
     else:
@@ -50,7 +52,7 @@ def callback(request):
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
         if state:
-            return redirect(state)
+            return redirect(base64.b64decode(state).decode())
         return redirect('dashboard')
     else:
         logger.error('User could not be logged in.')
@@ -75,14 +77,3 @@ def logout(request):
     response.delete_cookie(settings.AUTO_LOGOUT_COOKIE_NAME, domain=settings.SESSION_COOKIE_DOMAIN)
 
     return response
-
-
-def get_next(url):
-    return get_redirect_url(url) or urlparse(url).path
-
-
-def get_redirect_url(url):
-    query = parse_qs(urlparse(url).query)
-    redirect_query = query.get('redirect') or query.get('next')
-    if redirect_query:
-        return redirect_query[0]
