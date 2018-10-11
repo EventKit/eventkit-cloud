@@ -116,7 +116,8 @@
       "!**/initialState.js",
       "!**/styles/**",
       "!**/node_modules/**",
-      "!**/e2e/**"
+      "!**/e2e/**",
+      "!**/store/**"
     ],
     "moduleFileExtensions": [
       "js",
@@ -134,7 +135,7 @@
       "\\.(css|less)$": "identity-obj-proxy"
     },
     "modulePathIgnorePatterns": [
-      "staticfiles/",
+      "staticfiles",
       "rootReducer.js",
       "index.tsx",
       "store/"
@@ -150,7 +151,11 @@
       "^.+\\.js$": "babel-jest",
       "^.+\\.ts$": "ts-jest",
       "^.+\\.tsx$": "ts-jest"
-    }
+    },
+    "testMatch": [
+      "**/__tests__/**/.(js|ts)?(x)",
+      "**/?(*.)+(spec|test).(js|ts)?(x)"
+    ]
   },
   "scripts": {
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",

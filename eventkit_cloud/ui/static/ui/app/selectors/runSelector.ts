@@ -1,28 +1,28 @@
 import { createSelector } from 'reselect';
 
-const getAllRuns = state => state.exports.data.runs;
+export const getAllRuns = state => state.exports.data.runs;
 
-const getPropsRun = (state, props) => state.exports.data.runs[props.runId];
+export const getPropsRun = (state, props) => state.exports.data.runs[props.runId];
 
-const getDatacartIds = state => state.datacartDetails.ids;
+export const getDatacartIds = state => state.datacartDetails.ids;
 
-const getAllJobs = state => state.exports.data.jobs;
+export const getAllJobs = state => state.exports.data.jobs;
 
-const getAllProviderTasks = state => state.exports.data.provider_tasks;
+export const getAllProviderTasks = state => state.exports.data.provider_tasks;
 
-const getAllExportTasks = state => state.exports.data.tasks;
+export const getAllExportTasks = state => state.exports.data.tasks;
 
-const getPropsProviderTasks = () => createSelector(
+export const getPropsProviderTasks = () => createSelector(
     [getPropsRun, getAllProviderTasks, getAllExportTasks],
     (run, providerTasks, exportTasks) => run ? run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks)) : null,
 );
 
-const getPropsJob = createSelector(
+export const getPropsJob = createSelector(
     [getPropsRun, getAllJobs],
     (run, jobs) => run ? jobs[run.job] : null,
 );
 
-const toFullProviderTask = (providerTask, exportTasks) => {
+export const toFullProviderTask = (providerTask, exportTasks) => {
     const tasks = providerTask.tasks.map(id => exportTasks[id]);
     return {
         ...providerTask,
@@ -30,7 +30,7 @@ const toFullProviderTask = (providerTask, exportTasks) => {
     };
 };
 
-const toFullRun = (run, jobs, providerTasks, exportTasks) => {
+export const toFullRun = (run, jobs, providerTasks, exportTasks) => {
     if (!run.provider_tasks) {
         return run;
     }
@@ -59,7 +59,7 @@ export const makeAllRunsSelector = () => createSelector(
     }
 );
 
-const getDatacarts = createSelector(
+export const getDatacarts = createSelector(
     [getDatacartIds, getAllRuns],
     (ids, runs) => ids.map(id => runs[id]),
 );

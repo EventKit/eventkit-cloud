@@ -23,35 +23,9 @@ export default class Normalizer {
         this.provider_tasks = new schema.Array(this.provider_task);
         this.run = new schema.Entity('runs', { job: this.job, provider_tasks: this.provider_tasks }, this.idOption);
         this.runs = new schema.Array(this.run);
-
-        // user schemas
-        this.user = new schema.Entity('user', {}, { idAttribute: 'username'});
-        this.userData = new schema.Entity('user', {
-            user: this.user,
-        });
-
-    }
-
-    public getRunSchemas() {
-        return {
-            job: this.job,
-            task: this.task,
-            provider_task: this.provider_task,
-            provider_tasks: this.provider_tasks,
-            run: this.runs,
-            runs: this.runs,
-        };
-    }
-
-    public normalizeRuns(runs) {
-        return normalize(runs, this.runs);
     }
 
     public normalizeRun(run) {
         return normalize(run, this.run);
-    }
-
-    public normalizeUserData(user) {
-        return normalize(user, this.userData);
     }
 };
