@@ -4,7 +4,9 @@ export default class Normalizer {
     private idOption: object;
     private job: schema.Entity;
     private task: schema.Entity;
+    // tslint:disable-next-line
     private provider_task: schema.Entity;
+    // tslint:disable-next-line
     private provider_tasks: schema.Array;
     private run: schema.Entity;
     private runs: schema.Array;

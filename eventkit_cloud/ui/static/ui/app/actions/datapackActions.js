@@ -22,6 +22,7 @@ export const types = {
 };
 
 export const getDatacartDetails = jobuid => (dispatch, getState) => {
+    const { user } = getState();
     dispatch({
         type: types.GETTING_DATACART_DETAILS,
     });
@@ -37,14 +38,12 @@ export const getDatacartDetails = jobuid => (dispatch, getState) => {
             runs.push({ ...response.data[0] });
             if (!runs[0].deleted) {
                 runs[0].job.permissions = {
-                    value: runs[0].job.visibility,
+                    value: runs[0].job.permissions.value,
                     groups: runs[0].job.permissions.groups,
                     members: runs[0].job.permissions.users,
                 };
             }
         }
-
-        const { user } = getState();
 
         const normalizer = new Normalizer();
         const actions = runs.map((run) => {
@@ -285,8 +284,6 @@ export function getFeaturedRuns(args) {
                     type: 'ADD_FEATURED_RUN',
                     payload: {
                         id: result,
-                        range,
-                        nextPage,
                         username: user.data.user.username,
                         ...entities,
                     },

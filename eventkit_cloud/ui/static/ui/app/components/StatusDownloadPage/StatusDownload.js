@@ -131,7 +131,7 @@ export class StatusDownload extends React.Component {
         }
     }
 
-    shouldComponentUpdate(p, s) {
+    shouldComponentUpdate(p) {
         if (p.detailsFetched !== this.props.detailsFetched) {
             if (p.runs !== this.props.runs || this.state.isLoading) {
                 return true;

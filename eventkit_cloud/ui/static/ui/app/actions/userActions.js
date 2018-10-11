@@ -1,7 +1,6 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import Normalizer from '../utils/normalizers';
 
 export const types = {
     USER_LOGGING_IN: 'USER_LOGGING_IN',
@@ -53,16 +52,9 @@ export function login(data) {
             headers: { 'X-CSRFToken': csrftoken },
         }).then((response) => {
             if (response.data) {
-                const norm = new Normalizer();
-                const { entities, result } = norm.normalizeUserData(response.data);
-
                 dispatch({
                     type: types.USER_LOGGED_IN,
                     payload: response.data,
-                    normalized: {
-                        ...entities,
-                        ids: result,
-                    },
                 });
             } else {
                 dispatch({

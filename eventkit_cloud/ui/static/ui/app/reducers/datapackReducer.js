@@ -20,7 +20,7 @@ const genericInfo = {
     },
 };
 
-const exports = {
+export const exports = {
     data: {
         runs: {},
         jobs: {},
@@ -30,7 +30,7 @@ const exports = {
     orderedIds: [],
     allInfo: { ...genericInfo },
     featuredInfo: { ...genericInfo },
-    ownInfo: { ...genericInfo },
+    ownInfo: { ids: [] },
     viewedInfo: { ...genericInfo },
 };
 
@@ -224,10 +224,13 @@ const orderedIdReducer = (state = exports.orderedIds, action) => {
     }
 };
 
-const getStatusReducer = (
-    typeMap = { FETCHING: null, FETCHED: null, ERROR: null },
-    inputState = {},
-) => {
+const getStatusReducer = (inputTypeMap, inputState = {}) => {
+    const typeMap = {
+        FETCHING: null,
+        FETCHED: null,
+        ERROR: null,
+        ...inputTypeMap,
+    };
     const statusReducer = (state = inputState, action) => {
         switch (action.type) {
             case typeMap.FETCHING:
@@ -257,10 +260,13 @@ const getStatusReducer = (
     return statusReducer;
 };
 
-const getMetaReducer = (
-    typeMap = { FETCHED: null, SET_PAGE_ORDER: null, SET_PAGE_VIEW: null },
-    inputState = {},
-) => {
+const getMetaReducer = (inputTypeMap, inputState = {}) => {
+    const typeMap = {
+        FETCHED: null,
+        SET_PAGE_ORDER: null,
+        SET_PAGE_VIEW: null,
+        ...inputTypeMap,
+    };
     const metaReducer = (state = inputState, action) => {
         switch (action.type) {
             case typeMap.FETCHED: {
@@ -323,7 +329,7 @@ export const featuredInfoReducer = combineReducers({
         {
             FETCHING: types.FETCHING_FEATURED_RUNS,
             FETCHED: types.RECEIVED_FEATURED_RUNS,
-            ERROR: types.FETCHING_FEATURED_RUNS,
+            ERROR: types.FETCH_FEATURED_RUNS_ERROR,
         },
         exports.featuredInfo.status,
     ),
@@ -347,7 +353,7 @@ export const viewedInfoReducer = combineReducers({
     }, exports.viewedInfo.meta),
 });
 
-const ownInfoReducer = combineReducers({
+export const ownInfoReducer = combineReducers({
     ids: allOwnIds,
 });
 

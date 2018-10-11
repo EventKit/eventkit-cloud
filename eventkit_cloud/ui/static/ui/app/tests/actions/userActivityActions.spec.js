@@ -1,44 +1,64 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import sinon from 'sinon';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/userActivityActions';
-import { initialState as state } from '../../reducers/userActivityReducer';
+import { exports as state } from '../../reducers/datapackReducer';
+import Normalizer from '../../utils/normalizers';
 
-const initialState = { userActivity: state };
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
+const initialState = { exports: state, user: { data: { user: { username: 'test' } } } };
 
-const mockViewedJobs = [
-    {
-        last_export_run: {
-            job: {
-                visibility: '',
-                permissions: {
-                    groups: [],
-                    users: [],
-                },
-            },
-        },
+const apiPermissions = {
+    value: '',
+    groups: [],
+    users: [],
+};
+
+const reduxPermissions = {
+    value: '',
+    groups: [],
+    members: [],
+};
+
+const mockApiJobs = [{
+    last_export_run: {
+        uid: '123',
+        job: { uid: '111', permissions: apiPermissions },
+        provider_tasks: [],
     },
-    {
-        last_export_run: {
-            job: {
-                visibility: '',
-                permissions: {
-                    groups: [],
-                    users: [],
-                },
-            },
-        },
+},
+{
+    last_export_run: {
+        uid: '456',
+        job: { uid: '222', permissions: apiPermissions },
+        provider_tasks: [],
     },
-];
+}];
+
+const mockJobs = [{
+    last_export_run: {
+        uid: '123',
+        job: { uid: '111', permissions: reduxPermissions },
+        provider_tasks: [],
+    },
+},
+{
+    last_export_run: {
+        uid: '456',
+        job: { uid: '222', permissions: reduxPermissions },
+        provider_tasks: [],
+    },
+}];
+
+const normalizer = new Normalizer();
+const run1 = normalizer.normalizeRun(mockJobs[0].last_export_run);
+const run2 = normalizer.normalizeRun(mockJobs[1].last_export_run);
+
 
 describe('userActivityActions', () => {
     it('getViewedJobs() should send the received array of viewed jobs to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/user/activity/jobs').reply(200, mockViewedJobs, {
+        mock.onGet('/api/user/activity/jobs').reply(200, mockApiJobs, {
             link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24',
         });
 
@@ -47,37 +67,38 @@ describe('userActivityActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
             {
-                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: mockViewedJobs, nextPage: true, range: '12/24',
+                type: actions.types.FETCHING_VIEWED_JOBS,
+                cancelSource: testSource,
+            },
+            {
+                type: actions.types.RECEIVED_VIEWED_JOBS,
+                payload: {
+                    ids: ['123', '456'],
+                    nextPage: true,
+                    range: '12/24',
+                },
+            },
+            {
+                type: 'ADD_VIEWED_RUN',
+                payload: {
+                    id: run1.result,
+                    username: initialState.user.data.user.username,
+                    ...run1.entities,
+                },
+            },
+            {
+                type: 'ADD_VIEWED_RUN',
+                payload: {
+                    id: run2.result,
+                    username: initialState.user.data.user.username,
+                    ...run2.entities,
+                },
             },
         ];
 
-        const store = mockStore(initialState);
-
-        return store.dispatch(actions.getViewedJobs())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-            });
-    });
-
-    it('getViewedJobs() should handle empty header', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/user/activity/jobs').reply(200, mockViewedJobs, {});
-
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
-            {
-                type: actions.types.RECEIVED_VIEWED_JOBS, viewedJobs: mockViewedJobs, nextPage: false, range: '',
-            },
-        ];
-
-        const store = mockStore(initialState);
+        // const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getViewedJobs())
             .then(() => {
@@ -88,18 +109,21 @@ describe('userActivityActions', () => {
 
     it('getViewedJobs() should cancel an active request when manually called', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/user/activity/jobs').reply(200, mockViewedJobs, {});
+        mock.onGet('/api/user/activity/jobs').reply(200, mockApiJobs, {});
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
-        const store = mockStore({
+
+        const store = createTestStore({
             ...initialState,
-            userActivity: {
-                ...initialState.userActivity,
-                viewedJobs: {
-                    ...initialState.userActivity.viewedJobs,
-                    fetching: true,
-                    cancelSource,
+            exports: {
+                ...initialState.exports,
+                viewedInfo: {
+                    ...initialState.exports.viewedInfo,
+                    status: {
+                        fetching: true,
+                        cancelSource,
+                    },
                 },
             },
         });
@@ -113,18 +137,20 @@ describe('userActivityActions', () => {
 
     it('getViewedJobs() should NOT cancel an active request when automatically called', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/user/activity/jobs').reply(200, mockViewedJobs, {});
+        mock.onGet('/api/user/activity/jobs').reply(200, mockApiJobs, {});
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
-        const store = mockStore({
+        const store = createTestStore({
             ...initialState,
-            userActivity: {
-                ...initialState.userActivity,
-                viewedJobs: {
-                    ...initialState.userActivity.viewedJobs,
-                    fetching: true,
-                    cancelSource,
+            exports: {
+                ...initialState.exports,
+                viewedInfo: {
+                    ...initialState.viewedInfo,
+                    status: {
+                        fetching: true,
+                        cancelSource,
+                    },
                 },
             },
         });
@@ -147,7 +173,8 @@ describe('userActivityActions', () => {
             { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
+
 
         return store.dispatch(actions.getViewedJobs())
             .then(() => {
@@ -170,7 +197,8 @@ describe('userActivityActions', () => {
             { type: actions.types.FETCH_VIEWED_JOBS_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
+
 
         return store.dispatch(actions.getViewedJobs())
             .then(() => {

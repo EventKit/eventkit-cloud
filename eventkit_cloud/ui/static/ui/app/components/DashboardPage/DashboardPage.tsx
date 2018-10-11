@@ -32,7 +32,6 @@ export const CUSTOM_BREAKPOINTS = {
 
 interface Props {
     router: object;
-    userActivity: Eventkit.Store.UserActivity;
     notificationsData: Eventkit.Store.NotificationsData;
     notificationsStatus: Eventkit.Store.NotificationsStatus;
     providers: Eventkit.Provider[];
@@ -628,7 +627,6 @@ export class DashboardPage extends React.Component<Props, State> {
 function mapStateToProps(state) {
     return {
         userData: state.user.data,
-        userActivity: state.userActivity,
         notificationsData: state.notifications.data,
         notificationsStatus: state.notifications.status,
         providers: state.providers,

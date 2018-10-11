@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import { types } from '../actions/userActions';
 
-const user = {
+export const user = {
     data: null,
     meta: {
         autoLogoutAt: null,

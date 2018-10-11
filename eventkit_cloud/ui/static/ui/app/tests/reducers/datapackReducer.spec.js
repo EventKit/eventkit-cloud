@@ -1,198 +1,266 @@
 import * as reducers from '../../reducers/datapackReducer';
 
-describe('DataPackList reducer', () => {
+describe('Runs reducer', () => {
     it('it should return the initial state', () => {
-        expect(reducers.dataPackReducer(undefined, {})).toEqual({
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
-            range: '',
-            order: '',
-            view: '',
-            cancelSource: null,
+        expect(reducers.runsReducer(undefined, {})).toEqual({ ...reducers.exports });
+    });
+
+    describe('When handling ADD run data', () => {
+        it('handles ADD_RUN', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'ADD_RUN',
+                    payload: {
+                        id: '1234',
+                        runs: { 1234: { uid: '1234', user: 'test' } },
+                        jobs: { 1234: { uid: '1234' } },
+                        provider_tasks: { 1234: { uid: '1234' } },
+                        tasks: { 1234: { uid: '1234' } },
+                        username: 'test',
+                    },
+                },
+            )).toEqual({
+                ...reducers.exports,
+                data: {
+                    ...reducers.exports.data,
+                    runs: {
+                        1234: { uid: '1234', user: 'test' },
+                    },
+                    jobs: {
+                        1234: { uid: '1234' },
+                    },
+                    provider_tasks: {
+                        1234: { uid: '1234' },
+                    },
+                    tasks: {
+                        1234: { uid: '1234' },
+                    },
+                },
+                allInfo: {
+                    ...reducers.exports.allInfo,
+                    ids: ['1234'],
+                },
+                ownInfo: {
+                    ids: ['1234'],
+                },
+            });
         });
     });
 
-    it('should handle FETCHING RUNS', () => {
-        expect(reducers.dataPackReducer(
-            {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                order: '',
-                view: '',
-                cancelSource: null,
-            },
-            {
-                type: 'FETCHING_RUNS',
-                cancelSource: 'test',
-            },
-        )).toEqual({
-            fetching: true,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
-            range: '',
-            order: '',
-            view: '',
-            cancelSource: 'test',
+    describe('When handling standard RUNS', () => {
+        it('should handle FETCHING RUNS', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'FETCHING_RUNS',
+                    cancelSource: 'test',
+                },
+            )).toEqual({
+                ...reducers.exports,
+                allInfo: {
+                    ...reducers.exports.allInfo,
+                    status: {
+                        ...reducers.exports.allInfo.status,
+                        fetching: true,
+                        cancelSource: 'test',
+                    },
+                },
+            });
+        });
+
+        it('should handle RECEIVED_RUNS', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'RECEIVED_RUNS',
+                    payload: {
+                        orderedIds: ['1', '2'],
+                        nextPage: true,
+                        range: '12/24',
+                    },
+                },
+            )).toEqual({
+                ...reducers.exports,
+                orderedIds: ['1', '2'],
+                allInfo: {
+                    ...reducers.exports.allInfo,
+                    status: {
+                        ...reducers.exports.allInfo.status,
+                        fetched: true,
+                        fetching: false,
+                    },
+                    meta: {
+                        ...reducers.exports.allInfo.meta,
+                        nextPage: true,
+                        range: '12/24',
+                    },
+                },
+            });
+        });
+
+        it('should handle FETCH_RUNS_ERROR', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'FETCH_RUNS_ERROR', error: 'This is an error message',
+                },
+            )).toEqual({
+                ...reducers.exports,
+                allInfo: {
+                    ...reducers.exports.allInfo,
+                    status: {
+                        ...reducers.exports.allInfo.status,
+                        fetched: false,
+                        fetching: false,
+                        error: 'This is an error message',
+                    },
+                },
+            });
         });
     });
 
-    it('should handle RECEIVED_RUNS', () => {
-        expect(reducers.dataPackReducer(
-            {
-                fetching: true,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                order: '',
-                view: '',
-                cancelSource: 'test',
-            },
-            {
-                type: 'RECEIVED_RUNS', runs: [{ thisIs: 'a fake run' }], nextPage: true, range: '12/24',
-            },
-        )).toEqual({
-            fetching: false,
-            fetched: true,
-            runs: [{ thisIs: 'a fake run' }],
-            error: null,
-            nextPage: true,
-            range: '12/24',
-            order: '',
-            view: '',
-            cancelSource: null,
+    describe('When handling FEATURED RUNS', () => {
+        it('should handle FETCHING RUNS', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'FETCHING_FEATURED_RUNS',
+                    cancelSource: 'test',
+                },
+            )).toEqual({
+                ...reducers.exports,
+                featuredInfo: {
+                    ...reducers.exports.featuredInfo,
+                    status: {
+                        ...reducers.exports.featuredInfo.status,
+                        fetching: true,
+                        cancelSource: 'test',
+                    },
+                },
+            });
+        });
+
+        it('should handle RECEIVED_RUNS', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'RECEIVED_FEATURED_RUNS',
+                    payload: {
+                        ids: ['1', '2'],
+                        nextPage: true,
+                        range: '12/24',
+                    },
+                },
+            )).toEqual({
+                ...reducers.exports,
+                featuredInfo: {
+                    ...reducers.exports.featuredInfo,
+                    ids: ['1', '2'],
+                    status: {
+                        ...reducers.exports.featuredInfo.status,
+                        fetched: true,
+                        fetching: false,
+                    },
+                    meta: {
+                        ...reducers.exports.featuredInfo.meta,
+                        nextPage: true,
+                        range: '12/24',
+                    },
+                },
+            });
+        });
+
+        it('should handle FETCH_RUNS_ERROR', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'FETCH_FEATURED_RUNS_ERROR', error: 'This is an error message',
+                },
+            )).toEqual({
+                ...reducers.exports,
+                featuredInfo: {
+                    ...reducers.exports.featuredInfo,
+                    status: {
+                        ...reducers.exports.featuredInfo.status,
+                        fetched: false,
+                        fetching: false,
+                        error: 'This is an error message',
+                    },
+                },
+            });
         });
     });
 
-    it('should handle FETCH_RUNS_ERROR', () => {
-        expect(reducers.dataPackReducer(
-            {
-                fetching: true,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                order: '',
-                view: '',
-                cancelSource: 'test',
-            },
-            {
-                type: 'FETCH_RUNS_ERROR', error: 'This is an error message',
-            },
-        )).toEqual({
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: 'This is an error message',
-            nextPage: false,
-            range: '',
-            order: '',
-            view: '',
-            cancelSource: null,
+    describe('When handling VIEWD RUNS', () => {
+        it('should handle FETCHING VIEWED JOBS', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'FETCHING_VIEWED_JOBS',
+                    cancelSource: 'test',
+                },
+            )).toEqual({
+                ...reducers.exports,
+                viewedInfo: {
+                    ...reducers.exports.viewedInfo,
+                    status: {
+                        ...reducers.exports.viewedInfo.status,
+                        fetching: true,
+                        cancelSource: 'test',
+                    },
+                },
+            });
         });
-    });
-});
 
-describe('featuredRuns reducer', () => {
-    it('it should return the initial state', () => {
-        expect(reducers.featuredRunsReducer(undefined, {})).toEqual({
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
-            range: '',
-            cancelSource: null,
+        it('should handle RECEIVED_VIEWED_JOBS', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'RECEIVED_VIEWED_JOBS',
+                    payload: {
+                        ids: ['1', '2'],
+                        nextPage: true,
+                        range: '12/24',
+                    },
+                },
+            )).toEqual({
+                ...reducers.exports,
+                viewedInfo: {
+                    ...reducers.exports.viewedInfo,
+                    ids: ['1', '2'],
+                    status: {
+                        ...reducers.exports.viewedInfo.status,
+                        fetched: true,
+                        fetching: false,
+                    },
+                    meta: {
+                        ...reducers.exports.viewedInfo.meta,
+                        nextPage: true,
+                        range: '12/24',
+                    },
+                },
+            });
         });
-    });
 
-    it('should handle FETCHING RUNS', () => {
-        expect(reducers.featuredRunsReducer(
-            {
-                fetching: false,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                cancelSource: null,
-            },
-            {
-                type: 'FETCHING_FEATURED_RUNS',
-                cancelSource: 'test',
-            },
-        )).toEqual({
-            fetching: true,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
-            range: '',
-            cancelSource: 'test',
-        });
-    });
-
-    it('should handle RECEIVED_FEATURED_RUNS', () => {
-        expect(reducers.featuredRunsReducer(
-            {
-                fetching: true,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                cancelSource: 'test',
-            },
-            {
-                type: 'RECEIVED_FEATURED_RUNS',
-                runs: [{ thisIs: 'a fake run' }],
-                nextPage: true,
-                range: '12/24',
-            },
-        )).toEqual({
-            fetching: false,
-            fetched: true,
-            runs: [{ thisIs: 'a fake run' }],
-            error: null,
-            nextPage: true,
-            range: '12/24',
-            cancelSource: null,
-        });
-    });
-
-    it('should handle FETCH_FEATURED_RUNS_ERROR', () => {
-        expect(reducers.featuredRunsReducer(
-            {
-                fetching: true,
-                fetched: false,
-                runs: [],
-                error: null,
-                nextPage: false,
-                range: '',
-                cancelSource: 'test',
-            },
-            {
-                type: 'FETCH_FEATURED_RUNS_ERROR', error: 'This is an error message',
-            },
-        )).toEqual({
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: 'This is an error message',
-            nextPage: false,
-            range: '',
-            cancelSource: null,
+        it('should handle FETCH_VIEWED_JOBS_ERROR', () => {
+            expect(reducers.runsReducer(
+                { ...reducers.exports },
+                {
+                    type: 'FETCH_VIEWED_JOBS_ERROR', error: 'This is an error message',
+                },
+            )).toEqual({
+                ...reducers.exports,
+                viewedInfo: {
+                    ...reducers.exports.viewedInfo,
+                    status: {
+                        ...reducers.exports.viewedInfo.status,
+                        fetched: false,
+                        fetching: false,
+                        error: 'This is an error message',
+                    },
+                },
+            });
         });
     });
 });
@@ -200,84 +268,68 @@ describe('featuredRuns reducer', () => {
 describe('dataCartDetails reducer', () => {
     it('it should return the initial state', () => {
         expect(reducers.getDatacartDetailsReducer(undefined, {})).toEqual({
-            fetching: false,
-            fetched: false,
-            data: [],
-            error: null,
+            status: {
+                fetching: false,
+                fetched: false,
+                error: null,
+            },
+            ids: [],
         });
     });
 
     it('should handle GETTING_DATACART_DETAILS', () => {
         expect(reducers.getDatacartDetailsReducer(
-            {
-                fetching: false,
-                fetched: false,
-                data: [],
-                error: null,
-            },
+            reducers.initialState.datacartDetails,
             {
                 type: 'GETTING_DATACART_DETAILS',
             },
         )).toEqual({
-            fetching: true,
-            fetched: false,
-            data: [],
-            error: null,
+            status: {
+                fetching: true,
+                fetched: false,
+                error: null,
+            },
+            ids: [],
         });
     });
 
     it('should handle DATACART_DETAILS_RECEIVED', () => {
         expect(reducers.getDatacartDetailsReducer(
+            reducers.initialState.datacartDetails,
             {
-                fetching: false,
-                fetched: false,
-                data: [],
-                error: null,
-            },
-            {
-                type: 'DATACART_DETAILS_RECEIVED', datacartDetails: { data: [{ thisIs: 'a fake datacart' }] },
+                type: 'DATACART_DETAILS_RECEIVED',
+                ids: ['1', '2'],
             },
         )).toEqual({
-            fetching: false,
-            fetched: true,
-            data: [{ thisIs: 'a fake datacart' }],
-            error: null,
+            status: {
+                fetching: false,
+                fetched: true,
+                error: null,
+            },
+            ids: ['1', '2'],
         });
     });
 
     it('should handle DATACART_DETAILS_ERROR', () => {
         expect(reducers.getDatacartDetailsReducer(
-            {
-                fetching: false,
-                fetched: false,
-                data: [],
-                error: null,
-            },
+            reducers.initialState.datacartDetails,
             {
                 type: 'DATACART_DETAILS_ERROR', error: 'This is an error message',
             },
         )).toEqual({
-            fetching: false,
-            fetched: false,
-            data: [],
-            error: 'This is an error message',
+            status: {
+                fetching: false,
+                fetched: false,
+                error: 'This is an error message',
+            },
+            ids: [],
         });
     });
     it('should handle CLEAR_DATACART_DETAILS', () => {
         expect(reducers.getDatacartDetailsReducer(
-            {
-                fetching: false,
-                fetched: true,
-                data: [{ some: 'data' }],
-                error: null,
-            },
+            reducers.initialState.datacartDetails,
             { type: 'CLEAR_DATACART_DETAILS' },
-        )).toEqual({
-            fetching: false,
-            fetched: false,
-            data: [],
-            error: null,
-        });
+        )).toEqual(reducers.initialState.datacartDetails);
     });
 });
 

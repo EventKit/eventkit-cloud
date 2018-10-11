@@ -1,10 +1,6 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import sinon from 'sinon';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/uiActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('ui actions', () => {
     it('setPageOrder should return type SET_PAGE_ORDER and the order', () => {
@@ -44,7 +40,7 @@ describe('ui actions', () => {
             { type: actions.types.CLOSED_DRAWER },
         ];
 
-        const store = mockStore({ drawer: 'open' });
+        const store = createTestStore({ drawer: 'open' });
         return store.dispatch(timeout.closeDrawer())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -59,7 +55,7 @@ describe('ui actions', () => {
             { type: actions.types.CLOSED_DRAWER },
         ];
 
-        const store = mockStore({ drawer: 'open' });
+        const store = createTestStore({ drawer: 'open' });
         return store.dispatch(timeout.closeDrawer())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -75,7 +71,7 @@ describe('ui actions', () => {
             { type: actions.types.OPENED_DRAWER },
         ];
 
-        const store = mockStore({ drawer: 'closed' });
+        const store = createTestStore({ drawer: 'closed' });
         return store.dispatch(timeout.openDrawer())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -90,7 +86,7 @@ describe('ui actions', () => {
             { type: actions.types.OPENED_DRAWER },
         ];
 
-        const store = mockStore({ drawer: 'closed' });
+        const store = createTestStore({ drawer: 'closed' });
         return store.dispatch(timeout.openDrawer())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);

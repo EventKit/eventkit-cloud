@@ -146,20 +146,18 @@ export class DataPackList extends Component {
                             spacing={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
-                            {this.props.runIds.map((id) => {
-                                return (
-                                    <DataPackListItem
-                                        runId={id}
-                                        user={this.props.user}
-                                        key={id}
-                                        onRunDelete={this.props.onRunDelete}
-                                        onRunShare={this.props.onRunShare}
-                                        providers={this.props.providers}
-                                        users={this.props.users}
-                                        groups={this.props.groups}
-                                    />
-                                );
-                            })}
+                            {this.props.runIds.map(id => (
+                                <DataPackListItem
+                                    runId={id}
+                                    user={this.props.user}
+                                    key={id}
+                                    onRunDelete={this.props.onRunDelete}
+                                    onRunShare={this.props.onRunShare}
+                                    providers={this.props.providers}
+                                    users={this.props.users}
+                                    groups={this.props.groups}
+                                />
+                            ))}
                             {load}
                         </GridList>
                     </div>
@@ -292,20 +290,18 @@ export class DataPackList extends Component {
                             style={{ backgroundColor: colors.white, fontSize: '12px', tableLayout: 'fixed' }}
                         >
                             <TableBody>
-                                {this.props.runIds.map((id) => {
-                                    return (
-                                        <DataPackTableItem
-                                            runId={id}
-                                            user={this.props.user}
-                                            key={id}
-                                            onRunDelete={this.props.onRunDelete}
-                                            onRunShare={this.props.onRunShare}
-                                            providers={this.props.providers}
-                                            users={this.props.users}
-                                            groups={this.props.groups}
-                                        />
-                                    );
-                                })}
+                                {this.props.runIds.map(id => (
+                                    <DataPackTableItem
+                                        runId={id}
+                                        user={this.props.user}
+                                        key={id}
+                                        onRunDelete={this.props.onRunDelete}
+                                        onRunShare={this.props.onRunShare}
+                                        providers={this.props.providers}
+                                        users={this.props.users}
+                                        groups={this.props.groups}
+                                    />
+                                ))}
                             </TableBody>
                         </Table>
                         {load}

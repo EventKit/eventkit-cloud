@@ -26,10 +26,12 @@ describe('Account Component', () => {
                     test2: false,
                 },
             },
-            isLoading: false,
-            patched: false,
-            patching: false,
-            error: null,
+            status: {
+                isLoading: false,
+                patched: false,
+                patching: false,
+                error: null,
+            },
         },
         licenses: {
             error: null,

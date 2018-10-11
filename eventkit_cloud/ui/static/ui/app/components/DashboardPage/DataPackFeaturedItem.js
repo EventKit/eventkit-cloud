@@ -274,6 +274,8 @@ DataPackFeaturedItem.contextTypes = {
 
 DataPackFeaturedItem.propTypes = {
     run: PropTypes.object.isRequired,
+    // RunID is not used directly by the component but it is needs for the state selector
+    // eslint-disable-next-line react/no-unused-prop-types
     runId: PropTypes.string.isRequired,
     gridName: PropTypes.string.isRequired,
     index: PropTypes.number.isRequired,

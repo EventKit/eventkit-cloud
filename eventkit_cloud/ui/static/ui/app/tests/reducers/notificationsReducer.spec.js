@@ -29,11 +29,15 @@ const mockNotificationsArray = [
 
 const mockState = {
     ...initialState.notifications,
-    notifications: mockNotifications,
-    notificationsSorted: getSortedNotifications(mockNotifications),
+    data: {
+        notifications: mockNotifications,
+        notificationsSorted: getSortedNotifications(mockNotifications),
+    },
     unreadCount: {
         ...initialState.notifications.unreadCount,
-        unreadCount: 2,
+        data: {
+            unreadCount: 2,
+        },
     },
 };
 
@@ -50,10 +54,12 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(initialState.notifications, action)).toEqual({
             ...initialState.notifications,
-            fetching: true,
-            fetched: false,
-            error: null,
-            cancelSource: 'test',
+            status: {
+                fetching: true,
+                fetched: false,
+                error: null,
+                cancelSource: 'test',
+            },
         });
     });
 
@@ -72,22 +78,28 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(state, action)).toEqual({
             ...state,
-            fetching: false,
-            fetched: true,
-            notifications: mockNotifications,
-            notificationsSorted: getSortedNotifications(mockNotifications),
-            nextPage: action.nextPage,
-            range: action.range,
-            error: null,
-            cancelSource: null,
+            status: {
+                fetching: false,
+                fetched: true,
+                error: null,
+                cancelSource: null,
+            },
+            data: {
+                notifications: mockNotifications,
+                notificationsSorted: getSortedNotifications(mockNotifications),
+                nextPage: action.nextPage,
+                range: action.range,
+            },
         });
     });
 
     it('should handle FETCH_NOTIFICATIONS_ERROR', () => {
         const state = {
             ...initialState.notifications,
-            fetching: true,
-            cancelSource: 'test',
+            status: {
+                fetching: true,
+                cancelSource: 'test',
+            },
         };
         const action = {
             type: types.FETCH_NOTIFICATIONS_ERROR,
@@ -96,10 +108,12 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(state, action)).toEqual({
             ...state,
-            fetching: false,
-            fetched: false,
-            error: action.error,
-            cancelSource: null,
+            status: {
+                fetching: false,
+                fetched: false,
+                error: action.error,
+                cancelSource: null,
+            },
         });
     });
 
@@ -127,11 +141,13 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            notifications: expectedNotifications,
-            notificationsSorted: getSortedNotifications(expectedNotifications),
+            data: {
+                notifications: expectedNotifications,
+                notificationsSorted: getSortedNotifications(expectedNotifications),
+            },
             unreadCount: {
                 ...mockState.unreadCount,
-                unreadCount: 0,
+                data: { unreadCount: 0 },
             },
         });
     });
@@ -154,7 +170,10 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            error: action.error,
+            status: {
+                ...mockState.status,
+                error: action.error,
+            },
         });
     });
 
@@ -182,11 +201,13 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            notifications: expectedNotifications,
-            notificationsSorted: getSortedNotifications(expectedNotifications),
+            data: {
+                notifications: expectedNotifications,
+                notificationsSorted: getSortedNotifications(expectedNotifications),
+            },
             unreadCount: {
                 ...mockState.unreadCount,
-                unreadCount: 3,
+                data: { unreadCount: 3 },
             },
         });
     });
@@ -209,7 +230,10 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            error: action.error,
+            status: {
+                ...mockState.status,
+                error: action.error,
+            },
         });
     });
 
@@ -236,11 +260,13 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            notifications: expectedNotifications,
-            notificationsSorted: getSortedNotifications(expectedNotifications),
+            data: {
+                notifications: expectedNotifications,
+                notificationsSorted: getSortedNotifications(expectedNotifications),
+            },
             unreadCount: {
                 ...mockState.unreadCount,
-                unreadCount: 0,
+                data: { unreadCount: 0 },
             },
         });
     });
@@ -263,7 +289,10 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            error: action.error,
+            status: {
+                ...mockState.status,
+                error: action.error,
+            },
         });
     });
 
@@ -275,11 +304,15 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            notifications: {},
-            notificationsSorted: [],
+            data: {
+                notifications: {},
+                notificationsSorted: [],
+            },
             unreadCount: {
                 ...mockState.unreadCount,
-                unreadCount: 0,
+                data: {
+                    unreadCount: 0,
+                },
             },
         });
     });
@@ -302,7 +335,10 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
-            error: action.error,
+            status: {
+                ...mockState.status,
+                error: action.error,
+            },
         });
     });
 
@@ -315,10 +351,12 @@ describe('notificationsReducer', () => {
             ...initialState.notifications,
             unreadCount: {
                 ...initialState.notifications.unreadCount,
-                fetching: true,
-                fetched: false,
-                error: null,
-                cancelSource: action.cancelSource,
+                status: {
+                    fetching: true,
+                    fetched: false,
+                    error: null,
+                    cancelSource: action.cancelSource,
+                },
             },
         });
     });
@@ -341,10 +379,15 @@ describe('notificationsReducer', () => {
             ...state,
             unreadCount: {
                 ...state.unreadCount,
-                fetching: false,
-                fetched: true,
-                unreadCount: action.unreadCount,
-                cancelSource: null,
+                status: {
+                    fetching: false,
+                    fetched: true,
+                    error: null,
+                    cancelSource: null,
+                },
+                data: {
+                    unreadCount: action.unreadCount,
+                },
             },
         });
     });
@@ -367,10 +410,12 @@ describe('notificationsReducer', () => {
             ...state,
             unreadCount: {
                 ...state.unreadCount,
-                fetching: false,
-                fetched: false,
-                error: action.error,
-                cancelSource: null,
+                status: {
+                    fetching: false,
+                    fetched: false,
+                    error: action.error,
+                    cancelSource: null,
+                },
             },
         });
     });

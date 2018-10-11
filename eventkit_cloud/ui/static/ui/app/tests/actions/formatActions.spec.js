@@ -1,12 +1,7 @@
-
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/formatActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('format actions', () => {
     it('getFormats should return formats from the api', () => {
@@ -17,7 +12,7 @@ describe('format actions', () => {
             { type: actions.types.GETTING_FORMATS },
             { type: actions.types.FORMATS_RECEIVED, formats: ['my formats'] },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
         return store.dispatch(actions.getFormats())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -31,7 +26,7 @@ describe('format actions', () => {
         const expectedActions = [
             { type: actions.types.GETTING_FORMATS },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
         return store.dispatch(actions.getFormats())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);

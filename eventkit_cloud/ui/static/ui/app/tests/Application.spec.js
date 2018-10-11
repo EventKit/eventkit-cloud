@@ -2,7 +2,6 @@ import React from 'react';
 import axios from 'axios';
 import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
-import configureMockStore from 'redux-mock-store';
 import AppBar from '@material-ui/core/AppBar';
 import Drawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -15,14 +14,14 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
 import { Application } from '../components/Application';
 import ConfirmDialog from '../components/Dialog/ConfirmDialog';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 
-const mockStore = configureMockStore();
-const store = mockStore({});
+const store = createTestStore({});
 
 describe('Application component', () => {
     let shallow;
@@ -42,17 +41,15 @@ describe('Application component', () => {
                 pathname: '/exports',
             },
         },
-        notifications: {
+        notificationsStatus: {
             fetching: false,
             fetched: false,
+        },
+        notificationsData: {
             notifications: {},
             notificationsSorted: [],
-            unreadCount: {
-                fetching: false,
-                fetched: false,
-                unreadCount: 0,
-            },
         },
+        notificationsCount: 0,
         store,
         openDrawer: () => {},
         closeDrawer: () => {},
@@ -185,7 +182,8 @@ describe('Application component', () => {
     it('getChildContext should return config', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        wrapper.setState({ config: { key: 'value' } });
+        wrapper.setState({ childContext: { config: { key: 'value' } } });
+        wrapper.instance().forceUpdate();
         const context = wrapper.instance().getChildContext();
         expect(context).toEqual({ config: { key: 'value' } });
     });
@@ -199,7 +197,7 @@ describe('Application component', () => {
         const wrapper = getWrapper(props);
         await wrapper.instance().getConfig();
         expect(stateSpy.called).toBe(true);
-        expect(stateSpy.calledWith({ config: { LOGIN_DISCLAIMER: 'Test string' } })).toBe(true);
+        expect(stateSpy.calledWith({ childContext: { config: { LOGIN_DISCLAIMER: 'Test string' } } })).toBe(true);
         stateSpy.restore();
     });
 
@@ -354,24 +352,20 @@ describe('Application component', () => {
         let indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(0)');
         wrapper.setProps({
-            notifications: {
+            notificationsData: {
                 notifications: {},
                 notificationsSorted: [],
-                unreadCount: {
-                    unreadCount: 1,
-                },
             },
+            notificationsCount: 1,
         });
         indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(1)');
         wrapper.setProps({
-            notifications: {
+            notificationsData: {
                 notifications: {},
                 notificationsSorted: [],
-                unreadCount: {
-                    unreadCount: 0,
-                },
             },
+            notificationsCount: 0,
         });
         indicator = wrapper.find('.qa-Application-AppBar-NotificationsIndicator');
         expect(indicator.props().style.transform).toBe('scale(0)');

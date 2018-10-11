@@ -52,23 +52,21 @@ export class DataPackGrid extends Component {
                         spacing={isWidthUp('md', this.props.width) ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runIds.map((id, index) => {
-                            return (
-                                <DataPackGridItem
-                                    className="qa-DataPackGrid-GridListItem"
-                                    runId={id}
-                                    userData={this.props.user.data}
-                                    key={id}
-                                    onRunDelete={this.props.onRunDelete}
-                                    onRunShare={this.props.onRunShare}
-                                    providers={this.props.providers}
-                                    gridName={this.props.name}
-                                    index={index}
-                                    users={this.props.users}
-                                    groups={this.props.groups}
-                                />
-                            );
-                        })}
+                        {this.props.runIds.map((id, index) => (
+                            <DataPackGridItem
+                                className="qa-DataPackGrid-GridListItem"
+                                runId={id}
+                                userData={this.props.user.data}
+                                key={id}
+                                onRunDelete={this.props.onRunDelete}
+                                onRunShare={this.props.onRunShare}
+                                providers={this.props.providers}
+                                gridName={this.props.name}
+                                index={index}
+                                users={this.props.users}
+                                groups={this.props.groups}
+                            />
+                        ))}
                     </GridList>
                 </div>
                 <LoadButtons

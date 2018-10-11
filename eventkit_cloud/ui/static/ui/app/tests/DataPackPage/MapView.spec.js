@@ -196,6 +196,7 @@ function getRuns() {
 describe('MapView component', () => {
     const getProps = () => ({
         runs: getRuns(),
+        runIds: getRuns().map(run => run.uid),
         user: { data: { user: { username: 'admin' } } },
         users: [],
         groups: [],

@@ -1,11 +1,7 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/usersActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('usersActions actions', () => {
     it('getUsers should fetch users from the api', () => {
@@ -39,7 +35,7 @@ describe('usersActions actions', () => {
             },
         ];
 
-        const store = mockStore({
+        const store = createTestStore({
             user: {
                 data: {
                     user: { username: 'user1' },
@@ -61,7 +57,7 @@ describe('usersActions actions', () => {
             { type: actions.types.FETCHING_USERS },
             { type: actions.types.FETCH_USERS_ERROR, error },
         ];
-        const store = mockStore({
+        const store = createTestStore({
             user: { data: { user: {} } },
         });
 

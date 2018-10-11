@@ -202,7 +202,8 @@ export class NotificationsPage extends React.Component {
 
 NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,
-    notifications: PropTypes.object.isRequired,
+    notificationsData: PropTypes.object.isRequired,
+    notificationsStatus: PropTypes.object.isRequired,
     getNotifications: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,

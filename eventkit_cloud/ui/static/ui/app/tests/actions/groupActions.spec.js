@@ -1,12 +1,8 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import axios from 'axios';
 import sinon from 'sinon';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/groupActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('userGroups actions', () => {
     it('getGroups handle received groups', () => {
@@ -24,7 +20,7 @@ describe('userGroups actions', () => {
             { type: actions.types.FETCHING_GROUPS, cancelSource },
             { type: actions.types.FETCHED_GROUPS, groups },
         ];
-        const store = mockStore({
+        const store = createTestStore({
             groups: {
                 fetching: false,
                 cancelSource: null,
@@ -51,7 +47,7 @@ describe('userGroups actions', () => {
             { type: actions.types.FETCHING_GROUPS, cancelSource },
             { type: actions.types.FETCH_GROUPS_ERROR, error },
         ];
-        const store = mockStore({
+        const store = createTestStore({
             groups: {
                 fetching: false,
                 cancelSource: null,
@@ -74,7 +70,7 @@ describe('userGroups actions', () => {
 
         mock.onGet('/api/groups').reply(200, []);
 
-        const store = mockStore({
+        const store = createTestStore({
             groups: {
                 fetching: true,
                 cancelSource,
@@ -102,7 +98,7 @@ describe('userGroups actions', () => {
         const expectedActions = [
             { type: actions.types.FETCHING_GROUPS, cancelSource },
         ];
-        const store = mockStore({
+        const store = createTestStore({
             groups: {
                 fetching: false,
                 cancelSource: null,
@@ -127,7 +123,7 @@ describe('userGroups actions', () => {
             { type: actions.types.DELETING_GROUP },
             { type: actions.types.DELETED_GROUP },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
 
         return store.dispatch(actions.deleteGroup(groupId))
             .then(() => {
@@ -146,7 +142,7 @@ describe('userGroups actions', () => {
             { type: actions.types.DELETING_GROUP },
             { type: actions.types.DELETE_GROUP_ERROR, error },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
 
         return store.dispatch(actions.deleteGroup(groupId))
             .then(() => {
@@ -163,7 +159,7 @@ describe('userGroups actions', () => {
             { type: actions.types.CREATING_GROUP },
             { type: actions.types.CREATED_GROUP },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
 
         return store.dispatch(actions.createGroup('Group name', []))
             .then(() => {
@@ -181,7 +177,7 @@ describe('userGroups actions', () => {
             { type: actions.types.CREATING_GROUP },
             { type: actions.types.CREATE_GROUP_ERROR, error },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
 
         return store.dispatch(actions.createGroup())
             .then(() => {
@@ -199,7 +195,7 @@ describe('userGroups actions', () => {
             { type: actions.types.UPDATING_GROUP },
             { type: actions.types.UPDATED_GROUP },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
 
         const options = {
             name: 'new name',
@@ -224,7 +220,7 @@ describe('userGroups actions', () => {
             { type: actions.types.UPDATING_GROUP },
             { type: actions.types.UPDATING_GROUP_ERROR, error },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
 
         return store.dispatch(actions.updateGroup(group.id))
             .then(() => {
