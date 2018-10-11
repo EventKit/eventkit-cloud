@@ -9,14 +9,11 @@ from django.db import migrations, models
 
 def forwards_func(apps, schema_editor):
     Job = apps.get_model('jobs', 'Job')
-    ExportRun = apps.get_model('tasks', 'ExportRun')
 
     # Get each job's latest export run and save a reference to it in the job.
-    for job in Job.objects.all():
-        export_run_query = ExportRun.objects.filter(job=job)
-        if export_run_query.count() > 0:
-            job.last_export_run = export_run_query.latest('created_at')
-            job.save()
+    for job in Job.objects.all().prefetch_related('runs'):
+        job.last_export_run = job.runs.last()
+        job.save()
 
 
 def reverse_func(apps, schema_editor):
@@ -41,6 +38,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('type', models.CharField(max_length=100)),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
+                ('user', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('job', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.Job'))
             ],
         ),
         migrations.AddField(
@@ -48,15 +47,5 @@ class Migration(migrations.Migration):
             name='last_export_run',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='last_export_run', to='tasks.ExportRun'),
         ),
-        migrations.AddField(
-            model_name='userjobactivity',
-            name='job',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='jobs.Job'),
-        ),
-        migrations.AddField(
-            model_name='userjobactivity',
-            name='user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.RunPython(forwards_func, reverse_func),
+        migrations.RunPython(forwards_func, reverse_func, atomic=False),
     ]
