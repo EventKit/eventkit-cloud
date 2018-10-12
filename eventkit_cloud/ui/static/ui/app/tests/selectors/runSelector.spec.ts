@@ -23,7 +23,7 @@ describe('Run Selector', () => {
     const getFullMockRun = (id) => {
         const state = getState();
         const run = state.exports.data.runs[id];
-        const provider_tasks = run.provider_tasks.map(providerId => {
+        const providerTasks = run.provider_tasks.map(providerId => {
             const provider = { ...state.exports.data.provider_tasks[providerId] };
             provider.tasks = provider.tasks.map(taskId => ({ ...state.exports.data.tasks[taskId] }));
             return provider;
@@ -31,9 +31,9 @@ describe('Run Selector', () => {
         return {
             ...run,
             job: { ...state.exports.data.jobs[run.job] },
-            provider_tasks,
+            provider_tasks: providerTasks,
         };
-    }
+    };
 
     let state;
 
@@ -119,7 +119,7 @@ describe('Run Selector', () => {
 
     it('makeAllRunsSelector should return all runs in full', () => {
         const expected = Object.values(state.exports.data.runs)
-            .map(run => getFullMockRun(run.uid));
+            .map((run: { uid: string; }) => getFullMockRun(run.uid));
         const allRunsSelector = selectors.makeAllRunsSelector();
         expect(allRunsSelector(state)).toEqual(expected);
     });
