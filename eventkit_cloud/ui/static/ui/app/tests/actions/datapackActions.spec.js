@@ -279,6 +279,62 @@ describe('DataPackList actions', () => {
             });
     });
 
+    it('getFeaturedRuns should return null if fetch in progress and new call is auto"', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, [getApiRun()], {
+            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-6/24',
+        });
+
+        const store = createTestStore({
+            ...initialState,
+            exports: {
+                ...initialState.exports,
+                featuredInfo: {
+                    ...initialState.exports.featuredInfo,
+                    status: {
+                        fetching: true,
+                        cancelSource: {},
+                    },
+                },
+            },
+        });
+
+        expect(store.dispatch(actions.getFeaturedRuns({ pageSize: 6, isAuto: true }))).toEqual(null);
+    });
+
+    it('getFeaturedRuns should cancel an in progress request"', () => {
+        const mock = new MockAdapter(axios, { delayResponse: 1 });
+        mock.onPost('/api/runs/filter').reply(200, [getApiRun()], {
+            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-6/24',
+        });
+
+        const testSource = axios.CancelToken.source();
+        const original = axios.CancelToken.source;
+        axios.CancelToken.source = () => (testSource);
+
+        const fakeCancelSource = { cancel: sinon.spy() };
+
+        const store = createTestStore({
+            ...initialState,
+            exports: {
+                ...initialState.exports,
+                featuredInfo: {
+                    ...initialState.exports.featuredInfo,
+                    status: {
+                        fetching: true,
+                        cancelSource: fakeCancelSource,
+                    },
+                },
+            },
+        });
+
+        return store.dispatch(actions.getFeaturedRuns({ pageSize: 6 }))
+            .then(() => {
+                expect(fakeCancelSource.cancel.calledOnce).toBe(true);
+                axios.CancelToken.source = original;
+            });
+    });
+
     it('getFeaturedRuns should handle a generic request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         mock.onPost('/api/runs/filter').reply(400, 'oh no an error');
