@@ -18,7 +18,8 @@ class ExportTaskRecordAdmin(admin.ModelAdmin):
 
     readonly_fields = ('export_provider_task', 'celery_uid', 'name', 'status', 'progress', 'estimated_finish',
                        'pid', 'worker', 'cancel_user', 'result', 'exceptions')
-    search_fields = ['uid', 'name', 'status', 'export_provider_task__uid', 'export_provider_task__slug']
+    search_fields = ['uid', 'name', 'status', 'export_provider_task__uid', 'export_provider_task__slug',
+                     'export_provider_task__run__uid', 'export_provider_task__run__job__uid']
 
     @staticmethod
     def exceptions(obj):
