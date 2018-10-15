@@ -18,7 +18,7 @@ class ListFilter(django_filters.Filter):
         if value:
             value_list = value.split(',')
             lookup = '{}__in'.format(self.field_name)
-            return self.get_method(qs)(**{lookup: value_list})
+            return self.get_method(qs)(**{lookup: value_list}).distinct()
         else:
             return qs
           
