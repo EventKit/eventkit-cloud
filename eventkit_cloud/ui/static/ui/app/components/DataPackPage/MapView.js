@@ -919,7 +919,7 @@ export class MapView extends Component {
                                         onRunDelete={this.props.onRunDelete}
                                         onRunShare={this.props.onRunShare}
                                         onClick={this.handleClick}
-                                        backgroundColor={this.state.selectedFeature === run.uid ? colors.secondary : null}
+                                        backgroundColor={this.state.selectedFeature === run.uid ? colors.selected_primary : null}
                                         providers={this.props.providers}
                                         adminPermission={admin}
                                         users={this.props.users}
