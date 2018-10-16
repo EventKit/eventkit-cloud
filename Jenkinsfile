@@ -50,7 +50,8 @@ END
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
-            sh "docker-compose build"
+            sh "docker-compose pull"
+            sh "docker-compose build webpack"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             sh "docker-compose run --rm -T eventkit python manage.py runinitial setup || exit 0"
