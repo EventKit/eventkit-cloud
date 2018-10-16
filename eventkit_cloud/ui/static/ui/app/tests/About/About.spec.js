@@ -61,6 +61,7 @@ describe('About component', () => {
     it('should render null if no pageInfo', () => {
         const wrapper = getWrapper(getProps());
         wrapper.setState({ pageInfo: null });
+        wrapper.instance().forceUpdate();
         wrapper.update();
         expect(wrapper.type()).toBe(null);
     });

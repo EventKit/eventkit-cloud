@@ -18,6 +18,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            fetched: false,
             fetching: true,
             cancelSource,
         });
@@ -37,6 +38,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            fetching: false,
             fetched: true,
             groups,
         });
@@ -56,6 +58,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            fetched: false,
+            fetching: false,
             error,
         });
     });
@@ -70,6 +74,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            deleted: false,
             deleting: true,
         });
     });
@@ -85,6 +90,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            deleting: false,
             deleted: true,
         });
     });
@@ -102,6 +108,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            deleted: false,
+            deleting: false,
             error,
         });
     });
@@ -116,6 +124,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            created: false,
             creating: true,
         });
     });
@@ -131,6 +140,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            creating: false,
             created: true,
         });
     });
@@ -148,6 +158,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            created: false,
+            creating: false,
             error,
         });
     });
@@ -162,6 +174,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            updated: false,
             updating: true,
         });
     });
@@ -177,6 +190,7 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            updating: false,
             updated: true,
         });
     });
@@ -194,6 +208,8 @@ describe('userGroupsReducer', () => {
             },
         )).toEqual({
             ...state,
+            updated: false,
+            updating: false,
             error,
         });
     });

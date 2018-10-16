@@ -1,8 +1,8 @@
 import { types } from '../actions/licenseActions';
 
 export const initialState = {
-    fetching: false,
-    fetched: false,
+    fetching: null,
+    fetched: null,
     licenses: [],
     error: null,
 };

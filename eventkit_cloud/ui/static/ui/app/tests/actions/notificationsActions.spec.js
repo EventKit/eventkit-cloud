@@ -1,14 +1,11 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import sinon from 'sinon';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/notificationsActions';
 import { initialState as state } from '../../reducers/notificationsReducer';
 
 const initialState = { notifications: state };
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 const mockNotifications = {
     1: {
@@ -49,7 +46,7 @@ describe('notificationsActions', () => {
             },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotifications())
             .then(() => {
@@ -73,7 +70,7 @@ describe('notificationsActions', () => {
             },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotifications())
             .then(() => {
@@ -88,12 +85,14 @@ describe('notificationsActions', () => {
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
-        const store = mockStore({
+        const store = createTestStore({
             ...initialState,
             notifications: {
                 ...initialState.notifications,
-                fetching: true,
-                cancelSource,
+                status: {
+                    fetching: true,
+                    cancelSource,
+                },
             },
         });
 
@@ -110,12 +109,14 @@ describe('notificationsActions', () => {
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
-        const store = mockStore({
+        const store = createTestStore({
             ...initialState,
             notifications: {
                 ...initialState.notifications,
-                fetching: true,
-                cancelSource,
+                status: {
+                    fetching: true,
+                    cancelSource,
+                },
             },
         });
 
@@ -137,7 +138,7 @@ describe('notificationsActions', () => {
             { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotifications())
             .then(() => {
@@ -160,7 +161,7 @@ describe('notificationsActions', () => {
             { type: actions.types.FETCH_NOTIFICATIONS_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotifications())
             .then(() => {
@@ -182,7 +183,7 @@ describe('notificationsActions', () => {
             { type: actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT, unreadCount: 1 },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotificationsUnreadCount())
             .then(() => {
@@ -197,14 +198,16 @@ describe('notificationsActions', () => {
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
-        const store = mockStore({
+        const store = createTestStore({
             ...initialState,
             notifications: {
                 ...initialState.notifications,
                 unreadCount: {
                     ...initialState.notifications.unreadCount,
-                    fetching: true,
-                    cancelSource,
+                    status: {
+                        fetching: true,
+                        cancelSource,
+                    },
                 },
             },
         });
@@ -222,14 +225,16 @@ describe('notificationsActions', () => {
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
-        const store = mockStore({
+        const store = createTestStore({
             ...initialState,
             notifications: {
                 ...initialState.notifications,
                 unreadCount: {
                     ...initialState.notifications.unreadCount,
-                    fetching: true,
-                    cancelSource,
+                    status: {
+                        fetching: true,
+                        cancelSource,
+                    },
                 },
             },
         });
@@ -252,7 +257,7 @@ describe('notificationsActions', () => {
             { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotificationsUnreadCount())
             .then(() => {
@@ -275,7 +280,7 @@ describe('notificationsActions', () => {
             { type: actions.types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.getNotificationsUnreadCount())
             .then(() => {
@@ -293,7 +298,7 @@ describe('notificationsActions', () => {
             { type: actions.types.MARKED_NOTIFICATIONS_AS_READ, notifications: [mockNotificationsArray[0]] },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.markNotificationsAsRead([mockNotificationsArray[0]]))
             .then(() => {
@@ -310,7 +315,7 @@ describe('notificationsActions', () => {
             { type: actions.types.MARK_NOTIFICATIONS_AS_READ_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.markNotificationsAsRead([mockNotificationsArray[0]]))
             .then(() => {
@@ -327,7 +332,7 @@ describe('notificationsActions', () => {
             { type: actions.types.MARKED_NOTIFICATIONS_AS_UNREAD, notifications: [mockNotificationsArray[1]] },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.markNotificationsAsUnread([mockNotificationsArray[1]]))
             .then(() => {
@@ -344,7 +349,7 @@ describe('notificationsActions', () => {
             { type: actions.types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.markNotificationsAsUnread([mockNotificationsArray[1]]))
             .then(() => {
@@ -361,7 +366,7 @@ describe('notificationsActions', () => {
             { type: actions.types.REMOVED_NOTIFICATIONS, notifications: [mockNotificationsArray[0]] },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.removeNotifications([mockNotificationsArray[0]]))
             .then(() => {
@@ -378,7 +383,7 @@ describe('notificationsActions', () => {
             { type: actions.types.REMOVE_NOTIFICATIONS_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.removeNotifications([mockNotificationsArray[0]]))
             .then(() => {
@@ -395,7 +400,7 @@ describe('notificationsActions', () => {
             { type: actions.types.MARKED_ALL_NOTIFICATIONS_AS_READ },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.markAllNotificationsAsRead())
             .then(() => {
@@ -412,7 +417,7 @@ describe('notificationsActions', () => {
             { type: actions.types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
 
         return store.dispatch(actions.markAllNotificationsAsRead())
             .then(() => {

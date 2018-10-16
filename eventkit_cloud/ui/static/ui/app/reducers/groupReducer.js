@@ -3,14 +3,14 @@ import { types } from '../actions/groupActions';
 export const initialState = {
     groups: [],
     cancelSource: null,
-    fetching: false,
-    fetched: false,
-    creating: false,
-    created: false,
-    deleting: false,
-    deleted: false,
-    updating: false,
-    updated: false,
+    fetching: null,
+    fetched: null,
+    creating: null,
+    created: null,
+    deleting: null,
+    deleted: null,
+    updating: null,
+    updated: null,
     error: null,
 };
 

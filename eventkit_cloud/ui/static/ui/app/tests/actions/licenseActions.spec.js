@@ -1,11 +1,7 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import { types, getLicenses } from '../../actions/licenseActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('license actions', () => {
     it('should dispatch fetching then fetched with license data', () => {
@@ -18,7 +14,7 @@ describe('license actions', () => {
             { type: types.FETCHING_LICENSES },
             { type: types.RECEIVED_LICENSES, licenses: [{ name: 'license 1' }, { name: 'license 2' }] },
         ];
-        const store = mockStore({ licenses: [] });
+        const store = createTestStore({ licenses: [] });
 
         return store.dispatch(getLicenses())
             .then(() => {
@@ -33,7 +29,7 @@ describe('license actions', () => {
             { type: types.FETCHING_LICENSES },
             { type: types.FETCH_LICENSES_ERROR, error: 'oh no' },
         ];
-        const store = mockStore({ licenses: [] });
+        const store = createTestStore({ licenses: [] });
 
         return store.dispatch(getLicenses())
             .then(() => {

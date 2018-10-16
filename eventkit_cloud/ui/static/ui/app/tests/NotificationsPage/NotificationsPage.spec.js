@@ -47,12 +47,14 @@ describe('NotificationsPage component', () => {
 
     function defaultProps() {
         return {
-            notifications: {
-                fetched: false,
+            notificationsData: {
                 notifications: {},
                 notificationsSorted: [],
-                range: null,
-                nextPage: null,
+                range: '',
+                nextPage: false,
+            },
+            notificationsStatus: {
+                fetched: false,
             },
             router: {
                 push: sinon.spy(),
@@ -78,8 +80,7 @@ describe('NotificationsPage component', () => {
 
     function loadNotifications() {
         wrapper.setProps({
-            notifications: {
-                fetched: true,
+            notificationsData: {
                 notifications: mockNotifications,
                 notificationsSorted: [
                     mockNotifications['1'],
@@ -88,13 +89,16 @@ describe('NotificationsPage component', () => {
                 range: '2/4',
                 nextPage: true,
             },
+            notificationsStatus: {
+                fetched: true,
+            },
         });
     }
 
     it('gets correct range', () => {
         wrapper.setProps({
-            notifications: {
-                ...instance.props.notifications,
+            notificationsData: {
+                ...instance.props.notificationsData,
                 range: '20/40',
             },
         });
@@ -130,15 +134,15 @@ describe('NotificationsPage component', () => {
         });
 
         it('sets "range" prop on LoadButtons', () => {
-            const notifications = instance.props.notifications.notificationsSorted;
+            const notifications = instance.props.notificationsData.notificationsSorted;
             expect(wrapper.find(LoadButtons).props().range).toBe(instance.getRange(notifications));
         });
 
         describe('and next page is available', () => {
             beforeEach(() => {
                 wrapper.setProps({
-                    notifications: {
-                        ...instance.props.notifications,
+                    notificationsData: {
+                        ...instance.props.notificationsData,
                         nextPage: true,
                     },
                 });
@@ -152,8 +156,8 @@ describe('NotificationsPage component', () => {
         describe('and next page is not available', () => {
             beforeEach(() => {
                 wrapper.setProps({
-                    notifications: {
-                        ...instance.props.notifications,
+                    notificationsData: {
+                        ...instance.props.notificationsData,
                         nextPage: false,
                     },
                 });
@@ -177,7 +181,7 @@ describe('NotificationsPage component', () => {
         describe('and user has no notifications', () => {
             beforeEach(() => {
                 wrapper.setProps({
-                    notifications: {
+                    notificationsData: {
                         notifications: {},
                         notificationsSorted: [],
                     },
@@ -206,7 +210,7 @@ describe('NotificationsPage component', () => {
 
             it('renders notification grid items', () => {
                 const gridItems = wrapper.find(NotificationGridItem);
-                instance.props.notifications.notificationsSorted.forEach((notification, i) => {
+                instance.props.notificationsData.notificationsSorted.forEach((notification, i) => {
                     expect(gridItems.at(i).props().notification).toBe(notification);
                 });
             });
