@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import moment from 'moment';
 import { Link, browserHistory } from 'react-router';
@@ -18,6 +19,8 @@ import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
+import { userIsDataPackAdmin } from '../../utils/generic';
+import { makeFullRunSelector } from '../../selectors/runSelector';
 
 export class DataPackListItem extends Component {
     constructor(props) {
@@ -163,6 +166,12 @@ export class DataPackListItem extends Component {
             },
         };
 
+        const adminPermission = userIsDataPackAdmin(
+            this.props.user.data.user,
+            this.props.run.job.permissions,
+            this.props.groups,
+        );
+
         const cardTitleStyle = (this.props.run.job.featured) ? styles.cardTitleFeatured : styles.cardTitle;
         const onMouseEnter = this.props.onHoverStart ? () => { this.props.onHoverStart(this.props.run.uid); } : null;
         const onMouseLeave = this.props.onHoverEnd ? () => { this.props.onHoverEnd(this.props.run.uid); } : null;
@@ -220,7 +229,7 @@ export class DataPackListItem extends Component {
                                         View Data Sources
                                     </MenuItem>
 
-                                    {this.props.adminPermission ?
+                                    {adminPermission ?
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackListItem-MenuItem-deleteExport"
@@ -231,7 +240,7 @@ export class DataPackListItem extends Component {
                                         </MenuItem>
                                         : null
                                     }
-                                    {this.props.adminPermission ?
+                                    {adminPermission ?
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackListItem-MenuItem-share"
@@ -339,13 +348,20 @@ DataPackListItem.propTypes = {
     onHoverEnd: PropTypes.func,
     onClick: PropTypes.func,
     backgroundColor: PropTypes.string,
-    adminPermission: PropTypes.bool.isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
     groups: PropTypes.arrayOf(PropTypes.object).isRequired,
     style: PropTypes.object,
     theme: PropTypes.object.isRequired,
 };
 
-export default
-@withTheme()
-class Default extends DataPackListItem {}
+const makeMapStateToProps = () => {
+    const getFullRun = makeFullRunSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            run: getFullRun(state, props),
+        }
+    );
+    return mapStateToProps;
+};
+
+export default withTheme()(connect(makeMapStateToProps)(DataPackListItem));

@@ -3,8 +3,8 @@ import * as reducers from '../../reducers/geocodeReducer';
 describe('getGeocode reducer', () => {
     it('should return initial state', () => {
         expect(reducers.geocodeReducer(undefined, {})).toEqual({
-            fetching: false,
-            fetched: false,
+            fetching: null,
+            fetched: null,
             data: [],
             error: null,
         });

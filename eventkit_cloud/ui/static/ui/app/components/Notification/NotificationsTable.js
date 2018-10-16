@@ -26,13 +26,13 @@ export class NotificationsTable extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.notifications !== this.props.notifications) {
+        if (nextProps.notificationsData !== this.props.notificationsData) {
             // Make sure to deselect any notifications that have been removed. Handle it here instead of
             // the standard callback in case it was removed by the notifications dropdown.
             const selected = { ...this.state.selected };
 
             Object.keys(selected).forEach((uid) => {
-                if (!nextProps.notifications.notifications[uid]) {
+                if (!nextProps.notificationsData.notifications[uid]) {
                     delete selected[uid];
                 }
             });
@@ -137,7 +137,7 @@ export class NotificationsTable extends React.Component {
 
         return (
             <div style={styles.root}>
-                <Table selectable={false} style={{ tableLayout: 'fixed' }}>
+                <Table style={{ tableLayout: 'fixed' }}>
                     <TableBody
                         style={styles.tableHeader}
                     >
@@ -183,7 +183,7 @@ export class NotificationsTable extends React.Component {
                             </TableCell>
                         </TableRow>
                     </TableBody>
-                    <TableBody displayRowCheckbox={false}>
+                    <TableBody>
                         {this.props.notificationsArray.map(notification => (
                             <NotificationsTableItem
                                 key={`NotificationsTableItem-${notification.id}`}
@@ -206,8 +206,8 @@ export class NotificationsTable extends React.Component {
 }
 
 NotificationsTable.propTypes = {
-    notifications: PropTypes.object.isRequired,
     notificationsArray: PropTypes.arrayOf(PropTypes.object).isRequired,
+    notificationsData: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,

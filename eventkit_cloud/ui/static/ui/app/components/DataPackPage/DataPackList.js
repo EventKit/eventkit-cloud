@@ -9,7 +9,6 @@ import TableRow from '@material-ui/core/TableRow';
 import GridList from '@material-ui/core/GridList';
 import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
-import { userIsDataPackAdmin } from '../../utils/generic';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from './LoadButtons';
@@ -148,22 +147,18 @@ export class DataPackList extends Component {
                             spacing={0}
                             style={{ width: '100%', minWidth: '360px' }}
                         >
-                            {this.props.runs.map((run) => {
-                                const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
-                                return (
-                                    <DataPackListItem
-                                        run={run}
-                                        user={this.props.user}
-                                        key={run.uid}
-                                        onRunDelete={this.props.onRunDelete}
-                                        onRunShare={this.props.onRunShare}
-                                        providers={this.props.providers}
-                                        adminPermission={admin}
-                                        users={this.props.users}
-                                        groups={this.props.groups}
-                                    />
-                                );
-                            })}
+                            {this.props.runIds.map(id => (
+                                <DataPackListItem
+                                    runId={id}
+                                    user={this.props.user}
+                                    key={id}
+                                    onRunDelete={this.props.onRunDelete}
+                                    onRunShare={this.props.onRunShare}
+                                    providers={this.props.providers}
+                                    users={this.props.users}
+                                    groups={this.props.groups}
+                                />
+                            ))}
                             {load}
                         </GridList>
                     </div>
@@ -296,22 +291,18 @@ export class DataPackList extends Component {
                             style={{ backgroundColor: colors.white, fontSize: '12px', tableLayout: 'fixed' }}
                         >
                             <TableBody>
-                                {this.props.runs.map((run) => {
-                                    const admin = userIsDataPackAdmin(this.props.user.data.user, run.job.permissions, this.props.groups);
-                                    return (
-                                        <DataPackTableItem
-                                            run={run}
-                                            user={this.props.user}
-                                            key={run.uid}
-                                            onRunDelete={this.props.onRunDelete}
-                                            onRunShare={this.props.onRunShare}
-                                            providers={this.props.providers}
-                                            adminPermissions={admin}
-                                            users={this.props.users}
-                                            groups={this.props.groups}
-                                        />
-                                    );
-                                })}
+                                {this.props.runIds.map(id => (
+                                    <DataPackTableItem
+                                        runId={id}
+                                        user={this.props.user}
+                                        key={id}
+                                        onRunDelete={this.props.onRunDelete}
+                                        onRunShare={this.props.onRunShare}
+                                        providers={this.props.providers}
+                                        users={this.props.users}
+                                        groups={this.props.groups}
+                                    />
+                                ))}
                             </TableBody>
                         </Table>
                         {load}
@@ -323,7 +314,7 @@ export class DataPackList extends Component {
 }
 
 DataPackList.propTypes = {
-    runs: PropTypes.arrayOf(PropTypes.object).isRequired,
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
     onRunShare: PropTypes.func.isRequired,

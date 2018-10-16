@@ -8,10 +8,12 @@
     "@material-ui/core": "~3.0.0",
     "@material-ui/icons": "~3.0.0",
     "@material-ui/lab": "~1.0.0-alpha.12",
+    "@manaflair/redux-batch": "0.1.0",
     "axios": "~0.15.3",
     "jsts": "~1.4.0",
     "lodash": "~4.17.4",
     "moment": "~2.20.1",
+    "normalizr": "^3.2.4",
     "numeral": "~2.0.4",
     "ol": "~4.4.2",
     "prop-types": "~15.6.2",
@@ -25,14 +27,15 @@
     "react-dropzone": "~4.2.13",
     "react-joyride": "~1.11.4",
     "react-loadable": "~5.4.0",
-    "react-redux": "~4.4.6",
+    "react-redux": "5.0.7",
     "react-router": "~3.0.0",
     "react-router-redux": "~4.0.7",
     "react-swipeable-views": "~0.12.13",
-    "redux": "~3.6.0",
+    "redux": "4.0.0",
     "redux-auth-wrapper": "~2.0.3",
     "redux-logger": "~2.7.4",
-    "redux-thunk": "~2.1.0"
+    "redux-thunk": "~2.1.0",
+    "reselect": "4.0.0"
   },
   "devDependencies": {
     "@babel/cli": "~7.0.0",
@@ -79,7 +82,6 @@
     "react-addons-test-utils": "~15.4.0",
     "react-hot-loader": "~3.0.0-beta.6",
     "react-test-renderer": "~16.5.2",
-    "redux-mock-store": "~1.5.3",
     "sinon": "~3.2.0",
     "style-loader": "~0.21.0",
     "ts-jest": "~23.1.4",
@@ -97,10 +99,10 @@
   },
   "jest": {
     "globals": {
-        "ts-jest": {
-            "tsConfig": true,
-            "babelConfig": true
-        }
+      "ts-jest": {
+        "tsConfig": true,
+        "babelConfig": true
+      }
     },
     "testURL": "http://localhost",
     "coverageDirectory": "/var/lib/eventkit/coverage",
@@ -114,7 +116,8 @@
       "!**/initialState.js",
       "!**/styles/**",
       "!**/node_modules/**",
-      "!**/e2e/**"
+      "!**/e2e/**",
+      "!**/store/**"
     ],
     "moduleFileExtensions": [
       "js",
@@ -132,7 +135,7 @@
       "\\.(css|less)$": "identity-obj-proxy"
     },
     "modulePathIgnorePatterns": [
-      "staticfiles/",
+      "staticfiles",
       "rootReducer.js",
       "index.tsx",
       "store/"
@@ -144,10 +147,10 @@
       "/node_modules/(?!(jsts|ol)/).+\\.js$"
     ],
     "transform": {
-        "^.+\\.jsx$": "babel-jest",
-        "^.+\\.js$": "babel-jest",
-        "^.+\\.ts$": "ts-jest",
-        "^.+\\.tsx$": "ts-jest"
+      "^.+\\.jsx$": "babel-jest",
+      "^.+\\.js$": "babel-jest",
+      "^.+\\.ts$": "ts-jest",
+      "^.+\\.tsx$": "ts-jest"
     },
     "testMatch": [
       "**/__tests__/**/.(js|ts)?(x)",

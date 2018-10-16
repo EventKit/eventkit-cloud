@@ -4,17 +4,26 @@ import { types } from '../actions/notificationsActions';
 
 
 export const initialState = {
-    fetching: false,
-    fetched: false,
-    notifications: {},
-    notificationsSorted: [],
-    error: null,
-    cancelSource: null,
-    unreadCount: {
-        fetching: false,
-        fetched: false,
-        unreadCount: 0,
+    status: {
+        fetching: null,
+        fetched: null,
+        error: null,
         cancelSource: null,
+    },
+    data: {
+        notifications: {},
+        notificationsSorted: [],
+    },
+    unreadCount: {
+        status: {
+            fetching: null,
+            fetched: null,
+            error: null,
+            cancelSource: null,
+        },
+        data: {
+            unreadCount: 0,
+        },
     },
 };
 
@@ -29,40 +38,72 @@ export function notificationsReducer(state = initialState, action) {
         case types.FETCHING_NOTIFICATIONS:
             return {
                 ...state,
-                fetching: true,
-                fetched: false,
-                error: null,
-                cancelSource: action.cancelSource,
+                status: {
+                    ...state.status,
+                    fetching: true,
+                    fetched: false,
+                    error: null,
+                    cancelSource: action.cancelSource,
+                },
             };
         case types.RECEIVED_NOTIFICATIONS: {
-            const notifications = { ...state.notifications };
-            action.notifications.forEach((notification) => {
-                notifications[notification.id] = notification;
-            });
-
-            return {
-                ...state,
+            const status = {
+                ...state.status,
                 fetching: false,
                 fetched: true,
-                notifications,
-                notificationsSorted: getSortedNotifications(notifications),
-                nextPage: action.nextPage,
-                range: action.range,
                 error: null,
                 cancelSource: null,
+            };
+
+            let changed = Object.keys(state.data.notifications).length !== action.notifications.length;
+
+            const old = { ...state.data.notifications };
+            const updated = {};
+            action.notifications.forEach((n) => {
+                if (old[n.id]) {
+                    if (old[n.id].unread !== n.unread || old[n.id].deleted !== n.deleted) {
+                        changed = true;
+                    }
+                }
+                updated[n.id] = n;
+            });
+
+            // if no changes we only update the status
+            if (!changed) {
+                return {
+                    ...state,
+                    status,
+                };
+            }
+
+            // if there are changes we update status and data
+            return {
+                ...state,
+                status,
+                data: {
+                    ...state.data,
+                    notifications: updated,
+                    notificationsSorted: getSortedNotifications(updated),
+                    nextPage: action.nextPage,
+                    range: action.range,
+
+                },
             };
         }
         case types.FETCH_NOTIFICATIONS_ERROR:
             return {
                 ...state,
-                fetching: false,
-                fetched: false,
-                error: action.error,
-                cancelSource: null,
+                status: {
+                    ...state.status,
+                    fetching: false,
+                    fetched: false,
+                    error: action.error,
+                    cancelSource: null,
+                },
             };
         case types.MARKING_NOTIFICATIONS_AS_READ: {
-            const notifications = { ...state.notifications };
-            let { unreadCount } = state.unreadCount;
+            const notifications = { ...state.data.notifications };
+            let { unreadCount } = state.unreadCount.data;
             action.notifications.forEach((notification) => {
                 if (notifications[notification.id].unread) {
                     unreadCount -= 1;
@@ -74,22 +115,29 @@ export function notificationsReducer(state = initialState, action) {
             });
             return {
                 ...state,
-                notifications,
-                notificationsSorted: getSortedNotifications(notifications),
+                data: {
+                    notifications,
+                    notificationsSorted: getSortedNotifications(notifications),
+                },
                 unreadCount: {
                     ...state.unreadCount,
-                    unreadCount,
+                    data: {
+                        unreadCount,
+                    },
                 },
             };
         }
         case types.MARK_NOTIFICATIONS_AS_READ_ERROR:
             return {
                 ...state,
-                error: action.error,
+                status: {
+                    ...state.status,
+                    error: action.error,
+                },
             };
         case types.MARKING_NOTIFICATIONS_AS_UNREAD: {
-            const notifications = { ...state.notifications };
-            let { unreadCount } = state.unreadCount;
+            const notifications = { ...state.data.notifications };
+            let { unreadCount } = state.unreadCount.data;
             action.notifications.forEach((notification) => {
                 if (!notifications[notification.id].unread) {
                     unreadCount += 1;
@@ -102,21 +150,28 @@ export function notificationsReducer(state = initialState, action) {
 
             return {
                 ...state,
-                notifications,
-                notificationsSorted: getSortedNotifications(notifications),
+                data: {
+                    notifications,
+                    notificationsSorted: getSortedNotifications(notifications),
+                },
                 unreadCount: {
                     ...state.unreadCount,
-                    unreadCount,
+                    data: {
+                        unreadCount,
+                    },
                 },
             };
         }
         case types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR:
             return {
                 ...state,
-                error: action.error,
+                status: {
+                    ...state.status,
+                    error: action.error,
+                },
             };
         case types.MARKING_ALL_NOTIFICATIONS_AS_READ: {
-            const notifications = { ...state.notifications };
+            const notifications = { ...state.data.notifications };
             Object.keys(notifications).forEach((id) => {
                 notifications[id] = {
                     ...notifications[id],
@@ -126,22 +181,29 @@ export function notificationsReducer(state = initialState, action) {
 
             return {
                 ...state,
-                notifications,
-                notificationsSorted: getSortedNotifications(notifications),
+                data: {
+                    notifications,
+                    notificationsSorted: getSortedNotifications(notifications),
+                },
                 unreadCount: {
                     ...state.unreadCount,
-                    unreadCount: 0,
+                    data: {
+                        unreadCount: 0,
+                    },
                 },
             };
         }
         case types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR:
             return {
                 ...state,
-                error: action.error,
+                status: {
+                    ...state.status,
+                    error: action.error,
+                },
             };
         case types.REMOVING_NOTIFICATIONS: {
-            const notifications = { ...state.notifications };
-            let { unreadCount } = state.unreadCount;
+            const notifications = { ...state.data.notifications };
+            let { unreadCount } = state.unreadCount.data;
             action.notifications.forEach((notification) => {
                 if (notifications[notification.id].unread) {
                     unreadCount -= 1;
@@ -150,28 +212,37 @@ export function notificationsReducer(state = initialState, action) {
             });
             return {
                 ...state,
-                notifications,
-                notificationsSorted: getSortedNotifications(notifications),
+                data: {
+                    notifications,
+                    notificationsSorted: getSortedNotifications(notifications),
+                },
                 unreadCount: {
                     ...state.unreadCount,
-                    unreadCount,
+                    data: {
+                        unreadCount,
+                    },
                 },
             };
         }
         case types.REMOVE_NOTIFICATIONS_ERROR:
             return {
                 ...state,
-                error: action.error,
+                status: {
+                    ...state.status,
+                    error: action.error,
+                },
             };
         case types.FETCHING_NOTIFICATIONS_UNREAD_COUNT:
             return {
                 ...state,
                 unreadCount: {
                     ...state.unreadCount,
-                    fetching: true,
-                    fetched: false,
-                    error: null,
-                    cancelSource: action.cancelSource,
+                    status: {
+                        ...state.unreadCount.status,
+                        fetching: true,
+                        fetched: false,
+                        cancelSource: action.cancelSource,
+                    },
                 },
             };
         case types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT:
@@ -179,10 +250,15 @@ export function notificationsReducer(state = initialState, action) {
                 ...state,
                 unreadCount: {
                     ...state.unreadCount,
-                    fetching: false,
-                    fetched: true,
-                    unreadCount: action.unreadCount,
-                    cancelSource: null,
+                    status: {
+                        ...state.unreadCount.status,
+                        fetching: false,
+                        fetched: true,
+                        cancelSource: null,
+                    },
+                    data: {
+                        unreadCount: action.unreadCount,
+                    },
                 },
             };
         case types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR:
@@ -190,10 +266,12 @@ export function notificationsReducer(state = initialState, action) {
                 ...state,
                 unreadCount: {
                     ...state.unreadCount,
-                    fetching: false,
-                    fetched: false,
-                    error: action.error,
-                    cancelSource: null,
+                    status: {
+                        fetching: false,
+                        fetched: false,
+                        error: action.error,
+                        cancelSource: null,
+                    },
                 },
             };
         case types.USER_LOGGED_OUT:

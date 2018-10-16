@@ -154,7 +154,7 @@ describe('DataPackGridItem component', () => {
     const getProps = () => (
         {
             run: getRuns()[0],
-            user: { data: { user: { username: 'admin' } } },
+            userData: { user: { username: 'admin' } },
             users: [],
             groups: [],
             providers,

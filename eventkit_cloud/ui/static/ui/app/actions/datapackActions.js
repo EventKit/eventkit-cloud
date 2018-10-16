@@ -1,5 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
+import Normalizer from '../utils/normalizers';
 
 export const types = {
     FETCHING_RUNS: 'FETCHING_RUNS',
@@ -20,7 +21,8 @@ export const types = {
     DATACART_DETAILS_ERROR: 'DATACART_DETAILS_ERROR',
 };
 
-export const getDatacartDetails = jobuid => (dispatch) => {
+export const getDatacartDetails = jobuid => (dispatch, getState) => {
+    const { user } = getState();
     dispatch({
         type: types.GETTING_DATACART_DETAILS,
     });
@@ -31,24 +33,38 @@ export const getDatacartDetails = jobuid => (dispatch) => {
         // get the list of runs (DataPacks) that are associated with the job UID.
         // We take only the first one for now since multiples are currently disabled.
         // However we leave it in an array for future proofing.
-        const data = [];
+        const runs = [];
         if (response.data.length) {
-            data.push({ ...response.data[0] });
-            if (!data[0].deleted) {
-                data[0].job.permissions = {
-                    value: data[0].job.visibility,
-                    groups: data[0].job.permissions.groups,
-                    members: data[0].job.permissions.users,
+            runs.push({ ...response.data[0] });
+            if (!runs[0].deleted) {
+                runs[0].job.permissions = {
+                    value: runs[0].job.permissions.value,
+                    groups: runs[0].job.permissions.groups,
+                    members: runs[0].job.permissions.users,
                 };
             }
         }
 
-        dispatch({
-            type: types.DATACART_DETAILS_RECEIVED,
-            datacartDetails: {
-                data,
-            },
+        const normalizer = new Normalizer();
+        const actions = runs.map((run) => {
+            const { result, entities } = normalizer.normalizeRun(run);
+            return {
+                type: 'ADD_RUN',
+                payload: {
+                    id: result,
+                    username: user.data.user.username,
+                    ...entities,
+                },
+            };
         });
+
+        dispatch([
+            {
+                type: types.DATACART_DETAILS_RECEIVED,
+                ids: runs.map(run => run.uid),
+            },
+            ...actions,
+        ]);
     }).catch((error) => {
         dispatch({
             type: types.DATACART_DETAILS_ERROR, error: error.response.data,
@@ -62,16 +78,16 @@ export function clearDataCartDetails() {
 
 export function getRuns(args = {}) {
     return (dispatch, getState) => {
-        const { runsList } = getState();
+        const { exports, user } = getState();
         // if there is already a request in process we need to cancel it
         // before executing the current request
-        if (runsList.fetching && runsList.cancelSource) {
+        if (exports.allInfo.status.fetching && exports.allInfo.status.cancelSource) {
             // if this is not a direct request from the user, dont cancel ongoing requests
             if (args.isAuto) {
                 return null;
             }
             // if this is a direct user action, it is safe to cancel ongoing requests
-            runsList.cancelSource.cancel('Request is no longer valid, cancelling');
+            exports.allInfo.status.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 
         const { CancelToken } = axios;
@@ -152,22 +168,44 @@ export function getRuns(args = {}) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
+            const orderedIds = [];
             const runs = response.data.map((run) => {
                 const newRun = { ...run };
+                orderedIds.push(newRun.uid);
                 newRun.job.permissions = {
-                    value: newRun.job.visibility,
+                    value: newRun.job.permissions.value,
                     groups: newRun.job.permissions.groups,
                     members: newRun.job.permissions.users,
                 };
                 return newRun;
             });
 
-            dispatch({
-                type: types.RECEIVED_RUNS,
-                runs,
-                nextPage,
-                range,
+            const normalizer = new Normalizer();
+
+            const actions = runs.map((run) => {
+                const { result, entities } = normalizer.normalizeRun(run);
+                return {
+                    type: 'ADD_RUN',
+                    payload: {
+                        id: result,
+                        username: user.data.user.username,
+                        ...entities,
+                    },
+                };
             });
+            dispatch([
+                {
+                    type: types.RECEIVED_RUNS,
+                    payload: {
+                        range,
+                        nextPage,
+                        orderedIds,
+                    },
+                },
+                ...actions,
+            ]);
+
+            // dispatch();
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -180,15 +218,15 @@ export function getRuns(args = {}) {
 
 export function getFeaturedRuns(args) {
     return (dispatch, getState) => {
-        const { featuredRunsList } = getState();
-        if (featuredRunsList.fetching && featuredRunsList.cancelSource) {
+        const { exports, user } = getState();
+        if (exports.featuredInfo.status.fetching && exports.featuredInfo.status.cancelSource) {
             // if this is not a direct request from the user, dont cancel ongoing requests
             if (args.isAuto) {
                 return null;
             }
             // if there is already a request in process we need to cancel it
             // before executing the current request
-            featuredRunsList.cancelSource.cancel('Request is no longer valid, cancelling');
+            exports.featuredInfo.status.cancelSource.cancel('Request is no longer valid, cancelling');
         }
 
         const { CancelToken } = axios;
@@ -229,14 +267,39 @@ export function getFeaturedRuns(args) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
-            const runs = [...response.data];
-
-            dispatch({
-                type: types.RECEIVED_FEATURED_RUNS,
-                runs,
-                nextPage,
-                range,
+            const runs = response.data.map((run) => {
+                const newRun = { ...run };
+                newRun.job.permissions = {
+                    value: newRun.job.permissions.value,
+                    groups: newRun.job.permissions.groups,
+                    members: newRun.job.permissions.users,
+                };
+                return newRun;
             });
+
+            const norm = new Normalizer();
+            const actions = runs.map((run) => {
+                const { result, entities } = norm.normalizeRun(run);
+                return {
+                    type: 'ADD_FEATURED_RUN',
+                    payload: {
+                        id: result,
+                        username: user.data.user.username,
+                        ...entities,
+                    },
+                };
+            });
+            dispatch([
+                {
+                    type: types.RECEIVED_FEATURED_RUNS,
+                    payload: {
+                        ids: runs.map(run => run.uid),
+                        range,
+                        nextPage,
+                    },
+                },
+                ...actions,
+            ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
@@ -249,7 +312,7 @@ export function getFeaturedRuns(args) {
 
 export function deleteRun(uid) {
     return (dispatch) => {
-        dispatch({ type: types.DELETING_RUN });
+        dispatch({ type: types.DELETING_RUN, payload: { id: uid } });
 
         const csrftoken = cookie.load('csrftoken');
         const formData = new FormData();
@@ -261,7 +324,7 @@ export function deleteRun(uid) {
             data: formData,
             headers: { 'X-CSRFToken': csrftoken },
         }).then(() => {
-            dispatch({ type: types.DELETED_RUN });
+            dispatch({ type: types.DELETED_RUN, payload: { id: uid } });
         }).catch((error) => {
             dispatch({ type: types.DELETE_RUN_ERROR, error: error.response.data });
         });

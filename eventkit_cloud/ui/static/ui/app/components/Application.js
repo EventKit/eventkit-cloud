@@ -60,7 +60,7 @@ export class Application extends Component {
         this.setNotificationsDropdownContainerRef = this.setNotificationsDropdownContainerRef.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
-            config: {},
+            childContext: { config: {} },
             hovered: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
@@ -77,9 +77,7 @@ export class Application extends Component {
     }
 
     getChildContext() {
-        return {
-            config: this.state.config,
-        };
+        return this.state.childContext;
     }
 
     componentDidMount() {
@@ -112,6 +110,28 @@ export class Application extends Component {
         }
     }
 
+    shouldComponentUpdate(p) {
+        const status = p.notificationsStatus;
+        const oldStatus = this.props.notificationsStatus;
+
+        // if the status object has changed we need to inspect
+        if (status !== oldStatus) {
+            // if there is a error change we need to update
+            if (status.error !== oldStatus.error) {
+                return true;
+            }
+            // if a fetch has completed AND the data has changed we need to update
+            if (status.fetched && p.notificationsData !== this.props.notificationsData) {
+                return true;
+            }
+            // any other status change can be ignored
+            return false;
+        }
+
+        // if the status is not the update we can default to true
+        return true;
+    }
+
     componentWillUnmount() {
         this.stopListeningForNotifications();
     }
@@ -126,7 +146,7 @@ export class Application extends Component {
         return axios.get('/configuration')
             .then((response) => {
                 if (response.data) {
-                    this.setState({ config: response.data });
+                    this.setState({ childContext: { config: response.data } });
                 }
             }).catch((error) => {
                 console.log(error.response.data);
@@ -489,7 +509,7 @@ export class Application extends Component {
 
         const childrenWithContext = React.Children.map(this.props.children, child => (
             React.cloneElement(child, {
-                context: { config: this.state.config },
+                context: this.state.childContext,
             })
         ));
 
@@ -532,7 +552,7 @@ export class Application extends Component {
                                 style={{
                                     ...styles.notificationsIndicator,
                                     transition: 'transform 0.25s cubic-bezier(0.23, 1, 0.32, 1)',
-                                    transform: (this.props.notifications.unreadCount.unreadCount > 0) ? 'scale(1)' : 'scale(0)',
+                                    transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
                                 }}
                             />
                             <div ref={this.setNotificationsDropdownContainerRef}>
@@ -542,7 +562,8 @@ export class Application extends Component {
                                         pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
                                         transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
                                     }}
-                                    notifications={this.props.notifications}
+                                    notifications={this.props.notificationsData}
+                                    status={this.props.notificationsStatus}
                                     router={this.props.router}
                                     onNavigate={this.handleNotificationsDropdownNavigate}
                                 />
@@ -721,7 +742,7 @@ Application.defaultProps = {
     children: null,
     autoLogoutAt: null,
     autoLogoutWarningAt: null,
-    userData: {},
+    userData: null,
 };
 
 Application.propTypes = {
@@ -751,7 +772,9 @@ Application.propTypes = {
     }),
     autoLogoutAt: PropTypes.instanceOf(Date),
     autoLogoutWarningAt: PropTypes.instanceOf(Date),
-    notifications: PropTypes.object.isRequired,
+    notificationsData: PropTypes.object.isRequired,
+    notificationsStatus: PropTypes.object.isRequired,
+    notificationsCount: PropTypes.number.isRequired,
     getNotificationsUnreadCount: PropTypes.func.isRequired,
     getNotifications: PropTypes.func.isRequired,
     width: PropTypes.string.isRequired,
@@ -777,9 +800,11 @@ function mapStateToProps(state) {
     return {
         drawer: state.drawer,
         userData: state.user.data,
-        autoLogoutAt: state.user.autoLogoutAt,
-        autoLogoutWarningAt: state.user.autoLogoutWarningAt,
-        notifications: state.notifications,
+        autoLogoutAt: state.user.meta.autoLogoutAt,
+        autoLogoutWarningAt: state.user.meta.autoLogoutWarningAt,
+        notificationsStatus: state.notifications.status,
+        notificationsData: state.notifications.data,
+        notificationsCount: state.notifications.unreadCount.data.unreadCount,
     };
 }
 

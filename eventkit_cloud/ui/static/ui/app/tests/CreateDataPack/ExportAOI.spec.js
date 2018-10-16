@@ -639,7 +639,6 @@ describe('ExportAOI component', () => {
         wrapper.setState({ mode: 'MODE_DRAW_FREE' });
         const unwrapSpy = sinon.spy(utils, 'unwrapCoordinates');
         const createSpy = sinon.spy(utils, 'createGeoJSON');
-        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const isValidSpy = sinon.stub(utils, 'isGeoJSONValid').returns(true);
         const updateSpy = sinon.spy(wrapper.instance(), 'updateMode');
 
@@ -666,7 +665,6 @@ describe('ExportAOI component', () => {
         expect(unwrapSpy.calledOnce).toBe(true);
         expect(setCoordSpy.calledOnce).toBe(true);
         expect(createSpy.calledOnce).toBe(true);
-        expect(addSpy.calledOnce).toBe(true);
         expect(isValidSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.calledOnce).toBe(true);
         expect(props.setNextEnabled.calledOnce).toBe(true);
@@ -676,7 +674,6 @@ describe('ExportAOI component', () => {
         unwrapSpy.restore();
         setCoordSpy.restore();
         createSpy.restore();
-        addSpy.restore();
         isValidSpy.restore();
     });
 
@@ -686,7 +683,6 @@ describe('ExportAOI component', () => {
         props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
         wrapper.setState({ mode: 'MODE_DRAW_FREE' });
-        const addSpy = sinon.spy(VectorSource.prototype, 'addFeature');
         const isValidSpy = sinon.stub(utils, 'isGeoJSONValid').returns(false);
         const updateSpy = sinon.spy(wrapper.instance(), 'updateMode');
         const showWarningSpy = sinon.spy(wrapper.instance(), 'showInvalidDrawWarning');
@@ -702,13 +698,11 @@ describe('ExportAOI component', () => {
             }),
         };
         wrapper.instance().handleDrawEnd(event);
-        expect(addSpy.calledOnce).toBe(true);
         expect(isValidSpy.calledOnce).toBe(true);
         expect(showWarningSpy.calledOnce).toBe(true);
         expect(props.updateAoiInfo.called).toBe(false);
         expect(props.setNextEnabled.called).toBe(false);
         expect(updateSpy.calledOnce).toBe(true);
-        addSpy.restore();
         isValidSpy.restore();
     });
 
