@@ -228,7 +228,7 @@ describe('DataPackPage component', () => {
     it('componentWillReceiveProps should set PageLoading false when runs are fetched', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const nextProps = getProps();
         nextProps.runsList.fetched = true;
         wrapper.setProps(nextProps);
@@ -384,14 +384,12 @@ describe('DataPackPage component', () => {
             user: 'admin3',
             uid: '3',
         }];
-        const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const propsSpy = sinon.spy(wrapper.instance(), 'componentWillReceiveProps');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setProps(nextProps);
         expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ showLoading: false }));
-        DataPackPage.prototype.setState.restore();
-        DataPackPage.prototype.componentWillReceiveProps.restore();
     });
 
     it('onSearch should call updateLocationQuery with search text', () => {
@@ -446,15 +444,14 @@ describe('DataPackPage component', () => {
 
     it('if a run has been deleted it should call makeRunRequest again', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
-        const makeRequestSpy = sinon.spy(DataPackPage.prototype, 'makeRunRequest');
         const wrapper = getWrapper(props);
-        expect(makeRequestSpy.calledOnce).toBe(true);
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
+        const makeRequestSpy = sinon.spy(wrapper.instance(), 'makeRunRequest');
         const nextProps = getProps();
         nextProps.runDeletion.deleted = true;
         wrapper.setProps(nextProps);
         expect(stateSpy.calledWith({ loading: true }, wrapper.instance().makeRunRequest)).toBe(true);
-        expect(makeRequestSpy.calledTwice).toBe(true);
+        expect(makeRequestSpy.calledOnce).toBe(true);
         makeRequestSpy.restore();
         stateSpy.restore();
     });
@@ -535,7 +532,7 @@ describe('DataPackPage component', () => {
         props.width = 'md';
         const wrapper = shallow(<DataPackPage {...props} />);
         const currentState = { ...wrapper.state() };
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         const newState = {
             minDate: new Date(),
             maxDate: new Date(),
@@ -563,7 +560,7 @@ describe('DataPackPage component', () => {
         const props = getProps();
         props.width = 'lg';
         const wrapper = shallow(<DataPackPage {...props} />);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
         expect(stateSpy.calledWith({
@@ -589,7 +586,7 @@ describe('DataPackPage component', () => {
     it('handleSpatialFilter should setstate then call make run request', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         const geojson = {
             type: 'FeatureCollection',
             features: [
@@ -636,7 +633,7 @@ describe('DataPackPage component', () => {
     it('handleToggle should set state', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleToggle();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ open: false }));
@@ -688,7 +685,7 @@ describe('DataPackPage component', () => {
                 {...commonProps}
                 onSort={wrapper.instance().handleSortChange}
                 order={wrapper.state().order}
-                innerRef={wrapper.instance().getViewRef}
+                customRef={wrapper.instance().getViewRef}
             />),
             sinon.match({ ref: commonProps.ref }),
         );
@@ -697,7 +694,7 @@ describe('DataPackPage component', () => {
             <DataPackGrid
                 {...commonProps}
                 name="DataPackLibrary"
-                ref={wrapper.instance().getViewRef}
+                customRef={wrapper.instance().getViewRef}
             />
         ));
 
@@ -710,7 +707,7 @@ describe('DataPackPage component', () => {
                 processGeoJSONFile={props.processGeoJSONFile}
                 resetGeoJSONFile={props.resetGeoJSONFile}
                 onMapFilter={wrapper.instance().handleSpatialFilter}
-                innerRef={wrapper.instance().getViewRef}
+                customRef={wrapper.instance().getViewRef}
             />
         ));
         expect(wrapper.instance().getView('bad case')).toEqual(null);
@@ -739,7 +736,7 @@ describe('DataPackPage component', () => {
         ];
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
@@ -761,10 +758,10 @@ describe('DataPackPage component', () => {
         };
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
-        const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setState({ open: false });
         wrapper.instance().callback(callbackData);
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ open: true }));
         stateSpy.restore();
     });

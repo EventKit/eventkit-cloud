@@ -14,6 +14,7 @@ import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
 import LoadButtons from './LoadButtons';
 import CustomScrollbar from '../CustomScrollbar';
+import withRef from '../../utils/withRef';
 
 export class DataPackList extends Component {
     constructor(props) {
@@ -348,4 +349,5 @@ DataPackList.propTypes = {
 export default
 @withWidth()
 @withTheme()
+@withRef()
 class Default extends DataPackList {}

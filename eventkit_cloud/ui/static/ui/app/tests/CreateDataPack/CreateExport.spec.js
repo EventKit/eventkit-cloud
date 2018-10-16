@@ -47,7 +47,7 @@ describe('CreateExport component', () => {
 
     it('handleWalkthroughReset should set state', () => {
         const wrapper = getWrapper();
-        const stateSpy = sinon.spy(CreateExport.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleWalkthroughReset();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ walkthroughClicked: false }));
@@ -56,7 +56,7 @@ describe('CreateExport component', () => {
 
     it('handleWalkthroughClick should set state', () => {
         const wrapper = getWrapper();
-        const stateSpy = sinon.spy(CreateExport.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleWalkthroughClick();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ walkthroughClicked: true }));

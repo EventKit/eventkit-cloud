@@ -215,7 +215,7 @@ describe('DataPackGridItem component', () => {
         const wrapper = getWrapper(props);
         const targetSpy = sinon.spy();
         wrapper.instance().map = { setTarget: targetSpy };
-        const updateSpy = sinon.spy(DataPackGridItem.prototype, 'componentDidUpdate');
+        const updateSpy = sinon.spy(wrapper.instance(), 'componentDidUpdate');
         wrapper.instance().initMap = sinon.spy();
         wrapper.setState({ expanded: false });
         expect(updateSpy.called).toBe(true);
@@ -229,11 +229,11 @@ describe('DataPackGridItem component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.state().expanded).toBe(true);
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().toggleExpanded();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ expanded: false })).toBe(true);
-        stateSpy.restore();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ expanded: false })).toBe(true);
+        stateStub.restore();
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
@@ -267,7 +267,7 @@ describe('DataPackGridItem component', () => {
     it('showDeleteDialog should close menu and set deleteDialogOpen to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -280,7 +280,7 @@ describe('DataPackGridItem component', () => {
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -303,7 +303,7 @@ describe('DataPackGridItem component', () => {
 
     it('handleShareOpen should close menu and open share dialog', () => {
         const wrapper = getWrapper(getProps());
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
         expect(stateSpy.calledWithExactly({
@@ -314,7 +314,7 @@ describe('DataPackGridItem component', () => {
 
     it('handleShareClose should close share dialog', () => {
         const wrapper = getWrapper(getProps());
-        const stateSpy = sinon.spy(DataPackGridItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleShareClose();
         expect(stateSpy.callCount).toBe(1);
         expect(stateSpy.calledWithExactly({ shareDialogOpen: false }));

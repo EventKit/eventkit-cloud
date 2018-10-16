@@ -50,6 +50,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import globe from '../../../images/globe-americas.svg';
+import withRef from '../../utils/withRef';
 
 export const RED_STYLE = new Style({
     stroke: new Stroke({
@@ -1058,4 +1059,5 @@ MapView.propTypes = {
 export default
 @withWidth()
 @withTheme()
+@withRef()
 class Default extends MapView {}

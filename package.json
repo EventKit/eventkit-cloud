@@ -59,8 +59,8 @@
     "canvas": "~1.6.7",
     "compression-webpack-plugin": "~1.1.11",
     "css-loader": "~0.28.0",
-    "enzyme": "~3.3.0",
-    "enzyme-adapter-react-16": "~1.1.1",
+    "enzyme": "~3.7.0",
+    "enzyme-adapter-react-16": "~1.6.0",
     "eslint": "~4.9.0",
     "eslint-config-airbnb": "~16.1.0",
     "eslint-plugin-import": "~2.7.0",
@@ -148,7 +148,11 @@
         "^.+\\.js$": "babel-jest",
         "^.+\\.ts$": "ts-jest",
         "^.+\\.tsx$": "ts-jest"
-    }
+    },
+    "testMatch": [
+      "**/__tests__/**/.(js|ts)?(x)",
+      "**/?(*.)+(spec|test).(js|ts)?(x)"
+    ]
   },
   "scripts": {
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",

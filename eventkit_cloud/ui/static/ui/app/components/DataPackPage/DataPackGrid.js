@@ -6,6 +6,7 @@ import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from './LoadButtons';
 import { userIsDataPackAdmin } from '../../utils/generic';
+import withRef from '../../utils/withRef';
 
 export class DataPackGrid extends Component {
     getColumns() {
@@ -69,6 +70,7 @@ export class DataPackGrid extends Component {
                                     index={index}
                                     users={this.props.users}
                                     groups={this.props.groups}
+                                    showFeaturedFlag
                                 />
                             );
                         })}
@@ -110,4 +112,5 @@ DataPackGrid.propTypes = {
 
 export default
 @withWidth()
+@withRef()
 class Default extends DataPackGrid {}
