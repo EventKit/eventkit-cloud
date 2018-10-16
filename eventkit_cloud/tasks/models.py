@@ -24,6 +24,7 @@ def get_all_users_by_permissions(permissions):
         models.Q(username__in=permissions['users'])
     ).distinct()
 
+
 def notification_delete(instance):
     for notification in Notification.objects.filter(actor_object_id=instance.id):
         ct = ContentType.objects.filter(pk=notification.actor_content_type_id).get()
@@ -164,16 +165,16 @@ class UserDownload(UIDMixin):
 
     @property
     def job(self):
-        if self.downloadable.task:
-            return self.downloadable.task.export_provider_task.run.job
+        if self.downloadable.export_task:
+            return self.downloadable.export_task.export_provider_task.run.job
         if self.downloadable.run:
             return self.downloadable.run.job
 
     @property
     def provider(self):
         # TODO: This is one of many reasons why DataProviderTaskRecord should maybe point to DataProvider
-        if self.downloadable.task:
-            return DataProvider.objects.filter(slug=self.downloadable.task.export_provider_task.slug).first()
+        if self.downloadable.export_task:
+            return DataProvider.objects.filter(slug=self.downloadable.export_task.export_provider_task.slug).first()
 
 
 class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):

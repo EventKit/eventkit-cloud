@@ -140,8 +140,8 @@ describe('exportInfo reducer', () => {
 describe('submitJobReducer', () => {
     it('should return the intial state', () => {
         expect(reducers.submitJobReducer(undefined, {})).toEqual({
-            fetching: false,
-            fetched: false,
+            fetching: null,
+            fetched: null,
             jobuid: '',
             error: null,
         });
@@ -225,8 +225,8 @@ describe('submitJobReducer', () => {
 describe('rerunExport Reducer', () => {
     it('it should return the initial state', () => {
         expect(reducers.rerunExportReducer(undefined, {})).toEqual({
-            fetching: false,
-            fetched: false,
+            fetching: null,
+            fetched: null,
             data: [],
             error: null,
         });
@@ -314,8 +314,8 @@ describe('rerunExport Reducer', () => {
 describe('updatePermissions Reducer', () => {
     it('it should return the initial state', () => {
         expect(reducers.updatePermissionReducer(undefined, {})).toEqual({
-            updating: false,
-            updated: false,
+            updating: null,
+            updated: null,
             error: null,
         });
     });

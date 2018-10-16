@@ -26,13 +26,13 @@ export function getNotifications(args = {}) {
     return (dispatch, getState) => {
         // Check if we should cancel the previous request due to a user action.
         const state = getState();
-        if (state.notifications.fetching && state.notifications.cancelSource) {
+        if (state.notifications.status.fetching && state.notifications.status.cancelSource) {
             if (args.isAuto) {
                 // Just ignore this request.
                 return null;
             }
             // Cancel the last request.
-            state.notifications.cancelSource.cancel('Request is no longer valid, cancelling.');
+            state.notifications.status.cancelSource.cancel('Request is no longer valid, cancelling.');
         }
 
         const cancelSource = axios.CancelToken.source();
@@ -90,12 +90,12 @@ export function getNotifications(args = {}) {
 
 function cancelNotificationsSources(state) {
     // Avoid out-of-sync issues if we call this right as we're receiving notifications.
-    if (state.notifications.fetching && state.notifications.cancelSource) {
-        state.notifications.cancelSource.cancel('Taking another action on notifications, cancelling.');
+    if (state.notifications.status.fetching && state.notifications.status.cancelSource) {
+        state.notifications.status.cancelSource.cancel('Taking another action on notifications, cancelling.');
     }
 
-    if (state.notifications.unreadCount.fetching && state.notifications.unreadCount.cancelSource) {
-        state.notifications.unreadCount.cancelSource.cancel('Taking another action on notifications, cancelling.');
+    if (state.notifications.unreadCount.status.fetching && state.notifications.unreadCount.status.cancelSource) {
+        state.notifications.unreadCount.status.cancelSource.cancel('Taking another action on notifications, cancelling.');
     }
 }
 
@@ -239,13 +239,13 @@ export function getNotificationsUnreadCount(args = {}) {
     return (dispatch, getState) => {
         // Check if we should cancel the previous request due to a user action.
         const state = getState();
-        if (state.notifications.unreadCount.fetching && state.notifications.unreadCount.cancelSource) {
+        if (state.notifications.unreadCount.status.fetching && state.notifications.unreadCount.status.cancelSource) {
             if (args.isAuto) {
                 // Just ignore this request.
                 return null;
             }
             // Cancel the last request.
-            state.notifications.unreadCount.cancelSource.cancel('Request is no longer valid, cancelling.');
+            state.notifications.unreadCount.status.cancelSource.cancel('Request is no longer valid, cancelling.');
         }
 
         const cancelSource = axios.CancelToken.source();

@@ -26,10 +26,12 @@ describe('Account Component', () => {
                     test2: false,
                 },
             },
-            isLoading: false,
-            patched: false,
-            patching: false,
-            error: null,
+            status: {
+                isLoading: false,
+                patched: false,
+                patching: false,
+                error: null,
+            },
         },
         licenses: {
             error: null,
@@ -149,7 +151,7 @@ describe('Account Component', () => {
         const wrapper = getWrapper(props);
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(false);
         const nextProps = getProps();
-        nextProps.user.patched = true;
+        nextProps.user.status.patched = true;
         wrapper.setProps(nextProps);
         expect(stateSpy.calledWith({ showSavedMessage: true })).toBe(true);
         expect(stateSpy.calledWith({ showSavedMessage: false })).toBe(false);

@@ -1,0 +1,34 @@
+notifications:
+  email: false
+
+sudo: required
+dist: trusty
+language: generic
+
+services:
+  - docker
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+  - sudo groupadd -g 880 eventkit
+  - sudo useradd -u 8800 -g 880 eventkit
+
+before_script:
+    - docker-compose pull
+    - docker-compose build webpack
+    - docker-compose up -d
+    - sudo chown -R eventkit:eventkit ./
+    - docker-compose exec -T eventkit scripts/wait-for-postgis.sh python manage.py runinitial setup
+
+script:
+    - docker-compose exec -T webpack npm run lint
+    - docker-compose exec -T webpack npm test
+    - docker-compose exec -T eventkit pytest -n 4
+#    - docker-compose run --rm -T -e COVERAGE=True -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} -e TRAVIS=True -e TRAVIS_JOB_ID=${TRAVIS_JOB_ID} -e TRAVIS_BRANCH=${TRAVIS_BRANCH} eventkit python manage.py test eventkit_cloud
+    - docker-compose run --rm -T eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.22.0 SITE_NAME=cloud.eventkit.test SITE_IP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)

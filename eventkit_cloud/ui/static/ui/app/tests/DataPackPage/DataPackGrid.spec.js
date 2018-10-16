@@ -101,8 +101,10 @@ function getRuns() {
 }
 
 describe('DataPackGrid component', () => {
+    const runs = getRuns();
     const props = {
-        runs: getRuns(),
+        runIds: runs.map(run => run.uid),
+        runs,
         providers,
         user: { data: { user: { username: 'admin' } } },
         users: [],

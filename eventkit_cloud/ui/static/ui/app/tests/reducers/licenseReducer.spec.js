@@ -15,7 +15,7 @@ describe('License Reducer', () => {
             {
                 type: types.FETCHING_LICENSES,
             },
-        )).toEqual({ ...state, fetching: true });
+        )).toEqual({ ...state, fetched: false, fetching: true });
     });
 
     it('should return fetched true with the license data', () => {
@@ -25,7 +25,12 @@ describe('License Reducer', () => {
                 type: types.RECEIVED_LICENSES,
                 licenses: [{ name: 'license 1', text: 'some text', slug: '1' }],
             },
-        )).toEqual({ ...state, fetched: true, licenses: [{ name: 'license 1', text: 'some text', slug: '1' }] });
+        )).toEqual({
+            ...state,
+            fetched: true,
+            fetching: false,
+            licenses: [{ name: 'license 1', text: 'some text', slug: '1' }],
+        });
     });
 
     it('should return the error message', () => {
@@ -35,6 +40,6 @@ describe('License Reducer', () => {
                 type: types.FETCH_LICENSES_ERROR,
                 error: 'Oh no a big scary error',
             },
-        )).toEqual({ ...state, error: 'Oh no a big scary error' });
+        )).toEqual({ ...state, fetching: false, error: 'Oh no a big scary error' });
     });
 });
