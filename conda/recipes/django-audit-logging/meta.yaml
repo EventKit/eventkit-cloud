@@ -21,10 +21,10 @@ requirements:
   host:
     - python
     - setuptools
-    - django=2.0.5
+    - django=2.0.8
   run:
     - python
-    - django=2.0.5
+    - django=2.0.8
 
 test:
   imports:
