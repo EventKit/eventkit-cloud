@@ -50,6 +50,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
+import withRef from '../../utils/withRef';
 import { makeAllRunsSelector } from '../../selectors/runSelector';
 
 export const RED_STYLE = new Style({
@@ -1063,4 +1064,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps)(MapView)));
+export default withWidth()(withTheme()(withRef()(connect(makeMapStateToProps, null, null, { withRef: true })(MapView))));

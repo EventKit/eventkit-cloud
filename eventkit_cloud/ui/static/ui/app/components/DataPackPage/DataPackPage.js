@@ -227,7 +227,7 @@ export class DataPackPage extends React.Component {
                         {...commonProps}
                         onSort={this.handleSortChange}
                         order={this.props.location.query.order}
-                        innerRef={this.getViewRef}
+                        customRef={this.getViewRef}
                     />
                 );
             case 'grid':
@@ -235,7 +235,7 @@ export class DataPackPage extends React.Component {
                     <DataPackGrid
                         {...commonProps}
                         name="DataPackLibrary"
-                        ref={this.getViewRef}
+                        customRef={this.getViewRef}
                     />
                 );
             case 'map':
@@ -248,7 +248,7 @@ export class DataPackPage extends React.Component {
                         processGeoJSONFile={this.props.processGeoJSONFile}
                         resetGeoJSONFile={this.props.resetGeoJSONFile}
                         onMapFilter={this.handleSpatialFilter}
-                        innerRef={this.getViewRef}
+                        customRef={this.getViewRef}
                     />
                 );
             default: return null;
@@ -416,7 +416,14 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
         } else {
-            this.view.getScrollbar().scrollToTop();
+            let { view } = this;
+            // react-redux connect does not have good support for forwarded refs
+            // so if its a connected component we need to access the wrappedInstance
+            if (view.wrappedInstance) {
+                view = view.wrappedInstance;
+            }
+            view.getScrollbar().scrollToTop();
+
             this.setState({ isRunning: true, steps: [] });
             const steps = this.getJoyRideSteps();
 

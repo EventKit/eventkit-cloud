@@ -95,7 +95,7 @@ describe('FilterDrawer component', () => {
         };
         const wrapper = getWrapper(props);
         wrapper.setState(initialState);
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const expectedState = {
             permissions: {
                 value: '',
@@ -137,7 +137,7 @@ describe('FilterDrawer component', () => {
     it('handleStatusChange should set state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleStatusChange({ completed: true });
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({
@@ -149,7 +149,7 @@ describe('FilterDrawer component', () => {
     it('handleProvidersChange should add the provider to state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleProvidersChange(providers[0].slug, true);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ providers: { [providers[0].slug]: true } })).toBe(true);
@@ -175,7 +175,7 @@ describe('FilterDrawer component', () => {
         const date = new Date(2017, 2, 30);
         const e = { target: { value: date } };
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleMinDate(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ minDate: date }));
@@ -187,7 +187,7 @@ describe('FilterDrawer component', () => {
         const date = new Date(2017, 2, 30);
         const e = { target: { value: date } };
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(FilterDrawer.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleMaxDate(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ maxDate: date }));
