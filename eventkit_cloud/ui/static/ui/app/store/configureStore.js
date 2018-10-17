@@ -1,4 +1,5 @@
-import { applyMiddleware, createStore } from 'redux';
+import { applyMiddleware, createStore, compose } from 'redux';
+import { reduxBatch } from '@manaflair/redux-batch';
 import thunkMiddleware from 'redux-thunk';
 import createLogger from 'redux-logger';
 import { browserHistory } from 'react-router';
@@ -27,6 +28,6 @@ if (process.env.NODE_ENV !== 'production') {
 export default () => (
     createStore(
         rootReducer,
-        applyMiddleware(...middleware),
+        compose(reduxBatch, applyMiddleware(...middleware), reduxBatch),
     )
 );

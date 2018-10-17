@@ -136,7 +136,7 @@ export class NotificationsTableMenu extends React.Component {
                     null
                 }
                 {(selectedNotificationsKeys.length > 0) ?
-                    <Divider />
+                    <Divider key="divider" />
                     :
                     null
                 }

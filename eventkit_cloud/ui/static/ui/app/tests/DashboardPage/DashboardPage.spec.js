@@ -73,43 +73,27 @@ describe('DashboardPage component', () => {
 
     function defaultProps() {
         return {
-            user: {
-                data: {
-                    user: {
-                        username: 'admin',
-                    },
+            userData: {
+                user: {
+                    username: 'admin',
                 },
-            },
-            runsList: {
-                fetching: false,
-                fetched: false,
-                runs: [],
-            },
-            featuredRunsList: {
-                fetching: false,
-                fetched: false,
-                runs: [],
             },
             runDeletion: {
                 deleted: false,
             },
-            userActivity: {
-                viewedJobs: {
-                    fetching: false,
-                    fetched: true,
-                    viewedJobs: [],
-                },
-            },
-            notifications: {
+            ownIds: [],
+            featuredIds: [],
+            viewedIds: [],
+            runsFetched: null,
+            featuredRunsFetched: null,
+            viewedRunsFetched: null,
+            notificationsStatus: {
                 fetching: false,
                 fetched: false,
+            },
+            notificationsData: {
                 notifications: {},
                 notificationsSorted: [],
-                unreadCount: {
-                    fetching: false,
-                    fetched: false,
-                    unreadCount: 0,
-                },
             },
             updatePermission: {
                 updating: false,
@@ -153,30 +137,19 @@ describe('DashboardPage component', () => {
     function loadEmptyData() {
         wrapper.setProps({
             ...instance.props,
-            runsList: {
+            ownIds: [],
+            runsFetched: true,
+            featuredIds: [],
+            featuredRunsFetched: true,
+            viewedIds: [],
+            viewedRunsFetched: true,
+            notificationsStatus: {
                 fetching: false,
                 fetched: true,
-                runs: [],
             },
-            featuredRunsList: {
-                fetching: false,
-                fetched: true,
-                runs: [],
-            },
-            userActivity: {
-                ...instance.props.userActivity,
-                viewedJobs: {
-                    ...instance.props.userActivity.viewedJobs,
-                    fetching: false,
-                    fetched: true,
-                    viewedJobs: [],
-                },
-            },
-            notifications: {
-                ...instance.props.notifications,
-                fetching: false,
-                fetched: true,
+            notificationsData: {
                 notifications: [],
+                notificationsSorted: [],
             },
             users: {
                 fetching: false,
@@ -192,33 +165,19 @@ describe('DashboardPage component', () => {
 
     function loadData() {
         wrapper.setProps({
+
             ...instance.props,
-            runsList: {
+            ownIds: mockRuns.map(run => run.uid),
+            runsFetched: true,
+            featuredIds: mockRuns.map(run => run.uid),
+            featuredRunsFetched: true,
+            viewedIds: mockRuns.map(run => run.uid),
+            viewedRunsFetched: true,
+            notificationsStatus: {
                 fetching: false,
                 fetched: true,
-                runs: mockRuns,
             },
-            featuredRunsList: {
-                fetching: false,
-                fetched: true,
-                runs: mockRuns,
-            },
-            userActivity: {
-                ...instance.props.userActivity,
-                viewedJobs: {
-                    ...instance.props.userActivity.viewedJobs,
-                    fetching: false,
-                    fetched: true,
-                    viewedJobs: [
-                        { last_export_run: mockRuns[0] },
-                        { last_export_run: mockRuns[1] },
-                    ],
-                },
-            },
-            notifications: {
-                ...instance.props.notifications,
-                fetching: false,
-                fetched: true,
+            notificationsData: {
                 notifications: mockNotifications,
                 notificationsSorted: [
                     mockNotifications['1'],
@@ -381,7 +340,7 @@ describe('DashboardPage component', () => {
 
         it('renders notifications', () => {
             const notificationItems = wrapper.find('.qa-DashboardSection-Notifications').children().find(NotificationGridItem);
-            const notificationsSorted = instance.props.notifications.notificationsSorted;
+            const notificationsSorted = instance.props.notificationsData.notificationsSorted;
             expect(notificationItems).not.toHaveLength(0);
             expect(notificationItems).toHaveLength(notificationsSorted.length);
             notificationsSorted.forEach((notification, i) => {
@@ -391,31 +350,31 @@ describe('DashboardPage component', () => {
 
         it('renders recently viewed datapacks', () => {
             const recentlyViewedItems = wrapper.find('.qa-DashboardSection-RecentlyViewed').children().find(DataPackGridItem);
-            const viewedJobs = instance.props.userActivity.viewedJobs.viewedJobs;
+            const viewedJobs = instance.props.viewedIds;
             expect(recentlyViewedItems).not.toHaveLength(0);
             expect(recentlyViewedItems).toHaveLength(viewedJobs.length);
-            viewedJobs.forEach((viewedJob, i) => {
-                expect(recentlyViewedItems.at(i).props().run).toBe(viewedJob.last_export_run);
+            viewedJobs.forEach((id, i) => {
+                expect(recentlyViewedItems.at(i).props().runId).toBe(id);
             });
         });
 
         it('renders featured datapacks', () => {
             const featuredItems = wrapper.find('.qa-DashboardSection-Featured').children().find(DataPackFeaturedItem);
-            const featuredRuns = instance.props.featuredRunsList.runs;
+            const featuredRuns = instance.props.featuredIds;
             expect(featuredItems).not.toHaveLength(0);
             expect(featuredItems).toHaveLength(featuredRuns.length);
-            featuredRuns.forEach((featuredRun, i) => {
-                expect(featuredItems.at(i).props().run).toBe(featuredRun);
+            featuredRuns.forEach((id, i) => {
+                expect(featuredItems.at(i).props().runId).toBe(id);
             });
         });
 
         it('renders my datapacks', () => {
             const myDataPacksItems = wrapper.find('.qa-DashboardSection-MyDataPacks').children().find(DataPackGridItem);
-            const runs = instance.props.runsList.runs;
+            const runs = instance.props.ownIds;
             expect(myDataPacksItems).not.toHaveLength(0);
             expect(myDataPacksItems).toHaveLength(runs.length);
-            runs.forEach((run, i) => {
-                expect(myDataPacksItems.at(i).props().run).toBe(run);
+            runs.forEach((id, i) => {
+                expect(myDataPacksItems.at(i).props().runId).toBe(id);
             });
         });
 

@@ -1,12 +1,7 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/fileActions';
-
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('file actions', () => {
     it('resetGeoJSONFile should return type FILE_RESET', () => {
@@ -38,7 +33,7 @@ describe('file actions', () => {
             ],
         };
         const initialState = {};
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onPost('/file_upload').reply(200, geojson);
         const file = new File(
@@ -59,7 +54,7 @@ describe('file actions', () => {
 
     it('processGeoJSONFile should dispatch error if no data is returned in the response', () => {
         const initialState = {};
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onPost('/file_upload').reply(200, null);
         const file = new File(
@@ -80,7 +75,7 @@ describe('file actions', () => {
 
     it('processGeoJSONFile should dispatch error on axios error', () => {
         const initialState = {};
-        const store = mockStore(initialState);
+        const store = createTestStore(initialState);
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onPost('/file_upload').reply(400, 'whoops');
         const file = new File(

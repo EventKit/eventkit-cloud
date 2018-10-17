@@ -19,7 +19,7 @@ export class NotificationsDropdown extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
+        if (nextProps.status.fetched && !this.props.status.fetched) {
             this.setState({ showLoading: false });
         }
     }
@@ -197,6 +197,7 @@ export class NotificationsDropdown extends React.Component {
 NotificationsDropdown.propTypes = {
     style: PropTypes.object,
     notifications: PropTypes.object.isRequired,
+    status: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onNavigate: PropTypes.func,
     markAllNotificationsAsRead: PropTypes.func.isRequired,

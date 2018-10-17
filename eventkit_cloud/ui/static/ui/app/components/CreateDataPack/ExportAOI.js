@@ -347,8 +347,6 @@ export class ExportAOI extends Component {
         // make sure the user didnt create a polygon with no area
         if (bbox[0] !== bbox[2] && bbox[1] !== bbox[3]) {
             if (this.state.mode === MODE_DRAW_FREE) {
-                const drawFeature = new Feature({ geometry });
-                this.drawLayer.getSource().addFeature(drawFeature);
                 if (isGeoJSONValid(geojson)) {
                     this.props.updateAoiInfo({
                         ...this.props.aoiInfo,

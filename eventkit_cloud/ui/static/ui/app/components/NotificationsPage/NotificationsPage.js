@@ -33,7 +33,7 @@ export class NotificationsPage extends React.Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.notifications.fetched && !this.props.notifications.fetched) {
+        if (nextProps.notificationsStatus.fetched && !this.props.notificationsStatus.fetched) {
             this.setState({
                 loadingPage: false,
                 loading: false,
@@ -46,8 +46,8 @@ export class NotificationsPage extends React.Component {
     }
 
     getRange(notifications) {
-        if (this.props.notifications.range) {
-            const rangeParts = this.props.notifications.range.split('/');
+        if (this.props.notificationsData.range) {
+            const rangeParts = this.props.notificationsData.range.split('/');
             if (rangeParts.length !== 2) {
                 return '';
             }
@@ -64,7 +64,7 @@ export class NotificationsPage extends React.Component {
     }
 
     handleLoadMore() {
-        if (this.props.notifications.nextPage) {
+        if (this.props.notificationsData.nextPage) {
             this.setState({
                 pageSize: this.state.pageSize + this.itemsPerPage,
             }, this.refresh);
@@ -117,7 +117,7 @@ export class NotificationsPage extends React.Component {
             },
         };
 
-        const notifications = this.props.notifications.notificationsSorted.slice(0, this.state.pageSize);
+        const notifications = this.props.notificationsData.notificationsSorted.slice(0, this.state.pageSize);
 
         return (
             <div style={styles.root}>
@@ -164,7 +164,7 @@ export class NotificationsPage extends React.Component {
                                 <div className="qa-NotificationsPage-Content-Notifications">
                                     {isWidthUp('md', this.props.width) ?
                                         <NotificationsTable
-                                            notifications={this.props.notifications}
+                                            notifications={this.props.notificationsData}
                                             notificationsArray={notifications}
                                             router={this.props.router}
                                         />
@@ -188,7 +188,7 @@ export class NotificationsPage extends React.Component {
                                     <LoadButtons
                                         range={this.getRange(notifications)}
                                         handleLoadMore={this.handleLoadMore}
-                                        loadMoreDisabled={!this.props.notifications.nextPage}
+                                        loadMoreDisabled={!this.props.notificationsData.nextPage}
                                     />
                                 </div>
                             }
@@ -202,7 +202,8 @@ export class NotificationsPage extends React.Component {
 
 NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,
-    notifications: PropTypes.object.isRequired,
+    notificationsData: PropTypes.object.isRequired,
+    notificationsStatus: PropTypes.object.isRequired,
     getNotifications: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
@@ -210,7 +211,8 @@ NotificationsPage.propTypes = {
 
 function mapStateToProps(state) {
     return {
-        notifications: state.notifications,
+        notificationsStatus: state.notifications.status,
+        notificationsData: state.notifications.data,
     };
 }
 

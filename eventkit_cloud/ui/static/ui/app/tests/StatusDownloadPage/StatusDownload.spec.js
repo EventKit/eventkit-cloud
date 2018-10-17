@@ -91,12 +91,9 @@ describe('StatusDownload component', () => {
 
     const getProps = () => (
         {
-            datacartDetails: {
-                fetching: false,
-                fetched: false,
-                data: [],
-                error: null,
-            },
+            runs: [],
+            runIds: [],
+            detailsFetched: null,
             runDeletion: {
                 deleting: false,
                 deleted: false,
@@ -194,8 +191,9 @@ describe('StatusDownload component', () => {
         expect(wrapper.find(CustomScrollbar)).toHaveLength(1);
         expect(wrapper.find(DataCartDetails)).toHaveLength(0);
         const nextProps = getProps();
-        nextProps.datacartDetails.fetched = true;
-        nextProps.datacartDetails.data = [{ ...exampleRun }];
+        nextProps.detailsFetched = true;
+        nextProps.runs = [{ ...exampleRun }];
+        nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
         expect(wrapper.find(DataCartDetails)).toHaveLength(1);
         expect(wrapper.find(Joyride)).toHaveLength(1);
@@ -212,8 +210,7 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
-        nextProps.datacartDetails.fetched = true;
-        nextProps.datacartDetails.data = [];
+        nextProps.detailsFetched = true;
         wrapper.setProps(nextProps);
         expect(wrapper.find('.qa-StatusDownload-NoDatapack')).toHaveLength(1);
         expect(wrapper.find(DataCartDetails)).toHaveLength(0);
@@ -223,9 +220,10 @@ describe('StatusDownload component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         let nextProps = getProps();
-        nextProps.datacartDetails.fetched = true;
-        nextProps.datacartDetails.data = [{ ...exampleRun }];
-        nextProps.datacartDetails.data[0].zipfile_url = null;
+        nextProps.detailsFetched = true;
+        nextProps.runs = [{ ...exampleRun }];
+        nextProps.runs[0].zipfile_url = null;
+        nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
         nextProps = getProps();
@@ -322,8 +320,9 @@ describe('StatusDownload component', () => {
         const setStub = sinon.stub(global.window, 'setTimeout');
         setStub.onFirstCall().callsFake(callback => callback());
         const nextProps = getProps();
-        nextProps.datacartDetails.fetched = true;
-        nextProps.datacartDetails.data = [{ ...exampleRun }];
+        nextProps.detailsFetched = true;
+        nextProps.runs = [{ ...exampleRun }];
+        nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ isLoading: false })).toBe(true);
@@ -342,9 +341,9 @@ describe('StatusDownload component', () => {
         const clearStub = sinon.stub(global.window, 'clearInterval');
         const wrapper = getWrapper(props);
         const nextProps = getProps();
-        nextProps.datacartDetails.fetched = true;
-        nextProps.datacartDetails.data = [{ ...exampleRun }];
-        nextProps.datacartDetails.data[0].zipfile_url = null;
+        nextProps.detailsFetched = true;
+        nextProps.runs = [{ ...exampleRun }];
+        nextProps.runs[0].zipfile_url = null;
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
@@ -400,10 +399,10 @@ describe('StatusDownload component', () => {
         const clearStub = sinon.stub(global.window, 'clearInterval');
         const wrapper = getWrapper(props);
         const nextProps = getProps();
-        nextProps.datacartDetails.fetched = true;
-        nextProps.datacartDetails.data = [{ ...exampleRun }];
-        nextProps.datacartDetails.data[0].status = 'INCOMPLETE';
-        nextProps.datacartDetails.data[0].provider_tasks[0].tasks[0].status = 'RUNNING';
+        nextProps.detailsFetched = true;
+        nextProps.runs = [{ ...exampleRun }];
+        nextProps.runs[0].status = 'INCOMPLETE';
+        nextProps.runs[0].provider_tasks[0].tasks[0].status = 'RUNNING';
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);

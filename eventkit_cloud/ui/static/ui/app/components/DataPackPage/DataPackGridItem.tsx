@@ -1,7 +1,8 @@
 
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
+import { connect } from 'react-redux';
+import { withTheme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Collapse from '@material-ui/core/Collapse';
 import Card from '@material-ui/core/Card';
@@ -37,6 +38,8 @@ import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
 import DropDownListItem from '../common/DropDownListItem';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
+import { userIsDataPackAdmin } from '../../utils/generic';
+import { makeFullRunSelector } from '../../selectors/runSelector';
 
 const jss = (theme: any) => createStyles({
     cardTitle: {
@@ -111,9 +114,9 @@ const jss = (theme: any) => createStyles({
     }
 });
 
-interface Props {
-    run: Eventkit.Run;
-    user: Eventkit.Store.User;
+interface OwnProps {
+    className: string | undefined;
+    userData: any;
     onRunDelete: (uid) => void;
     onRunShare: (uid, permissions) => void;
     providers: Eventkit.Provider[];
@@ -125,7 +128,7 @@ interface Props {
     groups: Eventkit.Group[];
     style: object | undefined;
     theme: Eventkit.Theme;
-    classes: any;
+    runId: string;
 }
 
 interface State {
@@ -135,6 +138,14 @@ interface State {
     deleteDialogOpen: boolean;
     shareDialogOpen: boolean;
 }
+
+interface DispatchProps {}
+
+interface StateProps {
+    run: Eventkit.Run;
+}
+
+type Props = Eventkit.Theme & StyledComponentProps & StateProps & DispatchProps & OwnProps;
 
 export class DataPackGridItem extends React.Component<Props, State> {
     static defaultProps = {
@@ -365,6 +376,12 @@ export class DataPackGridItem extends React.Component<Props, State> {
             status = <AlertError style={styles.errorIcon} />;
         }
 
+        const adminPermission = userIsDataPackAdmin(
+            this.props.userData.user,
+            this.props.run.job.permissions,
+            this.props.groups,
+        );
+
         return (
             <div style={styles.gridItem} key={this.props.run.uid}>
                 <Card
@@ -417,7 +434,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                     >
                                         View Data Sources
                                     </MenuItem>
-                                    {this.props.adminPermission ?
+                                    {adminPermission ?
                                         <MenuItem
                                             key="delete"
                                             className="qa-DataPackGridItem-MenuItem-delete"
@@ -428,7 +445,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         </MenuItem>
                                         : null
                                     }
-                                    {this.props.adminPermission ?
+                                    {adminPermission ?
                                         <MenuItem
                                             key="share"
                                             className="qa-DataPackGridItem-MenuItem-share"
@@ -499,7 +516,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                     <CardActions className="qa-DataPackGridItem-CardActions" style={{ height: '45px', padding: '8px' }}>
                         <div style={{ width: '100%' }}>
                             {status}
-                            {this.props.run.user === this.props.user.data.user.username ?
+                            {this.props.run.user === this.props.userData.user.username ?
                                 <p style={styles.ownerLabel}>My DataPack</p>
                                 :
                                 <p style={styles.ownerLabel}>{this.props.run.user}</p>
@@ -515,7 +532,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         show={this.state.shareDialogOpen}
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
-                        user={this.props.user.data}
+                        user={this.props.userData}
                         groups={this.props.groups}
                         members={this.props.users}
                         permissions={this.props.run.job.permissions}
@@ -532,4 +549,17 @@ export class DataPackGridItem extends React.Component<Props, State> {
     }
 }
 
-export default withStyles(jss)(withTheme()(DataPackGridItem));
+const makeMapStateToProps = () => {
+    const getFullRun = makeFullRunSelector();
+    const mapStateToProps = (state, props) => (
+        {
+            run: getFullRun(state, props),
+        }
+    );
+    return mapStateToProps;
+};
+
+export default
+    withTheme()<any>(
+        withStyles<any>(jss)(
+            connect<StateProps, DispatchProps, OwnProps>(makeMapStateToProps)(DataPackGridItem)));

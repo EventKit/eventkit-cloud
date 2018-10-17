@@ -12,8 +12,8 @@ export const initialState = {
         buffer: 0,
     },
     submitJob: {
-        fetching: false,
-        fetched: false,
+        fetching: null,
+        fetched: null,
         jobuid: '',
         error: null,
     },
@@ -26,13 +26,13 @@ export const initialState = {
         formats: ['gpkg'],
     },
     updatePermission: {
-        updating: false,
-        updated: false,
+        updating: null,
+        updated: null,
         error: null,
     },
     exportReRun: {
-        fetching: false,
-        fetched: false,
+        fetching: null,
+        fetched: null,
         data: [],
         error: null,
     },

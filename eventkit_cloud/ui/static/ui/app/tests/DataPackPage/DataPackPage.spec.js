@@ -51,13 +51,12 @@ describe('DataPackPage component', () => {
     ];
 
     const getProps = () => ({
-        runsList: {
-            fetching: false,
-            fetched: false,
-            runs: [],
-            error: null,
-            nextPage: false,
+        runIds: [],
+        runsFetched: null,
+        runsFetching: null,
+        runsMeta: {
             range: '12/24',
+            nextPage: false,
             order: '',
             view: '',
         },
@@ -196,8 +195,8 @@ describe('DataPackPage component', () => {
 
     it('should use order and view from props or just default to map and featured', () => {
         const props = getProps();
-        props.runsList.order = 'job__featured';
-        props.runsList.view = 'grid';
+        props.runsMeta.order = 'job__featured';
+        props.runsMeta.view = 'grid';
         browserHistory.push.reset();
         const wrapper = getWrapper(props);
         expect(browserHistory.push.calledOnce).toBe(true);
@@ -225,25 +224,28 @@ describe('DataPackPage component', () => {
         nextWrapper.unmount();
     });
 
-    it('componentWillReceiveProps should set PageLoading false when runs are fetched', () => {
+    it('componentDidUpdate should set PageLoading false when runs are fetched', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(DataPackPage.prototype, 'setState');
         const nextProps = getProps();
-        nextProps.runsList.fetched = true;
+        nextProps.runsFetched = true;
         wrapper.setProps(nextProps);
+        wrapper.instance().forceUpdate();
         expect(stateStub.calledWith({ pageLoading: false })).toBe(true);
         stateStub.restore();
     });
 
-    it('componentWillReceiveProps should set loading false when runs are fetched', () => {
+    it('componentDidUpdate should set loading false when runs are fetched', () => {
         const props = getProps();
+        props.runsFetching = true;
         const wrapper = getWrapper(props);
         wrapper.setState({ loading: true, pageLoading: false });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const nextProps = getProps();
-        nextProps.runsList.fetched = true;
+        nextProps.runsFetching = false;
         wrapper.setProps(nextProps);
+        wrapper.instance().forceUpdate();
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ loading: false })).toBe(true);
     });
@@ -251,12 +253,13 @@ describe('DataPackPage component', () => {
     it('should show a progress circle when deleting a datapack', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const nextProps = getProps();
-        nextProps.runsList.fetched = true;
-        wrapper.setProps(nextProps);
+        wrapper.setState({ pageLoading: false, loading: false });
+        wrapper.instance().forceUpdate();
         expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        const nextProps = getProps();
         nextProps.runDeletion.deleting = true;
         wrapper.setProps(nextProps);
+        wrapper.instance().forceUpdate();
         expect(wrapper.find(CircularProgress)).toHaveLength(1);
     });
 
@@ -373,25 +376,13 @@ describe('DataPackPage component', () => {
         const props = getProps();
         const wrapper = shallow(<DataPackPage {...props} />);
         const nextProps = getProps();
-        nextProps.runsList.fetched = true;
-        nextProps.runsList.runs = [{
-            user: 'admin2',
-            uid: '2',
-        }, {
-            user: 'admin',
-            uid: '1',
-        }, {
-            user: 'admin3',
-            uid: '3',
-        }];
-        const propsSpy = sinon.spy(DataPackPage.prototype, 'componentWillReceiveProps');
+        nextProps.runsFetched = true;
+        nextProps.runIds = ['2', '1', '3'];
         const stateSpy = sinon.spy(DataPackPage.prototype, 'setState');
         wrapper.setProps(nextProps);
-        expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ showLoading: false }));
         DataPackPage.prototype.setState.restore();
-        DataPackPage.prototype.componentWillReceiveProps.restore();
     });
 
     it('onSearch should call updateLocationQuery with search text', () => {
@@ -515,6 +506,7 @@ describe('DataPackPage component', () => {
             providers,
             geojson_geometry: geojson,
         });
+        wrapper.instance().forceUpdate();
         wrapper.update();
         wrapper.instance().makeRunRequest();
         expect(props.getRuns.calledOnce).toBe(true);
@@ -645,7 +637,7 @@ describe('DataPackPage component', () => {
 
     it('if nextPage is true, loadMore should increase page size query', () => {
         const props = getProps();
-        props.runsList.nextPage = true;
+        props.runsMeta.nextPage = true;
         const wrapper = shallow(<DataPackPage {...props} />);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().loadMore();
@@ -668,15 +660,15 @@ describe('DataPackPage component', () => {
         const wrapper = shallow(<DataPackPage {...props} />);
 
         const commonProps = {
-            runs: props.runsList.runs,
+            runIds: props.runIds,
             user: props.user,
             onRunDelete: props.deleteRun,
             onRunShare: props.updateDataCartPermissions,
-            range: props.runsList.range,
+            range: props.runsMeta.range,
             handleLoadLess: wrapper.instance().loadLess,
             handleLoadMore: wrapper.instance().loadMore,
-            loadLessDisabled: props.runsList.runs.length <= 12,
-            loadMoreDisabled: !props.runsList.nextPage,
+            loadLessDisabled: props.runIds.length <= 12,
+            loadMoreDisabled: !props.runsMeta.nextPage,
             providers: testProviders,
             openShare: wrapper.instance().handleShareOpen,
             users: props.users,

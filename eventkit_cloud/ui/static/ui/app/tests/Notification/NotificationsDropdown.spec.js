@@ -45,9 +45,11 @@ describe('NotificationsDropdown component', () => {
     function defaultProps() {
         return {
             notifications: {
-                fetched: false,
                 notifications: {},
                 notificationsSorted: [],
+            },
+            status: {
+                fetched: false,
             },
             router: {
                 push: sinon.spy(),
@@ -72,12 +74,14 @@ describe('NotificationsDropdown component', () => {
             ...instance.props,
             notifications: {
                 ...instance.props,
-                fetched: true,
                 notifications: mockNotifications,
                 notificationsSorted: [
                     mockNotifications['1'],
                     mockNotifications['2'],
                 ],
+            },
+            status: {
+                fetched: true,
             },
         });
     }
@@ -87,9 +91,11 @@ describe('NotificationsDropdown component', () => {
             ...instance.props,
             notifications: {
                 ...instance.props.notifications,
-                fetched: true,
                 notifications: {},
                 notificationsSorted: [],
+            },
+            status: {
+                fetched: true,
             },
         });
     }

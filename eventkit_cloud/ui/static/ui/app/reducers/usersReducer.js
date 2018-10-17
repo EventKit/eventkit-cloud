@@ -2,8 +2,8 @@ import { types } from '../actions/usersActions';
 
 export const initialState = {
     users: [],
-    fetching: false,
-    fetched: false,
+    fetching: null,
+    fetched: null,
     error: null,
     total: 0,
     new: 0,

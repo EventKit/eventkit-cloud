@@ -17,6 +17,7 @@ describe('usersReducer', () => {
             },
         )).toEqual({
             ...usersState,
+            fetched: false,
             fetching: true,
         });
     });
@@ -42,6 +43,7 @@ describe('usersReducer', () => {
         )).toEqual({
             ...usersState,
             fetched: true,
+            fetching: false,
             users,
             total: 3,
             new: 2,
@@ -62,6 +64,8 @@ describe('usersReducer', () => {
             },
         )).toEqual({
             ...usersState,
+            fetched: false,
+            fetching: false,
             error,
         });
     });

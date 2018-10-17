@@ -51,7 +51,7 @@ const Loader = Loadable({
 
 const UserIsAuthenticated = connectedReduxRedirect({
     authenticatedSelector: state => !!state.user.data,
-    authenticatingSelector: state => state.user.isLoading,
+    authenticatingSelector: state => state.user.status.isLoading,
     AuthenticatingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
@@ -61,7 +61,7 @@ const UserIsAuthenticated = connectedReduxRedirect({
 const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
-    authenticatedSelector: state => !state.user.data && state.user.isLoading === false,
+    authenticatedSelector: state => !state.user.data && state.user.status.isLoading === false,
     redirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/dashboard',
     allowRedirectBack: false,
 });
