@@ -8,8 +8,8 @@ from django.test import TransactionTestCase
 from mapproxy.config.config import load_default_config
 from mock import Mock, patch, MagicMock
 
-from eventkit_cloud.utils.external_service import (ExternalRasterServiceToGeopackage,
-                                                   check_service, get_cache_template, CustomLogger, check_zoom_levels)
+from eventkit_cloud.utils.mapproxy import (MapproxyGeopackage,
+                                           check_service, get_cache_template, CustomLogger, check_zoom_levels)
 
 logger = logging.getLogger(__name__)
 
@@ -43,17 +43,17 @@ class TestGeopackage(TransactionTestCase):
         cache_template.return_value = {'sources': ['imagery'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}
         seed_template.return_value = {'coverages': {'geom': {'srs': 'EPSG:4326', 'bbox': [-2, -2, 2, 2]}}, 'seeds': {'seed': {'coverages': ['geom'], 'refresh_before': {'minutes': 0}, 'levels': {'to': 10, 'from': 0}, 'caches': ['cache']}}}
         self.task_process.return_value = Mock(exitcode=0)
-        w2g = ExternalRasterServiceToGeopackage(config=config,
-                               gpkgfile=gpkgfile,
-                               bbox=bbox,
-                               service_url='http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng',
-                               layer='imagery',
-                               debug=True,
-                               name='imagery',
-                               level_from=0,
-                               level_to=10,
-                               service_type='wmts',
-                               task_uid=self.task_uid)
+        w2g = MapproxyGeopackage(config=config,
+                                 gpkgfile=gpkgfile,
+                                 bbox=bbox,
+                                 service_url='http://generic.server/WMTS?SERVICE=WMTS&REQUEST=GetTile&TILEMATRIXSET=default028mm&TILEMATRIX=%(z)s&TILEROW=%(y)s&TILECOL=%(x)s&FORMAT=image%%2Fpng',
+                                 layer='imagery',
+                                 debug=True,
+                                 name='imagery',
+                                 level_from=0,
+                                 level_to=10,
+                                 service_type='wmts',
+                                 task_uid=self.task_uid)
         result = w2g.convert()
         mock_check_zoom_levels.assert_called_once()
         connections.close_all.assert_called_once()

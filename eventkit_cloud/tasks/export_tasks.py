@@ -35,7 +35,7 @@ from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, 
     get_human_readable_metadata_document, pickle_exception
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
-    overpass, pbf, s3, external_service, wcs, geopackage, gdalutils
+    overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 )
 from eventkit_cloud.utils.ogr import OGR
 
@@ -828,11 +828,11 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
 
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
-        w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
-                                                                 service_url=service_url, name=name, layer=layer,
-                                                                 config=config, level_from=level_from,
-                                                                 level_to=level_to, service_type=service_type,
-                                                                 task_uid=task_uid, selection=selection)
+        w2g = mapproxy.MapproxyGeopackage(gpkgfile=gpkgfile, bbox=bbox,
+                                          service_url=service_url, name=name, layer=layer,
+                                          config=config, level_from=level_from,
+                                          level_to=level_to, service_type=service_type,
+                                          task_uid=task_uid, selection=selection)
         gpkg = w2g.convert()
         result['result'] = gpkg
         result['geopackage'] = gpkg
