@@ -184,7 +184,7 @@ describe('DataPackTableItem component', () => {
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderClose();
         expect(stateSpy.calledOnce).toBe(true);
@@ -195,7 +195,7 @@ describe('DataPackTableItem component', () => {
     it('handleProviderOpen should close menu then set provider dialog to open', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
@@ -211,7 +211,7 @@ describe('DataPackTableItem component', () => {
     it('showDeleteDialog should close menu then set deleteDialogOpen to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().showDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -224,7 +224,7 @@ describe('DataPackTableItem component', () => {
     it('hideDeleteDialog should set deleteDialogOpen to false', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         expect(stateSpy.called).toBe(false);
         wrapper.instance().hideDeleteDialog();
         expect(stateSpy.calledOnce).toBe(true);
@@ -247,7 +247,7 @@ describe('DataPackTableItem component', () => {
 
     it('handleShareOpen should close menu and open share dialog', () => {
         const wrapper = getWrapper(getProps());
-        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleShareOpen();
         expect(stateSpy.callCount).toBe(1);
         expect(stateSpy.calledWithExactly({
@@ -258,7 +258,7 @@ describe('DataPackTableItem component', () => {
 
     it('handleShareClose should close share dialog', () => {
         const wrapper = getWrapper(getProps());
-        const stateSpy = sinon.spy(DataPackTableItem.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleShareClose();
         expect(stateSpy.callCount).toBe(1);
         expect(stateSpy.calledWithExactly({ shareDialogOpen: false }));

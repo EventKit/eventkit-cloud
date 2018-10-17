@@ -5,6 +5,7 @@ import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from './LoadButtons';
+import withRef from '../../utils/withRef';
 
 export class DataPackGrid extends Component {
     getColumns() {
@@ -65,6 +66,7 @@ export class DataPackGrid extends Component {
                                 index={index}
                                 users={this.props.users}
                                 groups={this.props.groups}
+                                showFeaturedFlag
                             />
                         ))}
                     </GridList>
@@ -105,4 +107,5 @@ DataPackGrid.propTypes = {
 
 export default
 @withWidth()
+@withRef()
 class Default extends DataPackGrid {}

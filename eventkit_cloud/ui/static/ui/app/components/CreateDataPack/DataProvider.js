@@ -140,54 +140,59 @@ export class DataProvider extends React.Component {
 
         const backgroundColor = (this.props.alt) ? colors.secondary : colors.white;
 
-        return ([
-            <ListItem
-                className="qa-DataProvider-ListItem"
-                key={provider.uid}
-                style={{ ...styles.listItem, backgroundColor }}
-                dense
-                disableGutters
-            >
-                <div style={{ display: 'flex', width: '100%' }}>
-                    <Checkbox
-                        className="qa-DataProvider-CheckBox-provider"
-                        name={provider.name}
-                        style={styles.checkbox}
-                        checked={this.props.checked}
-                        onChange={this.props.onChange}
-                        checkedIcon={
-                            <ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" style={{ fill: colors.success }} />
+        return (
+            <React.Fragment>
+                <ListItem
+                    className="qa-DataProvider-ListItem"
+                    key={provider.uid}
+                    style={{ ...styles.listItem, backgroundColor }}
+                    dense
+                    disableGutters
+                >
+                    <div style={{ display: 'flex', width: '100%' }}>
+                        <Checkbox
+                            className="qa-DataProvider-CheckBox-provider"
+                            name={provider.name}
+                            style={styles.checkbox}
+                            checked={this.props.checked}
+                            onChange={this.props.onChange}
+                            checkedIcon={
+                                <ActionCheckCircle
+                                    className="qa-DataProvider-ActionCheckCircle-provider"
+                                    style={{ fill: colors.success }}
+                                />
+                            }
+                            icon={
+                                <UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" color="primary" />
+                            }
+                            color="primary"
+                        />
+                        <span
+                            className="qa-DataProvider-ListItemName"
+                            style={styles.name}
+                        >
+                            {provider.name}
+                        </span>
+                        <ProviderStatusIcon
+                            id="ProviderStatus"
+                            tooltipStyle={{ zIndex: '1' }}
+                            baseStyle={{ marginRight: '40px' }}
+                            availability={provider.availability}
+                        />
+                        {this.state.open ?
+                            <ExpandLess style={styles.expand} onClick={this.handleExpand} color="primary" />
+                            :
+                            <ExpandMore style={styles.expand} onClick={this.handleExpand} color="primary" />
                         }
-                        icon={
-                            <UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" color="primary" />
-                        }
-                        color="primary"
-                    />
-                    <span
-                        className="qa-DataProvider-ListItemName"
-                        style={styles.name}
-                    >
-                        {provider.name}
-                    </span>
-                    <ProviderStatusIcon
-                        id="ProviderStatus"
-                        tooltipStyle={{ zIndex: '1' }}
-                        baseStyle={{ marginRight: '40px' }}
-                        availability={provider.availability}
-                    />
-                    {this.state.open ?
-                        <ExpandLess style={styles.expand} onClick={this.handleExpand} color="primary" />
-                        :
-                        <ExpandMore style={styles.expand} onClick={this.handleExpand} color="primary" />
-                    }
-                </div>
-            </ListItem>,
-            <Collapse in={this.state.open} key={`${provider.uid}-expanded`}>
-                <List style={{ padding: '0px', backgroundColor }}>
-                    {nestedItems}
-                </List>
-            </Collapse>,
-        ]);
+                    </div>
+                </ListItem>
+                <Collapse in={this.state.open} key={`${provider.uid}-expanded`}>
+                    <List style={{ padding: '0px', backgroundColor }}>
+                        {nestedItems}
+                    </List>
+                </Collapse>
+            </React.Fragment>
+        );
     }
 }
 
