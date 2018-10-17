@@ -1238,6 +1238,8 @@ class UserDataViewSet(viewsets.GenericViewSet):
                 not_grouped += 1
         headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
         filtered_queryset = self.filter_queryset(queryset)
+        if request.query_params.get('exclude_self'):
+            filtered_queryset = filtered_queryset.exclude(username=request.user.username)
         serializer = UserDataSerializer(filtered_queryset, many=True)
         return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
 

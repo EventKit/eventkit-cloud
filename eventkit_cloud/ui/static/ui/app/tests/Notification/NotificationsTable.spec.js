@@ -49,7 +49,7 @@ describe('NotificationsTable component', () => {
 
     function defaultProps() {
         return {
-            notifications: {
+            notificationsData: {
                 fetched: false,
                 notifications: mockNotifications,
                 notificationsSorted: [
@@ -294,8 +294,8 @@ describe('NotificationsTable component', () => {
                 },
             });
             wrapper.setProps({
-                notifications: {
-                    ...instance.props.notifications,
+                notificationsData: {
+                    ...instance.props.notificationsData,
                     notifications: {
                         1: mockNotifications['1'],
                     },

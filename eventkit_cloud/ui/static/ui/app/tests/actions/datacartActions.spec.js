@@ -1,12 +1,8 @@
 
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/datacartActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('export actions', () => {
     const expectedRuns = [
@@ -127,7 +123,7 @@ describe('export actions', () => {
             { jobuid: '123456789', type: actions.types.JOB_SUBMITTED_SUCCESS },
         ];
 
-        const store = mockStore({ jobSubmit: { jobuid: {} } });
+        const store = createTestStore({ jobSubmit: { jobuid: {} } });
         return store.dispatch(actions.submitJob(jobData))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -144,7 +140,7 @@ describe('export actions', () => {
             { type: actions.types.JOB_SUBMITTED_ERROR, error: 'uh oh' },
         ];
 
-        const store = mockStore({});
+        const store = createTestStore({});
         return store.dispatch(actions.submitJob(jobData))
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -171,7 +167,7 @@ describe('export actions', () => {
             { type: actions.types.RERUN_EXPORT_SUCCESS, exportReRun: { data: expectedRuns } },
         ];
 
-        const store = mockStore({ exportReRun: {} });
+        const store = createTestStore({ exportReRun: {} });
 
         return store.dispatch(actions.rerunExport('123456789'))
             .then(() => {
@@ -187,7 +183,7 @@ describe('export actions', () => {
             { type: actions.types.RERUN_EXPORT_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore({ exportReRun: {} });
+        const store = createTestStore({ exportReRun: {} });
 
         return store.dispatch(actions.rerunExport('123'))
             .then(() => {
@@ -210,7 +206,7 @@ describe('export actions', () => {
             { type: actions.types.UPDATE_PERMISSION_SUCCESS },
         ];
 
-        const store = mockStore({ updatePermission: {} });
+        const store = createTestStore({ updatePermission: {} });
 
         return store.dispatch(actions.updateDataCartPermissions('123456789', {
             permissions: {
@@ -232,7 +228,7 @@ describe('export actions', () => {
             { type: actions.types.UPDATE_PERMISSION_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore({ updatePermission: {} });
+        const store = createTestStore({ updatePermission: {} });
 
         return store.dispatch(actions.updateDataCartPermissions('123', {
             permissions: {

@@ -43,7 +43,7 @@ export class Account extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.user.patched && !this.props.user.patched) {
+        if (nextProps.user.status.patched && !this.props.user.status.patched) {
             this.setState({ showSavedMessage: true });
             window.setTimeout(() => {
                 this.setState({ showSavedMessage: false });

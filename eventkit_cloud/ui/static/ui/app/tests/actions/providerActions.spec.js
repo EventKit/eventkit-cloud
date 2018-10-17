@@ -1,11 +1,7 @@
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
+import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/providerActions';
-
-const middlewares = [thunk];
-const mockStore = configureMockStore(middlewares);
 
 describe('provider actions', () => {
     it('getProviders should return providers from the api', () => {
@@ -16,7 +12,7 @@ describe('provider actions', () => {
             { type: actions.types.GETTING_PROVIDERS },
             { type: actions.types.PROVIDERS_RECEIVED, providers: ['my providers'] },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
         return store.dispatch(actions.getProviders())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -30,7 +26,7 @@ describe('provider actions', () => {
         const expectedActions = [
             { type: actions.types.GETTING_PROVIDERS },
         ];
-        const store = mockStore({});
+        const store = createTestStore({});
         return store.dispatch(actions.getProviders())
             .then(() => {
                 expect(store.getActions()).toEqual(expectedActions);
@@ -46,7 +42,7 @@ describe('provider actions', () => {
             { type: actions.types.CANCELED_PROVIDER_TASK },
         ];
 
-        const store = mockStore({ cancelProviderTask: {} });
+        const store = createTestStore({ cancelProviderTask: {} });
 
         return store.dispatch(actions.cancelProviderTask('123456789'))
             .then(() => {
@@ -63,7 +59,7 @@ describe('provider actions', () => {
             { type: actions.types.CANCEL_PROVIDER_TASK_ERROR, error: 'oh no an error' },
         ];
 
-        const store = mockStore({ cancelProviderTask: {} });
+        const store = createTestStore({ cancelProviderTask: {} });
 
         return store.dispatch(actions.cancelProviderTask('123'))
             .then(() => {
