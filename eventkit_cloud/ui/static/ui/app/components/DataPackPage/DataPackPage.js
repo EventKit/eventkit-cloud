@@ -416,7 +416,14 @@ export class DataPackPage extends React.Component {
             this.setState({ isRunning: false });
             this.joyride.reset(true);
         } else {
-            this.view.getScrollbar().scrollToTop();
+            let { view } = this;
+            // react-redux connect does not have good support for forwarded refs
+            // so if its a connected component we need to access the wrappedInstance
+            if (view.wrappedInstance) {
+                view = view.wrappedInstance;
+            }
+            view.getScrollbar().scrollToTop();
+
             this.setState({ isRunning: true, steps: [] });
             const steps = this.getJoyRideSteps();
 

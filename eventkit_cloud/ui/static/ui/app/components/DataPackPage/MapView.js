@@ -1064,4 +1064,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps)(withRef()(MapView))));
+export default withWidth()(withTheme()(withRef()(connect(makeMapStateToProps, null, null, { withRef: true })(MapView))));
