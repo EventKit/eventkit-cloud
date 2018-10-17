@@ -157,7 +157,10 @@ export class DataProvider extends React.Component {
                             checked={this.props.checked}
                             onChange={this.props.onChange}
                             checkedIcon={
-                                <ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" style={{ fill: colors.success }} />
+                                <ActionCheckCircle
+                                    className="qa-DataProvider-ActionCheckCircle-provider"
+                                    style={{ fill: colors.success }}
+                                />
                             }
                             icon={
                                 <UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" color="primary" />
