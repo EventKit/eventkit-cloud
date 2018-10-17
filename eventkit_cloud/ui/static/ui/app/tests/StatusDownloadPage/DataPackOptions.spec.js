@@ -115,7 +115,7 @@ describe('DataPackOptions component', () => {
         const props = getProps();
         props.onDelete = sinon.stub();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(DataPackOptions.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleDelete();
         expect(props.onDelete.calledOnce).toBe(true);
         expect(props.onDelete.calledWith(props.dataPack.uid)).toBe(true);
@@ -128,7 +128,7 @@ describe('DataPackOptions component', () => {
         const props = getProps();
         props.onRerun = sinon.stub();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(DataPackOptions.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleRerun();
         expect(props.onRerun.calledOnce).toBe(true);
         expect(props.onRerun.calledWith(props.dataPack.job.uid)).toBe(true);
@@ -141,7 +141,7 @@ describe('DataPackOptions component', () => {
         const props = getProps();
         props.onClone = sinon.stub();
         const wrapper = getWrapper(props);
-        const stateStub = sinon.stub(DataPackOptions.prototype, 'setState');
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleClone();
         expect(props.onClone.calledOnce).toBe(true);
         expect(props.onClone.calledWith(props.dataPack, [props.dataPack.provider_tasks[0]])).toBe(true);

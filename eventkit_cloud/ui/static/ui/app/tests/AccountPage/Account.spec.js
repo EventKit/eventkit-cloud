@@ -70,7 +70,7 @@ describe('Account Component', () => {
         }];
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.stub(Account.prototype, 'setState');
+        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
@@ -80,7 +80,7 @@ describe('Account Component', () => {
     it('handleJoyride should set state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.stub(Account.prototype, 'setState');
+        const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().handleJoyride();
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));
@@ -103,7 +103,7 @@ describe('Account Component', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.instance().joyride = { reset: sinon.spy() };
-        const stateSpy = sinon.spy(Account.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ isRunning: false }));
