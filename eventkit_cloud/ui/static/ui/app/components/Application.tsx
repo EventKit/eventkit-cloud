@@ -1,12 +1,12 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import * as PropTypes from 'prop-types';
+import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import AppBar from '@material-ui/core/AppBar';
 import Drawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
-import { Link, IndexLink } from 'react-router';
+import { IndexLink, Link } from 'react-router';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
 import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
@@ -17,7 +17,7 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import { withTheme, withStyles } from '@material-ui/core/styles';
+import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
 import { DrawerTimeout } from '../actions/uiActions';
@@ -29,10 +29,11 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
-
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
+// tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
-const jss = theme => ({
+const jss = (theme: any) => createStyles({
     appBar: {
         position: 'relative',
         height: '95px',
@@ -100,7 +101,7 @@ const jss = theme => ({
         height: '14px',
         borderRadius: '50%',
         backgroundColor: theme.eventkit.colors.warning,
-        zIndex: '1',
+        zIndex: '1' as any,
         pointerEvents: 'none',
     },
     drawer: {
@@ -123,7 +124,95 @@ const jss = theme => ({
     },
 });
 
-export class Application extends Component {
+interface Props {
+    children: React.ReactChildren;
+    openDrawer: () => void;
+    closeDrawer: () => void;
+    userActive: () => void;
+    drawer: string;
+    router: any;
+    userData: {
+        accepted_licenses: object;
+        user: {
+            username: string;
+            last_name: string;
+            first_name: string;
+            email: string;
+            commonname: string;
+            date_joined: string;
+            last_login: string;
+            identification: string;
+        };
+    };
+    autoLogoutAt: Date;
+    autoLogoutWarningAt: Date;
+    notificationsData: Eventkit.Store.NotificationsData;
+    notificationsStatus: Eventkit.Store.NotificationsStatus;
+    notificationsCount: number;
+    getNotificationsUnreadCount: (options?: object) => void;
+    getNotifications: (options?: object) => void;
+    width: Breakpoint;
+    theme: Eventkit.Theme;
+    classes: {
+        appBar: string;
+        title: string;
+        img: string;
+        link: string;
+        activeLink: string;
+        menuButton: string;
+        menuItem: string;
+        notificationsButton: string;
+        notificationsIndicator: string;
+        drawer: string;
+        icon: string;
+    };
+}
+
+interface State {
+    childContext: { config: object };
+    autoLogoutWarningText: string;
+    showAutoLogoutWarningDialog: boolean;
+    showAutoLoggedOutDialog: boolean;
+    showLogoutDialog: boolean;
+    showNotificationsDropdown: boolean;
+}
+
+export class Application extends React.Component<Props, State> {
+    private userActiveInputTypes: String[];
+    private notificationsUnreadCountRefreshInterval: number;
+    private notificationsRefreshInterval: number;
+    private notificationsPageSize: number;
+    private notificationsUnreadCountIntervalId: number | null;
+    private notificationsRefreshIntervalId: number | null;
+    private checkAutoLogoutIntervalId: number | null;
+    private autoLogoutWarningIntervalId: number | null;
+    private notificationsDropdownContainerRef: React.RefObject<any> | null;
+    private isSendingUserActivePings: boolean;
+    private loggedIn: boolean;
+    private handleUserActiveInput: () => void;
+
+    static defaultProps = {
+        children: null,
+        autoLogoutAt: null,
+        autoLogoutWarningAt: null,
+        userData: null,
+    };
+
+    static childContextTypes = {
+        config: PropTypes.shape({
+            BANNER_BACKGROUND_COLOR: PropTypes.string,
+            BANNER_TEXT: PropTypes.string,
+            BANNER_TEXT_COLOR: PropTypes.string,
+            BASEMAP_COPYRIGHT: PropTypes.string,
+            BASEMAP_URL: PropTypes.string,
+            LOGIN_DISCLAIMER: PropTypes.string,
+            MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
+            MAX_RASTER_AOI_SQ_KM: PropTypes.number,
+            MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
+            VERSION: PropTypes.string,
+        }),
+    };
+
     constructor(props) {
         super(props);
         this.handleToggle = this.handleToggle.bind(this);
@@ -145,10 +234,10 @@ export class Application extends Component {
         this.handleLogoutDialogConfirm = this.handleLogoutDialogConfirm.bind(this);
         this.handleLogoutClick = this.handleLogoutClick.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
-        this.setNotificationsDropdownContainerRef = this.setNotificationsDropdownContainerRef.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
             childContext: { config: {} },
+            autoLogoutWarningText: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
             showLogoutDialog: false,
@@ -161,6 +250,7 @@ export class Application extends Component {
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
         this.loggedIn = false;
+        this.notificationsDropdownContainerRef = React.createRef();
     }
 
     getChildContext() {
@@ -240,10 +330,6 @@ export class Application extends Component {
             });
     }
 
-    setNotificationsDropdownContainerRef(ref) {
-        this.notificationsDropdownContainerRef = ref;
-    }
-
     async handleStayLoggedIn() {
         await this.startSendingUserActivePings();
         this.hideAutoLogoutWarning();
@@ -274,7 +360,7 @@ export class Application extends Component {
 
         // Unread notifications count.
         this.props.getNotificationsUnreadCount();
-        this.notificationsUnreadCountIntervalId = setInterval(
+        this.notificationsUnreadCountIntervalId = window.setInterval(
             this.autoGetNotificationsUnreadCount,
             this.notificationsUnreadCountRefreshInterval,
         );
@@ -284,7 +370,7 @@ export class Application extends Component {
             notificationsPageSize: this.notificationsPageSize,
             isAuto: true,
         });
-        this.notificationsRefreshIntervalId = setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
+        this.notificationsRefreshIntervalId = window.setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
     }
 
     stopListeningForNotifications() {
@@ -320,7 +406,7 @@ export class Application extends Component {
         }
 
         // Regularly check if the user should be notified about an impending auto logout.
-        this.checkAutoLogoutIntervalId = setInterval(() => {
+        this.checkAutoLogoutIntervalId = window.setInterval(() => {
             if (!this.props.autoLogoutAt) {
                 return;
             }
@@ -348,7 +434,7 @@ export class Application extends Component {
             return;
         }
 
-        clearInterval(this.checkAutoLogoutIntervalId);
+        window.clearInterval(this.checkAutoLogoutIntervalId);
         this.checkAutoLogoutIntervalId = null;
     }
 
@@ -374,7 +460,7 @@ export class Application extends Component {
         };
 
         // Check all forms of input to track user activity.
-        this.userActiveInputTypes.forEach((eventType) => {
+        this.userActiveInputTypes.forEach((eventType: string) => {
             window.addEventListener(eventType, this.handleUserActiveInput);
         });
 
@@ -391,7 +477,7 @@ export class Application extends Component {
         this.isSendingUserActivePings = false;
 
         // Remove input event listeners.
-        this.userActiveInputTypes.forEach((eventType) => {
+        this.userActiveInputTypes.forEach((eventType: string) => {
             window.removeEventListener(eventType, this.handleUserActiveInput);
         });
     }
@@ -431,7 +517,7 @@ export class Application extends Component {
         this.stopSendingUserActivePings();
 
         // Update auto logout warning text every second.
-        this.autoLogoutWarningIntervalId = setInterval(updateAutoLogoutWarningText, 1000);
+        this.autoLogoutWarningIntervalId = window.setInterval(updateAutoLogoutWarningText, 1000);
     }
 
     hideAutoLogoutWarning() {
@@ -442,13 +528,14 @@ export class Application extends Component {
 
         this.setState({ showAutoLogoutWarningDialog: false });
 
-        clearInterval(this.autoLogoutWarningIntervalId);
+        window.clearInterval(this.autoLogoutWarningIntervalId);
         this.autoLogoutWarningIntervalId = null;
     }
 
     handleClick(e) {
         // Close the notifications dropdown if it's open and we click outside of it.
         if (this.notificationsDropdownContainerRef && this.state.showNotificationsDropdown) {
+            // @ts-ignore: FIX THIS SHIT
             if (!this.notificationsDropdownContainerRef.contains(e.target)) {
                 this.setState({ showNotificationsDropdown: false });
             }
@@ -505,7 +592,7 @@ export class Application extends Component {
         };
 
         const childrenWithContext = React.Children.map(this.props.children, child => (
-            React.cloneElement(child, {
+            React.cloneElement(child as React.ReactElement<any>, {
                 context: this.state.childContext,
             })
         ));
@@ -546,7 +633,7 @@ export class Application extends Component {
                                     transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
                                 }}
                             />
-                            <div ref={this.setNotificationsDropdownContainerRef}>
+                            <div ref={this.notificationsDropdownContainerRef}>
                                 <NotificationsDropdown
                                     style={{
                                         opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
@@ -659,6 +746,7 @@ export class Application extends Component {
                             className={`qa-Application-Link-logout ${classes.link}`}
                             activeClassName={classes.activeLink}
                             onClick={this.handleLogoutClick}
+                            to={undefined}
                         >
                             <ActionExitToApp className={classes.icon} />
                             Log Out
@@ -698,71 +786,6 @@ export class Application extends Component {
     }
 }
 
-Application.defaultProps = {
-    children: null,
-    autoLogoutAt: null,
-    autoLogoutWarningAt: null,
-    userData: null,
-};
-
-Application.propTypes = {
-    children: PropTypes.object,
-    openDrawer: PropTypes.func.isRequired,
-    closeDrawer: PropTypes.func.isRequired,
-    userActive: PropTypes.func.isRequired,
-    drawer: PropTypes.string.isRequired,
-    router: PropTypes.shape({
-        location: PropTypes.shape({
-            pathname: PropTypes.string,
-        }),
-        push: PropTypes.func,
-    }).isRequired,
-    userData: PropTypes.shape({
-        accepted_licenses: PropTypes.object,
-        user: PropTypes.shape({
-            username: PropTypes.string,
-            last_name: PropTypes.string,
-            first_name: PropTypes.string,
-            email: PropTypes.string,
-            commonname: PropTypes.string,
-            date_joined: PropTypes.string,
-            last_login: PropTypes.string,
-            identification: PropTypes.string,
-        }),
-    }),
-    autoLogoutAt: PropTypes.instanceOf(Date),
-    autoLogoutWarningAt: PropTypes.instanceOf(Date),
-    notificationsData: PropTypes.object.isRequired,
-    notificationsStatus: PropTypes.object.isRequired,
-    notificationsCount: PropTypes.number.isRequired,
-    getNotificationsUnreadCount: PropTypes.func.isRequired,
-    getNotifications: PropTypes.func.isRequired,
-    width: PropTypes.string.isRequired,
-    theme: PropTypes.object.isRequired,
-    classes: PropTypes.shape({
-        appBar: PropTypes.string,
-        title: PropTypes.string,
-        img: PropTypes.string,
-        link: PropTypes.string,
-        activeLink: PropTypes.string,
-    }).isRequired,
-};
-
-Application.childContextTypes = {
-    config: PropTypes.shape({
-        BANNER_BACKGROUND_COLOR: PropTypes.string,
-        BANNER_TEXT: PropTypes.string,
-        BANNER_TEXT_COLOR: PropTypes.string,
-        BASEMAP_COPYRIGHT: PropTypes.string,
-        BASEMAP_URL: PropTypes.string,
-        LOGIN_DISCLAIMER: PropTypes.string,
-        MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
-        MAX_RASTER_AOI_SQ_KM: PropTypes.number,
-        MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
-        VERSION: PropTypes.string,
-    }),
-};
-
 function mapStateToProps(state) {
     return {
         drawer: state.drawer,
@@ -796,9 +819,12 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default
-@withWidth()
-@withTheme()
-@withStyles(jss)
-@connect(mapStateToProps, mapDispatchToProps)
-class Default extends Application {}
+export default withWidth()(
+    withTheme()<any>(
+        withStyles<any, any>(jss)(
+            connect(mapStateToProps, mapDispatchToProps)(
+                Application
+            )
+        )
+    )
+);

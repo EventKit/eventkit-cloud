@@ -561,5 +561,5 @@ const makeMapStateToProps = () => {
 
 export default
     withTheme()<any>(
-        withStyles<any>(jss)(
+        withStyles<any, any>(jss)(
             connect<StateProps, DispatchProps, OwnProps>(makeMapStateToProps)(DataPackGridItem)));
