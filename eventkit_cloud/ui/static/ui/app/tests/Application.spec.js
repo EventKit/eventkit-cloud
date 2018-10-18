@@ -56,6 +56,7 @@ describe('Application component', () => {
         userActive: () => {},
         getNotifications: sinon.spy(),
         getNotificationsUnreadCount: () => {},
+        classes: {},
         ...global.eventkit_test_props,
     });
 
@@ -96,37 +97,6 @@ describe('Application component', () => {
         expect(drawer.find(MenuItem).at(6).html()).toContain('Log Out');
         expect(drawer.find(MenuItem).at(6).find(ActionExitToApp)).toHaveLength(1);
         expect(drawer.find(MenuItem).at(6).find(Link)).toHaveLength(1);
-    });
-
-    it('the menu items should call handleMouseOver with the route name', () => {
-        const props = getProps();
-        const handleSpy = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().handleMouseOver = handleSpy;
-        expect(handleSpy.called).toBe(false);
-        wrapper.find('.qa-Application-Link-dashboard').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(1);
-        expect(handleSpy.calledWith('/dashboard')).toBe(true);
-
-        wrapper.find('.qa-Application-Link-exports').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(2);
-        expect(handleSpy.calledWith('/exports')).toBe(true);
-
-        wrapper.find('.qa-Application-Link-create').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(3);
-        expect(handleSpy.calledWith('/create')).toBe(true);
-
-        wrapper.find('.qa-Application-Link-about').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(4);
-        expect(handleSpy.calledWith('/about')).toBe(true);
-
-        wrapper.find('.qa-Application-Link-account').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(5);
-        expect(handleSpy.calledWith('/account')).toBe(true);
-
-        wrapper.find('.qa-Application-Link-logout').simulate('mouseEnter');
-        expect(handleSpy.callCount).toBe(6);
-        expect(handleSpy.calledWith('/logout')).toBe(true);
     });
 
     it('should call openDrawer when user data is added and window width is xl', () => {
@@ -199,28 +169,6 @@ describe('Application component', () => {
         expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ childContext: { config: { LOGIN_DISCLAIMER: 'Test string' } } })).toBe(true);
         stateSpy.restore();
-    });
-
-    it('handleMouseOver should set the passed in route as the hovered state', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().setState = stateSpy;
-        expect(stateSpy.called).toBe(false);
-        wrapper.instance().handleMouseOver('test string');
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ hovered: 'test string' })).toBe(true);
-    });
-
-    it('handleMouseOut should set the hovered state to an empty string', () => {
-        const props = getProps();
-        const stateSpy = sinon.spy();
-        const wrapper = getWrapper(props);
-        wrapper.instance().setState = stateSpy;
-        expect(stateSpy.called).toBe(false);
-        wrapper.instance().handleMouseOut();
-        expect(stateSpy.calledOnce).toBe(true);
-        expect(stateSpy.calledWith({ hovered: '' })).toBe(true);
     });
 
     it('Auto logout warning should show remaining minutes when above one minute', () => {

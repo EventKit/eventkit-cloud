@@ -50,6 +50,7 @@ import { generateDrawLayer, generateDrawBoxInteraction, generateDrawFreeInteract
     isBox, isVertex } from '../../utils/mapUtils';
 import ZoomLevelLabel from '../MapTools/ZoomLevelLabel';
 import globe from '../../../images/globe-americas.svg';
+import withRef from '../../utils/withRef';
 import { makeAllRunsSelector } from '../../selectors/runSelector';
 
 export const RED_STYLE = new Style({
@@ -918,7 +919,7 @@ export class MapView extends Component {
                                     onRunDelete={this.props.onRunDelete}
                                     onRunShare={this.props.onRunShare}
                                     onClick={this.handleClick}
-                                    backgroundColor={this.state.selectedFeature === id ? colors.secondary : null}
+                                    backgroundColor={this.state.selectedFeature === id ? colors.selected_primary : null}
                                     providers={this.props.providers}
                                     users={this.props.users}
                                     groups={this.props.groups}
@@ -1063,4 +1064,4 @@ const makeMapStateToProps = () => {
     return mapStateToProps;
 };
 
-export default withWidth()(withTheme()(connect(makeMapStateToProps)(MapView)));
+export default withWidth()(withTheme()(withRef()(connect(makeMapStateToProps, null, null, { withRef: true })(MapView))));

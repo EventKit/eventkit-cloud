@@ -1397,7 +1397,7 @@ describe('ExportAOI component', () => {
         }];
         const props = getProps();
         const wrapper = getWrapper(props);
-        const stateSpy = sinon.spy(ExportAOI.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ steps }));
