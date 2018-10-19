@@ -11,12 +11,6 @@ from django.db import migrations, models
 
 download_url_root = settings.EXPORT_MEDIA_ROOT
 
-def create_uuid(apps, schema_editor):
-    FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
-    for downloadable in FileProducingTaskResult.objects.all():
-        downloadable.uid = uuid.uuid4()
-        downloadable.save()
-
 def update_run_downloads(apps, schema_editor):
     ExportRun = apps.get_model('tasks', 'ExportRun')
     FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
@@ -39,29 +33,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('tasks', '0025_auto_20180213_2021'),
+        ('tasks', '0026_auto_20181018_2151'),
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='UserDownload',
-            fields=[
-                ('id', models.AutoField(editable=False, primary_key=True, serialize=False)),
-                ('uid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('downloaded_at', models.DateTimeField(default=django.utils.timezone.now, editable=False, verbose_name='Time of Download')),
-            ],
-            options={
-                'ordering': ['-downloaded_at'],
-            },
-        ),
-        migrations.RenameField(
-            model_name='finalizerunhooktaskrecord',
-            old_name='task_name',
-            new_name='name',
-        ),
-        migrations.AddField(
-            model_name='fileproducingtaskresult',
-            name='uid',
-            field=models.UUIDField(blank=True, null=True),
-        ),
+        migrations.RunPython(update_run_downloads, reverse_code=reverse_run_downloads),
     ]

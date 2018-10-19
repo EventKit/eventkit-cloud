@@ -7,22 +7,6 @@ from django.conf import settings
 from django.db import migrations, models
 
 
-def forwards_func(apps, schema_editor):
-    Job = apps.get_model('jobs', 'Job')
-
-    # Get each job's latest export run and save a reference to it in the job.
-    for job in Job.objects.all().prefetch_related('runs'):
-        job.last_export_run = job.runs.last()
-        job.save()
-
-
-def reverse_func(apps, schema_editor):
-    Job = apps.get_model('jobs', 'Job')
-    for job in Job.objects.all():
-        job.last_export_run = None
-        job.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -46,6 +30,5 @@ class Migration(migrations.Migration):
             model_name='job',
             name='last_export_run',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='last_export_run', to='tasks.ExportRun'),
-        ),
-        migrations.RunPython(forwards_func, reverse_func, atomic=False),
+        )
     ]
