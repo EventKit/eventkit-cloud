@@ -459,3 +459,4 @@ def get_band_statistics(file_path, band=1):
     except Exception as e:
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
+        return None
