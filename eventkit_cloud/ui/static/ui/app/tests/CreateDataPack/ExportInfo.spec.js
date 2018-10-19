@@ -116,10 +116,10 @@ describe('ExportInfo component', () => {
         const joyrideSpy = sinon.spy(ExportInfo.prototype, 'joyrideAddSteps');
         getWrapper(props);
         expect(mountSpy.calledOnce).toBe(true);
-        expect(hasFieldsSpy.calledOnce).toBe(true);
+        expect(hasFieldsSpy.called).toBe(true);
         expect(hasFieldsSpy.calledWith(props.exportInfo)).toBe(true);
         expect(joyrideSpy.calledOnce).toBe(true);
-        expect(props.setNextDisabled.calledOnce).toBe(true);
+        expect(props.setNextDisabled.called).toBe(true);
         expect(props.updateExportInfo.calledWith({
             ...props.exportInfo,
             areaStr: expectedString,
@@ -131,30 +131,28 @@ describe('ExportInfo component', () => {
         joyrideSpy.restore();
     });
 
-    it('componentWillReceiveProps should setNextEnabled', () => {
+    it('componentDidUpdate should setNextEnabled', () => {
         const props = getProps();
-        props.setNextEnabled = sinon.spy();
         const wrapper = getWrapper(props);
-        expect(props.setNextEnabled.called).toBe(false);
         const nextProps = getProps();
+        nextProps.setNextEnabled = sinon.spy();
         nextProps.exportInfo.exportName = 'name';
         nextProps.exportInfo.datapackDescription = 'description';
         nextProps.exportInfo.projectName = 'project';
         nextProps.exportInfo.providers = [{}];
         nextProps.nextEnabled = false;
         wrapper.setProps(nextProps);
-        expect(props.setNextEnabled.calledOnce).toBe(true);
+        expect(nextProps.setNextEnabled.calledOnce).toBe(true);
     });
 
-    it('componentWillReceiveProps should setNextDisabled', () => {
+    it('componentDidUpdate should setNextDisabled', () => {
         const props = getProps();
-        props.setNextDisabled = sinon.spy();
         const wrapper = getWrapper(props);
-        expect(props.setNextDisabled.calledOnce).toBe(true);
         const nextProps = getProps();
+        nextProps.setNextDisabled = sinon.spy();
         nextProps.nextEnabled = true;
         wrapper.setProps(nextProps);
-        expect(props.setNextDisabled.calledTwice).toBe(true);
+        expect(nextProps.setNextDisabled.calledOnce).toBe(true);
     });
 
     it('onNameChange should call updateExportInfo', () => {

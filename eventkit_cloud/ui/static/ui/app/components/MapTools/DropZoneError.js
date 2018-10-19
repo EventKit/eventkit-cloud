@@ -12,11 +12,11 @@ export class DropZoneError extends Component {
         };
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.importGeom.error !== this.props.importGeom.error) {
-            if (nextProps.importGeom.error) {
+    componentDidUpdate(prevProps) {
+        if (this.props.importGeom.error !== prevProps.importGeom.error) {
+            if (this.props.importGeom.error) {
                 this.props.setAllButtonsDefault();
-                this.setState({ showErrorMessage: true, errorMessage: nextProps.importGeom.error });
+                this.setState({ showErrorMessage: true, errorMessage: this.props.importGeom.error });
             }
         }
     }

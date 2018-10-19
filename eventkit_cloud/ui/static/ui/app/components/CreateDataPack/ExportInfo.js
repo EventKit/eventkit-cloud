@@ -66,7 +66,7 @@ export class ExportInfo extends React.Component {
 
         // make requests to check provider availability
         if (this.state.providers) {
-            this.fetch = setInterval(this.state.providers.forEach((provider) => {
+            this.fetch = window.setInterval(this.state.providers.forEach((provider) => {
                 if (provider.display === false) return;
                 this.checkAvailability(provider);
             }), 30000);
@@ -75,21 +75,21 @@ export class ExportInfo extends React.Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-        if (!nextProps.walkthroughClicked) {
+        if (!this.props.walkthroughClicked) {
         // if required fields are fulfilled enable next
-            if (this.hasRequiredFields(nextProps.exportInfo) &&
-                !this.hasDisallowedSelection(nextProps.exportInfo)) {
-                if (!nextProps.nextEnabled) {
+            if (this.hasRequiredFields(this.props.exportInfo) &&
+                !this.hasDisallowedSelection(this.props.exportInfo)) {
+                if (!this.props.nextEnabled) {
                     this.props.setNextEnabled();
                 }
-            } else if (nextProps.nextEnabled) {
+            } else if (this.props.nextEnabled) {
                 // if not and next is enabled it should be disabled
                 this.props.setNextDisabled();
             }
         }
-        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
+        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.reset(true);
             this.setState({ isRunning: true });
         }

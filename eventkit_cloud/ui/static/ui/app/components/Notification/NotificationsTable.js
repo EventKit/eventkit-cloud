@@ -25,14 +25,14 @@ export class NotificationsTable extends React.Component {
         };
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.notificationsData !== this.props.notificationsData) {
+    componentDidUpdate(prevProps) {
+        if (this.props.notificationsData !== prevProps.notificationsData) {
             // Make sure to deselect any notifications that have been removed. Handle it here instead of
             // the standard callback in case it was removed by the notifications dropdown.
             const selected = { ...this.state.selected };
 
             Object.keys(selected).forEach((uid) => {
-                if (!nextProps.notificationsData.notifications[uid]) {
+                if (!this.props.notificationsData.notifications[uid]) {
                     delete selected[uid];
                 }
             });

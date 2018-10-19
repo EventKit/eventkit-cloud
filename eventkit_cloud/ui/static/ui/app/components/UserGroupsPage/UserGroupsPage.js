@@ -108,7 +108,7 @@ export class UserGroupsPage extends Component {
         // If there is no ordering specified default to username
         if (!this.props.location.query.ordering) {
             // Set the current ordering to username so a change wont be detected
-            // by componentWillReceiveProps
+            // by componentDidUpdate
             this.props.location.query.ordering = 'username';
             // Replace the url with the ordering query included
             browserHistory.replace({
@@ -126,29 +126,29 @@ export class UserGroupsPage extends Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
         let changedQuery = false;
-        if (Object.keys(nextProps.location.query).length
-                !== Object.keys(this.props.location.query).length) {
+        if (Object.keys(this.props.location.query).length
+                !== Object.keys(prevProps.location.query).length) {
             changedQuery = true;
         } else {
-            const keys = Object.keys(nextProps.location.query);
-            if (!keys.every(key => nextProps.location.query[key] === this.props.location.query[key])) {
+            const keys = Object.keys(this.props.location.query);
+            if (!keys.every(key => this.props.location.query[key] === prevProps.location.query[key])) {
                 changedQuery = true;
             }
         }
         if (changedQuery) {
-            this.makeUserRequest({ ...nextProps.location.query });
+            this.makeUserRequest({ ...this.props.location.query });
         }
 
-        if (nextProps.users.fetched && !this.props.users.fetched) {
+        if (this.props.users.fetched && !prevProps.users.fetched) {
             // if we have new props.user array and there are selectedUsers
             // we need to create a new selectedUsers array, removing any users
             // not in the new props.users array
             if (this.state.selectedUsers.length) {
                 const fixedSelection = [];
                 this.state.selectedUsers.forEach((user) => {
-                    const newUser = nextProps.users.users
+                    const newUser = this.props.users.users
                         .find(nextUser => nextUser.user.username === user.user.username);
                     if (newUser) {
                         fixedSelection.push(newUser);
@@ -157,18 +157,18 @@ export class UserGroupsPage extends Component {
                 this.setState({ selectedUsers: fixedSelection });
             }
         }
-        if (nextProps.groups.updated && !this.props.groups.updated) {
+        if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
             this.props.getGroups();
         }
-        if (nextProps.groups.created && !this.props.groups.created) {
+        if (this.props.groups.created && !prevProps.groups.created) {
             this.props.getGroups();
             if (this.state.createUsers.length) {
                 this.makeUserRequest();
                 this.setState({ createUsers: [] });
             }
         }
-        if (nextProps.groups.deleted && !this.props.groups.deleted) {
+        if (this.props.groups.deleted && !prevProps.groups.deleted) {
             this.props.getGroups();
             const query = { ...this.props.location.query };
             if (query.groups) {
@@ -180,11 +180,11 @@ export class UserGroupsPage extends Component {
                 query,
             });
         }
-        if (nextProps.groups.error && !this.props.groups.error) {
-            this.showErrorDialog(nextProps.groups.error);
+        if (this.props.groups.error && !prevProps.groups.error) {
+            this.showErrorDialog(this.props.groups.error);
         }
-        if (nextProps.users.error && !this.props.users.error) {
-            this.showErrorDialog(nextProps.users.error);
+        if (this.props.users.error && !prevProps.users.error) {
+            this.showErrorDialog(this.props.users.error);
         }
     }
 

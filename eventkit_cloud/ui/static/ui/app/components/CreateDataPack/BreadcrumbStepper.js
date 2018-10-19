@@ -64,21 +64,20 @@ export class BreadcrumbStepper extends React.Component {
         this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.jobFetched && !this.props.jobFetched) {
-            this.hideLoading();
-            browserHistory.push(`/status/${nextProps.jobuid}`);
+    componentDidUpdate(prevProps) {
+        if (this.props.jobFetched && !prevProps.jobFetched) {
             this.props.clearJobInfo();
             this.props.getNotifications();
             this.props.getNotificationsUnreadCount();
+            browserHistory.push(`/status/${this.props.jobuid}`);
         }
-        if (nextProps.jobError && !this.props.jobError) {
+        if (this.props.jobError && !prevProps.jobError) {
             this.hideLoading();
-            this.showError(nextProps.jobError);
+            this.showError(this.props.jobError);
         }
 
-        if (!isEqual(nextProps.aoiInfo, this.props.aoiInfo) ||
-            !isEqual(nextProps.exportInfo, this.props.exportInfo)) {
+        if (!isEqual(this.props.aoiInfo, prevProps.aoiInfo) ||
+            !isEqual(this.props.exportInfo, prevProps.exportInfo)) {
             this.setState({ modified: true });
         }
     }
