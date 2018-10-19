@@ -36,13 +36,6 @@ export const getDatacartDetails = jobuid => (dispatch, getState) => {
         const runs = [];
         if (response.data.length) {
             runs.push({ ...response.data[0] });
-            if (!runs[0].deleted) {
-                runs[0].job.permissions = {
-                    value: runs[0].job.permissions.value,
-                    groups: runs[0].job.permissions.groups,
-                    members: runs[0].job.permissions.users,
-                };
-            }
         }
 
         const normalizer = new Normalizer();
@@ -134,10 +127,10 @@ export function getRuns(args = {}) {
 
             if (params.visibility === 'SHARED') {
                 const groups = Object.keys(args.permissions.groups);
-                const users = Object.keys(args.permissions.members);
+                const members = Object.keys(args.permissions.members);
                 data.permissions = {
                     groups,
-                    users,
+                    members,
                 };
             }
         }
@@ -168,17 +161,8 @@ export function getRuns(args = {}) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
-            const orderedIds = [];
-            const runs = response.data.map((run) => {
-                const newRun = { ...run };
-                orderedIds.push(newRun.uid);
-                newRun.job.permissions = {
-                    value: newRun.job.permissions.value,
-                    groups: newRun.job.permissions.groups,
-                    members: newRun.job.permissions.users,
-                };
-                return newRun;
-            });
+            const runs = response.data;
+            const orderedIds = runs.map(run => run.uid);
 
             const normalizer = new Normalizer();
 
@@ -267,15 +251,7 @@ export function getFeaturedRuns(args) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
-            const runs = response.data.map((run) => {
-                const newRun = { ...run };
-                newRun.job.permissions = {
-                    value: newRun.job.permissions.value,
-                    groups: newRun.job.permissions.groups,
-                    members: newRun.job.permissions.users,
-                };
-                return newRun;
-            });
+            const runs = response.data;
 
             const norm = new Normalizer();
             const actions = runs.map((run) => {

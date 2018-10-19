@@ -88,12 +88,10 @@ export function updateDataCartPermissions(uid, permissions) {
     return (dispatch) => {
         dispatch({ type: types.UPDATING_PERMISSION });
         const csrftoken = cookie.load('csrftoken');
-        const data = {};
-        data.permissions = {
-            groups: permissions.groups,
-            users: permissions.members,
+        const data = {
+            permissions,
+            visibility: permissions.value,
         };
-        data.visibility = permissions.value;
 
         return axios({
             url: `/api/jobs/${uid}`,

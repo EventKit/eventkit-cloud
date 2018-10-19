@@ -136,12 +136,12 @@ class JobPermission(TimeStampedModelMixin):
 
     @staticmethod
     def jobpermissions(job):
-        permissions = {'groups': {}, 'users': {}}
+        permissions = {'groups': {}, 'members': {}}
         for jp in JobPermission.objects.filter(job=job):
             item = None
             if jp.content_type == ContentType.objects.get_for_model(User):
                 user = User.objects.get(pk=jp.object_id)
-                permissions['users'][user.username] = jp.permission
+                permissions['members'][user.username] = jp.permission
             else:
                 group = Group.objects.get(pk=jp.object_id)
                 permissions['groups'][group.name] = jp.permission

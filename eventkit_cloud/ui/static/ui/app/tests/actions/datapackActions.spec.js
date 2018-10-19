@@ -46,7 +46,7 @@ const getApiRun = () => ({
         permissions: {
             value: 'PRIVATE',
             groups: {},
-            users: {},
+            members: {},
         },
     },
     expiration: '2017-03-24T15:52:35.637258Z',
