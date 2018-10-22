@@ -62,8 +62,16 @@ This is because EventKit will configure the cache for you.
 For best results use this (WMTS/TMS) template, updating the sources and grids section to fit your data source. 
 EventKit will use MapProxy to help validate your entry to help find errors.
 
+In addition there are two keys you can add to the examples to adjust how many times a request is attempted and how many concurrent workers mapproxy will use.
+Those options are `concurrency` and `max_repeat`.
+
+
+
 WMTS/TMS Full Example: 
 <pre>
+concurrency: 12
+max_repeat: 5
+
 layers:
  - name: imagery
    title: imagery
