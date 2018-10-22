@@ -1,8 +1,10 @@
 import React from 'react';
 import sinon from 'sinon';
+import axios from 'axios';
 import PropTypes from 'prop-types';
 import raf from 'raf';
 import { shallow } from 'enzyme';
+import MockAdapter from 'axios-mock-adapter';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -59,6 +61,7 @@ describe('ExportInfo component', () => {
                 exportName: '',
                 datapackDescription: '',
                 projectName: '',
+                providers: [],
             },
             providers: [],
             formats,
@@ -153,6 +156,31 @@ describe('ExportInfo component', () => {
         nextProps.nextEnabled = true;
         wrapper.setProps(nextProps);
         expect(nextProps.setNextDisabled.calledOnce).toBe(true);
+    });
+
+    it('componentDidUpdate should reset joyride and set running state', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const joyride = { reset: sinon.spy() };
+        wrapper.instance().joyride = joyride;
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const nextProps = getProps();
+        nextProps.walkthroughClicked = true;
+        wrapper.setProps(nextProps);
+        expect(joyride.reset.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ isRunning: true })).toBe(true);
+    });
+
+    it('componentDidUpdate should update the providers and call checkProviders', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const checkStub = sinon.stub(wrapper.instance(), 'checkProviders');
+        const nextProps = getProps();
+        nextProps.providers = [{ slug: '124' }];
+        wrapper.setProps(nextProps);
+        expect(stateStub.calledWith({ providers: nextProps.providers })).toBe(true);
+        expect(checkStub.calledWith(nextProps.providers)).toBe(true);
     });
 
     it('onNameChange should call updateExportInfo', () => {
@@ -250,6 +278,84 @@ describe('ExportInfo component', () => {
         checkStub.restore();
     });
 
+    it('getAvailability should return updated provider', async () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        const provider = {
+            slug: '123',
+        };
+        mock.onPost(`/api/providers/${provider.slug}/status`)
+            .reply(200, { status: 'some status' });
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const parseStub = sinon.stub(JSON, 'parse').callsFake(input => input);
+        const expected = {
+            ...provider,
+            availability: {
+                status: 'some status',
+                slug: provider.slug,
+            },
+        };
+        const newProvider = await wrapper.instance().getAvailability(provider, {});
+        expect(newProvider).toEqual(expected);
+        parseStub.restore();
+    });
+
+    it('getAvailability should return failed provider', async () => {
+        const mock = new MockAdapter(axios, { delayResponse: 10 });
+        const provider = {
+            slug: '123',
+        };
+        mock.onPost(`/api/providers/${provider.slug}/status`)
+            .reply(400, { status: 'some status' });
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const expected = {
+            ...provider,
+            availability: {
+                status: 'WARN',
+                type: 'CHECK_FAILURE',
+                message: 'An error occurred while checking this provider\'s availability.',
+                slug: provider.slug,
+            },
+        };
+        const newProvider = await wrapper.instance().getAvailability(provider, {});
+        expect(newProvider).toEqual(expected);
+    });
+
+    it('checkAvailability should setState with new provider', async () => {
+        const provider = {
+            slug: '123',
+        };
+
+        const newProvider = {
+            slug: '123',
+            availability: {
+                status: 'GOOD',
+            },
+        };
+
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        sinon.stub(wrapper.instance(), 'getAvailability').callsFake(() => (
+            new Promise((resolve) => {
+                setTimeout(() => resolve(newProvider), 100);
+            })
+        ));
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
+        await wrapper.instance().checkAvailability(provider);
+        expect(stateSpy.calledOnce).toBe(true);
+        expect(wrapper.state().providers).toEqual([newProvider]);
+    });
+
+    it('checkProviders should call checkAvailablity for each provider', () => {
+        const providers = [{ display: true }, { display: false }, { display: true }];
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const checkStub = sinon.stub(wrapper.instance(), 'checkAvailability');
+        wrapper.instance().checkProviders(providers);
+        expect(checkStub.calledTwice).toBe(true);
+    });
+
     it('handleProjectionsOpen should setState to true', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
@@ -311,6 +417,30 @@ describe('ExportInfo component', () => {
         expect(wrapper.instance().hasRequiredFields(valid)).toBe(true);
     });
 
+    it('hasDisallowedSelection should return true if the provider status is FATAL', () => {
+        const provider = {
+            slug: 'test',
+            availability: { status: 'FATAL' },
+        };
+        const info = { providers: [provider] };
+        const props = getProps();
+        props.providers = [provider];
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().hasDisallowedSelection(info)).toBe(true);
+    });
+
+    it('hasDisallowedSelection should return false if no status', () => {
+        const provider = {
+            slug: 'test',
+            availability: { status: undefined },
+        };
+        const info = { providers: [provider] };
+        const props = getProps();
+        props.providers = [provider];
+        const wrapper = getWrapper(props);
+        expect(wrapper.instance().hasDisallowedSelection(info)).toBe(false);
+    });
+
     it('joyrideAddSteps should set state for steps in tour', () => {
         const steps = [
             {
@@ -350,5 +480,35 @@ describe('ExportInfo component', () => {
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));
         stateSpy.restore();
+    });
+
+    it('callback should set location hash', () => {
+        const data = {
+            action: 'something',
+            index: 2,
+            step: {
+                scrollToId: 'scrollhere',
+            },
+            type: 'step:before',
+        };
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        expect(window.location.hash).toEqual('');
+        wrapper.instance().callback(data);
+        expect(window.location.hash).toEqual(`#${data.step.scrollToId}`);
+    });
+
+    it('callback should call setNextEnabled', () => {
+        const data = {
+            action: 'something',
+            index: 5,
+            step: {},
+            type: 'tooltip:before',
+        };
+        const props = getProps();
+        props.setNextEnabled = sinon.spy();
+        const wrapper = getWrapper(props);
+        wrapper.instance().callback(data);
+        expect(props.setNextEnabled.calledOnce).toBe(true);
     });
 });
