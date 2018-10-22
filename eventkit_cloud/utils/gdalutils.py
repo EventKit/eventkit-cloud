@@ -7,6 +7,7 @@ import subprocess
 import time
 from string import Template
 from tempfile import NamedTemporaryFile
+from functools import wraps
 
 from osgeo import gdal, ogr, osr
 
@@ -14,7 +15,34 @@ from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
-MAX_DB_CONNECTION_RETRIES = 3
+MAX_DB_CONNECTION_RETRIES = 5
+MAX_DB_CONNECTION_DELAY = 5
+
+# The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
+# retries as retrying forever would cause the job to never finish in the event that the database is down. An
+# improved method would perhaps be to see if there are connection options to create a more reliable connection.
+# We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
+# documentation.
+
+
+def retry(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        attempts = MAX_DB_CONNECTION_RETRIES
+        exc = None
+        while attempts:
+            try:
+                return f(*args, **kwds)
+            except Exception as e:
+                logger.error("The function {0} threw an error.".format(getattr(f, '__name__')))
+                logger.error(str(e))
+                exc = e
+                attempts -= 1
+                time.sleep(MAX_DB_CONNECTION_DELAY)
+                if attempts:
+                    logger.error("Retrying {0} times.".format(str(attempts)))
+        raise exc
+    return wrapper
 
 
 def open_ds(ds_path):
@@ -33,6 +61,7 @@ def open_ds(ds_path):
     use_exceptions = gdal.GetUseExceptions()
     gdal.UseExceptions()
 
+    logger.info("Opening the dataset: {}".format(ds_path))
     try:
         gdal_dataset = gdal.Open(ds_path)
         if gdal_dataset:
@@ -56,18 +85,18 @@ def open_ds(ds_path):
     return ogr_dataset
 
 
-def cleanup_ds(ds):
+def cleanup_ds(resources):
     """
     Given an input gdal.Dataset or ogr.DataSource, destroy it.
     NB: referring to this object's members after destruction will crash the Python interpreter.
     :param ds: Dataset / DataSource to destroy
     """
-    if type(ds) == ogr.DataSource:
-        ds.Destroy()
-    elif type(ds) == gdal.Dataset:
-        del ds
+    logger.info("Closing the resources: {}.".format(resources))
+    # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
+    del ds
 
 
+@retry
 def get_meta(ds_path):
     """
     Given a path to a raster or vector dataset, return the appropriate driver type.
@@ -82,9 +111,11 @@ def get_meta(ds_path):
     ret = {'driver': None,
            'is_raster': None,
            'nodata': None}
+
     try:
         ds = open_ds(ds_path)
-
+        #FOR DEBUGGING, DON'T COMMIT/MERGE!
+        time.sleep(5)
         if isinstance(ds, gdal.Dataset):
             ret['driver'] = ds.GetDriver().ShortName
             ret['is_raster'] = True
@@ -191,7 +222,7 @@ def is_envelope(geojson_path):
         # Unparseable JSON or unreadable file: play it safe
         return False
 
-
+@retry
 def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
@@ -203,7 +234,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     :param task_uid: A task uid to update
     :return: Filename of clipped dataset
     """
-
     if not boundary:
         raise Exception("Could not open boundary mask file: {0}".format(boundary))
 
@@ -277,23 +307,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
         task_process = TaskProcess(task_uid=task_uid)
 
-        # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
-        # retries as retrying forever would cause the job to never finish in the event that the database is down. An
-        # improved method would perhaps be to see if there are connection options to create a more reliable connection.
-        # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
-        # documentation.
-        attempts = 0
-        while True:
-            try:
-                task_process.start_process(cmd, shell=True, executable="/bin/bash",
+        task_process.start_process(cmd, shell=True, executable="/bin/bash",
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                break
-            except Exception as e:
-                logger.error(e)
-                attempts += 1
-                if attempts > MAX_DB_CONNECTION_RETRIES:
-                    raise e
-                time.sleep(2)
 
     finally:
         if temp_boundfile:
@@ -306,6 +321,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     return out_dataset
 
 
+@retry
 def convert(dataset=None, fmt=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
@@ -458,3 +474,12 @@ def get_band_statistics(file_path, band=1):
     except Exception as e:
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
+
+
+def add_resource():
+    """
+    Apparently GDAL can be buggy if resources aren't manually deallocated.
+    add them to a stack here if not already allocated.
+    :return:
+    """
+
