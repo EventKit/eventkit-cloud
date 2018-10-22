@@ -20,7 +20,6 @@ import logging
 from time import sleep
 import signal
 
-
 logger = logging.getLogger()
 
 
@@ -73,6 +72,7 @@ def get_provider_staging_dir(run_uid, provider_slug):
     """
     The provider staging dir is where all files are stored while they are being processed.
     It is a unique space to ensure that files aren't being improperly modified.
+    :param run_uid: The unique id for the run.
     :param provider_slug: The unique value to store the directory for the provider data.
     :return: The path to the provider directory.
     """
@@ -84,7 +84,8 @@ def get_download_filename(name, time, ext, additional_descriptors=None):
     """
     This provides specific formatting for the names of the downloadable files.
     :param name: A name for the file, typically the job name.
-    :param additional_descriptors: Additional descriptors, typically the provider slug or project name or any list of items.
+    :param additional_descriptors: Additional descriptors, typically the provider slug or project name
+    or any list of items.
     :param time:  A python datetime object.
     :param ext: The file extension (e.g. .gpkg)
     :return: The formatted file name (e.g. Boston-example-20180711.gpkg)
@@ -205,9 +206,10 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
                 # GeoTIFF are elevation.  This will need to be updated in the future.
                 file_ext = os.path.splitext(full_file_path)[1]
                 if file_ext not in [".zip", ".geojson"]:
-                    provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
-                                       'provider_name': provider_task.name,
-                                       'file_type': file_ext}
+                    provider_details[provider_task.slug] = {'provider_slug': provider_task.slug,
+                                                            'file_path': full_file_path,
+                                                            'provider_name': provider_task.name,
+                                                            'file_type': file_ext}
                     if provider_task.slug not in ['osm', 'nome']:
                         if file_ext == '.gpkg':
                             has_raster = True
@@ -219,12 +221,16 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
                         provider_details[provider_task.slug]["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
-                        steps = linspace(band_stats[0], band_stats[1], num=16)
-                        provider_details[provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
+                        try:
+                            steps = linspace(band_stats[0], band_stats[1], num=16)
+                            provider_details[provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
+                        except TypeError:
+                            provider_details[provider_task.slug]["ramp_shader_steps"] = None
 
     if data_provider_task_record:
-        style_file_name =  '{0}-{1}-{2}.qgs'.format(normalize_name(job_name), normalize_name(data_provider_task_record.slug),
-                                                         default_format_time(timezone.now()))
+        style_file_name = '{0}-{1}-{2}.qgs'.format(normalize_name(job_name),
+                                                   normalize_name(data_provider_task_record.slug),
+                                                   default_format_time(timezone.now()))
     else:
         style_file_name = '{0}-{1}.qgs'.format(normalize_name(job_name), default_format_time(timezone.now()))
     style_file = os.path.join(stage_dir, style_file_name)
@@ -233,14 +239,14 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
     logger.error(provider_details)
 
     with open(style_file, 'wb') as open_file:
-        open_file.write(render_to_string('styles/Style.qgs', context={'job_name': normalize_name(job_name),
-                                                                      'job_date_time': '{0}'.format(
-                                                                          timezone.now().strftime("%Y%m%d%H%M%S%f")[
-                                                                          :-3]),
-                                                                      'provider_details': provider_details,
-                                                                      'bbox': run.job.extents,
-                                                                      'has_raster': has_raster,
-                                                                      'has_elevation': has_elevation}).encode())
+        open_file.write(render_to_string('styles/Style.qgs',
+                                         context={'job_name': normalize_name(job_name),
+                                                  'job_date_time': '{0}'.format(
+                                                      timezone.now().strftime("%Y%m%d%H%M%S%f")[:-3]),
+                                                  'provider_details': provider_details,
+                                                  'bbox': run.job.extents,
+                                                  'has_raster': has_raster,
+                                                  'has_elevation': has_elevation}).encode())
     return style_file
 
 
@@ -261,7 +267,8 @@ def get_human_readable_metadata_document(run_uid):
         data_provider = DataProvider.objects.get(slug=provider_task.slug)
         provider_type = data_provider.export_provider_type.type_name
         data_provider_metadata = {'name': data_provider.name,
-                                  'description': str(data_provider.service_description).replace('\r\n', '\n').replace('\n', '\r\n\t'),
+                                  'description': str(data_provider.service_description).replace('\r\n', '\n').replace(
+                                      '\n', '\r\n\t'),
                                   # 'description': data_provider.service_description,
                                   'last_update': get_last_update(data_provider.url,
                                                                  provider_type,
@@ -282,8 +289,10 @@ def get_human_readable_metadata_document(run_uid):
     metadata_file = os.path.join(stage_dir, '{0}_ReadMe.txt'.format(normalize_name(run.job.name)))
 
     with open(metadata_file, 'wb') as open_file:
-        open_file.write(render_to_string('styles/metadata.txt', context={'metadata': metadata}).replace('\r\n', '\n').replace('\n', '\r\n').encode())
-
+        open_file.write(
+            render_to_string('styles/metadata.txt',
+                             context={'metadata': metadata}).replace('\r\n', '\n').replace('\n',
+                                                                                           '\r\n').encode())
     return metadata_file
 
 
@@ -313,7 +322,6 @@ def get_metadata_url(url, type):
     A wrapper to get different timestamps.
     :param url: The url to get the timestamp
     :param type: The type of services (e.g. osm)
-    :param slug: Optionally a slug if the service requires credentials.
     :return: The timestamp as a string.
     """
     if type in ['wcs', 'wms', 'wmts']:
