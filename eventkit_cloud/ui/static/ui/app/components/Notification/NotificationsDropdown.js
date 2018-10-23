@@ -18,8 +18,8 @@ export class NotificationsDropdown extends React.Component {
         };
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.status.fetched && !this.props.status.fetched) {
+    componentDidUpdate(prevProps) {
+        if (this.props.status.fetched && !prevProps.status.fetched) {
             this.setState({ showLoading: false });
         }
     }

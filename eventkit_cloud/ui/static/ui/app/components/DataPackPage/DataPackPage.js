@@ -118,12 +118,7 @@ export class DataPackPage extends React.Component {
         return true;
     }
 
-    componentDidUpdate(prevProps) { /* eslint-disable react/no-did-update-set-state */
-        // setState is permitted in componentDidUpdate, but you
-        // must wrap it in a conditional and be cautious
-        // https://reactjs.org/docs/react-component.html#componentdidupdate
-        // eslint-disable-next-line react/no-did-update-set-state
-        // if fetched WAS null but now TRUE we can show the page
+    componentDidUpdate(prevProps) {
         if (prevProps.runsFetched === null && this.props.runsFetched) {
             if (this.state.pageLoading) {
                 this.setState({ pageLoading: false });

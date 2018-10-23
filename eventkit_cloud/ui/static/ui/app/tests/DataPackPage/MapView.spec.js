@@ -369,9 +369,9 @@ describe('MapView component', () => {
         MapView.prototype.addRunFeatures = addRunFeatures;
     });
 
-    it('componentWillReceiveProps should clear the source, re-add features, and fit runs extent when new features are received', () => {
+    it('componentDidUpdate should clear the source, re-add features, and fit runs extent when new features are received', () => {
         const props = getProps();
-        const receiveSpy = sinon.spy(MapView.prototype, 'componentWillReceiveProps');
+        const receiveSpy = sinon.spy(MapView.prototype, 'componentDidUpdate');
         const newSpy = sinon.spy(MapView.prototype, 'hasNewRuns');
         const wrapper = getWrapper(props);
         const clearSpy = sinon.spy(VectorSource.prototype, 'clear');
@@ -409,9 +409,9 @@ describe('MapView component', () => {
         fitSpy.restore();
     });
 
-    it('componentWillReceiveProps should clear the source, re-add features, and fit drawlayer extent', () => {
+    it('componentDidUpdate should clear the source, re-add features, and fit drawlayer extent', () => {
         const props = getProps();
-        const receiveSpy = sinon.spy(MapView.prototype, 'componentWillReceiveProps');
+        const receiveSpy = sinon.spy(MapView.prototype, 'componentDidUpdate');
         const newSpy = sinon.spy(MapView.prototype, 'hasNewRuns');
         const wrapper = getWrapper(props);
         const clearSpy = sinon.spy(VectorSource.prototype, 'clear');
@@ -450,7 +450,7 @@ describe('MapView component', () => {
         fitSpy.restore();
     });
 
-    it('componentWillReceiveProps should fit to runs extent if there is no draw layer', () => {
+    it('componentDidUpdate should fit to runs extent if there is no draw layer', () => {
         const props = getProps();
         const newSpy = sinon.spy(MapView.prototype, 'hasNewRuns');
         const wrapper = getWrapper(props);
@@ -487,7 +487,7 @@ describe('MapView component', () => {
         fitSpy.restore();
     });
 
-    it('componentWillReceiveProps should fit to draw layer no features are added', () => {
+    it('componentDidUpdate should fit to draw layer no features are added', () => {
         const props = getProps();
         const newSpy = sinon.spy(MapView.prototype, 'hasNewRuns');
         const wrapper = getWrapper(props);
@@ -521,7 +521,7 @@ describe('MapView component', () => {
         fitSpy.restore();
     });
 
-    it('componentWillReceiveProps should call zoomToFeature', () => {
+    it('componentDidUpdate should call zoomToFeature', () => {
         const props = getProps();
         const newStub = sinon.stub(MapView.prototype, 'hasNewRuns')
             .returns(true);
@@ -545,7 +545,7 @@ describe('MapView component', () => {
         zoomStub.restore();
     });
 
-    it('componentWillReceiveProps should call handleGeoJSONUpload', () => {
+    it('componentDidUpdate should call handleGeoJSONUpload', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
@@ -564,7 +564,7 @@ describe('MapView component', () => {
         const wrapper = getWrapper(props);
         const updates = updateSpy.args.length;
         const mapUpdate = mapUpdateSpy.args.length;
-        wrapper.instance().componentDidUpdate();
+        wrapper.instance().componentDidUpdate(props);
         wrapper.update();
         expect(updateSpy.args.length).toEqual(updates + 1);
         expect(mapUpdateSpy.args.length).toEqual(mapUpdate + 1);

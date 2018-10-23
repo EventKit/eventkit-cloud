@@ -42,8 +42,8 @@ export class Account extends Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.user.status.patched && !this.props.user.status.patched) {
+    componentDidUpdate(prevProps) {
+        if (this.props.user.status.patched && !prevProps.user.status.patched) {
             this.setState({ showSavedMessage: true });
             window.setTimeout(() => {
                 this.setState({ showSavedMessage: false });
