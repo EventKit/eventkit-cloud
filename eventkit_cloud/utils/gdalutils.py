@@ -2,12 +2,14 @@
 import json
 import logging
 import math
+import billiard
 import os
 import subprocess
 import time
 from string import Template
 from tempfile import NamedTemporaryFile
 from functools import wraps
+
 
 from osgeo import gdal, ogr, osr
 
@@ -93,18 +95,40 @@ def cleanup_ds(resources):
     """
     logger.info("Closing the resources: {}.".format(resources))
     # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
-    del ds
+    del resources
 
 
 @retry
 def get_meta(ds_path):
     """
-    Given a path to a raster or vector dataset, return the appropriate driver type.
+    This function is a wrapper for the get_gdal metadata because if there is a database diconnection there is no obvious
+    way to clean up and free those resources therefore it is put on a separate process and if it fails it can just be
+    tried again.
+
+    This is using GDAL 2.2.4 this should be checked again to see if it can be simplified in a later version.
     :param ds_path: String: Path to dataset
     :return: Metadata dict
         driver: Short name of GDAL driver for dataset
         is_raster: True if dataset is a raster type
         nodata: NODATA value for all bands if all bands have the same one, otherwise None (raster sets only)
+    """
+
+    multiprocess_queue = billiard.Queue()
+    proc = billiard.Process(target=get_gdal_metadata, daemon=True, args=(ds_path, multiprocess_queue,))
+    proc.start()
+    proc.join()
+    return multiprocess_queue.get()
+
+
+def get_gdal_metadata(ds_path, multiprocess_queue):
+    """
+    Don't call this directly use get_meta.
+
+    Given a path to a raster or vector dataset, return the appropriate driver type.
+
+    :param ds_path: String: Path to dataset
+    :param A multiprocess queue.
+    :return: None.
     """
 
     ds = None
@@ -114,8 +138,6 @@ def get_meta(ds_path):
 
     try:
         ds = open_ds(ds_path)
-        #FOR DEBUGGING, DON'T COMMIT/MERGE!
-        time.sleep(5)
         if isinstance(ds, gdal.Dataset):
             ret['driver'] = ds.GetDriver().ShortName
             ret['is_raster'] = True
@@ -133,7 +155,7 @@ def get_meta(ds_path):
         else:
             logger.debug("Could not identify dataset {0}".format(ds_path))
 
-        return ret
+        multiprocess_queue.put(ret)
 
     finally:
         cleanup_ds(ds)
