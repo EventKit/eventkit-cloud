@@ -5,6 +5,7 @@ var WriteFilePlugin = require('write-file-webpack-plugin');
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var CompressionPlugin = require('compression-webpack-plugin');
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var CleanWebpackPlugin = require('clean-webpack-plugin');
 
 var BASE_DIR = path.resolve('/var', 'lib', 'eventkit', 'eventkit_cloud', 'ui', 'static', 'ui')
 var BUILD_DIR = path.resolve(BASE_DIR, 'build');
@@ -13,6 +14,7 @@ var APP_DIR = path.resolve(BASE_DIR, 'app');
 var PROD = JSON.parse(process.env.PROD || false);
 var devtool = 'cheap-source-map';
 var plugins = [
+    new CleanWebpackPlugin([BUILD_DIR]),
     new BundleAnalyzerPlugin({
         analyzerMode: 'static',
         reportFilename: 'report.html'
