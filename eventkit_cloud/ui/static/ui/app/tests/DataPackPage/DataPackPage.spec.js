@@ -178,7 +178,7 @@ describe('DataPackPage component', () => {
         };
         const updateStub = sinon.stub(DataPackPage.prototype, 'updateLocationQuery');
         getWrapper(props);
-        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.called).toBe(true);
         expect(updateStub.calledWith(expectedDefault)).toBe(true);
         updateStub.restore();
     });
@@ -199,7 +199,7 @@ describe('DataPackPage component', () => {
         props.runsMeta.view = 'grid';
         browserHistory.push.reset();
         const wrapper = getWrapper(props);
-        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.called).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
             query: {
@@ -212,7 +212,7 @@ describe('DataPackPage component', () => {
         browserHistory.push.reset();
         const nextProps = getProps();
         const nextWrapper = getWrapper(nextProps);
-        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.called).toBe(true);
         expect(browserHistory.push.calledWith({
             ...nextProps.location,
             query: {

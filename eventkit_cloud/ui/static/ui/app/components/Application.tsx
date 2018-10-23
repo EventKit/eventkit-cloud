@@ -263,23 +263,23 @@ export class Application extends React.Component<Props, State> {
         window.addEventListener('click', this.handleClick);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (this.loggedIn && nextProps.width !== this.props.width) {
-            if (nextProps.width === 'xl') {
+    componentDidUpdate(prevProps) {
+        if (this.loggedIn && this.props.width !== prevProps.width) {
+            if (this.props.width === 'xl') {
                 this.props.openDrawer();
-            } else if (this.props.width === 'xl') {
+            } else if (prevProps.width === 'xl') {
                 this.props.closeDrawer();
             }
         }
-        if (!this.loggedIn && nextProps.userData) {
+        if (!this.loggedIn && this.props.userData) {
             this.loggedIn = true;
-            if (nextProps.width === 'xl') {
+            if (this.props.width === 'xl') {
                 this.props.openDrawer();
             }
             this.startCheckingForAutoLogout();
             this.startSendingUserActivePings();
             this.startListeningForNotifications();
-        } else if (this.loggedIn && !nextProps.userData) {
+        } else if (this.loggedIn && !this.props.userData) {
             this.loggedIn = false;
             this.stopCheckingForAutoLogout();
             this.stopSendingUserActivePings();

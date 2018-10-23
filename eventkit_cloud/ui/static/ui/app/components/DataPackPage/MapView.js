@@ -174,11 +174,11 @@ export class MapView extends Component {
         this.map.getView().on('propertychange', this.updateZoomLevel);
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
         // if the runs have changed, clear out old features and re-add with new features
-        if (this.hasNewRuns(this.props.runs, nextProps.runs)) {
+        if (this.hasNewRuns(prevProps.runs, this.props.runs)) {
             this.source.clear();
-            const added = this.addRunFeatures(nextProps.runs, this.source);
+            const added = this.addRunFeatures(this.props.runs, this.source);
             const drawExtent = this.drawLayer.getSource().getExtent();
             const runsExtent = this.source.getExtent();
             // if any features were added to the source
@@ -201,13 +201,11 @@ export class MapView extends Component {
             }
         }
 
-        if (nextProps.importGeom.processed && !this.props.importGeom.processed) {
-            this.handleGeoJSONUpload(nextProps.importGeom.featureCollection);
+        if (this.props.importGeom.processed && !prevProps.importGeom.processed) {
+            this.handleGeoJSONUpload(this.props.importGeom.featureCollection);
         }
-    }
 
-    // update map size so it doesnt look like crap after page resize
-    componentDidUpdate() {
+        // update map size so it doesnt look like crap after page resize
         this.map.updateSize();
     }
 

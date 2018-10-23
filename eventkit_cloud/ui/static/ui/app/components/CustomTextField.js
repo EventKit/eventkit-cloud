@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
-import * as ReactDOM from 'react-dom';
 
 export class CustomTextField extends Component {
     constructor(props) {
@@ -84,6 +83,11 @@ export class CustomTextField extends Component {
             ...rest
         } = this.props;
 
+        const inputStyle = {
+            paddingRight: maxLength && showRemaining ? '55px' : 'unset',
+            ...InputProps.style,
+        };
+
         const charsRemainingColor = (this.state.charsRemaining > 10) ? theme.eventkit.colors.text_primary : theme.eventkit.colors.warning;
 
         return (
@@ -91,22 +95,12 @@ export class CustomTextField extends Component {
                 <TextField
                     className="qa-CustomTextField-TextField"
                     id="custom-text-field"
-                    ref={(textField) => {
-                        if (!textField) {
-                            return;
-                        }
-
-                        if (maxLength && showRemaining) {
-                            // eslint-disable-next-line react/no-find-dom-node
-                            ReactDOM.findDOMNode(textField).style.paddingRight = '55px';
-                        }
-                    }}
                     onChange={this.onChange}
                     onFocus={this.onFocus}
                     onBlur={this.onBlur}
                     inputProps={{ maxLength, ...inputProps }}
                     // eslint-disable-next-line react/jsx-no-duplicate-props
-                    InputProps={{ ...InputProps }}
+                    InputProps={{ ...InputProps, style: inputStyle }}
                     type="text"
                     {...rest}
                 />

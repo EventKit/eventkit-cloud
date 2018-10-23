@@ -140,18 +140,16 @@ export class ExportAOI extends Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.importGeom.processed && !this.props.importGeom.processed) {
-            this.handleGeoJSONUpload(nextProps.importGeom);
+    componentDidUpdate(prevProps) {
+        if (this.props.importGeom.processed && !prevProps.importGeom.processed) {
+            this.handleGeoJSONUpload(this.props.importGeom);
         }
 
-        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && this.state.isRunning === false) {
+        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && this.state.isRunning === false) {
             this.joyride.reset(true);
             this.setState({ isRunning: true });
         }
-    }
 
-    componentDidUpdate() {
         this.map.updateSize();
     }
 

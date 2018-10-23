@@ -24,14 +24,14 @@ export class SearchAOIToolbar extends Component {
         this.debouncer = debounce(e => this.handleChange(e), 500);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.geocode.fetched === true) {
-            this.setState({ suggestions: nextProps.geocode.data });
-        } else if (this.state.suggestions.length > 0) {
+    componentDidUpdate(prevProps) {
+        if (this.props.geocode.fetched === true && !prevProps.geocode.fetched) {
+            this.setState({ suggestions: this.props.geocode.data });
+        } else if (!this.props.geocode.fetched && this.state.suggestions.length > 0) {
             this.setState({ suggestions: [] });
         }
-        if (nextProps.toolbarIcons.search !== this.props.toolbarIcons.search) {
-            if (nextProps.toolbarIcons.search === 'DEFAULT') {
+        if (this.props.toolbarIcons.search !== prevProps.toolbarIcons.search) {
+            if (this.props.toolbarIcons.search === 'DEFAULT') {
                 this.typeaheadref.getInstance().clear();
             }
         }
@@ -128,7 +128,7 @@ export class SearchAOIToolbar extends Component {
                         <TypeaheadMenuItem
                             result={result}
                             index={index}
-                            key={`${result.name}${result.province}${result.region}${result.country}`}
+                            key={JSON.stringify(result.properties)}
                         />
                     ));
                 } else {
