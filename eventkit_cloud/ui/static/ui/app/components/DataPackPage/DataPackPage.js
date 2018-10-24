@@ -5,11 +5,11 @@ import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Help from '@material-ui/icons/Help';
 import Toolbar from '@material-ui/core/Toolbar';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
+import PageLoading from '../common/PageLoading';
 import DataPackGrid from './DataPackGrid';
 import DataPackList from './DataPackList';
 import MapView from './MapView';
@@ -541,6 +541,12 @@ export class DataPackPage extends React.Component {
                 marginRight: '5px',
                 marginBottom: '5px',
             },
+            loadingContainer: {
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                zIndex: 100,
+            },
         };
 
         const iconElementRight = (
@@ -623,35 +629,15 @@ export class DataPackPage extends React.Component {
                     />
 
                     {this.state.pageLoading ?
-                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                            <CircularProgress
-                                style={{ margin: 'auto', display: 'block' }}
-                                color="primary"
-                                size={50}
-                            />
-                        </div>
+                        <PageLoading background="transparent" />
                         :
                         <div style={{ position: 'relative' }} className="qa-DataPackPage-view">
                             {this.state.loading ||
                             this.props.runDeletion.deleting ||
                             this.props.updatePermissions.updating ||
                             this.props.importGeom.processing ?
-                                <div
-                                    style={{
-                                        zIndex: 100,
-                                        position: 'absolute',
-                                        width: '100%',
-                                        height: '100%',
-                                        backgroundColor: colors.backdrop,
-                                    }}
-                                >
-                                    <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                                        <CircularProgress
-                                            style={{ margin: 'auto', display: 'block' }}
-                                            color="primary"
-                                            size={50}
-                                        />
-                                    </div>
+                                <div style={styles.loadingContainer}>
+                                    <PageLoading background="transparent" partial />
                                 </div>
                                 : null
                             }

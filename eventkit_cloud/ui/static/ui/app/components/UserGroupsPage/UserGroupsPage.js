@@ -9,10 +9,10 @@ import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import TextField from '@material-ui/core/TextField';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Warning from '@material-ui/icons/Warning';
 import AddCircle from '@material-ui/icons/AddCircle';
 import PageHeader from '../common/PageHeader';
+import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../CustomScrollbar';
 import UserRow from './UserRow';
 import OwnUserRow from './OwnUserRow';
@@ -677,6 +677,14 @@ export class UserGroupsPage extends Component {
                 zIndex: 4,
                 boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
             },
+            loadingContainer: {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                zIndex: 1400,
+            },
             memberTitle: {
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -712,28 +720,6 @@ export class UserGroupsPage extends Component {
                 zIndex: 3,
                 backgroundColor: colors.white,
                 boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
-            },
-            loadingBackground: {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: colors.backdrop,
-                zIndex: 2001,
-            },
-            loadingContainer: {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: '100%',
-                width: bodyWidth,
-            },
-            loading: {
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
             },
             errorIcon: {
                 marginRight: '10px',
@@ -1039,14 +1025,8 @@ export class UserGroupsPage extends Component {
                 { this.props.groups.fetching || this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
-                    <div style={styles.loadingBackground}>
-                        <div style={styles.loadingContainer}>
-                            <CircularProgress
-                                color="primary"
-                                style={styles.loading}
-                                className="qa-UserGroupsPage-loading"
-                            />
-                        </div>
+                    <div style={styles.loadingContainer}>
+                        <PageLoading background="transparent" partial />
                     </div>
                     :
                     null
