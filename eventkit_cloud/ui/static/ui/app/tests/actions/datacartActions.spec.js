@@ -25,7 +25,7 @@ describe('export actions', () => {
                 selection: '',
                 permissions: {
                     groups: {},
-                    users: {},
+                    members: {},
                 },
             },
             provider_tasks: [],
