@@ -24,8 +24,8 @@ export class ExportSummary extends Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
+    componentDidUpdate(prevProps) {
+        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.reset(true);
             this.setState({ isRunning: true });
         }

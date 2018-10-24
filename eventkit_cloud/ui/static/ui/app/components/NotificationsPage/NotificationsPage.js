@@ -32,8 +32,8 @@ export class NotificationsPage extends React.Component {
         this.refresh();
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.notificationsStatus.fetched && !this.props.notificationsStatus.fetched) {
+    componentDidUpdate(prevProps) {
+        if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
             this.setState({
                 loadingPage: false,
                 loading: false,

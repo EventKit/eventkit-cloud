@@ -63,36 +63,47 @@ export class StatusDownload extends React.Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.runDeletion.deleted && !this.props.runDeletion.deleted) {
+    shouldComponentUpdate(p) {
+        if (p.detailsFetched !== this.props.detailsFetched) {
+            if (p.runs !== this.props.runs || this.state.isLoading) {
+                return true;
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.runDeletion.deleted && !prevProps.runDeletion.deleted) {
             browserHistory.push('/exports');
         }
-        if (nextProps.exportReRun.error && !this.props.exportReRun.error) {
-            this.setState({ error: nextProps.exportReRun.error });
+        if (this.props.exportReRun.error && !prevProps.exportReRun.error) {
+            this.setState({ error: this.props.exportReRun.error });
         }
-        if (nextProps.exportReRun.fetched && !this.props.exportReRun.fetched) {
+        if (this.props.exportReRun.fetched && !prevProps.exportReRun.fetched) {
             this.props.getDatacartDetails(this.props.router.params.jobuid);
             this.startTimer();
         }
-        if (nextProps.expirationState.updated && !this.props.expirationState.updated) {
+        if (this.props.expirationState.updated && !prevProps.expirationState.updated) {
             this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
-        if (nextProps.permissionState.updated && !this.props.permissionState.updated) {
+        if (this.props.permissionState.updated && !prevProps.permissionState.updated) {
             this.props.getDatacartDetails(this.props.router.params.jobuid);
         }
-        if (nextProps.detailsFetched && !this.props.detailsFetched) {
+        if (this.props.detailsFetched && !prevProps.detailsFetched) {
             if (this.state.isLoading) {
                 this.setState({ isLoading: false });
             }
 
             // If no data returned from API we stop here
-            if (!nextProps.runIds.length) {
+            if (!this.props.runIds.length) {
                 return;
             }
 
-            const datacart = nextProps.runs;
+            const datacart = this.props.runs;
             let clearTimer = true;
-            if (nextProps.runs[0].zipfile_url == null) {
+            if (this.props.runs[0].zipfile_url == null) {
                 clearTimer = false;
             }
 
@@ -123,23 +134,12 @@ export class StatusDownload extends React.Component {
             }
         }
 
-        if (nextProps.location.pathname !== this.props.location.pathname) {
+        if (this.props.location.pathname !== prevProps.location.pathname) {
             // Refresh the entire component.
             this.componentWillUnmount();
             this.setState(this.getInitialState());
             this.componentDidMount();
         }
-    }
-
-    shouldComponentUpdate(p) {
-        if (p.detailsFetched !== this.props.detailsFetched) {
-            if (p.runs !== this.props.runs || this.state.isLoading) {
-                return true;
-            }
-            return false;
-        }
-
-        return true;
     }
 
     componentWillUnmount() {

@@ -175,18 +175,16 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    it('componentWillReceiveProps should handle summing up the file sizes', () => {
+    it('componentDidUpdate should handle summing up the file sizes', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
+        nextProps.provider.status = 'some new status';
         const fileSize = 1.234;
-        const propsSpy = sinon.spy(wrapper.instance(), 'componentWillReceiveProps');
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setProps(nextProps);
-        expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ fileSize: fileSize.toFixed(3) })).toBe(true);
         stateSpy.restore();
-        propsSpy.restore();
     });
 
     it('getTextFontSize should return the font string for table text based on window width', () => {
@@ -333,10 +331,10 @@ describe('ProviderRow component', () => {
 
     it('handleProviderOpen should set provider dialog to open', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = shallow(<ProviderRow {...props} />);
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleProviderOpen();
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
         wrapper.update();
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual('provider description');
@@ -345,10 +343,10 @@ describe('ProviderRow component', () => {
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = shallow(<ProviderRow {...props} />);
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleProviderClose();
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ providerDialogOpen: false })).toBe(true);
         stateSpy.restore();
     });
