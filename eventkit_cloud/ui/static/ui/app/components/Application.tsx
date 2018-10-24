@@ -187,7 +187,6 @@ export class Application extends React.Component<Props, State> {
     private notificationsRefreshIntervalId: number | null;
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
-    private notificationsDropdownContainerRef: React.RefObject<any> | null;
     private isSendingUserActivePings: boolean;
     private loggedIn: boolean;
     private handleUserActiveInput: () => void;
@@ -252,7 +251,6 @@ export class Application extends React.Component<Props, State> {
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
         this.loggedIn = false;
-        this.notificationsDropdownContainerRef = React.createRef();
     }
 
     getChildContext() {
@@ -637,8 +635,8 @@ export class Application extends React.Component<Props, State> {
                                     transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
                                 }}
                             />
-                            <div ref={this.notificationsDropdownContainerRef}>
-                                    {this.state.showNotificationsDropdown ?
+                            <div>
+                                {this.state.showNotificationsDropdown ?
                                     <NotificationsDropdown
                                         loading={this.state.notificationsLoading}
                                         notifications={this.props.notificationsData}
