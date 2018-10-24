@@ -71,7 +71,10 @@ describe('SearchAOIToolbar button', () => {
         const suggestions = ['one', 'two'];
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props} />);
-        wrapper.setState({ suggestions });
+        const nextProps = getProps();
+        nextProps.geocode.fetched = true;
+        nextProps.geocode.data = suggestions;
+        wrapper.setProps(nextProps);
         expect(wrapper.state().suggestions).toEqual(suggestions);
         wrapper.instance().handleInputChange('e');
         expect(wrapper.state().suggestions.length).toEqual(0);
@@ -89,7 +92,10 @@ describe('SearchAOIToolbar button', () => {
         const suggestions = ['one', 'two'];
         const props = getProps();
         const wrapper = shallow(<SearchAOIToolbar {...props} />);
-        wrapper.setState({ suggestions });
+        const nextProps = getProps();
+        nextProps.geocode.fetched = true;
+        nextProps.geocode.data = suggestions;
+        wrapper.setProps(nextProps);
         expect(wrapper.state().suggestions).toEqual(suggestions);
         wrapper.instance().handleEnter('');
         expect(wrapper.state().suggestions.length).toEqual(0);

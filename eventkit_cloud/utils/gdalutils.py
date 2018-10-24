@@ -497,9 +497,11 @@ def get_band_statistics(file_path, band=1):
     :return: A list [min, max, mean, std_dev]
     """
     try:
+        gdal.UseExceptions()
         geotiff = gdal.Open(file_path)
         band = geotiff.GetRasterBand(1)
         return band.GetStatistics(True, True)
     except Exception as e:
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
+        return None

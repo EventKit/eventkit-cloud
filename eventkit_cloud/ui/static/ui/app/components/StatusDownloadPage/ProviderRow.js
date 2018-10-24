@@ -31,7 +31,7 @@ export class ProviderRow extends Component {
         this.state = {
             openTable: false,
             selectedRows: { },
-            fileSize: null,
+            fileSize: this.getFileSize(props.provider.tasks),
             providerDesc: '',
             providerDialogOpen: false,
         };
@@ -45,22 +45,30 @@ export class ProviderRow extends Component {
         this.setState({ selectedRows: rows });
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
+        if (this.props.provider.status !== prevProps.provider.status) {
+            this.setState({ fileSize: this.getFileSize(this.props.provider.tasks) });
+        }
+        if (this.props.selectedProviders !== this.state.selectedRows) {
+            this.setState({ selectedRows: this.props.selectedProviders });
+        }
+    }
+
+    getFileSize(tasks) {
         let fileSize = 0.000;
-        nextProps.provider.tasks.forEach((task) => {
+        tasks.forEach((task) => {
             if (task.result != null) {
                 if (task.display !== false && task.result.size) {
                     const textReplace = task.result.size.replace(' MB', '');
                     const number = textReplace;
                     fileSize = Number(fileSize) + Number(number);
-                    this.setState({ fileSize: fileSize.toFixed(3) });
                 }
             }
         });
 
-        if (nextProps.selectedProviders !== this.state.selectedRows) {
-            this.setState({ selectedRows: nextProps.selectedProviders });
-        }
+        if (fileSize === 0.000) return null;
+
+        return fileSize.toFixed(3);
     }
 
     getTextFontSize() {

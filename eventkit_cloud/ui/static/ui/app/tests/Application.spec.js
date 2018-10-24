@@ -99,21 +99,6 @@ describe('Application component', () => {
         expect(drawer.find(MenuItem).at(6).find(Link)).toHaveLength(1);
     });
 
-    it('should call openDrawer when user data is added and window width is xl', () => {
-        const props = getProps();
-        props.userData = null;
-        props.openDrawer = sinon.spy();
-        const wrapper = getWrapper(props);
-        const nextProps = getProps();
-        nextProps.userData = { data: {} };
-        nextProps.width = 'xl';
-        const spy = sinon.spy(Application.prototype, 'componentWillReceiveProps');
-        wrapper.setProps(nextProps);
-        expect(spy.calledOnce).toBe(true);
-        expect(props.openDrawer.calledOnce).toBe(true);
-        spy.restore();
-    });
-
     it('should call getConfig, getNotifications, and addEventListener on mount', () => {
         const getStub = sinon.stub(Application.prototype, 'getConfig');
         const props = getProps();

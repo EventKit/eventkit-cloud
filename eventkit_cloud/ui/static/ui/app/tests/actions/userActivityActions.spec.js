@@ -11,7 +11,7 @@ const initialState = { exports: state, user: { data: { user: { username: 'test' 
 const apiPermissions = {
     value: '',
     groups: [],
-    users: [],
+    members: [],
 };
 
 const reduxPermissions = {

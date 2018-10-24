@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def get_all_users_by_permissions(permissions):
     return User.objects.filter(
         models.Q(groups__name=permissions['groups']) |
-        models.Q(username__in=permissions['users'])
+        models.Q(username__in=permissions['members'])
     ).distinct()
 
 
