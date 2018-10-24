@@ -111,7 +111,8 @@ class MapproxyGeopackage(object):
         conf_dict['services'] = ['demo']
 
         # disable SSL cert checks
-        if getattr(settings, "DISABLE_SSL_VERIFICATION", False):
+        ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
+        if not ssl_verify:
             conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
         # Add autoconfiguration to base_config

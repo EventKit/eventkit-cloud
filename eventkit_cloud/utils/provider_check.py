@@ -113,7 +113,7 @@ class ProviderCheck(object):
         self.max_area = max_area
         self.result = CheckResults.SUCCESS
         self.timeout = 10
-        self.verify = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
+        self.verify = getattr(settings, "SSL_VERIFICATION", True)
 
         if aoi_geojson is not None and aoi_geojson is not "":
             if isinstance(aoi_geojson, str):
