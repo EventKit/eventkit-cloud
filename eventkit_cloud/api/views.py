@@ -502,9 +502,9 @@ class JobViewSet(viewsets.ModelViewSet):
         if "permissions" in payload:
             serializer = JobSerializer(job, context={'request': request})
             current_permissions = serializer.get_permissions(job)
-            if not "users" in payload["permissions"]: payload["permissions"]["users"] =  current_permissions["users"]
+            if not "members" in payload["permissions"]: payload["permissions"]["members"] =  current_permissions["members"]
             if not "groups" in payload["permissions"]: payload["permissions"]["groups"] = current_permissions["groups"]
-            users = payload["permissions"]["users"]
+            users = payload["permissions"]["members"]
             groups = payload["permissions"]["groups"]
 
             # make sure all user names, group names, and permissions are valid, and insure there is at least one admin
@@ -578,7 +578,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
              {  "permissions" : {
                 groups : [ 'group_one', 'group_two', ...]
-                users : ['user_one', 'user_two' ... ]
+                members : ['user_one', 'user_two' ... ]
                  }
              }
 
@@ -1761,8 +1761,8 @@ def get_job_ids_via_permissions(permissions):
     if "groups" in permissions:
         groupnames = permissions["groups"]
     usernames = []
-    if "users" in permissions:
-        usernames = permissions["users"]
+    if "members" in permissions:
+        usernames = permissions["members"]
 
     groups = Group.objects.filter(name__in=groupnames)
     payload = {}

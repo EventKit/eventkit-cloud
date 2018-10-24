@@ -89,11 +89,6 @@ export function getViewedJobs(args = {}) {
 
             const runs = response.data.map((entry) => {
                 const run = entry.last_export_run;
-                run.job.permissions = {
-                    value: run.job.permissions.value,
-                    groups: run.job.permissions.groups,
-                    members: run.job.permissions.users,
-                };
                 return run;
             });
 
