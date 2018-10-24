@@ -48,12 +48,11 @@ describe('NotificationsDropdown component', () => {
                 notifications: {},
                 notificationsSorted: [],
             },
-            status: {
-                fetched: false,
-            },
             router: {
                 push: sinon.spy(),
             },
+            loading: true,
+            onClickAway: sinon.spy(),
             onNavigate: sinon.spy(),
             markAllNotificationsAsRead: sinon.spy(),
             ...global.eventkit_test_props,
@@ -80,9 +79,7 @@ describe('NotificationsDropdown component', () => {
                     mockNotifications['2'],
                 ],
             },
-            status: {
-                fetched: true,
-            },
+            loading: false,
         });
     }
 
@@ -94,9 +91,7 @@ describe('NotificationsDropdown component', () => {
                 notifications: {},
                 notificationsSorted: [],
             },
-            status: {
-                fetched: true,
-            },
+            loading: false,
         });
     }
 

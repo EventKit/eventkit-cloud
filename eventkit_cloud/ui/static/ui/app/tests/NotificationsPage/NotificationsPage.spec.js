@@ -1,7 +1,7 @@
 import React from 'react';
 import { createShallow } from '@material-ui/core/test-utils';
 import sinon from 'sinon';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import PageLoading from '../../components/common/PageLoading';
 import { NotificationsPage } from '../../components/NotificationsPage/NotificationsPage';
 import NotificationsTable from '../../components/Notification/NotificationsTable';
 import LoadButtons from '../../components/DataPackPage/LoadButtons';
@@ -108,7 +108,7 @@ describe('NotificationsPage component', () => {
 
     describe('initial state', () => {
         it('renders loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(1);
+            expect(wrapper.find(PageLoading)).toHaveLength(1);
         });
 
         it('does not render content', () => {
@@ -122,7 +122,7 @@ describe('NotificationsPage component', () => {
         });
 
         it('does not render loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
+            expect(wrapper.find(PageLoading)).toHaveLength(0);
         });
 
         it('renders content', () => {
