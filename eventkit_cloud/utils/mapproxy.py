@@ -7,7 +7,7 @@ from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, valid
 
 from mapproxy.config.config import load_config, load_default_config
 from mapproxy.seed import seeder
-from mapproxy.seed.util import ProgressLog
+from mapproxy.seed.util import ProgressLog, exp_backoff
 from django.conf import settings
 import yaml
 import logging
@@ -39,7 +39,16 @@ class CustomLogger(ProgressLog):
         super(CustomLogger, self).log_step(progress)
 
 
-class ExternalRasterServiceToGeopackage(object):
+def get_custom_exp_backoff(max_repeat=None):
+
+    def custom_exp_backoff(*args, **kwargs):
+        if max_repeat:
+            kwargs['max_repeat'] = max_repeat
+        exp_backoff(*args, **kwargs)
+
+    return custom_exp_backoff
+
+class MapproxyGeopackage(object):
     """
     Convert a External service to a geopackage.
     """
@@ -95,20 +104,10 @@ class ExternalRasterServiceToGeopackage(object):
                                                               [grids for grids in conf_dict.get('grids')],
                                                               self.gpkgfile, table_name=self.layer)
 
+        # Need something listed as a service to pass the mapproxy validation.
         conf_dict['services'] = ['demo']
-
-        # Prevent the service from failing if source has missing tiles.
-        for source in conf_dict.get('sources') or []:
-            if conf_dict['sources'][source].get('type') == 'tile':
-                conf_dict['sources'][source]['transparent'] = True
-                # You can set any number of error codes here, and mapproxy will ignore them any time they appear and
-                # just skip the tile instead (normally it retries the tile for a very long time before finally erroring
-                # out and quitting the job). Putting the string "other" as an additional error code will cause mapproxy
-                # to skip tiles with ANY retrieval error. For now, we want to have mapproxy skip 404 tiles, and retry
-                # everything else.
-                conf_dict['sources'][source]['on_error'] = {404: {"response": "transparent", "cache": False}}
-
         # disable SSL cert checks
+
         if getattr(settings, "DISABLE_SSL_VERIFICATION", False):
             conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
@@ -151,6 +150,7 @@ class ExternalRasterServiceToGeopackage(object):
 
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
 
+        mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             auth_requests.patch_https(self.name)
@@ -160,7 +160,7 @@ class ExternalRasterServiceToGeopackage(object):
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
                                        kwargs={"tasks": seed_configuration.seeds(['seed']),
-                                               "concurrency": int(getattr(settings, 'MAPPROXY_CONCURRENCY', 1)),
+                                               "concurrency": get_concurrency(conf_dict),
                                                "progress_logger": progress_logger})
             check_zoom_levels(self.gpkgfile, mapproxy_configuration)
             remove_empty_zoom_levels(self.gpkgfile)
@@ -279,3 +279,9 @@ INSERT OR REPLACE INTO gpkg_tile_matrix (table_name, zoom_level, matrix_width, m
 VALUES(?, ?, ?, ?, ?, ?, ?, ?)""", (table_name, actual_zoom_level, grid_sizes[0], grid_sizes[1], tile_size[0], tile_size[1], res, res))
     except Exception as e:
         logger.error('Problem in check_zoom_levels: {}'.format(e))
+
+def get_concurrency(conf_dict):
+    concurrency = conf_dict.get('concurrency')
+    if not concurrency:
+        concurrency = getattr(settings, 'MAPPROXY_CONCURRENCY', 1)
+    return int(concurrency)

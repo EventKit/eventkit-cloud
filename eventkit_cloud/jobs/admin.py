@@ -120,9 +120,9 @@ class DataProviderForm(forms.ModelForm):
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
         if service_type in ['wms', 'wmts', 'tms']:
-            from ..utils.external_service import ExternalRasterServiceToGeopackage, \
+            from ..utils.mapproxy import MapproxyGeopackage, \
                                                  ConfigurationError
-            service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
+            service = MapproxyGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
                 service.get_check_config()
             except ConfigurationError as e:
