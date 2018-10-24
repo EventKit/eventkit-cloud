@@ -8,11 +8,11 @@ import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
 import ErrorOutline from '@material-ui/icons/ErrorOutlined';
 import PageHeader from '../common/PageHeader';
+import PageLoading from '../common/PageLoading';
 import DataCartDetails from './DataCartDetails';
 import {
     updateAoiInfo,
@@ -363,13 +363,7 @@ export class StatusDownload extends React.Component {
                     {iconElementRight}
                 </PageHeader>
                 {this.props.runDeletion.deleting ?
-                    <div style={styles.deleting}>
-                        <CircularProgress
-                            style={{ margin: 'auto', display: 'block' }}
-                            color="primary"
-                            size={50}
-                        />
-                    </div>
+                    <PageLoading background="transparent" partial style={{ position: 'absolute', zIndex: 10 }} />
                     :
                     null
                 }
@@ -402,9 +396,7 @@ export class StatusDownload extends React.Component {
                                     DataPack Details
                                 </div>
                                 {this.state.isLoading ?
-                                    <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                                        <CircularProgress color="primary" size={50} style={{ margin: '30px auto', display: 'block' }} />
-                                    </div>
+                                    <PageLoading partial />
                                     :
                                     null
                                 }

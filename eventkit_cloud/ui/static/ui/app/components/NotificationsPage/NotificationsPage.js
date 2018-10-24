@@ -3,10 +3,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
 import PageHeader from '../common/PageHeader';
+import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
@@ -126,23 +126,7 @@ export class NotificationsPage extends React.Component {
                     title="Notifications"
                 />
                 {this.state.loading ?
-                    <div
-                        style={{
-                            zIndex: 10,
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: colors.backdrop,
-                        }}
-                    >
-                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                            <CircularProgress
-                                style={{ margin: 'auto', display: 'block' }}
-                                color="primary"
-                                size={50}
-                            />
-                        </div>
-                    </div>
+                    <PageLoading background="transparent" />
                     : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>

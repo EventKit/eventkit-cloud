@@ -175,13 +175,17 @@ declare namespace Eventkit {
 
     namespace Store {
         interface User {
-            autoLogoutAt: string;
-            autoLogoutWarningAt: string;
             data: Eventkit.User;
-            error: any;
-            isLoading: boolean;
-            patched: boolean;
-            patching: boolean;
+            meta: {
+                autoLogoutAt: string;
+                autoLogoutWarningAt: string;
+            };
+            status: {
+                patched: boolean;
+                patching: boolean;
+                error: any;
+                isLoading: boolean;
+            };
         }
 
         interface RunDeletion {

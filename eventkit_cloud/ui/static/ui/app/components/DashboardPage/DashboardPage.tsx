@@ -5,10 +5,10 @@ import { withTheme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import PageHeader from '../common/PageHeader';
+import PageLoading from '../common/PageLoading';
 import { deleteRun, getFeaturedRuns, getRuns } from '../../actions/datapackActions';
 import { getViewedJobs } from '../../actions/userActivityActions';
 import { getNotifications } from '../../actions/notificationsActions';
@@ -418,23 +418,7 @@ export class DashboardPage extends React.Component<Props, State> {
                     {iconElementRight}
                 </PageHeader>
                 {this.isLoading() ?
-                    <div
-                        style={{
-                            zIndex: 10,
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: colors.backdrop,
-                        }}
-                    >
-                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                            <CircularProgress
-                                style={{ margin: 'auto', display: 'block' }}
-                                color="primary"
-                                size={50}
-                            />
-                        </div>
-                    </div>
+                    <PageLoading background="transparent" />
                     : null
                 }
                 <CustomScrollbar
