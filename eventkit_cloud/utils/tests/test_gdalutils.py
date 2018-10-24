@@ -25,9 +25,6 @@ class TestGdalUtils(TestCase):
     @patch('eventkit_cloud.utils.gdalutils.open_ds')
     def test_get_meta(self, open_ds_mock, isfile):
 
-        mock_retries = 1  # noqa
-        mock_delay = 1  # noqa
-
         dataset_path = "/path/to/dataset"
         isfile.return_value = True
         self.task_process.return_value = Mock(exitcode=0)
