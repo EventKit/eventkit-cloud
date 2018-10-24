@@ -4,7 +4,7 @@ import { createShallow } from '@material-ui/core/test-utils';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
@@ -202,7 +202,7 @@ describe('StatusDownload component', () => {
     it('should render a loading icon if data has not been received yet', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
         expect(wrapper.state().isLoading).toBe(true);
     });
 
@@ -225,11 +225,11 @@ describe('StatusDownload component', () => {
         nextProps.runs[0].zipfile_url = null;
         nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        expect(wrapper.find(PageLoading)).toHaveLength(0);
         nextProps = getProps();
         nextProps.runDeletion.deleting = true;
         wrapper.setProps(nextProps);
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
     });
 
     it('should call getDatacartDetails, getProviders, joyrideAddSteps and startTimer when shallowed', () => {
