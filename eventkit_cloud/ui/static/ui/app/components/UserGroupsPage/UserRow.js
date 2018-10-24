@@ -114,6 +114,7 @@ export class UserRow extends Component {
         if (this.props.showRemoveButton) {
             removeButton = (
                 <MenuItem
+                    key="remove"
                     style={{ ...styles.menuItem, color: colors.warning }}
                     onClick={this.handleRemoveUserClick}
                     className="qa-UserRow-MenuItem-remove"
