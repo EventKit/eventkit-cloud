@@ -106,9 +106,10 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                     # GeoTIFF are elevation.  This will need to be updated in the future.
                     file_ext = os.path.splitext(full_file_path)[1]
                     if file_ext not in [".zip", ".geojson"]:
-                        provider_details[provider_task.slug] = {'provider_slug': provider_task.slug, 'file_path': full_file_path,
-                                           'provider_name': provider_task.name,
-                                           'file_type': file_ext}
+                        provider_details[provider_task.slug] = {'provider_slug': provider_task.slug,
+                                                                'file_path': full_file_path,
+                                                                'provider_name': provider_task.name,
+                                                                'file_type': file_ext}
                         if provider_task.slug not in ['osm', 'nome']:
                             if file_ext == '.gpkg':
                                 has_raster = True
@@ -120,8 +121,11 @@ def generate_qgs_style(run_uid=None, export_provider_task=None):
                             logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
                             provider_details[provider_task.slug]["band_stats"] = band_stats
                             # Calculate the value for each elevation step (of 16)
-                            steps = linspace(band_stats[0], band_stats[1], num=16)
-                            provider_details[provider_task.slug]["ramp_shader_steps"] = map(int, steps)
+                            try:
+                                steps = linspace(band_stats[0], band_stats[1], num=16)
+                                provider_details[provider_task.slug]["ramp_shader_steps"] = list(map(int, steps))
+                            except TypeError:
+                                provider_details[provider_task.slug]["ramp_shader_steps"] = None
 
     style_file = os.path.join(stage_dir, '{0}-{1}.qgs'.format(normalize_name(job_name),
                                                               timezone.now().strftime("%Y%m%d")))

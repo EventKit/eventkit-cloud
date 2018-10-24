@@ -274,3 +274,5 @@ class TestGdalUtils(TestCase):
         returned_stats = get_band_statistics(in_file)
         self.assertEqual(example_stats, returned_stats)
         mock_gdal.Open.assert_called_once_with(in_file)
+        mock_gdal.Open.return_value.GetRasterBand.return_value.GetStatistics.side_effect = [Exception]
+        self.assertIsNone(get_band_statistics(in_file))
