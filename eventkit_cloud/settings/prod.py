@@ -354,7 +354,17 @@ LOGGING = {
     },
 }
 
-DISABLE_SSL_VERIFICATION = True if 't' in os.environ.get('DISABLE_SSL_VERIFICATION').lower() else False
+# SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
+# If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
+ssl_verification_settings = os.getenv('SSL_VERIFICATION', "")
+if ssl_verification_settings.lower() in ['f', 'false']:
+    SSL_VERIFICATION = False
+elif os.path.isfile(ssl_verification_settings):
+    SSL_VERIFICATION = ssl_verification_settings
+    if not os.getenv('REQUESTS_CA_BUNDLE'):
+        os.environ['REQUESTS_CA_BUNDLE'] = SSL_VERIFICATION
+else:
+    SSL_VERIFICATION = True
 
 LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
 

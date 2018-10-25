@@ -144,7 +144,7 @@ class WCSConverter(object):
             outfile = '{0}-{1}{2}'.format(file_path, idx, ext)
             try:
                 req = auth_requests.get(self.service_url, params=params, slug=self.slug, stream=True,
-                                        verify=(not getattr(settings, 'DISABLE_SSL_VERIFICATION', False)))
+                                        verify=getattr(settings, 'SSL_VERIFICATION', True))
                 logger.info("Getting the coverage: {0}".format(req.url))
                 try:
                     size = int(req.headers.get('content-length'))

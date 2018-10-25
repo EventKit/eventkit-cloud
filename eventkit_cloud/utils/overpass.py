@@ -42,7 +42,7 @@ class Overpass(object):
         self.job_name = job_name
         self.debug = debug
         self.task_uid = task_uid
-        self.verify_ssl = not getattr(settings, "DISABLE_SSL_VERIFICATION", False)
+        self.verify_ssl = getattr(settings, "SSL_VERIFICATION", True)
         if bbox:
             # Overpass expects a bounding box string of the form "<lat0>,<long0>,<lat1>,<long1>"
             self.bbox = '{},{},{},{}'.format(bbox[1], bbox[0], bbox[3], bbox[2])

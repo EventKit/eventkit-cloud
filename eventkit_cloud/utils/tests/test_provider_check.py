@@ -95,7 +95,7 @@ class TestProviderCheck(TransactionTestCase):
         result_status = json.loads(pc.check())['status']
         self.assertEquals(get_status(CheckResults.NO_URL), result_status)
 
-    @patch('eventkit_cloud.utils.provider_check.requests.get')
+    @patch('eventkit_cloud.utils.provider_check.auth_requests.get')
     def test_check_wfs(self, get):
         url = "http://example.com/wfs?"
         layer = "exampleLayer"
@@ -126,7 +126,7 @@ class TestProviderCheck(TransactionTestCase):
 
         self.check_ows(get, 'wfs', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
-    @patch('eventkit_cloud.utils.provider_check.requests.get')
+    @patch('eventkit_cloud.utils.provider_check.auth_requests.get')
     def test_check_wcs(self, get):
         url = "http://example.com/wcs?"
         coverage = "exampleCoverage"
@@ -162,7 +162,7 @@ class TestProviderCheck(TransactionTestCase):
 
         self.check_ows(get, 'wcs', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
-    @patch('eventkit_cloud.utils.provider_check.requests.get')
+    @patch('eventkit_cloud.utils.provider_check.auth_requests.get')
     def test_check_wms(self, get):
         url = "http://example.com/wms?"
         layer = "exampleLayer"
@@ -196,7 +196,7 @@ class TestProviderCheck(TransactionTestCase):
 
         self.check_ows(get, 'wms', pc, invalid_content, empty_content, no_intersect_content, valid_content)
 
-    @patch('eventkit_cloud.utils.provider_check.requests.get')
+    @patch('eventkit_cloud.utils.provider_check.auth_requests.get')
     def test_check_wmts(self, get):
         url = "http://example.com/wmts?"
         layer = "exampleLayer"
