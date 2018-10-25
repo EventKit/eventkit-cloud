@@ -1,21 +1,22 @@
 {% set name = "eventkit-cloud" %}
-{% set version = "1.2.0" %}
 
 package:
   name: '{{ name|lower }}'
-  version: '{{ version }}'
+  version: '{{ environ.get("GIT_DESCRIBE_TAG", "0.0.0") }}'
 
 source:
   git_url: /eventkit-cloud
 
 build:
-  number: 0
-  script: python setup.py install
+  number: '{{ environ.get("GIT_DESCRIBE_NUMBER", 0) }}'
 
 requirements:
   build:
-    - python
+    - python=3.5
     - setuptools
+    - nodejs
+    - ruby
+    - git
   run:
     - python=3.5
     - django-audit-logging=0.2.0
