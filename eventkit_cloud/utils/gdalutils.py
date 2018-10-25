@@ -2,11 +2,14 @@
 import json
 import logging
 import math
+import billiard
 import os
 import subprocess
 import time
 from string import Template
 from tempfile import NamedTemporaryFile
+from functools import wraps
+
 
 from osgeo import gdal, ogr, osr
 
@@ -14,7 +17,38 @@ from eventkit_cloud.tasks.task_process import TaskProcess
 
 logger = logging.getLogger(__name__)
 
-MAX_DB_CONNECTION_RETRIES = 3
+MAX_DB_CONNECTION_RETRIES = 5
+MAX_DB_CONNECTION_DELAY = 5
+
+# The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
+# retries as retrying forever would cause the job to never finish in the event that the database is down. An
+# improved method would perhaps be to see if there are connection options to create a more reliable connection.
+# We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
+# documentation.
+
+
+def retry(f):
+    @wraps(f)
+    def wrapper(*args, **kwds):
+        attempts = MAX_DB_CONNECTION_RETRIES
+        exc = None
+        while attempts:
+            try:
+                return_value = f(*args, **kwds)
+                if not return_value:
+                    logger.error("The function {0} failed to return any values.".format(getattr(f, '__name__')))
+                    raise Exception("The process failed to return any data, please contact an administrator.")
+                return return_value
+            except Exception as e:
+                logger.error("The function {0} threw an error.".format(getattr(f, '__name__')))
+                logger.error(str(e))
+                exc = e
+                attempts -= 1
+                time.sleep(MAX_DB_CONNECTION_DELAY)
+                if attempts:
+                    logger.error("Retrying {0} times.".format(str(attempts)))
+        raise exc
+    return wrapper
 
 
 def open_ds(ds_path):
@@ -33,6 +67,7 @@ def open_ds(ds_path):
     use_exceptions = gdal.GetUseExceptions()
     gdal.UseExceptions()
 
+    logger.info("Opening the dataset: {}".format(ds_path))
     try:
         gdal_dataset = gdal.Open(ds_path)
         if gdal_dataset:
@@ -56,21 +91,25 @@ def open_ds(ds_path):
     return ogr_dataset
 
 
-def cleanup_ds(ds):
+def cleanup_ds(resources):
     """
     Given an input gdal.Dataset or ogr.DataSource, destroy it.
     NB: referring to this object's members after destruction will crash the Python interpreter.
     :param ds: Dataset / DataSource to destroy
     """
-    if type(ds) == ogr.DataSource:
-        ds.Destroy()
-    elif type(ds) == gdal.Dataset:
-        del ds
+    logger.info("Closing the resources: {}.".format(resources))
+    # https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit
+    del resources
 
 
+@retry
 def get_meta(ds_path):
     """
-    Given a path to a raster or vector dataset, return the appropriate driver type.
+    This function is a wrapper for the get_gdal metadata because if there is a database diconnection there is no obvious
+    way to clean up and free those resources therefore it is put on a separate process and if it fails it can just be
+    tried again.
+
+    This is using GDAL 2.2.4 this should be checked again to see if it can be simplified in a later version.
     :param ds_path: String: Path to dataset
     :return: Metadata dict
         driver: Short name of GDAL driver for dataset
@@ -78,13 +117,31 @@ def get_meta(ds_path):
         nodata: NODATA value for all bands if all bands have the same one, otherwise None (raster sets only)
     """
 
+    multiprocess_queue = billiard.Queue()
+    proc = billiard.Process(target=get_gdal_metadata, daemon=True, args=(ds_path, multiprocess_queue,))
+    proc.start()
+    proc.join()
+    return multiprocess_queue.get()
+
+
+def get_gdal_metadata(ds_path, multiprocess_queue):
+    """
+    Don't call this directly use get_meta.
+
+    Given a path to a raster or vector dataset, return the appropriate driver type.
+
+    :param ds_path: String: Path to dataset
+    :param A multiprocess queue.
+    :return: None.
+    """
+
     ds = None
     ret = {'driver': None,
            'is_raster': None,
            'nodata': None}
+
     try:
         ds = open_ds(ds_path)
-
         if isinstance(ds, gdal.Dataset):
             ret['driver'] = ds.GetDriver().ShortName
             ret['is_raster'] = True
@@ -102,7 +159,7 @@ def get_meta(ds_path):
         else:
             logger.debug("Could not identify dataset {0}".format(ds_path))
 
-        return ret
+        multiprocess_queue.put(ret)
 
     finally:
         cleanup_ds(ds)
@@ -191,7 +248,7 @@ def is_envelope(geojson_path):
         # Unparseable JSON or unreadable file: play it safe
         return False
 
-
+@retry
 def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, table=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to clip a supported dataset file to a mask.
@@ -203,7 +260,6 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     :param task_uid: A task uid to update
     :return: Filename of clipped dataset
     """
-
     if not boundary:
         raise Exception("Could not open boundary mask file: {0}".format(boundary))
 
@@ -224,15 +280,18 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
         fmt = meta['driver'] or 'gpkg'
 
     band_type = ""
+
+    # Overwrite is added to the commands in the event that the dataset is retried.  In general we want these to
+    # act idempotently.
     if table:
-        cmd_template = Template("ogr2ogr -update -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
+        cmd_template = Template("ogr2ogr -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds $table")
     elif meta['is_raster']:
-        cmd_template = Template("gdalwarp -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template("gdalwarp -overwrite -cutline $boundary -crop_to_cutline $dstalpha -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -f $fmt -clipsrc $boundary $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -overwrite -f $fmt -clipsrc $boundary $out_ds $in_ds")
 
     temp_boundfile = None
     if isinstance(boundary, list):
@@ -277,23 +336,8 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
 
         task_process = TaskProcess(task_uid=task_uid)
 
-        # The retry here is an attempt to mitigate any possible dropped connections. We chose to do a limited number of
-        # retries as retrying forever would cause the job to never finish in the event that the database is down. An
-        # improved method would perhaps be to see if there are connection options to create a more reliable connection.
-        # We have used this solution for now as I could not find options supporting this in the ogr2ogr or gdalwarp
-        # documentation.
-        attempts = 0
-        while True:
-            try:
-                task_process.start_process(cmd, shell=True, executable="/bin/bash",
+        task_process.start_process(cmd, shell=True, executable="/bin/bash",
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                break
-            except Exception as e:
-                logger.error(e)
-                attempts += 1
-                if attempts > MAX_DB_CONNECTION_RETRIES:
-                    raise e
-                time.sleep(2)
 
     finally:
         if temp_boundfile:
@@ -306,6 +350,7 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     return out_dataset
 
 
+@retry
 def convert(dataset=None, fmt=None, task_uid=None):
     """
     Uses gdalwarp or ogr2ogr to convert a raster or vector dataset into another format.
@@ -330,12 +375,12 @@ def convert(dataset=None, fmt=None, task_uid=None):
 
     band_type = ""
     if is_raster:
-        cmd_template = Template("gdalwarp -of $fmt $type $in_ds $out_ds")
+        cmd_template = Template("gdalwarp -overwrite -of $fmt $type $in_ds $out_ds")
         # Geopackage raster only supports byte band type, so check for that
         if fmt.lower() == 'gpkg':
             band_type = "-ot byte"
     else:
-        cmd_template = Template("ogr2ogr -f $fmt $out_ds $in_ds")
+        cmd_template = Template("ogr2ogr -overwrite -f $fmt $out_ds $in_ds")
 
     cmd = cmd_template.safe_substitute({'fmt': fmt,
                                         'type': band_type,
@@ -452,9 +497,11 @@ def get_band_statistics(file_path, band=1):
     :return: A list [min, max, mean, std_dev]
     """
     try:
+        gdal.UseExceptions()
         geotiff = gdal.Open(file_path)
         band = geotiff.GetRasterBand(1)
         return band.GetStatistics(True, True)
     except Exception as e:
         logger.error(e)
         logger.error("Could not get statistics for {0}:{1}".format(file_path, band))
+        return None

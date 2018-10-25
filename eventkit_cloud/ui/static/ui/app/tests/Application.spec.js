@@ -70,7 +70,7 @@ describe('Application component', () => {
         expect(wrapper.find('.qa-Application-AppBar-MenuButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsButton')).toHaveLength(1);
         expect(wrapper.find('.qa-Application-AppBar-NotificationsIndicator')).toHaveLength(1);
-        expect(wrapper.find(NotificationsDropdown)).toHaveLength(1);
+        expect(wrapper.find(NotificationsDropdown)).toHaveLength(0);
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
         expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
@@ -97,21 +97,6 @@ describe('Application component', () => {
         expect(drawer.find(MenuItem).at(6).html()).toContain('Log Out');
         expect(drawer.find(MenuItem).at(6).find(ActionExitToApp)).toHaveLength(1);
         expect(drawer.find(MenuItem).at(6).find(Link)).toHaveLength(1);
-    });
-
-    it('should call openDrawer when user data is added and window width is xl', () => {
-        const props = getProps();
-        props.userData = null;
-        props.openDrawer = sinon.spy();
-        const wrapper = getWrapper(props);
-        const nextProps = getProps();
-        nextProps.userData = { data: {} };
-        nextProps.width = 'xl';
-        const spy = sinon.spy(Application.prototype, 'componentWillReceiveProps');
-        wrapper.setProps(nextProps);
-        expect(spy.calledOnce).toBe(true);
-        expect(props.openDrawer.calledOnce).toBe(true);
-        spy.restore();
     });
 
     it('should call getConfig, getNotifications, and addEventListener on mount', () => {
@@ -323,18 +308,12 @@ describe('Application component', () => {
         const wrapper = getWrapper(getProps());
         const e = { preventDefault: sinon.spy(), stopPropagation: sinon.spy() };
         let dropdown = wrapper.find(NotificationsDropdown);
-        expect(dropdown.props().style.opacity).toBe('0');
-        expect(dropdown.props().style.pointerEvents).toBe('none');
-        expect(dropdown.props().style.transform).toBe('scale(0)');
+        expect(dropdown).toHaveLength(0);
         wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click', e);
         dropdown = wrapper.find(NotificationsDropdown);
-        expect(dropdown.props().style.opacity).toBe('1');
-        expect(dropdown.props().style.pointerEvents).toBe('auto');
-        expect(dropdown.props().style.transform).toBe('scale(1)');
+        expect(dropdown).toHaveLength(1);
         wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click', e);
         dropdown = wrapper.find(NotificationsDropdown);
-        expect(dropdown.props().style.opacity).toBe('0');
-        expect(dropdown.props().style.pointerEvents).toBe('none');
-        expect(dropdown.props().style.transform).toBe('scale(0)');
+        expect(dropdown).toHaveLength(0);
     });
 });

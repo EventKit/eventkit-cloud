@@ -6,26 +6,19 @@ import { Provider } from 'react-redux';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Loadable from 'react-loadable';
 import { connectedReduxRedirect } from 'redux-auth-wrapper/history3/redirect';
-import { browserHistory, Router, Route, Redirect } from 'react-router';
+import { browserHistory, Router, Route, Redirect, RouteComponentProps } from 'react-router';
 import { syncHistoryWithStore, routerActions } from 'react-router-redux';
 import configureStore from './store/configureStore';
 import { login } from './actions/userActions';
 import ekTheme from './styles/eventkit_theme';
+import PageLoading from './components/common/PageLoading';
 
 const theme = createMuiTheme(ekTheme);
 
 const Loading = args => {
     if (args.pastDelay) {
         return (
-            <div
-                style={{
-                    color: 'white',
-                    height: '100vh',
-                    background: 'rgb(17, 24, 35)',
-                }}
-            >
-                Loading. . .
-            </div>
+            <PageLoading background="pattern" />
         );
     }
 
@@ -34,6 +27,10 @@ const Loading = args => {
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
+
+interface State {
+    user: Eventkit.Store.User;
+}
 
 function allTrue(acceptedLicenses) {
     return Object.keys(acceptedLicenses).every(license => acceptedLicenses[license]);
@@ -46,12 +43,12 @@ const loadableDefaults = {
 
 const Loader = Loadable({
     ...loadableDefaults,
-    loader: () => import('./components/auth/Loading'),
+    loader: () => import('./components/common/PageLoading'),
 });
 
 const UserIsAuthenticated = connectedReduxRedirect({
-    authenticatedSelector: state => !!state.user.data,
-    authenticatingSelector: state => state.user.status.isLoading,
+    authenticatedSelector: (state: State) => !!state.user.data,
+    authenticatingSelector: (state: State) => state.user.status.isLoading,
     AuthenticatingComponent: Loader,
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsAuthenticated',
@@ -61,8 +58,10 @@ const UserIsAuthenticated = connectedReduxRedirect({
 const UserIsNotAuthenticated = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     wrapperDisplayName: 'UserIsNotAuthenticated',
-    authenticatedSelector: state => !state.user.data && state.user.status.isLoading === false,
-    redirectPath: (state, ownProps) => (ownProps.location.query.redirect || ownProps.location.query.next) || '/dashboard',
+    authenticatedSelector: (state: State) => !state.user.data && state.user.status.isLoading === false,
+    redirectPath: (state, ownProps: RouteComponentProps<{}, {}>) => (
+        (ownProps.location.query.redirect || ownProps.location.query.next) || '/dashboard'
+    ),
     allowRedirectBack: false,
 });
 
@@ -70,7 +69,7 @@ const UserHasAgreed = connectedReduxRedirect({
     redirectAction: routerActions.replace,
     redirectPath: '/account',
     wrapperDisplayName: 'UserHasAgreed',
-    authenticatedSelector: state => allTrue(state.user.data.accepted_licenses),
+    authenticatedSelector: (state: State) => allTrue(state.user.data.accepted_licenses),
 });
 
 function checkAuth(storeObj) {

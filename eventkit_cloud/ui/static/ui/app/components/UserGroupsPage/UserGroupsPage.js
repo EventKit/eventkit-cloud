@@ -9,10 +9,10 @@ import Help from '@material-ui/icons/Help';
 import Button from '@material-ui/core/Button';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import TextField from '@material-ui/core/TextField';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Warning from '@material-ui/icons/Warning';
 import AddCircle from '@material-ui/icons/AddCircle';
 import PageHeader from '../common/PageHeader';
+import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../CustomScrollbar';
 import UserRow from './UserRow';
 import OwnUserRow from './OwnUserRow';
@@ -108,7 +108,7 @@ export class UserGroupsPage extends Component {
         // If there is no ordering specified default to username
         if (!this.props.location.query.ordering) {
             // Set the current ordering to username so a change wont be detected
-            // by componentWillReceiveProps
+            // by componentDidUpdate
             this.props.location.query.ordering = 'username';
             // Replace the url with the ordering query included
             browserHistory.replace({
@@ -126,29 +126,29 @@ export class UserGroupsPage extends Component {
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
         let changedQuery = false;
-        if (Object.keys(nextProps.location.query).length
-                !== Object.keys(this.props.location.query).length) {
+        if (Object.keys(this.props.location.query).length
+                !== Object.keys(prevProps.location.query).length) {
             changedQuery = true;
         } else {
-            const keys = Object.keys(nextProps.location.query);
-            if (!keys.every(key => nextProps.location.query[key] === this.props.location.query[key])) {
+            const keys = Object.keys(this.props.location.query);
+            if (!keys.every(key => this.props.location.query[key] === prevProps.location.query[key])) {
                 changedQuery = true;
             }
         }
         if (changedQuery) {
-            this.makeUserRequest({ ...nextProps.location.query });
+            this.makeUserRequest({ ...this.props.location.query });
         }
 
-        if (nextProps.users.fetched && !this.props.users.fetched) {
+        if (this.props.users.fetched && !prevProps.users.fetched) {
             // if we have new props.user array and there are selectedUsers
             // we need to create a new selectedUsers array, removing any users
             // not in the new props.users array
             if (this.state.selectedUsers.length) {
                 const fixedSelection = [];
                 this.state.selectedUsers.forEach((user) => {
-                    const newUser = nextProps.users.users
+                    const newUser = this.props.users.users
                         .find(nextUser => nextUser.user.username === user.user.username);
                     if (newUser) {
                         fixedSelection.push(newUser);
@@ -157,18 +157,18 @@ export class UserGroupsPage extends Component {
                 this.setState({ selectedUsers: fixedSelection });
             }
         }
-        if (nextProps.groups.updated && !this.props.groups.updated) {
+        if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
             this.props.getGroups();
         }
-        if (nextProps.groups.created && !this.props.groups.created) {
+        if (this.props.groups.created && !prevProps.groups.created) {
             this.props.getGroups();
             if (this.state.createUsers.length) {
                 this.makeUserRequest();
                 this.setState({ createUsers: [] });
             }
         }
-        if (nextProps.groups.deleted && !this.props.groups.deleted) {
+        if (this.props.groups.deleted && !prevProps.groups.deleted) {
             this.props.getGroups();
             const query = { ...this.props.location.query };
             if (query.groups) {
@@ -180,11 +180,11 @@ export class UserGroupsPage extends Component {
                 query,
             });
         }
-        if (nextProps.groups.error && !this.props.groups.error) {
-            this.showErrorDialog(nextProps.groups.error);
+        if (this.props.groups.error && !prevProps.groups.error) {
+            this.showErrorDialog(this.props.groups.error);
         }
-        if (nextProps.users.error && !this.props.users.error) {
-            this.showErrorDialog(nextProps.users.error);
+        if (this.props.users.error && !prevProps.users.error) {
+            this.showErrorDialog(this.props.users.error);
         }
     }
 
@@ -677,6 +677,14 @@ export class UserGroupsPage extends Component {
                 zIndex: 4,
                 boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
             },
+            loadingContainer: {
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                zIndex: 1400,
+            },
             memberTitle: {
                 display: 'flex',
                 flexWrap: 'wrap',
@@ -712,28 +720,6 @@ export class UserGroupsPage extends Component {
                 zIndex: 3,
                 backgroundColor: colors.white,
                 boxShadow: '0px 0px 2px 2px rgba(0, 0, 0, 0.1)',
-            },
-            loadingBackground: {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: '100%',
-                height: '100%',
-                backgroundColor: colors.backdrop,
-                zIndex: 2001,
-            },
-            loadingContainer: {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                height: '100%',
-                width: bodyWidth,
-            },
-            loading: {
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
             },
             errorIcon: {
                 marginRight: '10px',
@@ -1039,14 +1025,8 @@ export class UserGroupsPage extends Component {
                 { this.props.groups.fetching || this.props.users.fetching
                 || this.props.groups.creating || this.props.groups.deleting
                 || this.props.groups.updating ?
-                    <div style={styles.loadingBackground}>
-                        <div style={styles.loadingContainer}>
-                            <CircularProgress
-                                color="primary"
-                                style={styles.loading}
-                                className="qa-UserGroupsPage-loading"
-                            />
-                        </div>
+                    <div style={styles.loadingContainer}>
+                        <PageLoading background="transparent" partial />
                     </div>
                     :
                     null

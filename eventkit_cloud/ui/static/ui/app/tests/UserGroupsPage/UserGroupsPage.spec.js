@@ -157,7 +157,7 @@ describe('UserGroupsPage component', () => {
         sinon.stub(UserGroupsPage.prototype, 'componentDidMount');
     });
 
-    it('componentWillReceiveProps should handle a query change', () => {
+    it('componentDidUpdate should handle a query change', () => {
         const props = getProps();
         props.location.query = { ordering: 'username', group: '2' };
         const requestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
@@ -175,7 +175,7 @@ describe('UserGroupsPage component', () => {
         requestStub.restore();
     });
 
-    it('componentWillReceiveProps should handle users fetched', () => {
+    it('componentDidUpdate should handle users fetched', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ selectedUsers: [props.users.users[1], props.users.users[2]] });
@@ -189,7 +189,7 @@ describe('UserGroupsPage component', () => {
         stateStub.restore();
     });
 
-    it('componentWillReceiveProps should handle updated', () => {
+    it('componentDidUpdate should handle updated', () => {
         const props = getProps();
         props.getGroups = sinon.spy();
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
@@ -202,7 +202,7 @@ describe('UserGroupsPage component', () => {
         makeRequestStub.restore();
     });
 
-    it('componentWillReceiveProps should handle created with no users', () => {
+    it('componentDidUpdate should handle created with no users', () => {
         const props = getProps();
         props.getGroups = sinon.spy();
         const makeRequestStub = sinon.stub(UserGroupsPage.prototype, 'makeUserRequest');
@@ -215,7 +215,7 @@ describe('UserGroupsPage component', () => {
         makeRequestStub.restore();
     });
 
-    it('componentWillReceiveProps should handle created with users', () => {
+    it('componentDidUpdate should handle created with users', () => {
         const props = getProps();
         props.getGroups = sinon.spy();
         const stateSpy = sinon.spy(UserGroupsPage.prototype, 'setState');
@@ -232,7 +232,7 @@ describe('UserGroupsPage component', () => {
         stateSpy.restore();
     });
 
-    it('componentWillReceiveProps should handle deleted', () => {
+    it('componentDidUpdate should handle deleted', () => {
         const props = getProps();
         props.location.query = { groups: '12' };
         props.getGroups = sinon.spy();
@@ -247,7 +247,7 @@ describe('UserGroupsPage component', () => {
         makeRequestStub.restore();
     });
 
-    it('componentWillReceiveProps should handle groups error', () => {
+    it('componentDidUpdate should handle groups error', () => {
         const props = getProps();
         const showStub = sinon.stub(UserGroupsPage.prototype, 'showErrorDialog');
         const wrapper = getWrapper(props);
@@ -257,7 +257,7 @@ describe('UserGroupsPage component', () => {
         showStub.restore();
     });
 
-    it('componentWillReceiveProps should handle users error', () => {
+    it('componentDidUpdate should handle users error', () => {
         const props = getProps();
         const showStub = sinon.stub(UserGroupsPage.prototype, 'showErrorDialog');
         const wrapper = getWrapper(props);

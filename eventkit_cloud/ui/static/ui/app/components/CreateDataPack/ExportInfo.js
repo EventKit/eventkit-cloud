@@ -47,6 +47,11 @@ export class ExportInfo extends React.Component {
         this.handleRefreshTooltipClose = this.handleRefreshTooltipClose.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
+        this.getAvailability = this.getAvailability.bind(this);
+        this.checkAvailability = this.checkAvailability.bind(this);
+        this.checkProviders = this.checkProviders.bind(this);
+
+        this.joyride = React.createRef();
     }
 
     componentDidMount() {
@@ -66,32 +71,35 @@ export class ExportInfo extends React.Component {
 
         // make requests to check provider availability
         if (this.state.providers) {
-            this.fetch = setInterval(this.state.providers.forEach((provider) => {
-                if (provider.display === false) return;
-                this.checkAvailability(provider);
-            }), 30000);
+            this.checkProviders(this.state.providers);
         }
+
         const steps = joyride.ExportInfo;
         this.joyrideAddSteps(steps);
     }
 
-    componentWillReceiveProps(nextProps) {
+    componentDidUpdate(prevProps) {
         // if currently in walkthrough, we want to be able to show the green forward button, so ignore these statements
-        if (!nextProps.walkthroughClicked) {
+        if (!this.props.walkthroughClicked) {
         // if required fields are fulfilled enable next
-            if (this.hasRequiredFields(nextProps.exportInfo) &&
-                !this.hasDisallowedSelection(nextProps.exportInfo)) {
-                if (!nextProps.nextEnabled) {
+            if (this.hasRequiredFields(this.props.exportInfo) &&
+                !this.hasDisallowedSelection(this.props.exportInfo)) {
+                if (!this.props.nextEnabled) {
                     this.props.setNextEnabled();
                 }
-            } else if (nextProps.nextEnabled) {
+            } else if (this.props.nextEnabled) {
                 // if not and next is enabled it should be disabled
                 this.props.setNextDisabled();
             }
         }
-        if (nextProps.walkthroughClicked && !this.props.walkthroughClicked && !this.state.isRunning) {
+        if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
             this.joyride.reset(true);
             this.setState({ isRunning: true });
+        }
+
+        if (this.props.providers.length !== prevProps.providers.length) {
+            this.setState({ providers: this.props.providers });
+            this.checkProviders(this.props.providers);
         }
     }
 
@@ -170,13 +178,12 @@ export class ExportInfo extends React.Component {
         });
     }
 
-    checkAvailability(provider) {
+    getAvailability(provider, data) {
         // make a copy of the provider to edit
         const newProvider = { ...provider };
 
-        const data = { geojson: this.props.geojson };
         const csrfmiddlewaretoken = cookie.load('csrftoken');
-        axios({
+        return axios({
             url: `/api/providers/${provider.slug}/status`,
             method: 'POST',
             data,
@@ -184,26 +191,34 @@ export class ExportInfo extends React.Component {
         }).then((response) => {
             newProvider.availability = JSON.parse(response.data);
             newProvider.availability.slug = provider.slug;
-            this.setState((prevState) => {
-                // make a copy of state providers and replace the one we updated
-                const providers = [...prevState.providers];
-                providers.splice(providers.indexOf(provider), 1, newProvider);
-                return { providers };
-            });
+            return newProvider;
         }).catch((error) => {
-            console.log(error);
+            console.error(error);
             newProvider.availability = {
                 status: 'WARN',
                 type: 'CHECK_FAILURE',
                 message: "An error occurred while checking this provider's availability.",
             };
             newProvider.availability.slug = provider.slug;
-            this.setState((prevState) => {
-                // make a copy of state providers and replace the one we updated
-                const providers = [...prevState.providers];
-                providers.splice(providers.indexOf(provider), 1, newProvider);
-                return { providers };
-            });
+            return newProvider;
+        });
+    }
+
+    async checkAvailability(provider) {
+        const data = { geojson: this.props.geojson };
+        const newProvider = await this.getAvailability(provider, data);
+        this.setState((prevState) => {
+            // make a copy of state providers and replace the one we updated
+            const providers = [...prevState.providers];
+            providers.splice(providers.indexOf(provider), 1, newProvider);
+            return { providers };
+        });
+    }
+
+    checkProviders(providers) {
+        providers.forEach((provider) => {
+            if (provider.display === false) return;
+            this.checkAvailability(provider);
         });
     }
 
@@ -249,12 +264,7 @@ export class ExportInfo extends React.Component {
     }
 
     joyrideAddSteps(steps) {
-        let newSteps = steps;
-
-        if (!Array.isArray(newSteps)) {
-            newSteps = [newSteps];
-        }
-
+        const newSteps = steps;
         if (!newSteps.length) return;
 
         this.setState((currentState) => {
@@ -375,7 +385,7 @@ export class ExportInfo extends React.Component {
             <div id="root" className="qa-ExportInfo-root" style={style.root}>
                 <Joyride
                     callback={this.callback}
-                    ref={(instance) => { this.joyride = instance; }}
+                    ref={this.joyride}
                     steps={steps}
                     autoStart
                     type="continuous"

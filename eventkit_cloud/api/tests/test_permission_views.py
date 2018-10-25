@@ -85,10 +85,10 @@ class TestJobPermissions(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.data["visibility"], 'PRIVATE')
-        self.assertEqual(len(response.data["permissions"]["users"]), 1)
+        self.assertEqual(len(response.data["permissions"]["members"]), 1)
         self.assertEqual(len(response.data["permissions"]["groups"]), 0)
-        self.assertEqual(self.user1.username in response.data["permissions"]["users"], True)
-        self.assertEqual(response.data["permissions"]["users"][self.user1.username], "ADMIN")
+        self.assertEqual(self.user1.username in response.data["permissions"]["members"], True)
+        self.assertEqual(response.data["permissions"]["members"][self.user1.username], "ADMIN")
         self.assertEqual(response.data["visibility"], 'PRIVATE')
 
     def test_permissions_syntax(self, ):
@@ -96,37 +96,37 @@ class TestJobPermissions(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEqual(expected, url)
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN", "user_2": "ADMIN"},
+        request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_2": "ADMIN"},
                                         "groups": {"group_one": "ADMIN"}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        request_data = {"permissions": {"users": {"user_1": "READ", "user_2": "READ"}, "groups": {}}}
+        request_data = {"permissions": {"members": {"user_1": "READ", "user_2": "READ"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response.data[0]['detail'], 'This job has no administrators.')
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN", "user_2": "ADMEN"}, "groups": {}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_2": "ADMEN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response.data[0]['detail'], 'invalid permission value : ADMEN')
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN", "user_3": "ADMIN"}, "groups": {}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_3": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response.data[0]['detail'], 'unidentified user or group : user_3')
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN"}, "groups": {"group_three": "ADMIN"}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN"}, "groups": {"group_three": "ADMIN"}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(response.data[0]['detail'], 'unidentified user or group : group_three')
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN"}, "groups": {"group_two": "ADMEN"}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN"}, "groups": {"group_two": "ADMEN"}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -137,7 +137,7 @@ class TestJobPermissions(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEqual(expected, url)
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN", "user_2": "ADMIN"}, "groups": {}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_2": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -145,7 +145,7 @@ class TestJobPermissions(APITestCase):
         # change user_1 permissions to READ and visiblity SHARED
 
         request_data = {"visibility": "SHARED",
-                        "permissions": {"users": {"user_1": "READ", "user_2": "ADMIN"}, "groups": {}}}
+                        "permissions": {"members": {"user_1": "READ", "user_2": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -165,21 +165,21 @@ class TestJobPermissions(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.data["visibility"], 'SHARED')
-        self.assertEqual(response.data["permissions"]["users"][self.user1.username], "READ")
+        self.assertEqual(response.data["permissions"]["members"][self.user1.username], "READ")
 
     def test_private_user_permissions(self, ):
         expected = '/api/jobs/{0}'.format(self.job.uid)
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEqual(expected, url)
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN", "user_2": "ADMIN"}, "groups": {}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_2": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         #  remove user_1 and set visibility PRIVATE.
 
-        request_data = {"visibility": "PRIVATE", "permissions": {"users": {"user_2": "ADMIN"}, "groups": {}}}
+        request_data = {"visibility": "PRIVATE", "permissions": {"members": {"user_2": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -204,14 +204,14 @@ class TestJobPermissions(APITestCase):
         url = reverse('api:jobs-detail', args=[self.job.uid])
         self.assertEqual(expected, url)
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN", "user_2": "ADMIN"}, "groups": {}}}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN", "user_2": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         #  remove user_1 and set visibility PUBLIC.
 
-        request_data = {"visibility": "PUBLIC", "permissions": {"users": {"user_2": "ADMIN"}, "groups": {}}}
+        request_data = {"visibility": "PUBLIC", "permissions": {"members": {"user_2": "ADMIN"}, "groups": {}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -240,7 +240,7 @@ class TestJobPermissions(APITestCase):
 
         # remove logged in user as an administrator, allow his group to be ADMIN
 
-        request_data = {"permissions": {"users": {"user_2": "ADMIN"}, "groups": {"group_one": "ADMIN"}}}
+        request_data = {"permissions": {"members": {"user_2": "ADMIN"}, "groups": {"group_one": "ADMIN"}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -262,14 +262,14 @@ class TestJobPermissions(APITestCase):
 
         #  Now change the group's permissions to READ effectively removing user_1 from any admin rights
 
-        request_data = {"permissions": {"users": {"user_2": "ADMIN"}, "groups": {"group_one": "READ"}}}
+        request_data = {"permissions": {"members": {"user_2": "ADMIN"}, "groups": {"group_one": "READ"}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         # update should now fail. Here we try to regain our lost ADMIN rights
 
-        request_data = {"permissions": {"users": {"user_2": "ADMIN"}, "groups": {"group_one": "ADMIN"}}}
+        request_data = {"permissions": {"members": {"user_2": "ADMIN"}, "groups": {"group_one": "ADMIN"}}}
 
         response = self.client.patch(url, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
@@ -360,7 +360,7 @@ class TestExportRunViewSet(APITestCase):
 
         joburl = reverse('api:jobs-detail', args=[self.job.uid])
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN","user_2": "ADMIN"}, }}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN","user_2": "ADMIN"}, }}
 
         response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -376,7 +376,7 @@ class TestExportRunViewSet(APITestCase):
         result = response.data
         self.assertEqual(self.run_uid, result[0].get('uid'))
 
-        request_data = {"permissions": {"users": {"user_1": "ADMIN"}  }}
+        request_data = {"permissions": {"members": {"user_1": "ADMIN"}  }}
 
         response = self.client.patch(joburl, data=json.dumps(request_data), content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)

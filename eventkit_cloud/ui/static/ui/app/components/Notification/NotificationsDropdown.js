@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import GridList from '@material-ui/core/GridList';
 import Paper from '@material-ui/core/Paper';
 import NotificationGridItem from './NotificationGridItem';
@@ -13,15 +14,6 @@ export class NotificationsDropdown extends React.Component {
     constructor(props) {
         super(props);
         this.handleViewAll = this.handleViewAll.bind(this);
-        this.state = {
-            showLoading: true,
-        };
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.status.fetched && !this.props.status.fetched) {
-            this.setState({ showLoading: false });
-        }
     }
 
     handleViewAll() {
@@ -113,7 +105,7 @@ export class NotificationsDropdown extends React.Component {
                 {"You don't have any notifications."}
             </div>
         );
-        if (this.state.showLoading) {
+        if (this.props.loading) {
             body = (
                 <div style={{ textAlign: 'center' }}>
                     <CircularProgress
@@ -153,42 +145,44 @@ export class NotificationsDropdown extends React.Component {
                     className="qa-NotificationsDropdown-Pointer"
                     style={styles.pointer}
                 />
-                <Paper style={styles.paper}>
-                    <div
-                        className="qa-NotificationsDropdown-Header"
-                        style={styles.header}
-                    >
-                        <span
-                            className="qa-NotificationsDropdown-Header-Title"
-                            style={styles.headerTitle}
+                <ClickAwayListener onClickAway={this.props.onClickAway}>
+                    <Paper style={styles.paper}>
+                        <div
+                            className="qa-NotificationsDropdown-Header"
+                            style={styles.header}
                         >
-                            Notifications
-                        </span>
-                        <span
-                            role="button"
-                            tabIndex={0}
-                            className="qa-NotificationsDropdown-Header-MarkAllAsRead"
-                            style={styles.headerLink}
-                            onClick={this.props.markAllNotificationsAsRead}
-                            onKeyPress={this.props.markAllNotificationsAsRead}
-                        >
-                            Mark All As Read
-                        </span>
-                    </div>
-                    {body}
-                    <div style={styles.viewAllContainer}>
-                        <span
-                            role="button"
-                            tabIndex={0}
-                            className="qa-NotificationsDropdown-ViewAll"
-                            style={styles.viewAll}
-                            onClick={this.handleViewAll}
-                            onKeyPress={this.handleViewAll}
-                        >
-                            View All
-                        </span>
-                    </div>
-                </Paper>
+                            <span
+                                className="qa-NotificationsDropdown-Header-Title"
+                                style={styles.headerTitle}
+                            >
+                                Notifications
+                            </span>
+                            <span
+                                role="button"
+                                tabIndex={0}
+                                className="qa-NotificationsDropdown-Header-MarkAllAsRead"
+                                style={styles.headerLink}
+                                onClick={this.props.markAllNotificationsAsRead}
+                                onKeyPress={this.props.markAllNotificationsAsRead}
+                            >
+                                Mark All As Read
+                            </span>
+                        </div>
+                        {body}
+                        <div style={styles.viewAllContainer}>
+                            <span
+                                role="button"
+                                tabIndex={0}
+                                className="qa-NotificationsDropdown-ViewAll"
+                                style={styles.viewAll}
+                                onClick={this.handleViewAll}
+                                onKeyPress={this.handleViewAll}
+                            >
+                                View All
+                            </span>
+                        </div>
+                    </Paper>
+                </ClickAwayListener>
             </div>
         );
     }
@@ -197,10 +191,11 @@ export class NotificationsDropdown extends React.Component {
 NotificationsDropdown.propTypes = {
     style: PropTypes.object,
     notifications: PropTypes.object.isRequired,
-    status: PropTypes.object.isRequired,
     router: PropTypes.object.isRequired,
     onNavigate: PropTypes.func,
+    loading: PropTypes.bool.isRequired,
     markAllNotificationsAsRead: PropTypes.func.isRequired,
+    onClickAway: PropTypes.func.isRequired,
     theme: PropTypes.object.isRequired,
     width: PropTypes.string.isRequired,
 };

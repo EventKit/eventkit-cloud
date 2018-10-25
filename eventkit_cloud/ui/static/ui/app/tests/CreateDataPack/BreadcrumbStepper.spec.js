@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import NavigationArrowBack from '@material-ui/icons/ArrowBack';
 import NavigationArrowForward from '@material-ui/icons/ArrowForward';
 import NavigationCheck from '@material-ui/icons/Check';
+import PageLoading from '../../components/common/PageLoading';
 import { BreadcrumbStepper } from '../../components/CreateDataPack/BreadcrumbStepper';
 import ExportAOI from '../../components/CreateDataPack/ExportAOI';
 import ExportInfo from '../../components/CreateDataPack/ExportInfo';
@@ -126,9 +127,9 @@ describe('BreadcrumbStepper component', () => {
     it('should render a loading icon', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-BreadcrumbStepper-CircularProgress')).toHaveLength(0);
+        expect(wrapper.find(PageLoading)).toHaveLength(0);
         wrapper.setState({ loading: true });
-        expect(wrapper.find('.qa-BreadcrumbStepper-CircularProgress')).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
     });
 
     it('render should call getErrorMessage twice', () => {
@@ -162,25 +163,22 @@ describe('BreadcrumbStepper component', () => {
         mountSpy.restore();
     });
 
-    it('componentWillReceiveProps should push to status page and clearJobInfo', () => {
+    it('componentDidUpdate should push to status page and clearJobInfo', () => {
         const props = getProps();
-        props.clearJobInfo = sinon.spy();
-        const hideStub = sinon.stub(BreadcrumbStepper.prototype, 'hideLoading');
         const pushStub = sinon.stub(browserHistory, 'push');
         const wrapper = getWrapper(props);
         const nextProps = { ...getProps() };
         nextProps.jobuid = '123';
         nextProps.jobFetched = true;
+        nextProps.clearJobInfo = sinon.spy();
         wrapper.setProps(nextProps);
-        expect(hideStub.calledOnce).toBe(true);
         expect(pushStub.calledOnce).toBe(true);
         expect(pushStub.calledWith('/status/123')).toBe(true);
-        expect(props.clearJobInfo.calledOnce).toBe(true);
-        hideStub.restore();
+        expect(nextProps.clearJobInfo.calledOnce).toBe(true);
         pushStub.restore();
     });
 
-    it('componentWillReceiveProps should show job error', () => {
+    it('componentDidUpdate should show job error', () => {
         const props = getProps();
         props.jobError = null;
         const hideStub = sinon.stub(BreadcrumbStepper.prototype, 'hideLoading');
@@ -190,7 +188,7 @@ describe('BreadcrumbStepper component', () => {
         const error = { errors: ['one', 'two'] };
         nextProps.jobError = error;
         wrapper.setProps(nextProps);
-        expect(hideStub.calledOnce).toBe(true);
+        expect(hideStub.called).toBe(true);
         expect(showErrorStub.calledOnce).toBe(true);
         expect(showErrorStub.calledWith(error)).toBe(true);
         hideStub.restore();

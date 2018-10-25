@@ -4,10 +4,10 @@ import raf from 'raf';
 import { browserHistory } from 'react-router';
 import { shallow } from 'enzyme';
 import Joyride from 'react-joyride';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Help from '@material-ui/icons/Help';
 import Toolbar from '@material-ui/core/Toolbar';
 import PageHeader from '../../components/common/PageHeader';
+import PageLoading from '../../components/common/PageLoading';
 import { DataPackPage } from '../../components/DataPackPage/DataPackPage';
 import FilterDrawer from '../../components/DataPackPage/FilterDrawer';
 import DataPackGrid from '../../components/DataPackPage/DataPackGrid';
@@ -162,7 +162,7 @@ describe('DataPackPage component', () => {
         expect(wrapper.find(Joyride)).toHaveLength(1);
         expect(wrapper.find(Help)).toHaveLength(1);
         // Should show loading before datapacks have been fetched
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
         expect(wrapper.find(DataPackGrid)).toHaveLength(0);
         expect(wrapper.find(DataPackList)).toHaveLength(0);
     });
@@ -178,7 +178,7 @@ describe('DataPackPage component', () => {
         };
         const updateStub = sinon.stub(DataPackPage.prototype, 'updateLocationQuery');
         getWrapper(props);
-        expect(updateStub.calledOnce).toBe(true);
+        expect(updateStub.called).toBe(true);
         expect(updateStub.calledWith(expectedDefault)).toBe(true);
         updateStub.restore();
     });
@@ -199,7 +199,7 @@ describe('DataPackPage component', () => {
         props.runsMeta.view = 'grid';
         browserHistory.push.reset();
         const wrapper = getWrapper(props);
-        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.called).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
             query: {
@@ -212,7 +212,7 @@ describe('DataPackPage component', () => {
         browserHistory.push.reset();
         const nextProps = getProps();
         const nextWrapper = getWrapper(nextProps);
-        expect(browserHistory.push.calledOnce).toBe(true);
+        expect(browserHistory.push.called).toBe(true);
         expect(browserHistory.push.calledWith({
             ...nextProps.location,
             query: {
@@ -255,12 +255,12 @@ describe('DataPackPage component', () => {
         const wrapper = getWrapper(props);
         wrapper.setState({ pageLoading: false, loading: false });
         wrapper.instance().forceUpdate();
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        expect(wrapper.find(PageLoading)).toHaveLength(0);
         const nextProps = getProps();
         nextProps.runDeletion.deleting = true;
         wrapper.setProps(nextProps);
         wrapper.instance().forceUpdate();
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
     });
 
     it('componentDidMount should make data requests and setInterval', () => {

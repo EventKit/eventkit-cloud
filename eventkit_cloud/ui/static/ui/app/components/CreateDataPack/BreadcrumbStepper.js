@@ -6,7 +6,6 @@ import { withTheme } from '@material-ui/core/styles';
 import isEqual from 'lodash/isEqual';
 import Divider from '@material-ui/core/Divider';
 import Warning from '@material-ui/icons/Warning';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Button from '@material-ui/core/Button';
 import NavigationArrowBack from '@material-ui/icons/ArrowBack';
 import NavigationArrowForward from '@material-ui/icons/ArrowForward';
@@ -24,6 +23,7 @@ import { getProviders } from '../../actions/providerActions';
 import { getNotifications, getNotificationsUnreadCount } from '../../actions/notificationsActions';
 import BaseDialog from '../Dialog/BaseDialog';
 import ConfirmDialog from '../Dialog/ConfirmDialog';
+import PageLoading from '../common/PageLoading';
 
 export class BreadcrumbStepper extends React.Component {
     constructor() {
@@ -64,21 +64,20 @@ export class BreadcrumbStepper extends React.Component {
         this.props.router.setRouteLeaveHook(route, this.routeLeaveHook);
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.jobFetched && !this.props.jobFetched) {
-            this.hideLoading();
-            browserHistory.push(`/status/${nextProps.jobuid}`);
+    componentDidUpdate(prevProps) {
+        if (this.props.jobFetched && !prevProps.jobFetched) {
             this.props.clearJobInfo();
             this.props.getNotifications();
             this.props.getNotificationsUnreadCount();
+            browserHistory.push(`/status/${this.props.jobuid}`);
         }
-        if (nextProps.jobError && !this.props.jobError) {
+        if (this.props.jobError && !prevProps.jobError) {
             this.hideLoading();
-            this.showError(nextProps.jobError);
+            this.showError(this.props.jobError);
         }
 
-        if (!isEqual(nextProps.aoiInfo, this.props.aoiInfo) ||
-            !isEqual(nextProps.exportInfo, this.props.exportInfo)) {
+        if (!isEqual(this.props.aoiInfo, prevProps.aoiInfo) ||
+            !isEqual(this.props.exportInfo, prevProps.exportInfo)) {
             this.setState({ modified: true });
         }
     }
@@ -400,26 +399,7 @@ export class BreadcrumbStepper extends React.Component {
                     <strong>You haven&apos;t finished creating this DataPack yet. Any settings will be lost.</strong>
                 </ConfirmDialog>
                 { this.state.loading ?
-                    <div
-                        style={{
-                            zIndex: 10,
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: colors.backdrop,
-                        }}
-                    >
-                        <div style={{ width: '100%', height: '100%', display: 'inline-flex' }}>
-                            <CircularProgress
-                                className="qa-BreadcrumbStepper-CircularProgress"
-                                style={{ margin: 'auto', display: 'block' }}
-                                color="primary"
-                                size={50}
-                            />
-                        </div>
-                    </div>
+                    <PageLoading background="transparent" />
                     :
                     null
                 }
@@ -430,6 +410,7 @@ export class BreadcrumbStepper extends React.Component {
 
 BreadcrumbStepper.defaultProps = {
     jobError: undefined,
+    jobFetched: null,
 };
 
 BreadcrumbStepper.propTypes = {
@@ -443,7 +424,7 @@ BreadcrumbStepper.propTypes = {
     clearAoiInfo: PropTypes.func.isRequired,
     clearExportInfo: PropTypes.func.isRequired,
     clearJobInfo: PropTypes.func.isRequired,
-    jobFetched: PropTypes.bool.isRequired,
+    jobFetched: PropTypes.bool,
     jobError: PropTypes.object,
     jobuid: PropTypes.string.isRequired,
     formats: PropTypes.arrayOf(PropTypes.object).isRequired,

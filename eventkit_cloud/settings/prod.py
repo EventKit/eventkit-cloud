@@ -353,7 +353,7 @@ LOGGING = {
 
 # SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
 # If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
-ssl_verification_settings = os.getenv('SSL_VERIFICATION')
+ssl_verification_settings = os.getenv('SSL_VERIFICATION', "")
 if ssl_verification_settings.lower() in ['f', 'false']:
     SSL_VERIFICATION = False
 elif os.path.isfile(ssl_verification_settings):

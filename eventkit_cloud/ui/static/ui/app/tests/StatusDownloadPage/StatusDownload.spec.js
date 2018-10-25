@@ -4,7 +4,7 @@ import { createShallow } from '@material-ui/core/test-utils';
 import { browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import PageLoading from '../../components/common/PageLoading';
 import { StatusDownload } from '../../components/StatusDownloadPage/StatusDownload';
 import DataCartDetails from '../../components/StatusDownloadPage/DataCartDetails';
 import DataPackAoiInfo from '../../components/StatusDownloadPage/DataPackAoiInfo';
@@ -202,7 +202,7 @@ describe('StatusDownload component', () => {
     it('should render a loading icon if data has not been received yet', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
         expect(wrapper.state().isLoading).toBe(true);
     });
 
@@ -225,11 +225,11 @@ describe('StatusDownload component', () => {
         nextProps.runs[0].zipfile_url = null;
         nextProps.runIds = [exampleRun.uid];
         wrapper.setProps(nextProps);
-        expect(wrapper.find(CircularProgress)).toHaveLength(0);
+        expect(wrapper.find(PageLoading)).toHaveLength(0);
         nextProps = getProps();
         nextProps.runDeletion.deleting = true;
         wrapper.setProps(nextProps);
-        expect(wrapper.find(CircularProgress)).toHaveLength(1);
+        expect(wrapper.find(PageLoading)).toHaveLength(1);
     });
 
     it('should call getDatacartDetails, getProviders, joyrideAddSteps and startTimer when shallowed', () => {
@@ -250,7 +250,7 @@ describe('StatusDownload component', () => {
         joyrideSpy.restore();
     });
 
-    it('componentWillReceiveProps should call browserHistory push if a run has been deleted', () => {
+    it('componentDidUpdate should call browserHistory push if a run has been deleted', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         browserHistory.push = sinon.spy();
@@ -261,7 +261,7 @@ describe('StatusDownload component', () => {
         expect(browserHistory.push.calledWith('/exports')).toBe(true);
     });
 
-    it('componentWillReceiveProps should set error state on export rerun error', () => {
+    it('componentDidUpdate should set error state on export rerun error', () => {
         const props = getProps();
         const stateStub = sinon.stub(StatusDownload.prototype, 'setState');
         const wrapper = getWrapper(props);
@@ -273,46 +273,45 @@ describe('StatusDownload component', () => {
         stateStub.restore();
     });
 
-    it('componentWillReceiveProps should handle reRun of datacartDetails', () => {
+    it('componentDidUpdate should handle reRun of datacartDetails', () => {
         const props = getProps();
-        props.getDatacartDetails = sinon.spy();
         const timerStub = sinon.stub(StatusDownload.prototype, 'startTimer');
         const nextProps = getProps();
+        nextProps.getDatacartDetails = sinon.spy();
         nextProps.exportReRun.fetched = true;
         nextProps.exportReRun.data = [{ ...exampleRun }];
         const wrapper = getWrapper(props);
         wrapper.setProps(nextProps);
-        expect(props.getDatacartDetails.calledOnce).toBe(true);
+        expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
         expect(timerStub.calledOnce).toBe(true);
         timerStub.restore();
     });
 
-    it('componentWillReceiveProps should handle expiration update', () => {
+    it('componentDidUpdate should handle expiration update', () => {
         const props = getProps();
-        props.getDatacartDetails = sinon.spy();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
+        nextProps.getDatacartDetails = sinon.spy();
         nextProps.expirationState.updated = true;
         wrapper.setProps(nextProps);
-        expect(props.getDatacartDetails.calledOnce).toBe(true);
-        expect(props.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
+        expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
+        expect(nextProps.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
     });
 
-    it('componentWillReceiveProps should handle permission update', () => {
+    it('componentDidUpdate should handle permission update', () => {
         const props = getProps();
-        props.getDatacartDetails = sinon.spy();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
+        nextProps.getDatacartDetails = sinon.spy();
         nextProps.permissionState.updated = true;
         wrapper.setProps(nextProps);
-        expect(props.getDatacartDetails.calledOnce).toBe(true);
-        expect(props.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
+        expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
+        expect(nextProps.getDatacartDetails.calledWith(props.router.params.jobuid)).toBe(true);
     });
 
-    it('componentWillReceiveProps should handle fetched datacartDetails and set isLoading false', () => {
+    it('componentDidUpdate should handle fetched datacartDetails and set isLoading false', () => {
         jest.useFakeTimers();
         const props = getProps();
-        props.getDatacartDetails = sinon.spy();
         const stateStub = sinon.stub(StatusDownload.prototype, 'setState');
         const clearStub = sinon.stub(global.window, 'clearInterval');
         const wrapper = getWrapper(props);
@@ -320,6 +319,7 @@ describe('StatusDownload component', () => {
         const setStub = sinon.stub(global.window, 'setTimeout');
         setStub.onFirstCall().callsFake(callback => callback());
         const nextProps = getProps();
+        nextProps.getDatacartDetails = sinon.spy();
         nextProps.detailsFetched = true;
         nextProps.runs = [{ ...exampleRun }];
         nextProps.runIds = [exampleRun.uid];
@@ -329,13 +329,13 @@ describe('StatusDownload component', () => {
         expect(clearStub.calledOnce).toBe(true);
         expect(clearStub.calledWith(timer)).toBe(true);
         expect(setStub.called).toBe(true);
-        expect(props.getDatacartDetails.calledOnce).toBe(true);
+        expect(nextProps.getDatacartDetails.calledOnce).toBe(true);
         setStub.restore();
         stateStub.restore();
         clearStub.restore();
     });
 
-    it('componentWillReceiveProps should handle fetched datacartDetails and not clear interval zipfile_url is null', () => {
+    it('componentDidUpdate should handle fetched datacartDetails and not clear interval zipfile_url is null', () => {
         jest.useFakeTimers();
         const props = getProps();
         const clearStub = sinon.stub(global.window, 'clearInterval');
@@ -393,7 +393,7 @@ describe('StatusDownload component', () => {
         stateSpy.restore();
     });
 
-    it('componentWillReceiveProps should handle fetched datacartDetails and not clear interval when tasks are not completed', () => {
+    it('componentDidUpdate should handle fetched datacartDetails and not clear interval when tasks are not completed', () => {
         jest.useFakeTimers();
         const props = getProps();
         const clearStub = sinon.stub(global.window, 'clearInterval');
@@ -451,6 +451,7 @@ describe('StatusDownload component', () => {
         const wrapper = getWrapper(props);
         const error = [{ detail: 'one' }, { detail: 'two' }];
         wrapper.setState({ error });
+        wrapper.instance().forceUpdate();
         wrapper.update();
         const ret = wrapper.instance().getErrorMessage();
         expect(ret).toHaveLength(2);

@@ -39,15 +39,17 @@ describe('DropZoneError component', () => {
 
     it('should update state when new props are received', () => {
         const props = getProps();
-        props.setAllButtonsDefault = sinon.spy();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.importGeom.error = 'An error has occured';
-        wrapper.instance().setState = sinon.spy();
+        nextProps.setAllButtonsDefault = sinon.spy();
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
         wrapper.setProps(nextProps);
-        expect(wrapper.instance().setState
-            .calledWith({ showErrorMessage: true, errorMessage: nextProps.importGeom.error })).toEqual(true);
-        expect(props.setAllButtonsDefault.calledOnce).toBe(true);
+        expect(stateStub.calledWith({
+            showErrorMessage: true,
+            errorMessage: nextProps.importGeom.error,
+        })).toEqual(true);
+        expect(nextProps.setAllButtonsDefault.calledOnce).toBe(true);
     });
 
     it('should not update state if new props have no error', () => {

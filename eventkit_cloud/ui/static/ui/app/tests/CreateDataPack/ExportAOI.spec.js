@@ -80,6 +80,7 @@ describe('ExportAOI component', () => {
             onWalkthroughReset: () => {},
             updateAoiInfo: () => {},
             clearAoiInfo: () => {},
+            clearExportInfo: () => {},
             setNextDisabled: () => {},
             setNextEnabled: () => {},
             getGeocode: () => {},
@@ -237,20 +238,17 @@ describe('ExportAOI component', () => {
         updateMapSpy.restore();
     });
 
-    it('componentWillReceiveProps should handle geojson upload if processed', () => {
+    it('componentDidUpdate should handle geojson upload if processed', () => {
         const props = getProps();
-        const propsSpy = sinon.spy(ExportAOI.prototype, 'componentWillReceiveProps');
+        props.importGeom.processed = null;
         const wrapper = getWrapper(props);
-        wrapper.instance().handleGeoJSONUpload = sinon.spy();
-        wrapper.instance().updateAoiInfo = sinon.spy();
+        const uploadStub = sinon.stub(wrapper.instance(), 'handleGeoJSONUpload');
         const nextProps = getProps();
         nextProps.importGeom.processed = true;
         nextProps.importGeom.featureCollection = new Point([1, 1]);
         wrapper.setProps(nextProps);
-        expect(propsSpy.calledOnce).toBe(true);
-        expect(wrapper.instance().handleGeoJSONUpload.calledOnce).toBe(true);
-        expect(wrapper.instance().handleGeoJSONUpload.calledWith(nextProps.importGeom)).toBe(true);
-        propsSpy.restore();
+        expect(uploadStub.called).toBe(true);
+        expect(uploadStub.calledWith(nextProps.importGeom)).toBe(true);
     });
 
     it('setButtonSelected should update the specified icon state to SELECTED and all others to INACTIVE', () => {
