@@ -11,8 +11,8 @@ describe('license actions', () => {
             { name: 'license 2' },
         ]);
         const expectedActions = [
-            { type: types.FETCHING_LICENSES },
-            { type: types.RECEIVED_LICENSES, licenses: [{ name: 'license 1' }, { name: 'license 2' }] },
+            { type: types.FETCHING_LICENSES, _auth_required: true },
+            { type: types.RECEIVED_LICENSES, licenses: [{ name: 'license 1' }, { name: 'license 2' }], _auth_required: true },
         ];
         const store = createTestStore({ licenses: [] });
 
@@ -26,8 +26,8 @@ describe('license actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
         mock.onGet('/api/licenses').reply(404, 'oh no');
         const expectedActions = [
-            { type: types.FETCHING_LICENSES },
-            { type: types.FETCH_LICENSES_ERROR, error: 'oh no' },
+            { type: types.FETCHING_LICENSES, _auth_required: true },
+            { type: types.FETCH_LICENSES_ERROR, error: 'oh no', _auth_required: true },
         ];
         const store = createTestStore({ licenses: [] });
 

@@ -25,13 +25,14 @@ describe('usersActions actions', () => {
         ];
 
         const expectedActions = [
-            { type: actions.types.FETCHING_USERS },
+            { type: actions.types.FETCHING_USERS, _auth_required: true },
             {
                 type: actions.types.FETCHED_USERS,
                 users: expectedUsers,
                 total: 3,
                 new: 2,
                 ungrouped: 1,
+                _auth_required: true,
             },
         ];
 
@@ -54,8 +55,8 @@ describe('usersActions actions', () => {
         const error = 'Oh no an error';
         mock.onGet('/api/users').reply(400, error);
         const expectedActions = [
-            { type: actions.types.FETCHING_USERS },
-            { type: actions.types.FETCH_USERS_ERROR, error },
+            { type: actions.types.FETCHING_USERS, _auth_required: true },
+            { type: actions.types.FETCH_USERS_ERROR, error, _auth_required: true },
         ];
         const store = createTestStore({
             user: { data: { user: {} } },
