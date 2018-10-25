@@ -18,11 +18,34 @@ const crashReporter = () => next => (action) => {
     }
 };
 
+const checkAuth = store => next => (action) => {
+    const { user } = store.getState();
+    if (!user.data) {
+        console.log('not logged in for this action');
+    }
+
+    const result = next(action);
+
+    if (!user.data) {
+        if (action.cancelSource) {
+            console.log('cancellable action, return nothing');
+            return {};
+        }
+    }
+
+    // let promise = false;
+    // if (Promise.resolve(result) === result) {
+    //     promise = true;
+    // }
+
+    return result;
+};
+
 let middleware = [thunkMiddleware, crashReporter, routingMiddleware];
 
 if (process.env.NODE_ENV !== 'production') {
     const logger = createLogger();
-    middleware = [...middleware, logger];
+    middleware = [...middleware, checkAuth, logger];
 }
 
 export default () => (

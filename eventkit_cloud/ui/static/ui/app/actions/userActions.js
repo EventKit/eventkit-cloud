@@ -21,6 +21,7 @@ export function logout() {
             if (response.data.OAUTH_LOGOUT_URL) {
                 window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
+                console.log('logout done, pushing to login page');
                 dispatch(push({ pathname: '/login' }));
             }
         }).catch((error) => {

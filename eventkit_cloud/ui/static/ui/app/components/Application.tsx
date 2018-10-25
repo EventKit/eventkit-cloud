@@ -20,7 +20,7 @@ import Notifications from '@material-ui/icons/Notifications';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
-import { DrawerTimeout } from '../actions/uiActions';
+import { DrawerTimeout, resetState } from '../actions/uiActions';
 import { userActive } from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';
@@ -151,6 +151,7 @@ interface Props {
     notificationsCount: number;
     getNotificationsUnreadCount: (options?: object) => void;
     getNotifications: (options?: object) => void;
+    resetState: () => void;
     width: Breakpoint;
     theme: Eventkit.Theme;
     classes: {
@@ -599,6 +600,7 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <div style={{ backgroundColor: colors.black }}>
+                <button style={{ position: 'absolute', top: 10, left: 10}} onClick={this.props.resetState}>RESET</button>
                 <AppBar
                     className={`qa-Application-AppBar ${classes.appBar}`}
                 >
@@ -816,6 +818,7 @@ function mapDispatchToProps(dispatch) {
         getNotifications: (args) => {
             dispatch(getNotifications(args));
         },
+        resetState: () => (dispatch(resetState())),
     };
 }
 
