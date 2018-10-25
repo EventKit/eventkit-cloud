@@ -108,7 +108,7 @@ class TestGdalUtils(TestCase):
         in_dataset = "/path/to/old_dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdalwarp -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
             geojson_file,
             "-dstalpha",
             fmt,
@@ -126,7 +126,7 @@ class TestGdalUtils(TestCase):
         # Geotiff
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdalwarp -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
             geojson_file,
             "",
             fmt,
@@ -141,7 +141,7 @@ class TestGdalUtils(TestCase):
                                                              stderr=-1, stdout=-1)
 
         # Geotiff with non-envelope polygon cutline
-        expected_cmd = "gdalwarp -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
+        expected_cmd = "gdalwarp -overwrite -cutline {} -crop_to_cutline {} -of {} {} {} {}".format(
             geojson_file,
             "-dstalpha",
             fmt,
@@ -156,7 +156,7 @@ class TestGdalUtils(TestCase):
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -f {0} -clipsrc {1} {2} {3}".format(
+        expected_cmd = "ogr2ogr -overwrite -f {0} -clipsrc {1} {2} {3}".format(
             fmt,
             geojson_file,
             dataset,
@@ -191,7 +191,7 @@ class TestGdalUtils(TestCase):
         in_dataset = "/path/to/old_dataset"
         fmt = "gpkg"
         band_type = "-ot byte"
-        expected_cmd = "gdalwarp -of {0} {1} {2} {3}".format(
+        expected_cmd = "gdalwarp -overwrite -of {0} {1} {2} {3}".format(
             fmt,
             band_type,
             in_dataset,
@@ -206,7 +206,7 @@ class TestGdalUtils(TestCase):
         # Geotiff from raster geopackage
         fmt = "gtiff"
         band_type = ""
-        expected_cmd = "gdalwarp -of {0} {1} {2} {3}".format(
+        expected_cmd = "gdalwarp -overwrite -of {0} {1} {2} {3}".format(
             fmt,
             band_type,
             in_dataset,
@@ -219,7 +219,7 @@ class TestGdalUtils(TestCase):
 
         # Vector
         fmt = "gpkg"
-        expected_cmd = "ogr2ogr -f {0} {1} {2}".format(
+        expected_cmd = "ogr2ogr -overwrite -f {0} {1} {2}".format(
             fmt,
             dataset,
             in_dataset

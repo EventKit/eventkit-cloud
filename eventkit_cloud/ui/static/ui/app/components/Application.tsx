@@ -175,6 +175,7 @@ interface State {
     showAutoLoggedOutDialog: boolean;
     showLogoutDialog: boolean;
     showNotificationsDropdown: boolean;
+    notificationsLoading: boolean;
 }
 
 export class Application extends React.Component<Props, State> {
@@ -186,7 +187,6 @@ export class Application extends React.Component<Props, State> {
     private notificationsRefreshIntervalId: number | null;
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
-    private notificationsDropdownContainerRef: React.RefObject<any> | null;
     private isSendingUserActivePings: boolean;
     private loggedIn: boolean;
     private handleUserActiveInput: () => void;
@@ -242,6 +242,7 @@ export class Application extends React.Component<Props, State> {
             showAutoLoggedOutDialog: false,
             showLogoutDialog: false,
             showNotificationsDropdown: false,
+            notificationsLoading: true,
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
@@ -250,7 +251,6 @@ export class Application extends React.Component<Props, State> {
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
         this.loggedIn = false;
-        this.notificationsDropdownContainerRef = React.createRef();
     }
 
     getChildContext() {
@@ -260,7 +260,6 @@ export class Application extends React.Component<Props, State> {
     componentDidMount() {
         this.getConfig();
         this.props.getNotifications();
-        window.addEventListener('click', this.handleClick);
     }
 
     componentDidUpdate(prevProps) {
@@ -285,6 +284,10 @@ export class Application extends React.Component<Props, State> {
             this.stopSendingUserActivePings();
             this.stopListeningForNotifications();
         }
+
+        if (this.props.notificationsStatus.fetched && !prevProps.notificationsStatus.fetched) {
+            this.setState({ notificationsLoading: false });
+        }
     }
 
     shouldComponentUpdate(p) {
@@ -297,8 +300,10 @@ export class Application extends React.Component<Props, State> {
             if (status.error !== oldStatus.error) {
                 return true;
             }
-            // if a fetch has completed AND the data has changed we need to update
-            if (status.fetched && p.notificationsData !== this.props.notificationsData) {
+            // if a fetch has completed AND the data has changed we need to update OR loading state is true
+            if (status.fetched && (
+                (p.notificationsData !== this.props.notificationsData) || this.state.notificationsLoading)
+            ) {
                 return true;
             }
             // any other status change can be ignored
@@ -532,13 +537,10 @@ export class Application extends React.Component<Props, State> {
         this.autoLogoutWarningIntervalId = null;
     }
 
-    handleClick(e) {
+    handleClick() {
         // Close the notifications dropdown if it's open and we click outside of it.
-        if (this.notificationsDropdownContainerRef && this.state.showNotificationsDropdown) {
-            // @ts-ignore: FIX THIS SHIT
-            if (!this.notificationsDropdownContainerRef.contains(e.target)) {
-                this.setState({ showNotificationsDropdown: false });
-            }
+        if (this.state.showNotificationsDropdown) {
+            this.setState({ showNotificationsDropdown: false });
         }
     }
 
@@ -633,18 +635,15 @@ export class Application extends React.Component<Props, State> {
                                     transform: (this.props.notificationsCount > 0) ? 'scale(1)' : 'scale(0)',
                                 }}
                             />
-                            <div ref={this.notificationsDropdownContainerRef}>
-                                <NotificationsDropdown
-                                    style={{
-                                        opacity: (this.state.showNotificationsDropdown) ? '1' : '0',
-                                        pointerEvents: (this.state.showNotificationsDropdown) ? 'auto' : 'none',
-                                        transform: (this.state.showNotificationsDropdown) ? 'scale(1)' : 'scale(0)',
-                                    }}
-                                    notifications={this.props.notificationsData}
-                                    status={this.props.notificationsStatus}
-                                    router={this.props.router}
-                                    onNavigate={this.handleNotificationsDropdownNavigate}
-                                />
+                            <div>
+                                {this.state.showNotificationsDropdown ?
+                                    <NotificationsDropdown
+                                        loading={this.state.notificationsLoading}
+                                        notifications={this.props.notificationsData}
+                                        router={this.props.router}
+                                        onNavigate={this.handleNotificationsDropdownNavigate}
+                                        onClickAway={this.handleClick}
+                                    /> : null }
                             </div>
                         </div>
                     </div>

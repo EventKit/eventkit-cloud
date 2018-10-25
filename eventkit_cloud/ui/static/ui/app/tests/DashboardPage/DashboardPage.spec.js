@@ -3,7 +3,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import sinon from 'sinon';
 import { browserHistory } from 'react-router';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import PageLoading from '../../components/common/PageLoading';
 import { DashboardPage } from '../../components/DashboardPage/DashboardPage';
 import DataPackShareDialog from '../../components/DataPackShareDialog/DataPackShareDialog';
 import DashboardSection from '../../components/DashboardPage/DashboardSection';
@@ -301,7 +301,7 @@ describe('DashboardPage component', () => {
 
     describe('initial state', () => {
         it('renders loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(1);
+            expect(wrapper.find(PageLoading)).toHaveLength(1);
         });
 
         it('does not render any dashboard sections', () => {
@@ -319,7 +319,7 @@ describe('DashboardPage component', () => {
         });
 
         it('does not render loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
+            expect(wrapper.find(PageLoading)).toHaveLength(0);
         });
 
         it('renders Notifications section', () => {
@@ -400,7 +400,7 @@ describe('DashboardPage component', () => {
         });
 
         it('does not render loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
+            expect(wrapper.find(PageLoading)).toHaveLength(0);
         });
 
         it('renders Notifications section', () => {
@@ -427,7 +427,7 @@ describe('DashboardPage component', () => {
         });
 
         it('does not render loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(0);
+            expect(wrapper.find(PageLoading)).toHaveLength(0);
         });
     });
 
@@ -503,7 +503,7 @@ describe('DashboardPage component', () => {
         });
 
         it('renders loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(1);
+            expect(wrapper.find(PageLoading)).toHaveLength(1);
         });
 
         describe('then it is successfully deleted', () => {
@@ -518,7 +518,7 @@ describe('DashboardPage component', () => {
             });
 
             it('does not render loading spinner', () => {
-                expect(wrapper.find(CircularProgress)).toHaveLength(0);
+                expect(wrapper.find(PageLoading)).toHaveLength(0);
             });
 
             it('refreshes the page', () => {
@@ -542,7 +542,7 @@ describe('DashboardPage component', () => {
         });
 
         it('renders loading spinner', () => {
-            expect(wrapper.find(CircularProgress)).toHaveLength(1);
+            expect(wrapper.find(PageLoading)).toHaveLength(1);
         });
     });
 });
