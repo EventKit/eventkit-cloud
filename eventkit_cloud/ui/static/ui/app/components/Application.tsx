@@ -3,6 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import AppBar from '@material-ui/core/AppBar';
 import Drawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -20,7 +21,7 @@ import Notifications from '@material-ui/icons/Notifications';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
-import { DrawerTimeout, resetState } from '../actions/uiActions';
+import { DrawerTimeout } from '../actions/uiActions';
 import { userActive } from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
 import ConfirmDialog from './Dialog/ConfirmDialog';
@@ -29,7 +30,6 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 
@@ -151,7 +151,6 @@ interface Props {
     notificationsCount: number;
     getNotificationsUnreadCount: (options?: object) => void;
     getNotifications: (options?: object) => void;
-    resetState: () => void;
     width: Breakpoint;
     theme: Eventkit.Theme;
     classes: {
@@ -600,7 +599,6 @@ export class Application extends React.Component<Props, State> {
 
         return (
             <div style={{ backgroundColor: colors.black }}>
-                <button style={{ position: 'absolute', top: 10, left: 10}} onClick={this.props.resetState}>RESET</button>
                 <AppBar
                     className={`qa-Application-AppBar ${classes.appBar}`}
                 >
@@ -818,7 +816,6 @@ function mapDispatchToProps(dispatch) {
         getNotifications: (args) => {
             dispatch(getNotifications(args));
         },
-        resetState: () => (dispatch(resetState())),
     };
 }
 

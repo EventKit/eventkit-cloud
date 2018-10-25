@@ -1,6 +1,7 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
+import { resetState } from './uiActions';
 
 export const types = {
     USER_LOGGING_IN: 'USER_LOGGING_IN',
@@ -21,8 +22,8 @@ export function logout() {
             if (response.data.OAUTH_LOGOUT_URL) {
                 window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
-                console.log('logout done, pushing to login page');
                 dispatch(push({ pathname: '/login' }));
+                dispatch(resetState());
             }
         }).catch((error) => {
             console.log(error);

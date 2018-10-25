@@ -18,34 +18,41 @@ const crashReporter = () => next => (action) => {
     }
 };
 
+// do not let actions update state if auth is required and user not signed-in
 const checkAuth = store => next => (action) => {
     const { user } = store.getState();
+    // if user is not signed in check the actions before proceeding
     if (!user.data) {
-        console.log('not logged in for this action');
-    }
-
-    const result = next(action);
-
-    if (!user.data) {
-        if (action.cancelSource) {
-            console.log('cancellable action, return nothing');
-            return {};
+        // ignore thunk actions and only process objects
+        if (typeof action === 'object') {
+            // if its an array of actions we need to check each one
+            if (Array.isArray(action)) {
+                // eslint-disable-next-line no-underscore-dangle
+                const actions = action.filter(a => !a._auth_required);
+                // if all actions filtered out log and return
+                if (!actions.length) {
+                    console.error('Authentication is required for these actions:', action);
+                    return undefined;
+                }
+                // if some actions left then execute them
+                return next(actions);
+                // eslint-disable-next-line no-underscore-dangle
+            } else if (action._auth_required) {
+                // if action is a json obj and requires auth return
+                console.error('Authentication is required for action:', action);
+                return undefined;
+            }
         }
     }
 
-    // let promise = false;
-    // if (Promise.resolve(result) === result) {
-    //     promise = true;
-    // }
-
-    return result;
+    return next(action);
 };
 
-let middleware = [thunkMiddleware, crashReporter, routingMiddleware];
+let middleware = [checkAuth, thunkMiddleware, crashReporter, routingMiddleware];
 
 if (process.env.NODE_ENV !== 'production') {
     const logger = createLogger();
-    middleware = [...middleware, checkAuth, logger];
+    middleware = [...middleware, logger];
 }
 
 export default () => (

@@ -74,11 +74,9 @@ const UserHasAgreed = connectedReduxRedirect({
 });
 
 function checkAuth(storeObj) {
-    console.log('checking auth');
     return nextState => {
         const { user } = storeObj.getState();
         if (!user.data) {
-            console.log('auth checked, login with null');
             storeObj.dispatch(login(null));
         }
     };

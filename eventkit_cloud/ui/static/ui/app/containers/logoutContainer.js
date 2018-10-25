@@ -21,7 +21,6 @@ class Logout extends React.Component {
     }
 
     componentDidMount() {
-        console.log('dispatching logout');
         this.handlers.handleLogout();
     }
 
