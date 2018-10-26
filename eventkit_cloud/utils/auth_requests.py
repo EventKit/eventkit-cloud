@@ -125,10 +125,10 @@ def handle_basic_auth(func):
                 kwargs["auth"] = tuple(cred)
             logger.debug("requests.%s('%s', %s)", func.__name__, url, ", ".join(["%s=%s" % (k,v) for k,v in kwargs.items()]))
             response = func(url, **kwargs)
+            return response
         except Exception as e:
             logger.error(str(e))
             raise Exception("Unable to securely connect to this provider.")
-        return response
 
     return wrapper
 

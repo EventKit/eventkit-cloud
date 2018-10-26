@@ -61,9 +61,6 @@ class TestGeopackage(TransactionTestCase):
 
         cache_template.assert_called_once_with(["imagery"], [grids for grids in json_config.get('grids')], gpkgfile, table_name='imagery')
         json_config['caches'] = {'cache': {'sources': ['imagery'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
-        json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
-        json_config['sources']['imagery']['transparent'] = True
-        json_config['sources']['imagery']['on_error'] = {404: {'cache': False,'response': 'transparent'}}
         json_config['services'] = ['demo']
 
         patch_https.assert_called_once_with('imagery')
@@ -97,6 +94,7 @@ class TestHelpers(TransactionTestCase):
             check_service(conf_dict)
 
         response.status_code = 500
+        response.ok = False
         requests_get.return_value = response
         with self.assertRaisesMessage(Exception, "The provider reported a server error."):
             check_service(conf_dict)

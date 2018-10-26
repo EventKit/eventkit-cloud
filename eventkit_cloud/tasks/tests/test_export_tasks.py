@@ -235,7 +235,7 @@ class TestExportTasks(ExportTaskBase):
 
     @patch('eventkit_cloud.tasks.export_tasks.add_metadata_task')
     @patch('celery.app.task.Task.request')
-    @patch('eventkit_cloud.utils.mapproxy.ExternalRasterServiceToGeopackage')
+    @patch('eventkit_cloud.utils.mapproxy.MapproxyGeopackage')
     def test_run_external_raster_service_export_task(self, mock_service, mock_request, mock_add_metadata_task):
         celery_uid = str(uuid.uuid4())
         expected_provider_slug = "slug"
