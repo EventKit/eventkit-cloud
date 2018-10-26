@@ -30,7 +30,7 @@ from ..feature_selection.feature_selection import FeatureSelection
 from ..ui.helpers import get_style_files, generate_qgs_style, create_license_file, get_human_readable_metadata_document
 from ..celery import app, TaskPriority
 from ..utils import (
-    kml, overpass, pbf, s3, shp, mapproxy, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
+    kml, overpass, pbf, s3, shp, mapproxyutils, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
 )
 from ..utils.hotosm_geopackage import Geopackage
 from ..utils.geopackage import add_file_metadata
@@ -851,11 +851,11 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
 
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
-        w2g = mapproxy.MapproxyGeopackage(gpkgfile=gpkgfile, bbox=bbox,
-                                          service_url=service_url, name=name, layer=layer,
-                                          config=config, level_from=level_from,
-                                          level_to=level_to, service_type=service_type,
-                                          task_uid=task_uid, selection=selection)
+        w2g = mapproxyutils.MapproxyGeopackage(gpkgfile=gpkgfile, bbox=bbox,
+                                               service_url=service_url, name=name, layer=layer,
+                                               config=config, level_from=level_from,
+                                               level_to=level_to, service_type=service_type,
+                                               task_uid=task_uid, selection=selection)
         gpkg = w2g.convert()
         result['result'] = gpkg
         result['geopackage'] = gpkg

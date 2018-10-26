@@ -3,7 +3,7 @@ import logging
 import requests
 import httplib
 import urllib2
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 from mock import Mock, patch, MagicMock, ANY
 from mapproxy.client.http import VerifiedHTTPSConnection, _URLOpenerCache
 
@@ -21,8 +21,8 @@ class TestAuthResult(TransactionTestCase):
     def do_tests(self, req, req_patch, getenv):
         # Test: exception propagation
         getenv.return_value = None
-        req_patch.side_effect = requests.exceptions.ConnectionError()
-        with self.assertRaises(requests.exceptions.ConnectionError):
+        req_patch.side_effect = requests.exceptions.ConnectionError("This is a test ConnectionError")
+        with self.assertRaises(Exception):
             req(self.url)
 
         # Test: normal response without cert
@@ -59,14 +59,14 @@ class TestAuthResult(TransactionTestCase):
         self.assertEqual("test", result.content)
 
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
-    @patch('eventkit_cloud.utils.auth_requests.requests.get')
-    def test_get(self, get_patch, getenv):
-        self.do_tests(auth_requests.get, get_patch, getenv)
+    @patch('eventkit_cloud.utils.auth_requests.requests')
+    def test_get(self, patch_requests, getenv):
+        self.do_tests(auth_requests.get, patch_requests.get, getenv)
 
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
-    @patch('eventkit_cloud.utils.auth_requests.requests.post')
-    def test_post(self, post_patch, getenv):
-        self.do_tests(auth_requests.post, post_patch, getenv)
+    @patch('eventkit_cloud.utils.auth_requests.requests')
+    def test_post(self, patch_requests, getenv):
+        self.do_tests(auth_requests.post, patch_requests.post, getenv)
 
     @patch('eventkit_cloud.utils.auth_requests.os.getenv')
     def test_patch_https(self, getenv):

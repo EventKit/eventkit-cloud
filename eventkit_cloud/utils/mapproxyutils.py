@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-from ..utils import auth_requests
+from eventkit_cloud.utils import auth_requests
+import mapproxy
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references

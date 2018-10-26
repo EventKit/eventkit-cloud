@@ -90,7 +90,7 @@ def open_ds(ds_path):
     return ogr_dataset
 
 
-def cleanup_ds(ds):
+def cleanup_ds(resources):
     """
     Given an input gdal.Dataset or ogr.DataSource, destroy it.
     NB: referring to this object's members after destruction will crash the Python interpreter.
