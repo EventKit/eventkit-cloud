@@ -7,4 +7,7 @@ npm config set python python2.7
 npm install
 npm run build
 
-python setup.py install --single-version-externally-managed --record=record.txt
+ls -al eventkit_cloud/ui/static/ui
+ls -al eventkit_cloud/ui/static/ui/build
+
+pip install .

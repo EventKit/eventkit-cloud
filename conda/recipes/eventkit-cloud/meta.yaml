@@ -13,12 +13,15 @@ build:
 requirements:
   build:
     - python=3.5
+    - pip
     - setuptools
+    - wheel
     - nodejs
     - ruby
     - git
   run:
     - python=3.5
+    - setuptools
     - django-audit-logging=0.2.0
     - gdal=2.2.4
     - geos=3.6.2

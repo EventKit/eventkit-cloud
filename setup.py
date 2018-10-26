@@ -20,5 +20,6 @@ setup(
     keywords="eventkit osm-export-tool django",
     packages=['eventkit_cloud',],
     include_package_data=True,
+    scripts=['manage.py']
 )
 
