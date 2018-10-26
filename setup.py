@@ -1,5 +1,5 @@
 import os
-from distutils.core import setup
+from distutils.core import setup, find_packages
 
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
@@ -18,8 +18,8 @@ setup(
     ],
     license="BSD",
     keywords="eventkit osm-export-tool django",
-    packages=['eventkit_cloud',],
-    include_package_data=True,
+    packages=['eventkit_cloud', find_packages()],
+    package_data={'': ['*']},
     scripts=['manage.py']
 )
 
