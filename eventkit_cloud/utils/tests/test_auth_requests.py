@@ -22,7 +22,7 @@ class TestAuthResult(TransactionTestCase):
         # Test: exception propagation
         getenv.return_value = None
         req_patch.side_effect = requests.exceptions.ConnectionError()
-        with self.assertRaises(requests.exceptions.ConnectionError):
+        with self.assertRaises(Exception):
             req(self.url)
 
         # Test: normal response without cert
