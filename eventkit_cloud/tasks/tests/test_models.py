@@ -11,7 +11,7 @@ from django.test import TestCase
 from mock import patch
 
 from eventkit_cloud.jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)

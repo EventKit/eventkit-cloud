@@ -3,6 +3,7 @@
 
 import logging
 
+from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -12,6 +13,8 @@ from django.http import HttpRequest
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
 from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
+from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRTATION, get_cache_key, get_cache_value
 from notifications.models import Notification
 
 
@@ -201,6 +204,26 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def __str__(self):
         return 'ExportTaskRecord uid: {0}'.format(str(self.uid))
 
+    @property
+    def progress(self):
+        if TaskStates[self.status] in TaskStates.get_finished_states():
+            return 100
+        return cache.get(get_cache_key(self, "progress"))
+
+    @progress.setter
+    def progress(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
+        return cache.set(get_cache_key(self), value, expiration)
+
+    @property
+    def estimated_finish(self):
+        if TaskStates[self.status] in TaskStates.get_finished_states():
+            return
+        return cache.get(get_cache_key(self, "estimated_finish"))
+
+    @estimated_finish.setter
+    def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
+        return cache.set(get_cache_key(self), value, expiration)
+
 
 class ExportTaskException(TimeStampedModelMixin):
     """
@@ -213,5 +236,4 @@ class ExportTaskException(TimeStampedModelMixin):
     class Meta:
         managed = True
         db_table = 'export_task_exceptions'
-
 
