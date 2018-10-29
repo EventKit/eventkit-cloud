@@ -4,10 +4,10 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.2.1
-    volumes:
-    - ./:/var/lib/eventkit/
-    - /var/lib/eventkit/node_modules/
+    image: eventkit/eventkit-base:1.2.2
+#    volumes:
+#    - ./:/var/lib/eventkit/
+#    - /var/lib/eventkit/node_modules/
     user: eventkit
     depends_on:
     - postgis
@@ -15,9 +15,9 @@ services:
     links:
     - postgis
     - rabbitmq
-    expose:
-    - "6080"
-    command: sh /var/lib/eventkit/scripts/eventkit-start.sh
+    ports:
+    - "6080:6080"
+    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 1 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -53,7 +53,7 @@ services:
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -78,15 +78,17 @@ services:
     - PYTHONWARNINGS
     - SSL_VERIFICATION
     - MAX_EXPORTRUN_EXPIRATION_DAYS
-    - CONCURRENCY=4
     - MAPPROXY_CONCURRENCY=4
     - CONTAINER_CODE_PATH
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: sh /var/lib/eventkit/scripts/celery-start.sh
+    command: |
+      celery worker -A eventkit_cloud --concurrency=4 --loglevel=INFO -n worker@%h -Q %h & \
+      celery worker -A eventkit_cloud --loglevel=INFO -n celery@%h -Q celery & \
+      celery worker -A eventkit_cloud --loglevel=INFO -n cancel@%h -Q %h.cancel
   celery-beat:
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -117,7 +119,7 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: sh /var/lib/eventkit/scripts/celery-beat-start.sh
+    command: celery beat -A eventkit_cloud --loglevel=$LOG_LEVEL
   postgis:
     image: mdillon/postgis:9.5
     environment:
@@ -151,7 +153,7 @@ services:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -164,13 +166,11 @@ services:
     - postgis
     ports:
     - "49555:5555"
-    command: sh /var/lib/eventkit/scripts/flower-start.sh
+    command: flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-    - BROKER_API=http://guest:guest@rabbitmq:15672/api/
-    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
     - SITE_NAME
     - SITE_IP
     - TERM

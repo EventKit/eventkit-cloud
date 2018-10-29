@@ -6,7 +6,7 @@ def read(*rnames):
 
 setup(
     name="eventkit",
-    version="1.2.1",
+    version="1.2.2",
     author="Joseph Svrcek",
     author_email="joseph.svrcek@rgi-corp.com",
     description="Eventkit Cloud",
@@ -20,6 +20,6 @@ setup(
     keywords="eventkit osm-export-tool django",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     package_data={'': ['*']},
-    scripts=['manage.py']
+    scripts=['manage.py', 'scripts/wait-for-postgis.sh']
 )
 
