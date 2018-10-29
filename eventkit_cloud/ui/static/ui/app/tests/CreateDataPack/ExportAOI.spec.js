@@ -843,6 +843,8 @@ describe('ExportAOI component', () => {
         expect(props.updateAoiInfo.calledWith({
             ...props.aoiInfo,
             geojson: g,
+            originalGeojson: g,
+            buffer: 0,
         })).toBe(true);
         expect(warningSpy.calledOnce).toBe(true);
         expect(warningSpy.calledWith(false)).toBe(true);
