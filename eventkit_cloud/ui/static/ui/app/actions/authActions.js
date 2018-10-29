@@ -11,3 +11,10 @@ export const setToken = token => ({
 export const clearToken = () => ({
     type: types.CLEAR_TOKEN,
 });
+
+export const makeAuthRequired = action => (
+    {
+        ...action,
+        _auth_required: true,
+    }
+);

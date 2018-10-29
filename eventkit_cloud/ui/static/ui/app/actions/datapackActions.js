@@ -1,6 +1,7 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
 import Normalizer from '../utils/normalizers';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     FETCHING_RUNS: 'FETCHING_RUNS',
@@ -23,9 +24,9 @@ export const types = {
 
 export const getDatacartDetails = jobuid => (dispatch, getState) => {
     const { user } = getState();
-    dispatch({
+    dispatch(makeAuthRequired({
         type: types.GETTING_DATACART_DETAILS,
-    });
+    }));
     return axios({
         url: `/api/runs?job_uid=${jobuid}`,
         method: 'GET',
@@ -41,27 +42,27 @@ export const getDatacartDetails = jobuid => (dispatch, getState) => {
         const normalizer = new Normalizer();
         const actions = runs.map((run) => {
             const { result, entities } = normalizer.normalizeRun(run);
-            return {
+            return makeAuthRequired({
                 type: 'ADD_RUN',
                 payload: {
                     id: result,
                     username: user.data.user.username,
                     ...entities,
                 },
-            };
+            });
         });
 
         dispatch([
-            {
+            makeAuthRequired({
                 type: types.DATACART_DETAILS_RECEIVED,
                 ids: runs.map(run => run.uid),
-            },
+            }),
             ...actions,
         ]);
     }).catch((error) => {
-        dispatch({
+        dispatch(makeAuthRequired({
             type: types.DATACART_DETAILS_ERROR, error: error.response.data,
-        });
+        }));
     });
 };
 
@@ -86,7 +87,7 @@ export function getRuns(args = {}) {
         const { CancelToken } = axios;
         const source = CancelToken.source();
 
-        dispatch({ type: types.FETCHING_RUNS, cancelSource: source });
+        dispatch(makeAuthRequired({ type: types.FETCHING_RUNS, cancelSource: source }));
 
         const status = [];
         if (args.status) {
@@ -168,24 +169,24 @@ export function getRuns(args = {}) {
 
             const actions = runs.map((run) => {
                 const { result, entities } = normalizer.normalizeRun(run);
-                return {
+                return makeAuthRequired({
                     type: 'ADD_RUN',
                     payload: {
                         id: result,
                         username: user.data.user.username,
                         ...entities,
                     },
-                };
+                });
             });
             dispatch([
-                {
+                makeAuthRequired({
                     type: types.RECEIVED_RUNS,
                     payload: {
                         range,
                         nextPage,
                         orderedIds,
                     },
-                },
+                }),
                 ...actions,
             ]);
 
@@ -194,7 +195,7 @@ export function getRuns(args = {}) {
             if (axios.isCancel(error)) {
                 console.log(error.message);
             } else {
-                dispatch({ type: types.FETCH_RUNS_ERROR, error: error.response.data });
+                dispatch(makeAuthRequired({ type: types.FETCH_RUNS_ERROR, error: error.response.data }));
             }
         });
     };
@@ -216,7 +217,7 @@ export function getFeaturedRuns(args) {
         const { CancelToken } = axios;
         const source = CancelToken.source();
 
-        dispatch({ type: types.FETCHING_FEATURED_RUNS, cancelSource: source });
+        dispatch(makeAuthRequired({ type: types.FETCHING_FEATURED_RUNS, cancelSource: source }));
 
         const params = {};
         params.page_size = args.pageSize;
@@ -256,31 +257,31 @@ export function getFeaturedRuns(args) {
             const norm = new Normalizer();
             const actions = runs.map((run) => {
                 const { result, entities } = norm.normalizeRun(run);
-                return {
+                return makeAuthRequired({
                     type: 'ADD_FEATURED_RUN',
                     payload: {
                         id: result,
                         username: user.data.user.username,
                         ...entities,
                     },
-                };
+                });
             });
             dispatch([
-                {
+                makeAuthRequired({
                     type: types.RECEIVED_FEATURED_RUNS,
                     payload: {
                         ids: runs.map(run => run.uid),
                         range,
                         nextPage,
                     },
-                },
+                }),
                 ...actions,
             ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
             } else {
-                dispatch({ type: types.FETCH_FEATURED_RUNS_ERROR, error: error.response.data });
+                dispatch(makeAuthRequired({ type: types.FETCH_FEATURED_RUNS_ERROR, error: error.response.data }));
             }
         });
     };

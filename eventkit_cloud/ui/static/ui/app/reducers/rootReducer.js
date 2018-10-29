@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
+import { types } from '../actions/uiActions';
 import { userReducer } from './userReducer';
 import { usersReducer } from './usersReducer';
 import {
@@ -25,7 +26,7 @@ import authReducer from './authReducer';
 import { userGroupsReducer } from './groupReducer';
 import { notificationsReducer } from './notificationsReducer';
 
-const rootReducer = combineReducers({
+const reducer = combineReducers({
     // short hand property names
     auth: authReducer,
     aoiInfo: exportAoiInfoReducer,
@@ -50,5 +51,14 @@ const rootReducer = combineReducers({
     notifications: notificationsReducer,
     exports: runsReducer,
 });
+
+const rootReducer = (rootState, action) => {
+    let state = rootState;
+    if (action.type === types.RESET_STATE) {
+        state = undefined;
+    }
+
+    return reducer(state, action);
+};
 
 export default rootReducer;

@@ -9,8 +9,8 @@ describe('provider actions', () => {
         mock.onGet('/api/providers').reply(200, ['my providers']);
 
         const expectedActions = [
-            { type: actions.types.GETTING_PROVIDERS },
-            { type: actions.types.PROVIDERS_RECEIVED, providers: ['my providers'] },
+            { type: actions.types.GETTING_PROVIDERS, _auth_required: true },
+            { type: actions.types.PROVIDERS_RECEIVED, providers: ['my providers'], _auth_required: true },
         ];
         const store = createTestStore({});
         return store.dispatch(actions.getProviders())
@@ -24,7 +24,7 @@ describe('provider actions', () => {
         mock.onGet('/api/providers').reply(400);
 
         const expectedActions = [
-            { type: actions.types.GETTING_PROVIDERS },
+            { type: actions.types.GETTING_PROVIDERS, _auth_required: true },
         ];
         const store = createTestStore({});
         return store.dispatch(actions.getProviders())
