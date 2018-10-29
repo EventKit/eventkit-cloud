@@ -215,5 +215,9 @@ EventKit include land data with OSM exports, this data needs to be initially loa
 <pre>LAND_DATA_URL=http://data.openstreetmapdata.com/land-polygons-split-3857.zip</pre>
 
 #### SSL Verification
-SSL should be used but many services (especially geospatial services) don't have proper certificates with production CAs. SSL can be disabled using:
-<pre>DISABLE_SSL_VERIFICATION=True</pre>
+By default SSL verification will be enabled and the system certificates and certifi certs will be used.
+A custom SSL cert file can be specified using:
+<pre>SSL_VERIFICATION=/path/to/certificate.pem</pre>
+SSL should be used but many services (especially geospatial services) don't have proper certificates with production CAs. 
+SSL can be disabled using:
+<pre>SSL_VERIFICATION=False</pre>

@@ -50,8 +50,7 @@ END
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
-            sh "docker-compose pull"
-            sh "docker-compose build webpack"
+            sh "docker-compose build"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             sh "docker-compose run --rm -T eventkit python manage.py runinitial setup || exit 0"
@@ -74,7 +73,9 @@ END
     stage("Run unit tests"){
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
-            sh "docker-compose run --rm -T  eventkit python manage.py test -v=2 --noinput eventkit_cloud"
+            retry(5) {
+                sh "timeout 10m docker-compose run --rm -T  eventkit python manage.py test -v=2 --noinput eventkit_cloud"
+            }
             sh "docker-compose run --rm -T  webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
             sh "docker-compose down"

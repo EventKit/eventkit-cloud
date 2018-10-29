@@ -31,7 +31,7 @@ def authenticate():
             public_cert = ('').join(cert.partition('-----END CERTIFICATE-----')[:-1])
             # clean line endings, the service wants the public cert without line returns.
             public_cert = public_cert.replace('\n', '\\n').replace('\\n', '')
-            verify = not getattr(settings, "DISABLE_SSL_VERIFICATION")
+            verify = getattr(settings, "SSL_VERIFICATION", True)
             auth_response = requests.get(getattr(settings, 'GEOCODING_AUTH_URL'), verify=verify, cert=temp_file.name,
                                          headers={'SSL_CLIENT_CERT': public_cert}).json()
             token = auth_response.get('token')
