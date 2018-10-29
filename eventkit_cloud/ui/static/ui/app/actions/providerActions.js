@@ -1,5 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     GETTING_PROVIDERS: 'GETTING_PROVIDERS',
@@ -11,17 +12,17 @@ export const types = {
 
 export function getProviders() {
     return (dispatch) => {
-        dispatch({
+        dispatch(makeAuthRequired({
             type: types.GETTING_PROVIDERS,
-        });
+        }));
         return axios({
             url: '/api/providers',
             method: 'GET',
         }).then((response) => {
-            dispatch({
+            dispatch(makeAuthRequired({
                 type: types.PROVIDERS_RECEIVED,
                 providers: response.data,
-            });
+            }));
         }).catch((error) => {
             console.log(error);
         });

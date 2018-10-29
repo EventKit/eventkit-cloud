@@ -7,7 +7,14 @@ export const types = {
     MAKE_STEPPER_INACTIVE: 'MAKE_STEPPER_INACTIVE',
     SET_PAGE_ORDER: 'SET_PAGE_ORDER',
     SET_PAGE_VIEW: 'SET_PAGE_VIEW',
+    RESET_STATE: 'RESET_APPLICATION_STATE',
 };
+
+export function resetState() {
+    return {
+        type: types.RESET_STATE,
+    };
+}
 
 export function stepperNextDisabled() {
     return {

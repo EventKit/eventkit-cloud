@@ -1,5 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     FETCHING_NOTIFICATIONS: 'FETCHING_NOTIFICATIONS',
@@ -37,10 +38,10 @@ export function getNotifications(args = {}) {
 
         const cancelSource = axios.CancelToken.source();
 
-        dispatch({
+        dispatch(makeAuthRequired({
             type: types.FETCHING_NOTIFICATIONS,
             cancelSource,
-        });
+        }));
 
         const params = {
             page_size: args.pageSize || 12,
@@ -69,20 +70,20 @@ export function getNotifications(args = {}) {
                 [, range] = response.headers['content-range'].split('-');
             }
 
-            dispatch({
+            dispatch(makeAuthRequired({
                 type: types.RECEIVED_NOTIFICATIONS,
                 notifications: response.data,
                 nextPage,
                 range,
-            });
+            }));
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
             } else {
-                dispatch({
+                dispatch(makeAuthRequired({
                     type: types.FETCH_NOTIFICATIONS_ERROR,
                     error: error.response.data,
-                });
+                }));
             }
         });
     };
@@ -250,28 +251,28 @@ export function getNotificationsUnreadCount(args = {}) {
 
         const cancelSource = axios.CancelToken.source();
 
-        dispatch({
+        dispatch(makeAuthRequired({
             type: types.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
             cancelSource,
-        });
+        }));
 
         return axios({
             url: '/api/notifications/counts',
             method: 'GET',
             cancelToken: cancelSource.token,
         }).then((response) => {
-            dispatch({
+            dispatch(makeAuthRequired({
                 type: types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
                 unreadCount: response.data.unread,
-            });
+            }));
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
             } else {
-                dispatch({
+                dispatch(makeAuthRequired({
                     type: types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
                     error: error.response.data,
-                });
+                }));
             }
         });
     };
