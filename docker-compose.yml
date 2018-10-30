@@ -5,9 +5,9 @@ services:
       context: .
       dockerfile: config/Dockerfile
     image: eventkit/eventkit-base:1.2.2
-#    volumes:
-#    - ./:/var/lib/eventkit/
-#    - /var/lib/eventkit/node_modules/
+    volumes:
+    - ./:/var/lib/eventkit/
+    - /var/lib/eventkit/node_modules/
     user: eventkit
     depends_on:
     - postgis
@@ -15,8 +15,8 @@ services:
     links:
     - postgis
     - rabbitmq
-    ports:
-    - "6080:6080"
+    expose:
+    - "6080"
     command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 1 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
@@ -83,10 +83,7 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: |
-      celery worker -A eventkit_cloud --concurrency=4 --loglevel=INFO -n worker@%h -Q %h & \
-      celery worker -A eventkit_cloud --loglevel=INFO -n celery@%h -Q celery & \
-      celery worker -A eventkit_cloud --loglevel=INFO -n cancel@%h -Q %h.cancel
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.5/site-packages/scripts/run-celery.sh
   celery-beat:
     image: eventkit/eventkit-base:1.2.2
     volumes:
