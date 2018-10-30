@@ -20,7 +20,7 @@ interface State {
     anchorEl?: HTMLElement;
 }
 
-export default class ProviderStatusIcon extends React.Component<Props, State> {
+export class ProviderStatusIcon extends React.Component<Props, State> {
     constructor(props) {
         super(props);
         this.handlePopoverClose = this.handlePopoverClose.bind(this);
@@ -132,3 +132,5 @@ export default class ProviderStatusIcon extends React.Component<Props, State> {
         );
     }
 }
+
+export default ProviderStatusIcon;

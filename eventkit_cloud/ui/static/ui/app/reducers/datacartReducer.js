@@ -3,50 +3,12 @@ import { types } from '../actions/datacartActions';
 
 export const initialState = {
     aoiInfo: {
-        geojson: {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                bbox: [105.84281, 21.01934, 105.86006, 21.03496],
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [
-                        [
-                            [105.856245106566, 21.03496241619689],
-                            [105.84281260381943, 21.031878108216233],
-                            [105.84946448217636, 21.023866620411965],
-                            [105.85645968328718, 21.01933993943311],
-                            [105.86006457220321, 21.030195731499816],
-                            [105.856245106566, 21.03496241619689],
-                        ],
-                    ],
-                },
-            }],
-        },
-        originalGeojson: {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                bbox: [105.84281, 21.01934, 105.86006, 21.03496],
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [
-                        [
-                            [105.856245106566, 21.03496241619689],
-                            [105.84281260381943, 21.031878108216233],
-                            [105.84946448217636, 21.023866620411965],
-                            [105.85645968328718, 21.01933993943311],
-                            [105.86006457220321, 21.030195731499816],
-                            [105.856245106566, 21.03496241619689],
-                        ],
-                    ],
-                },
-            }],
-        },
-        geomType: 'Polygon',
-        title: 'Custom Polygon',
-        description: 'Draw',
-        selectionType: 'free',
+        geojson: {},
+        originalGeojson: {},
+        geomType: null,
+        title: null,
+        description: null,
+        selectionType: null,
         buffer: 0,
     },
     submitJob: {

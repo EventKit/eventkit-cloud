@@ -376,25 +376,24 @@ describe('ExportInfo component', () => {
         stateStub.restore();
     });
 
-    it('handleRefreshTooltipOpen should setState true', () => {
+    it('handlePopoverOpen should setState with anchorEl', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const ret = wrapper.instance().handleRefreshTooltipOpen();
-        expect(ret).toEqual(false);
+        const e = { currentTarget: sinon.spy() };
+        wrapper.instance().handlePopoverOpen(e);
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ refreshTooltipOpen: true })).toBe(true);
+        expect(stateStub.calledWith({ refreshPopover: e.currentTarget })).toBe(true);
         stateStub.restore();
     });
 
-    it('handleRefreshTooltipClose should setState false', () => {
+    it('handlePopoverClose should setState anchorEl', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        const ret = wrapper.instance().handleRefreshTooltipClose();
-        expect(ret).toBe(false);
+        wrapper.instance().handlePopoverClose();
         expect(stateStub.calledOnce).toBe(true);
-        expect(stateStub.calledWith({ refreshTooltipOpen: false })).toBe(true);
+        expect(stateStub.calledWith({ refreshPopover: null })).toBe(true);
         stateStub.restore();
     });
 
