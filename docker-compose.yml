@@ -189,7 +189,6 @@ services:
     - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud:rw
     - ./coverage/coveralls:/var/lib/eventkit/coverage/coveralls:rw
     - ./package.json:/var/lib/eventkit/package.json
-    - ./package-lock.json:/var/lib/eventkit/package-lock.json
     - ./config/ui/.eslintrc.json:/var/lib/eventkit/.eslintrc.json
     - ./config/ui/.eslintignore:/var/lib/eventkit/.eslintignore
     - ./config/ui/webpack.config.js:/var/lib/eventkit/webpack.config.js
