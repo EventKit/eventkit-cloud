@@ -3,6 +3,7 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import AppBar from '@material-ui/core/AppBar';
 import Drawer from '@material-ui/core/Drawer';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -29,7 +30,6 @@ import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
 import '../styles/flexboxgrid.css';
 import '../styles/react-joyride-compliled.css';
-import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 // tslint:disable-next-line:no-var-requires
 require('../fonts/index.css');
 

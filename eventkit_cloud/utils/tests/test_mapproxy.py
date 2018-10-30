@@ -23,17 +23,17 @@ class TestGeopackage(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
-    @patch('eventkit_cloud.utils.external_service.auth_requests.patch_https')
-    @patch('eventkit_cloud.utils.external_service.set_gpkg_contents_bounds')
-    @patch('eventkit_cloud.utils.external_service.check_zoom_levels')
-    @patch('eventkit_cloud.utils.external_service.check_service')
-    @patch('eventkit_cloud.utils.external_service.remove_empty_zoom_levels')
-    @patch('eventkit_cloud.utils.external_service.connections')
-    @patch('eventkit_cloud.utils.external_service.SeedingConfiguration')
-    @patch('eventkit_cloud.utils.external_service.seeder')
-    @patch('eventkit_cloud.utils.external_service.load_config')
-    @patch('eventkit_cloud.utils.external_service.get_cache_template')
-    @patch('eventkit_cloud.utils.external_service.get_seed_template')
+    @patch('eventkit_cloud.utils.mapproxy.auth_requests.patch_https')
+    @patch('eventkit_cloud.utils.mapproxy.set_gpkg_contents_bounds')
+    @patch('eventkit_cloud.utils.mapproxy.check_zoom_levels')
+    @patch('eventkit_cloud.utils.mapproxy.check_service')
+    @patch('eventkit_cloud.utils.mapproxy.remove_empty_zoom_levels')
+    @patch('eventkit_cloud.utils.mapproxy.connections')
+    @patch('eventkit_cloud.utils.mapproxy.SeedingConfiguration')
+    @patch('eventkit_cloud.utils.mapproxy.seeder')
+    @patch('eventkit_cloud.utils.mapproxy.load_config')
+    @patch('eventkit_cloud.utils.mapproxy.get_cache_template')
+    @patch('eventkit_cloud.utils.mapproxy.get_seed_template')
     def test_convert(self, seed_template, cache_template, load_config, seeder, seeding_config, connections, remove_zoom_levels, check_service, mock_check_zoom_levels, mock_set_gpkg_contents_bounds, patch_https):
         gpkgfile = '/var/lib/eventkit/test.gpkg'
         config = "layers:\r\n - name: imagery\r\n   title: imagery\r\n   sources: [cache]\r\n\r\nsources:\r\n  imagery:\r\n    type: tile\r\n    grid: webmercator\r\n    url: http://a.tile.openstreetmap.fr/hot/%(z)s/%(x)s/%(y)s.png\r\n\r\ngrids:\r\n  webmercator:\r\n    srs: EPSG:3857\r\n    tile_size: [256, 256]\r\n    origin: nw"
@@ -61,9 +61,6 @@ class TestGeopackage(TransactionTestCase):
 
         cache_template.assert_called_once_with(["imagery"], [grids for grids in json_config.get('grids')], gpkgfile, table_name='imagery')
         json_config['caches'] = {'cache': {'sources': ['imagery'], 'cache': {'type': 'geopackage', 'filename': '/var/lib/eventkit/test.gpkg'}, 'grids': ['webmercator']}}
-        json_config['globals'] = {'http': {'ssl_no_cert_checks': True}}
-        json_config['sources']['imagery']['transparent'] = True
-        json_config['sources']['imagery']['on_error'] = {404: {'cache': False,'response': 'transparent'}}
         json_config['services'] = ['demo']
 
         patch_https.assert_called_once_with('imagery')
@@ -79,7 +76,7 @@ class TestGeopackage(TransactionTestCase):
 
 class TestHelpers(TransactionTestCase):
 
-    @patch('eventkit_cloud.utils.external_service.auth_requests.get')
+    @patch('eventkit_cloud.utils.mapproxy.auth_requests.get')
     def test_check_service(self, requests_get):
 
         conf_dict = {'sources': {'source1': {'url': 'http://example.com/url'},
@@ -97,6 +94,7 @@ class TestHelpers(TransactionTestCase):
             check_service(conf_dict)
 
         response.status_code = 500
+        response.ok = False
         requests_get.return_value = response
         with self.assertRaisesMessage(Exception, "The provider reported a server error."):
             check_service(conf_dict)
@@ -121,10 +119,10 @@ class TestHelpers(TransactionTestCase):
 
         self.assertEqual(cache_template, expected_template)
 
-    @patch('eventkit_cloud.utils.external_service.sqlite3')
-    @patch('eventkit_cloud.utils.external_service.get_table_tile_matrix_information')
-    @patch('eventkit_cloud.utils.external_service.get_zoom_levels_table')
-    @patch('eventkit_cloud.utils.external_service.get_tile_table_names')
+    @patch('eventkit_cloud.utils.mapproxy.sqlite3')
+    @patch('eventkit_cloud.utils.mapproxy.get_table_tile_matrix_information')
+    @patch('eventkit_cloud.utils.mapproxy.get_zoom_levels_table')
+    @patch('eventkit_cloud.utils.mapproxy.get_tile_table_names')
     def test_check_zoom_levels(self, mock_get_tables, mock_get_zoom_levels, mock_tile_matrix, mock_sql):
         from mapproxy.config.loader import ProxyConfiguration
         example_geopackage = '/test/example.gpkg'

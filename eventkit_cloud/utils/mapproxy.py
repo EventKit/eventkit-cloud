@@ -111,7 +111,8 @@ class MapproxyGeopackage(object):
         conf_dict['services'] = ['demo']
 
         # disable SSL cert checks
-        if getattr(settings, "DISABLE_SSL_VERIFICATION", False):
+        ssl_verify = getattr(settings, "SSL_VERIFICATION", True)
+        if not ssl_verify:
             conf_dict['globals'] = {'http': {'ssl_no_cert_checks': True}}
 
         # Add autoconfiguration to base_config
@@ -246,15 +247,16 @@ def check_service(conf_dict, provider_name=None):
             continue
         tile = {'x': '1', 'y': '1', 'z': '1'}
         url = conf_dict['sources'][source].get('url') % tile
-        response = auth_requests.get(url, slug=provider_name, verify=False)
+        response = auth_requests.get(url, slug=provider_name, verify=getattr(settings, "SSL_VERIFICATION", True))
         if response.status_code in [401, 403]:
             logger.error("The provider has invalid credentials with status code {0} and the text: \n{1}".format(
                 response.status_code, response.text))
             raise Exception("The provider does not have valid credentials.")
-        elif response.status_code >= 500:
+        elif not response.ok:
             logger.error("The provider reported a server error with status code {0} and the text: \n{1}".format(
                 response.status_code, response.text))
             raise Exception("The provider reported a server error.")
+
 
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
