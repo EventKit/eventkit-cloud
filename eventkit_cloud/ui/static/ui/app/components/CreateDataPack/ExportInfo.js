@@ -488,7 +488,7 @@ export class ExportInfo extends React.Component {
                                         <Popover
                                             style={{ pointerEvents: 'none' }}
                                             PaperProps={{
-                                                style: { padding: '16px', maxWidth: 400 },
+                                                style: { padding: '16px' },
                                             }}
                                             open={Boolean(this.state.refreshPopover)}
                                             anchorEl={this.state.refreshPopover}
@@ -502,10 +502,12 @@ export class ExportInfo extends React.Component {
                                                 horizontal: 'center',
                                             }}
                                         >
-                                            <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
-                                                RUN AVAILABILITY CHECK AGAIN
-                                            </Typography>
-                                            <div>You may try to resolve errors by running the availability check again.</div>
+                                            <div style={{ maxWidth: 400 }}>
+                                                <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
+                                                    RUN AVAILABILITY CHECK AGAIN
+                                                </Typography>
+                                                <div>You may try to resolve errors by running the availability check again.</div>
+                                            </div>
                                         </Popover>
                                     </div>
                                 </div>

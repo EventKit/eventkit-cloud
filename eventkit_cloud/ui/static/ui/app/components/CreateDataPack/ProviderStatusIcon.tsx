@@ -30,6 +30,8 @@ export default class ProviderStatusIcon extends React.Component<Props, State> {
         };
     }
 
+    static defaultProps = { availability: { status: '', type: '', message: '' } };
+
     handlePopoverOpen(e: Event) {
         this.setState({ anchorEl: e.currentTarget as HTMLElement });
     }
@@ -105,7 +107,7 @@ export default class ProviderStatusIcon extends React.Component<Props, State> {
                 <Popover
                     style={{ pointerEvents: 'none' }}
                     PaperProps={{
-                        style: { padding: '16px', maxWidth: 400 },
+                        style: { padding: '16px' },
                     }}
                     open={Boolean(this.state.anchorEl)}
                     anchorEl={this.state.anchorEl}
@@ -119,10 +121,12 @@ export default class ProviderStatusIcon extends React.Component<Props, State> {
                         horizontal: 'center',
                     }}
                 >
-                    <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
-                        {title}
-                    </Typography>
-                    <div>{message}</div>
+                    <div style={{ maxWidth: 400 }}>
+                        <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
+                            {title}
+                        </Typography>
+                        <div>{message}</div>
+                    </div>
                 </Popover>
             </div>
         );
