@@ -1386,11 +1386,12 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up.
     :return: A function which can be called to update the progress on an ExportTaskRecord.
     """
+
+    from django.db import connection
+    from eventkit_cloud.tasks import set_cache_value
+
     if task_uid is None:
         return
-
-    from eventkit_cloud.tasks.models import ExportTaskRecord
-    from django.db import connection
 
     if not estimated_finish and not progress:
         return
@@ -1403,13 +1404,10 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     # will be invalid and throw an error.
     connection.close()
 
-
-    export_task = ExportTaskRecord.objects.get(uid=task_uid)
     if absolute_progress:
-        export_task.progress = absolute_progress
+        set_cache_value(uid=task_uid, attribute="progress", model_name='ExportTaskRecord')
     if estimated_finish:
-        export_task.estimated_finish = estimated_finish
-    export_task.save()
+        set_cache_value(uid=task_uid, attribute="estimated_finish", model_name='ExportTaskRecord')
 
 
 def parse_result(task_result, key=''):
