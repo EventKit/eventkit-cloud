@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, Theme, createStyles, withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Collapse from '@material-ui/core/Collapse';
@@ -12,8 +11,91 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import ProviderStatusIcon from './ProviderStatusIcon';
 import BaseDialog from '../Dialog/BaseDialog';
 
+const jss = (theme: Theme & Eventkit.Theme) => createStyles({
+    container: {
+        display: 'flex',
+        width: '100%',
+    },
+    listItem: {
+        fontWeight: 'normal',
+        fontSize: '16px',
+        padding: '16px 10px',
+    },
+    sublistItem: {
+        fontWeight: 'normal',
+        fontSize: '13px',
+        padding: '14px 20px 14px 49px',
+        borderTop: theme.eventkit.colors.secondary,
+    },
+    checkbox: {
+        width: '24px',
+        height: '24px',
+        marginRight: '15px',
+        flex: '0 0 auto',
+        color: theme.eventkit.colors.primary,
+        '&$checked': {
+            color: theme.eventkit.colors.success,
+        },
+    },
+    checked: {},
+    name: {
+        marginRight: '10px',
+        display: 'flex',
+        flex: '1 1 auto',
+        flexWrap: 'wrap',
+    },
+    expand: {
+        display: 'flex',
+        flex: '0 0 auto',
+    },
+    license: {
+        cursor: 'pointer',
+        color: theme.eventkit.colors.primary,
+    },
+    prewrap: {
+        whiteSpace: 'pre-wrap',
+    },
+});
 
-export class DataProvider extends React.Component {
+interface Props {
+    provider: {
+        uid: string;
+        name: string;
+        max_selection: string;
+        service_description: string;
+        license: {
+            text: string;
+            name: string;
+        };
+        availability: {
+            status: string;
+            type: string;
+            message: string;
+        };
+    };
+    checked: boolean;
+    onChange: (event) => void;
+    alt: boolean;
+    theme: Eventkit.Theme;
+    classes: {
+        container: string;
+        listItem: string;
+        sublistItem: string;
+        checkbox: string;
+        checked: string;
+        name: string;
+        expand: string;
+        license: string;
+        prewrap: string;
+    };
+}
+
+interface State {
+    open: boolean;
+    licenseDialogOpen: boolean;
+}
+
+export class DataProvider extends React.Component<Props, State> {
     constructor(props) {
         super(props);
         this.handleLicenseOpen = this.handleLicenseOpen.bind(this);
@@ -39,37 +121,7 @@ export class DataProvider extends React.Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-
-        const { provider } = this.props;
-        const styles = {
-            listItem: {
-                fontWeight: 'normal',
-                fontSize: '16px',
-                padding: '16px 10px',
-            },
-            sublistItem: {
-                fontWeight: 'normal',
-                fontSize: '13px',
-                padding: '14px 20px 14px 49px',
-                borderTop: colors.secondary,
-            },
-            checkbox: {
-                width: '24px',
-                height: '24px',
-                marginRight: '15px',
-                flex: '0 0 auto',
-            },
-            name: {
-                marginRight: '10px',
-                display: 'flex',
-                flex: '1 1 auto',
-                flexWrap: 'wrap',
-            },
-            expand: {
-                display: 'flex',
-                flex: '0 0 auto',
-            },
-        };
+        const { classes, provider } = this.props;
 
         // Show license if one exists.
         const nestedItems = [];
@@ -79,10 +131,9 @@ export class DataProvider extends React.Component {
                     key={nestedItems.length}
                     dense
                     disableGutters
-                    style={styles.sublistItem}
-                    className="qa-DataProvider-ListItem-license"
+                    className={`qa-DataProvider-ListItem-license ${classes.sublistItem}`}
                 >
-                    <div style={{ whiteSpace: 'pre-wrap' }}>
+                    <div className={classes.prewrap}>
                         <i>
                             Use of this data is governed by&nbsp;
                             <span
@@ -90,7 +141,7 @@ export class DataProvider extends React.Component {
                                 tabIndex={0}
                                 onClick={this.handleLicenseOpen}
                                 onKeyPress={this.handleLicenseOpen}
-                                style={{ cursor: 'pointer', color: colors.primary }}
+                                className={classes.license}
                             >
                                 {provider.license.name}
                             </span>
@@ -100,7 +151,7 @@ export class DataProvider extends React.Component {
                             title={provider.license.name}
                             onClose={this.handleLicenseClose}
                         >
-                            <div style={{ whiteSpace: 'pre-wrap' }}>{provider.license.text}</div>
+                            <div className={classes.prewrap}>{provider.license.text}</div>
                         </BaseDialog>
                     </div>
                 </ListItem>
@@ -109,26 +160,24 @@ export class DataProvider extends React.Component {
 
         nestedItems.push((
             <ListItem
-                className="qa-DataProvider-ListItem-provServDesc"
+                className={`qa-DataProvider-ListItem-provServDesc ${classes.sublistItem}`}
                 key={nestedItems.length}
                 dense
                 disableGutters
-                style={styles.sublistItem}
             >
-                <div style={{ whiteSpace: 'pre-wrap' }}>{provider.service_description || 'No provider description available.'}</div>
+                <div className={classes.prewrap}>{provider.service_description || 'No provider description available.'}</div>
             </ListItem>
         ));
 
         nestedItems.push((
             <ListItem
-                className="qa-DataProvider-ListItem-provMaxAoi"
+                className={`qa-DataProvider-ListItem-provMaxAoi ${classes.sublistItem}`}
                 key={nestedItems.length}
                 dense
                 disableGutters
-                style={styles.sublistItem}
             >
-                <div style={{ whiteSpace: 'pre-wrap' }}>
-                    <span style={{ fontWeight: 'bold' }}>Maximum selection area: </span>
+                <div className={classes.prewrap}>
+                    <strong>Maximum selection area: </strong>
                     {((provider.max_selection == null ||
                         provider.max_selection === '' ||
                         parseFloat(provider.max_selection) <= 0) ?
@@ -143,51 +192,41 @@ export class DataProvider extends React.Component {
         return (
             <React.Fragment>
                 <ListItem
-                    className="qa-DataProvider-ListItem"
+                    className={`qa-DataProvider-ListItem ${classes.listItem}`}
                     key={provider.uid}
-                    style={{ ...styles.listItem, backgroundColor }}
+                    style={{ backgroundColor }}
                     dense
                     disableGutters
                 >
-                    <div style={{ display: 'flex', width: '100%' }}>
+                    <div className={classes.container}>
                         <Checkbox
                             className="qa-DataProvider-CheckBox-provider"
+                            classes={{ root: classes.checkbox, checked: classes.checked }}
                             name={provider.name}
-                            style={styles.checkbox}
                             checked={this.props.checked}
                             onChange={this.props.onChange}
-                            checkedIcon={
-                                <ActionCheckCircle
-                                    className="qa-DataProvider-ActionCheckCircle-provider"
-                                    style={{ fill: colors.success }}
-                                />
-                            }
-                            icon={
-                                <UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" color="primary" />
-                            }
-                            color="primary"
+                            checkedIcon={<ActionCheckCircle className="qa-DataProvider-ActionCheckCircle-provider" />}
+                            icon={<UncheckedCircle className="qa-DataProvider-UncheckedCircle-provider" />}
                         />
                         <span
-                            className="qa-DataProvider-ListItemName"
-                            style={styles.name}
+                            className={`qa-DataProvider-ListItemName ${classes.name}`}
                         >
                             {provider.name}
                         </span>
                         <ProviderStatusIcon
                             id="ProviderStatus"
-                            tooltipStyle={{ zIndex: '1' }}
                             baseStyle={{ marginRight: '40px' }}
                             availability={provider.availability}
                         />
                         {this.state.open ?
-                            <ExpandLess style={styles.expand} onClick={this.handleExpand} color="primary" />
+                            <ExpandLess className={classes.expand} onClick={this.handleExpand} color="primary" />
                             :
-                            <ExpandMore style={styles.expand} onClick={this.handleExpand} color="primary" />
+                            <ExpandMore className={classes.expand} onClick={this.handleExpand} color="primary" />
                         }
                     </div>
                 </ListItem>
                 <Collapse in={this.state.open} key={`${provider.uid}-expanded`}>
-                    <List style={{ padding: '0px', backgroundColor }}>
+                    <List style={{ backgroundColor }}>
                         {nestedItems}
                     </List>
                 </Collapse>
@@ -196,22 +235,4 @@ export class DataProvider extends React.Component {
     }
 }
 
-DataProvider.propTypes = {
-    provider: PropTypes.shape({
-        uid: PropTypes.string,
-        name: PropTypes.string,
-        max_selection: PropTypes.string,
-        service_description: PropTypes.string,
-        license: PropTypes.shape({
-            text: PropTypes.string,
-            name: PropTypes.string,
-        }),
-        availability: PropTypes.object,
-    }).isRequired,
-    checked: PropTypes.bool.isRequired,
-    onChange: PropTypes.func.isRequired,
-    alt: PropTypes.bool.isRequired,
-    theme: PropTypes.object.isRequired,
-};
-
-export default withTheme()(DataProvider);
+export default withTheme()(withStyles<any, any>(jss)(DataProvider));

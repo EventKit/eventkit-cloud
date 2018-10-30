@@ -7,7 +7,9 @@ import cookie from 'react-cookie';
 import Joyride from 'react-joyride';
 import List from '@material-ui/core/List';
 import Paper from '@material-ui/core/Paper';
+import Popover from '@material-ui/core/Popover';
 import Checkbox from '@material-ui/core/Checkbox';
+import Typography from '@material-ui/core/Typography';
 import ActionCheckCircle from '@material-ui/icons/CheckCircle';
 import Info from '@material-ui/icons/Info';
 import NavigationRefresh from '@material-ui/icons/Refresh';
@@ -19,7 +21,6 @@ import { stepperNextDisabled, stepperNextEnabled } from '../../actions/uiActions
 import BaseDialog from '../Dialog/BaseDialog';
 import CustomTextField from '../CustomTextField';
 import CustomTableRow from '../CustomTableRow';
-import BaseTooltip from '../BaseTooltip';
 import { joyride } from '../../joyride.config';
 import { getSqKmString } from '../../utils/generic';
 
@@ -33,7 +34,7 @@ export class ExportInfo extends React.Component {
             isRunning: false,
             // we make a local copy of providers for editing
             providers: props.providers,
-            refreshTooltipOpen: false,
+            refreshPopover: null,
         };
         this.onNameChange = this.onNameChange.bind(this);
         this.onDescriptionChange = this.onDescriptionChange.bind(this);
@@ -43,13 +44,13 @@ export class ExportInfo extends React.Component {
         this.callback = this.callback.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
-        this.handleRefreshTooltipOpen = this.handleRefreshTooltipOpen.bind(this);
-        this.handleRefreshTooltipClose = this.handleRefreshTooltipClose.bind(this);
         this.onChangeCheck = this.onChangeCheck.bind(this);
         this.onRefresh = this.onRefresh.bind(this);
         this.getAvailability = this.getAvailability.bind(this);
         this.checkAvailability = this.checkAvailability.bind(this);
         this.checkProviders = this.checkProviders.bind(this);
+        this.handlePopoverOpen = this.handlePopoverOpen.bind(this);
+        this.handlePopoverClose = this.handlePopoverClose.bind(this);
 
         this.joyride = React.createRef();
     }
@@ -230,14 +231,12 @@ export class ExportInfo extends React.Component {
         this.setState({ projectionsDialogOpen: true });
     }
 
-    handleRefreshTooltipOpen() {
-        this.setState({ refreshTooltipOpen: true });
-        return false;
+    handlePopoverOpen(e) {
+        this.setState({ refreshPopover: e.currentTarget });
     }
 
-    handleRefreshTooltipClose() {
-        this.setState({ refreshTooltipOpen: false });
-        return false;
+    handlePopoverClose() {
+        this.setState({ refreshPopover: null });
     }
 
     hasRequiredFields(exportInfo) {
@@ -481,28 +480,33 @@ export class ExportInfo extends React.Component {
                                         <span>AVAILABILITY</span>
                                         <NavigationRefresh
                                             style={style.refreshIcon}
-                                            onMouseOver={this.handleRefreshTooltipOpen}
-                                            onMouseOut={this.handleRefreshTooltipClose}
-                                            onFocus={this.handleRefreshTooltipOpen}
-                                            onBlur={this.handleRefreshTooltipClose}
+                                            onMouseEnter={this.handlePopoverOpen}
+                                            onMouseLeave={this.handlePopoverClose}
                                             onClick={this.onRefresh}
                                             color="primary"
                                         />
-                                        <BaseTooltip
-                                            show={this.state.refreshTooltipOpen}
-                                            title="RUN AVAILABILITY CHECK AGAIN"
-                                            tooltipStyle={{
-                                                right: '-150px',
-                                                bottom: '35px',
+                                        <Popover
+                                            style={{ pointerEvents: 'none' }}
+                                            PaperProps={{
+                                                style: { padding: '16px', maxWidth: 400 },
                                             }}
-                                            onMouseOver={this.handleRefreshTooltipOpen}
-                                            onMouseOut={this.handleRefreshTooltipClose}
-                                            onFocus={this.handleRefreshTooltipOpen}
-                                            onBlur={this.handleRefreshTooltipClose}
-                                            onClick={this.onRefresh}
+                                            open={Boolean(this.state.refreshPopover)}
+                                            anchorEl={this.state.refreshPopover}
+                                            onClose={this.handlePopoverClose}
+                                            anchorOrigin={{
+                                                vertical: 'top',
+                                                horizontal: 'center',
+                                            }}
+                                            transformOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'center',
+                                            }}
                                         >
+                                            <Typography variant="h6" gutterBottom style={{ fontWeight: 600 }}>
+                                                RUN AVAILABILITY CHECK AGAIN
+                                            </Typography>
                                             <div>You may try to resolve errors by running the availability check again.</div>
-                                        </BaseTooltip>
+                                        </Popover>
                                     </div>
                                 </div>
                                 <List
