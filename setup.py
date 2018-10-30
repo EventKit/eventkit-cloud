@@ -1,8 +1,10 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
+
 
 setup(
     name="eventkit",
@@ -15,11 +17,14 @@ setup(
     # http://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         'Development Status :: 4 - Beta',
+        'Framework :: Django',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: JavaScript'
     ],
     license="BSD",
-    keywords="eventkit osm-export-tool django",
+    keywords="eventkit osm-export-tool django mapproxy",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    package_data={'': ['*']},
-    scripts=['manage.py', 'scripts/wait-for-postgis.sh']
+    include_package_data=True,
+    scripts=['manage.py']
 )
-
