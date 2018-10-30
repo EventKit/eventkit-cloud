@@ -9,8 +9,8 @@ describe('format actions', () => {
         mock.onGet('/api/formats').reply(200, ['my formats']);
 
         const expectedActions = [
-            { type: actions.types.GETTING_FORMATS },
-            { type: actions.types.FORMATS_RECEIVED, formats: ['my formats'] },
+            { type: actions.types.GETTING_FORMATS, _auth_required: true },
+            { type: actions.types.FORMATS_RECEIVED, formats: ['my formats'], _auth_required: true },
         ];
         const store = createTestStore({});
         return store.dispatch(actions.getFormats())
@@ -24,7 +24,7 @@ describe('format actions', () => {
         mock.onGet('/api/formats').reply(400);
 
         const expectedActions = [
-            { type: actions.types.GETTING_FORMATS },
+            { type: actions.types.GETTING_FORMATS, _auth_required: true },
         ];
         const store = createTestStore({});
         return store.dispatch(actions.getFormats())

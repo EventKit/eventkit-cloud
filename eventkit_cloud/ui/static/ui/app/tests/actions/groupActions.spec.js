@@ -17,8 +17,8 @@ describe('userGroups actions', () => {
         mock.onGet('/api/groups').reply(200, groups);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_GROUPS, cancelSource },
-            { type: actions.types.FETCHED_GROUPS, groups },
+            { type: actions.types.FETCHING_GROUPS, cancelSource, _auth_required: true },
+            { type: actions.types.FETCHED_GROUPS, groups, _auth_required: true },
         ];
         const store = createTestStore({
             groups: {
@@ -44,8 +44,8 @@ describe('userGroups actions', () => {
         mock.onGet('/api/groups').reply(400, error);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_GROUPS, cancelSource },
-            { type: actions.types.FETCH_GROUPS_ERROR, error },
+            { type: actions.types.FETCHING_GROUPS, cancelSource, _auth_required: true },
+            { type: actions.types.FETCH_GROUPS_ERROR, error, _auth_required: true },
         ];
         const store = createTestStore({
             groups: {
@@ -96,7 +96,7 @@ describe('userGroups actions', () => {
         mock.onGet('/api/groups').reply(400, error);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_GROUPS, cancelSource },
+            { type: actions.types.FETCHING_GROUPS, cancelSource, _auth_required: true },
         ];
         const store = createTestStore({
             groups: {

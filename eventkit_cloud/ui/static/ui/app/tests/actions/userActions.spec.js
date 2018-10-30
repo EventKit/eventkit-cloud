@@ -22,6 +22,7 @@ describe('userActions actions', () => {
                 },
                 type: '@@router/CALL_HISTORY_METHOD',
             },
+            { type: 'RESET_APPLICATION_STATE' },
         ];
         const store = createTestStore({ user: { username: 'ExampleUser' } });
 
