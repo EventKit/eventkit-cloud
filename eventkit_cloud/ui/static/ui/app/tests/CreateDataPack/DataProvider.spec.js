@@ -24,6 +24,7 @@ describe('DataProvider component', () => {
             checked: false,
             onChange: sinon.spy(),
             alt: false,
+            classes: {},
             ...global.eventkit_test_props,
         }
     );
