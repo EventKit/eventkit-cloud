@@ -60,7 +60,14 @@ describe('Application component', () => {
         ...global.eventkit_test_props,
     });
 
-    const getWrapper = props => shallow(<Application {...props} />);
+    const config = {
+        DATAPACK_PAGE_SIZE: '12',
+        NOTIFICATIONS_PAGE_SIZE: '12',
+    };
+
+    const getWrapper = props => shallow(<Application {...props} />, {
+        context: { config },
+    });
 
     it('should render the basic elements', () => {
         const props = getProps();
@@ -99,12 +106,11 @@ describe('Application component', () => {
         expect(drawer.find(MenuItem).at(6).find(Link)).toHaveLength(1);
     });
 
-    it('should call getConfig, getNotifications, and addEventListener on mount', () => {
+    it('should call getConfig on mount', () => {
         const getStub = sinon.stub(Application.prototype, 'getConfig');
         const props = getProps();
         getWrapper(props);
         expect(getStub.calledOnce).toBe(true);
-        expect(props.getNotifications.callCount).toBe(1);
         getStub.restore();
     });
 
@@ -222,7 +228,7 @@ describe('Application component', () => {
         logoutSpy.restore();
     });
 
-    it('should start listening for notifications on user login', () => {
+    it('should start listening for notifications on user login & context received', () => {
         const startListeningForNotificationsSpy = sinon.spy(Application.prototype, 'startListeningForNotifications');
         const props = {
             ...getProps(),
@@ -236,6 +242,7 @@ describe('Application component', () => {
         wrapper.setProps({
             userData: {},
         });
+        wrapper.setState({ childContext: { config } });
         expect(startListeningForNotificationsSpy.callCount).toBe(1);
         expect(instance.notificationsRefreshIntervalId).not.toBe(null);
         expect(instance.notificationsUnreadCountIntervalId).not.toBe(null);

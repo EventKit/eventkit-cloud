@@ -64,12 +64,16 @@ describe('NotificationsPage component', () => {
         };
     }
 
+    const config = { NOTIFICATIONS_PAGE_SIZE: '12' };
+
     function setup(propsOverride = {}) {
         const props = {
             ...defaultProps(),
             ...propsOverride,
         };
-        wrapper = shallow(<NotificationsPage {...props} />);
+        wrapper = shallow(<NotificationsPage {...props} />, {
+            context: { config },
+        });
         instance = wrapper.instance();
     }
 
