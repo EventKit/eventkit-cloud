@@ -1405,9 +1405,11 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     connection.close()
 
     if absolute_progress:
-        set_cache_value(uid=task_uid, attribute="progress", model_name='ExportTaskRecord')
+        set_cache_value(uid=task_uid, attribute="progress",
+                        model_name='ExportTaskRecord', value=absolute_progress)
     if estimated_finish:
-        set_cache_value(uid=task_uid, attribute="estimated_finish", model_name='ExportTaskRecord')
+        set_cache_value(uid=task_uid, attribute="estimated_finish",
+                        model_name='ExportTaskRecord', value=estimated_finish)
 
 
 def parse_result(task_result, key=''):

@@ -14,7 +14,7 @@ from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, Noti
 from eventkit_cloud.core.models import UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin
 from eventkit_cloud.jobs.models import Job, LowerCaseCharField, DataProvider
 from eventkit_cloud.tasks.enumerations import TaskStates
-from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRTATION, get_cache_key, get_cache_value
+from eventkit_cloud.tasks import DEFAULT_CACHE_EXPIRTATION, get_cache_key, get_cache_value, set_cache_value
 from notifications.models import Notification
 
 
@@ -188,8 +188,6 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     name = models.CharField(max_length=50)
     export_provider_task = models.ForeignKey(DataProviderTaskRecord, related_name='tasks', on_delete=models.CASCADE)
     status = models.CharField(blank=True, max_length=20, db_index=True)
-    progress = models.IntegerField(default=0, editable=False, null=True)
-    estimated_finish = models.DateTimeField(blank=True, editable=False, null=True)
     pid = models.IntegerField(blank=True, default=-1)
     worker = models.CharField(max_length=100, blank=True, editable=False, null=True)
     cancel_user = models.ForeignKey(User, null=True, blank=True, editable=False, on_delete=models.CASCADE)
@@ -208,21 +206,21 @@ class ExportTaskRecord(UIDMixin, TimeStampedModelMixin, TimeTrackingModelMixin):
     def progress(self):
         if TaskStates[self.status] in TaskStates.get_finished_states():
             return 100
-        return cache.get(get_cache_key(self, "progress"))
+        return get_cache_value(obj=self, attribute="progress", default=0)
 
     @progress.setter
     def progress(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
-        return cache.set(get_cache_key(self), value, expiration)
+        return set_cache_value(obj=self, attribute="progress", value=value, expiration=expiration)
 
     @property
     def estimated_finish(self):
         if TaskStates[self.status] in TaskStates.get_finished_states():
             return
-        return cache.get(get_cache_key(self, "estimated_finish"))
+        return get_cache_value(obj=self, attribute="estimated_finish", default=0)
 
     @estimated_finish.setter
     def estimated_finish(self, value, expiration=DEFAULT_CACHE_EXPIRTATION):
-        return cache.set(get_cache_key(self), value, expiration)
+        return set_cache_value(obj=self, attribute="estimated_finish", value=value, expiration=expiration)
 
 
 class ExportTaskException(TimeStampedModelMixin):

@@ -7,6 +7,10 @@ from eventkit_cloud.tasks.scheduled_tasks import *
 from django.core.cache import cache
 from django.apps import apps as django_apps
 
+import logging
+
+logger = logging.getLogger(__file__)
+
 default_app_config = 'eventkit_cloud.tasks.apps.EventKitTasks'
 
 DEFAULT_CACHE_EXPIRTATION = 86400  # expire in a day
@@ -27,22 +31,28 @@ def get_cache_key(obj=None, attribute=None, uid=None, model_name=None):
     if obj:
         uid = obj.uid
         model_name = type(obj).__name__
+        model = type(obj)
     else:
         uid = uid
         try:
             model = django_apps.get_model('tasks', model_name)
-            if not hasattr(model, attribute):
-                raise Exception("{} does not have the attribute {}".format(model, attribute))
         except LookupError:
             logger.error("There is no such model {0}".format(model_name))
             raise
-    return "{}.{}.{}".format(model_name, str(uid), attribute)
+    if not uid:
+        raise Exception("Cannot cache a state without a uid.")
+    if not hasattr(model, attribute):
+        raise Exception("{} does not have the attribute {}".format(model, attribute))
+    cache_key = "{}.{}.{}".format(model_name, str(uid), attribute)
+    return cache_key
 
 
 def set_cache_value(obj=None, uid=None, attribute=None, value=None,
                     model_name=None, expiration=DEFAULT_CACHE_EXPIRTATION):
-    return cache.set(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name), value, expiration)
+    return cache.set(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name),
+                     value,
+                     timeout=expiration)
 
 
-def get_cache_value(obj=None, uid=None, attribute=None, model_name=None):
-    return cache.get(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name))
+def get_cache_value(obj=None, uid=None, attribute=None, model_name=None, default=None):
+    return cache.get(get_cache_key(obj=obj, attribute=attribute, uid=str(uid), model_name=model_name), default)
