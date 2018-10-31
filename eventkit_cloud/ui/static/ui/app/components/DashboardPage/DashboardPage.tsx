@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import * as debounce from 'lodash/debounce';
-import { withTheme } from '@material-ui/core/styles';
+import { withTheme, Theme } from '@material-ui/core/styles';
 import { Link, browserHistory } from 'react-router';
 import Joyride from 'react-joyride';
 import Help from '@material-ui/icons/Help';
@@ -641,4 +641,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
+export default withTheme()<any>(connect(mapStateToProps, mapDispatchToProps)(DashboardPage));
