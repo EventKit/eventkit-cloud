@@ -1,0 +1,6 @@
+include *
+recursive-include eventkit_cloud *
+recursive-include scripts *
+recursive-include documentation *
+prune conda
+prune config
