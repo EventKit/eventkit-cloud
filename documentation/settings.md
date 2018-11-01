@@ -236,7 +236,7 @@ The contact url will be displayed as a link on the About page.
 #### Disclaimer
 You can add any disclaimer that need to be visible before login. It will appear alongside the login options.
 The disclaimer can be a plain string or a string containing properly formatted HTML elements
-<pre>LOGIN_DISCLAIMER='<{div}>my disclaimer</{div}>'</pre>
+<pre>LOGIN_DISCLAIMER='<{div}>my disclaimer<{/div}>'</pre>
 #### Banner Color
 If you choose to display a banner you can use this setting to change the default background color.
 The value can be a hex code or color name.
