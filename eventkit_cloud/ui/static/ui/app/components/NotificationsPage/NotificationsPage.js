@@ -10,7 +10,7 @@ import PageLoading from '../common/PageLoading';
 import CustomScrollbar from '../CustomScrollbar';
 import NotificationsTable from '../Notification/NotificationsTable';
 import NotificationGridItem from '../Notification/NotificationGridItem';
-import LoadButtons from '../DataPackPage/LoadButtons';
+import LoadButtons from '../common/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
 
 export class NotificationsPage extends React.Component {

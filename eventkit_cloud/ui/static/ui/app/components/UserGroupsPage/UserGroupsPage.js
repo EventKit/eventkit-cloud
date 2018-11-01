@@ -27,13 +27,14 @@ import MemberInfoDialog from './Dialogs/MemberInfoDialog';
 import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
+import LoadButtons from '../common/LoadButtons';
 import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/groupActions';
 import { getUsers } from '../../actions/usersActions';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 
 export class UserGroupsPage extends Component {
-    constructor(props) {
+    constructor(props, context) {
         super(props);
         this.getQueryGroup = this.getQueryGroup.bind(this);
         this.getGroupTitle = this.getGroupTitle.bind(this);
@@ -43,6 +44,8 @@ export class UserGroupsPage extends Component {
         this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleOrderingChange = this.handleOrderingChange.bind(this);
+        this.handleLoadLess = this.handleLoadLess.bind(this);
+        this.handleLoadMore = this.handleLoadMore.bind(this);
         this.handleCreateOpen = this.handleCreateOpen.bind(this);
         this.handleCreateClose = this.handleCreateClose.bind(this);
         this.handleCreateInput = this.handleCreateInput.bind(this);
@@ -81,6 +84,7 @@ export class UserGroupsPage extends Component {
         this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
+        this.pageSize = Number(context.config.USER_GROUPS_PAGE_SIZE);
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
@@ -105,17 +109,29 @@ export class UserGroupsPage extends Component {
     }
 
     componentWillMount() {
+        /* eslint-disable camelcase */
         // If there is no ordering specified default to username
-        if (!this.props.location.query.ordering) {
+        let { ordering, page_size } = this.props.location.query;
+        if (!ordering) {
+            ordering = 'username';
             // Set the current ordering to username so a change wont be detected
             // by componentDidUpdate
-            this.props.location.query.ordering = 'username';
+            this.props.location.query.ordering = ordering;
             // Replace the url with the ordering query included
-            browserHistory.replace({
-                ...this.props.location,
-                query: { ...this.props.location.query, ordering: 'username' },
-            });
         }
+        if (!page_size) {
+            page_size = this.pageSize;
+            this.props.location.query.page_size = page_size;
+        }
+        browserHistory.replace({
+            ...this.props.location,
+            query: {
+                ...this.props.location.query,
+                ordering,
+                page_size,
+            },
+        });
+        /* eslint-enable camelcase */
     }
 
     componentDidMount() {
@@ -235,6 +251,7 @@ export class UserGroupsPage extends Component {
             // if group in options is not null or undefined we use that
             params.groups = options.groups;
         }
+
         this.props.getUsers(params);
     }
 
@@ -303,6 +320,18 @@ export class UserGroupsPage extends Component {
     handleOrderingChange(value) {
         const query = { ...this.props.location.query };
         query.ordering = value;
+        browserHistory.push({ ...this.props.location, query });
+    }
+
+    handleLoadMore() {
+        const query = { ...this.props.location.query };
+        query.page_size = Number(query.page_size) + this.pageSize;
+        browserHistory.push({ ...this.props.location, query });
+    }
+
+    handleLoadLess() {
+        const query = { ...this.props.location.query };
+        query.page_size = Number(query.page_size) - this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
 
@@ -838,6 +867,11 @@ export class UserGroupsPage extends Component {
             });
         }
 
+        const pageSize = Number(this.props.location.query.page_size);
+        const len = queryGroup ? queryGroup.members.length : this.props.users.total;
+        const loadMoreDisabled = pageSize >= len;
+        const loadLessDisabled = pageSize <= this.pageSize || this.pageSize >= len;
+
         return (
             <div style={{ backgroundColor: colors.white, position: 'relative' }}>
                 <Joyride
@@ -960,6 +994,13 @@ export class UserGroupsPage extends Component {
                                 />
                             ))}
                             <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
+                            <LoadButtons
+                                range={this.props.users.range}
+                                handleLoadMore={this.handleLoadMore}
+                                handleLoadLess={this.handleLoadLess}
+                                loadMoreDisabled={loadMoreDisabled}
+                                loadLessDisabled={loadLessDisabled}
+                            />
                         </CustomScrollbar>
                     </div>
                 </div>
@@ -1067,6 +1108,12 @@ export class UserGroupsPage extends Component {
     }
 }
 
+UserGroupsPage.contextTypes = {
+    config: {
+        USER_GROUPS_PAGE_SIZE: PropTypes.string,
+    },
+};
+
 UserGroupsPage.propTypes = {
     user: PropTypes.shape({
         username: PropTypes.string,
@@ -1117,8 +1164,8 @@ UserGroupsPage.propTypes = {
         fetched: PropTypes.bool,
         error: PropTypes.string,
         total: PropTypes.number,
-        new: PropTypes.number,
-        ungrouped: PropTypes.number,
+        nextPage: PropTypes.bool,
+        range: PropTypes.string,
     }).isRequired,
     getGroups: PropTypes.func.isRequired,
     deleteGroup: PropTypes.func.isRequired,

@@ -1183,6 +1183,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
     serializer_class = UserDataSerializer
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
     parser_classes = (JSONParser,)
+    pagination_class = LinkHeaderPagination
     filter_class = UserFilter
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     lookup_field = 'username'
@@ -1230,18 +1231,19 @@ class UserDataViewSet(viewsets.GenericViewSet):
         """
         queryset = self.get_queryset()
         total = len(queryset)
-        delta = date.today() - timedelta(days=14)
-        new = len(queryset.filter(date_joined__gte=delta))
-        not_grouped = 0
-        for user in queryset:
-            if not len(GroupPermission.objects.filter(user=user)):
-                not_grouped += 1
-        headers = {'Total-Users': total, 'New-Users': new, 'Not-Grouped-Users': not_grouped}
         filtered_queryset = self.filter_queryset(queryset)
         if request.query_params.get('exclude_self'):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
-        serializer = UserDataSerializer(filtered_queryset, many=True)
-        return Response(serializer.data, headers=headers, status=status.HTTP_200_OK)
+        page = self.paginate_queryset(filtered_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            response = self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(filtered_queryset, many=True, context={'request': request})
+            response =  Response(serializer.data, status=status.HTTP_200_OK)
+
+        response['Total-Users'] = total
+        return response
 
     @list_route(methods=['post', 'get'])
     def members(self, request, *args, **kwargs):
