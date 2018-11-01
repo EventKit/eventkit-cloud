@@ -20,7 +20,7 @@ class TaskProcess(object):
 
     def start_process(self, command=None, billiard=False, *args, **kwargs):
         from eventkit_cloud.tasks.models import ExportTaskRecord
-        from eventkit_cloud.tasks.export_tasks import TaskStates
+        from eventkit_cloud.tasks import TaskStates
 
         if billiard:
             proc = Process(daemon=False, *args, **kwargs)
