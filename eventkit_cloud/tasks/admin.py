@@ -4,7 +4,7 @@ from django.contrib import admin
 from eventkit_cloud.tasks.models import ExportRun, UserDownload, ExportTaskRecord, FileProducingTaskResult, \
     ExportTaskException
 
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks.enumerations import TaskStates
 
 import logging
 import pickle
