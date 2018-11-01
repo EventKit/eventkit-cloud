@@ -13,7 +13,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
-from mock import Mock, PropertyMock, patch, MagicMock
+from mock import Mock, PropertyMock, patch, MagicMock, ANY
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
@@ -590,8 +590,8 @@ class TestExportTasks(ExportTaskBase):
             mock_export_run.objects.filter().first().__nonzero__.return_value = False
             wait_for_providers_task(run_uid=mock_run_uid, callback_task=callback_task, apply_args=apply_args)
 
-    @patch('eventkit_cloud.tasks.export_tasks.create_license_file')
-    @patch('eventkit_cloud.tasks.export_tasks.get_data_type_from_provider')
+    @patch('eventkit_cloud.tasks.export_tasks.get_arcgis_metadata')
+    @patch('eventkit_cloud.tasks.helpers.get_metadata')
     @patch('eventkit_cloud.tasks.export_tasks.zip_files')
     @patch('eventkit_cloud.tasks.export_tasks.get_human_readable_metadata_document')
     @patch('eventkit_cloud.tasks.export_tasks.get_style_files')
@@ -599,69 +599,46 @@ class TestExportTasks(ExportTaskBase):
     @patch('builtins.open')
     @patch('eventkit_cloud.tasks.export_tasks.generate_qgs_style')
     @patch('os.path.join', side_effect=lambda *args: args[-1])
-    @patch('os.path.isfile')
     @patch('eventkit_cloud.tasks.models.DataProviderTaskRecord')
-    def test_create_zip_task(self, mock_DataProviderTaskRecord, isfile, join, mock_generate_qgs_style, mock_open,
+    def test_create_zip_task(self, mock_DataProviderTaskRecord, join, mock_generate_qgs_style, mock_open,
                              mock_json, mock_get_style_files, mock_get_human_readable_metadata_document,
-                             mock_zip_files, mock_get_data_type_from_provider, mock_create_license_file):
+                             mock_zip_files, mock_get_metadata, mock_get_arcgis_metadata):
+        mock_get_style_files.return_value = style_files = ['/styles.png']
+        mock_get_human_readable_metadata_document.return_value = human_metadata_doc = "/human_metadata.txt"
+        mock_generate_qgs_style.return_value = qgis_file = "/style.qgs"
 
-        # This doesn't need to be valid with ExportRun mocked
-        mock_run_uid = str(uuid.uuid4())
-        mock_job_name = 'test'
-        mock_get_data_type_from_provider.return_value = 'osm'
-        expected_zip = "{0}.zip".format(mock_job_name)
+        metadata = {
+            "aoi": "AOI",
+            "bbox": [-1,-1,1,1], "data_sources": {
+            "osm": {"copyright": None,
+                    "description": "OpenStreetMap vector data provided in a custom thematic schema. \r\n\t\r\n\tData is grouped into separate tables (e.g. water, roads...).",
+                    "file_path": "data/osm/test-osm-20181101.gpkg", "file_type": ".gpkg",
+                    "full_file_path": "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+                    "last_update": "2018-10-29T04:35:02Z\n",
+                    "metadata": "https://overpass-server.com/overpass/interpreter",
+                    "name": "OpenStreetMap Data (Themes)", "slug": "osm", "type": "osm",
+                    "uid": "0d08ddf6-35c1-464f-b271-75f6911c3f78"}}, "date": "20181101", "description": "Test",
+            "has_elevation": False, "has_raster": True, "include_files": [
+                human_metadata_doc, qgis_file,
+            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/test.gpkg",
+            "/var/lib/eventkit/exports_stage/7fadf34e-58f9-4bb8-ab57-adc1015c4269/osm/osm_selection.geojson"],
+            "name": "test", "project": "Test", "run_uid": "7fadf34e-58f9-4bb8-ab57-adc1015c4269",
+            "url": "http://cloud.eventkit.test/status/2010025c-6d61-4a0b-8d5d-ff9c657259eb"}
+        provider_task_uid = "0d08ddf6-35c1-464f-b271-75f6911c3f78"
+        mock_get_metadata.return_value = metadata
+        expected_zip = "{0}.zip".format(metadata['name'])
         mock_zip_files.return_value = expected_zip
-        expected_style_files = ['test.svg']
-        mock_get_style_files.return_value = expected_style_files
-        style_file = "style.qgs"
-        mock_generate_qgs_style.return_value = style_file
-        metadata_file = "ReadMe.txt"
-        mock_get_human_readable_metadata_document.return_value = metadata_file
-        license_file = "license.txt"
-        mock_create_license_file.return_value = license_file
-
-        expected_file_list = ['e1', 'e2', 'e3', style_file, license_file, 'metadata.json', metadata_file]
-        missing_file_list = ['e4']
-        all_file_list = expected_file_list + missing_file_list
-
-
-        def fake_isfile(fname):
-            if fname in expected_file_list:
-                return True
-            else:
-                return False
-        isfile.side_effect = fake_isfile
-
-        # Fill out the behavior for mocked ExportRun by adding a provider task with
-        # subtasks for each file in all_file_list
-        mocked_provider_subtasks = []
-        for fname in all_file_list:
-            mps = MagicMock()
-            mps.result.filename = fname
-            mocked_provider_subtasks.append(mps)
-
-        mocked_provider_task_uid = uuid.uuid4()
-        mocked_provider_task = MagicMock()
-        mocked_provider_task.uid = mocked_provider_task_uid
-        mocked_provider_task.status = TaskStates.COMPLETED.value
-        mocked_provider_task.tasks.all.return_value = mocked_provider_subtasks
-        mocked_provider_task.slug = 'dummy_slug'
-        mocked_provider_task.run.uid = mock_run_uid
-        mocked_provider_task.run.job.include_zipfile = True
-        mocked_provider_task.run.job.name = mock_job_name
-        mocked_provider_task.run.provider_tasks.all.return_value = [mocked_provider_task]
-
-        mock_DataProviderTaskRecord.objects.get.return_value = mocked_provider_task
-
-        returned_zip = create_zip_task.run(data_provider_task_uid=mocked_provider_task_uid)
-        mock_generate_qgs_style.assert_called_once_with(run_uid=mock_run_uid, data_provider_task_record=mocked_provider_task)
+        returned_zip = create_zip_task.run(data_provider_task_uid=provider_task_uid)
+        mock_generate_qgs_style.assert_called_once_with(metadata)
         mock_open.assert_called_once()
         mock_zip_files.assert_called_once_with(file_path=expected_zip,
-                                               include_files=set(expected_file_list),
-                                               static_files=expected_style_files,
+                                               include_files=set(metadata['include_files']),
+                                               static_files=style_files,
                                                )
         mock_json.dump.assert_called_once()
+        mock_get_arcgis_metadata.assert_called_once_with(metadata)
         self.assertEqual(returned_zip, {'result': expected_zip})
+
 
     def test_zip_file_task_invalid_params(self):
 
