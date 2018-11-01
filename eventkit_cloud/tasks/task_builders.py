@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db import DatabaseError
 
 from eventkit_cloud.jobs.models import DataProviderTask
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.helpers import normalize_name
 from eventkit_cloud.tasks.models import ExportTaskRecord, DataProviderTaskRecord
 
