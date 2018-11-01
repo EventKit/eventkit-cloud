@@ -13,7 +13,8 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
-from mock import Mock, PropertyMock, patch, MagicMock, ANY
+from mock import Mock, PropertyMock, patch, MagicMock, call, ANY
+
 
 from eventkit_cloud.celery import TaskPriority, app
 from eventkit_cloud.jobs.models import DatamodelPreset, Job
@@ -21,10 +22,10 @@ from eventkit_cloud.tasks.export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
-    zip_files, pick_up_run_task, cancel_export_provider_task, kill_task, TaskStates,
-    bounds_export_task, parse_result, finalize_export_provider_task,
+    zip_files, pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
     FormatTask, wait_for_providers_task, create_zip_task, default_format_time
 )
+from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -437,9 +438,10 @@ class TestExportTasks(ExportTaskBase):
         rmtree.assert_called_once_with(stage_dir)
         email().send.assert_called_once()
 
+    @patch('eventkit_cloud.tasks.set_cache_value')
     @patch('django.db.connection.close')
     @patch('eventkit_cloud.tasks.models.ExportTaskRecord')
-    def test_update_progress(self, export_task, mock_close):
+    def test_update_progress(self, export_task, mock_close, mock_set_cache_value):
         export_provider_task = DataProviderTaskRecord.objects.create(
             run=self.run,
             name='test_provider_task'
@@ -450,12 +452,11 @@ class TestExportTasks(ExportTaskBase):
             name="test_task"
         ).uid
         estimated = timezone.now()
-        export_task_instance = Mock(progress=0, estimated_finish=None)
-        export_task.objects.get.return_value = export_task_instance
         update_progress(saved_export_task_uid, progress=50, estimated_finish=estimated)
         mock_close.assert_called_once()
-        self.assertEqual(export_task_instance.progress, 50)
-        self.assertEqual(export_task_instance.estimated_finish, estimated)
+        mock_set_cache_value.assert_has_calls([call(uid=saved_export_task_uid, attribute='progress', model_name='ExportTaskRecord', value=50),
+                                              call(uid=saved_export_task_uid, attribute='estimated_finish',
+                                                   model_name='ExportTaskRecord', value=estimated)])
 
     @patch('eventkit_cloud.tasks.export_tasks.kill_task')
     def test_cancel_task(self, mock_kill_task):

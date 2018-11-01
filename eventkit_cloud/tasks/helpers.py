@@ -169,6 +169,7 @@ def generate_qgs_style(metadata):
     :param metadata: A dict of metadata provided by get_metadata.
     :return: The path to the generated qgs file.
     """
+
     from eventkit_cloud.tasks.helpers import normalize_name
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata['run_uid']))
 

@@ -7,7 +7,6 @@ import re
 import shutil
 import socket
 import traceback
-from collections import Sequence
 from zipfile import ZipFile, ZIP_DEFLATED
 
 from audit_logging.celery_support import UserDetailsBase
@@ -23,11 +22,11 @@ from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-from enum import Enum
 
 from eventkit_cloud.celery import app, TaskPriority
 from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
 from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.tasks.enumerations import TaskStates
 from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
@@ -44,28 +43,6 @@ BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
-
-
-class TaskStates(Enum):
-    COMPLETED = "COMPLETED"  # Used for runs when all tasks were successful
-    INCOMPLETE = "INCOMPLETE"  # Used for runs when one or more tasks were unsuccessful
-    SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
-
-    PENDING = "PENDING"  # Used for tasks that have not been started
-    RUNNING = "RUNNING"  # Used for tasks that have been started
-    CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
-    SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
-    FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
-
-    # or a non-zero exit code was returned.)
-
-    @staticmethod
-    def get_finished_states():
-        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELED, TaskStates.SUCCESS, TaskStates.FAILED]
-
-    @staticmethod
-    def get_incomplete_states():
-        return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
 
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
@@ -1361,11 +1338,12 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up.
     :return: A function which can be called to update the progress on an ExportTaskRecord.
     """
+
+    from django.db import connection
+    from eventkit_cloud.tasks import set_cache_value
+
     if task_uid is None:
         return
-
-    from eventkit_cloud.tasks.models import ExportTaskRecord
-    from django.db import connection
 
     if not estimated_finish and not progress:
         return
@@ -1378,12 +1356,12 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     # will be invalid and throw an error.
     connection.close()
 
-    export_task = ExportTaskRecord.objects.get(uid=task_uid)
     if absolute_progress:
-        export_task.progress = absolute_progress
+        set_cache_value(uid=task_uid, attribute="progress",
+                        model_name='ExportTaskRecord', value=absolute_progress)
     if estimated_finish:
-        export_task.estimated_finish = estimated_finish
-    export_task.save()
+        set_cache_value(uid=task_uid, attribute="estimated_finish",
+                        model_name='ExportTaskRecord', value=estimated_finish)
 
 
 def parse_result(task_result, key=''):
