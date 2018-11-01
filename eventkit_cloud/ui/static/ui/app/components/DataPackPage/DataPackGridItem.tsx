@@ -139,13 +139,11 @@ interface State {
     shareDialogOpen: boolean;
 }
 
-interface DispatchProps {}
-
 interface StateProps {
     run: Eventkit.Run;
 }
 
-type Props = Eventkit.Theme & StyledComponentProps & StateProps & DispatchProps & OwnProps;
+type Props = StyledComponentProps & StateProps & OwnProps;
 
 export class DataPackGridItem extends React.Component<Props, State> {
     static defaultProps = {
@@ -560,6 +558,6 @@ const makeMapStateToProps = () => {
 };
 
 export default
-    withTheme()<any>(
-        withStyles<any, any>(jss)(
-            connect<StateProps, DispatchProps, OwnProps>(makeMapStateToProps)(DataPackGridItem)));
+    withTheme()(
+        withStyles(jss)(
+            connect(makeMapStateToProps)(DataPackGridItem)));

@@ -511,6 +511,8 @@ export class ExportAOI extends Component {
                 this.props.updateAoiInfo({
                     ...this.props.aoiInfo,
                     geojson,
+                    originalGeojson: geojson,
+                    buffer: 0,
                 });
                 this.showInvalidDrawWarning(false);
                 const enable = this.shouldEnableNext(geojson);

@@ -70,6 +70,7 @@ describe('DataPackList actions', () => {
             {
                 type: actions.types.FETCHING_RUNS,
                 cancelSource: testSource,
+                _auth_required: true,
             },
             {
                 type: actions.types.RECEIVED_RUNS,
@@ -78,6 +79,7 @@ describe('DataPackList actions', () => {
                     nextPage: true,
                     range: '12/24',
                 },
+                _auth_required: true,
             },
             {
                 type: 'ADD_RUN',
@@ -86,6 +88,7 @@ describe('DataPackList actions', () => {
                     username: initialState.user.data.user.username,
                     ...normalRun.entities,
                 },
+                _auth_required: true,
             },
         ];
 
@@ -110,6 +113,7 @@ describe('DataPackList actions', () => {
             {
                 type: actions.types.FETCHING_RUNS,
                 cancelSource: testSource,
+                _auth_required: true,
             },
             {
                 type: actions.types.RECEIVED_RUNS,
@@ -118,6 +122,7 @@ describe('DataPackList actions', () => {
                     nextPage: false,
                     range: '',
                 },
+                _auth_required: true,
             },
             {
                 type: 'ADD_RUN',
@@ -126,6 +131,7 @@ describe('DataPackList actions', () => {
                     username: initialState.user.data.user.username,
                     ...normalRun.entities,
                 },
+                _auth_required: true,
             },
         ];
 
@@ -202,7 +208,7 @@ describe('DataPackList actions', () => {
         const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_RUNS, cancelSource: testSource },
+            { type: actions.types.FETCHING_RUNS, cancelSource: testSource, _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -224,8 +230,8 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_RUNS, cancelSource: testSource },
-            { type: actions.types.FETCH_RUNS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_RUNS, cancelSource: testSource, _auth_required: true },
+            { type: actions.types.FETCH_RUNS_ERROR, error: 'oh no an error', _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -251,6 +257,7 @@ describe('DataPackList actions', () => {
             {
                 type: actions.types.FETCHING_FEATURED_RUNS,
                 cancelSource: testSource,
+                _auth_required: true,
             },
             {
                 type: actions.types.RECEIVED_FEATURED_RUNS,
@@ -259,6 +266,7 @@ describe('DataPackList actions', () => {
                     nextPage: true,
                     range: '6/24',
                 },
+                _auth_required: true,
             },
             {
                 type: 'ADD_FEATURED_RUN',
@@ -267,6 +275,7 @@ describe('DataPackList actions', () => {
                     username: initialState.user.data.user.username,
                     ...normalRun.entities,
                 },
+                _auth_required: true,
             },
         ];
 
@@ -344,8 +353,8 @@ describe('DataPackList actions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_FEATURED_RUNS, cancelSource: testSource },
-            { type: actions.types.FETCH_FEATURED_RUNS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_FEATURED_RUNS, cancelSource: testSource, _auth_required: true },
+            { type: actions.types.FETCH_FEATURED_RUNS_ERROR, error: 'oh no an error', _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -393,10 +402,11 @@ describe('DataPackList actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onGet('/api/runs?job_uid=123456789').reply(200, [getApiRun()]);
         const expectedActions = [
-            { type: actions.types.GETTING_DATACART_DETAILS },
+            { type: actions.types.GETTING_DATACART_DETAILS, _auth_required: true },
             {
                 type: actions.types.DATACART_DETAILS_RECEIVED,
                 ids: [getRun().uid],
+                _auth_required: true,
             },
             {
                 type: 'ADD_RUN',
@@ -405,6 +415,7 @@ describe('DataPackList actions', () => {
                     username: initialState.user.data.user.username,
                     ...normalRun.entities,
                 },
+                _auth_required: true,
             },
         ];
 
@@ -420,10 +431,11 @@ describe('DataPackList actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onGet('/api/runs?job_uid=123456789').reply(200, []);
         const expectedActions = [
-            { type: actions.types.GETTING_DATACART_DETAILS },
+            { type: actions.types.GETTING_DATACART_DETAILS, _auth_required: true },
             {
                 type: actions.types.DATACART_DETAILS_RECEIVED,
                 ids: [],
+                _auth_required: true,
             },
         ];
 
@@ -439,8 +451,8 @@ describe('DataPackList actions', () => {
         const mock = new MockAdapter(axios, { delayResponse: 10 });
         mock.onGet('/api/runs?job_uid=123').reply(400, 'oh no an error');
         const expectedActions = [
-            { type: actions.types.GETTING_DATACART_DETAILS },
-            { type: actions.types.DATACART_DETAILS_ERROR, error: 'oh no an error' },
+            { type: actions.types.GETTING_DATACART_DETAILS, _auth_required: true },
+            { type: actions.types.DATACART_DETAILS_ERROR, error: 'oh no an error', _auth_required: true },
         ];
 
         const store = createTestStore(initialState);

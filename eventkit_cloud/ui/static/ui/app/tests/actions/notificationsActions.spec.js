@@ -37,12 +37,13 @@ describe('notificationsActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
+            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
             {
                 type: actions.types.RECEIVED_NOTIFICATIONS,
                 notifications: mockNotificationsArray,
                 nextPage: true,
                 range: '12/24',
+                _auth_required: true,
             },
         ];
 
@@ -64,9 +65,13 @@ describe('notificationsActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
+            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
             {
-                type: actions.types.RECEIVED_NOTIFICATIONS, notifications: mockNotificationsArray, nextPage: false, range: '',
+                type: actions.types.RECEIVED_NOTIFICATIONS,
+                notifications: mockNotificationsArray,
+                nextPage: false,
+                range: '',
+                _auth_required: true,
             },
         ];
 
@@ -135,7 +140,7 @@ describe('notificationsActions', () => {
         const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
+            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -157,8 +162,8 @@ describe('notificationsActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource },
-            { type: actions.types.FETCH_NOTIFICATIONS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
+            { type: actions.types.FETCH_NOTIFICATIONS_ERROR, error: 'oh no an error', _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -179,8 +184,8 @@ describe('notificationsActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource },
-            { type: actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT, unreadCount: 1 },
+            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource, _auth_required: true },
+            { type: actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT, unreadCount: 1, _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -254,7 +259,7 @@ describe('notificationsActions', () => {
         const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource },
+            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource, _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -276,8 +281,8 @@ describe('notificationsActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource },
-            { type: actions.types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource, _auth_required: true },
+            { type: actions.types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR, error: 'oh no an error', _auth_required: true },
         ];
 
         const store = createTestStore(initialState);

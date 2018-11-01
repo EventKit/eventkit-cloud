@@ -70,6 +70,7 @@ describe('userActivityActions', () => {
             {
                 type: actions.types.FETCHING_VIEWED_JOBS,
                 cancelSource: testSource,
+                _auth_required: true,
             },
             {
                 type: actions.types.RECEIVED_VIEWED_JOBS,
@@ -78,6 +79,7 @@ describe('userActivityActions', () => {
                     nextPage: true,
                     range: '12/24',
                 },
+                _auth_required: true,
             },
             {
                 type: 'ADD_VIEWED_RUN',
@@ -86,6 +88,7 @@ describe('userActivityActions', () => {
                     username: initialState.user.data.user.username,
                     ...run1.entities,
                 },
+                _auth_required: true,
             },
             {
                 type: 'ADD_VIEWED_RUN',
@@ -94,6 +97,7 @@ describe('userActivityActions', () => {
                     username: initialState.user.data.user.username,
                     ...run2.entities,
                 },
+                _auth_required: true,
             },
         ];
 
@@ -170,7 +174,7 @@ describe('userActivityActions', () => {
         const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
+            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource, _auth_required: true },
         ];
 
         const store = createTestStore(initialState);
@@ -193,8 +197,8 @@ describe('userActivityActions', () => {
         axios.CancelToken.source = () => (testSource);
 
         const expectedActions = [
-            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource },
-            { type: actions.types.FETCH_VIEWED_JOBS_ERROR, error: 'oh no an error' },
+            { type: actions.types.FETCHING_VIEWED_JOBS, cancelSource: testSource, _auth_required: true },
+            { type: actions.types.FETCH_VIEWED_JOBS_ERROR, error: 'oh no an error', _auth_required: true },
         ];
 
         const store = createTestStore(initialState);

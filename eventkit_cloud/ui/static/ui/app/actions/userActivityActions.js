@@ -1,6 +1,7 @@
 import axios from 'axios/index';
 import cookie from 'react-cookie';
 import Normalizer from '../utils/normalizers';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     VIEWED_JOB: 'VIEWED_JOB',
@@ -13,10 +14,10 @@ export const types = {
 
 export function viewedJob(jobuid) {
     return (dispatch) => {
-        dispatch({
+        dispatch(makeAuthRequired({
             type: types.VIEWED_JOB,
             jobuid,
-        });
+        }));
 
         return axios({
             url: '/api/user/activity/jobs?activity=viewed',
@@ -24,16 +25,16 @@ export function viewedJob(jobuid) {
             data: { job_uid: jobuid },
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {
-            dispatch({
+            dispatch(makeAuthRequired({
                 type: types.VIEWED_JOB_SUCCESS,
                 jobuid,
-            });
+            }));
         }).catch((error) => {
             console.error(error.message);
-            dispatch({
+            dispatch(makeAuthRequired({
                 type: types.VIEWED_JOB_ERROR,
                 jobuid,
-            });
+            }));
         });
     };
 }
@@ -53,10 +54,10 @@ export function getViewedJobs(args = {}) {
 
         const cancelSource = axios.CancelToken.source();
 
-        dispatch({
+        dispatch(makeAuthRequired({
             type: types.FETCHING_VIEWED_JOBS,
             cancelSource,
-        });
+        }));
 
         const params = {
             activity: 'viewed',
@@ -96,35 +97,35 @@ export function getViewedJobs(args = {}) {
 
             const actions = runs.map((run) => {
                 const { result, entities } = normalizer.normalizeRun(run);
-                return {
+                return makeAuthRequired({
                     type: 'ADD_VIEWED_RUN',
                     payload: {
                         id: result,
                         username: state.user.data.user.username,
                         ...entities,
                     },
-                };
+                });
             });
 
             dispatch([
-                {
+                makeAuthRequired({
                     type: types.RECEIVED_VIEWED_JOBS,
                     payload: {
                         nextPage,
                         range,
                         ids: runs.map(run => run.uid),
                     },
-                },
+                }),
                 ...actions,
             ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
             } else {
-                dispatch({
+                dispatch(makeAuthRequired({
                     type: types.FETCH_VIEWED_JOBS_ERROR,
                     error: error.response.data,
-                });
+                }));
             }
         });
     };

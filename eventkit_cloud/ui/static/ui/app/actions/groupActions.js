@@ -1,5 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     FETCHING_GROUPS: 'FETCHING_GROUPS',
@@ -28,7 +29,7 @@ export function getGroups() {
         const { CancelToken } = axios;
         const source = CancelToken.source();
 
-        dispatch({ type: types.FETCHING_GROUPS, cancelSource: source });
+        dispatch(makeAuthRequired({ type: types.FETCHING_GROUPS, cancelSource: source }));
 
         const csrfmiddlewaretoken = cookie.load('csrftoken');
 
@@ -38,12 +39,12 @@ export function getGroups() {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
-            dispatch({ type: types.FETCHED_GROUPS, groups: response.data });
+            dispatch(makeAuthRequired({ type: types.FETCHED_GROUPS, groups: response.data }));
         }).catch((error) => {
             if (axios.isCancel(error)) {
                 console.log(error.message);
             } else {
-                dispatch({ type: types.FETCH_GROUPS_ERROR, error: error.response.data });
+                dispatch(makeAuthRequired({ type: types.FETCH_GROUPS_ERROR, error: error.response.data }));
             }
         });
     };

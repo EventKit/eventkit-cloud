@@ -1,5 +1,6 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     FETCHING_USERS: 'FETCHING_USERS',
@@ -9,7 +10,7 @@ export const types = {
 
 export function getUsers(params) {
     return (dispatch) => {
-        dispatch({ type: types.FETCHING_USERS });
+        dispatch(makeAuthRequired({ type: types.FETCHING_USERS }));
 
         const csrfmiddlewaretoken = cookie.load('csrftoken');
 
@@ -25,15 +26,15 @@ export function getUsers(params) {
             const ungroupedUsers = Number(response.headers['not-grouped-users']);
 
             const users = response.data;
-            dispatch({
+            dispatch(makeAuthRequired({
                 type: types.FETCHED_USERS,
                 users,
                 total: totalUsers,
                 new: newUsers,
                 ungrouped: ungroupedUsers,
-            });
+            }));
         }).catch((error) => {
-            dispatch({ type: types.FETCH_USERS_ERROR, error: error.response.data });
+            dispatch(makeAuthRequired({ type: types.FETCH_USERS_ERROR, error: error.response.data }));
         });
     };
 }
