@@ -99,6 +99,9 @@ Used with a [custom version](https://github.com/venicegeo/pelias-api) of the API
 ##### Basemap URL
 To set the application basemap add:
 <pre>BASEMAP_URL=http://my-tile-service.com/{z}/{x}/{y}.png</pre>
+##### Basemap Copyright
+To set the copyright information for your basemap add (for example):
+<pre>© My Copyright</pre>
 ##### Max Extent
 A value to warn users that the datapack will not include any datasets.
 Exceeding this as a selection will prevent the user from proceeding. 
@@ -206,7 +209,7 @@ OAUTH_PROFILE_SCHEMA = {"identification": "ID",
                         ...}</pre>
 Note an array can be used and EventKit will try each one for a valid value to enter in the EventKit users profile. 
 
-####Logging
+#### Logging
 <pre>DEBUG=True</pre>
 <pre>LOG_LEVEL=Info</pre> 
 
@@ -221,3 +224,44 @@ A custom SSL cert file can be specified using:
 SSL should be used but many services (especially geospatial services) don't have proper certificates with production CAs. 
 SSL can be disabled using:
 <pre>SSL_VERIFICATION=False</pre>
+
+### UI Settings
+
+#### Version
+The version number will be display on the Login page and the About page.
+<pre>VERSION='1.2.1'</pre>
+#### Contact Url
+The contact url will be displayed as a link on the About page.
+<pre>CONTACT_URL='mailto:my.team@domain.com'</pre>
+#### Disclaimer
+You can add any disclaimer that need to be visible before login. It will appear alongside the login options.
+The disclaimer can be a plain string or a string containing properly formatted HTML elements
+<pre>LOGIN_DISCLAIMER='<{div}>my disclaimer</{div}>'</pre>
+#### Banner Color
+If you choose to display a banner you can use this setting to change the default background color.
+The value can be a hex code or color name.
+<pre>BANNER_BACKGROUND_COLOR='#eee'</pre>
+#### Banner Text Color
+If you choose to display a banner you can use this setting to change the default text color.
+Value can be a hex code or color name.
+<pre>BANNER_TEXT_COLOR='blue'</pre>
+#### Banner Text
+Setting this value will display the text at the top of the page in a high visibility banner.
+<pre>BANNER_TEXT='IMPORTANT TEXT FOR USERS TO SEE'</pre>
+#### BASEMAP_URL
+See "Map Settings".
+#### BASEMAP_COPYRIGHT
+See "Map Settings".
+#### DataPack Expiration
+Set a limit for keeping DataPacks in the system.
+<pre>MAX_DATAPACK_EXPIRATION_DAYS='30'</pre>
+#### Max Vector AOI:
+See "JOB_MAX_EXTENT".
+#### Max Raster AOI
+See "JOB_MAX_RASTER_EXTENT".
+#### DataPack Page Size
+The default number of DataPacks to be displayed in the DataPack Library
+<pre>DATAPACK_PAGE_SIZE='10'</pre>
+#### Notifications Page Size
+The default number of Notifications to be displayed in the Notifications page
+<pre>NOTIFICATIONS_PAGE_SIZE='15'</pre>
