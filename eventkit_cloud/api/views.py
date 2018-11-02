@@ -1234,7 +1234,15 @@ class UserDataViewSet(viewsets.GenericViewSet):
         filtered_queryset = self.filter_queryset(queryset)
         if request.query_params.get('exclude_self'):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
-        page = self.paginate_queryset(filtered_queryset)
+        elif request.query_params.get('prepend_self'):
+            if request.user in filtered_queryset:
+                filtered_queryset = filtered_queryset.exclude(username=request.user.username)
+                filtered_queryset = [qs for qs in filtered_queryset]
+                filtered_queryset = [request.user] + filtered_queryset
+
+        page = None
+        if not request.query_params.get('disable_page'):
+            page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={'request': request})
             response = self.get_paginated_response(serializer.data)

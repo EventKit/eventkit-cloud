@@ -55,7 +55,7 @@ export class StatusDownload extends React.Component {
         this.props.getDatacartDetails(this.props.router.params.jobuid);
         this.props.viewedJob(this.props.router.params.jobuid);
         this.props.getProviders();
-        this.props.getUsers({ exclude_self: true });
+        this.props.getUsers({ exclude_self: true, disable_page: true });
         this.props.getGroups();
         this.startTimer();
 

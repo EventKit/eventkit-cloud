@@ -252,6 +252,8 @@ export class UserGroupsPage extends Component {
             params.groups = options.groups;
         }
 
+        params.prepend_self = true;
+
         this.props.getUsers(params);
     }
 
@@ -301,6 +303,7 @@ export class UserGroupsPage extends Component {
             if (text) {
                 const query = { ...this.props.location.query };
                 query.search = text;
+                query.page_size = this.pageSize;
                 browserHistory.push({ ...this.props.location, query });
             }
         }
@@ -312,6 +315,7 @@ export class UserGroupsPage extends Component {
             // we need to undo any search
             const query = { ...this.props.location.query };
             query.search = null;
+            query.page_size = this.pageSize;
             delete query.search;
             browserHistory.push({ ...this.props.location, query });
         }
@@ -435,6 +439,8 @@ export class UserGroupsPage extends Component {
         } else {
             query.groups = value;
         }
+        // because we are navigating to new group we need to reset the page size
+        query.page_size = this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
 
@@ -869,7 +875,8 @@ export class UserGroupsPage extends Component {
 
         const pageSize = Number(this.props.location.query.page_size);
         const len = queryGroup ? queryGroup.members.length : this.props.users.total;
-        const loadMoreDisabled = pageSize >= len;
+
+        const loadMoreDisabled = !this.props.users.nextPage;
         const loadLessDisabled = pageSize <= this.pageSize || this.pageSize >= len;
 
         return (
@@ -968,39 +975,44 @@ export class UserGroupsPage extends Component {
                             className="qa-UserGroupsPage-CustomScrollbar"
                             ref={(instance) => { this.scrollbar = instance; }}
                         >
-                            <div style={styles.ownUser}>
-                                {ownUser}
-                            </div>
-                            {users.map(user => (
-                                <UserRow
-                                    key={user.user.username}
-                                    selected={selectedUsernames.indexOf(user.user.username) > -1}
-                                    onSelect={this.handleUserSelect}
-                                    user={user}
-                                    groups={ownedGroups}
-                                    handleNewGroup={this.handleNewGroup}
-                                    handleAddUser={this.handleAddUsers}
-                                    handleMakeAdmin={this.handleMakeAdmin}
-                                    handleDemoteAdmin={this.handleDemoteAdmin}
-                                    handleRemoveUser={this.handleRemoveUser}
-                                    isAdmin={
-                                        !!queryGroup
-                                        && queryGroup.administrators.includes(user.user.username)
-                                    }
-                                    showAdminButton={showAdminButton}
-                                    showAdminLabel={showAdminLabel}
-                                    showRemoveButton={!!ownedQueryGroup}
-                                    className="qa-UserGroupsPage-UserRow"
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                                <div>
+                                    <div style={styles.ownUser}>
+                                        {ownUser}
+                                    </div>
+                                    {users.map(user => (
+                                        <UserRow
+                                            key={user.user.username}
+                                            selected={selectedUsernames.indexOf(user.user.username) > -1}
+                                            onSelect={this.handleUserSelect}
+                                            user={user}
+                                            groups={ownedGroups}
+                                            handleNewGroup={this.handleNewGroup}
+                                            handleAddUser={this.handleAddUsers}
+                                            handleMakeAdmin={this.handleMakeAdmin}
+                                            handleDemoteAdmin={this.handleDemoteAdmin}
+                                            handleRemoveUser={this.handleRemoveUser}
+                                            isAdmin={
+                                                !!queryGroup
+                                                && queryGroup.administrators.includes(user.user.username)
+                                            }
+                                            showAdminButton={showAdminButton}
+                                            showAdminLabel={showAdminLabel}
+                                            showRemoveButton={!!ownedQueryGroup}
+                                            className="qa-UserGroupsPage-UserRow"
+                                        />
+                                    ))}
+                                    <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
+                                </div>
+                                <LoadButtons
+                                    style={{ paddingTop: '10px' }}
+                                    range={this.props.users.range}
+                                    handleLoadMore={this.handleLoadMore}
+                                    handleLoadLess={this.handleLoadLess}
+                                    loadMoreDisabled={loadMoreDisabled}
+                                    loadLessDisabled={loadLessDisabled}
                                 />
-                            ))}
-                            <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
-                            <LoadButtons
-                                range={this.props.users.range}
-                                handleLoadMore={this.handleLoadMore}
-                                handleLoadLess={this.handleLoadLess}
-                                loadMoreDisabled={loadMoreDisabled}
-                                loadLessDisabled={loadLessDisabled}
-                            />
+                            </div>
                         </CustomScrollbar>
                     </div>
                 </div>
@@ -1109,9 +1121,9 @@ export class UserGroupsPage extends Component {
 }
 
 UserGroupsPage.contextTypes = {
-    config: {
+    config: PropTypes.shape({
         USER_GROUPS_PAGE_SIZE: PropTypes.string,
-    },
+    }),
 };
 
 UserGroupsPage.propTypes = {
