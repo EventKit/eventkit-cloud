@@ -110,7 +110,7 @@
       }
     },
     "testURL": "http://localhost",
-    "coverageDirectory": "/var/lib/eventkit/coverage",
+    "coverageDirectory": "./coverage",
     "collectCoverageFrom": [
       "**/app/**.{js,jsx,ts,tsx}",
       "!**/*.d.ts",
@@ -136,7 +136,7 @@
       "shared"
     ],
     "moduleNameMapper": {
-      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/__mocks__/fileMock.js",
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/eventkit_cloud/ui/static/ui/app/__mocks__/fileMock.js",
       "\\.(css|less)$": "identity-obj-proxy"
     },
     "modulePathIgnorePatterns": [
@@ -165,12 +165,12 @@
   "scripts": {
     "build": "PROD=1 node_modules/webpack/bin/webpack.js",
     "start": "node_modules/webpack-dev-server/bin/webpack-dev-server.js --inline",
-    "coverage": "node_modules/jest-cli/bin/jest.js --coverage --silent && mkdir -p /var/lib/eventkit/coverage/coveralls && coveralls-lcov -v -n /var/lib/eventkit/coverage/lcov.info > /var/lib/eventkit/coverage/coveralls/coveralls.json",
+    "coverage": "node_modules/jest-cli/bin/jest.js --coverage --silent && mkdir -p ./coverage/coveralls && coveralls-lcov -v -n ./coverage/lcov.info > ./coverage/coveralls/coveralls.json",
     "test": "node_modules/jest-cli/bin/jest.js --silent",
     "e2e": "node_modules/nightwatch/bin/nightwatch",
     "install-linter": "npm install eslint@4.9.0 eslint-plugin-import@2.7.0 eslint-plugin-react@7.4.0 eslint-plugin-jsx-a11y@6.0.2 eslint-config-airbnb@16.1.0",
-    "eslint": "node_modules/eslint/bin/eslint.js '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.js'",
-    "tslint": "node_modules/tslint/bin/tslint '/var/lib/eventkit/eventkit_cloud/ui/static/ui/app/**/*.{ts,tsx}'"
+    "eslint": "node_modules/eslint/bin/eslint.js './eventkit_cloud/ui/static/ui/app/**/*.js'",
+    "tslint": "node_modules/tslint/bin/tslint './eventkit_cloud/ui/static/ui/app/**/*.{ts,tsx}'"
   },
   "repository": {
     "type": "git",
