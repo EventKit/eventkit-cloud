@@ -179,7 +179,7 @@ class TestHelpers(TestCase):
             "name": expected_job_name,
             "project": expected_project_name,
             "run_uid": run_uid,
-            "url": "http://cloud.eventkit.test/status/{}".format(expected_job_uid)
+            "url": "{}/status/{}".format(getattr(settings, 'SITE_URL'), expected_job_uid)
         }
 
         returned_metadata = get_metadata(mocked_provider_task.uid)
