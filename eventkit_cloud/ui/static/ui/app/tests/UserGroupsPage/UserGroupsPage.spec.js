@@ -108,8 +108,12 @@ describe('UserGroupsPage component', () => {
         }
     );
 
+    const config = { USER_GROUPS_PAGE_SIZE: '20' };
+
     const getWrapper = props => (
-        shallow(<UserGroupsPage {...props} />)
+        shallow(<UserGroupsPage {...props} />, {
+            context: { config },
+        })
     );
 
     beforeAll(() => {
@@ -308,7 +312,11 @@ describe('UserGroupsPage component', () => {
         props.location.query = {};
         props.getUsers = sinon.spy();
         const wrapper = getWrapper(props);
-        const expectedParams = { ordering: 'username' };
+        const expectedParams = {
+            ordering: 'username',
+            prepend_self: true,
+            page_size: wrapper.instance().pageSize,
+        };
         wrapper.instance().makeUserRequest();
         expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getUsers.calledWith(expectedParams)).toBe(true);
@@ -319,7 +327,12 @@ describe('UserGroupsPage component', () => {
         props.location.query = { ordering: 'username', search: 'my-search' };
         props.getUsers = sinon.spy();
         const wrapper = getWrapper(props);
-        const expectedParams = { ordering: 'username', search: 'my-search' };
+        const expectedParams = {
+            ordering: 'username',
+            search: 'my-search',
+            prepend_self: true,
+            page_size: wrapper.instance().pageSize,
+        };
         wrapper.instance().makeUserRequest();
         expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getUsers.calledWith(expectedParams)).toBe(true);
@@ -330,7 +343,12 @@ describe('UserGroupsPage component', () => {
         props.location.query = { groups: 2 };
         props.getUsers = sinon.spy();
         const wrapper = getWrapper(props);
-        const expectedParams = { groups: 2, ordering: 'username' };
+        const expectedParams = {
+            groups: 2,
+            ordering: 'username',
+            prepend_self: true,
+            page_size: wrapper.instance().pageSize,
+        };
         wrapper.instance().makeUserRequest();
         expect(props.getUsers.calledOnce).toBe(true);
         expect(props.getUsers.calledWith(expectedParams)).toBe(true);
@@ -411,7 +429,7 @@ describe('UserGroupsPage component', () => {
         expect(browserHistory.push.calledOnce).toBe(true);
         expect(browserHistory.push.calledWith({
             ...props.location,
-            query: { ordering: 'admin' },
+            query: { ordering: 'admin', page_size: wrapper.instance().pageSize },
         })).toBe(true);
     });
 
