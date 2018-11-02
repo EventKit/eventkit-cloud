@@ -14,12 +14,12 @@ from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, Noti
 from eventkit_cloud.core.models import JobPermission, JobPermissionLevel
 from eventkit_cloud.jobs.models import Job
 from eventkit_cloud.tasks.export_tasks import (finalize_export_provider_task, TaskPriority,
-                                               wait_for_providers_task, TaskStates,
-                                               create_zip_task, finalize_run_task,
+                                               wait_for_providers_task, create_zip_task, finalize_run_task,
                                                output_selection_geojson_task,
                                                osm_data_collection_task, wfs_export_task,
                                                external_raster_service_export_task, wcs_export_task,
                                                arcgis_feature_service_export_task)
+from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.helpers import get_run_staging_dir, get_provider_staging_dir, get_style_files
 from eventkit_cloud.tasks.models import ExportRun, DataProviderTaskRecord
 from eventkit_cloud.tasks.task_builders import TaskChainBuilder, create_export_task_record

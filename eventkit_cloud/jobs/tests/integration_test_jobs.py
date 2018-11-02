@@ -13,7 +13,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
-from eventkit_cloud.tasks.export_tasks import TaskStates
+from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.models import DataProviderTaskRecord
 from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_levels
 

@@ -170,7 +170,7 @@ def generate_qgs_style(run_uid=None, data_provider_task_record=None):
     :return: The path to the generated qgs file.
     """
     from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.tasks.export_tasks import TaskStates
+    from eventkit_cloud.tasks import TaskStates
     from eventkit_cloud.tasks.helpers import normalize_name
     run = ExportRun.objects.get(uid=run_uid)
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid))
