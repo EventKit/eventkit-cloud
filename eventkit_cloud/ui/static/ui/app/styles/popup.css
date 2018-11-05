@@ -1,0 +1,137 @@
+
+    div.callout {
+        background-color: #fff;
+        position: absolute;
+        padding: 15px;
+        border-radius: 1px;
+        box-shadow: 0px 0px 2px 2px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+    }
+    
+    .callout::before {
+        content: "";
+        width: 0px;
+        height: 0px;
+        border: 0.8em solid transparent;
+        position: absolute;
+    }
+    
+    .callout.top::before {
+        left: calc(50% - 14px);
+        bottom: -20px;
+        box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: transparent transparent #fff #fff;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+    
+    .callout.bottom::before {
+        left: calc(50% - 14px);
+        top: 0px;
+        box-shadow: 2px -2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: #fff #fff transparent transparent;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+    
+    .callout.left::before {
+        right: -6px;
+        top: calc(50% + 4px);
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: transparent #fff #fff transparent;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+
+    .callout.left-bottom::before {
+        right: -6px;
+        bottom: 10px;
+        box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: transparent #fff #fff transparent;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+    
+    .callout.right::before {
+        left: -14px;
+        top: calc(50% + 4px);
+        box-shadow: -2px -2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: #fff transparent transparent #fff;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+
+    .callout.right-bottom::before {
+        left: -14px;
+        bottom: 10px;
+        box-shadow: -2px -2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: #fff transparent transparent #fff;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+    
+    .callout.top-left::before {
+        left: 10px;
+        bottom: -20px;
+        box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: transparent transparent #fff #fff;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }
+    
+    .callout.top-right::before {
+        right: 20px;
+        bottom: -20px;
+        box-shadow: -2px 2px 2px rgba(0, 0, 0, 0.2);
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        box-sizing: border-box;
+        border: 10px solid black;
+        border-color: transparent transparent #fff #fff;
+        transform-origin: 0 0;
+        transform: rotate(-45deg);
+    }

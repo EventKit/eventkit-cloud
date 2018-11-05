@@ -1,62 +1,69 @@
-import React, {PropTypes} from 'react';
-import ActionViewModule from 'material-ui/svg-icons/action/view-module';
-import ActionViewStream from 'material-ui/svg-icons/action/view-stream';
-import MapsMap from 'material-ui/svg-icons/maps/map';
-import IconButton from 'material-ui/IconButton';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import IconButton from '@material-ui/core/IconButton';
+import ActionViewModule from '@material-ui/icons/ViewModule';
+import ActionViewStream from '@material-ui/icons/ViewStream';
+import MapsMap from '@material-ui/icons/Map';
 
 export class DataPackViewButtons extends React.Component {
-
-    constructor(props) {
-        super(props);
-    }
-
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             button: {
-                height: '35px', 
-                width: '22px', 
-                padding: '0px', 
-                float: 'right'
+                height: '35px',
+                width: '22px',
+                padding: '0px',
+                float: 'right',
             },
             icon: {
-                color: '#4498c0', 
-                height: '22px', 
-                width: '22px'
+                height: '22px',
+                width: '22px',
             },
             selectedIcon: {
-                color: '#253447', 
-                height: '22px', 
-                width: '22px', 
-                backgroundColor: '#4498c0'
-            }
-        }
+                color: colors.background_light,
+                backgroundColor: colors.primary,
+                height: '22px',
+                width: '22px',
+            },
+        };
         return (
-            <div className={'qa-DataPackViewButtons-Icons'}  style={{paddingRight: '10px', display: 'inline-block', float: 'right'}}>
+            <div className="qa-DataPackViewButtons-Icons" style={{ paddingRight: '10px', display: 'inline-block', float: 'right' }}>
                 <IconButton
-                    className={'qa-DataPackViewButtons-IconButton-map'}
-                    onClick={() => {this.props.handleViewChange('map')}}
+                    className="qa-DataPackViewButtons-IconButton-map"
+                    onClick={() => this.props.handleViewChange('map')}
                     style={styles.button}
-                    iconStyle={this.props.view == 'map' ? styles.selectedIcon : styles.icon}
                 >
-                    <MapsMap  className={'qa-DataPackViewButtons-MapsMap'}/>
+                    <MapsMap
+                        className="qa-DataPackViewButtons-MapsMap"
+                        color="primary"
+                        style={this.props.view === 'map' ? styles.selectedIcon : styles.icon}
+                    />
                 </IconButton>
                 <IconButton
-                    className={'qa-DataPackViewButtons-IconButton-grid'}
-                    onClick={() => {this.props.handleViewChange('grid')}}
+                    className="qa-DataPackViewButtons-IconButton-grid"
+                    onClick={() => this.props.handleViewChange('grid')}
                     style={styles.button}
-                    iconStyle={this.props.view == 'grid' ? styles.selectedIcon : styles.icon}
                 >
-                    <ActionViewModule  className={'qa-DataPackViewButtons-ActionViewModule'}/>
+                    <ActionViewModule
+                        className="qa-DataPackViewButtons-ActionViewModule"
+                        color="primary"
+                        style={this.props.view === 'grid' ? styles.selectedIcon : styles.icon}
+                    />
                 </IconButton>
                 <IconButton
-                    className={'qa-DataPackViewButtons-IconButton-list'}
-                    onClick={() => {this.props.handleViewChange('list')}}
+                    className="qa-DataPackViewButtons-IconButton-list"
+                    onClick={() => this.props.handleViewChange('list')}
                     style={styles.button}
-                    iconStyle={this.props.view == 'list' ? styles.selectedIcon : styles.icon}
                 >
-                    <ActionViewStream  className={'qa-DataPackViewButtons-ActionViewStream'}/>
+                    <ActionViewStream
+                        className="qa-DataPackViewButtons-ActionViewStream"
+                        color="primary"
+                        style={this.props.view === 'list' ? styles.selectedIcon : styles.icon}
+                    />
                 </IconButton>
-            </div> 
+            </div>
         );
     }
 }
@@ -64,7 +71,8 @@ export class DataPackViewButtons extends React.Component {
 
 DataPackViewButtons.propTypes = {
     handleViewChange: PropTypes.func.isRequired,
-    view: PropTypes.string
+    view: PropTypes.string.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataPackViewButtons;
+export default withTheme()(DataPackViewButtons);

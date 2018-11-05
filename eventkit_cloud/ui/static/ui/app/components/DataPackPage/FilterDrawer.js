@@ -1,5 +1,6 @@
-import React, { PropTypes, Component } from 'react';
-import Drawer from 'material-ui/Drawer';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Drawer from '@material-ui/core/Drawer';
 import PermissionFilter from './PermissionsFilter';
 import StatusFilter from './StatusFilter';
 import DateFilter from './DateFilter';
@@ -23,7 +24,11 @@ export class FilterDrawer extends Component {
 
     getDefaultState() {
         return {
-            published: null,
+            permissions: {
+                value: '',
+                groups: {},
+                members: {},
+            },
             minDate: null,
             maxDate: null,
             status: {
@@ -44,8 +49,8 @@ export class FilterDrawer extends Component {
         this.props.onFilterClear();
     }
 
-    handlePermissionsChange(event, value) {
-        this.setState({ published: value });
+    handlePermissionsChange(permissions) {
+        this.setState({ permissions: { ...this.state.permissions, ...permissions } });
     }
 
     handleStatusChange(stateChange) {
@@ -65,11 +70,11 @@ export class FilterDrawer extends Component {
         this.setState({ providers });
     }
 
-    handleMinDate(e, date) {
+    handleMinDate(date) {
         this.setState({ minDate: date });
     }
 
-    handleMaxDate(e, date) {
+    handleMaxDate(date) {
         this.setState({ maxDate: date });
     }
 
@@ -78,19 +83,21 @@ export class FilterDrawer extends Component {
             containerStyle: {
                 backgroundColor: '#fff',
                 top: '221px',
-                height: window.innerHeight - 221,
+                height: 'calc(100vh - 221px)',
                 overflowY: 'hidden',
                 overflowX: 'hidden',
+                width: '250px',
+                visibility: this.props.open ? 'visible' : 'hidden',
             },
         };
 
         return (
             <Drawer
                 className="qa-FilterDrawer-Drawer"
-                width={250}
-                openSecondary
+                variant="persistent"
+                anchor="right"
                 open={this.props.open}
-                containerStyle={styles.containerStyle}
+                PaperProps={{ style: styles.containerStyle }}
             >
                 <CustomScrollbar>
                     <FilterHeader
@@ -99,7 +106,9 @@ export class FilterDrawer extends Component {
                     />
                     <PermissionFilter
                         onChange={this.handlePermissionsChange}
-                        valueSelected={this.state.published}
+                        permissions={this.state.permissions}
+                        groups={this.props.groups}
+                        members={this.props.members}
                     />
                     <StatusFilter
                         onChange={this.handleStatusChange}
@@ -129,6 +138,24 @@ FilterDrawer.propTypes = {
     onFilterClear: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    members: PropTypes.arrayOf(PropTypes.shape({
+        user: PropTypes.shape({
+            username: PropTypes.string,
+            first_name: PropTypes.string,
+            last_name: PropTypes.string,
+            email: PropTypes.string,
+            date_joined: PropTypes.string,
+            last_login: PropTypes.string,
+        }),
+        accepted_licenses: PropTypes.object,
+        groups: PropTypes.arrayOf(PropTypes.number),
+    })).isRequired,
 };
 
 export default FilterDrawer;

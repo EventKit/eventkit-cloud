@@ -1,53 +1,42 @@
 import React from 'react';
 import sinon from 'sinon';
-import {mount} from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
-import FilterHeader from '../../components/DataPackPage/FilterHeader';
+import { shallow } from 'enzyme';
+import { FilterHeader } from '../../components/DataPackPage/FilterHeader';
 
 describe('FilterHeader component', () => {
-    const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            onApply: () => {},
-            onClear: () => {},
-        }
-    }
+    const getProps = () => ({
+        onApply: () => {},
+        onClear: () => {},
+        ...global.eventkit_test_props,
+    });
 
     it('should render a RaisedButton and a FlatButton', () => {
         const props = getProps();
-        const wrapper = mount(<FilterHeader {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        expect(wrapper.find(RaisedButton)).toHaveLength(1);
-        expect(wrapper.find(RaisedButton).text()).toEqual('Apply');
-        expect(wrapper.find(RaisedButton).props().onClick).toEqual(props.onApply);
-        expect(wrapper.find(FlatButton)).toHaveLength(1);
-        expect(wrapper.find(FlatButton).text()).toEqual('Clear All');
-        expect(wrapper.find(FlatButton).props().onClick).toEqual(props.onClear);
+        const wrapper = shallow(<FilterHeader {...props} />);
+        const apply = wrapper.find('.qa-FilterHeader-Button-apply');
+        expect(apply).toHaveLength(1);
+        expect(apply.html()).toContain('Apply');
+        expect(apply.props().onClick).toEqual(props.onApply);
+
+        const clear = wrapper.find('.qa-FilterHeader-Button-clear');
+        expect(clear).toHaveLength(1);
+        expect(clear.html()).toContain('Clear All');
+        expect(clear.props().onClick).toEqual(props.onClear);
     });
 
-    it('should call onApply when RaisedButton is clicked', () => {
-        let props = getProps();
-        props.onApply = new sinon.spy();
-        const wrapper = mount(<FilterHeader {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        wrapper.find(RaisedButton).find('button').simulate('click');
+    it('should call onApply when Apply Button is clicked', () => {
+        const props = getProps();
+        props.onApply = sinon.spy();
+        const wrapper = shallow(<FilterHeader {...props} />);
+        wrapper.find('.qa-FilterHeader-Button-apply').simulate('click');
         expect(props.onApply.calledOnce).toBe(true);
     });
 
-    it('should call onClear when FlatButton is clicked', () => {
-        let props = getProps();
-        props.onClear = new sinon.spy();
-        const wrapper = mount(<FilterHeader {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        wrapper.find(FlatButton).find('button').simulate('click');
+    it('should call onClear when Clear Button is clicked', () => {
+        const props = getProps();
+        props.onClear = sinon.spy();
+        const wrapper = shallow(<FilterHeader {...props} />);
+        wrapper.find('.qa-FilterHeader-Button-clear').simulate('click');
         expect(props.onClear.calledOnce).toBe(true);
     });
 });

@@ -1,21 +1,16 @@
-"""Provides validation for API operatios."""
+"""Provides validation for API operations."""
 
+import json
 # -*- coding: utf-8 -*-
 import logging
 import math
-import os
 from collections import OrderedDict
-from StringIO import StringIO
-import json
 
 import magic
-from lxml import etree
-
 from django.conf import settings
-from django.contrib.gis.geos import GEOSException, GEOSGeometry, GeometryCollection, Polygon
 from django.contrib.gis.gdal import GDALException
+from django.contrib.gis.geos import GEOSException, GEOSGeometry, GeometryCollection, Polygon
 from django.utils.translation import ugettext as _
-
 from rest_framework import serializers
 
 # Get an instance of a logger
@@ -132,6 +127,7 @@ def validate_bbox(extents, user=None):
     except GEOSException:
         raise serializers.ValidationError(detail)
 
+
 def validate_original_selection(data):
     """
     Checks for a feature collection with features and constructs a GEOS Geometry Collection if possible
@@ -152,7 +148,6 @@ def validate_original_selection(data):
     except GEOSException as geos_exception:
         logger.error(geos_exception)
         return GeometryCollection()
-
 
 
 def validate_selection(data, user=None):
@@ -202,11 +197,11 @@ def validate_selection(data, user=None):
         else:
             raise serializers.ValidationError(detail)
     except GEOSException as geos_exception:
-        logger.error(geos_exception.message)
+        logger.error(str(geos_exception))
         raise serializers.ValidationError(detail)
     except GDALException as gdal_exception:
         detail['id'] = _('GDAL Error')
-        detail['message'] = _('GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}'.format(gdal_exception.message, geometry))
+        detail['message'] = _('GDAL produced a an error:\n{0} \nUsing the geometry:\n{1}'.format(str(gdal_exception), geometry))
         raise serializers.ValidationError(detail)
 
 

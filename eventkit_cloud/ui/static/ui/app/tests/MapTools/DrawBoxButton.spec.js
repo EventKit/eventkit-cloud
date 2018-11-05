@@ -1,28 +1,29 @@
-import {DrawBoxButton} from '../../components/MapTools/DrawBoxButton';
 import React from 'react';
 import sinon from 'sinon';
-import {mount, shallow} from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import ImageCropSquare from 'material-ui/svg-icons/image/crop-square';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import { createShallow } from '@material-ui/core/test-utils';
+import ImageCropSquare from '@material-ui/icons/CropSquare';
+import ContentClear from '@material-ui/icons/Clear';
+import { DrawBoxButton } from '../../components/MapTools/DrawBoxButton';
 
 describe('DrawBoxButton component', () => {
-    const muiTheme = getMuiTheme();
-    const getProps = () => {
-        return {
-            buttonState: 'DEFAULT',
-            updateMode: () => {},
-            setBoxButtonSelected: () => {},
-            setAllButtonsDefault: () => {},
-            handleCancel: () => {},
-        }
-    }
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
+    const getProps = () => ({
+        buttonState: 'DEFAULT',
+        updateMode: () => {},
+        setBoxButtonSelected: () => {},
+        setAllButtonsDefault: () => {},
+        handleCancel: () => {},
+        ...global.eventkit_test_props,
+    });
+
     it('should display the default icon', () => {
-        const props = getProps()
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const props = getProps();
+        const wrapper = shallow(<DrawBoxButton {...props} />);
         expect(wrapper.find('button')).toHaveLength(1);
         expect(wrapper.find('div')).toHaveLength(2);
         expect(wrapper.find(ImageCropSquare)).toHaveLength(1);
@@ -31,10 +32,7 @@ describe('DrawBoxButton component', () => {
 
     it('should display inactive icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = shallow(<DrawBoxButton {...props} />);
         const newProps = getProps();
         newProps.buttonState = 'INACTIVE';
         wrapper.setProps(newProps);
@@ -46,10 +44,7 @@ describe('DrawBoxButton component', () => {
 
     it('should display selected icon based on updated props', () => {
         const props = getProps();
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = shallow(<DrawBoxButton {...props} />);
         const newProps = getProps();
         newProps.buttonState = 'SELECTED';
         wrapper.setProps(newProps);
@@ -59,13 +54,10 @@ describe('DrawBoxButton component', () => {
         expect(wrapper.find('#selected_icon')).toHaveLength(1);
     });
 
-    it('should handleOnClick when icon is in SELECTED state', () => {   
+    it('should handleOnClick when icon is in SELECTED state', () => {
         const props = getProps();
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        let newProps = getProps();
+        const wrapper = shallow(<DrawBoxButton {...props} />);
+        const newProps = getProps();
         newProps.buttonState = 'SELECTED';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();
@@ -76,13 +68,10 @@ describe('DrawBoxButton component', () => {
     });
 
     it('should handleOnClick when icon is in DEFAULT state', () => {
-        let props = getProps();
+        const props = getProps();
         props.setBoxButtonSelected = sinon.spy();
         props.updateMode = sinon.spy();
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
+        const wrapper = shallow(<DrawBoxButton {...props} />);
         wrapper.find('button').simulate('click');
         expect(props.setBoxButtonSelected.calledOnce).toEqual(true);
         expect(props.updateMode.calledOnce).toEqual(true);
@@ -90,11 +79,8 @@ describe('DrawBoxButton component', () => {
 
     it('handleOnClick should do nothing when icon is in INACTIVE state', () => {
         const props = getProps();
-        const wrapper = mount(<DrawBoxButton {...props}/>, {
-            context: {muiTheme},
-            childContextTypes: {muiTheme: React.PropTypes.object}
-        });
-        let newProps = getProps();
+        const wrapper = shallow(<DrawBoxButton {...props} />);
+        const newProps = getProps();
         newProps.buttonState = 'INACTIVE';
         newProps.setAllButtonsDefault = sinon.spy();
         newProps.handleCancel = sinon.spy();

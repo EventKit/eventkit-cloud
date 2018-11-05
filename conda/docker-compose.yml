@@ -1,0 +1,16 @@
+version: '3'
+services:
+  conda:
+    working_dir: /root/
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./repo:/root/repo
+      - ./recipes:/root/recipes
+      - ./build.sh:/root/build.sh
+      - ./recipes.txt:/root/recipes.txt
+      - ../:/eventkit-cloud
+    environment:
+      version:
+      branch:

@@ -1,9 +1,30 @@
-import React, { PropTypes, Component } from 'react';
-import { Table, TableHeader, TableHeaderColumn, TableRow }
-    from 'material-ui/Table';
-import RaisedButton from 'material-ui/RaisedButton';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withStyles } from '@material-ui/core/styles';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import Button from '@material-ui/core/Button';
+import CloudDownload from '@material-ui/icons/CloudDownload';
 import ProviderRow from './ProviderRow';
+
+const jss = theme => ({
+    root: {
+        backgroundColor: theme.eventkit.colors.selected_primary,
+        color: theme.eventkit.colors.primary,
+        fontWeight: 'bold',
+        '&:hover': {
+            backgroundColor: theme.eventkit.colors.selected_primary_dark,
+            color: theme.eventkit.colors.primary,
+        },
+        '&:disabled': {
+            backgroundColor: theme.eventkit.colors.secondary_dark,
+            color: theme.eventkit.colors.grey,
+        },
+    },
+});
 
 export class DataPackDetails extends Component {
     constructor(props) {
@@ -14,6 +35,10 @@ export class DataPackDetails extends Component {
     }
 
     componentDidMount() {
+        this.onMount();
+    }
+
+    onMount() {
         const selectedProviders = {};
         this.props.providerTasks.forEach((provider) => {
             if (provider.display === true) {
@@ -24,67 +49,69 @@ export class DataPackDetails extends Component {
     }
 
     getCloudDownloadIcon() {
-        if (this.props.zipFileProp === null) {
+        const { colors } = this.props.theme.eventkit;
+        if (!this.props.zipFileProp) {
             return (
                 <CloudDownload
                     className="qa-DataPackDetails-CloudDownload-disabled"
-                    style={{ fill: 'gray', verticalAlign: 'middle' }}
+                    style={{ fill: colors.grey, verticalAlign: 'middle', marginRight: '5px' }}
                 />
             );
         }
         return (
             <CloudDownload
                 className="qa-DataPackDetails-CloudDownload-enabled"
-                style={{ fill: '#4598bf', verticalAlign: 'middle' }}
+                style={{ fill: colors.primary, verticalAlign: 'middle', marginRight: '5px' }}
             />
         );
     }
 
     getTextFontSize() {
-        if (window.innerWidth <= 575) {
+        const { width } = this.props;
+        if (!isWidthUp('sm', width)) {
             return '10px';
-        } else if (window.innerWidth <= 767) {
+        } else if (!isWidthUp('md', width)) {
             return '11px';
-        } else if (window.innerWidth <= 991) {
+        } else if (!isWidthUp('lg', width)) {
             return '12px';
-        } else if (window.innerWidth <= 1199) {
+        } else if (!isWidthUp('xl', width)) {
             return '13px';
         }
         return '14px';
     }
 
     getTableCellWidth() {
-        if (window.innerWidth <= 767) {
+        if (!isWidthUp('md', this.props.width)) {
             return '80px';
         }
         return '120px';
     }
 
     getToggleCellWidth() {
-        return '70px';
+        return '86px';
     }
 
     isZipFileCompleted() {
-        if (this.props.zipFileProp === null) {
-            return true;
+        if (!this.props.zipFileProp) {
+            return false;
         }
-        return false;
+        return true;
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
         const textFontSize = this.getTextFontSize();
 
-        const providers = this.props.providerTasks.filter((provider) => {
-            return provider.display !== false;
-        });
+        const providers = this.props.providerTasks.filter(provider => (provider.display));
 
         const styles = {
             subHeading: {
                 fontSize: '16px',
                 fontWeight: 'bold',
-                color: 'black',
+                color: colors.black,
                 alignContent: 'flex-start',
                 paddingBottom: '5px',
             },
@@ -103,6 +130,8 @@ export class DataPackDetails extends Component {
             },
         };
 
+        const { classes } = this.props;
+
         return (
             <div>
                 <div className="qa-DataPackDetails-heading" style={styles.subHeading}>
@@ -111,73 +140,82 @@ export class DataPackDetails extends Component {
                 <Table
                     className="qa-DataPackDetails-Table"
                     style={{ width: '100%', tableLayout: 'fixed' }}
-                    selectable={false}
                 >
-                    <TableHeader
+                    <TableBody
                         className="qa-DataPackDetails-TableHeader"
-                        displaySelectAll={false}
-                        adjustForCheckbox={false}
-                        enableSelectAll={false}
                     >
                         <TableRow className="qa-DataPackDetails-TableRow">
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-zipButton"
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-zipButton"
                                 style={styles.download}
                             >
-                                <a href={this.props.zipFileProp}>
-                                    <RaisedButton
-                                        className="qa-DataPackDetails-RaisedButton-zipButton"
-                                        backgroundColor="rgba(179,205,224,0.5)"
-                                        disabled={this.isZipFileCompleted()}
-                                        disableTouchRipple
-                                        labelColor="#4598bf"
-                                        labelStyle={{ fontWeight: 'bold', fontSize: textFontSize }}
-                                        label={this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
-                                        icon={this.getCloudDownloadIcon()}
-                                    />
-                                </a>
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-fileSize"
+                                <Button
+                                    id="CompleteDownload"
+                                    href={this.props.zipFileProp}
+                                    variant="contained"
+                                    className="qa-DataPackDetails-Button-zipButton"
+                                    classes={{ root: classes.root }}
+                                    disabled={!this.isZipFileCompleted()}
+                                    style={{ fontSize: textFontSize, lineHeight: 'initial' }}
+                                >
+                                    {this.getCloudDownloadIcon()}
+                                    {this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
+
+                                </Button>
+                            </TableCell>
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-fileSize"
                                 style={styles.genericColumn}
                             >
                                 FILE SIZE
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-progress"
+                            </TableCell>
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-progress"
                                 style={styles.genericColumn}
                             >
                                 PROGRESS
-                            </TableHeaderColumn>
-                            <TableHeaderColumn
-                                className="qa-DataPackDetails-TableHeaderColumn-empty"
+                            </TableCell>
+                            <TableCell
+                                className="qa-DataPackDetails-TableCell-empty"
                                 style={{ ...styles.genericColumn, width: toggleCellWidth }}
                             />
                         </TableRow>
-                    </TableHeader>
+                    </TableBody>
                 </Table>
-                {providers.map((provider, ix) => (
-                    <ProviderRow
-                        backgroundColor={ix % 2 === 0 ? 'whitesmoke' : 'white'}
-                        key={provider.uid}
-                        onSelectionToggle={this.onSelectionToggle}
-                        onProviderCancel={this.props.onProviderCancel}
-                        updateSelectionNumber={this.updateSelectionNumber} 
-                        provider={provider}
-                        selectedProviders={this.state.selectedProviders}
-                        providers={this.props.providers}
-                    />
-                ))}
+                <div className="qa-DataPackDetails-providers" id="Providers">
+                    {providers.map((provider, ix) => (
+                        <ProviderRow
+                            backgroundColor={ix % 2 === 0 ? colors.secondary : colors.white}
+                            key={provider.uid}
+                            onSelectionToggle={this.onSelectionToggle}
+                            onProviderCancel={this.props.onProviderCancel}
+                            updateSelectionNumber={this.updateSelectionNumber}
+                            provider={provider}
+                            selectedProviders={this.state.selectedProviders}
+                            providers={this.props.providers}
+                        />
+                    ))}
+                </div>
             </div>
         );
     }
 }
 
+DataPackDetails.defaultProps = {
+    zipFileProp: null,
+};
+
 DataPackDetails.propTypes = {
     providerTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
     onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     zipFileProp: PropTypes.string,
+    classes: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default DataPackDetails;
+export default
+@withWidth()
+@withStyles(jss, { withTheme: true })
+class Default extends DataPackDetails {}

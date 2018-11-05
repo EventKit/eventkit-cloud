@@ -1,34 +1,30 @@
 import React from 'react';
 import sinon from 'sinon';
 import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Clear from 'material-ui/svg-icons/content/clear';
-import AlertCallout from '../../components/CreateDataPack/AlertCallout';
+import Clear from '@material-ui/icons/Clear';
+import { AlertCallout } from '../../components/CreateDataPack/AlertCallout';
 
 describe('AlertCallout component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             style: {},
             onClose: () => {},
+            title: 'test title',
+            body: 'test body',
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<AlertCallout {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        })
+        mount(<AlertCallout {...props} />)
     );
 
     it('should render the basic elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find('.qa-AlertCallout')).toHaveLength(1);
-        expect(wrapper.find('.qa-AlertCallout-arrow')).toHaveLength(1);
-        expect(wrapper.find('.qa-AlertCallout-box')).toHaveLength(1);
-        expect(wrapper.find('.qa-AlertCallout-header').text()).toEqual('There must be a buffer.');
-        expect(wrapper.find('.qa-AlertCallout-body').text()).toEqual('Please add a buffer before moving forward.');
+        expect(wrapper.find('.qa-AlertCallout-title').text()).toEqual('test title');
+        expect(wrapper.find('.qa-AlertCallout-body').text()).toEqual('test body');
     });
 
     it('should call onClose when the clear icon is clicked', () => {

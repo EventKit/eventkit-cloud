@@ -11,7 +11,7 @@
      require('./../../common/snaptest-nw-driver.js').bindHelpers(browser);
      require('./../../common/components.js').bindComponents(browser);
 
-     var baseUrl = browser.launchUrl || `http://cloud.eventkit.dev`;
+     var baseUrl = browser.launchUrl || `http://cloud.eventkit.test`;
 
 
      browser

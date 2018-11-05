@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
+
 import os
-from django.db import migrations
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+
 from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.db import migrations
 
 
 def convert_polygon(geom):

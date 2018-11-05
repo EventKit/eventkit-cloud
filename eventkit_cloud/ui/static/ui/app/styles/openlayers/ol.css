@@ -1,7 +1,8 @@
 .ol-control,
 .ol-scale-line {
     position: absolute;
-    padding: 2px
+    padding: 2px;
+    background: rgba(0,0,0,0)
 }
 
 .ol-box {
@@ -194,15 +195,16 @@
 }
 
 .ol-attribution:not(.ol-collapsed) {
-    background: rgba(255, 255, 255, .8)
+    background: rgba(255,255,255,.0)
 }
 
 .ol-attribution.ol-uncollapsible {
     bottom: 0;
-    right: 0;
+    left: 10px;
+    right: auto;
     border-radius: 4px 0 0;
     height: 1.1em;
-    line-height: 1em
+    line-height: 1em;
 }
 
 .ol-attribution.ol-logo-only {

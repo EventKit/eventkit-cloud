@@ -1,10 +1,9 @@
 import os
 
 from django.utils import timezone
-
-from eventkit_cloud.jobs import presets
 from utils.overpass import Overpass
 
+from eventkit_cloud.jobs import presets
 
 """
     Harness to run an Overpass Query outside of test context.
@@ -27,20 +26,20 @@ def run(*script_args):
     for kvp in kvps:
         filter_tag = '{0}={1}'.format(kvp['key'], kvp['value'])
         filters.append(filter_tag)
-    print filters
+    print(filters)
 
-    print "=============="
-    print "Querying Monrovia with OSM filters."
-    print timezone.now()
+    print("==============")
+    print("Querying Monrovia with OSM filters.")
+    print(timezone.now())
     op = Overpass(
         bbox=bbox, stage_dir=path + '/files/',
         job_name='test', filters=filters
     )
     osm = op.run_query()
-    print timezone.now()
+    print(timezone.now())
     stat = os.stat(osm)
     size = stat.st_size / 1024 / 1024.00
-    print 'Result file size: {0}'.format(size)
+    print('Result file size: {0}'.format(size))
 
     filtered = op.filter()
 

@@ -6,18 +6,20 @@ Used by the View classes api/views.py to serialize API responses as JSON or HTML
 See DEFAULT_RENDERER_CLASSES setting in core.settings.contrib for the enabled renderers.
 """
 # -*- coding: utf-8 -*-
-import cPickle
+import pickle
 import json
 import logging
-import os
-from urlparse import urlparse, urlunparse
 
-from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils.translation import ugettext as _
+from notifications.models import Notification
+from rest_framework import serializers
+from rest_framework_gis import serializers as geo_serializers
 
-from django.contrib.auth.models import User
-
+from . import validators
+from eventkit_cloud.core.models import GroupPermission, GroupPermissionLevel, JobPermission
 from eventkit_cloud.jobs.models import (
     ExportFormat,
     DatamodelPreset,
@@ -27,8 +29,8 @@ from eventkit_cloud.jobs.models import (
     DataProvider,
     DataProviderTask,
     License,
-    UserLicense
-)
+    UserLicense,
+    UserJobActivity)
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -36,11 +38,6 @@ from eventkit_cloud.tasks.models import (
     FileProducingTaskResult,
     DataProviderTaskRecord
 )
-from eventkit_cloud.utils.s3 import get_presigned_url
-from rest_framework import serializers
-from rest_framework_gis import serializers as geo_serializers
-import validators
-
 
 try:
     from collections import OrderedDict
@@ -69,11 +66,10 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
     def create(validated_data, **kwargs):
         from eventkit_cloud.api.views import get_models
         """Creates an export DataProviderTask."""
-        format_names = validated_data.pop("formats")
-        format_models = get_models([formats for formats in format_names], ExportFormat, 'slug')
+        formats = validated_data.pop("formats")
         provider_model = DataProvider.objects.get(name=validated_data.get("provider"))
         provider_task = DataProviderTask.objects.create(provider=provider_model)
-        provider_task.formats.add(*format_models)
+        provider_task.formats.add(*formats)
         provider_task.save()
         return provider_task
 
@@ -95,25 +91,31 @@ class ProviderTaskSerializer(serializers.ModelSerializer):
         return data
 
 
-class ExportTaskResultSerializer(serializers.ModelSerializer):
+class FileProducingTaskResultSerializer(serializers.ModelSerializer):
     """Serialize FileProducingTaskResult models."""
     url = serializers.SerializerMethodField()
     size = serializers.SerializerMethodField()
+    uid = serializers.UUIDField(read_only=True)
+
+    def __init__(self, *args, **kwargs):
+        super(FileProducingTaskResultSerializer, self).__init__(*args, **kwargs)
+        if self.context.get('no_license'):
+            self.fields.pop('url')
 
     class Meta:
         model = FileProducingTaskResult
-        fields = ('filename', 'size', 'url', 'deleted')
+        fields = ('uid', 'filename', 'size', 'url', 'deleted')
 
     def get_url(self, obj):
         request = self.context['request']
-        if getattr(settings, 'USE_S3', False):
-            return get_presigned_url(download_url=obj.download_url)
-        else:
-            return request.build_absolute_uri(obj.download_url)
+        return request.build_absolute_uri('/download?uid={}'.format(obj.uid))
 
     @staticmethod
     def get_size(obj):
-        return "{0:.3f} MB".format(obj.size)
+        size = ""
+        if obj.size:
+            size = "{0:.3f} MB".format(obj.size)
+        return size
 
 
 class ExportTaskExceptionSerializer(serializers.ModelSerializer):
@@ -126,9 +128,15 @@ class ExportTaskExceptionSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_exception(obj):
-        exc_info = cPickle.loads(str(obj.exception)).exc_info
+        # set a default (incase not found)
+        exc_info = ["","Exception info not found or unreadable."]
+        try:
+            exc_info = pickle.loads(obj.exception.encode()).exc_info
+        except Exception as te:
+            logger.error(str(te))
 
         return str(exc_info[1])
+
 
 class ExportTaskRecordSerializer(serializers.ModelSerializer):
     """Serialize ExportTasks models."""
@@ -149,7 +157,7 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         """Serialize the FileProducingTaskResult for this ExportTaskRecord."""
         try:
             result = obj.result
-            serializer = ExportTaskResultSerializer(result, many=False, context=self.context)
+            serializer = FileProducingTaskResultSerializer(result, many=False, context=self.context)
             return serializer.data
         except FileProducingTaskResult.DoesNotExist:
             return None  # no result yet
@@ -165,15 +173,19 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
 
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
-    tasks = ExportTaskRecordSerializer(many=True, required=False)
+    tasks = serializers.SerializerMethodField()
     url = serializers.HyperlinkedIdentityField(
         view_name='api:provider_tasks-detail',
         lookup_field='uid'
     )
 
+    def get_tasks(self, obj):
+        return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
+
     class Meta:
         model = DataProviderTaskRecord
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
+
 
 class SimpleJobSerializer(serializers.Serializer):
     """Return a sub-set of Job model attributes."""
@@ -193,8 +205,10 @@ class SimpleJobSerializer(serializers.Serializer):
     original_selection = serializers.SerializerMethodField(read_only=True)
     # bounds = serializers.SerializerMethodField()
     published = serializers.BooleanField()
+    visibility = serializers.CharField()
     featured = serializers.BooleanField()
-    formats = serializers.SerializerMethodField('get_provider_tasks')
+    formats = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -229,8 +243,20 @@ class SimpleJobSerializer(serializers.Serializer):
             feature_collection['features'].append(feature)
         return feature_collection
 
-    def get_provider_tasks(self, obj):
-        return [format.name for format in obj.provider_tasks.first().formats.all()]
+    @staticmethod
+    def get_permissions(obj):
+        permissions = JobPermission.jobpermissions(obj)
+        permissions['value'] = obj.visibility
+        return permissions
+
+    @staticmethod
+    def get_formats(obj):
+        # Since formats are the same for all provider_tasks (1.1.0) just grab anyone and print them.
+        provider_task = obj.provider_tasks.first()
+        formats = []
+        if hasattr(provider_task, "formats"):
+            formats = [format.name for format in obj.provider_tasks.first().formats.all()]
+        return formats
 
 
 class LicenseSerializer(serializers.ModelSerializer):
@@ -243,17 +269,26 @@ class LicenseSerializer(serializers.ModelSerializer):
         )
 
 
+
+
 class ExportRunSerializer(serializers.ModelSerializer):
     """Serialize ExportRun."""
     url = serializers.HyperlinkedIdentityField(
         view_name='api:runs-detail',
         lookup_field='uid'
     )
-    job = SimpleJobSerializer()  # nest the job details
-    provider_tasks = DataProviderTaskRecordSerializer(many=True)
+    job = serializers.SerializerMethodField()  # nest the job details
+    provider_tasks = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     zipfile_url = serializers.SerializerMethodField()
-    expiration = serializers.SerializerMethodField
+    expiration = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    started_at = serializers.SerializerMethodField()
+    finished_at = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField()
 
     class Meta:
         model = ExportRun
@@ -265,32 +300,95 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def get_user(obj):
-        return obj.user.username
+        if not obj.deleted:
+            return obj.user.username
+
+    def get_provider_tasks(self, obj):
+        if not obj.deleted:
+            return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
         request = self.context['request']
-        if not obj.zipfile_url:
+        if obj.provider_tasks.filter(name='run'):
+            task_downloadable = obj.provider_tasks.get(name='run').tasks.filter(name__icontains='zip')[0].result
+            if task_downloadable:
+                return request.build_absolute_uri('/download?uid={}'.format(task_downloadable.uid))
+        return ""
+
+    def get_created_at(self, obj):
+        if not obj.deleted:
+            return obj.created_at
+
+    def get_started_at(self, obj):
+        if not obj.deleted:
+            return obj.started_at
+
+    def get_finished_at(self, obj):
+        if not obj.deleted:
+            return obj.finished_at
+
+    def get_duration(self, obj):
+        if not obj.deleted:
+            return obj.duration
+
+    def get_status(self, obj):
+        if not obj.deleted:
+            return obj.status
+
+    def get_job(self, obj):
+        data = SimpleJobSerializer(obj.job, context=self.context).data
+        if not obj.deleted:
+            return data
+        else:
+            return {'uid': data['uid'], 'name': data['name']}
+
+    def get_expiration(self, obj):
+        if not obj.deleted:
+            return obj.expiration
+
+
+class GroupPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroupPermission
+        fields = ('group', 'user', 'permission')
+
+
+class JobPermissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobPermission
+        fields = ('job', 'content_type', 'object_id', 'permission')
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField()
+    administrators = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Group
+        fields = ('id', 'name', 'members', 'administrators')
+
+    @staticmethod
+    def get_members(instance):
+        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
+            permission=GroupPermissionLevel.MEMBER.value)]
+        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+
+    @staticmethod
+    def get_administrators(instance):
+        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
+            permission=GroupPermissionLevel.ADMIN.value)]
+        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+        return []
+
+    @staticmethod
+    def get_identification(instance):
+        if hasattr(instance, 'oauth'):
+            return instance.oauth.identification
+        else:
             return None
-
-        if obj.zipfile_url.startswith('http'):
-            if getattr(settings, 'USE_S3', False):
-                return get_presigned_url(download_url=obj.zipfile_url)
-            else:
-                return obj.zipfile_url
-
-        # get full URL path from current request
-        uri = request.build_absolute_uri()
-        uri = list(urlparse(uri))
-        # modify path, query parmas, and fragment on the URI to match zipfile URL
-        path = os.path.join(settings.EXPORT_MEDIA_ROOT, obj.zipfile_url)
-        uri[2] = path  # path
-        uri[4] = None  # fragment
-        uri[5] = None  # query
-        return urlunparse(uri)
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     username = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField()
@@ -325,10 +423,11 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.Serializer):
     """
         Return a GeoJSON representation of the user data.
-        
+
     """
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
+    groups = serializers.SerializerMethodField()
 
     class Meta:
         fields = (
@@ -354,9 +453,15 @@ class UserDataSerializer(serializers.Serializer):
                 licenses[license.slug] = False
         return licenses
 
+    @staticmethod
+    def get_groups(instance):
+        group_ids = [perm.group.id for perm in
+                     GroupPermission.objects.filter(user=instance).filter(permission="MEMBER")]
+        return group_ids
+
     def update(self, instance, validated_data):
         if self.context.get('request').data.get('accepted_licenses'):
-            for slug, selected in self.context.get('request').data.get('accepted_licenses').iteritems():
+            for slug, selected in self.context.get('request').data.get('accepted_licenses').items():
                 user_license = UserLicense.objects.filter(user=instance, license=License.objects.get(slug=slug))
                 if user_license and not selected:
                     user_license.delete()
@@ -479,8 +584,9 @@ class ListJobSerializer(serializers.Serializer):
     original_selection = serializers.SerializerMethodField(read_only=True)
     region = SimpleRegionSerializer(read_only=True)
     published = serializers.BooleanField()
-    featured  = serializers.BooleanField()
-
+    visibility = serializers.CharField()
+    featured = serializers.BooleanField()
+    permissions = serializers.SerializerMethodField(read_only=True)
 
     @staticmethod
     def get_uid(obj):
@@ -519,6 +625,12 @@ class ListJobSerializer(serializers.Serializer):
     def get_owner(obj):
         return obj.user.username
 
+    @staticmethod
+    def get_permissions(obj):
+        permissions = JobPermission.jobpermissions(obj)
+        permissions['value'] = obj.visibility
+        return permissions
+
 
 class JobSerializer(serializers.Serializer):
     """
@@ -548,9 +660,11 @@ class JobSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     owner = serializers.SerializerMethodField(read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
     exports = serializers.SerializerMethodField()
     preset = serializers.PrimaryKeyRelatedField(queryset=DatamodelPreset.objects.all(), required=False)
     published = serializers.BooleanField(required=False)
+    visibility = serializers.CharField(required=False)
     featured = serializers.BooleanField(required=False)
     region = SimpleRegionSerializer(read_only=True)
     extent = serializers.SerializerMethodField(read_only=True)
@@ -560,13 +674,6 @@ class JobSerializer(serializers.Serializer):
     )
     tags = serializers.SerializerMethodField()
     include_zipfile = serializers.BooleanField(required=False, default=False)
-
-    def get_zipfile_url(self, obj):
-        request = self.context['request']
-        if not obj.zipfile_url:
-            return None
-
-        return request.build_absolute_uri('../../downloads/' + obj.zipfile_url)
 
     @staticmethod
     def create(validated_data, **kwargs):
@@ -659,3 +766,53 @@ class JobSerializer(serializers.Serializer):
     def get_owner(obj):
         """Return the username for the owner of this export."""
         return obj.user.username
+
+    @staticmethod
+    def get_permissions(obj):
+        permissions = JobPermission.jobpermissions(obj)
+        permissions['value'] = obj.visibility
+        return permissions
+
+
+class UserJobActivitySerializer(serializers.ModelSerializer):
+    job = ListJobSerializer()
+    last_export_run = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserJobActivity
+        fields = ('job', 'last_export_run', 'type', 'created_at')
+
+    def get_last_export_run(self, obj):
+        if obj.job.last_export_run:
+            serializer = ExportRunSerializer(obj.job.last_export_run, context={'request': self.context['request']})
+            return serializer.data
+        else:
+            return None
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Notification
+        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
+
+    def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
+
+        response = {}
+        referenced_object_id = referenced_object_id or 0
+        if int(referenced_object_id) > 0:
+            response['type'] = str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
+            response['id'] = referenced_object_id
+
+        if isinstance(referenced_object, User):
+            response['details'] = UserSerializer(referenced_object).data
+        if isinstance(referenced_object, Job):
+            job = Job.objects.get(pk=obj.actor_object_id)
+            response['details'] = ListJobSerializer(job,context={'request': request}).data
+        if isinstance(referenced_object, ExportRun):
+            run = ExportRun.objects.get(pk=obj.actor_object_id)
+            response['details'] = ExportRunSerializer(run,context={'request': request}).data
+        if isinstance(referenced_object, Group):
+            response['details'] = GroupSerializer(referenced_object).data
+
+        return response

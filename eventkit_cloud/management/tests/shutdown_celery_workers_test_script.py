@@ -1,14 +1,16 @@
-from __future__ import print_function
-# from django.test import TestCase
-from time import sleep
-import sys
+
+
 import os
+# from django.test import TestCase
+import sys
+
 import django
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "eventkit_cloud.settings.prod")
 django.setup()
 
 from django.core.management import call_command
-from eventkit_cloud.tasks import test_chain, test_task
+from eventkit_cloud.tasks import test_chain
 from eventkit_cloud.celery import app
 
 
@@ -55,7 +57,7 @@ def test_shutdown_celery_workers_mgmt_cmd():
     if app.control.inspect().ping() is None:
         return (100, 'No worker nodes found running prior to test')
 
-    worker_nodename = [n for n in app.control.inspect().ping().keys() if 'worker' in n][0]
+    worker_nodename = [n for n in list(app.control.inspect().ping().keys()) if 'worker' in n][0]
     worker_hostname = worker_nodename.split('@')[1]
 
     # Fire off a number of tasks & wait for them to be picked up

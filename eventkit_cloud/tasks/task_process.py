@@ -1,8 +1,8 @@
-from billiard import Process
-import subprocess
-from django.db import connection
-
 import logging
+import subprocess
+
+from billiard import Process
+from django.db import connection
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ class TaskProcess(object):
         self.stderr = None
 
     def start_process(self, command=None, billiard=False, *args, **kwargs):
-        from .models import ExportTaskRecord
-        from ..tasks.export_tasks import TaskStates
+        from eventkit_cloud.tasks.models import ExportTaskRecord
+        from eventkit_cloud.tasks import TaskStates
 
         if billiard:
             proc = Process(daemon=False, *args, **kwargs)
@@ -39,7 +39,7 @@ class TaskProcess(object):
         connection.close()
         export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
         if export_task and export_task.status == TaskStates.CANCELED.value:
-            from ..tasks.exceptions import CancelException
+            from eventkit_cloud.tasks.exceptions import CancelException
             raise CancelException(task_name=export_task.export_provider_task.name,
                                   user_name=export_task.cancel_user.username)
 
@@ -51,7 +51,7 @@ class TaskProcess(object):
         if pid:
             if not self.task_uid:
                 return
-            from ..tasks.models import ExportTaskRecord
+            from eventkit_cloud.tasks.models import ExportTaskRecord
             export_task = ExportTaskRecord.objects.filter(uid=self.task_uid).first()
             if export_task:
                 export_task.pid = pid

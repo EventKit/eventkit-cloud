@@ -1,26 +1,29 @@
-import React, { PropTypes, Component } from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import moment from 'moment';
-import DataPackTableRow from './DataPackTableRow';
+import CustomTableRow from '../CustomTableRow';
 
 export class DataCartInfoTable extends Component {
     render() {
         return (
-            <div style={{ marginTop: '-5px', marginLeft: '-5px' }}>
-                <DataPackTableRow
+            <div>
+                <CustomTableRow
                     title="Run By"
                     data={this.props.dataPack.user}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     title="Run Id"
                     data={this.props.dataPack.uid}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     title="Started"
-                    data={moment(this.props.dataPack.started_at).format('h:mm:ss a, MMMM Do YYYY')}
+                    data={moment(this.props.dataPack.started_at).format('M/D/YY h:mma')}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     title="Finished"
-                    data={moment(this.props.dataPack.finished_at).format('h:mm:ss a, MMMM Do YYYY')}
+                    data={this.props.dataPack.finished_at === null ?
+                        'Currently Processing...' : moment(this.props.dataPack.finished_at).format('M/D/YY h:mma')
+                    }
                 />
             </div>
         );

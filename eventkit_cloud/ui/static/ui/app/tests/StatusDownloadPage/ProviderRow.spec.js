@@ -1,32 +1,31 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
-import IconMenu from 'material-ui/IconMenu';
-import MenuItem from 'material-ui/MenuItem';
-import IconButton from 'material-ui/IconButton';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import {
-    Table,
-    TableBody,
-    TableHeader,
-    TableHeaderColumn,
-    TableRow,
-    TableRowColumn,
-} from 'material-ui/Table';
-import NavigationMoreVert from 'material-ui/svg-icons/navigation/more-vert';
-import ArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import Check from 'material-ui/svg-icons/navigation/check';
-import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
-import LinearProgress from 'material-ui/LinearProgress';
+import { createShallow } from '@material-ui/core/test-utils';
+import MenuItem from '@material-ui/core/MenuItem';
+import IconButton from '@material-ui/core/IconButton';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import ArrowDown from '@material-ui/icons/KeyboardArrowDown';
+import Warning from '@material-ui/icons/Warning';
+import Check from '@material-ui/icons/Check';
+import CloudDownload from '@material-ui/icons/CloudDownload';
+import IconMenu from '../../components/common/IconMenu';
 import ProviderError from '../../components/StatusDownloadPage/ProviderError';
 import TaskError from '../../components/StatusDownloadPage/TaskError';
-import BaseDialog from '../../components/BaseDialog';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 import LicenseRow from '../../components/StatusDownloadPage/LicenseRow';
 import { ProviderRow } from '../../components/StatusDownloadPage/ProviderRow';
 
 describe('ProviderRow component', () => {
-    const muiTheme = getMuiTheme();
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     const selectedProviders = {
         123: true,
@@ -47,7 +46,7 @@ describe('ProviderRow component', () => {
             result: {
                 file: 'osm.pkg',
                 size: '1.234 MB',
-                url: 'http://cloud.eventkit.dev/api/tasks/123',
+                url: 'http://cloud.eventkit.test/api/tasks/123',
             },
             display: true,
         },
@@ -56,7 +55,7 @@ describe('ProviderRow component', () => {
     const providers = [
         {
             id: 2,
-            model_url: 'http://cloud.eventkit.dev/api/providers/osm',
+            model_url: 'http://cloud.eventkit.test/api/providers/osm',
             type: 'osm',
             license: {
                 slug: 'osm',
@@ -87,7 +86,7 @@ describe('ProviderRow component', () => {
                 status: 'COMPLETED',
                 tasks,
                 uid: '123',
-                url: 'http://cloud.eventkit.dev/api/provider_tasks/123',
+                url: 'http://cloud.eventkit.test/api/provider_tasks/123',
                 display: true,
                 slug: 'osm',
             },
@@ -96,30 +95,26 @@ describe('ProviderRow component', () => {
             backgroundColor: 'white',
             onSelectionToggle: () => {},
             onProviderCancel: () => {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<ProviderRow {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            },
-        })
+        shallow(<ProviderRow {...props} />)
     );
 
     it('should render elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         expect(wrapper.find(Table)).toHaveLength(1);
-        expect(wrapper.find(TableHeader)).toHaveLength(1);
+        expect(wrapper.find(TableHead)).toHaveLength(1);
         expect(wrapper.find(TableRow)).toHaveLength(1);
-        expect(wrapper.find(TableHeaderColumn)).toHaveLength(5);
+        expect(wrapper.find(TableCell)).toHaveLength(5);
         expect(wrapper.find(ArrowDown)).toHaveLength(1);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconButton)).toHaveLength(2);
+        expect(wrapper.find(IconButton)).toHaveLength(1);
         expect(wrapper.find(IconButton).find(ArrowDown)).toHaveLength(1);
-        expect(wrapper.find(MenuItem)).toHaveLength(0);
+        expect(wrapper.find(MenuItem)).toHaveLength(2);
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
@@ -129,18 +124,16 @@ describe('ProviderRow component', () => {
         props.onProviderCancel = sinon.spy();
         const wrapper = getWrapper(props);
         expect(wrapper.find(IconMenu)).toHaveLength(1);
-        expect(wrapper.find(IconMenu).find(IconButton)).toHaveLength(1);
-        expect(wrapper.find(IconMenu).find(NavigationMoreVert)).toHaveLength(1);
     });
 
     it('should render the task rows when the table is open', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         wrapper.setState({ openTable: true });
-        expect(wrapper.find(Table)).toHaveLength(1);
-        expect(wrapper.find(TableHeader)).toHaveLength(1);
-        expect(wrapper.find(TableRow)).toHaveLength(3);
-        expect(wrapper.find(TableRowColumn)).toHaveLength(12);
+        expect(wrapper.find(Table)).toHaveLength(2);
+        expect(wrapper.find(TableHead)).toHaveLength(1);
+        expect(wrapper.find(TableRow)).toHaveLength(2);
+        expect(wrapper.find(TableCell)).toHaveLength(11);
         expect(wrapper.find(TableBody)).toHaveLength(1);
         expect(wrapper.find(LicenseRow)).toHaveLength(1);
     });
@@ -148,25 +141,19 @@ describe('ProviderRow component', () => {
     it('Cancel MenuItem should call onProviderCancel with uid', () => {
         const props = getProps();
         props.onProviderCancel = sinon.spy();
-        const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
-        menu.setState({ open: true });
-        expect(menu.find(MenuItem)).toHaveLength(2);
-        menu.find(MenuItem).first().simulate('click');
+        const wrapper = shallow(<ProviderRow {...props} />);
+        wrapper.find(IconMenu).childAt(0).simulate('click');
         expect(props.onProviderCancel.calledOnce).toBe(true);
         expect(props.onProviderCancel.calledWith(props.provider.uid)).toBe(true);
     });
 
-    it('View source MenuItem should call handleProviderOpen with uid', () => {
+    it('View source MenuItem should call handleProviderOpen', () => {
         const props = getProps();
-        props.onProviderCancel = sinon.spy();
-        const wrapper = shallow(<ProviderRow {...props} />, { context: { muiTheme } });
-        const menu = shallow(wrapper.find(IconMenu).node, { context: { muiTheme } });
-        menu.setState({ open: true });
-        expect(menu.find(MenuItem)).toHaveLength(2);
-        menu.find(MenuItem).first().simulate('click');
-        expect(props.onProviderCancel.calledOnce).toBe(true);
-        expect(props.onProviderCancel.calledWith(props.provider.uid)).toBe(true);
+        const handleStub = sinon.stub(ProviderRow.prototype, 'handleProviderOpen');
+        const wrapper = shallow(<ProviderRow {...props} />);
+        wrapper.find(IconMenu).childAt(1).simulate('click');
+        expect(handleStub.calledOnce).toBe(true);
+        handleStub.restore();
     });
 
     it('getTaskDownloadIcon should return an icon that calls handleSingleDownload', () => {
@@ -182,59 +169,43 @@ describe('ProviderRow component', () => {
     it('componentWillMount should set selectedRows', () => {
         const props = getProps();
         const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
-        const wrapper = getWrapper(props);
+        getWrapper(props);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ selectedRows: { 123: false } })).toBe(true);
         stateSpy.restore();
     });
 
-    it('componentWillReceiveProps should handle summing up the file sizes', () => {
+    it('componentDidUpdate should handle summing up the file sizes', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const nextProps = getProps();
+        nextProps.provider.status = 'some new status';
         const fileSize = 1.234;
-        const propsSpy = sinon.spy(ProviderRow.prototype, 'componentWillReceiveProps');
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setProps(nextProps);
-        expect(propsSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ fileSize: fileSize.toFixed(3) })).toBe(true);
         stateSpy.restore();
-        propsSpy.restore();
     });
 
     it('getTextFontSize should return the font string for table text based on window width', () => {
         const props = getProps();
+        props.width = 'sm';
         const wrapper = getWrapper(props);
 
-        window.resizeTo(500, 600);
-        expect(window.innerWidth).toEqual(500);
-        expect(wrapper.instance().getTextFontSize()).toEqual('10px');
-
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
-        expect(wrapper.instance().getTextFontSize()).toEqual('11px');
-
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
         expect(wrapper.instance().getTextFontSize()).toEqual('12px');
 
-        window.resizeTo(1000, 600);
-        expect(window.innerWidth).toEqual(1000);
-        expect(wrapper.instance().getTextFontSize()).toEqual('13px');
-
-        window.resizeTo(1200, 600);
-        expect(window.innerWidth).toEqual(1200);
+        wrapper.setProps({ width: 'xl' });
         expect(wrapper.instance().getTextFontSize()).toEqual('14px');
     });
 
     it('getTableCellWidth should return the pixel string for table width based on window width', () => {
         const props = getProps();
+        props.width = 'sm';
         const wrapper = getWrapper(props);
-        window.resizeTo(700, 800);
-        expect(window.innerWidth).toEqual(700);
+
         expect(wrapper.instance().getTableCellWidth()).toEqual('80px');
-        window.resizeTo(800, 900);
-        expect(window.innerWidth).toEqual(800);
+
+        wrapper.setProps({ width: 'xl' });
         expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
     });
 
@@ -257,7 +228,7 @@ describe('ProviderRow component', () => {
         props.provider.tasks[0].status = 'RUNNING';
         expect(wrapper.instance().getTaskStatus({ status: 'RUNNING', progress: 100 })).toEqual((
             <span className="qa-ProviderRow-span-taskStatus">
-                <LinearProgress mode="determinate" value={100} />
+                <LinearProgress variant="determinate" value={100} />
                 {''}
             </span>
         ));
@@ -266,7 +237,6 @@ describe('ProviderRow component', () => {
                 className="qa-ProviderRow-Warning-taskStatus"
                 style={{
                     marginLeft: '10px',
-                    display: 'inlineBlock',
                     fill: '#f4d225',
                     verticalAlign: 'bottom',
                 }}
@@ -299,7 +269,6 @@ describe('ProviderRow component', () => {
                 className="qa-ProviderRow-span-providerStatus"
                 style={{
                     fontWeight: 'bold',
-                    display: 'inlineBlock',
                     borderTopWidth: '10px',
                     borderBottomWidth: '10px',
                     borderLeftWidth: '10px',
@@ -311,7 +280,6 @@ describe('ProviderRow component', () => {
                     className="qa-ProviderRow-Warning-providerStatus"
                     style={{
                         marginLeft: '10px',
-                        display: 'inlineBlock',
                         fill: '#f4d225',
                         verticalAlign: 'bottom',
                     }}
@@ -331,14 +299,14 @@ describe('ProviderRow component', () => {
         expect(elem.text()).toEqual('test name');
     });
 
-    it('getTaskLink should return a "a" element with click handler', () => {
+    it('getTaskLink should return a "span" element with click handler', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
         const task = { result: { url: 'test-url.io' }, name: 'test name' };
         const link = wrapper.instance().getTaskLink(task);
         wrapper.instance().handleSingleDownload = sinon.spy();
         const elem = shallow(link);
-        expect(elem.is('a')).toBe(true);
+        expect(elem.is('span')).toBe(true);
         expect(elem.text()).toEqual('test name');
         elem.simulate('click');
         expect(wrapper.instance().handleSingleDownload.calledOnce).toBe(true);
@@ -350,12 +318,7 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         const task = { result: {} };
         const icon = wrapper.instance().getTaskDownloadIcon(task);
-        const elem = mount(icon, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        });
-        expect(elem.is(CloudDownload)).toBe(true);
-        expect(elem.props().onClick).toBe(undefined);
+        expect(icon.props.onClick).toBe(undefined);
     });
 
     it('getTaskDownloadIcon should return a icon with click handler', () => {
@@ -363,31 +326,27 @@ describe('ProviderRow component', () => {
         const wrapper = getWrapper(props);
         const task = { result: { url: 'test-url.io' } };
         const icon = wrapper.instance().getTaskDownloadIcon(task);
-        const elem = mount(icon, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        });
-        expect(elem.is(CloudDownload)).toBe(true);
-        expect(elem.props().onClick).not.toBe(undefined);
+        expect(icon.props.onClick).not.toBe(undefined);
     });
 
     it('handleProviderOpen should set provider dialog to open', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = shallow(<ProviderRow {...props} />);
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleProviderOpen();
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ providerDesc: 'provider description', providerDialogOpen: true })).toBe(true);
+        wrapper.update();
         expect(wrapper.find(BaseDialog).childAt(0).text()).toEqual('provider description');
         stateSpy.restore();
     });
 
     it('handleProviderClose should set the provider dialog to closed', () => {
         const props = getProps();
-        const stateSpy = sinon.spy(ProviderRow.prototype, 'setState');
         const wrapper = shallow(<ProviderRow {...props} />);
+        const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleProviderClose();
-        expect(stateSpy.calledTwice).toBe(true);
+        expect(stateSpy.called).toBe(true);
         expect(stateSpy.calledWith({ providerDialogOpen: false })).toBe(true);
         stateSpy.restore();
     });

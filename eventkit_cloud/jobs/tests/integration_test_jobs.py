@@ -2,29 +2,26 @@
 import json
 import logging
 import os
-import requests
 import shutil
-from time import sleep
 from datetime import timedelta, datetime
+from time import sleep
 
-from ...tasks.models import DataProviderTaskRecord
-from ...tasks.export_tasks import TaskStates
-from ...tasks.task_runners import normalize_name
-from ...core.helpers import download_file
-from ..models import DataProvider, DataProviderType, Job
-from ...utils.geopackage import check_content_exists, check_zoom_levels
-
+import requests
 from django.conf import settings
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 from django.utils import timezone
 
+from eventkit_cloud.jobs.models import DataProvider, DataProviderType, Job
+from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.tasks.models import DataProviderTaskRecord
+from eventkit_cloud.utils.geopackage import check_content_exists, check_zoom_levels
 
 logger = logging.getLogger(__name__)
 
 
 # Default length of time to let a single test case run.
-DEFAULT_TIMEOUT = 120
+DEFAULT_TIMEOUT = 600
 
 
 class TestJob(TestCase):
@@ -35,38 +32,32 @@ class TestJob(TestCase):
     def setUp(self):
         username = 'admin'
         password = '@dm1n'
-        self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings, "SITE_NAME", "cloud.eventkit.dev")))
-        self.login_url = self.base_url + '/auth'
+        self.base_url = os.getenv('BASE_URL', 'http://{0}'.format(getattr(settings, "SITE_NAME", "cloud.eventkit.test")))
+        self.login_url = self.base_url + '/api/login/'
         self.create_export_url = self.base_url + '/status/create'
         self.jobs_url = self.base_url + reverse('api:jobs-list')
         self.runs_url = self.base_url + reverse('api:runs-list')
         self.download_dir = os.path.join(os.getenv('EXPORT_STAGING_ROOT', '.'), "test")
         if not os.path.exists(self.download_dir):
-            os.makedirs(self.download_dir, mode=0660)
+            os.makedirs(self.download_dir, mode=0o660)
         self.client = requests.session()
-        self.client.get(self.login_url)
+        response = self.client.get(self.login_url)
+        if not (response.status_code == requests.codes.ok):
+            raise Exception("FAILURE: The target server returned: {0}".format(str(response.status_code)))
         self.csrftoken = self.client.cookies['csrftoken']
 
-        login_data = dict(username=username, password=password, csrfmiddlewaretoken=self.csrftoken, next='/')
+        login_data = dict(username=username, password=password, csrfmiddlewaretoken=self.csrftoken, next='/exports', submit='Log in')
         self.client.post(self.login_url, data=login_data, headers=dict(Referer=self.login_url),
                          auth=(username, password))
         self.client.get(self.base_url)
         self.client.get(self.create_export_url)
         self.csrftoken = self.client.cookies['csrftoken']
-        self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "MultiPolygon",
-                                                                                              "coordinates": [
-                                                                                                  [[[127.01, 37.01],
-                                                                                                    [127.03, 37.02],
-                                                                                                    [127.03, 37.03],
-                                                                                                    [127.02, 37.03],
-                                                                                                    [127.01, 37.01]]],
-                                                                                                  [[[127.03, 37.03],
-                                                                                                    [127.04, 37.03],
-                                                                                                    [127.05, 37.05],
-                                                                                                    [127.03, 37.04],
-                                                                                                    [127.03, 37.03]]]
-                                                                                              ]
-                                                                                              }}]}
+        self.selection = {"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {},
+                                                              "geometry": {"type": "Polygon", "coordinates": [
+                                                                  [[31.128165, 29.971509], [31.128521, 29.971509],
+                                                                   [31.128521, 29.971804], [31.128165, 29.971804],
+                                                                   [31.128165, 29.971509]]]}}]}
+
     def tearDown(self):
         if os.path.exists(self.download_dir):
             shutil.rmtree(self.download_dir)
@@ -96,7 +87,7 @@ class TestJob(TestCase):
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'referer': self.create_export_url})
         self.assertEqual(200, response.status_code)
-        self.assertEqual({'success': True}, json.loads(response.content))
+        self.assertEqual({'success': True}, response.json())
         self.orm_job = Job.objects.get(uid=job_json.get('uid'))
         self.orm_run = self.orm_job.runs.last()
 
@@ -148,7 +139,7 @@ class TestJob(TestCase):
                     "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "OpenStreetMap Data (Themes)", "formats": ["sqlite"]}]}
-        self.assertTrue(self.run_job(job_data, run_timeout=90))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_osm_shp(self):
         """
@@ -241,7 +232,7 @@ class TestJob(TestCase):
         job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "TestSHP-WFS", "description": "Test Description",
                     "event": "TestProject", "selection": self.selection, "tags": [],
                     "provider_tasks": [{"provider": "eventkit-integration-test-wfs", "formats": ["shp"]}]}
-        self.assertTrue(self.run_job(job_data, run_timeout=90))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_wfs_sqlite(self):
         """
@@ -308,7 +299,24 @@ class TestJob(TestCase):
                                                    # {"provider": "eventkit-integration-test-arc-fs",
                                                    #  "formats": ["shp", "gpkg", "kml", "sqlite"]}
                                                    ]}
-        self.assertTrue(self.run_job(job_data, run_timeout=300))
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
+
+    def test_loaded(self):
+        """
+
+        :return: This test will run all currently loaded providers.
+        """
+        provider_tasks = []
+        for data_provider in get_all_providers():
+            provider_tasks += [{"provider": data_provider,
+                            "formats": ["gpkg"]}]
+        job_data = {"csrfmiddlewaretoken": self.csrftoken, "name": "Pyramids of Queens",
+                    "description": "An Integration Test ", "event": "Integration Tests",
+                    "include_zipfile": True,
+                    "provider_tasks": provider_tasks,
+                    "selection": self.selection,
+                    "tags": []}
+        self.assertTrue(self.run_job(job_data, run_timeout=DEFAULT_TIMEOUT))
 
     def test_rerun_all(self):
         """
@@ -339,10 +347,10 @@ class TestJob(TestCase):
                                     json=job_data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
-        self.assertEquals(response.status_code, 202)
+        self.assertEqual(response.status_code, 202)
         job = response.json()
 
-        run = self.wait_for_run(job.get('uid'), run_timeout=300)
+        run = self.wait_for_run(job.get('uid'), run_timeout=DEFAULT_TIMEOUT)
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):
             geopackage_url = self.get_gpkg_url(run, provider_task.get("name"))
@@ -357,8 +365,8 @@ class TestJob(TestCase):
                                          headers={'X-CSRFToken': self.csrftoken,
                                                   'Referer': self.create_export_url})
 
-        self.assertEquals(rerun_response.status_code, 202)
-        rerun = self.wait_for_run(job.get('uid'), run_timeout=300)
+        self.assertEqual(rerun_response.status_code, 202)
+        rerun = self.wait_for_run(job.get('uid'), run_timeout=DEFAULT_TIMEOUT)
         self.assertTrue(rerun.get('status') == "COMPLETED")
         for provider_task in rerun.get('provider_tasks'):
             geopackage_url = self.get_gpkg_url(rerun, provider_task.get("name"))
@@ -381,7 +389,9 @@ class TestJob(TestCase):
                                     json=data,
                                     headers={'X-CSRFToken': self.csrftoken,
                                              'Referer': self.create_export_url})
-        self.assertEquals(response.status_code, 202)
+        if response.status_code != 202:
+            logger.error(response.content)
+        self.assertEqual(response.status_code, 202)
         job = response.json()
 
         if not wait_for_run:
@@ -392,21 +402,16 @@ class TestJob(TestCase):
         self.orm_run = orm_run = orm_job.runs.last()
         date = timezone.now().strftime('%Y%m%d')
 
-        test_zip_url = '%s%s%s/%s' % (
-            self.base_url,
-            settings.EXPORT_MEDIA_ROOT,
-            run.get('uid'),
-            '%s-%s-%s-%s.zip' % (
-                normalize_name(orm_run.job.name),
-                normalize_name(orm_run.job.event),
-                'eventkit',
-                date
-            ))
+        # Get the filename for the zip, to ensure that it exists.
+        for provider_task in run['provider_tasks']:
+            if provider_task['name'] == 'run':
+                run_provider_task = provider_task
 
-        if not getattr(settings, "USE_S3", False):
-            self.assertEquals(test_zip_url, run['zipfile_url'])
+        for task in run_provider_task['tasks']:
+            if 'zip' in task['name'].lower():
+                zip_result = task['result']
 
-        assert '.zip' in orm_run.zipfile_url
+        assert '.zip' in zip_result['filename']
 
         self.assertTrue(run.get('status') == "COMPLETED")
         for provider_task in run.get('provider_tasks'):
@@ -465,7 +470,7 @@ class TestJob(TestCase):
                     for task in provider_task['tasks']:
                         if task['status'] == 'FAILED':
                             errors_as_list = [
-                                '{}: {}'.format(k, v) for error_dict in task['errors'] for k, v in error_dict.items()
+                                '{}: {}'.format(k, v) for error_dict in task['errors'] for k, v in list(error_dict.items())
                             ]
                             errors_text = ', '.join(errors_as_list)
                             msg = 'Task "{}" failed: {}'.format(task['name'], errors_text)
@@ -591,3 +596,7 @@ def delete_providers():
         ).first()
         if provider:
             provider.delete(using='default')
+
+
+def get_all_providers():
+    return [provider.name for provider in DataProvider.objects.all()]

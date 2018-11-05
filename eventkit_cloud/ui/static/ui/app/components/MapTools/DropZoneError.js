@@ -1,5 +1,6 @@
-import React, { Component, PropTypes } from 'react';
-import BaseDialog from '../BaseDialog';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class DropZoneError extends Component {
     constructor(props) {
@@ -11,11 +12,11 @@ export class DropZoneError extends Component {
         };
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.importGeom.error !== this.props.importGeom.error) {
-            if (nextProps.importGeom.error) {
+    componentDidUpdate(prevProps) {
+        if (this.props.importGeom.error !== prevProps.importGeom.error) {
+            if (this.props.importGeom.error) {
                 this.props.setAllButtonsDefault();
-                this.setState({ showErrorMessage: true, errorMessage: nextProps.importGeom.error });
+                this.setState({ showErrorMessage: true, errorMessage: this.props.importGeom.error });
             }
         }
     }

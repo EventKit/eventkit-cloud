@@ -11,7 +11,6 @@ import VectorSource from 'ol/source/vector';
 import VectorLayer from 'ol/layer/vector';
 import WKTReader from 'jsts/org/locationtech/jts/io/WKTReader';
 import * as utils from '../../utils/mapUtils';
-import { WGS84, WEB_MERCATOR } from '../../utils/mapUtils';
 
 // this polyfills requestAnimationFrame in the test browser, required for ol3
 raf.polyfill();
@@ -483,7 +482,7 @@ describe('mapUtils', () => {
         const map = { getView: sinon.spy(() => ({ fit: fitSpy })) };
         utils.zoomToFeature(feature, map);
         expect(transformStub.calledOnce).toBe(true);
-        expect(transformStub.calledWith([1, 1, 1, 1], WGS84, WEB_MERCATOR)).toBe(true);
+        expect(transformStub.calledWith([1, 1, 1, 1], utils.WGS84, utils.WEB_MERCATOR)).toBe(true);
         expect(fitSpy.calledOnce).toBe(true);
         expect(fitSpy.calledWith([1, 1, 1, 1])).toBe(true);
         transformStub.restore();
@@ -634,15 +633,15 @@ describe('mapUtils', () => {
         expect(utils.isVertex(pixel, feature, tolerance, map)).toBe(false);
     });
 
-    it('hasArea should return false if there are no features', () => {
+    it('allHaveArea should return false if there are no features', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [],
         };
-        expect(utils.hasArea(collection)).toBe(false);
+        expect(utils.allHaveArea(collection)).toBe(false);
     });
 
-    it('hasArea should return false if polygon has no area', () => {
+    it('allHaveArea should return false if polygon has no area', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [
@@ -661,10 +660,10 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.hasArea(collection)).toBe(false);
+        expect(utils.allHaveArea(collection)).toBe(false);
     });
 
-    it('hasArea should return false for points (no getArea func in ol)', () => {
+    it('allHaveArea should return false for points (no getArea func in ol)', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [
@@ -680,10 +679,10 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.hasArea(collection)).toBe(false);
+        expect(utils.allHaveArea(collection)).toBe(false);
     });
 
-    it('hasArea should retunr true', () => {
+    it('allHaveArea should retunr true', () => {
         const collection = {
             type: 'FeatureCollection',
             features: [
@@ -702,7 +701,7 @@ describe('mapUtils', () => {
                 },
             ],
         };
-        expect(utils.hasArea(collection)).toBe(true);
+        expect(utils.allHaveArea(collection)).toBe(true);
     });
 
     it('getDominantGeometry should return Point', () => {

@@ -10,7 +10,7 @@ div.map {
     top: 125px;
     left: 40px;
 }
-.olScaleLine {
+.olScaleLine, .olScaleLineLargeMap {
     position: absolute;
     padding: 2px;
     background: rgba(0,0,0,0);
@@ -19,7 +19,13 @@ div.map {
     right: 10px;
 }
 
-.olScaleLine > div {
+@media (max-width: 640px) {
+    .olScaleLineLargeMap {
+        right: 92px;
+    }
+}
+
+.olScaleLine > div, .olScaleLineLargeMap > div {
     color: #707274;
     border: 1px solid #707274;
     border-top: none;
@@ -37,6 +43,24 @@ div.map {
     background-color: white;
 }
 
+.olZoomSlider {
+    z-index: 3;
+    top: 108px;
+    left: 10px;
+    height: 200px;
+    color: #66a3ff;
+    background-color: white;
+}
+
+.olZoomSlider button {
+    position: relative;
+    height: 15px;
+
+    /* Fix issue where slider button scrolls down too far */
+    transform: scaleY(0.75);
+    transform-origin: top center;
+}
+
 .olControlTopLeft {
     top: 15px !important;
     left: 10px !important;
@@ -51,7 +75,7 @@ div.map {
 }
 
 .olZoomToExtent button {
-    color: #4498c0;
+    color: #4598bf;
     background-color: white;
     outline: none;
     height: 22px;
@@ -59,15 +83,11 @@ div.map {
 }
 
 .olZoom button {
-    color: #4498c0;
+    color: #4598bf;
     background-color: white;
     outline: none;
     height: 22px;
     width: 22px;
-}
-
-.olZoomToExtent button i {
-    font-size: 16px;
 }
 
 .olZoom button i {
@@ -88,6 +108,21 @@ div.map {
 
 .olZoom button:focus {
     background-color: white;
+}
+
+.olZoomLevel {
+    z-index: 3;
+    position: absolute;
+    bottom: 38px;
+    right: 12px;
+    color: #707274;
+    font-size: 10px;
+}
+
+@media (max-width: 640px) {
+    .olZoomLevel {
+        bottom: 14px;
+    }
 }
 
 .olPopup {
@@ -126,15 +161,19 @@ div.map {
 .olPopupCloser {
     text-decoration: none;
     position: absolute;
+    color: #4598bf;
+    cursor: pointer;
     top: 2px;
     right: 8px;
 }
+
 .olPopupCloser:after {
     content: "✖";
 }
 
 .ol-custom-overviewmap:not(.ol-collapsed) {
     left: 10px;
+    right: auto;
     right: initial;
     bottom: 25px;
 }

@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+import json
+import os
 
 from celery.schedules import crontab
 
-from .contrib import *  # NOQA
 import os
 import json
 import socket
 from kombu import Exchange, Queue
-from ..celery import app
+from eventkit_cloud.celery import app
+from eventkit_cloud.settings.contrib import *  # NOQA
 
 # Celery config
 CELERY_TRACK_STARTED = True
@@ -53,11 +54,15 @@ app.conf.beat_schedule = {
     'scale-celery': {
             'task': 'Scale Celery',
             'schedule': 60.0,
-            'kwargs' : {"max_instances": int(os.getenv("CELERY_INSTANCES", 2))},
+            'kwargs' : {"max_instances": int(os.getenv("CELERY_INSTANCES", 3))},
             'options': {'priority': 90,
                         'queue': "scale".format(socket.gethostname()),
                         'routing_key': "scale".format(socket.gethostname())}
     },
+    'provider-statuses': {
+        'task': 'Check Provider Availability',
+        'schedule': crontab(minute='*/{}'.format(os.getenv('PROVIDER_CHECK_INTERVAL', '30')))
+    }
 }
 
 CELERYD_USER = CELERYD_GROUP = 'eventkit'
@@ -68,13 +73,13 @@ CELERYD_GROUP = os.getenv("CELERYD_GROUP", CELERYD_GROUP)
 
 BROKER_URL = None
 if os.getenv("VCAP_SERVICES"):
-    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         try:
             if 'rabbitmq' in service:
                 BROKER_URL = listings[0]['credentials']['protocols']['amqp']['uri']
             if 'cloudamqp' in service:
                 BROKER_URL = listings[0]['credentials']['uri']
-        except KeyError, TypeError:
+        except KeyError as TypeError:
             continue
         if BROKER_URL:
             break

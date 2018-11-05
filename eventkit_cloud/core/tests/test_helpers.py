@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
 
 import logging
 
-from mock import Mock
 from django.test import TestCase
-from ..helpers import get_id
+from mock import Mock
 
+from eventkit_cloud.core.helpers import get_id
 
 logger = logging.getLogger(__name__)
 

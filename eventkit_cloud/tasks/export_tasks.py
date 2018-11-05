@@ -1,68 +1,48 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-import cPickle
-from collections import Sequence
 import json
 import logging
 import os
+import re
 import shutil
 import socket
 import traceback
 from zipfile import ZipFile, ZIP_DEFLATED
 
+from audit_logging.celery_support import UserDetailsBase
+from celery import signature
+from celery.result import AsyncResult
+from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.gis.geos import Polygon
-
 from django.core.cache import caches
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.template.loader import get_template, render_to_string
 from django.utils import timezone
-from celery import signature
-from celery.result import AsyncResult
-from celery.utils.log import get_task_logger
-from enum import Enum
-from ..feature_selection.feature_selection import FeatureSelection
-from audit_logging.celery_support import UserDetailsBase
-from ..ui.helpers import get_style_files, generate_qgs_style
-from ..celery import app, TaskPriority
-from ..utils import (
-    kml, overpass, pbf, s3, shp, external_service, wfs, wcs, arcgis_feature_service, sqlite, geopackage, gdalutils
+
+from eventkit_cloud.celery import app, TaskPriority
+from eventkit_cloud.core.helpers import sendnotification, NotificationVerb, NotificationLevel
+from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+from eventkit_cloud.tasks.enumerations import TaskStates
+from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
+from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
+    get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
+    default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
+    get_human_readable_metadata_document, pickle_exception
+from eventkit_cloud.utils.auth_requests import get_cred
+from eventkit_cloud.utils import (
+    overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
 )
-from ..utils.hotosm_geopackage import Geopackage
-from ..utils.geopackage import add_file_metadata
+from eventkit_cloud.utils.ogr import OGR
 
-from .exceptions import CancelException, DeleteException
 
-BLACKLISTED_ZIP_EXTS = ['.pbf', '.ini', '.txt', '.om5', '.osm', '.lck']
+BLACKLISTED_ZIP_EXTS = ['.ini', '.om5', '.osm', '.lck', '.pyc']
 
 # Get an instance of a logger
 logger = get_task_logger(__name__)
-
-
-class TaskStates(Enum):
-
-    COMPLETED = "COMPLETED"  # Used for runs when all tasks were successful
-    INCOMPLETE = "INCOMPLETE"  # Used for runs when one or more tasks were unsuccessful
-    SUBMITTED = "SUBMITTED"  # Used for runs that have not been started
-
-    PENDING = "PENDING"  # Used for tasks that have not been started
-    RUNNING = "RUNNING"  # Used for tasks that have been started
-    CANCELED = "CANCELED"  # Used for tasks that have been CANCELED by the user
-    SUCCESS = "SUCCESS"  # Used for tasks that have successfully completed
-    FAILED = "FAILED"  # Used for tasks that have failed (an exception other than CancelException was thrown
-
-    # or a non-zero exit code was returned.)
-
-    @staticmethod
-    def get_finished_states():
-        return [TaskStates.COMPLETED, TaskStates.INCOMPLETE, TaskStates.CANCELED, TaskStates.SUCCESS, TaskStates.FAILED]
-
-    @staticmethod
-    def get_incomplete_states():
-        return [TaskStates.FAILED, TaskStates.INCOMPLETE, TaskStates.CANCELED]
 
 
 # http://docs.celeryproject.org/en/latest/tutorials/task-cookbook.html
@@ -116,7 +96,7 @@ class LockingTask(UserDetailsBase):
         worker = kwargs.get('worker')
         task_settings = {
             'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
-            'priority': TaskPriority.TASK_RUNNER.value}
+            'priority': TaskPriority.RUN_TASK.value}
 
         if lock_key:
             self.lock_expiration = 5
@@ -145,17 +125,23 @@ class LockingTask(UserDetailsBase):
         super(LockingTask, self).after_return(*args, **kwargs)
 
 
-def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False, download_filename=None):
+def make_file_downloadable(filepath, run_uid, provider_slug=None, skip_copy=False, download_filename=None,
+                           size=None, direct=False):
     """ Construct the filesystem location and url needed to download the file at filepath.
         Copy filepath to the filesystem location required for download.
         @provider_slug is specific to ExportTasks, not needed for FinalizeHookTasks
         @skip_copy: It looks like sometimes (At least for OverpassQuery) we don't want the file copied,
             generally can be ignored
+        @direct: If true, return the direct download URL and skip the Downloadable tracking step
         @return A url to reach filepath.
     """
-    download_filesystem_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-    download_url_root = settings.EXPORT_MEDIA_ROOT
-    run_dir = os.path.join(download_filesystem_root, run_uid)
+
+    staging_dir = get_run_staging_dir(run_uid)
+    if provider_slug:
+        staging_dir = get_provider_staging_dir(run_uid, provider_slug)
+    run_download_dir = get_run_download_dir(run_uid)
+    run_download_url = get_run_download_url(run_uid)
+
     filename = os.path.basename(filepath)
     if download_filename is None:
         download_filename = filename
@@ -163,19 +149,15 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
     if getattr(settings, "USE_S3", False):
         download_url = s3.upload_to_s3(
             run_uid,
-            os.path.join(provider_slug, filename),
-            download_filename
+            os.path.join(staging_dir, filename),
+            download_filename,
         )
     else:
-        try:
-            if not os.path.isdir(run_dir):
-                os.makedirs(run_dir)
-        except OSError as e:
-            logger.info(e)
+        make_dirs(run_download_dir)
 
-        download_url = os.path.join(download_url_root, run_uid, download_filename)
+        download_url = os.path.join(run_download_url, download_filename)
 
-        download_filepath = os.path.join(download_filesystem_root, run_uid, download_filename)
+        download_filepath = os.path.join(run_download_dir, download_filename)
         if not skip_copy:
             shutil.copy(filepath, download_filepath)
 
@@ -183,7 +165,7 @@ def make_file_downloadable(filepath, run_uid, provider_slug='', skip_copy=False,
 
 
 # ExportTaskRecord abstract base class and subclasses.
-class ExportTask(LockingTask):
+class ExportTask(UserDetailsBase):
     """
     Abstract base class for export tasks.
     """
@@ -192,10 +174,11 @@ class ExportTask(LockingTask):
     abort_on_error = False
 
     def __call__(self, *args, **kwargs):
+
+        from eventkit_cloud.tasks.models import FileProducingTaskResult, ExportTaskRecord
         task_uid = kwargs.get('task_uid')
 
         try:
-            from ..tasks.models import (FileProducingTaskResult, ExportTaskRecord)
             task = ExportTaskRecord.objects.get(uid=task_uid)
 
             try:
@@ -204,7 +187,8 @@ class ExportTask(LockingTask):
                 task_state_result = None
             self.update_task_state(result=task_state_result, task_uid=task_uid)
 
-            retval = super(ExportTask, self).__call__(*args, **kwargs)
+            if not TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
+                retval = super(ExportTask, self).__call__(*args, **kwargs)
 
             """
             Update the successfully completed task as follows:
@@ -216,16 +200,19 @@ class ExportTask(LockingTask):
                 5. copy the export file to the download directory
                 6. create the export task result
                 7. update the export task status and save it
-            """
-            # If a task is skipped it will be successfully completed but it won't have a return value.  These tasks
-            # should just return.
-            if not retval:
-                return
+                """
+            # If a task is skipped it will be successfully completed but it won't have a return value.
+            # Something needs to be populated to notify the user and to skip the following steps.
+            if not (retval and retval.get('result')):
+                raise Exception("This task was skipped due to previous failures/cancellations.")
             # update the task
             finished = timezone.now()
             if TaskStates.CANCELED.value in [task.status, task.export_provider_task.status]:
                 logging.info('Task reported on success but was previously canceled ', format(task_uid))
-                raise CancelException(task_name=task.export_provider_task.name, user_name=task.cancel_user.username)
+                username = None
+                if task.cancel_user:
+                    username = task.cancel_user.username
+                raise CancelException(task_name=task.export_provider_task.name, user_name=username)
 
             task.finished_at = finished
             task.progress = 100
@@ -240,18 +227,23 @@ class ExportTask(LockingTask):
             provider_slug = parts[-2]
             run_uid = parts[-3]
             name, ext = os.path.splitext(filename)
-            download_filename = '{0}-{1}-{2}{3}'.format(
-                name,
-                provider_slug,
-                finished.strftime('%Y%m%d'),
-                ext
-            )
+            if provider_slug == 'run':
+                event = normalize_name(task.export_provider_task.run.job.event)
+                download_filename = get_download_filename(name,
+                                                          finished,
+                                                          ext,
+                                                          additional_descriptors=[event, 'eventkit'])
+            else:
+                download_filename = get_download_filename(name,
+                                                          finished,
+                                                          ext,
+                                                          additional_descriptors=provider_slug)
 
             # construct the download url
             skip_copy = (task.name == 'OverpassQuery')
             download_url = make_file_downloadable(
                 output_url, run_uid, provider_slug=provider_slug, skip_copy=skip_copy,
-                download_filename=download_filename
+                download_filename=download_filename,
             )
 
             # save the task and task result
@@ -288,8 +280,8 @@ class ExportTask(LockingTask):
             5. run export_task_error_handler if the run should be aborted
                - this is only for initial tasks on which subsequent export tasks depend
         """
-        from ..tasks.models import ExportTaskRecord
-        from ..tasks.models import ExportTaskException, DataProviderTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskException, DataProviderTaskRecord
         try:
             task = ExportTaskRecord.objects.get(uid=task_id)
             task.finished_at = timezone.now()
@@ -299,8 +291,7 @@ class ExportTask(LockingTask):
             logger.error(traceback.format_exc())
             logger.error('Cannot update the status of ExportTaskRecord object: no such object has been created for '
                          'this task yet.')
-        exception = cPickle.dumps(einfo)
-        ete = ExportTaskException(task=task, exception=exception)
+        ete = ExportTaskException(task=task, exception=pickle_exception(einfo))
         ete.save()
         if task.status != TaskStates.CANCELED.value:
             task.status = TaskStates.FAILED.value
@@ -308,7 +299,7 @@ class ExportTask(LockingTask):
             logger.debug('Task name: {0} failed, {1}'.format(self.name, einfo))
             if self.abort_on_error:
                 export_provider_task = DataProviderTaskRecord.objects.get(tasks__uid=task_id)
-                cancel_synchronous_task_chain(export_provider_task_uid=export_provider_task.uid)
+                cancel_synchronous_task_chain(data_provider_task_uid=export_provider_task.uid)
                 run = export_provider_task.run
                 stage_dir = kwargs['stage_dir']
                 export_task_error_handler(
@@ -326,10 +317,12 @@ class ExportTask(LockingTask):
         """
         result = result or {}
         started = timezone.now()
-        from ..tasks.models import ExportTaskRecord
+        from eventkit_cloud.tasks.models import ExportTaskRecord
         try:
             task = ExportTaskRecord.objects.get(uid=task_uid)
             celery_uid = self.request.id
+            if not celery_uid:
+                raise Exception("Failed to save celery_UID")
             task.celery_uid = celery_uid
             task.save()
             result = parse_result(result, 'status') or []
@@ -338,7 +331,8 @@ class ExportTask(LockingTask):
                 task.status = TaskStates.CANCELED.value
                 task.save()
                 raise CancelException(task_name=task.export_provider_task.name)
-            task.pid = os.getpid()
+            # The parent ID is actually the process running in celery.
+            task.pid = os.getppid()
             task.status = task_status
             task.export_provider_task.status = TaskStates.RUNNING.value
             task.started_at = started
@@ -362,7 +356,7 @@ class FormatTask(ExportTask):
 
 
 def osm_data_collection_pipeline(
-        export_task_record_uid, stage_dir, job_name='no_job_name_specified',
+        export_task_record_uid, stage_dir, job_name='no_job_name_specified', url=None, slug=None,
         bbox=None, user_details=None, config=None):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
@@ -370,12 +364,12 @@ def osm_data_collection_pipeline(
     """
     # --- Overpass Query
     op = overpass.Overpass(
-        bbox=bbox, stage_dir=stage_dir,
+        bbox=bbox, stage_dir=stage_dir, slug=slug, url=url,
         job_name=job_name, task_uid=export_task_record_uid,
         raw_data_filename='{}_query.osm'.format(job_name)
     )
 
-    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=60)  # run the query
+    osm_data_filename = op.run_query(user_details=user_details, subtask_percentage=20)  # run the query
 
     # --- Convert Overpass result to PBF
     osm_filename = os.path.join(stage_dir, osm_data_filename)
@@ -385,25 +379,31 @@ def osm_data_collection_pipeline(
     # --- Generate thematic gpkg from PBF
     geopackage_filepath = os.path.join(stage_dir, '{}.gpkg'.format(job_name))
 
+    if config is None:
+        logger.error("No configuration was provided for OSM export")
+        raise RuntimeError("The configuration field is required for OSM data providers")
+
     feature_selection = FeatureSelection.example(config)
-    update_progress(export_task_record_uid, progress=75)
-
+    update_progress(export_task_record_uid, progress=25)
     geom = Polygon.from_bbox(bbox)
-    g = Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom)
+    g = geopackage.Geopackage(pbf_filepath, geopackage_filepath, stage_dir, feature_selection, geom,
+                   export_task_record_uid=export_task_record_uid)
     g.run()
-
+    update_progress(export_task_record_uid, progress=75)
     # --- Add the Land Boundaries polygon layer
     database = settings.DATABASES['feature_data']
-    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(host=database['HOST'],
-                                        user=database['USER'],
-                                        password=database['PASSWORD'].replace('$', '\$'),
-                                        port=database['PORT'],
-                                        name=database['NAME'])
-
-    gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons", fmt='gpkg')
+    in_dataset = 'PG:"dbname={name} host={host} user={user} password={password} port={port}"'.format(
+        host=database['HOST'],
+        user=database['USER'],
+        password=database['PASSWORD'].replace('$', '\$'),
+        port=database['PORT'],
+        name=database['NAME'])
+    update_progress(export_task_record_uid, progress=95)
+    gdalutils.clip_dataset(boundary=bbox, in_dataset=in_dataset, out_dataset=geopackage_filepath, table="land_polygons",
+                           fmt='gpkg')
 
     ret_geopackage_filepath = g.results[0].parts[0]
-    assert(ret_geopackage_filepath == geopackage_filepath)
+    assert (ret_geopackage_filepath == geopackage_filepath)
     update_progress(export_task_record_uid, progress=100)
 
     return geopackage_filepath
@@ -411,17 +411,16 @@ def osm_data_collection_pipeline(
 
 @app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
 def osm_data_collection_task(
-        self, result=None, stage_dir=None, run_uid=None, provider_slug=None, task_uid=None,
+        self, result=None, stage_dir=None, run_uid=None, provider_slug=None, overpass_url=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
         config=None, *args, **kwargs):
     """
     Collects data from OSM & produces a thematic gpkg as a subtask of the task referenced by export_provider_task_id.
     bbox expected format is an iterable of the form [ long0, lat0, long1, lat1 ]
     """
-    from .models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     logger.debug("enter run for {0}".format(self.name))
-
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -430,8 +429,8 @@ def osm_data_collection_task(
         user_details = {'username': 'username not set in osm_data_collection_task'}
 
     gpkg_filepath = osm_data_collection_pipeline(
-        task_uid, stage_dir, job_name=job_name, bbox=bbox, user_details=user_details,
-        config=config
+        task_uid, stage_dir, slug=provider_slug, job_name=job_name, bbox=bbox, user_details=user_details,
+        url=overpass_url, config=config
     )
 
     selection = parse_result(result, 'selection')
@@ -452,9 +451,9 @@ def osm_data_collection_task(
 @app.task(name="Add Metadata", bind=True, base=UserDetailsBase, abort_on_error=False)
 def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_details=None, *args, **kwargs):
     """
-    Task to create styles for osm.
+    Task to create metadata to a geopackage.
     """
-    from ..jobs.models import Job, DataProvider
+    from eventkit_cloud.jobs.models import Job, DataProvider
 
     job = Job.objects.get(uid=job_uid)
 
@@ -463,7 +462,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
     input_gpkg = parse_result(result, 'geopackage')
     date_time = timezone.now()
     bbox = job.extents
-    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, date_time.strftime("%Y%m%d")),
+    metadata_values = {"fileIdentifier": '{0}-{1}-{2}'.format(job.name, provider.slug, default_format_time(date_time)),
                        "abstract": job.description,
                        "title": job.name,
                        "westBoundLongitude": bbox[0],
@@ -480,7 +479,7 @@ def add_metadata_task(self, result=None, job_uid=None, provider_slug=None, user_
 
     metadata = render_to_string('data/geopackage_metadata.xml', context=metadata_values)
 
-    add_file_metadata(input_gpkg, metadata)
+    geopackage.add_file_metadata(input_gpkg, metadata)
 
     result['result'] = input_gpkg
     result['geopackage'] = input_gpkg
@@ -498,8 +497,9 @@ def shp_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     shapefile = os.path.join(stage_dir, '{0}_shp'.format(job_name))
 
     try:
-        s2s = shp.GPKGToShp(gpkg=gpkg, shapefile=shapefile, task_uid=task_uid)
-        out = s2s.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='ESRI Shapefile', in_file=gpkg, out_file=shapefile,
+                          params="-lco 'ENCODING=UTF-8' -overwrite")
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -519,8 +519,8 @@ def kml_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=No
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     kmlfile = os.path.join(stage_dir, '{0}.kml'.format(job_name))
     try:
-        s2k = kml.GPKGToKml(gpkg=gpkg, kmlfile=kmlfile, task_uid=task_uid)
-        out = s2k.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='KML', in_file=gpkg, out_file=kmlfile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -540,8 +540,8 @@ def sqlite_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     sqlitefile = os.path.join(stage_dir, '{0}.sqlite'.format(job_name))
     try:
-        s2g = sqlite.GPKGToSQLite(gpkg=gpkg, sqlitefile=sqlitefile, task_uid=task_uid)
-        out = s2g.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='SQLite', in_file=gpkg, out_file=sqlitefile)
         result['result'] = out
         result['geopackage'] = gpkg
         return result
@@ -558,11 +558,12 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
     """
     result = result or {}
 
-    geojson_file = os.path.join(stage_dir,
-                                "{0}_selection.geojson".format(provider_slug))
+    geojson_file = os.path.join(stage_dir, "{0}_selection.geojson".format(provider_slug))
     if selection:
+
         # Test if json.
         json.loads(selection)
+
         from audit_logging.file_logging import logging_open
         user_details = kwargs.get('user_details')
         with logging_open(geojson_file, 'w', user_details=user_details) as open_file:
@@ -575,12 +576,11 @@ def output_selection_geojson_task(self, result=None, task_uid=None, selection=No
 
 @app.task(name='Geopackage Format', bind=True, base=FormatTask)
 def geopackage_export_task(self, result={}, run_uid=None, task_uid=None,
-        user_details=None, *args, **kwargs):
-
+                           user_details=None, *args, **kwargs):
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun, ExportTaskRecord
+    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -606,22 +606,21 @@ def geotiff_export_task(self, result=None, run_uid=None, task_uid=None, stage_di
     """
     Class defining geopackage export function.
     """
-    from .models import ExportRun
     result = result or {}
 
     gtiff = parse_result(result, 'result')
     selection = parse_result(result, 'selection')
     if selection:
-        gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt=None)
-
-    gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+        gtiff = gdalutils.clip_dataset(boundary=selection, in_dataset=gtiff, fmt='gtiff', task_uid=task_uid)
+    else:
+        gtiff = gdalutils.convert(dataset=gtiff, fmt='gtiff', task_uid=task_uid)
 
     result['result'] = gtiff
     result['geotiff'] = gtiff
     return result
 
 
-@app.task(name='Clip Export', bind=True, base=LockingTask)
+@app.task(name='Clip Export', bind=True, base=UserDetailsBase)
 def clip_export_task(self, result=None, run_uid=None, task_uid=None, stage_dir=None, job_name=None, user_details=None,
                      *args, **kwargs):
     """
@@ -657,15 +656,42 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     result = result or {}
 
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
+
+    # Strip out query string parameters that might conflict
+    service_url = re.sub(r"(?i)(?<=[?&])(version|service|request|typename|srsname)=.*?(&|$)", "",
+                              service_url)
+    query_str = 'SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME={}&SRSNAME=EPSG:4326'.format(layer)
+    if "?" in service_url:
+        if "&" != service_url[-1]:
+            service_url += "&"
+        service_url += query_str
+    else:
+        service_url += "?" + query_str
+
+    url = service_url
+    cred = get_cred(slug=name, url=url)
+    if cred:
+        user, pw = cred
+        if not re.search(r"(?<=://)[a-zA-Z0-9\-._~]+:[a-zA-Z0-9\-._~]+(?=@)", url):
+            url = re.sub(r"(?<=://)", "%s:%s@" % (user, pw), url)
+
+    if bbox:
+        params = "-skipfailures -spat {w} {s} {e} {n}".format(
+            w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
+    else:
+        params = "-skipfailures"
+
     try:
-        w2g = wfs.WFSToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                            config=config, service_type=service_type, task_uid=task_uid)
-        out = w2g.convert()
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='GPKG', in_file="WFS:\"{}\"".format(url), out_file=gpkg, params=params)
         result['result'] = out
         result['geopackage'] = out
+        # Check for geopackage contents; gdal wfs driver fails silently
+        if not geopackage.check_content_exists(out):
+            raise Exception("Empty response: Unknown layer name '{}' or invalid AOI bounds".format(layer))
         return result
     except Exception as e:
-        logger.error('Raised exception in wfs export, %s', str(e))
+        logger.error('Raised exception in wfs export: {}'.format(str(e)))
         raise Exception(e)
 
 
@@ -676,13 +702,17 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
     """
     Class defining export for WCS services
     """
+    from eventkit_cloud.tasks.models import ExportTaskRecord
+
     result = result or {}
     out = os.path.join(stage_dir, '{0}.tif'.format(job_name))
+
+    task = ExportTaskRecord.objects.get(uid=task_uid)
     try:
-        wcs_conv = wcs.WCSConverter(out=out, bbox=bbox, service_url=service_url, name=name, layer=layer,
-                                    config=config, service_type=service_type, task_uid=task_uid, debug=True,
-                                    fmt="gtiff")
-        wcs_conv.convert()
+        wcs_conv = wcs.WCSConverter(config=config, out=out, bbox=bbox, service_url=service_url, layer=layer, debug=True,
+                                    name=name, task_uid=task_uid, fmt="gtiff", slug=task.export_provider_task.slug,
+                                    user_details=user_details)
+        out = wcs_conv.convert()
         result['result'] = out
         result['geotiff'] = out
         return result
@@ -692,9 +722,8 @@ def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
 
 
 @app.task(name='ArcFeatureServiceExport', bind=True, base=FormatTask)
-def arcgis_feature_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
-                                       stage_dir=None, job_name=None, bbox=None, service_url=None, name=None,
-                                       service_type=None, user_details=None,
+def arcgis_feature_service_export_task(self, result=None, task_uid=None,
+                                       stage_dir=None, job_name=None, bbox=None, service_url=None,
                                        *args, **kwargs):
     """
     Class defining sqlite export for ArcFeatureService service.
@@ -702,66 +731,32 @@ def arcgis_feature_service_export_task(self, result=None, layer=None, config=Non
     result = result or {}
     gpkg = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
-        w2g = arcgis_feature_service.ArcGISFeatureServiceToGPKG(gpkg=gpkg, bbox=bbox, service_url=service_url,
-                                                                name=name, layer=layer,
-                                                                config=config, service_type=service_type,
-                                                                task_uid=task_uid,
-                                                                *args, **kwargs)
-        out = w2g.convert()
+        if not os.path.exists(os.path.dirname(gpkg)):
+            os.makedirs(os.path.dirname(gpkg), 6600)
+
+        try:
+            # remove any url query so we can add our own
+            service_url = service_url.split('/query?')[0]
+        except ValueError:
+            # if no url query we can just check for trailing slash and move on
+            service_url = service_url.rstrip('/\\')
+        finally:
+            service_url = '{}{}'.format(service_url, '/query?where=objectid%3Dobjectid&outfields=*&f=json')
+
+        if bbox:
+            params = "-skipfailures -t_srs EPSG:3857 -spat_srs EPSG:4326 -spat {w} {s} {e} {n}".format(
+                w=bbox[0], s=bbox[1], e=bbox[2], n=bbox[3])
+        else:
+            params = "-skipfailures -t_srs EPSG:3857"
+
+        ogr = OGR(task_uid=task_uid)
+        out = ogr.convert(file_format='GPKG', in_file=service_url, out_file=gpkg, params=params)
         result['result'] = out
         result['geopackage'] = out
         return result
     except Exception as e:
         logger.error('Raised exception in arcgis feature service export, %s', str(e))
         raise Exception(e)
-
-
-@app.task(name='Project file (.zip)', bind=True, base=FormatTask)
-def zip_export_provider(self, result=None, job_name=None, export_provider_task_uid=None, run_uid=None, task_uid=None,
-                        stage_dir=None, *args, **kwargs):
-    from .models import DataProviderTaskRecord
-    from .task_runners import normalize_name
-
-    result = result or {}
-
-    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-    # deleted during cancellation.
-    logger.debug("Running 'zip_export_provider' for {0}".format(job_name))
-    include_files = []
-    export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
-    if TaskStates[export_provider_task.status] not in TaskStates.get_incomplete_states():
-        for export_task in export_provider_task.tasks.all():
-            try:
-                filename = export_task.result.filename
-                export_task.display = False
-            except Exception:
-                logger.error("export_task: {0} did not have a result... skipping.".format(export_task.name))
-                continue
-            full_file_path = os.path.join(stage_dir, filename)
-            if not os.path.isfile(full_file_path):
-                logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                              export_task.name))
-                continue
-            include_files += [full_file_path]
-            export_task.save()
-    # Need to remove duplicates from the list because
-    # some intermediate tasks produce files with the same name.
-    # sorted while adding time allows comparisons in tests.
-    include_files = sorted(list(set(include_files)))
-    if include_files:
-        qgs_style_file = generate_qgs_style(run_uid=run_uid, export_provider_task=export_provider_task)
-        include_files += [qgs_style_file]
-        logger.debug("Zipping files: {0}".format(include_files))
-        zip_file = zip_file_task.run(run_uid=run_uid, include_files=include_files,
-                                     file_name=os.path.join(stage_dir, "{0}.zip".format(normalize_name(job_name))),
-                                     adhoc=True, static_files=get_style_files()).get('result')
-    else:
-        raise Exception("There are no files in this provider available to zip.")
-    if not zip_file:
-        raise Exception("A zipfile could not be created, please contact an administrator.")
-    result['result'] = zip_file
-
-    return result
 
 
 @app.task(name='Area of Interest (.gpkg)', bind=True, base=ExportTask)
@@ -775,7 +770,7 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     if user_details is None:
         user_details = {'username': 'unknown-bounds_export_task'}
 
-    from .models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     run = ExportRun.objects.get(uid=run_uid)
 
@@ -800,7 +795,7 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
     Class defining geopackage export for external raster service.
     """
 
-    from .models import ExportRun, ExportTaskRecord
+    from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord
 
     result = result or {}
     run = ExportRun.objects.get(uid=run_uid)
@@ -810,11 +805,11 @@ def external_raster_service_export_task(self, result=None, layer=None, config=No
 
     gpkgfile = os.path.join(stage_dir, '{0}.gpkg'.format(job_name))
     try:
-        w2g = external_service.ExternalRasterServiceToGeopackage(gpkgfile=gpkgfile, bbox=bbox,
-                                                                 service_url=service_url, name=name, layer=layer,
-                                                                 config=config, level_from=level_from,
-                                                                 level_to=level_to, service_type=service_type,
-                                                                 task_uid=task_uid, selection=selection)
+        w2g = mapproxy.MapproxyGeopackage(gpkgfile=gpkgfile, bbox=bbox,
+                                          service_url=service_url, name=name, layer=layer,
+                                          config=config, level_from=level_from,
+                                          level_to=level_to, service_type=service_type,
+                                          task_uid=task_uid, selection=selection)
         gpkg = w2g.convert()
         result['result'] = gpkg
         result['geopackage'] = gpkg
@@ -835,31 +830,34 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
     if user_details is None:
         user_details = {'username': 'unknown-pick_up_run_task'}
 
-    from .models import ExportRun
-    from .task_factory import TaskFactory
-
+    from eventkit_cloud.tasks.models import ExportRun
+    from eventkit_cloud.tasks.task_factory import TaskFactory
+    run = ExportRun.objects.get(uid=run_uid)
     try:
         worker = socket.gethostname()
-        run = ExportRun.objects.get(uid=run_uid)
         run.worker = worker
         run.save()
         TaskFactory().parse_tasks(worker=worker, run_uid=run_uid, user_details=user_details)
-    except Exception:
+    except Exception as e:
         run.status = TaskStates.FAILED.value
         run.save()
+        logger.error(str(e))
+        raise
 
 
-#This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', base=LockingTask)
+# This could be improved by using Redis or Memcached to help manage state.
+@app.task(name='Wait For Providers', base=UserDetailsBase)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
-    from .models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     if isinstance(callback_task, dict):
         callback_task = signature(callback_task)
 
     run = ExportRun.objects.filter(uid=run_uid).first()
     if run:
-        if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in run.provider_tasks.all()):
+        provider_tasks = run.provider_tasks.filter(~Q(slug='run'))
+        if all(TaskStates[provider_task.status] in TaskStates.get_finished_states() for provider_task in
+               provider_tasks):
             callback_task.apply_async(**apply_args)
         else:
             logger.error("Waiting for other tasks to finish.")
@@ -867,172 +865,98 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-class FinalizeRunHookTask(LockingTask):
-    """ Base for tasks which execute after all export provider tasks have completed, but before finalize_run_task.
-        - Ensures the task state is recorded when the task is started and after it has completed.
-        - Combines new_zip_filepaths list from the previous FinalizeRunHookTask in a chain with the new
-          filepaths returned from this task so they can all be passed to prepare_for_export_zip_task later in the chain.
-        @params:
-          new_zip_filepaths is a list of new files the previous FinalizeRunHookTask created in the export directory.
-          kwarg 'run_uid' is the value of ExportRun.uid for the ExportRun which is being finalized.
-        @see create_finalize_run_task_collection
-        @returns: list of any new files created that should be included in the ExportRun's zip & available for
-            download.  These should be located in the download directory; see example_finalize_run_hook_task
-            for details.
+@app.task(name='Project File (.zip)', base=FormatTask)
+def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *args, **kwargs):
     """
-
-    def __call__(self, new_zip_filepaths=None, run_uid=None):
-        """ Override execution so tasks derived from this aren't responsible for concatenating files
-            from previous tasks to their return value.
-        """
-        if new_zip_filepaths is None:
-            new_zip_filepaths = []
-
-        if not isinstance(new_zip_filepaths, Sequence):
-            msg = 'new_zip_filepaths is not a sequence, got: {}'.format(new_zip_filepaths)
-            logger.error(msg)
-            raise Exception(msg)
-
-        self.run_uid = run_uid
-        if run_uid is None:
-            raise ValueError('"run_uid" is a required kwarg for tasks subclassed from FinalizeRunHookTask')
-
-        self.record_task_state()
-
-        # Ensure that the staging and download directories for the run this task is associated with exist
-        try:
-            os.makedirs(os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), run_uid))
-        except OSError:
-            pass  # Already exists
-
-        try:
-            os.makedirs(os.path.join(settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/'), run_uid))
-        except OSError:
-            pass  # Already exists
-
-        task_files = super(FinalizeRunHookTask, self).__call__(new_zip_filepaths, run_uid=run_uid)
-        # task_files could be None
-        task_files = task_files or []
-
-        self.save_files_produced(task_files, run_uid)
-        new_zip_filepaths.extend(task_files)
-        return new_zip_filepaths
-
-    def save_files_produced(self, new_files, run_uid):
-        if len(new_files) > 0:
-            from eventkit_cloud.tasks.models import FileProducingTaskResult, FinalizeRunHookTaskRecord
-
-            for file_path in new_files:
-                filename = os.path.split(file_path)[-1]
-                provider_slug = os.path.split(file_path)[-2]
-                size = os.path.getsize(file_path)
-                url = make_file_downloadable(file_path, run_uid, provider_slug=provider_slug)
-
-                result = FileProducingTaskResult.objects.create(filename=filename, size=size, download_url=url)
-                task_record = FinalizeRunHookTaskRecord.objects.get(celery_uid=self.request.id)
-                task_record.result = result
-                task_record.save()
-
-    def record_task_state(self, started_at=None, finished_at=None, testing_run_uid=None):
-        """ When testing-only param testing_run_uid is set, this value will be used if self.run_uid is not set
-        """
-        run_uid = getattr(self, 'run_uid', None) or testing_run_uid
-        if run_uid is None:
-            msg = 'ExportRun uid is {}, unable to record task state.'.format(self.run_uid)
-            logger.error(msg)
-            raise TypeError(msg)
-
-        from eventkit_cloud.tasks.models import FinalizeRunHookTaskRecord
-        from eventkit_cloud.tasks.models import ExportRun
-
-        export_run = ExportRun.objects.get(uid=run_uid)
-        worker_name = self.request.hostname
-        status = AsyncResult(self.request.id).status
-        tr, _ = FinalizeRunHookTaskRecord.objects.get_or_create(
-            run=export_run, celery_uid=self.request.id, task_name=self.name,
-            status=status, pid=os.getpid(), worker=worker_name
-        )
-
-        if started_at or finished_at:
-            if started_at:
-                tr.started_at = started_at
-            if finished_at:
-                tr.finished_at = finished_at
-            tr.save()
-
-    def after_return(self, status, retval, task_id, args, kwargs, einfo):
-        self.record_task_state(finished_at=timezone.now())
-        super(FinalizeRunHookTask, self).after_return(status, retval, task_id, args, kwargs, einfo)
-
-
-@app.task(name='Do Some Example Thing', base=FinalizeRunHookTask, bind=True)
-def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *args, **kwargs):
-    """ Just a placeholder hook task that doesn't do anything except create a new file to collect from the chain
-        It's included in.
+    :param result: The celery task result value, it should be a dict with the current state.
+    :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
+    :param run_uid: A run to be zipped (this or data_provider_task_uid must be passed).
+    :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
-    staging_root = settings.EXPORT_STAGING_ROOT
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
 
-    f1_name = 'non_downloadable_file_not_included_in_zip'
-    # If this were a real task, you'd do something with a file at f1_path now.
-    # It won't be saved to the database for display to user or included in the zip file.
+    if not result:
+        result = {}
 
-    # The path to this file is returned, so it will be duplicated to the download directory, it's location
-    #    stored in the database, and passed along the finalize run task chain for inclusion in the run's zip.
-    f2_name = 'downloadable_file_to_be_included_in_zip'
-    f2_stage_path = os.path.join(staging_root, str(run_uid), f2_name)
-    with open(f2_stage_path, 'w+') as f2:
-        f2.write('hi')
+    data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    data_provider_task_slug = data_provider_task.slug
 
-    created_files = [f2_stage_path]
+    run = data_provider_task.run
 
-    logger.debug('example_finalize_run_hook_task.  Created files: {}, new_zip_filepaths: {}, run_uid: {}' \
-                 .format(created_files, new_zip_filepaths, run_uid))
-
-    return created_files
-
-
-@app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
-def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
-    from eventkit_cloud.tasks.models import ExportRun
-    run = ExportRun.objects.get(uid=run_uid)
+    if data_provider_task.name == 'run':
+        provider_tasks = run.provider_tasks.filter(~Q(name='run'))
+        data_provider_task = None
+    else:
+        provider_tasks = [data_provider_task]
 
     # To prepare for the zipfile task, the files need to be checked to ensure they weren't
     # deleted during cancellation.
     include_files = list([])
 
-    provider_tasks = run.provider_tasks.all()
+    metadata = {"name": normalize_name(run.job.name), "bbox": run.job.extents, "data_sources": {}}
 
     for provider_task in provider_tasks:
+        metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
         if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
+            provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
             for export_task in provider_task.tasks.all():
                 try:
                     filename = export_task.result.filename
                 except Exception:
                     continue
-                full_file_path = os.path.join(settings.EXPORT_STAGING_ROOT, str(run_uid),
-                                                 provider_task.slug, filename)
+                full_file_path = os.path.join(provider_staging_dir, filename)
+                ext = os.path.splitext(filename)[1]
+                if ext in ['.gpkg', '.tif']:
+                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
+                                                              timezone.now(),
+                                                              ext,
+                                                              additional_descriptors=provider_task.slug)
+                    filepath = get_archive_data_path(
+                        provider_task.slug,
+                        download_filename
+                    )
+                    metadata['data_sources'][provider_task.slug]['file_path'] = filepath
+                    metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
+                        provider_task.slug)
+                    # If a single data source is being zipped hide the task to only display the zip in the UI.
+                    if data_provider_task:
+                        export_task.display = False
+                        export_task.save()
                 if not os.path.isfile(full_file_path):
-                    logger.error("Could not find file {0} for export {1}.".format(full_file_path,
-                                                                                     export_task.name))
+                    logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
                     continue
                 # Exclude zip files created by zip_export_provider
-                if full_file_path.endswith(".zip") == False:
+                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
                     include_files += [full_file_path]
 
+        # add the license for this provider if there are other files already
+        license_file = create_license_file(provider_task)
+        if license_file:
+            include_files += [license_file]
+
     if include_files:
+        arcgis_dir = os.path.join(get_run_staging_dir(run.uid), Directory.ARCGIS.value)
+        make_dirs(arcgis_dir)
+        metadata_file = os.path.join(arcgis_dir, 'metadata.json')
+        with open(metadata_file, 'w') as open_md_file:
+            json.dump(metadata, open_md_file)
+        include_files += [metadata_file]
         # No need to add QGIS file if there aren't any files to be zipped.
-        qgs_style_file = generate_qgs_style(run_uid=run_uid)
-        include_files += [qgs_style_file]
+        include_files += [generate_qgs_style(run_uid=run.uid, data_provider_task_record=data_provider_task)]
+        include_files += [get_human_readable_metadata_document(run_uid=run.uid)]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
         include_files = set(include_files)
-
-    return include_files
+        result['result'] = zip_files(include_files=include_files,
+                                     file_path=os.path.join(get_provider_staging_dir(run.uid, data_provider_task_slug),
+                                                            "{0}.zip".format(normalize_name(run.job.name))),
+                                     static_files=get_style_files())
+    return result
 
 
 @app.task(name='Finalize Export Provider Task', base=UserDetailsBase)
-def finalize_export_provider_task(result=None, export_provider_task_uid=None,
+def finalize_export_provider_task(result=None, data_provider_task_uid=None,
                                   status=None, *args, **kwargs):
     """
     Finalizes provider task.
@@ -1047,121 +971,103 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
     result_status = parse_result(result, 'status')
 
     with transaction.atomic():
-
-        export_provider_task = DataProviderTaskRecord.objects.get(uid=export_provider_task_uid)
-        if TaskStates[result_status] != TaskStates.SUCCESS:
+        export_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+        if TaskStates[result_status] == TaskStates.CANCELED:
+            export_provider_task.status = TaskStates.CANCELED.value
+        elif TaskStates[result_status] != TaskStates.SUCCESS:
             export_provider_task.status = TaskStates.INCOMPLETE.value
         else:
             export_provider_task.status = TaskStates.COMPLETED.value
-
         export_provider_task.finished_at = timezone.now()
         export_provider_task.save()
 
     return result
 
 
-@app.task(name='Zip File Task', bind=False, base=UserDetailsBase)
-def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, static_files=None, *args, **kwargs):
+def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs):
     """
-    rolls up runs into a zip file
+    Contains the organization for the files within the archive.
+    :param include_files: A list of files to be included.
+    :param run_uid: The UUID of the export run.
+    :param file_path: An optional name for the archive.
+    :param static_files: Files that are in the same location for every datapack (i.e. templates and metadata files).
+    :return: The zipfile path.
     """
-    from eventkit_cloud.tasks.models import ExportRun as ExportRunModel
-    from .task_runners import normalize_name
-    from django import db
 
-    download_root = settings.EXPORT_DOWNLOAD_ROOT.rstrip('\/')
-    staging_root = settings.EXPORT_STAGING_ROOT.rstrip('\/')
-
-    dl_filepath = os.path.join(download_root, str(run_uid))
-    st_filepath = os.path.join(staging_root, str(run_uid))
-
-    files = []
     if not include_files:
-        logger.warn("zip_file_task called with no include_files.")
-        return {'result': None}
-    files += [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
+        logger.error("zip_file_task called with no include_files.")
+        raise Exception("zip_file_task called with no include_files.")
 
-    run = ExportRunModel.objects.get(uid=run_uid)
+    if not file_path:
+        logger.error("zip_file_task called no file path.")
+        raise Exception("zip_file_task called no file path.")
 
-    name = run.job.name
-    project = run.job.event
-    date = timezone.now().strftime('%Y%m%d')
-    # XXX: name-project-eventkit-yyyymmdd.zip
-    if file_name:
-        zip_filename = file_name
-    else:
-        zip_filename = "{0}-{1}-{2}-{3}.{4}".format(
-            normalize_name(name),
-            normalize_name(project),
-            "eventkit",
-            date,
-            'zip'
-        )
+    files = [filename for filename in include_files if os.path.splitext(filename)[-1] not in BLACKLISTED_ZIP_EXTS]
 
-    zip_st_filepath = os.path.join(st_filepath, zip_filename)
-    zip_dl_filepath = os.path.join(dl_filepath, zip_filename)
-    with ZipFile(zip_st_filepath, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
+    with ZipFile(file_path, 'a', compression=ZIP_DEFLATED, allowZip64=True) as zipfile:
         if static_files:
-            for absolute_file_path, relative_file_path in static_files.iteritems():
+            for absolute_file_path, relative_file_path in static_files.items():
+                if '__pycache__' in absolute_file_path:
+                    continue
+                filename = relative_file_path
+                # Support files should go in the correct directory.  It might make sense to break these files up
+                # by directory and then just put each directory in the correct location so that we don't have to
+                # list all support files in the future.
+                basename = os.path.basename(absolute_file_path)
+                if basename == "__init__.py":
+                    continue
+                elif os.path.basename(os.path.dirname(absolute_file_path)) == Directory.ARCGIS.value:
+                    if basename == "create_mxd.py":
+                        filename = os.path.join(Directory.ARCGIS.value, '{0}'.format(basename))
+                    else:
+                        # Put the support files in the correct directory.
+                        filename = os.path.join(Directory.ARCGIS.value, Directory.TEMPLATES.value, '{0}'.format(basename))
                 zipfile.write(
                     absolute_file_path,
-                    arcname=relative_file_path
+                    arcname=filename
                 )
         for filepath in files:
+            # This takes files from the absolute stage paths and puts them in the provider directories in the data dir.
+            # (e.g. staging_root/run_uid/provider_slug/file_name.ext -> data/provider_slug/file_name.ext)
             name, ext = os.path.splitext(filepath)
             provider_slug, name = os.path.split(name)
             provider_slug = os.path.split(provider_slug)[1]
 
-            if filepath.endswith(".qgs"):
+            if filepath.endswith((".qgs", "ReadMe.txt")):
                 # put the style file in the root of the zip
                 filename = '{0}{1}'.format(
                     name,
                     ext
-                    )
+                )
+            elif filepath.endswith("metadata.json"):
+                # put the metadata file in arcgis folder unless it becomes more useful.
+                filename = os.path.join(Directory.ARCGIS.value, '{0}{1}'.format(
+                    name,
+                    ext
+                ))
             else:
                 # Put the files into directories based on their provider_slug
                 # prepend with `data`
-                filename = 'data/{0}/{1}-{0}-{2}{3}'.format(
-                    provider_slug,
+                download_filename = get_download_filename(
                     name,
-                    date,
-                    ext
-                    )
+                    timezone.now(),
+                    ext,
+                    additional_descriptors=provider_slug
+                )
+                filename = get_archive_data_path(
+                    provider_slug,
+                    download_filename
+                )
 
             zipfile.write(
                 filepath,
                 arcname=filename
             )
 
-    # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
-    # be handled as an ExportTaskRecord.
-
-    if not adhoc:
-        run_uid = str(run_uid)
-        if getattr(settings, "USE_S3", False):
-            zipfile_url = s3.upload_to_s3(run_uid, zip_st_filepath, zip_filename)
-        else:
-            if zip_st_filepath != zip_dl_filepath:
-                shutil.copy(zip_st_filepath, zip_dl_filepath)
-            zipfile_url = os.path.join(run_uid, zip_filename)
-
-        #Update Connection
-        db.close_old_connections()
-        run.refresh_from_db()
-
-        run.zipfile_url = zipfile_url
-
-        try:
-            run.save()
-        except Exception as e:
-            logger.error(e)
-
-    result = {'result': zip_st_filepath}
-    return result
+    return file_path
 
 
-class FinalizeRunBase(LockingTask):
-
+class FinalizeRunBase(UserDetailsBase):
     name = 'Finalize Export Run'
 
     def run(self, result=None, run_uid=None, stage_dir=None):
@@ -1172,13 +1078,15 @@ class FinalizeRunBase(LockingTask):
         Updates run with finish time.
         Emails user notification.
         """
+        """
+        """
         from eventkit_cloud.tasks.models import ExportRun
         result = result or {}
 
         run = ExportRun.objects.get(uid=run_uid)
-        if run.job.include_zipfile and not run.zipfile_url:
-            logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
         run.status = TaskStates.COMPLETED.value
+        notification_level = NotificationLevel.SUCCESS.value
+        verb = NotificationVerb.RUN_COMPLETED.value
         provider_tasks = run.provider_tasks.all()
 
         # Complicated Celery chain from TaskFactory.parse_tasks() is incorrectly running pieces in parallel;
@@ -1191,15 +1099,22 @@ class FinalizeRunBase(LockingTask):
         # mark run as incomplete if any tasks fail
         if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
             run.status = TaskStates.INCOMPLETE.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_FAILED.value
         if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
             run.status = TaskStates.CANCELED.value
+            notification_level = NotificationLevel.WARNING.value
+            verb = NotificationVerb.RUN_CANCELED.value
         finished = timezone.now()
         run.finished_at = finished
         run.save()
 
+        # sendnotification to user via django notifications
+        sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
+
         # send notification email to user
-        hostname = settings.HOSTNAME
-        url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+        site_url = settings.SITE_URL.rstrip('/')
+        url = '{0}/exports/{1}'.format(site_url, run.job.uid)
         addr = run.user.email
         if run.status == TaskStates.CANCELED.value:
             subject = "Your Eventkit Data Pack was CANCELED."
@@ -1230,7 +1145,8 @@ class FinalizeRunBase(LockingTask):
         stage_dir = None if retval is None else retval.get('stage_dir')
         try:
             if stage_dir and os.path.isdir(stage_dir):
-                shutil.rmtree(stage_dir)
+                if not os.getenv('KEEP_STAGE', False):
+                    shutil.rmtree(stage_dir)
         except IOError or OSError:
             logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1250,23 +1166,31 @@ def finalize_run_task(result=None, run_uid=None, stage_dir=None, apply_args=None
     result = result or {}
 
     run = ExportRun.objects.get(uid=run_uid)
-    if run.job.include_zipfile and not run.zipfile_url:
-        logger.error("THE ZIPFILE IS MISSING FROM RUN {0}".format(run.uid))
     run.status = TaskStates.COMPLETED.value
+    verb = NotificationVerb.RUN_COMPLETED.value
+    notification_level = NotificationLevel.SUCCESS.value
     provider_tasks = run.provider_tasks.all()
 
     # mark run as incomplete if any tasks fail
     if any(getattr(TaskStates, task.status, None) in TaskStates.get_incomplete_states() for task in provider_tasks):
         run.status = TaskStates.INCOMPLETE.value
+        notification_level = NotificationLevel.WARNING.value
+        verb = NotificationVerb.RUN_FAILED.value
     if all(getattr(TaskStates, task.status, None) == TaskStates.CANCELED for task in provider_tasks):
         run.status = TaskStates.CANCELED.value
+        verb = NotificationVerb.RUN_CANCELED.value
+        notification_level = NotificationLevel.WARNING.value
     finished = timezone.now()
     run.finished_at = finished
     run.save()
 
+    #sendnotification to user via django notifications
+
+    sendnotification(run, run.job.user, verb, None, None, notification_level, run.status)
+
     # send notification email to user
-    hostname = settings.HOSTNAME
-    url = 'http://{0}/exports/{1}'.format(hostname, run.job.uid)
+    site_url = settings.SITE_URL.rstrip('/')
+    url = '{0}/exports/{1}'.format(site_url, run.job.uid)
     addr = run.user.email
     if run.status == TaskStates.CANCELED.value:
         subject = "Your Eventkit Data Pack was CANCELED."
@@ -1304,8 +1228,8 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     run = ExportRun.objects.get(uid=run_uid)
     try:
         if os.path.isdir(stage_dir):
-            # DON'T leave the stage_dir in place for debugging
-            shutil.rmtree(stage_dir)
+            if not os.getenv('KEEP_STAGE', False):
+                shutil.rmtree(stage_dir)
     except IOError:
         logger.error('Error removing {0} during export finalize'.format(stage_dir))
 
@@ -1329,10 +1253,11 @@ def export_task_error_handler(self, result=None, run_uid=None, task_id=None, sta
     return result
 
 
-def cancel_synchronous_task_chain(export_provider_task_uid=None):
-    from ..tasks.models import DataProviderTaskRecord
-    export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
-    for export_task in export_provider_task.tasks.all():
+def cancel_synchronous_task_chain(data_provider_task_uid=None):
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord
+
+    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
+    for export_task in data_provider_task_record.tasks.all():
         if TaskStates[export_task.status] == TaskStates.PENDING.value:
             export_task.status = TaskStates.CANCELED.value
             export_task.save()
@@ -1343,35 +1268,35 @@ def cancel_synchronous_task_chain(export_provider_task_uid=None):
                 routing_key="{0}.cancel".format(export_task.worker))
 
 
-@app.task(name='Cancel Export Provider Task', base=LockingTask)
-def cancel_export_provider_task(result=None, export_provider_task_uid=None, canceling_username=None, delete=False,
+@app.task(name='Cancel Export Provider Task', base=UserDetailsBase)
+def cancel_export_provider_task(result=None, data_provider_task_uid=None, canceling_username=None, delete=False,
                                 error=False, *args, **kwargs):
     """
     Cancels an DataProviderTaskRecord and terminates each subtasks execution.
-    Checks if all ExportProviderTasks for the Run grouping them have finished & updates the Run's status.
+    Checks if all DataProviderTasks for the Run grouping them have finished & updates the Run's status.
     """
 
-    #There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
-    #the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
+    # There is enough over use of this class (i.e. for errors, deletions, canceling) the reason is because it had all
+    # the working logic for stopping future jobs, but that can probably be abstracted a bit, and then let the caller
     # manage the task state (i.e. the task should be FAILED or CANCELED).
-    from ..tasks.models import DataProviderTaskRecord, ExportTaskException
-    from ..tasks.exceptions import CancelException
+    from eventkit_cloud.tasks.models import DataProviderTaskRecord, ExportTaskException
+    from eventkit_cloud.tasks.exceptions import CancelException
     from billiard.einfo import ExceptionInfo
     from django.contrib.auth.models import User
 
     result = result or {}
+    data_provider_task_record = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
 
-    export_provider_task = DataProviderTaskRecord.objects.filter(uid=export_provider_task_uid).first()
-    canceling_user = User.objects.filter(username=canceling_username).first()
+    # There might not be a canceling user...
+    try:
+        canceling_user = User.objects.get(username=canceling_username)
+    except ObjectDoesNotExist:
+        canceling_user = None
 
-    if not export_provider_task:
-        result['result'] = False
-        return result
-
-    export_tasks = export_provider_task.tasks.all()
+    export_tasks = data_provider_task_record.tasks.all()
 
     # Loop through both the tasks in the DataProviderTaskRecord model, as well as the Task Chain in celery
-    for export_task in export_tasks.filter(~Q(status=TaskStates.CANCELED.value) | ~Q(status=TaskStates.FAILED.value)):
+    for export_task in export_tasks.all():
         if delete:
             exception_class = DeleteException
         else:
@@ -1384,86 +1309,73 @@ def cancel_export_provider_task(result=None, export_provider_task_uid=None, canc
         # This part is to populate the UI with the cancel message.  If a different mechanism is incorporated
         # to pass task information to the users, then it may make sense to replace this.
         try:
-            raise exception_class(task_name=export_provider_task.name, user_name=canceling_user)
+            raise exception_class(task_name=data_provider_task_record.name, user_name=canceling_user)
         except exception_class as ce:
             einfo = ExceptionInfo()
             einfo.exception = ce
-            ExportTaskException.objects.create(task=export_task, exception=cPickle.dumps(einfo))
+            ExportTaskException.objects.create(task=export_task, exception=pickle_exception(einfo))
 
         # Remove the ExportTaskResult, which will clean up the files.
         task_result = export_task.result
         if task_result:
             task_result.soft_delete()
 
-        if export_task.pid > 0 and export_task.worker:
+        if int(export_task.pid) > 0 and export_task.worker:
             kill_task.apply_async(
                 kwargs={"task_pid": export_task.pid, "celery_uid": export_task.celery_uid},
                 queue="{0}.cancel".format(export_task.worker),
                 priority=TaskPriority.CANCEL.value,
                 routing_key="{0}.cancel".format(export_task.worker))
 
-    if TaskStates[export_provider_task.status] not in TaskStates.get_finished_states():
+    if TaskStates[data_provider_task_record.status] not in TaskStates.get_finished_states():
         if error:
-            export_provider_task.status = TaskStates.FAILED.value
+            data_provider_task_record.status = TaskStates.FAILED.value
         else:
-            export_provider_task.status = TaskStates.CANCELED.value
-    export_provider_task.save()
-
-    #if error:
-    #    finalize_export_provider_task(
-    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
-    #        status=TaskStates.INCOMPLETE.value
-    #    )
-    #else:
-    #    finalize_export_provider_task(
-    #        result={'status': TaskStates.INCOMPLETE.value}, export_provider_task_uid=export_provider_task_uid,
-    #        status=TaskStates.CANCELED.value
-    #    )
+            data_provider_task_record.status = TaskStates.CANCELED.value
+    data_provider_task_record.save()
 
     return result
 
 
 @app.task(name='Cancel Run', base=UserDetailsBase)
 def cancel_run(result=None, export_run_uid=None, canceling_username=None, delete=False, *args, **kwargs):
-    from ..tasks.models import ExportRun
+    from eventkit_cloud.tasks.models import ExportRun
 
     result = result or {}
 
-    export_run = ExportRun.objects.filter(uid=export_run_uid).first()
-
-    if not export_run:
-        result['result'] = False
-        return result
+    export_run = ExportRun.objects.get(uid=export_run_uid)
 
     for export_provider_task in export_run.provider_tasks.all():
-        cancel_export_provider_task(export_provider_task_uid=export_provider_task.uid,
+        cancel_export_provider_task(data_provider_task_uid=export_provider_task.uid,
                                     canceling_username=canceling_username, delete=delete,
                                     locking_task_key="cancel_export_provider_task-{0}".format(export_provider_task.uid))
     result['result'] = True
     return result
 
 
-@app.task(name='Kill Task', base=LockingTask)
+@app.task(name='Kill Task', base=UserDetailsBase)
 def kill_task(result=None, task_pid=None, celery_uid=None, *args, **kwargs):
     """
     Asks a worker to kill a task.
     """
 
-    import os, signal
     import celery
     result = result or {}
 
-    if task_pid:
-        # Don't kill tasks with default pid.
-        if task_pid <= 0:
-            return
+    if celery_uid:
         try:
             # Ensure the task is still running otherwise the wrong process will be killed
-            if AsyncResult(celery_uid, app=app).state == celery.states.STARTED:
+            if AsyncResult(str(celery_uid), app=app).state == celery.states.STARTED:
                 # If the task finished prior to receiving this kill message it could throw an OSError.
-                os.kill(task_pid, signal.SIGTERM)
+                logger.info("Attempting to kill {0}".format(task_pid))
+                # Don't kill tasks with default pid.
+                if int(task_pid) > 0:
+                    progressive_kill(task_pid)
+            else:
+                logger.info("The celery_uid {0} has the status of {1}.".format(celery_uid,
+                                                                               AsyncResult(celery_uid, app=app).state))
         except OSError:
-            logger.info("{0} PID does not exist.")
+            logger.info("{0} PID does not exist.".format(task_pid))
     return result
 
 
@@ -1474,11 +1386,12 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     :param subtask_percentage: is the percentage of the task referenced by task_uid the caller takes up.
     :return: A function which can be called to update the progress on an ExportTaskRecord.
     """
+
+    from django.db import connection
+    from eventkit_cloud.tasks import set_cache_value
+
     if task_uid is None:
         return
-
-    from ..tasks.models import ExportTaskRecord
-    from django.db import connection
 
     if not estimated_finish and not progress:
         return
@@ -1487,16 +1400,16 @@ def update_progress(task_uid, progress=None, subtask_percentage=100.0, estimated
     if absolute_progress > 100:
         absolute_progress = 100
 
-    # We need to close the existing connection because the logger could be using a forked process which,
+    # We need to close the existing connection because the logger could be using a forked process which
     # will be invalid and throw an error.
     connection.close()
 
-    export_task = ExportTaskRecord.objects.get(uid=task_uid)
     if absolute_progress:
-        export_task.progress = absolute_progress
+        set_cache_value(uid=task_uid, attribute="progress",
+                        model_name='ExportTaskRecord', value=absolute_progress)
     if estimated_finish:
-        export_task.estimated_finish = estimated_finish
-    export_task.save()
+        set_cache_value(uid=task_uid, attribute="estimated_finish",
+                        model_name='ExportTaskRecord', value=estimated_finish)
 
 
 def parse_result(task_result, key=''):
@@ -1525,3 +1438,31 @@ def get_function(function):
     function_object = getattr(module_object, function_name)
 
     return function_object
+
+
+def get_data_type_from_provider(provider_slug):
+    from eventkit_cloud.jobs.models import DataProvider
+    # NOTE TIF here is a place holder until we figure out how to support other formats.
+    data_types = {'wms': 'raster',
+                  'tms': 'raster',
+                  'wmts': 'raster',
+                  'wcs': 'tif',
+                  'wfs': 'vector',
+                  'osm': 'osm',
+                  'arcgis-feature': 'vector',
+                  'arcgis-raster': 'raster'}
+    data_provider = DataProvider.objects.get(slug=provider_slug)
+    type_name = data_provider.export_provider_type.type_name
+    type_mapped = data_types.get(type_name)
+    if data_provider.slug.lower() == 'nome':
+        type_mapped = 'nome'
+    return type_mapped
+
+
+def make_dirs(path):
+    try:
+        os.makedirs(path)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+

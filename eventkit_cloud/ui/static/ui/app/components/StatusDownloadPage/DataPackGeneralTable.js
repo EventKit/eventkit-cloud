@@ -1,22 +1,21 @@
-import React, { PropTypes, Component } from 'react';
-import Info from 'material-ui/svg-icons/action/info';
-import DataPackTableRow from './DataPackTableRow';
-import BaseDialog from '../BaseDialog';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Info from '@material-ui/icons/Info';
+import CustomTableRow from '../CustomTableRow';
+import BaseDialog from '../Dialog/BaseDialog';
 
-export class DataCartGeneralTable extends Component {
+export class DataPackGeneralTable extends Component {
     constructor(props) {
         super(props);
         this.handleProviderOpen = this.handleProviderOpen.bind(this);
         this.handleProviderClose = this.handleProviderClose.bind(this);
-        this.handleFormatsOpen = this.handleFormatsOpen.bind(this);
-        this.handleFormatsClose = this.handleFormatsClose.bind(this);
         this.handleProjectionsOpen = this.handleProjectionsOpen.bind(this);
         this.handleProjectionsClose = this.handleProjectionsClose.bind(this);
         this.state = {
             providerName: '',
             providerDescription: '',
             providerDialogOpen: false,
-            formatsDialogOpen: false,
             projectionsDialogOpen: false,
         };
     }
@@ -32,14 +31,6 @@ export class DataCartGeneralTable extends Component {
         this.setState({ providerDescription, providerName, providerDialogOpen: true });
     }
 
-    handleFormatsClose() {
-        this.setState({ formatsDialogOpen: false });
-    }
-
-    handleFormatsOpen() {
-        this.setState({ formatsDialogOpen: true });
-    }
-
     handleProjectionsClose() {
         this.setState({ projectionsDialogOpen: false });
     }
@@ -49,38 +40,40 @@ export class DataCartGeneralTable extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const providerTasks = this.props.dataPack.provider_tasks.filter(task => (
             task.display
         ));
 
         const styles = {
             tableRowInfoIcon: {
-                marginLeft: '10px',
+                marginLeft: '5px',
                 height: '18px',
                 width: '18px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
-                fill: '#4598bf',
+                fill: colors.primary,
                 verticalAlign: 'middle',
+                marginRight: '10px',
             },
         };
 
         return (
-            <div style={{ marginTop: '-5px', marginLeft: '-5px' }} className="qa-DataPackGeneralTable">
-                <DataPackTableRow
+            <div className="qa-DataPackGeneralTable">
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-description"
                     title="Description"
                     data={this.props.dataPack.job.description}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-project"
                     title="Project / Category"
                     data={this.props.dataPack.job.event}
                 />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-sources"
                     title="Data Sources"
-                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px' }}
+                    dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
                     data={
                         providerTasks.map(providerTask => (
                             <div key={providerTask.name} style={{ margin: '5px 0px' }}>
@@ -105,34 +98,7 @@ export class DataCartGeneralTable extends Component {
                         ))
                     }
                 />
-                <DataPackTableRow
-                    className="qa-DataPackGeneralTable-formats"
-                    title="File Formats"
-                    data={
-                        this.props.dataPack.job.formats.map(format => (
-                            <div key={format}>
-                                {format}
-                                <Info
-                                    className="qa-DataPackGeneralTable-Info-formats"
-                                    onClick={this.handleFormatsOpen}
-                                    style={styles.tableRowInfoIcon}
-                                />
-                                <BaseDialog
-                                    className="qa-DataCartGeneralTable-BaseDialog-formats"
-                                    show={this.state.formatsDialogOpen}
-                                    title="Format Information"
-                                    onClose={this.handleFormatsClose}
-                                >
-                                    <div style={{ paddingBottom: '20px', wordWrap: 'break-word' }}>
-                                        EventKit provides all geospatial data in the GeoPackage (.gpkg) format.
-                                            Additional format support will be added in subsequent versions.
-                                    </div>
-                                </BaseDialog>
-                            </div>
-                        ))
-                    }
-                />
-                <DataPackTableRow
+                <CustomTableRow
                     className="qa-DataPackGeneralTable-projection"
                     title="Projection"
                     data={
@@ -144,7 +110,7 @@ export class DataCartGeneralTable extends Component {
                                 style={styles.tableRowInfoIcon}
                             />
                             <BaseDialog
-                                className="qa-DataCartGeneralTable-BaseDialog-projection"
+                                className="qa-DataPackGeneralTable-BaseDialog-projection"
                                 show={this.state.projectionsDialogOpen}
                                 title="Projection Information"
                                 onClose={this.handleProjectionsClose}
@@ -164,7 +130,7 @@ export class DataCartGeneralTable extends Component {
     }
 }
 
-DataCartGeneralTable.propTypes = {
+DataPackGeneralTable.propTypes = {
     dataPack: PropTypes.shape({
         job: PropTypes.shape({
             description: PropTypes.string,
@@ -174,6 +140,7 @@ DataCartGeneralTable.propTypes = {
         provider_tasks: PropTypes.arrayOf(PropTypes.object),
     }).isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default DataCartGeneralTable;
+export default withTheme()(DataPackGeneralTable);

@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from social import utils
-from social.exceptions import InvalidEmail
-from social.pipeline.partial import partial
-
 from django.conf import settings
 from django.contrib.sessions.models import Session
 from django.core import signing
 from django.core.mail import EmailMultiAlternatives
 from django.core.signing import BadSignature
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import redirect
 from django.template import Context
 from django.template.loader import get_template
+from social import utils
+from social.exceptions import InvalidEmail
+from social.pipeline.partial import partial
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +63,8 @@ def partial_pipeline_data(backend, user=None, *args, **kwargs):  # pragma: no co
         try:
             signed_details = signing.loads(data['signature'], key=settings.SECRET_KEY)
             session = Session.objects.get(pk=signed_details['session_key'])
-        except BadSignature, Session.DoesNotExist:
+        except BadSignature as xxx_todo_changeme:
+            Session.DoesNotExist = xxx_todo_changeme
             raise InvalidEmail(backend)
 
         session_details = session.get_decoded()

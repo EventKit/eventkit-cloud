@@ -1,32 +1,52 @@
-import React, {Component} from 'react';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
 export class InfoParagraph extends Component {
-
-    constructor(props) {
-        super(props);
-    };
-
     render() {
-        if (!this.props.header || !this.props.body) {
+        const styles = {
+            title: {
+                textAlign: 'center',
+                ...this.props.titleStyle,
+            },
+            body: {
+                marginBottom: '30px',
+                ...this.props.bodyStyle,
+            },
+        };
+
+        if (!this.props.title || !this.props.body) {
             return null;
         }
 
         return (
-            <div className={'qa-InfoParagraph-header'}>
-                <h4 style={this.props.headerStyle}><strong>{this.props.header}</strong></h4>
-                <div id={this.props.header} style={this.props.bodyStyle} className={'qa-InfoParagraph-body'}>
+            <div className="qa-InfoParagraph-title">
+                <h3 style={styles.title}><strong>{this.props.title}</strong></h3>
+                <div id={this.props.title} style={styles.body} className="qa-InfoParagraph-body">
                     {this.props.body}
                 </div>
             </div>
-        )
-    };
+        );
+    }
+}
+
+InfoParagraph.defaultProps = {
+    titleStyle: {},
+    bodyStyle: {},
 };
 
 InfoParagraph.propTypes = {
-    header: React.PropTypes.string.isRequired,
-    body: React.PropTypes.string.isRequired,
-    headerStyle: React.PropTypes.object,
-    bodyStyle: React.PropTypes.object,
-}
+    title: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node,
+        PropTypes.arrayOf(PropTypes.node),
+    ]).isRequired,
+    body: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node,
+        PropTypes.arrayOf(PropTypes.node),
+    ]).isRequired,
+    titleStyle: PropTypes.object,
+    bodyStyle: PropTypes.object,
+};
 
 export default InfoParagraph;

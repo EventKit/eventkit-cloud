@@ -1,5 +1,4 @@
-from pyparsing import Word, delimitedList, Optional, \
-    Group, alphas, nums, alphanums, ParseException, Forward, oneOf, quotedString, \
+from pyparsing import Word, delimitedList, Group, alphas, nums, alphanums, ParseException, Forward, oneOf, quotedString, \
     ZeroOrMore, Keyword
 
 
@@ -50,7 +49,7 @@ class SQLValidator(object):
         try:
             self._parse_result = whereExpression.parseString(self._s, parseAll=True)
         except InvalidSQL as e:
-            self._errors.append(e.message)
+            self._errors.append(str(e))
             return False
         except ParseException as e:
             self._errors.append("SQL could not be parsed.")
@@ -66,7 +65,7 @@ class SQLValidator(object):
         # takes a dictionary, returns a list
         def column_names_in_dict(d):
             result = []
-            for column_name, value in d.iteritems():
+            for column_name, value in d.items():
                 if 'columnName' == column_name:
                     result = result + [value]
                 if isinstance(value, dict):

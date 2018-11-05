@@ -1,13 +1,10 @@
 Eventkit-Cloud
 ==============
-[![Build Status](https://travis-ci.org/venicegeo/eventkit-cloud.svg?branch=master)](https://travis-ci.org/venicegeo/eventkit-cloud) [![Coverage Status](https://coveralls.io/repos/github/venicegeo/eventkit-cloud/badge.svg?branch=master)](https://coveralls.io/github/venicegeo/eventkit-cloud?branch=master)
 
-Eventkit-cloud is based on the [HOT OSM Export Tool 2](https://github.com/hotosm/osm-export-tool2).  It allows the user to select data from different sources to export into a variety of formats.
+Eventkit-cloud is based on the [HOT OSM Export Tool](https://github.com/hotosm/osm-export-tool).  It allows the user to select data from different sources to export into a variety of formats.
   
 ## Getting Started
-Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/) or [Vagrant](https://www.vagrantup.com/). 
-
-A setup guide for running docker in vagrant can be found in the [windows setup guide](windows.md).
+Eventkit-cloud requires [Docker](https://docs.docker.com/engine/installation/). 
 
 ### Installation 
 _Note: the RabbitMQ configuration provided here is the Official Docker version and is Copyright (c) 2014-2015 Docker, Inc._
@@ -15,26 +12,39 @@ _Note: the RabbitMQ configuration provided here is the Official Docker version a
 There are several options that may be set, however prior to using the EventKit docker setup, two variables must be set
 in the environment running docker, `SITE_NAME` and `SITE_IP`.
 
-Typically `SITE_NAME` is set to 'cloud.eventkit.dev' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
+Typically `SITE_NAME` is set to 'cloud.eventkit.test' and `SITE_IP` is '127.0.0.1'.  If needing to run the integration tests,
 then `SITE_IP` must be set to a different IP available on the system, typically the local ip `192.168.X.X` or `10.0.X.X`.
-This is usually done by using `export SITE_NAME=cloud.eventkit.dev` on mac/linux or `setx SITE_NAME cloud.eventkit.dev`. 
+This is usually done by using `export SITE_NAME=cloud.eventkit.test` on OSX/Linux or `setx SITE_NAME cloud.eventkit.test` on Windows. 
 Usually docker-compose will need to be run as sudo.  In which case you want to make sure that the environment variables are made available as sudo won't always use the shell environment.
 
+#### Building the dependencies
+Before you can build the eventkit container you first need to build a local conda repo that will be used in the creation of the EventKit containers. 
 
+This will probably take about an hour or two depending on your system settings and internet speed.
+
+After installing docker open an elevated shell/command prompt and enter:
+<pre>
+cd conda
+docker-compose run --rm conda  # now grab a warm beverage perhaps a nice technical manual to read through...
+cd ..
+</pre>
+
+In the future it may be nice to host prebuilt artifacts but the ability to build these locally allows us to upgrade dependencies without needing to rely on third-party hosting. 
+
+After conda successfully builds you can now build and start the EventKit application. 
 
 _Note: if running the docker setup with an IP set other than 127.0.0.1, then the application will be made available to other computer that can access the host machine at the `SITE_IP` address._
 
-After installing docker open an elevated shell/command prompt and enter:
 <pre>git clone https://repo_server/repo_org/eventkit-cloud.git
 cd eventkit-cloud
 docker-compose run --rm eventkit python manage.py runinitial setup
 docker-compose up</pre>
-In a different elevated shell/command prompt add the cloud.eventkit.dev to the hosts file:
+In a different elevated shell/command prompt add the cloud.eventkit.test to the hosts file:
 On linux:
-<code> echo "127.0.0.1  cloud.eventkit.dev" > /etc/hosts </code>
+<code> echo "127.0.0.1  cloud.eventkit.test" > /etc/hosts </code>
 On windows:
-<code> echo "127.0.0.1  cloud.eventkit.dev" > "C:\Windows\System32\drivers\etc\hosts"</code>
-Then open a browser and navigate to http://cloud.eventkit.dev
+<code> echo "127.0.0.1  cloud.eventkit.test" > "C:\Windows\System32\drivers\etc\hosts"</code>
+Then open a browser and navigate to http://cloud.eventkit.test
 
 Linux users have indicated issues with the docker setup.  That is because it mounts directories in the containers, and on linux the container user and host user permissions are mapped. To solve this problem run:
 <pre>groupadd -g 880 eventkit
@@ -44,56 +54,21 @@ Ownership is typically given with
 <code> chown eventkit:eventkit -R <repo_path></code>
 
 ### Settings
-The following are a few of the relevant environment variables that can be used to adjust how eventkit_cloud is configured.
 
-#### S3 Storage
-If you want your export files to be stored on S3 rather than locally add:
-<pre>USE_S3=True
-AWS_BUCKET_NAME='my-bucket'
-AWS_ACCESS_KEY='my-access-key'
-AWS_SECRET_KEY='my-secret-key'</pre>
+EventKit can be configured to support many different environments, visit the [settings readme](./documentation/settings.md) in the documentation for options.
 
-#### Database
-To use your own database connection string add:
-<pre>DATABASE_URL='postgis://user:password@site:5432/database_name'</pre>
+### Data Sources
 
-To reset the database:
-<pre>docker volume rm eventkitcloud_postgis_database</pre>
-<pre>docker-compose run --rm eventkit python manage.py runinitial setup</pre>
-
-#### Broker URL
-To specify which RabbitMQ instance to use add:
-<pre>BROKER_URL='amqp://guest:guest@rabbitmq:5672/'</pre>
-
-#### Task error email
-To configure the email address that will send out any error messages add:
-<pre>EMAIL_HOST_USER='email@email.com'
-EMAIL_HOST_PASSWORD='email-password'</pre>
-
-#### Overpass API
-To use your own instance of an Overpass API add:
-<pre>OVERPASS_API_URL = 'my-overpass-site.com/api/interpreter'</pre>
-
-#### Geocoder
-By default EventKit will use geonames.org. However it also supports pelias. If wishing to change the geocoder add:
-<pre>GEOCODING_API_URL = 'http://my-pelias.com/api/v1'</pre>
-<pre>GEOCODING_API_TYPE = 'pelias'</pre>
-
-#### Basemap URL
-To set the application basemap add:
-<pre>BASEMAP_URL=http://my-tile-service.com/{z}/{x}/{y}.png</pre>
+EventKit can be configured to support many different data sources within the application, visit the [sources readme](./documentation/sources.md) in the documentation for options.
 
 ### Tests
 To run tests:
 <pre>docker-compose run --rm -e COVERAGE=True eventkit python manage.py test eventkit_cloud</pre>
-
-## Export Directories
-If you need to change where export files are staged or downloaded you can add:
-<pre>EXPORT_STAGING_ROOT='/path/to/staging/dir/'
-EXPORT_DOWNLOAD_ROOT='/path/to/download/dir/'</pre>
+or
+<pre>docker-compose run --rm eventkit pytest</pre>
 
 
-## Building the bundle
+#### Building the bundle
 By default, the Eventkit webpack is configured for development, if you need to create bundle and vendor files for production run
 <pre>docker-compose run --rm webpack npm run build</pre>
 

@@ -1,94 +1,34 @@
-FROM ubuntu:xenial-20170119
+FROM cloudfoundry/cflinuxfs2:1.46.0
 
-# a few minor docker-specific tweaks
-# see https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap
-RUN set -xe \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L40-L48
-	&& echo '#!/bin/sh' > /usr/sbin/policy-rc.d \
-	&& echo 'exit 101' >> /usr/sbin/policy-rc.d \
-	&& chmod +x /usr/sbin/policy-rc.d \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L54-L56
-	&& dpkg-divert --local --rename --add /sbin/initctl \
-	&& cp -a /usr/sbin/policy-rc.d /sbin/initctl \
-	&& sed -i 's/^exit.*/exit 0/' /sbin/initctl \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L71-L78
-	&& echo 'force-unsafe-io' > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L85-L105
-	&& echo 'DPkg::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' > /etc/apt/apt.conf.d/docker-clean \
-	&& echo 'APT::Update::Post-Invoke { "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true"; };' >> /etc/apt/apt.conf.d/docker-clean \
-	&& echo 'Dir::Cache::pkgcache ""; Dir::Cache::srcpkgcache "";' >> /etc/apt/apt.conf.d/docker-clean \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L109-L115
-	&& echo 'Acquire::Languages "none";' > /etc/apt/apt.conf.d/docker-no-languages \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L118-L130
-	&& echo 'Acquire::GzipIndexes "true"; Acquire::CompressionTypes::Order:: "gz";' > /etc/apt/apt.conf.d/docker-gzip-indexes \
-	\
-# https://github.com/docker/docker/blob/9a9fc01af8fb5d98b8eec0740716226fadb3735c/contrib/mkimage/debootstrap#L134-L151
-	&& echo 'Apt::AutoRemove::SuggestsImportant "false";' > /etc/apt/apt.conf.d/docker-autoremove-suggests
 
-# enable the universe
-RUN sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list
+RUN groupadd -g 880 eventkit && useradd -u 8800 -g 880 -m eventkit && \
+    mkdir -p /var/lib/eventkit && chown eventkit:eventkit /var/lib/eventkit
 
-RUN export PATH=/var/lib/.virtualenvs/eventkit/bin:/usr/local/bin:$PATH
-RUN echo "PATH=:$PATH" >> /etc/profile.d/path.sh
-ENV PATH /var/lib/.virtualenvs/eventkit/bin:$PATH
-RUN groupadd -g 880 eventkit
-RUN useradd -u 8800 -g 880 eventkit
-# Python dependecies needed for python-ldap
-RUN apt-get update && apt-get -y install python-pip libsasl2-dev python-dev libldap2-dev libssl-dev
-RUN pip install virtualenv
-RUN virtualenv /var/lib/.virtualenvs/eventkit
+USER eventkit
 
-RUN apt-get -y install git libpq-dev python-dev gcc g++ software-properties-common
-RUN git clone https://gitlab.com/osm-c-tools/osmctools.git /var/lib/eventkit/osmctools
-RUN gcc /var/lib/eventkit/osmctools/src/osmupdate.c -o /var/lib/eventkit/osmctools/osmupdate
-RUN gcc /var/lib/eventkit/osmctools/src/osmfilter.c -O3 -o /var/lib/eventkit/osmctools/osmfilter
-RUN gcc /var/lib/eventkit/osmctools/src/osmconvert.c -lz -O3 -o /var/lib/eventkit/osmctools/osmconvert
-RUN cp /var/lib/eventkit/osmctools/osmupdate /var/lib/eventkit/osmctools/osmfilter /var/lib/eventkit/osmctools/osmconvert /usr/local/bin
-RUN rm -fr /var/lib/eventkit/osmctools
+WORKDIR /var/lib/eventkit
 
-RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
-RUN apt-get update && apt-get -y install gdal-bin libgdal-dev libgeos-dev libspatialite-dev libspatialite7 libgeos-c1v5 libsqlite3-mod-spatialite osmctools spatialite-bin libspatialite7 libspatialite-dev default-jre zip unzip postgresql-client
+COPY --chown=eventkit ./environment.yml /var/lib/eventkit/environment.yml
+COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
+COPY --chown=eventkit ./conda /var/lib/eventkit/conda
+COPY --chown=eventkit ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
+COPY --chown=eventkit ./scripts /var/lib/eventkit/scripts
+COPY --chown=eventkit ./manage.py /var/lib/eventkit/manage.py
+COPY --chown=eventkit ./pytest.ini /var/lib/eventkit/pytest.ini
 
-#RUN mkdir /var/lib/eventkit/tmp
-#RUN cd /var/lib/eventkit/tmp
+ENV PATH="/home/eventkit/miniconda3/bin:$PATH"
 
-COPY ./eventkit_cloud /var/lib/eventkit/eventkit_cloud
-COPY ./requirements.txt /var/lib/eventkit/requirements.txt
-COPY ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
-COPY ./manage.py /var/lib/eventkit/manage.py
-COPY ./.coveragerc /var/lib/eventkit/.coveragerc
+RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o miniconda.sh && \
+    /bin/bash miniconda.sh -b -p "/home/eventkit/miniconda3" && \
+    rm miniconda.sh && \
+    echo "y" | conda update -n root --all && \
+    conda config --add channels local && \
+    conda config --add channels file://var/lib/eventkit/conda/repo
 
-RUN apt-get -y install libxml2-dev libxslt-dev
-RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal &&\
-  export C_INCLUDE_PATH=/usr/include/gdal &&\
-  /var/lib/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements.txt &&\
-  /var/lib/.virtualenvs/eventkit/bin/pip install -r /var/lib/eventkit/requirements-dev.txt
+RUN conda env create --file environment-dev.yml python=3.5
 
-RUN mkdir /var/lib/eventkit/exports_stage
-RUN mkdir /var/lib/eventkit/exports_download
-RUN mkdir /var/lib/eventkit/db_dir
-RUN chown eventkit:eventkit -R /var/lib/eventkit/
-RUN mkdir /var/log/eventkit
+COPY --chown=eventkit ./scripts/wait-for-postgis.sh /var/lib/eventkit/scripts/wait-for-postgis.sh
 
-COPY ./scripts /var/lib/eventkit/scripts
+ENTRYPOINT ["bash", "./scripts/wait-for-postgis.sh"]
 
-RUN chmod 755 /var/lib/eventkit /var/log/eventkit /home
-RUN chown -R eventkit:eventkit /var/lib/eventkit /var/log/eventkit
-
-# Adds remote path mapping via env vars to pydevd to support remote debugging.
-COPY ./config/pydevd_path_mapping_snippet.py /var/lib/eventkit/
-RUN bash -c '\
-    export SNIPPET=`cat /var/lib/eventkit/pydevd_path_mapping_snippet.py`;\
-    export PYDEVD_FILE_UTILS=/var/lib/.virtualenvs/eventkit/lib/python2.7/site-packages/pydevd_file_utils.py;\
-    perl -0777 -i -pe "s/PATHS_FROM_ECLIPSE_TO_PYTHON = \[\]/$SNIPPET/" $PYDEVD_FILE_UTILS \
-'
-
-ENTRYPOINT ["sh", "/var/lib/eventkit/scripts/wait-for-postgis.sh"]
-CMD ["echo", "Override this command in the docker-compose.yaml"]
-
+CMD ["echo", "This image has no default run command."]

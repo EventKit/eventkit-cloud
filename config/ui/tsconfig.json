@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "sourceMap": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "target": "es6",
+        "jsx": "react",
+        "lib": ["dom", "es6", "esnext"],
+        "allowJs": true,
+        "allowSyntheticDefaultImports": true,
+        "typeRoots": [
+            "./node_modules/@types"
+        ]
+    },
+    "exclude": [
+        "node_modules"
+    ],
+    "include": [
+        "./eventkit_cloud/ui/static/ui/app/"
+    ]
+}

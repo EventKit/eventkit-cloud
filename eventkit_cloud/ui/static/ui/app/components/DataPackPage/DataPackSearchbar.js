@@ -1,7 +1,9 @@
-import React, {PropTypes} from 'react'
-import TextField from 'material-ui/TextField';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
 
-class DataPackSearchbar extends React.Component {
+export class DataPackSearchbar extends React.Component {
     constructor(props) {
         super(props);
         this.handleKeyDown = this.handleKeyDown.bind(this);
@@ -9,66 +11,59 @@ class DataPackSearchbar extends React.Component {
     }
 
     handleKeyDown(event) {
-        if(event.key == 'Enter') {
+        if (event.key === 'Enter') {
             const text = event.target.value || '';
             this.props.onSearchSubmit(text);
         }
     }
 
-    handleChange(event, value) {
-        const text = value || '';
+    handleChange(event) {
+        const text = event.target.value || '';
         this.props.onSearchChange(text);
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
         const styles = {
             container: {
-                color: 'white',
-                height: '36px', 
-                width: '100%', 
-                backgroundColor: '#16212f',
-                lineHeight: '36px'
-            },
-            hint: {
-                color: '#5a5a5a',
                 height: '36px',
-                lineHeight: 'inherit',
-                bottom: '0px',
-                paddingLeft: '5px'
+                width: '100%',
+                backgroundColor: colors.background,
+                lineHeight: '36px',
             },
             input: {
-                color: '#cacaca',
-                paddingLeft: '5px'
+                color: colors.white,
+                height: '36px',
+                width: '100%',
+                lineHeight: '36px',
+                padding: '0px 10px',
+                fontSize: '16px',
             },
-            underline: {
-                borderBottom: '1px solid #5a5a5a', 
-                bottom: '0px'
-            },
-            underlineFocus: {
-                borderBottom: '2px solid #4498c0', 
-                bottom: '0px'
-            }
         };
 
         return (
             <TextField
-                className={'qa-DataPackSearchBar-TextField'}
+                className="qa-DataPackSearchBar-TextField"
                 style={styles.container}
-                hintText={'Search DataPacks'}
-                hintStyle={styles.hint}
-                inputStyle={styles.input}
+                inputProps={{ style: styles.input }}
+                placeholder="Search DataPacks"
                 onChange={this.handleChange}
-                underlineStyle={styles.underline}
-                underlineFocusStyle={styles.underlineFocus}
                 onKeyDown={this.handleKeyDown}
+                defaultValue={this.props.defaultValue}
             />
         );
     }
 }
 
-DataPackSearchbar.propTypes = {
-    onSearchChange: React.PropTypes.func,
-    onSearchSubmit: React.PropTypes.func,
+DataPackSearchbar.defaultProps = {
+    defaultValue: '',
 };
 
-export default DataPackSearchbar;
+DataPackSearchbar.propTypes = {
+    onSearchChange: PropTypes.func.isRequired,
+    onSearchSubmit: PropTypes.func.isRequired,
+    defaultValue: PropTypes.string,
+    theme: PropTypes.object.isRequired,
+};
+
+export default withTheme()(DataPackSearchbar);

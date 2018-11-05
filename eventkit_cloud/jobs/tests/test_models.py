@@ -2,18 +2,17 @@
 import logging
 import os
 
-from django.conf import settings
 from django.contrib.auth.models import Group, User
+from django.contrib.gis.db.models.functions import Area
+from django.contrib.gis.db.models.functions import Intersection
 from django.contrib.gis.gdal import DataSource
 from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.contrib.gis.db.models.functions import Intersection
-from django.contrib.gis.db.models.functions import Area
-from django.core.files import File
 from django.test import TestCase
+from mock import patch
+
 from eventkit_cloud.jobs.models import (
     ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderTask
 , DatamodelPreset)
-from mock import patch
 
 logger = logging.getLogger(__name__)
 
@@ -53,25 +52,25 @@ class TestJob(TestCase):
     def test_job_creation(self,):
         saved_job = Job.objects.all()[0]
         self.assertEqual(self.job, saved_job)
-        self.assertEquals(self.uid, saved_job.uid)
+        self.assertEqual(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
-        self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
-        self.assertEquals('Test description', saved_job.description)
-        self.assertEquals(4, len(saved_job.json_tags))
+        self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
+        self.assertEqual('Test description', saved_job.description)
+        self.assertEqual(4, len(saved_job.json_tags))
         self.assertEqual(False, saved_job.include_zipfile)  # default
 
     def test_job_creation_with_config(self,):
         saved_job = Job.objects.all()[0]
         self.assertEqual(self.job, saved_job)
-        self.assertEquals(self.uid, saved_job.uid)
+        self.assertEqual(self.uid, saved_job.uid)
         self.assertIsNotNone(saved_job.created_at)
         self.assertIsNotNone(saved_job.updated_at)
         saved_provider_tasks = saved_job.provider_tasks.first()
         self.assertIsNotNone(saved_provider_tasks.formats.all())
-        self.assertItemsEqual(saved_provider_tasks.formats.all(), self.formats)
+        self.assertCountEqual(saved_provider_tasks.formats.all(), self.formats)
         # attach a configuration to a job
         hdm_preset = DatamodelPreset.objects.get(name='hdm')
         saved_job.preset = hdm_preset
@@ -80,7 +79,7 @@ class TestJob(TestCase):
     def test_spatial_fields(self,):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # in africa
         the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326), srid=4326)
-        the_geog = MultiPolygon(GEOSGeometry(bbox))
+        the_geog = MultiPolygon(GEOSGeometry(bbox), srid=4326)
         the_geom_webmercator = the_geom.transform(ct=3857, clone=True)
         job = Job.objects.all()[0]
         self.assertIsNotNone(job)
@@ -93,20 +92,20 @@ class TestJob(TestCase):
 
     def test_fields(self,):
         job = Job.objects.all()[0]
-        self.assertEquals('TestJob', job.name)
-        self.assertEquals('Test description', job.description)
-        self.assertEquals('Nepal activation', job.event)
+        self.assertEqual('TestJob', job.name)
+        self.assertEqual('Test description', job.description)
+        self.assertEqual('Nepal activation', job.event)
         self.assertEqual(self.user, job.user)
 
     def test_str(self,):
         job = Job.objects.all()[0]
-        self.assertEquals(str(job), 'TestJob')
+        self.assertEqual(str(job), 'TestJob')
 
     def test_job_region(self,):
         bbox = Polygon.from_bbox((-7.96, 22.6, -8.14, 27.12))  # africa
         region = Region.objects.filter(the_geom__contains=bbox)[0]
         self.assertIsNotNone(region)
-        self.assertEquals('Africa', region.name)
+        self.assertEqual('Africa', region.name)
         self.job.region = region
         self.job.save()
         saved_job = Job.objects.all()[0]
@@ -116,17 +115,17 @@ class TestJob(TestCase):
         job = Job.objects.all()[0]
         extents = job.overpass_extents
         self.assertIsNotNone(extents)
-        self.assertEquals(4, len(extents.split(',')))
+        self.assertEqual(4, len(extents.split(',')))
 
     def test_extents(self,):
         job = Job.objects.all()[0]
         extents = job.extents
         self.assertIsNotNone(extents)
-        self.assertEquals(4, len(extents))
+        self.assertEqual(4, len(extents))
 
     def test_categorised_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
-        self.assertEquals(259, len(tags))
+        self.assertEqual(259, len(tags))
 
         # save all the tags from the preset
         job = Job.objects.first()
@@ -134,25 +133,24 @@ class TestJob(TestCase):
         categories = job.categorised_tags
 
         self.assertIsNotNone(categories)
-        self.assertEquals(29, len(categories['points']))
-        self.assertEquals(16, len(categories['lines']))
-        self.assertEquals(26, len(categories['polygons']))
+        self.assertEqual(29, len(categories['points']))
+        self.assertEqual(16, len(categories['lines']))
+        self.assertEqual(26, len(categories['polygons']))
 
     def test_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(259, len(tags))
+        self.assertEqual(259, len(tags))
         # save all the tags from the preset
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(259, len(self.job.json_tags))
+        self.assertEqual(259, len(self.job.json_tags))
 
 
 class TestExportFormat(TestCase):
     def test_str(self,):
         kml = ExportFormat.objects.get(slug='kml')
-        self.assertEquals(unicode(kml), 'kml')
-        self.assertEquals(str(kml), 'KML Format')
+        self.assertEqual(str(kml), 'KML Format')
 
 
 class TestRegion(TestCase):
@@ -171,7 +169,7 @@ class TestRegion(TestCase):
     def test_africa_region(self,):
         africa = Region.objects.get(name='Africa')
         self.assertIsNotNone(africa)
-        self.assertEquals('Africa', africa.name)
+        self.assertEqual('Africa', africa.name)
         self.assertIsNotNone(africa.the_geom)
 
     def test_bbox_intersects_region(self,):
@@ -190,7 +188,7 @@ class TestRegion(TestCase):
                 found.append(region)
                 break
         self.assertTrue(len(found) == 1)
-        self.assertEquals('Africa', found[0].name)
+        self.assertEqual('Africa', found[0].name)
 
 
 class TestJobRegionIntersection(TestCase):
@@ -214,28 +212,14 @@ class TestJobRegionIntersection(TestCase):
         # use the_geog
         regions = Region.objects.filter(the_geog__intersects=job.the_geog).annotate(
             intersection=Area(Intersection('the_geog', job.the_geog))).order_by('-intersection')
-        self.assertEquals(2, len(regions))
+        self.assertEqual(2, len(regions))
         asia = regions[0]
         africa = regions[1]
         self.assertIsNotNone(asia)
         self.assertIsNotNone(africa)
-        self.assertEquals('Central Asia/Middle East', asia.name)
-        self.assertEquals('Africa', africa.name)
+        self.assertEqual('Central Asia/Middle East', asia.name)
+        self.assertEqual('Africa', africa.name)
         self.assertTrue(asia.intersection > africa.intersection)
-
-        # use the_geom
-        regions = Region.objects.filter(the_geom__intersects=job.the_geom).intersection(job.the_geom,
-                                                                                        field_name='the_geom').order_by(
-            '-intersection')
-        # logger.debug('Geometry lookup took: %s' % geom_time)
-        self.assertEquals(2, len(regions))
-        asia = regions[0]
-        africa = regions[1]
-        self.assertIsNotNone(asia)
-        self.assertIsNotNone(africa)
-        self.assertEquals('Central Asia/Middle East', asia.name)
-        self.assertEquals('Africa', africa.name)
-        self.assertTrue(asia.intersection.area > africa.intersection.area)
 
     def test_job_outside_region(self,):
         job = Job.objects.all()[0]
@@ -243,10 +227,8 @@ class TestJobRegionIntersection(TestCase):
         the_geom = MultiPolygon(GEOSGeometry(bbox, srid=4326))
         job.the_geom = the_geom
         job.save()
-        regions = Region.objects.filter(the_geom__intersects=job.the_geom).intersection(job.the_geom,
-                                                                                        field_name='the_geom').order_by(
-            '-intersection')
-        self.assertEquals(0, len(regions))
+        regions = Region.objects.filter(the_geom__intersects=job.the_geom)
+        self.assertEqual(0, len(regions))
 
 
 class TestTag(TestCase):
@@ -280,27 +262,27 @@ class TestTag(TestCase):
         self.job.json_tags = tags
         self.job.save()
 
-        self.assertEquals(self.job.json_tags[0]['key'], 'aeroway')
+        self.assertEqual(self.job.json_tags[0]['key'], 'aeroway')
         geom_types = self.job.json_tags[0]['geom']
-        self.assertEquals(1, len(self.job.json_tags))
+        self.assertEqual(1, len(self.job.json_tags))
         self.assertEqual(['node', 'area'], geom_types)
 
     def test_save_tags_from_preset(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(259, len(tags))
+        self.assertEqual(259, len(tags))
         self.job.json_tags = tags
         self.job.save()
 
-        self.assertEquals(259, len(self.job.json_tags))
+        self.assertEqual(259, len(self.job.json_tags))
 
     def test_get_categorised_tags(self,):
         tags = DatamodelPreset.objects.get(name='hdm').json_tags
         self.assertIsNotNone(tags)
-        self.assertEquals(259, len(tags))
+        self.assertEqual(259, len(tags))
         self.job.json_tags = tags
         self.job.save()
-        self.assertEquals(259, len(self.job.json_tags))
+        self.assertEqual(259, len(self.job.json_tags))
 
 
 class TestExportProfile(TestCase):
@@ -311,5 +293,5 @@ class TestExportProfile(TestCase):
         profile = ExportProfile.objects.create(name='DefaultExportProfile', max_extent=2500000,
                                                group=self.group)
         self.assertEqual(self.group.export_profile, profile)
-        self.assertEquals('DefaultExportProfile', profile.name)
-        self.assertEquals(2500000, profile.max_extent)
+        self.assertEqual('DefaultExportProfile', profile.name)
+        self.assertEqual(2500000, profile.max_extent)

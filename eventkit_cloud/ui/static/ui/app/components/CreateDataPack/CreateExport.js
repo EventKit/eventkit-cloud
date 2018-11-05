@@ -1,48 +1,93 @@
-import React, {Component} from 'react'
-import {connect} from 'react-redux'
-import AppBar from 'material-ui/AppBar'
-import BreadcrumbStepper from '../BreadcrumbStepper'
+import PropTypes from 'prop-types';
+import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Help from '@material-ui/icons/Help';
+import ButtonBase from '@material-ui/core/ButtonBase';
+import PageHeader from '../common/PageHeader';
+import BreadcrumbStepper from './BreadcrumbStepper';
 
 export class CreateExport extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleWalkthroughReset = this.handleWalkthroughReset.bind(this);
+        this.handleWalkthroughClick = this.handleWalkthroughClick.bind(this);
+        this.state = {
+            walkthroughClicked: false,
+        };
+    }
 
-    constructor() {
-        super()
+    handleWalkthroughReset() {
+        this.setState({ walkthroughClicked: false });
+    }
+
+    handleWalkthroughClick() {
+        this.setState({ walkthroughClicked: true });
     }
 
     render() {
-        const pageTitle = "Create DataPack"
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
-            appBar: {
-                backgroundColor: '#161e2e',
-                height: '35px',
-                color: 'white',
-                fontSize: '14px',
+            tourButton: {
+                color: colors.primary,
+                cursor: 'pointer',
+                display: 'inline-block',
             },
-            pageTitle: {
-                fontSize: '18px', 
-                lineHeight: '35px', 
-                paddingLeft: '10px',
-                height: '35px'
-            }
-        }
+            tourIcon: {
+                cursor: 'pointer',
+                height: '18px',
+                width: '18px',
+                verticalAlign: 'middle',
+                marginRight: '5px',
+            },
+        };
+
+        const iconElementRight = (
+            <ButtonBase
+                onClick={this.handleWalkthroughClick}
+                style={styles.tourButton}
+            >
+                <Help
+                    style={styles.tourIcon}
+                />
+                Page Tour
+            </ButtonBase>
+        );
 
         return (
             <div>
-                <AppBar 
-                    style={styles.appBar} 
-                    title={pageTitle}
-                    titleStyle={styles.pageTitle}
-                    iconStyleRight={{marginTop: '2px'}}
-                    iconElementLeft={<p style={{display: 'none'}}/>}
+                <PageHeader
+                    title="Create DataPack"
+                >
+                    {iconElementRight}
+                </PageHeader>
+                <BreadcrumbStepper
+                    router={this.props.router}
+                    routes={this.props.routes}
+                    walkthroughClicked={this.state.walkthroughClicked}
+                    onWalkthroughReset={this.handleWalkthroughReset}
                 />
-                <BreadcrumbStepper/>
-                <div >
+                <div>
                     {this.props.children}
                 </div>
-
-        </div>
+            </div>
         );
     }
 }
 
-export default CreateExport;
+CreateExport.defaultProps = {
+    children: null,
+};
+
+CreateExport.propTypes = {
+    children: PropTypes.oneOf([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+        PropTypes.string,
+    ]),
+    router: PropTypes.object.isRequired,
+    routes: PropTypes.arrayOf(PropTypes.object).isRequired,
+    theme: PropTypes.object.isRequired,
+};
+
+export default withTheme()(CreateExport);

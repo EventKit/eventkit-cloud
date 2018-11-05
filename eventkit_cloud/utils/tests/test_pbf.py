@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
-
-from mock import Mock, patch
+from uuid import uuid4
 
 from django.test import TransactionTestCase
+from mock import Mock, patch
 
-from ..pbf import OSMToPBF
-from uuid import uuid4
-import os
+from eventkit_cloud.utils.pbf import OSMToPBF
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,7 @@ class TestOSMToPBF(TransactionTestCase):
         exists.assert_called_once_with(osm)
         self.task_process().start_process.assert_called_once_with(convert_cmd, executable='/bin/bash', shell=True, stderr=-1,
                                                                   stdout=-1)
-        self.assertEquals(out, pbffile)
+        self.assertEqual(out, pbffile)
 
         self.task_process.return_value = Mock(exitcode=1)
         with self.assertRaises(Exception):

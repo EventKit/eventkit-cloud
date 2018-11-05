@@ -1,74 +1,117 @@
-import React, {Component} from 'react';
-import Checkbox from 'material-ui/Checkbox';
-import {Card, CardHeader, CardText} from 'material-ui/Card';
-import ToggleCheckBox from 'material-ui/svg-icons/toggle/check-box';
-import ToggleCheckBoxOutlineBlank from 'material-ui/svg-icons/toggle/check-box-outline-blank';
-import HardwareKeyboardArrowDown from 'material-ui/svg-icons/hardware/keyboard-arrow-down';
-import HardwareKeyboardArrowUp from 'material-ui/svg-icons/hardware/keyboard-arrow-up';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Checkbox from '@material-ui/core/Checkbox';
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardContent from '@material-ui/core/CardContent';
+import Collapse from '@material-ui/core/Collapse';
+import IconButton from '@material-ui/core/IconButton';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import CustomScrollbar from '../CustomScrollbar';
 
 export class UserLicense extends Component {
-
     constructor(props) {
         super(props);
-    };
+        this.handleToggle = this.handleToggle.bind(this);
+        this.state = { expanded: false };
+    }
+
+    handleToggle() {
+        this.setState(state => ({ expanded: !state.expanded }));
+    }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
-            card: {boxShadow: 'none', marginBottom: '10px', border: this.props.checked ? 'none': '1px solid red'},
-            checkbox: {width: '24px', display: 'inline-block', verticalAlign: 'middle', marginRight: '10px'},
-            cardText: {border: '2px solid #dedede', padding: '0px'}
+            card: {
+                boxShadow: 'none',
+                marginBottom: '10px',
+                border: this.props.checked ? `1px solid ${colors.secondary}` : `1px solid ${colors.warning}`,
+            },
+            checkbox: {
+                width: '24px',
+                height: '24px',
+                verticalAlign: 'middle',
+                marginRight: '10px',
+            },
+            cardText: {
+                border: `2px solid ${colors.secondary}`,
+                padding: '0px',
+            },
+            expand: {
+                width: '24px',
+                height: '24px',
+                float: 'right',
+                transform: 'rotate(0deg)',
+                transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+            },
+        };
+
+        if (this.state.expanded) {
+            styles.expand.transform = 'rotate(180deg)';
         }
 
         return (
             <Card
-                className={'qa-UserLicense-Card'}
-                initiallyExpanded={false} 
+                className="qa-UserLicense-Card"
                 style={styles.card}
-                containerStyle={{paddingBottom: '0px'}}
             >
                 <CardHeader
-                    className={'qa-UserLicense-CardHeader'}
-                    style={{backgroundColor: 'whitesmoke'}}
+                    className="qa-UserLicense-CardHeader"
+                    style={{ backgroundColor: colors.secondary, padding: '16px' }}
                     title={
                         <div>
                             <Checkbox
-                                className={'qa-UserLicense-Checkbox'}
+                                className="qa-UserLicense-Checkbox"
                                 style={styles.checkbox}
                                 checked={this.props.checked}
-                                onCheck={(e,v) => {this.props.onCheck(this.props.license.slug, v)}}
-                                checkedIcon={<ToggleCheckBox className={'qa-UserLicense-ToggleCheckBox'} style={{fill: this.props.disabled ? 'grey' : '#4498c0'}}/>}
-                                uncheckedIcon={<ToggleCheckBoxOutlineBlank className={'qa-UserLicense-ToggleCheckBoxOutlineBlank'} style={{fill: '#4498c0'}}/>}
+                                onChange={(e, v) => { this.props.onCheck(this.props.license.slug, v); }}
+                                color="primary"
                                 disabled={this.props.disabled}
                             />
-                            <span className={'qa-UserLicense-agreement'} style={{lineHeight: '24px'}}>
+                            <span className="qa-UserLicense-agreement" style={{ lineHeight: '24px' }}>
                                 {'I agree to the '}<strong>{this.props.license.name}</strong>
                             </span>
+                            <IconButton
+                                onClick={this.handleToggle}
+                                color="primary"
+                                style={styles.expand}
+                                className="qa-UserLicense-expand"
+                            >
+                                <ExpandMoreIcon />
+                            </IconButton>
                         </div>
                     }
-                    actAsExpander={false}
-                    showExpandableButton={true}
-                    openIcon={<HardwareKeyboardArrowUp className={'qa-UserLicense-ArrowUp'} style={{fill: '#4498c0'}}/>}
-                    closeIcon={<HardwareKeyboardArrowDown className={'qa-UserLicense-ArrowDown'} style={{fill: '#4498c0'}}/>}
                 />
-                <CardText className={'qa-UserLicense-CardText'} expandable={true} style={styles.cardText}>
-                    <CustomScrollbar style={{height: '200px', width: '100%'}}>
-                        <div className={'qa-UserLicense-licenseText'} style={{padding: '16px', whiteSpace: 'pre-wrap'}}>
-                            <a href={`/api/licenses/${this.props.license.slug}/download`}>- Download this license text -</a><br/><br/>
-                            {this.props.license.text}
-                        </div>
-                    </CustomScrollbar>
-                </CardText>
+                <Collapse in={this.state.expanded}>
+                    <CardContent className="qa-UserLicense-CardText" style={styles.cardText}>
+                        <CustomScrollbar style={{ height: '200px', width: '100%' }}>
+                            <div className="qa-UserLicense-licenseText" style={{ padding: '16px', whiteSpace: 'pre-wrap' }}>
+                                <a href={`/api/licenses/${this.props.license.slug}/download`}>- Download this license text -</a>
+                                <br />
+                                <br />
+                                {this.props.license.text}
+                            </div>
+                        </CustomScrollbar>
+                    </CardContent>
+                </Collapse>
             </Card>
         );
-    };
+    }
+}
+
+UserLicense.propTypes = {
+    license: PropTypes.shape({
+        slug: PropTypes.string,
+        name: PropTypes.string,
+        text: PropTypes.string,
+    }).isRequired,
+    checked: PropTypes.bool.isRequired,
+    onCheck: PropTypes.func.isRequired,
+    disabled: PropTypes.bool.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-UserLicense.PropTypes = {
-    license: React.PropTypes.object.isRequired,
-    checked: React.PropTypes.bool.isRequired,
-    onCheck: React.PropTypes.func.isRequired,
-    disabled: React.PropTypes.bool.isRequired,
-};
-
-export default UserLicense;
+export default withTheme()(UserLicense);

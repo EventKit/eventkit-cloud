@@ -1,19 +1,20 @@
-import cookie from 'react-cookie'
-import actions from './actionTypes'
+export const types = {
+    SET_TOKEN: 'SET_TOKEN',
+    CLEAR_TOKEN: 'CLEAR_TOKEN',
+};
 
+export const setToken = token => ({
+    type: types.SET_TOKEN,
+    payload: { token },
+});
 
-export const setToken = token => {
+export const clearToken = () => ({
+    type: types.CLEAR_TOKEN,
+});
 
-    return {
-        type: actions.SET_TOKEN,
-        payload: {token: token}
+export const makeAuthRequired = action => (
+    {
+        ...action,
+        _auth_required: true,
     }
-}
-
-export const clearToken = () => {
-
-    return {
-        type: actions.CLEAR_TOKEN,
-    }
-
-}
+);

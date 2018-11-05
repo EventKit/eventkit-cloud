@@ -1,7 +1,9 @@
-import React, { PropTypes, Component } from 'react';
-import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import BaseDialog from '../BaseDialog';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Divider from '@material-ui/core/Divider';
+import Warning from '@material-ui/icons/Warning';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class ProviderError extends Component {
     constructor(props) {
@@ -22,27 +24,26 @@ export class ProviderError extends Component {
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             errorText: {
-                display: 'inlineBlock',
                 borderTopWidth: '10px',
                 borderBottomWidth: '10px',
                 borderLeftWidth: '10px',
-                color: '#ce4427',
+                color: colors.warning,
                 cursor: 'pointer',
                 fontWeight: 'bold',
             },
             warning: {
                 marginLeft: '10px',
                 cursor: 'pointer',
-                display: 'inlineBlock',
-                fill: '#ce4427',
+                fill: colors.warning,
                 verticalAlign: 'bottom',
             },
             warningIcon: {
                 marginRight: '10px',
-                display: 'inlineBlock',
-                fill: '#e8ac90',
+                fill: colors.warning,
                 verticalAlign: 'bottom',
             },
         };
@@ -61,7 +62,7 @@ export class ProviderError extends Component {
         const errorTitle = (
             <strong id="error-title">
                 {provider.name} has
-                <strong style={{ color: '#ce4427' }}> {errors.length} error(s).</strong>
+                <strong style={{ color: colors.warning }}> {errors.length} error(s).</strong>
             </strong>
         );
 
@@ -86,12 +87,16 @@ export class ProviderError extends Component {
 
         return (
             <span className="qa-ProviderError-span-errorText">
-                <a 
+                <span
+                    role="button"
+                    tabIndex={0}
+                    onKeyPress={this.handleProviderErrorOpen}
                     onClick={this.handleProviderErrorOpen}
                     style={styles.errorText}
+                    className="qa-ProviderError-error-text"
                 >
                     ERROR
-                </a>
+                </span>
                 <Warning
                     className="qa-ProviderError-Warning"
                     onClick={this.handleProviderErrorOpen}
@@ -112,6 +117,7 @@ export class ProviderError extends Component {
 
 ProviderError.propTypes = {
     provider: PropTypes.object.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ProviderError;
+export default withTheme()(ProviderError);

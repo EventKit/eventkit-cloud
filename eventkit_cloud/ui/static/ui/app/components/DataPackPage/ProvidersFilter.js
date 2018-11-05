@@ -1,59 +1,73 @@
-import React, { PropTypes, Component } from 'react';
-import Checkbox from 'material-ui/Checkbox';
-import Checked from 'material-ui/svg-icons/toggle/check-box';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Checkbox from '@material-ui/core/Checkbox';
+import Checked from '@material-ui/icons/CheckBox';
 
 export class ProvidersFilter extends Component {
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         let providers = [];
         if (this.props.providers) {
             providers = this.props.providers.filter(provider => provider.display);
         }
 
         const styles = {
-            drawerSection: {
+            container: {
                 width: '100%',
-                paddingLeft: '10px',
-                paddingRight: '10px',
+                padding: '0px 10px',
+            },
+            title: {
+                width: '100%',
+                margin: '0px',
                 lineHeight: '36px',
             },
+            provider: {
+                display: 'flex',
+                flexWrap: 'nowrap',
+                lineHeight: '24px',
+                paddingBottom: '8px',
+                color: colors.text_primary,
+                fontWeight: 700,
+            },
             checkbox: {
-                width: '100%',
-                float: 'left',
-            },
-            checkboxIcon: {
-                fill: 'grey',
+                width: '24px',
+                height: '24px',
+                flex: '0 0 auto',
                 marginRight: '5px',
-            },
-            checkboxLabel: {
-                color: 'grey',
-                width: '100%',
             },
         };
 
-        const checkedIcon = (<Checked style={{ fill: '#4598bf' }} />);
+        const checkedIcon = (<Checked color="primary" />);
 
         return (
-            <div style={styles.drawerSection}>
+            <div style={styles.container}>
                 <p
                     className="qa-ProvidersFilter-p"
-                    style={{ width: '100%', margin: '0px' }}
+                    style={styles.title}
                 >
                     <strong>Sources</strong>
                 </p>
                 {providers.map(provider => (
-                    <Checkbox
-                        className="qa-ProvidersFilter-Checkbox"
-                        key={provider.slug}
-                        label={provider.name}
-                        style={styles.checkbox}
-                        iconStyle={styles.checkboxIcon}
-                        labelStyle={styles.checkboxLabel}
-                        checked={!!this.props.selected[provider.slug]}
-                        checkedIcon={checkedIcon}
-                        onCheck={(e, v) => {
-                            this.props.onChange(provider.slug, v);
-                        }}
-                    />
+                    <div style={styles.provider} key={provider.slug}>
+                        <Checkbox
+                            className="qa-ProvidersFilter-Checkbox"
+                            key={provider.slug}
+                            style={styles.checkbox}
+                            checked={!!this.props.selected[provider.slug]}
+                            checkedIcon={checkedIcon}
+                            onChange={(e, v) => {
+                                this.props.onChange(provider.slug, v);
+                            }}
+                        />
+                        <span
+                            className="qa-ProvidersFilter-name"
+                            style={{ display: 'flex', flex: '1 1 auto' }}
+                        >
+                            {provider.name}
+                        </span>
+                    </div>
                 ))}
             </div>
         );
@@ -64,6 +78,7 @@ ProvidersFilter.propTypes = {
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     selected: PropTypes.object.isRequired,
     onChange: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
 };
 
-export default ProvidersFilter;
+export default withTheme()(ProvidersFilter);

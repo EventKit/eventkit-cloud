@@ -8,8 +8,9 @@
 """
 
 import os
-from pysqlite2 import dbapi2 as sqlite3
 from string import Template
+
+import sqlite3
 
 
 def run(*script_args):
@@ -22,9 +23,9 @@ def run(*script_args):
         pair = line.strip().split(',')
         trans.append(pair)
     for entry in trans:
-        print entry[0], entry[1]
+        print(entry[0], entry[1])
 
-    print trans
+    print(trans)
     conn = sqlite3.connect('/home/ubuntu/export_downloads/0c937545-cb43-4f9a-97b4-6e90e0c791a7/query.sqlite')
 
     # load spatialite extension

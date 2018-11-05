@@ -1,61 +1,43 @@
-import React, {PropTypes} from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
-import { Link } from 'react-router';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Button from '@material-ui/core/Button';
 
 export class DataPackLinkButton extends React.Component {
-
-    constructor(props) {
-        super(props);
-    }
-
-    getFontSize() {
-        if(window.innerWidth <= 575) {
-            return '10px';
-        }
-        else if (window.innerWidth <= 767) {
-            return '11px';
-        }
-        else if (window.innerWidth <= 991) {
-            return '12px';
-        }
-        else if(window.innerWidth <= 1199) {
-            return '13px';
-        }
-        else {
-            return '14px';
-        }
-    }
-
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const styles = {
             button: {
-                margin: '0px', 
-                minWidth: '50px', 
-                height: '35px', 
-                borderRadius: '0px'
-            },
-            label: {
-                fontSize: this.getFontSize(),
-                paddingLeft: '20px', 
-                paddingRight: '20px', 
-                lineHeight: '35px'
+                margin: '0px',
+                minWidth: '50px',
+                height: '35px',
+                borderRadius: '0px',
+                width: '150px',
+                fontSize: '12px',
+                paddingLeft: '0px',
+                paddingRight: '0px',
+                lineHeight: '35px',
+                color: colors.white,
             },
         };
 
         return (
-            <Link to={'/create'}>
-                <RaisedButton
-                    className={'qa-DataPackLinkButton-RaisedButton'}
-                    label={"Create DataPack"}
-                    primary={true}
-                    labelStyle={styles.label}
-                    style={styles.button}
-                    buttonStyle={{borderRadius: '0px', backgroundColor: '#4598bf'}}
-                    overlayStyle={{borderRadius: '0px'}}
-                />
-            </Link>
+            <Button
+                className="qa-DataPackLinkButton-Button"
+                color="primary"
+                variant="contained"
+                href="/create"
+                style={styles.button}
+            >
+                Create DataPack
+            </Button>
         );
     }
 }
 
-export default DataPackLinkButton;
+DataPackLinkButton.propTypes = {
+    theme: PropTypes.object.isRequired,
+};
+
+export default withTheme()(DataPackLinkButton);

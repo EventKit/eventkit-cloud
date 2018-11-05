@@ -1,6 +1,8 @@
-from __future__ import print_function
-import os
+
+
 import json
+import os
+
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'eventkit_cloud.settings.prod')
@@ -48,8 +50,8 @@ def merge_dups(dmp):
 
 unique_osm = merge_dups(osm)
 print('osm tags:')
-print(json.dumps(unique_osm.values()))
+print(json.dumps(list(unique_osm.values())))
 print()
 unique_hdm = merge_dups(hdm)
 print('hdm tags:')
-print(json.dumps(unique_hdm.values()))
+print(json.dumps(list(unique_hdm.values())))

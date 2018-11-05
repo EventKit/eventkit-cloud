@@ -2,9 +2,9 @@
 import logging
 
 from django.test import TestCase
-
-from ..data_estimator import get_size_estimate, get_gb_estimate
 from mock import Mock, patch
+
+from eventkit_cloud.ui.data_estimator import get_size_estimate, get_gb_estimate
 
 logger = logging.getLogger(__name__)
 
@@ -26,4 +26,4 @@ class TestDataEstimation(TestCase):
         export_provider.objects.get.assert_called_once_with(name=provider_name)
         # two tiles, an arbritary value of four from the mock, one tile per level represented in array.
         expected_values = [2, 4, [1, 1]]
-        self.assertEquals(returned_values, expected_values)
+        self.assertEqual(returned_values, expected_values)

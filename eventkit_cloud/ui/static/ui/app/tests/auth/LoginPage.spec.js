@@ -1,28 +1,25 @@
-import React, { isValidElement } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
-import Paper from 'material-ui/Paper';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { shallow } from 'enzyme';
+import Paper from '@material-ui/core/Paper';
 import { fakeStore } from '../../__mocks__/fakeStore';
 import { LoginPage } from '../../components/auth/LoginPage';
-import BrowserWarning from '../../components/auth/BrowserWarning';
 import LoginForm from '../../containers/loginContainer';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import * as utils from '../../utils/generic';
 
 
 describe('LoginPage component', () => {
-    const muiTheme = getMuiTheme();
     const store = fakeStore({});
-    const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer' };
+    const loginConfig = { LOGIN_DISCLAIMER: 'This is a disclaimer', ...global.eventkit_test_props };
 
     function getWrapper(config) {
-        return mount(<LoginPage />, {
-            context: { muiTheme, store, config },
+        return shallow(<LoginPage {...global.eventkit_test_props} />, {
+            context: { store, config },
             childContextTypes: {
-                muiTheme: React.PropTypes.object,
-                store: React.PropTypes.object,
-                config: React.PropTypes.object,
+                store: PropTypes.object,
+                config: PropTypes.object,
             },
         });
     }
@@ -63,17 +60,8 @@ describe('LoginPage component', () => {
         expect(wrapper.find(Paper)).toHaveLength(2);
         expect(wrapper.find(LoginForm)).toHaveLength(1);
         expect(wrapper.find(Paper).last().find('strong').text()).toEqual('ATTENTION');
-        expect(wrapper.find(CustomScrollbar).last().childAt(0).childAt(1)
-            .text()).toEqual('This is a disclaimer');
-        isValidStub.restore();
-    });
-
-    it('should display the browser warning if user browser is not valid', () => {
-        const isValidStub = sinon.stub(utils, 'isBrowserValid')
-            .returns(false);
-        const wrapper = getWrapper({});
-        expect(wrapper.find(BrowserWarning)).toHaveLength(1);
-        expect(wrapper.find(Paper)).toHaveLength(0);
+        expect(wrapper.find(CustomScrollbar).at(1).dive().find('.qa-LoginPage-disclaimer')
+            .html()).toContain('This is a disclaimer');
         isValidStub.restore();
     });
 });

@@ -1,16 +1,18 @@
-from __future__ import absolute_import
 
-import requests
-import logging
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.contrib.auth import logout as auth_logout
-from django.shortcuts import redirect
-from .models import OAuth
+
 import json
+import logging
 from datetime import datetime, timedelta
+
 import dateutil.parser
 import pytz
+import requests
+from django.conf import settings
+from django.contrib.auth import logout as auth_logout
+from django.contrib.auth.models import User
+from django.shortcuts import redirect
+
+from eventkit_cloud.auth.models import OAuth
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ logger = logging.getLogger(__name__)
 def auto_logout(get_response):
     def middleware(request):
         # Only check for auto logout if we're logged in.
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return get_response(request)
 
         last_active_at_iso = request.session.get(settings.SESSION_USER_LAST_ACTIVE_AT)
@@ -68,20 +70,23 @@ def fetch_user_from_token(access_token):
         logger.error('OAuth Resource Server returned HTTP {0} {1}'.format(status_code, err.response.text))
         raise OAuthError(status_code)
 
-    user_data = get_user_data_from_schema(response.json())
+    orig_data = response.json()
+    user_data = get_user_data_from_schema(orig_data)
 
-    return get_user(user_data)
+    return get_user(user_data, orig_data)
 
 
-
-def get_user(user_data):
+def get_user(user_data, orig_data=None):
     """
     A helper function for retrieving or creating a user given a user_data dictionary.
     :param user_data: A dict containg user data.
+    :param orig_data: The original dictionary returned from the OAuth response, not modified to fit our User model.
     :return: 
     """
     oauth = OAuth.objects.filter(identification=user_data.get('identification')).first()
     if not oauth:
+        if orig_data is None:
+            orig_data = {}
         try:
             identification = user_data.pop('identification')
             commonname = user_data.pop('commonname')
@@ -95,7 +100,7 @@ def get_user(user_data):
                          "it most likely caused by OAUTH_PROFILE_SCHEMA containing an invalid key.")
             raise e
         try:
-            OAuth.objects.create(user=user, identification=identification, commonname=commonname)
+            OAuth.objects.create(user=user, identification=identification, commonname=commonname, user_info=orig_data)
         except Exception as e:
             logger.error("The user data provided by the resource server could not be used to create a user, "
                          "it most likely caused by OAUTH_PROFILE_SCHEMA mapping is incorrect and/or not providing "
@@ -123,13 +128,22 @@ def get_user_data_from_schema(data):
         raise
     except ValueError:
         raise Error("An invalid json string was added to OAUTH_PROFILE_SCHEMA, please ensure names and values are "
-                     "quoted properly, that quotes are terminated, and that it is surrounded by braces.")
+                    "quoted properly, that quotes are terminated, and that it is surrounded by braces.")
     except TypeError:
-        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid mapping.")
+        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it is empty.  Please add a valid "
+                    "mapping.")
     if not mapping:
-        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a valid mapping.")
-    for key, value in mapping.iteritems():
-        user_data[key] = data.get(value)
+        raise Error("AN OAUTH_PROFILE_SCHEMA was added to the environment but it an empty json object.  Please add a "
+                    "valid mapping.")
+    for key, value_list in mapping.items():
+        if type(value_list) is not list:
+            value_list = [value_list]
+        for value in value_list:
+            try:
+                user_data[key] = data[value]
+                break
+            except KeyError:
+                continue
     return user_data
 
 

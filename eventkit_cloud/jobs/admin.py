@@ -1,42 +1,24 @@
-from django.contrib import admin
-from django import forms
-from django.template import RequestContext
-from django.conf.urls import url
-from django.contrib import messages
-from django.shortcuts import render_to_response
-from django.contrib.gis.admin import OSMGeoAdmin
-from django.contrib.gis.geos import GEOSGeometry
 import logging
 
-from .models import ExportFormat, ExportProfile, Job, Region, DataProvider, DataProviderType, \
-    DataProviderTask, DatamodelPreset, License, UserLicense
+from django import forms
+from django.conf.urls import url
+from django.contrib import admin
+from django.contrib import messages
+from django.contrib.gis.admin import OSMGeoAdmin
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from django.utils.html import format_html
+from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 
+from eventkit_cloud.jobs.models import ExportFormat, Job, Region, DataProvider, DataProviderType, \
+    DatamodelPreset, License, DataProviderStatus
 
 logger = logging.getLogger(__name__)
 
 admin.site.register(ExportFormat)
-admin.site.register(ExportProfile)
 admin.site.register(DataProviderType)
-admin.site.register(DataProviderTask)
 admin.site.register(DatamodelPreset)
 admin.site.register(License)
-admin.site.register(UserLicense)
-
-
-class HOTRegionGeoAdmin(OSMGeoAdmin):
-    """
-    Admin model to allow Region editing in admin interface.
-
-    Uses OSM for base layer in map in admin.
-    """
-    model = Region
-    exclude = ['the_geom', 'the_geog']
-
-    def save_model(self, request, obj, form, change):  # pragma no cover
-        geom_merc = obj.the_geom_webmercator
-        obj.the_geom = geom_merc.transform(ct=4326, clone=True)
-        obj.the_geog = GEOSGeometry(obj.the_geom.wkt)
-        obj.save()
 
 
 class JobAdmin(OSMGeoAdmin):
@@ -45,7 +27,8 @@ class JobAdmin(OSMGeoAdmin):
     """
     search_fields = ['uid', 'name', 'user__username', 'region__name']
     list_display = ['uid', 'name', 'user', 'region']
-    exclude = ['the_geom', 'the_geog']
+    readonly_fields = ['user', 'name', 'description', 'event']
+    exclude = ['the_geom', 'the_geom_webmercator', 'original_selection', 'the_geog', 'provider_tasks', 'json_tags', 'preset']
     actions = ['select_exports']
 
     update_template = 'admin/update_regions.html'
@@ -120,6 +103,7 @@ class DataProviderForm(forms.ModelForm):
                   'service_description',
                   'layer',
                   'export_provider_type',
+                  'max_selection',
                   'level_from',
                   'level_to',
                   'config',
@@ -131,26 +115,26 @@ class DataProviderForm(forms.ModelForm):
 
     def clean_config(self):
         config = self.cleaned_data.get('config')
-        if not config:
-            return
 
         service_type = self.cleaned_data.get('export_provider_type').type_name
 
-        if service_type in ['wms', 'wmts']:
-            from ..utils.external_service import ExternalRasterServiceToGeopackage, \
-                                                 ConfigurationError, SeedConfigurationError
-            service = ExternalRasterServiceToGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
+        if service_type in ['wms', 'wmts', 'tms']:
+            from eventkit_cloud.utils.mapproxy import MapproxyGeopackage, \
+                                                 ConfigurationError
+            service = MapproxyGeopackage(layer=self.cleaned_data.get('layer'), service_type=self.cleaned_data.get('export_provider_type'), config=config)
             try:
-                conf_dict, seed_configuration, mapproxy_configuration = service.get_check_config()
-            except (ConfigurationError, SeedConfigurationError) as e:
-                raise forms.ValidationError(e.message)
+                service.get_check_config()
+            except ConfigurationError as e:
+                raise forms.ValidationError(str(e))
 
         elif service_type in ['osm', 'osm-generic']:
-            from ..feature_selection.feature_selection import FeatureSelection
-            try:
-                f = FeatureSelection.example(config)
-            except AssertionError:
-                raise forms.ValidationError("Invalid configuration")
+            if not config:
+                raise forms.ValidationError("Configuration is required for OSM data providers")
+            from eventkit_cloud.feature_selection.feature_selection import FeatureSelection
+            feature_selection = FeatureSelection(config)
+            feature_selection.valid
+            if feature_selection.errors:
+                raise forms.ValidationError("Invalid configuration: {0}".format(feature_selection.errors))
 
         return config
 
@@ -163,7 +147,49 @@ class DataProviderAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug', 'export_provider_type', 'user', 'license', 'display']
 
 
+# The reason for these empty classes is to remove IntervalSchedule and CrontabSchedule from the admin page. The easiest
+# way to do this is to unregister them using admin.site.unregister, but that also means that you can't use the plus
+# button to add new ones on lists displayed on admin pages of other models (in this case, PeriodicTask). Having the
+# model be registered but hidden prevents that option from being removed.
+class IntervalScheduleAdmin(admin.ModelAdmin):
+    def get_model_perms(self, request):
+        return {}
+
+
+class CrontabScheduleAdmin(admin.ModelAdmin):
+    def get_model_perms(self, request):
+        return {}
+
+
+admin.site.unregister(IntervalSchedule)
+admin.site.unregister(CrontabSchedule)
+
+
+class DataProviderStatusAdmin(admin.ModelAdmin):
+    """
+    Status information for Data Providers
+    """
+
+    def color_status(self, obj):
+        if obj.status == 'SUCCESS':
+            return format_html('<div style="width:100%%; height:100%%; background-color:rgba(0, 255, 0, 0.3);">%s</div>' % obj.status)
+        elif obj.status.startswith('WARN'):
+            return format_html('<div style="width:100%%; height:100%%; background-color:rgba(255, 255, 0, 0.3);">%s</div>' % obj.status)
+        return format_html('<div style="width:100%%; height:100%%; background-color:rgba(255, 0, 0, 0.3);">%s</div>' % obj.status)
+    color_status.short_description = 'status'
+
+    model = DataProviderStatus
+    readonly_fields = ('status', 'status_type', 'message', 'last_check_time', 'related_provider')
+    list_display = ('color_status', 'status_type', 'message', 'last_check_time', 'related_provider')
+    list_filter = ('related_provider', 'status', 'status_type', 'last_check_time')
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 # register the new admin models
-admin.site.register(Region, HOTRegionGeoAdmin)
+admin.site.register(IntervalSchedule, IntervalScheduleAdmin)
+admin.site.register(CrontabSchedule, CrontabScheduleAdmin)
 admin.site.register(Job, JobAdmin)
 admin.site.register(DataProvider, DataProviderAdmin)
+admin.site.register(DataProviderStatus, DataProviderStatusAdmin)

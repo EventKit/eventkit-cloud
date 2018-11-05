@@ -1,0 +1,4 @@
+# do not run the lint test on the following files or directories
+eventkit_cloud/ui/static/ui/app/tests/e2e
+eventkit_cloud/ui/static/ui/app/styles
+eventkit_cloud/ui/static/ui/app/fonts

@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
-import getpass
-import os
-import json
 import argparse
+import getpass
+import json
+import logging
+import os
 
 from eventkit_cloud.utils.client import EventKitClient
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=os.getenv("LOG_LEVEL", "WARNING"))
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -28,7 +32,7 @@ def main():
     if not password:
         password = getpass.getpass("EventKit Password:")
 
-    client = EventKitClient(args.url, user, password)
+    client = EventKitClient(args.url.rstrip('/'), user, password)
     if args.sources:
         provider_tasks = []
         for provider in client.get_providers():
@@ -49,20 +53,20 @@ def main():
         description = feature['properties'].get(args.description) or "Created using the seed_data script."
         project = feature['properties'].get(args.project) or "seed"
         if name in [run['job']['name'] for run in client.get_runs(search_term=name)]:
-            print("Skipping {0} because data already exists in a DataPack with the same name.".format(name))
+            print(("Skipping {0} because data already exists in a DataPack with the same name.".format(name)))
             continue
         if not name:
-            print("Skipping: \n {0} \n"
-                  "because a valid name wasn't provided or found.".format(feature))
+            print(("Skipping: \n {0} \n"
+                  "because a valid name wasn't provided or found.".format(feature)))
             continue
         response = client.run_job(name=name, description=description, project=project,
                                   provider_tasks=provider_tasks, selection=feature)
 
         if response:
-            print('Submitted job for {0}'.format(name))
+            print(('Submitted job for {0}'.format(name)))
             count -= 1
         else:
-            print('Failed to submit job for {0}'.format(name))
+            print(('Failed to submit job for {0}'.format(name)))
             print(response)
 
 

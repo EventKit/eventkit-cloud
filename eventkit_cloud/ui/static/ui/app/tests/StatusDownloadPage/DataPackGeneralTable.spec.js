@@ -1,15 +1,15 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Info from 'material-ui/svg-icons/action/info';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
-import BaseDialog from '../../components/BaseDialog';
-import DataPackGeneralTable from '../../components/StatusDownloadPage/DataPackGeneralTable';
-import { DataPackDetails } from '../../components/StatusDownloadPage/DataPackDetails';
+import { createShallow } from '@material-ui/core/test-utils';
+import CustomTableRow from '../../components/CustomTableRow';
+import { DataPackGeneralTable } from '../../components/StatusDownloadPage/DataPackGeneralTable';
 
 describe('DataPackGeneralTable component', () => {
-    const muiTheme = getMuiTheme();
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     const getProps = () => (
         {
@@ -48,28 +48,26 @@ describe('DataPackGeneralTable component', () => {
                     service_description: 'number two service',
                 },
             ],
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<DataPackGeneralTable {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: PropTypes.object },
-        })
+        shallow(<DataPackGeneralTable {...props} />)
     );
 
     it('should render the basic components', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find(DataPackTableRow)).toHaveLength(5);
-        expect(wrapper.find(BaseDialog)).toHaveLength(3);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(4);
     });
 
     it('Source Info icon should call handleProviderOpen on click', () => {
         const props = getProps();
         const openStub = sinon.stub(DataPackGeneralTable.prototype, 'handleProviderOpen');
         const wrapper = getWrapper(props);
-        wrapper.find('.qa-DataPackGeneralTable-Info-source').first().simulate('click');
+        shallow(wrapper.find(CustomTableRow).at(2).props().data[0])
+            .find('.qa-DataPackGeneralTable-Info-source').simulate('click');
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
     });
@@ -97,28 +95,6 @@ describe('DataPackGeneralTable component', () => {
         wrapper.instance().handleProviderClose();
         expect(statestub.calledOnce).toBe(true);
         expect(statestub.calledWith({ providerDialogOpen: false })).toBe(true);
-        statestub.restore();
-    });
-
-    it('handleFormatsOpen should set format dialog to open', () => {
-        const props = getProps();
-        const statestub = sinon.stub(DataPackGeneralTable.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        expect(statestub.called).toBe(false);
-        wrapper.instance().handleFormatsOpen();
-        expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ formatsDialogOpen: true })).toBe(true);
-        statestub.restore();
-    });
-
-    it('handleFormatClose should set the format dialog to closed', () => {
-        const props = getProps();
-        const statestub = sinon.stub(DataPackGeneralTable.prototype, 'setState');
-        const wrapper = getWrapper(props);
-        expect(statestub.called).toBe(false);
-        wrapper.instance().handleFormatsClose();
-        expect(statestub.calledOnce).toBe(true);
-        expect(statestub.calledWith({ formatsDialogOpen: false })).toBe(true);
         statestub.restore();
     });
 

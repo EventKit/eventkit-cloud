@@ -1,10 +1,11 @@
-import React, { PropTypes } from 'react';
-import { mount } from 'enzyme';
-import moment from 'moment';
-import DataPackTableRow from '../../components/StatusDownloadPage/DataPackTableRow';
-import DataCartInfoTable from '../../components/StatusDownloadPage/DataCartInfoTable';
+import React from 'react';
+import { createShallow } from '@material-ui/core/test-utils';
+import CustomTableRow from '../../components/CustomTableRow';
+import { DataCartInfoTable } from '../../components/StatusDownloadPage/DataCartInfoTable';
 
 describe('DataCartInfoTable component', () => {
+    const shallow = createShallow();
+
     const props = {
         dataPack: {
             uid: '12345',
@@ -12,11 +13,12 @@ describe('DataCartInfoTable component', () => {
             started_at: '2017-03-24T15:52:35.637258Z',
             finished_at: '2017-03-24T15:52:35.637258Z',
         },
+        ...global.eventkit_test_props,
     };
 
-    const wrapper = mount(<DataCartInfoTable {...props} />);
+    const wrapper = shallow(<DataCartInfoTable {...props} />);
 
     it('should render the 4 needed rows', () => {
-        expect(wrapper.find(DataPackTableRow)).toHaveLength(4);
+        expect(wrapper.find(CustomTableRow)).toHaveLength(4);
     });
 });

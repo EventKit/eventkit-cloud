@@ -1,32 +1,28 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import RaisedButton from 'material-ui/RaisedButton';
-import FlatButton from 'material-ui/FlatButton';
-import TextField from 'material-ui/TextField';
-import Slider from 'material-ui/Slider';
-import Clear from 'material-ui/svg-icons/content/clear';
-import BufferDialog from '../../components/CreateDataPack/BufferDialog';
+import { shallow } from 'enzyme';
+import TextField from '@material-ui/core/TextField';
+import Slider from '@material-ui/lab/Slider';
+import Clear from '@material-ui/icons/Clear';
+import AlertCallout from '../../components/CreateDataPack/AlertCallout';
+import { BufferDialog } from '../../components/CreateDataPack/BufferDialog';
 
 describe('AlertCallout component', () => {
-    const muiTheme = getMuiTheme();
     const getProps = () => (
         {
             show: true,
             value: 0,
             valid: true,
-            onBufferClick: () => {},
+            handleBufferClick: () => {},
             handleBufferChange: () => {},
             closeBufferDialog: () => {},
+            aoi: {},
+            ...global.eventkit_test_props,
         }
     );
 
     const getWrapper = props => (
-        mount(<BufferDialog {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        })
+        shallow(<BufferDialog {...props} />)
     );
 
     it('should render the basic elements', () => {
@@ -41,35 +37,31 @@ describe('AlertCallout component', () => {
         expect(wrapper.find(Slider)).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footnote')).toHaveLength(1);
         expect(wrapper.find('.qa-BufferDialog-footer')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-FlatButton-close')).toHaveLength(1);
-        expect(wrapper.find('.qa-BufferDialog-RaisedButton-buffer')).toHaveLength(1);
-        expect(wrapper.find(RaisedButton).props().labelStyle.color).toEqual('whitesmoke');
-        expect(wrapper.find(RaisedButton).props().buttonStyle.backgroundColor).toEqual('#4598bf');
-        expect(wrapper.find(TextField).props().inputStyle.color).toEqual('grey');
+        expect(wrapper.find(TextField).props().style.color).toEqual('#808080');
     });
 
     it('should not render anything if show is false', () => {
         const props = getProps();
         props.show = false;
         const wrapper = getWrapper(props);
-        expect(wrapper.find('.qa-BufferDialog-main')).toHaveLength(0);
-        expect(wrapper.find('.qa-BufferDialog-background')).toHaveLength(0);
+        expect(wrapper.find('.qa-BufferDialog-main').hostNodes()).toHaveLength(0);
+        expect(wrapper.find('.qa-BufferDialog-background').hostNodes()).toHaveLength(0);
     });
 
-    it('Close buttons should call closeBufferDialog', () => {
+    it('should render a warning if the area exceeds the aoi limit', () => {
         const props = getProps();
-        props.closeBufferDialog = sinon.spy();
+        props.maxVectorAoiSqKm = -200;
         const wrapper = getWrapper(props);
-        wrapper.find(FlatButton).simulate('click');
-        expect(props.closeBufferDialog.calledOnce).toBe(true);
+        expect(wrapper.find('.qa-BufferDialog-warning')).toHaveLength(1);
     });
 
-    it('Update button should call onBufferClick', () => {
+    it('should render the alert popup', () => {
         const props = getProps();
-        props.onBufferClick = sinon.spy();
+        props.maxVectorAoiSqKm = -200;
         const wrapper = getWrapper(props);
-        wrapper.find(RaisedButton).find('button').simulate('click');
-        expect(props.onBufferClick.calledOnce).toBe(true);
+        expect(wrapper.find(AlertCallout)).toHaveLength(0);
+        wrapper.setState({ showAlert: true });
+        expect(wrapper.find(AlertCallout)).toHaveLength(1);
     });
 
     it('Clear icon should call closeBufferDialog on click', () => {
@@ -78,5 +70,25 @@ describe('AlertCallout component', () => {
         const wrapper = getWrapper(props);
         wrapper.find(Clear).simulate('click');
         expect(props.closeBufferDialog.calledOnce).toBe(true);
+    });
+
+    it('showAlert should set showAlert true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().showAlert();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAlert: true })).toBe(true);
+        stateStub.restore();
+    });
+
+    it('closeAlert should set showAlert false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().closeAlert();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAlert: false })).toBe(true);
+        stateStub.restore();
     });
 });

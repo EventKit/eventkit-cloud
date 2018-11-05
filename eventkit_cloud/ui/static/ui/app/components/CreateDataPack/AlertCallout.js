@@ -1,67 +1,68 @@
-import React, { Component, PropTypes } from 'react';
-import Clear from 'material-ui/svg-icons/content/clear';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import Clear from '@material-ui/icons/Clear';
+import css from '../../styles/popup.css';
 
 export class AlertCallout extends Component {
     render() {
         const styles = {
-            container: {
-                position: 'absolute',
-                ...this.props.style,
-            },
             clear: {
-                float: 'right',
                 height: '20px',
                 width: '20px',
-                fill: '#4498c0',
+                flex: '0 0 auto',
+                fill: this.props.theme.eventkit.colors.primary,
                 cursor: 'pointer',
-            },
-            arrow: {
-                width: 0,
-                height: 0,
-                borderLeft: '8px solid transparent',
-                borderRight: '8px solid transparent',
-                borderTop: '14px solid #fff',
-                position: 'relative',
-                bottom: '-100px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-            },
-            textBox: {
-                width: '220px',
-                height: '100px',
-                backgroundColor: '#fff',
-                position: 'relative',
-                bottom: '14px',
-                left: '0px',
-                color: '#d32f2f',
-                padding: '20px',
             },
         };
 
         return (
-            <div className="qa-AlertCallout" style={styles.container}>
-                <div className="qa-AlertCallout-arrow" style={styles.arrow} />
-                <div className="qa-AlertCallout-box" style={styles.textBox}>
-                    <div className="qa-AlertCallout-header" style={{ lineHeight: '20px' }}>
-                        <strong>There must be a buffer.</strong>
-                        <Clear
-                            className="qa-AlertCallout-alert-close"
-                            style={styles.clear}
-                            onClick={this.props.onClose}
-                        />
-                    </div>
-                    <div className="qa-AlertCallout-body">
-                        Please add a buffer before moving forward.
-                    </div>
+            <div
+                className={`${css.callout} ${css[this.props.orientation]} qa-AlertCallout`}
+                style={this.props.style}
+            >
+                <div
+                    style={{ minHeight: '20px', display: 'flex', marginBottom: '10px' }}
+                    className="qa-AlertCallout-title"
+                >
+                    <div style={{ flexWrap: 'wrap', flex: '1 1 auto' }}><strong>{this.props.title}</strong></div>
+                    <Clear
+                        className="qa-AlertCallout-alert-close"
+                        style={styles.clear}
+                        onClick={this.props.onClose}
+                    />
+                </div>
+                <div className="qa-AlertCallout-body">
+                    {this.props.body}
                 </div>
             </div>
         );
     }
 }
-
-AlertCallout.propTypes = {
-    style: PropTypes.object,
-    onClose: PropTypes.func,
+AlertCallout.defaultProps = {
+    title: '',
+    body: null,
+    style: {},
 };
 
-export default AlertCallout;
+AlertCallout.propTypes = {
+    title: PropTypes.string,
+    body: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node,
+        PropTypes.arrayOf(PropTypes.node),
+    ]),
+    orientation: PropTypes.oneOf([
+        'top',
+        'bottom',
+        'top-left',
+        'top-right',
+        'right-bottom',
+        'left-bottom',
+    ]).isRequired,
+    style: PropTypes.object,
+    onClose: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
+};
+
+export default withTheme()(AlertCallout);

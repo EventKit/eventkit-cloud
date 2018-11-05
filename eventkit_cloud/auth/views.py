@@ -1,24 +1,27 @@
 # -*- coding: utf-8 -*-
 
-from django.conf import settings
-
-from .auth import request_access_token, fetch_user_from_token
-from ..core.helpers import get_id
-from django.contrib.auth import login
-import urllib
-from django.shortcuts import redirect
-from django.http import HttpResponse, JsonResponse
 import json
-from django.contrib.auth import logout as auth_logout
-
 from logging import getLogger
+
+from django.conf import settings
+from django.contrib.auth import login
+from django.contrib.auth import logout as auth_logout
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect
+
+from eventkit_cloud.auth.auth import request_access_token, fetch_user_from_token
+from eventkit_cloud.core.helpers import get_id
+
+from urllib.parse import urlparse, parse_qs, urlencode
+
+import base64
 
 logger = getLogger(__name__)
 
 
 def oauth(request):
     """
-    :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings 
+    :return: A redirection to the OAuth server (OAUTH_AUTHORIZATION_URL) provided in the settings
     """
     if getattr(settings, "OAUTH_AUTHORIZATION_URL", None):
         if request.GET.get('query'):
@@ -26,13 +29,16 @@ def oauth(request):
                                 content_type="application/json",
                                 status=200)
         else:
-            params = urllib.urlencode((
+            params = [
                 ('client_id', settings.OAUTH_CLIENT_ID),
                 ('redirect_uri', settings.OAUTH_REDIRECT_URI),
                 ('response_type', settings.OAUTH_RESPONSE_TYPE),
-                ('scope', settings.OAUTH_SCOPE),
-            ))
-            return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), params))
+                ('scope', settings.OAUTH_SCOPE)
+            ]
+            if request.META.get('HTTP_REFERER'):
+                    params += [('state', base64.b64encode(request.META.get('HTTP_REFERER').encode()))]
+            encoded_params = urlencode(params)
+            return redirect('{0}?{1}'.format(settings.OAUTH_AUTHORIZATION_URL.rstrip('/'), encoded_params))
     else:
         return HttpResponse(status=400)
 
@@ -40,10 +46,13 @@ def oauth(request):
 def callback(request):
     access_token = request_access_token(request.GET.get('code'))
     user = fetch_user_from_token(access_token)
+    state = request.GET.get('state')
     if user:
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         logger.info('User "{0}" has logged in successfully'.format(get_id(user)))
-        return redirect('exports')
+        if state:
+            return redirect(base64.b64decode(state).decode())
+        return redirect('dashboard')
     else:
         logger.error('User could not be logged in.')
         return HttpResponse('{"error":"User could not be logged in"}',

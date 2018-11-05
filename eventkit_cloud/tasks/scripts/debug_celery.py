@@ -1,10 +1,9 @@
-from __future__ import absolute_import
+
 
 import os
+import sys
 
 from django.core.wsgi import get_wsgi_application
-
-import sys
 
 proj_path = "/var/lib/eventkit"
 sys.path.append(proj_path)

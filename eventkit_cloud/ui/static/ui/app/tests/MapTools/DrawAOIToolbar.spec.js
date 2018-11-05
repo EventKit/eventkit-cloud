@@ -1,14 +1,17 @@
 import React from 'react';
-import { mount } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import { DrawAOIToolbar } from '../../components/MapTools/DrawAOIToolbar';
-import { DrawBoxButton } from '../../components/MapTools/DrawBoxButton';
-import { DrawFreeButton } from '../../components/MapTools/DrawFreeButton';
-import { MapViewButton } from '../../components/MapTools/MapViewButton';
-import { ImportButton } from '../../components/MapTools/ImportButton';
+import { createShallow } from '@material-ui/core/test-utils';
+import DrawAOIToolbar from '../../components/MapTools/DrawAOIToolbar';
+import DrawBoxButton from '../../components/MapTools/DrawBoxButton';
+import DrawFreeButton from '../../components/MapTools/DrawFreeButton';
+import MapViewButton from '../../components/MapTools/MapViewButton';
+import ImportButton from '../../components/MapTools/ImportButton';
 
 describe('DrawAOIToolbar component', () => {
-    const muiTheme = getMuiTheme();
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
 
     it('should render a toolbar title and 4 sub components', () => {
         const props = {
@@ -22,12 +25,10 @@ describe('DrawAOIToolbar component', () => {
             setMapViewButtonSelected: () => {},
             setImportButtonSelected: () => {},
             setImportModalState: () => {},
+            ...global.eventkit_test_props,
         };
 
-        const wrapper = mount(<DrawAOIToolbar {...props} />, {
-            context: { muiTheme },
-            childContextTypes: { muiTheme: React.PropTypes.object },
-        });
+        const wrapper = shallow(<DrawAOIToolbar {...props} />);
         expect(wrapper.find('#container')).toHaveLength(1);
         expect(wrapper.find('.qa-DrawAOIToolbar-div-title')).toHaveLength(1);
         expect(wrapper.find('.qa-DrawAOIToolbar-div-title').text()).toEqual('TOOLS');

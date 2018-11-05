@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-from .celery import *  # NOQA
+
 import dj_database_url
-import os
-import logging
-import json
-import urllib
+
+from eventkit_cloud.settings.celery import *  # NOQA
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+INSTALLED_APPS += ("django_celery_results", "django_celery_beat", "django_filters")
 
 # Project apps
 INSTALLED_APPS += (
@@ -20,9 +19,8 @@ INSTALLED_APPS += (
     'eventkit_cloud.ui',
     'eventkit_cloud.utils',
     'eventkit_cloud',
+    'notifications',
 )
-
-INSTALLED_APPS += ("django_celery_results", "django_celery_beat", )
 
 LOGIN_URL = '/login'
 LOGOUT_URL = '/logout'
@@ -39,7 +37,7 @@ EXPORT_TASKS = {
 # where exports are staged for processing
 EXPORT_STAGING_ROOT = None
 if os.getenv("VCAP_SERVICES"):
-    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if 'nfs' in service:
             try:
                 EXPORT_STAGING_ROOT = os.path.join(listings[0]['volume_mounts'][0]['container_dir'], 'eventkit_stage')
@@ -56,31 +54,40 @@ EXPORT_DOWNLOAD_ROOT = os.getenv('EXPORT_DOWNLOAD_ROOT', '/var/lib/eventkit/expo
 EXPORT_MEDIA_ROOT = os.getenv('EXPORT_MEDIA_ROOT', '/downloads/')
 
 # url to overpass api endpoint
-# OVERPASS_API_URL = 'http://cloud.eventkit.dev/overpass-api/interpreter'
+# OVERPASS_API_URL = 'http://cloud.eventkit.test/overpass-api/interpreter'
 OVERPASS_API_URL = os.getenv('OVERPASS_API_URL', 'http://overpass-api.de/api/interpreter')
 GEOCODING_API_URL = os.getenv('GEOCODING_API_URL', 'http://api.geonames.org/searchJSON')
+REVERSE_GEOCODING_API_URL = os.getenv('REVERSE_GEOCODING_API_URL', None)
+REVERSE_GEOCODING_API_TYPE = os.getenv('REVERSE_GEOCODING_API_TYPE', 'PELIAS')
 GEOCODING_API_TYPE = os.getenv('GEOCODING_API_TYPE', 'GEONAMES')
 GEOCODING_UPDATE_URL = os.getenv('GEOCODING_UPDATE_URL', None)
+GEOCODING_AUTH_URL = os.getenv('GEOCODING_AUTH_URL', None)
+GEOCODING_AUTH_CERT = os.getenv('GEOCODING_AUTH_CERT', None)
+CONVERT_API_URL = os.getenv('CONVERT_API_URL', 'http://172.17.0.1:4000/v1/convert')
+
+# zoom extents of reverse geocode point result (in degrees)
+REVERSE_GEOCODE_ZOOM = 0.1
 
 """
 Maximum extent of a Job
 max of (latmax-latmin) * (lonmax-lonmin)
 """
-JOB_MAX_EXTENT = os.getenv('JOB_MAX_EXTENT', 2500000)  # default export max extent in sq km
+JOB_MAX_EXTENT = int(os.getenv('JOB_MAX_EXTENT', '10000'))  # default export max extent in sq km
+JOB_MAX_RASTER_EXTENT = int(os.getenv('JOB_MAX_RASTER_EXTENT', '250'))  # default raster max extent in sq km
 
 # maximum number of runs to hold for each export
 EXPORT_MAX_RUNS = 1
 
 import socket
 HOSTNAME = os.getenv('HOSTNAME', socket.gethostname())
-if os.environ.get('VCAP_APPLICATION'):
-    env = json.loads(os.environ.get('VCAP_APPLICATION'))
+if os.getenv('VCAP_APPLICATION'):
+    env = json.loads(os.getenv('VCAP_APPLICATION'))
     if env['application_uris']:
         HOSTNAME = os.getenv('HOSTNAME', env['application_uris'][0])
 SITE_NAME = os.getenv('SITE_NAME', HOSTNAME)
 if SITE_NAME == '':
     SITE_NAME = 'localhost'
-if os.environ.get('VCAP_APPLICATION'):
+if os.getenv('VCAP_APPLICATION'):
     SITE_URL = os.getenv('SITE_URL', 'https://{0}'.format(SITE_NAME))
 else:
     SITE_URL = os.getenv('SITE_URL', 'http://{0}'.format(SITE_NAME))
@@ -131,17 +138,17 @@ OVERPASS_TIMEOUT = os.getenv('OVERPASS_TIMEOUT', 1600)  # query timeout in secon
 
 AUTHENTICATION_BACKENDS = tuple()
 
-if os.environ.get('OAUTH_AUTHORIZATION_URL'):
-    OAUTH_NAME = os.environ.get('OAUTH_NAME', 'OAUTH')
-    OAUTH_CLIENT_ID = os.environ.get('OAUTH_CLIENT_ID')
-    OAUTH_CLIENT_SECRET = os.environ.get('OAUTH_CLIENT_SECRET')
-    OAUTH_AUTHORIZATION_URL = os.environ.get('OAUTH_AUTHORIZATION_URL')
-    OAUTH_LOGOUT_URL = os.environ.get('OAUTH_LOGOUT_URL')
-    OAUTH_TOKEN_URL = os.environ.get('OAUTH_TOKEN_URL')
-    OAUTH_TOKEN_KEY = os.environ.get('OAUTH_TOKEN_KEY', 'access_token')
-    OAUTH_RESPONSE_TYPE = os.environ.get('OAUTH_RESPONSE_TYPE', 'code')
-    OAUTH_REDIRECT_URI = os.environ.get('OAUTH_REDIRECT_URI')
-    OAUTH_SCOPE = os.environ.get('OAUTH_SCOPE')
+if os.getenv('OAUTH_AUTHORIZATION_URL'):
+    OAUTH_NAME = os.getenv('OAUTH_NAME', 'OAUTH')
+    OAUTH_CLIENT_ID = os.getenv('OAUTH_CLIENT_ID')
+    OAUTH_CLIENT_SECRET = os.getenv('OAUTH_CLIENT_SECRET')
+    OAUTH_AUTHORIZATION_URL = os.getenv('OAUTH_AUTHORIZATION_URL')
+    OAUTH_LOGOUT_URL = os.getenv('OAUTH_LOGOUT_URL')
+    OAUTH_TOKEN_URL = os.getenv('OAUTH_TOKEN_URL')
+    OAUTH_TOKEN_KEY = os.getenv('OAUTH_TOKEN_KEY', 'access_token')
+    OAUTH_RESPONSE_TYPE = os.getenv('OAUTH_RESPONSE_TYPE', 'code')
+    OAUTH_REDIRECT_URI = os.getenv('OAUTH_REDIRECT_URI')
+    OAUTH_SCOPE = os.getenv('OAUTH_SCOPE')
 
     # The OAuth profile needs to map to the User model.
 
@@ -152,20 +159,20 @@ if os.environ.get('OAUTH_AUTHORIZATION_URL'):
 
     # Example:
     # OAUTH_PROFILE_SCHEMA = {"identification": "ID", "username": "username", "email": "email", "first_name": "firstname"...}
-    OAUTH_PROFILE_SCHEMA = os.environ.get('OAUTH_PROFILE_SCHEMA')
-    OAUTH_PROFILE_URL = os.environ.get('OAUTH_PROFILE_URL')
+    OAUTH_PROFILE_SCHEMA = os.getenv('OAUTH_PROFILE_SCHEMA')
+    OAUTH_PROFILE_URL = os.getenv('OAUTH_PROFILE_URL')
 
-if os.environ.get('LDAP_SERVER_URI') :
+if os.getenv('LDAP_SERVER_URI'):
 
     import ldap
     from django_auth_ldap.config import LDAPSearch
 
-    AUTH_LDAP_SERVER_URI = os.environ.get('LDAP_SERVER_URI')
-    AUTH_LDAP_BIND_PASSWORD = os.environ.get('LDAP_BIND_PASSWORD')
-    AUTH_LDAP_USER_DN_TEMPLATE = os.environ.get('LDAP_USER_DN_TEMPLATE')
-    LDAP_SEARCH_DN = os.environ.get('LDAP_SEARCH_DN')
-    AUTH_LDAP_USER = os.environ.get('LDAP_USER')
-    AUTH_LDAP_BIND_DN = os.environ.get('LDAP_BIND_DN')
+    AUTH_LDAP_SERVER_URI = os.getenv('LDAP_SERVER_URI')
+    AUTH_LDAP_BIND_PASSWORD = os.getenv('LDAP_BIND_PASSWORD')
+    AUTH_LDAP_USER_DN_TEMPLATE = os.getenv('LDAP_USER_DN_TEMPLATE')
+    LDAP_SEARCH_DN = os.getenv('LDAP_SEARCH_DN')
+    AUTH_LDAP_USER = os.getenv('LDAP_USER')
+    AUTH_LDAP_BIND_DN = os.getenv('LDAP_BIND_DN')
     AUTHENTICATION_BACKENDS += (
         'django_auth_ldap.backend.LDAPBackend',
     )
@@ -181,13 +188,13 @@ if os.environ.get('LDAP_SERVER_URI') :
       AUTH_LDAP_USER
     )
 
-DJANGO_MODEL_LOGIN = os.environ.get('DJANGO_MODEL_LOGIN')
+DJANGO_MODEL_LOGIN = os.getenv('DJANGO_MODEL_LOGIN')
 AUTHENTICATION_BACKENDS += (
       'django.contrib.auth.backends.ModelBackend',
     )
 
 # Set debug to True for development
-DEBUG = os.environ.get('DEBUG', False)
+DEBUG = os.getenv('DEBUG', False)
 
 ALLOWED_HOSTS = [HOSTNAME, SITE_NAME]
 
@@ -209,17 +216,17 @@ AUDIT_MODELS = [
 
 DATABASES = {}
 
-if os.environ.get('VCAP_SERVICES'):
-    if os.environ.get('DATABASE_URL'):
+if os.getenv('VCAP_SERVICES'):
+    if os.getenv('DATABASE_URL'):
         DATABASES = {'default': dj_database_url.config()}
     if not DATABASES:
-        for service, listings in json.loads(os.environ.get('VCAP_SERVICES')).iteritems():
+        for service, listings in json.loads(os.getenv('VCAP_SERVICES')).items():
             try:
                 if ('pg_95' in service) or ('postgres' in service):
                     DATABASES['default'] = dj_database_url.config(default=listings[0]['credentials']['uri'])
                     DATABASES['default']['CONN_MAX_AGE'] = 30
             except (KeyError, TypeError) as e:
-                print("Could not configure information for service: {0}".format(service))
+                print(("Could not configure information for service: {0}".format(service)))
                 print(e)
                 continue
             if DATABASES:
@@ -239,7 +246,7 @@ else:
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['api/templates/', 'ui/templates', 'ui/static/ui/js'],
+        'DIRS': ['api/templates/', 'ui/templates', 'tasks/templates', 'ui/static/ui/js'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -253,11 +260,11 @@ TEMPLATES = [
     },
 ]
 
-if os.environ.get("MEMCACHED"):
+if os.getenv("MEMCACHED"):
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-            'LOCATION': os.environ.get("MEMCACHED"),
+            'LOCATION': os.getenv("MEMCACHED"),
         }
     }
 else:
@@ -271,7 +278,7 @@ else:
 
 # session settings
 SESSION_COOKIE_NAME = 'eventkit_exports_sessionid'
-SESSION_COOKIE_DOMAIN = os.environ.get('SESSION_COOKIE_DOMAIN', SITE_NAME)
+SESSION_COOKIE_DOMAIN = os.getenv('SESSION_COOKIE_DOMAIN', SITE_NAME)
 SESSION_COOKIE_PATH = '/'
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_USER_LAST_ACTIVE_AT = 'user_last_active_at'
@@ -282,24 +289,27 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 UI_CONFIG = {
-    'VERSION': os.environ.get('VERSION', ''),
-    'LOGIN_DISCLAIMER': os.environ.get('LOGIN_DISCLAIMER', ''),
-    'BANNER_BACKGROUND_COLOR': os.environ.get('BANNER_BACKGROUND_COLOR', ''),
-    'BANNER_TEXT_COLOR': os.environ.get('BANNER_TEXT_COLOR', ''),
-    'BANNER_TEXT': os.environ.get('BANNER_TEXT', ''),
-    'BASEMAP_URL': os.environ.get('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
-    'BASEMAP_COPYRIGHT': os.environ.get('BASEMAP_COPYRIGHT', 'Map data © OpenStreetMap contributors'),
-    'MAX_DATAPACK_EXPIRATION_DAYS': os.environ.get('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
+    'VERSION': os.getenv('VERSION', ''),
+    'CONTACT_URL': os.getenv('CONTACT_URL', 'mailto:eventkit.team@gmail.com'),
+    'LOGIN_DISCLAIMER': os.getenv('LOGIN_DISCLAIMER', ''),
+    'BANNER_BACKGROUND_COLOR': os.getenv('BANNER_BACKGROUND_COLOR', ''),
+    'BANNER_TEXT_COLOR': os.getenv('BANNER_TEXT_COLOR', ''),
+    'BANNER_TEXT': os.getenv('BANNER_TEXT', ''),
+    'BASEMAP_URL': os.getenv('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+    'BASEMAP_COPYRIGHT': os.getenv('BASEMAP_COPYRIGHT', '© OpenStreetMap'),
+    'MAX_DATAPACK_EXPIRATION_DAYS': os.getenv('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
+    'MAX_VECTOR_AOI_SQ_KM': JOB_MAX_EXTENT,
+    'MAX_RASTER_AOI_SQ_KM': JOB_MAX_RASTER_EXTENT,
 }
 
-if os.environ.get('USE_S3'):
+if os.getenv('USE_S3'):
     USE_S3 = True
 else:
     USE_S3 = False
 
 AWS_BUCKET_NAME = AWS_ACCESS_KEY = AWS_SECRET_KEY = None
 if os.getenv("VCAP_SERVICES"):
-    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).iteritems():
+    for service, listings in json.loads(os.getenv("VCAP_SERVICES")).items():
         if 's3' in service.lower():
             try:
                 AWS_BUCKET_NAME = listings[0]['credentials']['bucket']
@@ -307,12 +317,12 @@ if os.getenv("VCAP_SERVICES"):
                 AWS_SECRET_KEY = listings[0]['credentials']['secret_access_key']
             except (KeyError, TypeError) as e:
                 continue
-AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.environ.get('AWS_BUCKET_NAME')
-AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.environ.get('AWS_ACCESS_KEY')
-AWS_SECRET_KEY = AWS_SECRET_KEY or os.environ.get('AWS_SECRET_KEY')
+AWS_BUCKET_NAME = AWS_BUCKET_NAME or os.getenv('AWS_BUCKET_NAME')
+AWS_ACCESS_KEY = AWS_ACCESS_KEY or os.getenv('AWS_ACCESS_KEY')
+AWS_SECRET_KEY = AWS_SECRET_KEY or os.getenv('AWS_SECRET_KEY')
 
 
-MAPPROXY_CONCURRENCY = os.environ.get('MAPPROXY_CONCURRENCY', 1)
+MAPPROXY_CONCURRENCY = os.getenv('MAPPROXY_CONCURRENCY', 1)
 
 LOGGING = {
     'version': 1,
@@ -341,9 +351,19 @@ LOGGING = {
     },
 }
 
-DISABLE_SSL_VERIFICATION = os.environ.get('DISABLE_SSL_VERIFICATION', False)
+# SSL_VERIFICATION should point to a CA certificate file (.pem), if not then REQUESTS_CA_BUNDLE should be set also.
+# If wishing to disable verification (not recommended), set SSL_VERIFICATION to False.
+ssl_verification_settings = os.getenv('SSL_VERIFICATION', "")
+if ssl_verification_settings.lower() in ['f', 'false']:
+    SSL_VERIFICATION = False
+elif os.path.isfile(ssl_verification_settings):
+    SSL_VERIFICATION = ssl_verification_settings
+    if not os.getenv('REQUESTS_CA_BUNDLE'):
+        os.environ['REQUESTS_CA_BUNDLE'] = SSL_VERIFICATION
+else:
+    SSL_VERIFICATION = True
 
-LAND_DATA_URL = os.environ.get('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
+LAND_DATA_URL = os.getenv('LAND_DATA_URL', "http://data.openstreetmapdata.com/land-polygons-split-3857.zip")
 
 AUTO_LOGOUT_COOKIE_NAME = 'eventkit_auto_logout'
 
@@ -351,3 +371,5 @@ AUTO_LOGOUT_SECONDS = int(os.getenv('AUTO_LOGOUT_SECONDS', 0))
 AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT = int(os.getenv('AUTO_LOGOUT_WARNING_AT_SECONDS_LEFT', 5 * 60))
 if AUTO_LOGOUT_SECONDS:
     MIDDLEWARE += ['eventkit_cloud.auth.auth.auto_logout']
+
+DJANGO_NOTIFICATIONS_CONFIG = {'SOFT_DELETE': True}

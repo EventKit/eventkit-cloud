@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+
+
 import logging
-import uuid
 import os
+import uuid
 
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import GEOSGeometry, Polygon
 from django.test import TestCase
 from mock import patch
 
-from ..export_tasks import TaskStates
-from ...jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
-from ..models import ExportRun, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
+from eventkit_cloud.jobs.models import ExportFormat, Job, DataProviderTask, DataProvider
+from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, FileProducingTaskResult, DataProviderTaskRecord
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,6 @@ class TestExportRun(TestCase):
         self.assertEqual(run, saved_run)
         self.assertIsNone(run.notified)
         self.assertIsNotNone(run.expiration)
-        self.assertIsNone(saved_run.zipfile_url)
 
     def test_get_tasks_for_run(self,):
         job = Job.objects.first()
@@ -70,8 +70,8 @@ class TestExportRun(TestCase):
             ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid)
         runs = job.runs.all()
         tasks = runs[0].provider_tasks.all()[0].tasks.all()
-        self.assertEquals(5, len(runs))
-        self.assertEquals(1, len(tasks))
+        self.assertEqual(5, len(runs))
+        self.assertEqual(1, len(tasks))
 
     def test_delete_export_run(self,):
         job = Job.objects.first()
@@ -80,11 +80,11 @@ class TestExportRun(TestCase):
         export_provider_task = DataProviderTaskRecord.objects.create(run=run)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid)
         runs = job.runs.all()
-        self.assertEquals(1, runs.count())
+        self.assertEqual(1, runs.count())
         run.delete()
         job.refresh_from_db()
         runs = job.runs.all()
-        self.assertEquals(0, runs.count())
+        self.assertEqual(0, runs.count())
 
     @patch('eventkit_cloud.tasks.signals.exportrun_delete_exports')
     def test_soft_delete_export_run(self, mock_run_delete_exports):
@@ -94,11 +94,11 @@ class TestExportRun(TestCase):
         export_provider_task = DataProviderTaskRecord.objects.create(run=run, status=TaskStates.PENDING.value)
         ExportTaskRecord.objects.create(export_provider_task=export_provider_task, uid=task_uid, status=TaskStates.PENDING.value)
         runs = job.runs.all()
-        self.assertEquals(1, runs.count())
+        self.assertEqual(1, runs.count())
         run.soft_delete()
         job.refresh_from_db()
         runs = job.runs.all()
-        self.assertEquals(1, runs.count())
+        self.assertEqual(1, runs.count())
         run.refresh_from_db()
         self.assertTrue(run.deleted)
         mock_run_delete_exports.assert_called_once()
@@ -147,7 +147,7 @@ class TestExportTask(TestCase):
              download_url='http://testserver/media/{0}/file.txt'.format(self.run.uid)
         )
         task.result = result
-        self.assertEquals('http://testserver/media/{0}/file.txt'.format(self.run.uid), task.result.download_url)
+        self.assertEqual('http://testserver/media/{0}/file.txt'.format(self.run.uid), task.result.download_url)
         task.result.soft_delete()
         task.result.refresh_from_db()
         self.assertTrue(task.result.deleted)
@@ -179,7 +179,7 @@ class TestExportTask(TestCase):
         self.assertIsNone(task.result)
         result = FileProducingTaskResult.objects.create(download_url=download_url)
         task.result = result
-        self.assertEquals(download_url, task.result.download_url)
+        self.assertEqual(download_url, task.result.download_url)
 
         # Test
         with self.settings(USE_S3=True, EXPORT_DOWNLOAD_ROOT=download_dir):

@@ -1,6 +1,8 @@
 import logging
+
 from django.test import TestCase
-from ..exceptions import CancelException
+
+from eventkit_cloud.tasks.exceptions import CancelException
 
 logger = logging.getLogger(__name__)
 
@@ -13,9 +15,9 @@ class TestExceptions(TestCase):
         message = "The task was canceled"
 
         output = CancelException(task_name=task_name, user_name=user_name)
-        self.assertEquals(output.message, "{0} was canceled by {1}.".format(task_name, user_name))
+        self.assertEqual(str(output), "{0} was canceled by {1}.".format(task_name, user_name))
 
         output = CancelException(message=message)
-        self.assertEquals(output.message, message)
+        self.assertEqual(str(output), message)
 
 

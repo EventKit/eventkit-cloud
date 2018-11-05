@@ -1,19 +1,29 @@
 import { push } from 'react-router-redux';
 import axios from 'axios';
 import cookie from 'react-cookie';
-import actions from './actionTypes';
+import { resetState } from './uiActions';
 
+export const types = {
+    USER_LOGGING_IN: 'USER_LOGGING_IN',
+    USER_LOGGED_IN: 'USER_LOGGED_IN',
+    USER_LOGGED_OUT: 'USER_LOGGED_OUT',
+    PATCHING_USER: 'PATCHING_USER',
+    PATCHED_USER: 'PATCHED_USER',
+    PATCHING_USER_ERROR: 'PATCHING_USER_ERROR',
+    USER_ACTIVE: 'USER_ACTIVE',
+};
 
 export function logout() {
     return dispatch => (
         axios('/logout', { method: 'GET' }).then((response) => {
             dispatch({
-                type: actions.USER_LOGGED_OUT,
+                type: types.USER_LOGGED_OUT,
             });
             if (response.data.OAUTH_LOGOUT_URL) {
-                window.location.href = response.data.OAUTH_LOGOUT_URL;
+                window.location.assign(response.data.OAUTH_LOGOUT_URL);
             } else {
                 dispatch(push({ pathname: '/login' }));
+                dispatch(resetState());
             }
         }).catch((error) => {
             console.log(error);
@@ -21,41 +31,41 @@ export function logout() {
     );
 }
 
-export function login(data, query) {
+export function login(data) {
     return (dispatch) => {
         const csrftoken = cookie.load('csrftoken');
 
         dispatch({
-            type: actions.USER_LOGGING_IN,
+            type: types.USER_LOGGING_IN,
         });
 
-        const form_data = new FormData();
+        const formData = new FormData();
         let method = 'get';
         if (data && (data.username && data.password)) {
-            form_data.append('username', data.username);
-            form_data.append('password', data.password);
+            formData.append('username', data.username);
+            formData.append('password', data.password);
             method = 'post';
         }
 
         return axios({
             url: '/auth',
             method,
-            data: form_data,
+            data: formData,
             headers: { 'X-CSRFToken': csrftoken },
         }).then((response) => {
             if (response.data) {
                 dispatch({
-                    type: actions.USER_LOGGED_IN,
+                    type: types.USER_LOGGED_IN,
                     payload: response.data,
                 });
             } else {
                 dispatch({
-                    type: actions.USER_LOGGED_OUT,
+                    type: types.USER_LOGGED_OUT,
                 });
             }
         }).catch(() => {
             dispatch({
-                type: actions.USER_LOGGED_OUT,
+                type: types.USER_LOGGED_OUT,
             });
         });
     };
@@ -64,23 +74,24 @@ export function login(data, query) {
 export function patchUser(acceptedLicenses, username) {
     return (dispatch) => {
         const csrftoken = cookie.load('csrftoken');
+
         dispatch({
-            type: actions.PATCHING_USER,
+            type: types.PATCHING_USER,
         });
 
         return axios({
-            url: `/api/user/${username}`,
+            url: `/api/users/${username}`,
             method: 'PATCH',
             data: { accepted_licenses: acceptedLicenses },
             headers: { 'X-CSRFToken': csrftoken },
         }).then((response) => {
             dispatch({
-                type: actions.PATCHED_USER,
+                type: types.PATCHED_USER,
                 payload: response.data || { ERROR: 'No user response data' },
             });
         }).catch((error) => {
             dispatch({
-                type: actions.PATCHING_USER_ERROR,
+                type: types.PATCHING_USER_ERROR,
                 error: error.response.data,
             });
         });
@@ -94,7 +105,7 @@ export function userActive() {
             const autoLogoutWarningat = response.data.auto_logout_warning_at;
 
             dispatch({
-                type: actions.USER_ACTIVE,
+                type: types.USER_ACTIVE,
                 payload: {
                     autoLogoutAt: (autoLogoutAt) ? new Date(autoLogoutAt) : null,
                     autoLogoutWarningAt: (autoLogoutWarningat) ?

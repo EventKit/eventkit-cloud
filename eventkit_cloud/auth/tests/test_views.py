@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 
-import logging
 
-from django.test import TestCase
-from mock import patch, Mock
-from django.contrib.auth.models import User, Group
-from ..views import callback
-from ..models import OAuth
-from django.test import Client, override_settings
-from django.core.urlresolvers import reverse
-from django.conf import settings
 import json
-import urllib
+import logging
+import urllib.request, urllib.parse, urllib.error
+
+from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.urls import reverse
+from django.test import Client, override_settings
+from django.test import TestCase
+from mock import patch, Mock, MagicMock
+
+from eventkit_cloud.auth.models import OAuth
+from eventkit_cloud.auth.views import callback, oauth
+
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +33,7 @@ class TestAuthViews(TestCase):
         oauth_name = "provider"
         with self.settings(OAUTH_NAME=oauth_name):
             example_token = "token"
+
             request = Mock(GET={'code': "1234"})
             group, created = Group.objects.get_or_create(name='TestDefaultExportExtentGroup')
             with patch('eventkit_cloud.jobs.signals.Group') as mock_group:
@@ -44,8 +48,18 @@ class TestAuthViews(TestCase):
 
             mock_get_token.return_value = example_token
             mock_get_user.return_value = user
-            callback(request)
+            response = callback(request)
             mock_login.assert_called_once_with(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.assertRedirects(response, '/dashboard', fetch_redirect_response=False)
+
+            mock_login.reset_mock()
+            example_state = base64.b64encode("/status/12345".encode())
+            request = Mock(GET={'code': "1234", 'state': example_state})
+            mock_get_token.return_value = example_token
+            mock_get_user.return_value = user
+            response = callback(request)
+            mock_login.assert_called_once_with(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            self.assertRedirects(response, base64.b64decode(example_state).decode(), fetch_redirect_response=False)
 
     def test_oauth(self):
         # Test GET to ensure a provider name is returned for dynamically naming oauth login.
@@ -55,10 +69,11 @@ class TestAuthViews(TestCase):
         response_type = "code"
         scope = "profile"
         authorization_url = "http://remote.dev/authorize"
+        referer = "/status/12345"
 
         with self.settings(OAUTH_NAME=oauth_name):
             response = self.client.get(reverse('oauth'),{'query':'name'})
-            return_name = json.loads(response.content).get('name')
+            return_name = response.json().get('name')
             self.assertEqual(return_name, oauth_name)
             self.assertEqual(response.status_code, 200)
 
@@ -66,16 +81,32 @@ class TestAuthViews(TestCase):
         with self.settings(OAUTH_CLIENT_ID=client_id,
                            OAUTH_REDIRECT_URI=redirect_uri,
                            OAUTH_RESPONSE_TYPE=response_type,
-                           OAUTH_SCOPE=scope):
+                           OAUTH_SCOPE=scope,
+                           OAUTH_NAME=oauth_name):
             response = self.client.post(reverse('oauth'))
-            params = urllib.urlencode((
+            params = urllib.parse.urlencode((
+                ('client_id', client_id),
+                ('redirect_uri', redirect_uri),
+                ('response_type', response_type),
+                ('scope', scope)
+            ))
+            self.assertRedirects(response, '{url}?{params}'.format(url=authorization_url.rstrip('/'),
+                                                                  params=params),
+                                 fetch_redirect_response=False)
+
+            mock_request = MagicMock()
+            mock_request.META = {'HTTP_REFERER': referer}
+            mock_request.GET = {'query': None}
+            response = oauth(mock_request)
+            params = urllib.parse.urlencode((
                 ('client_id', client_id),
                 ('redirect_uri', redirect_uri),
                 ('response_type', response_type),
                 ('scope', scope),
+                ('state', base64.b64encode(referer.encode()))
             ))
             self.assertRedirects(response, '{url}?{params}'.format(url=authorization_url.rstrip('/'),
-                                                                  params=params),
+                                                                   params=params),
                                  fetch_redirect_response=False)
 
     @patch('eventkit_cloud.auth.views.fetch_user_from_token')
@@ -105,6 +136,6 @@ class TestAuthViews(TestCase):
             self.client.login(username='test', password='password')
             self.client.get(reverse('callback'), params={'code': example_auth_code}, follow=True)
             response = self.client.get(reverse('logout'))
-            self.assertEquals(response.json().get('OAUTH_LOGOUT_URL'), settings.OAUTH_LOGOUT_URL)
+            self.assertEqual(response.json().get('OAUTH_LOGOUT_URL'), settings.OAUTH_LOGOUT_URL)
 
 

@@ -1,34 +1,36 @@
-import React, {Component, PropTypes} from 'react';
-import FileFileUpload from 'material-ui/svg-icons/file/file-upload';
-import ContentClear from 'material-ui/svg-icons/content/clear';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { withTheme } from '@material-ui/core/styles';
+import FileFileUpload from '@material-ui/icons/CloudUpload';
+import ContentClear from '@material-ui/icons/Clear';
 
 export class ImportButton extends Component {
-
     constructor(props) {
         super(props);
         this.handleOnClick = this.handleOnClick.bind(this);
     }
 
     handleOnClick() {
-        if(this.props.buttonState == 'SELECTED') {
+        if (this.props.buttonState === 'SELECTED') {
             this.props.setAllButtonsDefault();
             this.props.setImportModalState(false);
             this.props.handleCancel();
-        }
-        else if(this.props.buttonState == 'DEFAULT') {
+        } else if (this.props.buttonState === 'DEFAULT') {
             this.props.setImportButtonSelected();
             this.props.setImportModalState(true);
         }
     }
 
     render() {
+        const { colors } = this.props.theme.eventkit;
+
         const state = this.props.buttonState;
         const styles = {
             buttonName: {
-                fontSize: '.5em',
+                fontSize: '8px',
                 width: '50px',
                 height: '12px',
-                color: '#4498c0',
+                color: colors.primary,
                 bottom: '0',
             },
             drawButtonGeneral: {
@@ -40,40 +42,64 @@ export class ImportButton extends Component {
                 borderBottom: 'none',
                 margin: 0,
                 padding: 0,
-                backgroundColor: '#fff',
-                outline: 'none'
-            }
+                backgroundColor: colors.white,
+                outline: 'none',
+            },
+        };
+
+        const DEFAULT_ICON = ((
+            <div id="default_icon">
+                <FileFileUpload
+                    className="qa-ImportButton-FileFileUpload-default"
+                    color="primary"
+                />
+                <div className="qa-ImportButton-div-default" style={styles.buttonName}>IMPORT</div>
+            </div>
+        ));
+
+        const INACTIVE_ICON = ((
+            <div id="inactive_icon">
+                <FileFileUpload
+                    className="qa-ImportButton-FileFileUpload-inactive"
+                    style={{ opacity: 0.4 }}
+                    color="primary"
+                />
+                <div className="qa-ImportButton-div-inactive" style={{ ...styles.buttonName, opacity: 0.4 }}>IMPORT</div>
+            </div>
+        ));
+
+        const SELECTED_ICON = ((
+            <div id="selected_icon">
+                <ContentClear
+                    className="qa-ImportButton-ContentClear"
+                    color="primary"
+                />
+                <div className="qa-ImportButton-div-selected" style={styles.buttonName}>IMPORT</div>
+            </div>
+        ));
+
+        let icon = SELECTED_ICON;
+        if (state === 'DEFAULT') {
+            icon = DEFAULT_ICON;
+        } else if (state === 'INACTIVE') {
+            icon = INACTIVE_ICON;
         }
 
-        const DEFAULT_ICON = <div id='default_icon'>
-                <FileFileUpload  className={'qa-ImportButton-FileFileUpload-default'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div className={'qa-ImportButton-div-default'} style={styles.buttonName}>IMPORT</div>
-            </div>
-
-        const INACTIVE_ICON = <div id='inactive_icon'>
-                <FileFileUpload  className={'qa-ImportButton-FileFileUpload-inactive'} style={{opacity: 0.4, fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div className={'qa-ImportButton-div-inactive'} style={{...styles.buttonName, opacity: 0.4}}>IMPORT</div>
-            </div>
-
-        const SELECTED_ICON =<div id='selected_icon'>
-                <ContentClear className={'qa-ImportButton-ContentClear'} style={{fontSize: '1.3em', padding: '0px', fill: '#4498c0'}}/>
-                <div className={'qa-ImportButton-div-selected'} style={styles.buttonName}>IMPORT</div>
-            </div>
-
         return (
-            <button className={'qa-ImportButton-button'} style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
-                {state == 'DEFAULT' ? DEFAULT_ICON : state == 'INACTIVE' ? INACTIVE_ICON : SELECTED_ICON}
+            <button className="qa-ImportButton-button" style={styles.drawButtonGeneral} onClick={this.handleOnClick}>
+                {icon}
             </button>
-        )
+        );
     }
 }
 
 ImportButton.propTypes = {
-    buttonState: PropTypes.string,
-    setImportButtonSelected: PropTypes.func,
-    setAllButtonsDefault: PropTypes.func,
-    setImportModalState: PropTypes.func,
-    handleCancel: PropTypes.func
-}
+    buttonState: PropTypes.string.isRequired,
+    setImportButtonSelected: PropTypes.func.isRequired,
+    setAllButtonsDefault: PropTypes.func.isRequired,
+    setImportModalState: PropTypes.func.isRequired,
+    handleCancel: PropTypes.func.isRequired,
+    theme: PropTypes.object.isRequired,
+};
 
-export default ImportButton;
+export default withTheme()(ImportButton);

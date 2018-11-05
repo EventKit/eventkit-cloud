@@ -1,0 +1,45 @@
+{% set name = "django-audit-logging" %}
+{% set version = "0.2.0" %}
+{% set file_ext = "tar.gz" %}
+{% set hash_type = "sha256" %}
+{% set hash_value = "FC13D2AD7CBB4C1B4D12037276DE78CBE9E7AD8E898E738129E89D656CBE8298" %}
+
+package:
+  name: '{{ name|lower }}'
+  version: '{{ version }}'
+
+source:
+  fn: '{{ name }}-{{ version }}.{{ file_ext }}'
+  url: https://github.com/venicegeo/{{ name }}/archive/v{{ version }}.tar.gz
+  '{{ hash_type }}': '{{ hash_value|lower }}'
+
+build:
+  number: 0
+  script: python setup.py install
+
+requirements:
+  host:
+    - python
+    - setuptools
+    - django=2.0.8
+  run:
+    - python
+    - django=2.0.8
+
+test:
+  imports:
+    - audit_logging
+
+about:
+  home: https://github.com/venicegeo/django-audit-logging
+  license: GPLV2
+  license_family: GPL
+  license_file: ''
+  summary: 'Django-Audit-Logging'
+  description: "This tool is adds logging support to a django application."
+  doc_url: 'https://github.com/venicegeo/django-audit-logging/blob/master/README.md'
+  dev_url: 'https://github.com/venicegeo/django-audit-logging'
+
+extra:
+  recipe-maintainers:
+    - jsvrcek

@@ -1,29 +1,28 @@
-import React, {PropTypes, Component} from 'react'
-import {GridList} from 'material-ui/GridList'
-import {Card, CardActions, CardHeader, CardMedia, CardTitle, CardText} from 'material-ui/Card'
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
 import LoadButtons from './LoadButtons';
+import withRef from '../../utils/withRef';
 
 export class DataPackGrid extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     getColumns() {
-        if(window.innerWidth <= 800) {
+        if (!isWidthUp('md', this.props.width)) {
             return 2;
-        }
-        else if(window.innerWidth > 1200) {
+        } else if (isWidthUp('xl', this.props.width)) {
             return 4;
         }
-        else {
-            return 3;
-        }
+        return 3;
+    }
+
+    getScrollbar() {
+        return this.scrollbar;
     }
 
     render() {
-        const spacing = window.innerWidth > 575 ? '10px' : '2px';
+        const spacing = isWidthUp('sm', this.props.width) ? '10px' : '2px';
         const styles = {
             root: {
                 display: 'flex',
@@ -31,7 +30,7 @@ export class DataPackGrid extends Component {
                 justifyContent: 'space-around',
                 marginLeft: spacing,
                 marginRight: spacing,
-                paddingBottom: spacing
+                paddingBottom: spacing,
             },
             gridList: {
                 border: '1px',
@@ -42,23 +41,32 @@ export class DataPackGrid extends Component {
         };
 
         return (
-            <CustomScrollbar style={{ height: window.innerWidth > 525 ? window.innerHeight - 236 : window.innerHeight - 225, width: '100%' }}>
-                <div style={styles.root}>
+            <CustomScrollbar
+                ref={(instance) => { this.scrollbar = instance; }}
+                style={{ height: 'calc(100vh - 236px)', width: '100%' }}
+            >
+                <div style={styles.root} className="qa-div-root">
                     <GridList
                         className="qa-DataPackGrid-GridList"
                         cellHeight="auto"
                         style={styles.gridList}
-                        padding={window.innerWidth >= 768 ? 7 : 2}
+                        spacing={isWidthUp('md', this.props.width) ? 7 : 2}
                         cols={this.getColumns()}
                     >
-                        {this.props.runs.map(run => (
+                        {this.props.runIds.map((id, index) => (
                             <DataPackGridItem
                                 className="qa-DataPackGrid-GridListItem"
-                                run={run}
-                                user={this.props.user}
-                                key={run.uid}
+                                runId={id}
+                                userData={this.props.user.data}
+                                key={id}
                                 onRunDelete={this.props.onRunDelete}
+                                onRunShare={this.props.onRunShare}
                                 providers={this.props.providers}
+                                gridName={this.props.name}
+                                index={index}
+                                users={this.props.users}
+                                groups={this.props.groups}
+                                showFeaturedFlag
                             />
                         ))}
                     </GridList>
@@ -76,15 +84,28 @@ export class DataPackGrid extends Component {
 }
 
 DataPackGrid.propTypes = {
-    runs: PropTypes.array.isRequired,
+    runIds: PropTypes.arrayOf(PropTypes.string).isRequired,
     user: PropTypes.object.isRequired,
     onRunDelete: PropTypes.func.isRequired,
-    providers: PropTypes.array.isRequired,
+    onRunShare: PropTypes.func.isRequired,
+    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     range: PropTypes.string.isRequired,
     handleLoadLess: PropTypes.func.isRequired,
     handleLoadMore: PropTypes.func.isRequired,
     loadLessDisabled: PropTypes.bool.isRequired,
     loadMoreDisabled: PropTypes.bool.isRequired,
+    users: PropTypes.arrayOf(PropTypes.object).isRequired,
+    groups: PropTypes.arrayOf(PropTypes.shape({
+        id: PropTypes.number,
+        name: PropTypes.string,
+        members: PropTypes.arrayOf(PropTypes.string),
+        administrators: PropTypes.arrayOf(PropTypes.string),
+    })).isRequired,
+    name: PropTypes.string.isRequired,
+    width: PropTypes.string.isRequired,
 };
 
-export default DataPackGrid;
+export default
+@withWidth()
+@withRef()
+class Default extends DataPackGrid {}

@@ -1,25 +1,26 @@
 # -*- coding: utf-8 -*-
 """UI view definitions."""
 import json
+from datetime import timedelta
+from logging import getLogger
+
 from django.conf import settings
+from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as auth_logout
-from django.core.urlresolvers import reverse
-from django.template import RequestContext
+from django.urls import reverse
+from django.http import HttpResponse
 from django.shortcuts import redirect, render_to_response
+from django.template import RequestContext
 from django.template.context_processors import csrf
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponse
-from .data_estimator import get_size_estimate
-from django.contrib.auth import authenticate, login
-from ..api.serializers import UserDataSerializer
 from rest_framework.renderers import JSONRenderer
-from logging import getLogger
-from ..utils.geocode import Geocode
-from .helpers import file_to_geojson, set_session_user_last_active_at
-from datetime import datetime, timedelta
-import pytz
 
-
+from eventkit_cloud.api.serializers import UserDataSerializer
+from eventkit_cloud.ui.data_estimator import get_size_estimate
+from eventkit_cloud.ui.helpers import file_to_geojson, set_session_user_last_active_at, is_mgrs, is_lat_lon
+from eventkit_cloud.utils.geocoding.coordinate_converter import CoordinateConverter
+from eventkit_cloud.utils.geocoding.geocode import Geocode
+from eventkit_cloud.utils.geocoding.reverse import ReverseGeocode
 
 logger = getLogger(__file__)
 
@@ -69,7 +70,7 @@ def view_export(request, uuid=None):  # NOQA
 
 
 def auth(request):
-    if request.method == 'GET' and request.user.is_authenticated():
+    if (request.method == 'GET') and request.user.is_authenticated:
         # If the user is already authenticated we want to return the user data (required for oauth).
         return HttpResponse(JSONRenderer().render(UserDataSerializer(request.user).data),
                             content_type="application/json",
@@ -115,6 +116,137 @@ def require_email(request):
 
 
 @require_http_methods(['GET'])
+def search(request):
+    """
+    Detects the query type and calls the relevant geocoder to get results
+    :param request: User request which should include a query parameter
+    :return: A geojson with features matching the search query
+    """
+    q = request.GET.get('query', None)
+    if not q:
+        return HttpResponse(status=204, content_type="application/json")
+
+    error_string = "An unknown error occurred while querying for results, please contact an administrator."
+    degree_range = 0.05
+    if is_mgrs(q):
+        # check for necessary settings
+        if getattr(settings, 'CONVERT_API_URL') is None:
+            return HttpResponse('No Convert API specified', status=501)
+
+        if getattr(settings, 'REVERSE_GEOCODING_API_URL') is None:
+            return HttpResponse('No Reverse Geocode API specified', status=501)
+
+        # make call to convert which should return a geojson feature of the MGRS location
+        convert = CoordinateConverter()
+        try:
+            mgrs_data = convert.get(q)
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
+
+        # if no feature geom return nothing
+        if not mgrs_data or not mgrs_data.get('geometry'):
+            return HttpResponse(status=204, content_type="application/json")
+
+        features = []
+        # save the mgrs feature to return later
+        if not mgrs_data.get('properties'):
+            mgrs_data['properties'] = {}
+        mgrs_data['properties']['bbox'] = [
+            mgrs_data.get('geometry').get('coordinates')[0] - degree_range,
+            mgrs_data.get('geometry').get('coordinates')[1] - degree_range,
+            mgrs_data.get('geometry').get('coordinates')[0] + degree_range,
+            mgrs_data.get('geometry').get('coordinates')[1] + degree_range
+        ]
+        mgrs_data['source'] = 'MGRS'
+        features.append(mgrs_data)
+
+        # call reverse to get a list of results near the mgrs feature
+        reverse = ReverseGeocode()
+        try:
+            result = reverse.search({
+                "point.lat": mgrs_data.get('geometry').get('coordinates')[1],
+                "point.lon": mgrs_data.get('geometry').get('coordinates')[0]
+            })
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
+
+        if result.get('features'):
+            # add the mgrs feature with the search results and return together
+            result['features'] = features + result['features']
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        # if no results just return the MGRS feature in the response
+        return HttpResponse(content=json.dumps({'features': features}), status=200, content_type="application/json")
+
+    elif is_lat_lon(q):
+        coords = is_lat_lon(q)
+        # if no reverse url return 501
+        if getattr(settings, 'REVERSE_GEOCODING_API_URL') is None:
+            return HttpResponse('No Reverse Geocode API specified', status=501)
+
+        # make call to reverse geocode
+        reverse = ReverseGeocode()
+        try:
+            result = reverse.search({
+                "point.lat": coords[0],
+                "point.lon": coords[1]
+            })
+        except Exception:
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
+
+        # create a feature representing the exact lat/lon being searched
+        point_feature = {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [coords[1], coords[0]]
+            },
+            "source": "Coordinate",
+            "type": "Feature",
+            "properties": {
+                "name": "{0} {1}, {2} {3}".format(
+                    coords[0] if coords[0] >= 0 else coords[0] * -1,
+                    "N" if coords[0] >= 0 else "S",
+                    coords[1] if coords[1] >= 0 else coords[1] * -1,
+                    "E" if coords[1] >= 0 else "W"
+                ),
+                "bbox": [
+                    coords[1] - degree_range,
+                    coords[0] - degree_range,
+                    coords[1] + degree_range,
+                    coords[0] + degree_range
+                ]
+            }
+        }
+        # if there are results add the point feature and return them together
+        if result.get('features'):
+            result.get('features').insert(0, point_feature)
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        # if there are no results return only the point feature
+        features = {'features': [point_feature]}
+        return HttpResponse(content=json.dumps(features), status=200, content_type="application/json")
+    else:
+        # make call to geocode with search
+        geocode = Geocode()
+        try:
+            result = geocode.search(q)
+        except Exception as e:
+            logger.error(e)
+            return HttpResponse(
+                content=error_string,
+                status=500
+            )
+        return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+
+
+@require_http_methods(['GET'])
 def geocode(request):
     geocode = Geocode()
     if request.GET.get('search'):
@@ -125,6 +257,35 @@ def geocode(request):
         return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
     else:
         return HttpResponse(status=204, content_type="application/json")
+
+
+@require_http_methods(['GET'])
+def convert(request):
+    convert = CoordinateConverter()
+    if getattr(settings, 'CONVERT_API_URL') is not None:
+        if request.GET.get('convert'):
+            result = convert.get(request.GET.get('convert'))
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        else:
+            return HttpResponse(status=204, content_type="application/json")
+    else:
+        return HttpResponse('No Convert API specified', status=501)
+
+
+@require_http_methods(['GET'])
+def reverse_geocode(request):
+    reverseGeocode = ReverseGeocode()
+    if getattr(settings, 'REVERSE_GEOCODING_API_URL') is not None:
+        if request.GET.get('lat') and request.GET.get('lon'):
+            result = reverseGeocode.search({"point.lat": request.GET.get('lat'), "point.lon": request.GET.get('lon')})
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        if request.GET.get('result'):
+            result = reverseGeocode.add_bbox(json.loads(request.GET.get('result')))
+            return HttpResponse(content=json.dumps(result), status=200, content_type="application/json")
+        else:
+            return HttpResponse(status=204, content_type="application/json")
+    else:
+        return HttpResponse('No Reverse Geocode API specified', status=501)
 
 
 @require_http_methods(['GET'])
@@ -193,7 +354,7 @@ def data_estimator(request):
     :param request: Example {'providers': ['ESRI-Imagery'], 'bbox': [-43.238239, -22.933733, -43.174725, -22.892623]}
     :return: HttpResponse, with the size.
     """
-    request_data = json.loads(request.body)
+    request_data = json.loads(request.body.decode())
     size = 0
     providers = request_data.get('providers')
     bbox = request_data.get('bbox')
@@ -212,7 +373,7 @@ def get_config(request):
     :return: a dict of available configurations
     """
     config = getattr(settings, 'UI_CONFIG', {})
-    return HttpResponse(json.dumps(config), status=200)
+    return HttpResponse(json.dumps(config), content_type='application/json', status=200)
 
 
 @require_http_methods(['POST'])
@@ -225,7 +386,7 @@ def convert_to_geojson(request):
         return HttpResponse(json.dumps(geojson), content_type="application/json", status=200)
     except Exception as e:
         logger.error(e)
-        return HttpResponse(e.message, status=400)
+        return HttpResponse(str(e), status=400)
 
 
 def user_active(request):

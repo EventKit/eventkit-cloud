@@ -1,18 +1,23 @@
 import React from 'react';
 import sinon from 'sinon';
-import { mount, shallow } from 'enzyme';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
-import Divider from 'material-ui/Divider';
-import Warning from 'material-ui/svg-icons/alert/warning';
-import TaskError from '../../components/StatusDownloadPage/TaskError';
-import BaseDialog from '../../components/BaseDialog';
+import { createShallow } from '@material-ui/core/test-utils';
+import Divider from '@material-ui/core/Divider';
+import Warning from '@material-ui/icons/Warning';
+import { TaskError } from '../../components/StatusDownloadPage/TaskError';
+import BaseDialog from '../../components/Dialog/BaseDialog';
 
 describe('TaskError component', () => {
+    let shallow;
+
+    beforeAll(() => {
+        shallow = createShallow();
+    });
+
     const getProps = () => (
         {
             task: {
                 uid: '1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
-                url: 'http://cloud.eventkit.dev/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
+                url: 'http://cloud.eventkit.test/api/tasks/1975da4d-9580-4fa8-8a4b-c1ef6e2f7553',
                 name: 'OSM Data (.gpkg)',
                 status: 'CANCELED',
                 progress: 0,
@@ -28,24 +33,19 @@ describe('TaskError component', () => {
                 ],
                 display: true,
             },
+            ...global.eventkit_test_props,
         }
     );
 
-    const muiTheme = getMuiTheme();
 
     const getWrapper = props => (
-        mount(<TaskError {...props} />, {
-            context: { muiTheme },
-            childContextTypes: {
-                muiTheme: React.PropTypes.object,
-            },
-        })
+        shallow(<TaskError {...props} />)
     );
 
     it('should render UI elements', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        expect(wrapper.find('span').find('a').text()).toEqual('ERROR');
+        expect(wrapper.find('.qa-TaskError-error-text').text()).toEqual('ERROR');
         expect(wrapper.find(BaseDialog)).toHaveLength(1);
     });
 
@@ -81,7 +81,7 @@ describe('TaskError component', () => {
         const errorSpy = sinon.spy(TaskError.prototype, 'handleTaskErrorOpen');
         const wrapper = getWrapper(props);
         expect(errorSpy.notCalled).toBe(true);
-        wrapper.find('a').simulate('click');
+        wrapper.find('.qa-TaskError-error-text').simulate('click');
         expect(errorSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWith({ taskErrorDialogOpen: true })).toBe(true);
         stateSpy.restore();

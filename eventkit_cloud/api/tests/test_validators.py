@@ -4,13 +4,12 @@ import logging
 from django.contrib.auth.models import User, Group
 from django.contrib.gis.geos import GEOSGeometry, GeometryCollection, Point, LineString, Polygon
 from django.test import TestCase
-from rest_framework.serializers import ValidationError
 from mock import patch, Mock
+from rest_framework.serializers import ValidationError
 
 from eventkit_cloud.api.validators import get_geodesic_area, validate_bbox, \
     validate_selection, validate_bbox_params, validate_original_selection
 from eventkit_cloud.jobs.models import bbox_to_geojson
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +28,9 @@ class TestValidators(TestCase):
 
     def test_validate_bbox(self,):
 
-        bbox = validate_bbox(self.extents, user=self.user)
-        self.assertIsInstance(bbox, Polygon)
+        with self.settings(JOB_MAX_EXTENT=99999999):
+            bbox = validate_bbox(self.extents, user=self.user)
+            self.assertIsInstance(bbox, Polygon)
 
         with self.settings(JOB_MAX_EXTENT=1):
             with self.assertRaises(ValidationError):
@@ -48,7 +48,7 @@ class TestValidators(TestCase):
     def test_get_geodesic_area(self,):
         bbox = GEOSGeometry(Polygon.from_bbox(self.extents), srid=4326)
         area = get_geodesic_area(bbox)
-        self.assertEquals(2006874.9259034647, area / 1000000)
+        self.assertEqual(2006874.9259034647, area / 1000000)
 
     def test_validate_original_selection(self):
         geojson = {
@@ -82,12 +82,13 @@ class TestValidators(TestCase):
         data = {'original_selection': {}}
         collection = validate_original_selection(data)
         self.assertIsInstance(collection, GeometryCollection)
-        self.assertEquals(collection.length, 0)
+        self.assertEqual(collection.length, 0)
 
     def test_validate_selection(self):
         data = {'selection': self.selection}
-        geom = validate_selection(data)
-        self.assertIsInstance(geom, Polygon)
+        with self.settings(JOB_MAX_EXTENT=99999999):
+            geom = validate_selection(data)
+            self.assertIsInstance(geom, Polygon)
 
         with self.assertRaises(ValidationError):
             data = {'selection': []}
