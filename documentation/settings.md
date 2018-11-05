@@ -268,3 +268,4 @@ The default number of Notifications to be displayed in the Notifications page
 #### User Groups Page Size
 The default number of users to be loaded on the Groups Page
 <pre>USER_GROUPS_PAGE_SIZE='20'</pre>
+

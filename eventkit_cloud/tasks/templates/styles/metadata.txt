@@ -9,12 +9,12 @@ Date Created: {{ metadata.date }}
 DataPack UID: {{ metadata.run_uid }}
 
 Data Sources
-{% for provider in metadata.data_providers %}
-	Name: {{ provider.name }}
-	Description: {{ provider.description }}
-	{% if provider.last_update %}Last Update: {{ provider.last_update }}{% else %}Last Update: Unknown, see metadata for more details{% endif %}
-	Metadata: {{ provider.metadata }}
-	{% if provider.copyright %}Copyright: {{ provider.copyright }}{% endif %}
+{% for provider_slug, provider_data in metadata.data_sources.items %}
+	Name: {{ provider_data.name }}
+	Description: {{ provider_data.description }}
+	{% if provider_data.last_update %}Last Update: {{ provider_data.last_update }}{% else %}Last Update: Unknown, see metadata for more details{% endif %}
+	Metadata: {{ provider_data.metadata }}
+	{% if provider_data.copyright %}Copyright: {{ provider_data.copyright }}{% endif %}
 {% endfor %}
 Area of Interest:
 
