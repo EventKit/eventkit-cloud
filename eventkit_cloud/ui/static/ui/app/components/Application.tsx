@@ -169,7 +169,10 @@ interface Props {
 }
 
 interface State {
-    childContext: { config: object };
+    childContext: { config: {
+        DATAPACK_PAGE_SIZE?: string;
+        NOTIFICATIONS_PAGE_SIZE?: string;
+    }};
     autoLogoutWarningText: string;
     showAutoLogoutWarningDialog: boolean;
     showAutoLoggedOutDialog: boolean;
@@ -179,7 +182,7 @@ interface State {
 }
 
 export class Application extends React.Component<Props, State> {
-    private userActiveInputTypes: String[];
+    private userActiveInputTypes: string[];
     private notificationsUnreadCountRefreshInterval: number;
     private notificationsRefreshInterval: number;
     private notificationsPageSize: number;
@@ -209,6 +212,8 @@ export class Application extends React.Component<Props, State> {
             MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
             MAX_RASTER_AOI_SQ_KM: PropTypes.number,
             MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
+            DATAPACK_PAGE_SIZE: PropTypes.string,
+            NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
         }),
     };
@@ -259,10 +264,17 @@ export class Application extends React.Component<Props, State> {
 
     componentDidMount() {
         this.getConfig();
-        this.props.getNotifications();
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.childContext !== this.state.childContext) {
+            this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
+            if (this.loggedIn || this.props.userData) {
+                this.startCheckingForAutoLogout();
+                this.startSendingUserActivePings();
+                this.startListeningForNotifications();
+            }
+        }
         if (this.loggedIn && this.props.width !== prevProps.width) {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
@@ -275,9 +287,6 @@ export class Application extends React.Component<Props, State> {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             }
-            this.startCheckingForAutoLogout();
-            this.startSendingUserActivePings();
-            this.startListeningForNotifications();
         } else if (this.loggedIn && !this.props.userData) {
             this.loggedIn = false;
             this.stopCheckingForAutoLogout();
@@ -372,7 +381,7 @@ export class Application extends React.Component<Props, State> {
 
         // Notifications.
         this.props.getNotifications({
-            notificationsPageSize: this.notificationsPageSize,
+            pageSize: this.notificationsPageSize,
             isAuto: true,
         });
         this.notificationsRefreshIntervalId = window.setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
@@ -399,7 +408,7 @@ export class Application extends React.Component<Props, State> {
 
     autoGetNotifications() {
         this.props.getNotifications({
-            notificationsPageSize: this.notificationsPageSize,
+            pageSize: this.notificationsPageSize,
             isAuto: true,
         });
     }
