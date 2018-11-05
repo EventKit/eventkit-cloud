@@ -246,8 +246,3 @@ def prefetch_export_runs(queryset_list_or_model):
     elif isinstance(queryset_list_or_model, ExportRun):
         models.prefetch_related_objects([queryset_list_or_model], *prefetch_args)
     return queryset_list_or_model
-
-
-def prefetch(model_type, queryset_list_or_model):
-    prefetchers = {ExportRun: prefetch_export_runs}
-    return prefetchers[model_type](queryset_list_or_model)
