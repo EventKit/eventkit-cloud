@@ -48,7 +48,7 @@ export function getNotifications(args = {}) {
         };
 
         return axios({
-            url: '/api/notifications/all',
+            url: '/api/notifications',
             method: 'GET',
             params,
             cancelToken: cancelSource.token,
@@ -109,17 +109,14 @@ export function markNotificationsAsRead(notifications) {
             notifications,
         });
 
-        const data = [];
+        const data = { ids: [] };
 
         notifications.forEach((notification) => {
-            data.push({
-                id: notification.id,
-                action: 'READ',
-            });
+            data.ids.push(notification.id);
         });
 
         return axios({
-            url: '/api/notifications/mark',
+            url: '/api/notifications/read',
             method: 'POST',
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
             data,
@@ -146,17 +143,14 @@ export function markNotificationsAsUnread(notifications) {
             notifications,
         });
 
-        const data = [];
+        const data = { ids: [] };
 
         notifications.forEach((notification) => {
-            data.push({
-                id: notification.id,
-                action: 'UNREAD',
-            });
+            data.ids.push(notification.id);
         });
 
         return axios({
-            url: '/api/notifications/mark',
+            url: '/api/notifications/unread',
             method: 'POST',
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
             data,
@@ -183,18 +177,15 @@ export function removeNotifications(notifications) {
             notifications,
         });
 
-        const data = [];
+        const data = { ids: [] };
 
         notifications.forEach((notification) => {
-            data.push({
-                id: notification.id,
-                action: 'DELETE',
-            });
+            data.ids.push(notification.id);
         });
 
         return axios({
-            url: '/api/notifications/mark',
-            method: 'POST',
+            url: '/api/notifications/delete',
+            method: 'DELETE',
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
             data,
         }).then(() => {
@@ -220,7 +211,7 @@ export function markAllNotificationsAsRead() {
         });
 
         return axios({
-            url: '/api/notifications/mark_all_as_read',
+            url: '/api/notifications/read',
             method: 'POST',
             headers: { 'X-CSRFToken': cookie.load('csrftoken') },
         }).then(() => {

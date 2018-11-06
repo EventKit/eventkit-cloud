@@ -15,7 +15,7 @@ from django.utils.translation import ugettext as _
 from notifications.models import Notification
 from rest_framework import exceptions
 from rest_framework import filters, permissions, status, views, viewsets, mixins
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import detail_route, list_route, action
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
@@ -1585,7 +1585,7 @@ class GroupViewSet(viewsets.ModelViewSet):
         return Response("OK", status=status.HTTP_200_OK)
 
 
-class NotificationViewSet(viewsets.GenericViewSet):
+class NotificationViewSet(viewsets.ModelViewSet):
     """
      Api components for viewing and working with notifications
     """
@@ -1600,8 +1600,10 @@ class NotificationViewSet(viewsets.GenericViewSet):
         qs = Notification.objects.filter(recipient_id=self.request.user.id, deleted=False)
         return qs
 
-    @list_route(methods=['get'])
-    def all(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
+        """
+        Get all user notifications that are not deleted
+        """
         notifications = self.get_queryset()
         page = self.paginate_queryset(notifications)
         if page is not None:
@@ -1610,19 +1612,64 @@ class NotificationViewSet(viewsets.GenericViewSet):
             serializer = self.get_serializer(notifications, context={'request': self.request}, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @list_route(methods=['get'])
+    @action(detail=False, methods=['delete'])
+    def delete(self, request, *args, **kwargs):
+        """
+        Delete notifications
+        If request data of { ids: [....ids] } is provided only those ids will be deleted
+        If no request data is included all notifications will be deleted
+        """
+        notifications = self.get_queryset()
+        if request.data.get('ids', None):
+            for id in request.data.get('ids'):
+                note = notifications.get(id=id)
+                if note:
+                    note.deleted = True
+                    note.save()
+        else:
+            notifications = self.get_queryset()
+            notifications.mark_all_as_deleted()
+        return Response({"success": True}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
     def read(self, request, *args, **kwargs):
-        notifications = request.user.notifications.read()
-        payload = self.serialize_records(notifications, request)
-        return Response(payload, status=status.HTTP_200_OK)
+        """
+        Mark notifications as read
+        If request data of { ids: [....ids] } is provided only those ids will be marked
+        If no request data is included all notifications will be marked read
+        """
+        notifications = self.get_queryset()
+        if request.data.get('ids', None):
+            for id in request.data.get('ids'):
+                note = notifications.get(id=id)
+                if note:
+                    note.unread = False
+                    note.save()
+        else:
+            notifications = self.get_queryset()
+            notifications.mark_all_as_read()
+        return Response({"success": True}, status=status.HTTP_200_OK)
 
-    @list_route(methods=['get'])
+    @action(detail=False, methods=['post'])
     def unread(self, request, *args, **kwargs):
-        notifications = request.user.notifications.unread()
-        payload = self.serialize_records(notifications, request)
-        return Response(payload, status=status.HTTP_200_OK)
+        """
+        Mark notifications as unread
+        If request data of { ids: [....ids] } is provided only those ids will be marked
+        If no request data is included all notifications will be marked unread
+        """
+        notifications = self.get_queryset()
+        if request.data.get('ids', None):
+            for id in request.data.get('ids'):
+                note = notifications.get(id=id)
+                if note:
+                    note.unread = True
+                    note.save()
+        else:
+            notifications = self.get_queryset()
+            notifications.mark_all_as_unread()
+        return Response({"success": True}, status=status.HTTP_200_OK)
 
-    @list_route(methods=['get'])
+    @action(detail=False, methods=['get'])
     def counts(self, request, *args, **kwargs):
         payload = {
             "read": len(request.user.notifications.read()),
@@ -1631,17 +1678,11 @@ class NotificationViewSet(viewsets.GenericViewSet):
 
         return Response(payload, status=status.HTTP_200_OK)
 
-    @list_route(methods=['post'])
-    def mark_all_as_read(self, request, *args, **kwargs):
-        qs = Notification.objects.filter(recipient_id=self.request.user.id)
-        qs.mark_all_as_read()
-        return Response({"success": True}, status=status.HTTP_200_OK)
-
-    @list_route(methods=['post'])
+    @action(detail=False, methods=['post'])
     def mark(self, request, *args, **kwargs):
         """
          Change the status of one or more notifications.
-
+         **Use if you need to modify in more than one way. Otherwise just use 'delete', 'read', or 'unread'**
 
          Args:
              A list containing one or more records like this:
