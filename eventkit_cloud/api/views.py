@@ -42,7 +42,7 @@ from eventkit_cloud.jobs.models import (
     UserJobActivity
 )
 from eventkit_cloud.tasks.export_tasks import pick_up_run_task, cancel_export_provider_task
-from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord
+from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, prefetch_export_runs
 from eventkit_cloud.tasks.task_factory import create_run, get_invalid_licenses, InvalidLicense, Error
 from eventkit_cloud.utils.gdalutils import get_area
 from eventkit_cloud.utils.provider_check import perform_provider_check
@@ -836,9 +836,6 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         _, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        # return prefetch(ExportRun, (ExportRun.objects.filter(
-        #     (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))))
-        from eventkit_cloud.tasks.models import prefetch_export_runs
         return prefetch_export_runs((ExportRun.objects.filter(
             (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))))
 
@@ -1290,20 +1287,23 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
         if activity_type == 'viewed':
-            return UserJobActivity.objects.select_related('user').prefetch_related('job__provider_tasks__provider',
-                                                                                   'job__provider_tasks__formats',
-                                                                                   'job__last_export_run__provider_tasks__tasks__result',
-                                                                                   'job__last_export_run__provider_tasks__tasks__exceptions').filter(
+            return UserJobActivity.objects.filter(
                 user=self.request.user,
                 type=UserJobActivity.VIEWED,
                 job__last_export_run__isnull=False,
                 job__last_export_run__deleted=False,
-            ).order_by('job', '-created_at').distinct('job')
+            ).order_by('job', '-created_at').distinct('job').select_related('job',
+                                                                            'user').prefetch_related(
+                'job__provider_tasks__provider',
+                'job__provider_tasks__formats',
+                'job__last_export_run__provider_tasks__tasks__result',
+                'job__last_export_run__provider_tasks__tasks__exceptions')
         else:
-            return UserJobActivity.objects.select_related('user').prefetch_related('job__provider_tasks__provider',
-                                                                                   'job__provider_tasks__formats',
-                                                                                   'job__last_export_run__provider_tasks__tasks__result',
-                                                                                   'job__last_export_run__provider_tasks__tasks__exceptions').filter(
+            return UserJobActivity.objects.select_related('job', 'user').prefetch_related(
+                'job__provider_tasks__provider',
+                'job__provider_tasks__formats',
+                'job__last_export_run__provider_tasks__tasks__result',
+                'job__last_export_run__provider_tasks__tasks__exceptions').filter(
                 user=self.request.user).order_by('-created_at')
 
 
@@ -1326,9 +1326,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
         """
         activity_type = request.query_params.get('activity', '').lower()
         job_uid = request.data.get('job_uid')
-
         # Save the
-        job = Job.objects.get(uid=job_uid)
         if activity_type == 'viewed':
             # Don't save consecutive views of the same job.
             queryset = self.get_queryset()
@@ -1336,7 +1334,7 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
                 last_job_viewed = queryset.latest('created_at')
                 if str(last_job_viewed.job.uid) == job_uid:
                     return Response({'ignored': True}, content_type='application/json', status=status.HTTP_200_OK)
-
+            job = Job.objects.get(uid=job_uid)
             UserJobActivity.objects.create(user=self.request.user, job=job, type=UserJobActivity.VIEWED)
         else:
             raise exceptions.ValidationError("Activity type '%s' is invalid." % activity_type)
@@ -1594,8 +1592,6 @@ class NotificationViewSet(viewsets.GenericViewSet):
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     pagination_class = LinkHeaderPagination
 
-    from django.contrib.contenttypes.models import ContentType
-
     def get_queryset(self):
         qs = Notification.objects.filter(recipient_id=self.request.user.id, deleted=False)
         return qs
@@ -1850,21 +1846,3 @@ class SwaggerSchemaView(views.APIView):
         except ImportError:
             # CoreAPI couldn't be imported, falling back to static schema
             return Response()
-
-
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import fields as generic
-
-
-def get_field_by_name(meta, fname):
-    return [f for f in meta.get_fields() if f.name == fname]
-
-
-def get_generic_foreign_keys(queryset):
-    generic_foreign_keys = {}
-    for name, generic_foreign_key in queryset.model.__dict__.items():
-        if not isinstance(generic_foreign_key, generic.GenericForeignKey):
-            continue
-            generic_foreign_keys[name] = generic_foreign_key
-    return generic_foreign_keys
