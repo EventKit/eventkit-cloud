@@ -162,7 +162,6 @@ class MapproxyGeopackage(object):
         """
 
         from eventkit_cloud.tasks.task_process import TaskProcess
-
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
         #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
