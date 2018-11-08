@@ -1,4 +1,5 @@
 import React from 'react';
+import sinon from 'sinon';
 import { mount } from 'enzyme';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
 import { Table, TableHeader, TableHeaderColumn, TableRow }
@@ -168,5 +169,22 @@ describe('DataPackDetails component', () => {
         expect(wrapper.instance().getCloudDownloadIcon()).toEqual((
             <CloudDownload className="qa-DataPackDetails-CloudDownload-enabled" style={{ fill: '#4598bf', verticalAlign: 'middle' }} />
         ));
+    });
+
+    it('handleInfoOpen should set infoOpen true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleInfoOpen();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ infoOpen: true })).toBe(true);
+    });
+     it('handleInfoClose should set infoOpen false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleInfoClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ infoOpen: false })).toBe(true);
     });
 });

@@ -3,12 +3,17 @@ import { Table, TableHeader, TableHeaderColumn, TableRow }
     from 'material-ui/Table';
 import RaisedButton from 'material-ui/RaisedButton';
 import CloudDownload from 'material-ui/svg-icons/file/cloud-download';
+import Info from 'material-ui/svg-icons/action/info';
 import ProviderRow from './ProviderRow';
+import BaseDialog from '../Dialog/BaseDialog';
 
 export class DataPackDetails extends Component {
     constructor(props) {
         super(props);
+        this.handleInfoOpen = this.handleInfoOpen.bind(this);
+        this.handleInfoClose = this.handleInfoClose.bind(this);
         this.state = {
+            infoOpen: false,
             selectedProviders: {},
         };
     }
@@ -75,6 +80,14 @@ export class DataPackDetails extends Component {
         return true;
     }
 
+    handleInfoOpen() {
+        this.setState({ infoOpen: true });
+    }
+
+    handleInfoClose() {
+        this.setState({ infoOpen: false });
+    }
+
     render() {
         const tableCellWidth = this.getTableCellWidth();
         const toggleCellWidth = this.getToggleCellWidth();
@@ -102,6 +115,14 @@ export class DataPackDetails extends Component {
                 width: tableCellWidth,
                 textAlign: 'center',
                 fontSize: textFontSize,
+            },
+            info: {
+                margin: '5px 10px 5px 5px',
+                height: '18px',
+                width: '18px',
+                cursor: 'pointer',
+                fill: '#4598bf',
+                verticalAlign: 'middle',
             },
         };
 
@@ -138,6 +159,27 @@ export class DataPackDetails extends Component {
                                     label={this.props.zipFileProp ? 'DOWNLOAD DATAPACK (.ZIP)' : 'CREATING DATAPACK ZIP'}
                                     icon={this.getCloudDownloadIcon()}
                                 />
+                                <Info
+                                    className="qa-DataPackDetails-info"
+                                    onClick={this.handleInfoOpen}
+                                    style={styles.info}
+                                />
+                                <BaseDialog
+                                    className="qa-DataPackDetails-info-dialog"
+                                    show={this.state.infoOpen}
+                                    title="DataPack Information"
+                                    onClose={this.handleInfoClose}
+                                >
+                                    <div style={{ paddingBottom: '10px', wordWrap: 'break-word' }}>
+                                        For convenience, EventKit bundles all the individual data sources into a single download
+                                         (formatted as a .zip file).
+                                         Additionally, this file contains GIS application files (QGIS and ArcMap),
+                                         cartographic styles, metadata, and associated documents.
+                                         See the Page Tour for more details about other elements of the Status and Download page.
+                                         Detailed information about how to use the DataPacks in QGIS and ArcMap are in
+                                         the About EventKit page and in the metadata of the DataPack.
+                                    </div>
+                                </BaseDialog>
                             </TableHeaderColumn>
                             <TableHeaderColumn
                                 className="qa-DataPackDetails-TableHeaderColumn-fileSize"

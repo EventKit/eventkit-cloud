@@ -17,6 +17,7 @@ import ActionExitToApp from 'material-ui/svg-icons/action/exit-to-app';
 import Notifications from 'material-ui/svg-icons/social/notifications';
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import Mail from 'material-ui/svg-icons/communication/mail-outline';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
 import logo from '../../images/eventkit-logo.1.png';
@@ -474,9 +475,13 @@ export class Application extends Component {
             },
             drawer: {
                 width: '200px',
+                height: 'calc(100% - 95px)',
                 marginTop: '95px',
                 backgroundColor: '#010101',
                 padding: '0px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
             },
             mainMenu: {
                 color: '#3e3f3f',
@@ -519,6 +524,14 @@ export class Application extends Component {
                 transition: 'margin-left 450ms cubic-bezier(0.23, 1, 0.32, 1)',
                 marginLeft: ((this.props.drawer === 'open' || this.props.drawer === 'opening') && window.innerWidth) >= 1200 ? 200 : 0,
             },
+            contact: {
+                display: 'flex',
+                alignItems: 'center',
+                paddingLeft: '11px',
+                marginBottom: '20px',
+                color: '#4498c0',
+                fill: '#4498c0',
+            }
         };
 
         const img = <img style={styles.img} src={logo} alt="EventKit" />;
@@ -603,125 +616,134 @@ export class Application extends Component {
                         docked
                         open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                     >
-                        <MenuItem
-                            className="qa-Application-MenuItem-dashboard"
-                            onClick={this.onMenuItemClick}
-                            innerDivStyle={styles.menuItem}
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <MenuItem
+                                className="qa-Application-MenuItem-dashboard"
+                                onClick={this.onMenuItemClick}
+                                innerDivStyle={styles.menuItem}
+                            >
+                                <IndexLink
+                                    className="qa-Application-Link-dashboard"
+                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
+                                    activeStyle={styles.activeLink}
+                                    to="/dashboard"
+                                    onMouseEnter={() => this.handleMouseOver('/dashboard')}
+                                    onMouseLeave={this.handleMouseOut}
+                                >
+                                    <Dashboard style={styles.icon} />
+                                    Dashboard
+                                </IndexLink>
+                            </MenuItem>
+                            <MenuItem
+                                className="qa-Application-MenuItem-exports"
+                                onClick={this.onMenuItemClick}
+                                innerDivStyle={styles.menuItem}
+                            >
+                                <Link
+                                    className="qa-Application-Link-exports"
+                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/exports') }}
+                                    activeStyle={styles.activeLink}
+                                    to="/exports"
+                                    href="/exports"
+                                    onMouseEnter={() => this.handleMouseOver('/exports')}
+                                    onMouseLeave={this.handleMouseOut}
+                                >
+                                    <AVLibraryBooks style={styles.icon} />
+                                    DataPack Library
+                                </Link>
+                            </MenuItem>
+                            <MenuItem
+                                className="qa-Application-MenuItem-create"
+                                onClick={this.onMenuItemClick}
+                                innerDivStyle={styles.menuItem}
+                            >
+                                <Link
+                                    className="qa-Application-Link-create"
+                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/create') }}
+                                    activeStyle={styles.activeLink}
+                                    onMouseEnter={() => this.handleMouseOver('/create')}
+                                    onMouseLeave={this.handleMouseOut}
+                                    to="/create"
+                                    href="/create"
+                                >
+                                    <ContentAddBox style={styles.icon} />
+                                    Create DataPack
+                                </Link>
+                            </MenuItem>
+                            <MenuItem
+                                className="qa-Application-MenuItem-groups"
+                                onClick={this.onMenuItemClick}
+                                innerDivStyle={styles.menuItem}
+                            >
+                                <Link
+                                    className="qa-Application-Link-groups"
+                                    style={{ ...styles.link, backgroundColor: this.state.hovered === 'groups' ? '#161e2e' : '' }}
+                                    activeStyle={styles.activeLink}
+                                    onMouseEnter={() => this.handleMouseOver('groups')}
+                                    onMouseLeave={this.handleMouseOut}
+                                    to="/groups"
+                                    href="/groups"
+                                >
+                                    <SocialGroup style={styles.icon} />
+                                    Members and Groups
+                                </Link>
+                            </MenuItem>
+                            <MenuItem className="qa-Application-MenuItem-about" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
+                                <Link
+                                    className="qa-Application-Link-about"
+                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/about') }}
+                                    activeStyle={styles.activeLink}
+                                    onMouseEnter={() => this.handleMouseOver('/about')}
+                                    onMouseLeave={this.handleMouseOut}
+                                    to="/about"
+                                    href="/about"
+                                >
+                                    <ActionInfoOutline style={styles.icon} />
+                                    About EventKit
+                                </Link>
+                            </MenuItem>
+                            <MenuItem
+                                className="qa-Application-MenuItem-account"
+                                onClick={this.onMenuItemClick}
+                                innerDivStyle={styles.menuItem}
+                            >
+                                <Link
+                                    className="qa-Application-Link-account"
+                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/account') }}
+                                    activeStyle={styles.activeLink}
+                                    onMouseEnter={() => this.handleMouseOver('/account')}
+                                    onMouseLeave={this.handleMouseOut}
+                                    to="/account"
+                                    href="/account"
+                                >
+                                    <SocialPerson style={styles.icon} />
+                                    Account Settings
+                                </Link>
+                            </MenuItem>
+                            <MenuItem
+                                className="qa-Application-MenuItem-logout"
+                                innerDivStyle={styles.menuItem}
+                            >
+                                <Link // eslint-disable-line jsx-a11y/anchor-is-valid
+                                    className="qa-Application-Link-logout"
+                                    style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/logout') }}
+                                    activeStyle={styles.activeLink}
+                                    onMouseEnter={() => this.handleMouseOver('/logout')}
+                                    onMouseLeave={this.handleMouseOut}
+                                    onClick={this.handleLogoutClick}
+                                >
+                                    <ActionExitToApp style={styles.icon} />
+                                    Log Out
+                                </Link>
+                            </MenuItem>
+                        </div>
+                        {this.state.config.CONTACT_URL ? <a
+                            className="qa-Application-contact"
+                            style={styles.contact}
+                            href={this.state.config.CONTACT_URL}
                         >
-                            <IndexLink
-                                className="qa-Application-Link-dashboard"
-                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/dashboard') }}
-                                activeStyle={styles.activeLink}
-                                to="/dashboard"
-                                onMouseEnter={() => this.handleMouseOver('/dashboard')}
-                                onMouseLeave={this.handleMouseOut}
-                            >
-                                <Dashboard style={styles.icon} />
-                                Dashboard
-                            </IndexLink>
-                        </MenuItem>
-                        <MenuItem
-                            className="qa-Application-MenuItem-exports"
-                            onClick={this.onMenuItemClick}
-                            innerDivStyle={styles.menuItem}
-                        >
-                            <Link
-                                className="qa-Application-Link-exports"
-                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/exports') }}
-                                activeStyle={styles.activeLink}
-                                to="/exports"
-                                href="/exports"
-                                onMouseEnter={() => this.handleMouseOver('/exports')}
-                                onMouseLeave={this.handleMouseOut}
-                            >
-                                <AVLibraryBooks style={styles.icon} />
-                                DataPack Library
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className="qa-Application-MenuItem-create"
-                            onClick={this.onMenuItemClick}
-                            innerDivStyle={styles.menuItem}
-                        >
-                            <Link
-                                className="qa-Application-Link-create"
-                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/create') }}
-                                activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('/create')}
-                                onMouseLeave={this.handleMouseOut}
-                                to="/create"
-                                href="/create"
-                            >
-                                <ContentAddBox style={styles.icon} />
-                                Create DataPack
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className="qa-Application-MenuItem-groups"
-                            onClick={this.onMenuItemClick}
-                            innerDivStyle={styles.menuItem}
-                        >
-                            <Link
-                                className="qa-Application-Link-groups"
-                                style={{ ...styles.link, backgroundColor: this.state.hovered === 'groups' ? '#161e2e' : '' }}
-                                activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('groups')}
-                                onMouseLeave={this.handleMouseOut}
-                                to="/groups"
-                                href="/groups"
-                            >
-                                <SocialGroup style={styles.icon} />
-                                Members and Groups
-                            </Link>
-                        </MenuItem>
-                        <MenuItem className="qa-Application-MenuItem-about" onClick={this.onMenuItemClick} innerDivStyle={styles.menuItem}>
-                            <Link
-                                className="qa-Application-Link-about"
-                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/about') }}
-                                activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('/about')}
-                                onMouseLeave={this.handleMouseOut}
-                                to="/about"
-                                href="/about"
-                            >
-                                <ActionInfoOutline style={styles.icon} />
-                                About EventKit
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className="qa-Application-MenuItem-account"
-                            onClick={this.onMenuItemClick}
-                            innerDivStyle={styles.menuItem}
-                        >
-                            <Link
-                                className="qa-Application-Link-account"
-                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/account') }}
-                                activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('/account')}
-                                onMouseLeave={this.handleMouseOut}
-                                to="/account"
-                                href="/account"
-                            >
-                                <SocialPerson style={styles.icon} />
-                                Account Settings
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className="qa-Application-MenuItem-logout"
-                            innerDivStyle={styles.menuItem}
-                        >
-                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
-                                className="qa-Application-Link-logout"
-                                style={{ ...styles.link, backgroundColor: this.getButtonBackgroundColor('/logout') }}
-                                activeStyle={styles.activeLink}
-                                onMouseEnter={() => this.handleMouseOver('/logout')}
-                                onMouseLeave={this.handleMouseOut}
-                                onClick={this.handleLogoutClick}
-                            >
-                                <ActionExitToApp style={styles.icon} />
-                                Log Out
-                            </Link>
-                        </MenuItem>
+                            <Mail style={styles.icon} />Contact Us
+                        </a> : null}
                     </Drawer>
                     <div style={styles.content} className="qa-Application-content">
                         <div>{childrenWithContext}</div>

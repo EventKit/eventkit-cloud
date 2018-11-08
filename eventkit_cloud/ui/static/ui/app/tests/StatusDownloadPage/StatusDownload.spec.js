@@ -341,7 +341,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(8);
+        expect(setTimeout.mock.calls.length).toBe(9);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
@@ -401,7 +401,7 @@ describe('StatusDownload component', () => {
         wrapper.setProps(nextProps);
         expect(clearStub.calledOnce).toBe(false);
         expect(clearStub.calledWith(wrapper.instance().timer)).toBe(false);
-        expect(setTimeout.mock.calls.length).toBe(8);
+        expect(setTimeout.mock.calls.length).toBe(9);
         expect(setTimeout.mock.calls[3][1]).toBe(0);
         clearStub.restore();
     });
