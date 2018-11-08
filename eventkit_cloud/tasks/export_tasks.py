@@ -787,10 +787,10 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
-@app.task(name='Raster export (.gpkg)', bind=True, base=FormatTask, abort_on_error=True)
-def external_raster_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
-                                        stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
-                                        level_to=None, name=None, service_type=None, *args, **kwargs):
+@app.task(name='Raster export (.gpkg)', bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
+                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
+                         level_to=None, name=None, service_type=None, *args, **kwargs):
     """
     Class defining geopackage export for external raster service.
     """
