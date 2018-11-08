@@ -1,18 +1,18 @@
 import os
 import re
 
-import codecs
 import copy
 from contextlib import contextmanager
 
 from django.conf import settings
-from django.template import Context
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.db.models import Q
 
 from enum import Enum
 from numpy import linspace
+
+from eventkit_cloud.tasks import logger
 from eventkit_cloud.ui.helpers import logger
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.gdalutils import get_band_statistics
@@ -204,8 +204,6 @@ def get_human_readable_metadata_document(metadata):
     :param metadata: A dictionary returned by get_metadata.
     :return: A filepath to a txt document.
     """
-    from eventkit_cloud.tasks.models import ExportRun
-    from eventkit_cloud.jobs.models import DataProvider
     from eventkit_cloud.tasks.helpers import normalize_name
     stage_dir = os.path.join(settings.EXPORT_STAGING_ROOT, str(metadata['run_uid']))
 

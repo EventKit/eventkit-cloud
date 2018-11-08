@@ -936,6 +936,7 @@ def finalize_export_provider_task(result=None, data_provider_task_uid=None,
     return result
 
 
+@gdalutils.retry
 def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs):
     """
     Contains the organization for the files within the archive.
@@ -1015,6 +1016,9 @@ def zip_files(include_files, file_path=None, static_files=None, *args, **kwargs)
                 filepath,
                 arcname=filename
             )
+        
+        if zipfile.testzip():
+            raise Exception("The zipped file was corrupted.")
 
     return file_path
 

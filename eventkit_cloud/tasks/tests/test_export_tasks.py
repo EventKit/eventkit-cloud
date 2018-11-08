@@ -22,10 +22,10 @@ from eventkit_cloud.tasks.export_tasks import (
     LockingTask, export_task_error_handler, finalize_run_task,
     kml_export_task, external_raster_service_export_task, geopackage_export_task,
     shp_export_task, arcgis_feature_service_export_task, update_progress,
-    zip_files, pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
+    pick_up_run_task, cancel_export_provider_task, kill_task, bounds_export_task, parse_result, finalize_export_provider_task,
     FormatTask, wait_for_providers_task, create_zip_task, default_format_time
 )
-from eventkit_cloud.tasks import TaskStates
+from eventkit_cloud.tasks import TaskStates, zip_files
 from eventkit_cloud.tasks.models import (
     ExportRun,
     ExportTaskRecord,
@@ -293,13 +293,14 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(error_type, ValueError)
         self.assertEqual('some unexpected error', str(msg))
 
+    @patch('eventkit_cloud.tasks.export_tasks.retry')
     @patch('shutil.copy')
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
     @patch('os.walk')
     @patch('os.path.getsize')
     @patch('eventkit_cloud.tasks.export_tasks.s3.upload_to_s3')
-    def test_zipfile_task(self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy):
+    def test_zipfile_task(self, s3, os_path_getsize, mock_os_walk, mock_zipfile, remove, copy, mock_retry):
         os_path_getsize.return_value = 20
 
         class MockZipFile:
@@ -318,6 +319,9 @@ class TestExportTasks(ExportTaskBase):
 
             def __enter__(self, *args, **kw):
                 return self
+
+            def testzip(self):
+                return None
 
         expected_archived_files = {'data/osm/file1-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file1.txt',
                                    'data/osm/file2-osm-{0}.txt'.format(default_format_time(timezone.now())): 'osm/file2.txt'}
@@ -342,6 +346,11 @@ class TestExportTasks(ExportTaskBase):
         result = zip_files(include_files=include_files, file_path=zipfile_path )
         self.assertEqual(zipfile.files, expected_archived_files)
         self.assertEqual(result, zipfile_path)
+
+        zipfile.testzip = Exception("Bad Zip")
+        with self.assertRaises(Exception):
+            zip_files(include_files=include_files, file_path=zipfile_path)
+
 
     @patch('celery.app.task.Task.request')
     @patch('eventkit_cloud.tasks.export_tasks.geopackage')
