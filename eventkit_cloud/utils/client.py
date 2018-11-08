@@ -178,7 +178,9 @@ class EventKitClient(object):
                 totals[provider]['total'] = convert_seconds_to_hms(statistics.mean(times))
             for task in providers[provider]:
                 totals[provider][task] = {}
-                totals[provider][task] = convert_seconds_to_hms(statistics.mean(providers[provider][task].get('times')))
+                times = providers[provider][task].get('times')
+                if times:
+                    totals[provider][task] = convert_seconds_to_hms(statistics.mean(times))
         return totals
 
     def get_area(self, run):
