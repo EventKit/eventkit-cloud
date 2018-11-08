@@ -1,4 +1,5 @@
 import React from 'react';
+import sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import Table from '@material-ui/core/Table';
 import TableRow from '@material-ui/core/TableRow';
@@ -89,13 +90,16 @@ describe('DataPackDetails component', () => {
         const table = wrapper.find(Table).dive();
         expect(table.find(TableRow)).toHaveLength(1);
         expect(table.find(TableCell)).toHaveLength(4);
-        expect(table.find(TableCell).at(0).dive()
-            .html()).toContain('CREATING DATAPACK ZIP');
-        expect(table.find(TableCell).at(0).dive().find(Button)).toHaveLength(1);
+        expect(wrapper.find(Table).find(TableCell)
+            .at(0)
+            .find(Button)
+            .html())
+            .toContain('CREATING DATAPACK ZIP');
         expect(table.find(TableCell).at(1).dive().html()).toContain('FILE SIZE');
         expect(table.find(TableCell).at(2).dive().html()).toContain('PROGRESS');
         expect(wrapper.find(ProviderRow)).toHaveLength(1);
     });
+
     it('getTextFontSize should return the font string for table text based on window width', () => {
         const props = getProps();
         props.width = 'xs';
@@ -160,5 +164,23 @@ describe('DataPackDetails component', () => {
                 style={{ fill: '#4598bf', marginRight: '5px', verticalAlign: 'middle' }}
             />
         ));
+    });
+
+    it('handleInfoOpen should set infoOpen true', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleInfoOpen();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ infoOpen: true })).toBe(true);
+    });
+
+    it('handleInfoClose should set infoOpen false', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleInfoClose();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ infoOpen: false })).toBe(true);
     });
 });

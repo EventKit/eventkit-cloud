@@ -31,7 +31,7 @@ from eventkit_cloud.tasks.exceptions import CancelException, DeleteException
 from eventkit_cloud.tasks.helpers import normalize_name, get_archive_data_path, get_run_download_url, \
     get_download_filename, get_run_staging_dir, get_provider_staging_dir, get_run_download_dir, Directory, \
     default_format_time, progressive_kill, get_style_files, generate_qgs_style, create_license_file, \
-    get_human_readable_metadata_document, pickle_exception
+    get_human_readable_metadata_document, pickle_exception, get_data_type_from_provider, get_arcgis_metadata
 from eventkit_cloud.utils.auth_requests import get_cred
 from eventkit_cloud.utils import (
     overpass, pbf, s3, mapproxy, wcs, geopackage, gdalutils
@@ -787,10 +787,10 @@ def bounds_export_task(self, result={}, run_uid=None, task_uid=None, stage_dir=N
     return result
 
 
-@app.task(name='Raster export (.gpkg)', bind=True, base=FormatTask, abort_on_error=True)
-def external_raster_service_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
-                                        stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
-                                        level_to=None, name=None, service_type=None, *args, **kwargs):
+@app.task(name='Raster export (.gpkg)', bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
+def mapproxy_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None,
+                         stage_dir=None, job_name=None, bbox=None, service_url=None, level_from=None,
+                         level_to=None, name=None, service_type=None, *args, **kwargs):
     """
     Class defining geopackage export for external raster service.
     """
@@ -866,92 +866,44 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
 
 
 @app.task(name='Project File (.zip)', base=FormatTask)
-def create_zip_task(result=None, task_uid=None, data_provider_task_uid=None, *args, **kwargs):
+def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     """
     :param result: The celery task result value, it should be a dict with the current state.
     :param data_provider_task_uid: A data provider to zip (this or run_uid must be passed).
-    :param run_uid: A run to be zipped (this or data_provider_task_uid must be passed).
     :return: The run files, or a single zip file if data_provider_task_uid is passed.
     """
     from eventkit_cloud.tasks.models import DataProviderTaskRecord
+    from eventkit_cloud.tasks.helpers import get_metadata
 
     if not result:
         result = {}
 
     data_provider_task = DataProviderTaskRecord.objects.get(uid=data_provider_task_uid)
-    data_provider_task_slug = data_provider_task.slug
+    metadata = get_metadata(data_provider_task_uid)
 
-    run = data_provider_task.run
-
-    if data_provider_task.name == 'run':
-        provider_tasks = run.provider_tasks.filter(~Q(name='run'))
-        data_provider_task = None
-    else:
-        provider_tasks = [data_provider_task]
-
-    # To prepare for the zipfile task, the files need to be checked to ensure they weren't
-    # deleted during cancellation.
-    include_files = list([])
-
-    metadata = {"name": normalize_name(run.job.name), "bbox": run.job.extents, "data_sources": {}}
-
-    for provider_task in provider_tasks:
-        metadata['data_sources'][provider_task.slug] = {"name": provider_task.name}
-        if TaskStates[provider_task.status] not in TaskStates.get_incomplete_states():
-            provider_staging_dir = get_provider_staging_dir(run.uid, provider_task.slug)
-            for export_task in provider_task.tasks.all():
-                try:
-                    filename = export_task.result.filename
-                except Exception:
-                    continue
-                full_file_path = os.path.join(provider_staging_dir, filename)
-                ext = os.path.splitext(filename)[1]
-                if ext in ['.gpkg', '.tif']:
-                    download_filename = get_download_filename(os.path.splitext(os.path.basename(filename))[0],
-                                                              timezone.now(),
-                                                              ext,
-                                                              additional_descriptors=provider_task.slug)
-                    filepath = get_archive_data_path(
-                        provider_task.slug,
-                        download_filename
-                    )
-                    metadata['data_sources'][provider_task.slug]['file_path'] = filepath
-                    metadata['data_sources'][provider_task.slug]['type'] = get_data_type_from_provider(
-                        provider_task.slug)
-                    # If a single data source is being zipped hide the task to only display the zip in the UI.
-                    if data_provider_task:
-                        export_task.display = False
-                        export_task.save()
-                if not os.path.isfile(full_file_path):
-                    logger.error("Could not find file {0} for export {1}.".format(full_file_path, export_task.name))
-                    continue
-                # Exclude zip files created by zip_export_provider
-                if not (full_file_path.endswith(".zip") and export_task.name == create_zip_task.name):
-                    include_files += [full_file_path]
-
-        # add the license for this provider if there are other files already
-        license_file = create_license_file(provider_task)
-        if license_file:
-            include_files += [license_file]
-
+    include_files = metadata['include_files']
     if include_files:
-        arcgis_dir = os.path.join(get_run_staging_dir(run.uid), Directory.ARCGIS.value)
+        arcgis_dir = os.path.join(get_run_staging_dir(metadata['run_uid']), Directory.ARCGIS.value)
         make_dirs(arcgis_dir)
-        metadata_file = os.path.join(arcgis_dir, 'metadata.json')
-        with open(metadata_file, 'w') as open_md_file:
-            json.dump(metadata, open_md_file)
-        include_files += [metadata_file]
+        arcgis_metadata_file = os.path.join(arcgis_dir, 'metadata.json')
+        arcgis_metadata = get_arcgis_metadata(metadata)
+        with open(arcgis_metadata_file, 'w') as open_md_file:
+            json.dump(arcgis_metadata, open_md_file)
+        include_files += [arcgis_metadata_file]
         # No need to add QGIS file if there aren't any files to be zipped.
-        include_files += [generate_qgs_style(run_uid=run.uid, data_provider_task_record=data_provider_task)]
-        include_files += [get_human_readable_metadata_document(run_uid=run.uid)]
+        include_files += [generate_qgs_style(metadata)]
+        include_files += [get_human_readable_metadata_document(metadata)]
         # Need to remove duplicates from the list because
         # some intermediate tasks produce files with the same name.
         # and add the static resources
         include_files = set(include_files)
         result['result'] = zip_files(include_files=include_files,
-                                     file_path=os.path.join(get_provider_staging_dir(run.uid, data_provider_task_slug),
-                                                            "{0}.zip".format(normalize_name(run.job.name))),
+                                     file_path=os.path.join(get_provider_staging_dir(metadata['run_uid'],
+                                                                                     data_provider_task.slug),
+                                                            "{0}.zip".format(metadata['name'])),
                                      static_files=get_style_files())
+    else:
+        raise Exception("Could not create a zip file because there were not files to include.")
     return result
 
 
@@ -1440,29 +1392,9 @@ def get_function(function):
     return function_object
 
 
-def get_data_type_from_provider(provider_slug):
-    from eventkit_cloud.jobs.models import DataProvider
-    # NOTE TIF here is a place holder until we figure out how to support other formats.
-    data_types = {'wms': 'raster',
-                  'tms': 'raster',
-                  'wmts': 'raster',
-                  'wcs': 'tif',
-                  'wfs': 'vector',
-                  'osm': 'osm',
-                  'arcgis-feature': 'vector',
-                  'arcgis-raster': 'raster'}
-    data_provider = DataProvider.objects.get(slug=provider_slug)
-    type_name = data_provider.export_provider_type.type_name
-    type_mapped = data_types.get(type_name)
-    if data_provider.slug.lower() == 'nome':
-        type_mapped = 'nome'
-    return type_mapped
-
-
 def make_dirs(path):
     try:
         os.makedirs(path)
     except OSError:
         if not os.path.isdir(path):
             raise
-
