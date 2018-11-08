@@ -47,7 +47,7 @@ class BenchmarkEventkit(object):
             provider_tasks = [{"provider": provider.get('name'), "formats": ["gpkg"]} for provider in
                               self.client.get_providers()]
 
-        with open(self.file, 'rb') as geojson_file:
+        with open(self.file, 'r') as geojson_file:
             geojson_data = json.load(geojson_file)
 
         count = batch_size
@@ -128,13 +128,14 @@ def main():
     args = parser.parse_args()
     user = os.getenv('EVENTKIT_USER')
     if not user:
-        getpass.getpass("EventKit Username:")
+        user = input("EventKit Username:")
     passwd = os.getenv('EVENTKIT_PASS')
     if not passwd:
         passwd = getpass.getpass("EventKit Password:")
 
     benchmarker = BenchmarkEventkit(args.url, user, passwd, args.file, args.name, args.sources)
     times = benchmarker.run_tests(batch_sizes=args.batches)
+    print(times)
 
 
 if __name__ == "__main__":
