@@ -170,10 +170,10 @@ class EventKitClient(object):
         for provider in providers:
             totals[provider] = {}
             totals[provider]['count'] = len(providers[provider].get('times'))
-            areas = providers[provider].pop('areas')
+            areas = providers[provider].pop('areas', None)
             if areas:
                 totals[provider]['area_average'] = statistics.mean(areas)
-            times = providers[provider].pop('times')
+            times = providers[provider].pop('times', None)
             if times:
                 totals[provider]['total'] = convert_seconds_to_hms(statistics.mean(times))
             for task in providers[provider]:
