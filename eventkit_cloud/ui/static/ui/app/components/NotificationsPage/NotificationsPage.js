@@ -14,13 +14,13 @@ import LoadButtons from '../DataPackPage/LoadButtons';
 import { getNotifications } from '../../actions/notificationsActions';
 
 export class NotificationsPage extends React.Component {
-    constructor(props) {
+    constructor(props, context) {
         super(props);
         this.refresh = this.refresh.bind(this);
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
-        this.itemsPerPage = 12;
+        this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE);
         this.state = {
             loadingPage: true,
             loading: true,
@@ -183,6 +183,12 @@ export class NotificationsPage extends React.Component {
         );
     }
 }
+
+NotificationsPage.contextTypes = {
+    config: PropTypes.shape({
+        NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
+    }),
+};
 
 NotificationsPage.propTypes = {
     router: PropTypes.object.isRequired,

@@ -1,30 +1,25 @@
 {% set name = "eventkit-cloud" %}
-{% set version = "1.2.0" %}
 
 package:
   name: '{{ name|lower }}'
-  version: '{{ version }}'
+  version: '{{ environ.get("GIT_DESCRIBE_TAG", "0.0.0") }}'
 
 source:
   git_url: /eventkit-cloud
 
 build:
-  number: 0
-  script: python setup.py install
+  number: '{{ environ.get("GIT_DESCRIBE_NUMBER", 0) }}'
 
 requirements:
   build:
-    - python
-    - setuptools
-  run:
     - python=3.5
-    - django-audit-logging=0.2.0
-    - gdal=2.2.4
-    - geos=3.6.2
-    - libgdal=2.2.4
-    - osmctools=0.7.0
-    - openldap=2.4.45
-    - python-ldap=3.1.0
+    - pip
+    - setuptools
+    - wheel
+    - nodejs
+    - ruby
+    - git
+  run:
     - python=3.5
     - django-audit-logging=0.2.0
     - gdal=2.2.4
@@ -56,7 +51,7 @@ requirements:
     - MapProxy=1.11.0
     - Markdown=2.6.8
     - numpy=1.14.3
-    - Pillow=5.2.0
+    - Pillow= 5.2.0
     - psycopg2=2.7.3.2
     - PyJWT=1.4.2
     - pyparsing=2.1.10

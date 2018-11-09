@@ -32,7 +32,7 @@ import { flattenFeatureCollection } from '../../utils/mapUtils';
 import { joyride } from '../../joyride.config';
 
 export class DataPackPage extends React.Component {
-    constructor(props) {
+    constructor(props, context) {
         super(props);
         this.getViewRef = this.getViewRef.bind(this);
         this.handleToggle = this.handleToggle.bind(this);
@@ -51,8 +51,9 @@ export class DataPackPage extends React.Component {
         this.handleSpatialFilter = this.handleSpatialFilter.bind(this);
         this.handleSortChange = this.handleSortChange.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
+        this.pageSize = Number(context.config.DATAPACK_PAGE_SIZE);
         this.state = {
-            open: isWidthUp('xl', this.props.width),
+            open: isWidthUp('xl', props.width),
             permissions: {
                 value: '',
                 groups: {},
@@ -66,7 +67,7 @@ export class DataPackPage extends React.Component {
                 incomplete: false,
             },
             providers: {},
-            pageLoading: this.props.runsFetched === null,
+            pageLoading: props.runsFetched === null,
             loading: true,
             geojson_geometry: null,
             steps: [],
@@ -75,9 +76,9 @@ export class DataPackPage extends React.Component {
 
         this.defaultQuery = {
             collection: 'all',
-            order: this.props.runsMeta.order || '-job__featured',
-            view: this.props.runsMeta.view || 'map',
-            page_size: '12',
+            order: props.runsMeta.order || '-job__featured',
+            view: props.runsMeta.view || 'map',
+            page_size: this.pageSize,
         };
     }
 
@@ -209,7 +210,7 @@ export class DataPackPage extends React.Component {
             range: this.props.runsMeta.range,
             handleLoadLess: this.loadLess,
             handleLoadMore: this.loadMore,
-            loadLessDisabled: this.props.runIds.length <= 12,
+            loadLessDisabled: this.props.runIds.length <= this.pageSize,
             loadMoreDisabled: !this.props.runsMeta.nextPage,
             providers: this.props.providers,
             users: this.props.users,
@@ -354,13 +355,17 @@ export class DataPackPage extends React.Component {
 
     loadMore() {
         if (this.props.runsMeta.nextPage) {
-            this.updateLocationQuery({ page_size: Number(this.props.location.query.page_size) + 12 });
+            this.updateLocationQuery({
+                page_size: Number(this.props.location.query.page_size) + this.pageSize,
+            });
         }
     }
 
     loadLess() {
-        if (Number(this.props.location.query.page_size) > 12) {
-            this.updateLocationQuery({ page_size: Number(this.props.location.query.page_size) - 12 });
+        if (Number(this.props.location.query.page_size) > this.pageSize) {
+            this.updateLocationQuery({
+                page_size: Number(this.props.location.query.page_size) - this.pageSize,
+            });
         }
     }
 
@@ -649,6 +654,12 @@ export class DataPackPage extends React.Component {
         );
     }
 }
+
+DataPackPage.contextTypes = {
+    config: PropTypes.shape({
+        DATAPACK_PAGE_SIZE: PropTypes.string,
+    }),
+};
 
 DataPackPage.defaultProps = {
     runsFetched: false,

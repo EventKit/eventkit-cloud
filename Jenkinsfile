@@ -53,7 +53,7 @@ END
             sh "docker-compose build"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
-            sh "docker-compose run --rm -T eventkit python manage.py runinitial setup || exit 0"
+            sh "docker-compose run --rm -T eventkit manage.py runinitial setup || exit 0"
             sh "docker-compose up --force-recreate -d"
         }catch(Exception e) {
            handleErrors("Failed to build the docker containers.")
@@ -74,7 +74,7 @@ END
         try{
             postStatus(getPendingStatus("Running the unit tests..."))
             retry(5) {
-                sh "timeout 10m docker-compose run --rm -T  eventkit python manage.py test -v=2 --noinput eventkit_cloud"
+                sh "timeout 10m docker-compose run --rm -T  eventkit manage.py test -v=2 --noinput eventkit_cloud"
             }
             sh "docker-compose run --rm -T  webpack npm test"
             postStatus(getSuccessStatus("All tests passed!"))
@@ -90,7 +90,7 @@ END
 //    stage("Run integration tests"){
 //        try{
 //                postStatus(getPendingStatus("Running the integration tests..."))
-//                sh "docker-compose run --rm -T  eventkit python manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded"
+//                sh "docker-compose run --rm -T  eventkit manage.py run_integration_tests eventkit_cloud.jobs.tests.integration_test_jobs.TestJob.test_loaded"
 //                postStatus(getSuccessStatus("All tests passed!"))
 //        }catch(Exception e) {
 //            sh "docker-compose logs --tail=50"
