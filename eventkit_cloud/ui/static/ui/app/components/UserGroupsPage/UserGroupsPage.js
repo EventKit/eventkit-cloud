@@ -703,6 +703,12 @@ export class UserGroupsPage extends Component {
                 height: bodyHeight,
                 width: bodyWidth,
             },
+            groups: {
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                justifyContent: 'space-between',
+            },
             fixedHeader: {
                 paddingTop: 15,
                 backgroundColor: colors.white,
@@ -975,7 +981,7 @@ export class UserGroupsPage extends Component {
                             className="qa-UserGroupsPage-CustomScrollbar"
                             ref={(instance) => { this.scrollbar = instance; }}
                         >
-                            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                            <div style={styles.groups}>
                                 <div>
                                     <div style={styles.ownUser}>
                                         {ownUser}
