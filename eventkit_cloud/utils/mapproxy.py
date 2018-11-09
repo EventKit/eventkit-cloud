@@ -6,17 +6,20 @@ import yaml
 from django.conf import settings
 from django.db import connections
 import mapproxy
+from mapproxy.cache.geopackage import GeopackageCache
 from mapproxy.config.config import load_config, load_default_config
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
 from mapproxy.seed import seeder
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.seed.seeder import seed
-from mapproxy.seed.util import ProgressLog, exp_backoff
+from mapproxy.seed.util import ProgressLog, exp_backoff, ProgressStore
+import os
 import sqlite3
 
 from eventkit_cloud.utils import auth_requests
 from eventkit_cloud.utils.geopackage import get_tile_table_names, set_gpkg_contents_bounds, \
     get_table_tile_matrix_information, get_zoom_levels_table, remove_empty_zoom_levels
+from eventkit_cloud.utils.gdalutils import retry
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +52,16 @@ def get_custom_exp_backoff(max_repeat=None):
         exp_backoff(*args, **kwargs)
 
     return custom_exp_backoff
+
+# This is a bug in mapproxy, https://github.com/mapproxy/mapproxy/issues/387
+def load_tile_metadata(self, tile):
+    if not self.supports_timestamp:
+        # GPKG specification does not include timestamps.
+        # This sets the timestamp of the tile to epoch (1970s)
+        tile.timestamp = -1
+    else:
+        self.load_tile(tile)
+
 
 
 class MapproxyGeopackage(object):
@@ -144,21 +157,25 @@ class MapproxyGeopackage(object):
 
         return conf_dict, seed_configuration, mapproxy_configuration
 
+    @retry
     def convert(self,):
         """
         Convert external service to gpkg.
         """
 
         from eventkit_cloud.tasks.task_process import TaskProcess
-
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
+        #  Customizations...
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
+        mapproxy.cache.geopackage.GeopackageCache.load_tile_metadata = load_tile_metadata
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             auth_requests.patch_https(self.name)
             auth_requests.patch_mapproxy_opener_cache(slug=self.name)
-            check_service(conf_dict, self.name)
-            progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid)
+
+            progress_store = get_progress_store(self.gpkgfile)
+            progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid, progress_store=progress_store)
+
             task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
                                        kwargs={"tasks": seed_configuration.seeds(['seed']),
@@ -175,6 +192,11 @@ class MapproxyGeopackage(object):
         finally:
             connections.close_all()
         return self.gpkgfile
+
+
+def get_progress_store(gpkg):
+    progress_file = os.path.join(os.path.dirname(gpkg), '.progress_logger')
+    return ProgressStore(filename=progress_file, continue_seed=True)
 
 
 def get_cache_template(sources, grids, geopackage, table_name='tiles'):
@@ -230,33 +252,6 @@ def get_seed_template(bbox=None, level_from=None, level_to=None, coverage_file=N
         seed_template['coverages']['geom']['bbox'] = bbox
 
     return seed_template
-
-
-def check_service(conf_dict, provider_name=None):
-    """
-    Used to verify the state of the service before running the seed task. This is used to prevent an invalid url from
-    being seeded.  MapProxy's default behavior is to either cache a blank tile or to retry, that behavior can be altered,
-    in the cache settings (i.e. `get_cache_template`).
-    :param conf_dict: A MapProxy configuration as a dict.
-    :param provider_name: (optional) Provider slug, used for client cert authentication if available
-    :return: None if valid, otherwise exception is raised.
-    """
-
-    for source in conf_dict.get('sources', []):
-        if not conf_dict['sources'][source].get('url'):
-            continue
-        tile = {'x': '1', 'y': '1', 'z': '1'}
-        url = conf_dict['sources'][source].get('url') % tile
-        response = auth_requests.get(url, slug=provider_name, verify=getattr(settings, "SSL_VERIFICATION", True))
-        if response.status_code in [401, 403]:
-            logger.error("The provider has invalid credentials with status code {0} and the text: \n{1}".format(
-                response.status_code, response.text))
-            raise Exception("The provider does not have valid credentials.")
-        elif not response.ok:
-            logger.error("The provider reported a server error with status code {0} and the text: \n{1}".format(
-                response.status_code, response.text))
-            raise Exception("The provider reported a server error.")
-
 
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
