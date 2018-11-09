@@ -29,16 +29,13 @@ describe('usersReducer', () => {
                 ...usersState,
                 fetching: true,
                 total: 0,
-                new: 0,
-                ungrouped: 0,
             },
             {
                 type: types.FETCHED_USERS,
                 users,
                 total: 3,
-                new: 2,
-                ungrouped: 1,
-
+                nextPage: false,
+                range: '1/1',
             },
         )).toEqual({
             ...usersState,
@@ -46,8 +43,8 @@ describe('usersReducer', () => {
             fetching: false,
             users,
             total: 3,
-            new: 2,
-            ungrouped: 1,
+            nextPage: false,
+            range: '1/1',
         });
     });
 

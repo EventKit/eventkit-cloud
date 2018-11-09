@@ -20,18 +20,34 @@ export function getUsers(params) {
             method: 'GET',
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
         }).then((response) => {
-            // get the total, new, and ungrouped counts from the header
+            // get the total count from the header
             const totalUsers = Number(response.headers['total-users']);
-            const newUsers = Number(response.headers['new-users']);
-            const ungroupedUsers = Number(response.headers['not-grouped-users']);
+
+            let nextPage = false;
+            let links = [];
+
+            if (response.headers.link) {
+                links = response.headers.link.split(',');
+            }
+
+            links.forEach((link) => {
+                if (link.includes('rel="next"')) {
+                    nextPage = true;
+                }
+            });
+
+            let range = '';
+            if (response.headers['content-range']) {
+                [, range] = response.headers['content-range'].split('-');
+            }
 
             const users = response.data;
             dispatch(makeAuthRequired({
                 type: types.FETCHED_USERS,
                 users,
                 total: totalUsers,
-                new: newUsers,
-                ungrouped: ungroupedUsers,
+                range,
+                nextPage,
             }));
         }).catch((error) => {
             dispatch(makeAuthRequired({ type: types.FETCH_USERS_ERROR, error: error.response.data }));

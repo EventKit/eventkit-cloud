@@ -30,8 +30,8 @@ describe('usersActions actions', () => {
                 type: actions.types.FETCHED_USERS,
                 users: expectedUsers,
                 total: 3,
-                new: 2,
-                ungrouped: 1,
+                nextPage: false,
+                range: '',
                 _auth_required: true,
             },
         ];
