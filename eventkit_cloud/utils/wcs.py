@@ -12,7 +12,7 @@ from django.conf import settings
 
 from eventkit_cloud.tasks.task_process import TaskProcess
 from eventkit_cloud.utils import auth_requests
-from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs
+from eventkit_cloud.utils.gdalutils import get_dimensions, merge_geotiffs, retry
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +173,7 @@ class WCSConverter(object):
         else:
             shutil.copy(geotiffs[0], self.out)
 
+    @retry
     def convert(self, ):
         """
         Download WCS data and convert to geopackage
