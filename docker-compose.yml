@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: config/Dockerfile
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     - /var/lib/eventkit/node_modules/
@@ -17,7 +17,7 @@ services:
     - rabbitmq
     expose:
     - "6080"
-    command: sh /var/lib/eventkit/scripts/eventkit-start.sh
+    command: gunicorn eventkit_cloud.wsgi:application --bind 0.0.0.0:6080 --worker-class eventlet --workers 1 --threads 2 --name eventkit --user eventkit --no-sendfile --reload
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
     - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
@@ -53,7 +53,7 @@ services:
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
   celery:
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -84,9 +84,9 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: sh /var/lib/eventkit/scripts/celery-start.sh
+    command: /home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.5/site-packages/scripts/run-celery.sh
   celery-beat:
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -117,7 +117,7 @@ services:
     - DEV_MACHINE_CODE_PATH
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
-    command: sh /var/lib/eventkit/scripts/celery-beat-start.sh
+    command: celery beat -A eventkit_cloud --loglevel=$LOG_LEVEL
   postgis:
     image: mdillon/postgis:9.5
     environment:
@@ -151,7 +151,7 @@ services:
     - SITE_NAME=${SITE_NAME}
     - LOG_LEVEL=warn
   flower:
-    image: eventkit/eventkit-base:1.2.1
+    image: eventkit/eventkit-base:1.2.2
     volumes:
     - ./:/var/lib/eventkit/
     user: eventkit
@@ -164,13 +164,11 @@ services:
     - postgis
     ports:
     - "49555:5555"
-    command: sh /var/lib/eventkit/scripts/flower-start.sh
+    command: flower -A eventkit_cloud --address=0.0.0.0 --port=5555 --broker=amqp://guest:guest@rabbitmq:5672/ --broker_api=http://guest:guest@rabbitmq:15672/api/
     extra_hosts:
     - "${SITE_NAME}:${SITE_IP}"
     environment:
     - DATABASE_URL=postgres://eventkit:eventkit_exports@postgis:5432/eventkit_exports
-    - BROKER_API=http://guest:guest@rabbitmq:15672/api/
-    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
     - SITE_NAME
     - SITE_IP
     - TERM

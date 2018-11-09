@@ -135,8 +135,12 @@ describe('DataPackPage component', () => {
         ...global.eventkit_test_props,
     });
 
+    const config = { DATAPACK_PAGE_SIZE: '12' };
+
     const getWrapper = props => (
-        shallow(<DataPackPage {...props} />)
+        shallow(<DataPackPage {...props} />, {
+            context: { config },
+        })
     );
 
     beforeAll(() => {
@@ -174,7 +178,7 @@ describe('DataPackPage component', () => {
             collection: 'all',
             order: '-job__featured',
             view: 'map',
-            page_size: '12',
+            page_size: Number(config.DATAPACK_PAGE_SIZE),
         };
         const updateStub = sinon.stub(DataPackPage.prototype, 'updateLocationQuery');
         getWrapper(props);
@@ -364,7 +368,7 @@ describe('DataPackPage component', () => {
     it('should remove the fetch interval on unmount', () => {
         jest.useFakeTimers();
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         expect(clearInterval.mock.calls.length).toEqual(0);
         const { fetch } = wrapper.instance();
         wrapper.unmount();
@@ -374,7 +378,7 @@ describe('DataPackPage component', () => {
 
     it('should handle fetched runs', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const nextProps = getProps();
         nextProps.runsFetched = true;
         nextProps.runIds = ['2', '1', '3'];
@@ -386,7 +390,7 @@ describe('DataPackPage component', () => {
 
     it('onSearch should call updateLocationQuery with search text', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().onSearch('test_search', 0);
         expect(updateStub.calledOnce).toBe(true);
@@ -427,7 +431,7 @@ describe('DataPackPage component', () => {
     it('checkForEmptySearch should call updateLocationQuery with search undefined', () => {
         const props = getProps();
         props.location.query.search = 'test_search';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().checkForEmptySearch('');
         expect(updateStub.calledOnce).toBe(true);
@@ -450,7 +454,7 @@ describe('DataPackPage component', () => {
 
     it('handleSortChange should call updateLocationQuery with new order', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().handleSortChange('job__name');
         expect(updateStub.calledOnce).toBe(true);
@@ -473,7 +477,7 @@ describe('DataPackPage component', () => {
         props.location.query.search = 'search_text';
         props.location.query.order = '-job__featured';
         props.location.query.collection = 'test_user';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         props.getRuns.reset();
         const status = { completed: true, incomplete: true };
         const minDate = new Date(2017, 6, 30, 8, 0, 0);
@@ -513,7 +517,7 @@ describe('DataPackPage component', () => {
 
     it('handleOwnerFilter call updateLocationQuery', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().handleOwnerFilter('test_value');
         expect(updateStub.calledOnce).toBe(true);
@@ -523,7 +527,7 @@ describe('DataPackPage component', () => {
     it('handleFilterApply should take filter state in and update new state then make runRequest', () => {
         const props = getProps();
         props.width = 'md';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const currentState = { ...wrapper.state() };
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         const newState = {
@@ -552,7 +556,7 @@ describe('DataPackPage component', () => {
     it('handleFilterClear should setState then re-apply search and sort', () => {
         const props = getProps();
         props.width = 'lg';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleFilterClear();
         expect(stateSpy.calledTwice).toBe(true);
@@ -578,7 +582,7 @@ describe('DataPackPage component', () => {
 
     it('handleSpatialFilter should setstate then call make run request', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         const geojson = {
             type: 'FeatureCollection',
@@ -609,7 +613,7 @@ describe('DataPackPage component', () => {
     it('changeView updateLocationQuery with new order if its not a shared order, otherwise just update with view', () => {
         const props = getProps();
         props.location.query.order = 'started_at';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().changeView('list');
         expect(updateStub.calledOnce).toBe(true);
@@ -625,7 +629,7 @@ describe('DataPackPage component', () => {
 
     it('handleToggle should set state', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().handleToggle();
         expect(stateSpy.calledOnce).toBe(true);
@@ -636,7 +640,7 @@ describe('DataPackPage component', () => {
     it('if nextPage is true, loadMore should increase page size query', () => {
         const props = getProps();
         props.runsMeta.nextPage = true;
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().loadMore();
         expect(updateStub.calledOnce).toBe(true);
@@ -646,7 +650,7 @@ describe('DataPackPage component', () => {
     it('if pageSize is greater than 12  is should decrease pageSize and makeRunRequest', () => {
         const props = getProps();
         props.location.query.page_size = '24';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const updateStub = sinon.stub(wrapper.instance(), 'updateLocationQuery');
         wrapper.instance().loadLess();
         expect(updateStub.calledOnce).toBe(true);
@@ -655,7 +659,7 @@ describe('DataPackPage component', () => {
 
     it('getView should return null, list, grid, or map component', () => {
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
 
         const commonProps = {
             runIds: props.runIds,
@@ -709,7 +713,7 @@ describe('DataPackPage component', () => {
     it('getJoyRideSteps should return correct steps based on view', () => {
         const props = getProps();
         props.location.query.view = 'map';
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.map);
         props.location.query.view = 'grid';
         expect(wrapper.instance().getJoyRideSteps()).toEqual(joyride.DataPackPage.grid);
@@ -728,7 +732,7 @@ describe('DataPackPage component', () => {
             },
         ];
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.instance().joyrideAddSteps(steps);
         expect(stateSpy.calledOnce).toBe(true);
@@ -750,7 +754,7 @@ describe('DataPackPage component', () => {
             type: 'step:before',
         };
         const props = getProps();
-        const wrapper = shallow(<DataPackPage {...props} />);
+        const wrapper = getWrapper(props);
         const stateSpy = sinon.spy(wrapper.instance(), 'setState');
         wrapper.setState({ open: false });
         wrapper.instance().callback(callbackData);
