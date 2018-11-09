@@ -24,6 +24,10 @@ export class NotificationsTableMenu extends React.Component {
         this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
         this.handleRemove = this.handleRemove.bind(this);
         this.handleMarkAllAsRead = this.handleMarkAllAsRead.bind(this);
+        this.handleDialogOpen = this.handleDialogOpen.bind(this);
+        this.handleDialogClose = this.handleDialogClose.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+        this.handleSelection = this.handleSelection.bind(this);
         this.state = {
             showRemoveDialog: false,
             deleteAll: 'false',
@@ -44,7 +48,7 @@ export class NotificationsTableMenu extends React.Component {
 
     handleRemove() {
         if (this.props.allSelected && !this.state.showRemoveDialog) {
-            this.setState({ showRemoveDialog: true });
+            this.handleDialogOpen();
         } else if (this.props.onRemove(values(this.props.selectedNotifications))) {
             this.props.removeNotifications(values(this.props.selectedNotifications));
         }
@@ -54,6 +58,23 @@ export class NotificationsTableMenu extends React.Component {
         if (this.props.onMarkAllAsRead()) {
             this.props.markAllNotificationsAsRead();
         }
+    }
+
+    handleDialogOpen() {
+        this.setState({ showRemoveDialog: true });
+    }
+
+    handleDialogClose() {
+        this.setState({ showRemoveDialog: false });
+    }
+
+    handleDelete() {
+        this.handleRemove();
+        this.handleDialogClose();
+    }
+
+    handleSelection(e) {
+        this.setState({ deleteAll: e.target.value });
     }
 
     render() {
@@ -160,9 +181,10 @@ export class NotificationsTableMenu extends React.Component {
                 </IconMenu>
                 <DeleteDialog
                     show={this.state.showRemoveDialog}
-                    onClose={() => { this.setState({ showRemoveDialog: false }); }}
+                    onDelete={this.handleDelete}
+                    onCancel={this.handleDialogClose}
                     deleteAll={this.state.deleteAll}
-                    onSelectionChange={(e) => { this.setState({ deleteAll: e.target.value }); }}
+                    onSelectionChange={this.handleSelection}
                 />
             </React.Fragment>
         );

@@ -2,29 +2,36 @@ import * as React from 'react';
 import { withTheme, createStyles, withStyles, Theme } from '@material-ui/core/styles';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
+import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import BaseDialog from '../Dialog/BaseDialog';
 
-const jss = (theme: Theme) => createStyles({
+const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     form: {
         width: '100%',
         padding: '20px 20px 0px',
     },
     radioLabel: {
-        fontSize: '12px',
+        fontSize: '14px',
+        color: 'inherit',
     },
+    delete: {
+        color: theme.eventkit.colors.warning,
+    }
 });
 
 interface Props {
     show: boolean;
     deleteAll: 'false' | 'true';
-    onClose: () => void;
+    onCancel: () => void;
+    onDelete: () => void;
     onSelectionChange: (e: any) => void;
     theme: Theme & Eventkit.Theme;
     classes: {
         form: string;
         radioLabel: string;
+        delete: string;
     };
 }
 
@@ -32,11 +39,33 @@ export class DeleteDialog extends React.Component<Props, {}> {
     render() {
         const { classes } = this.props;
 
+        const actions = [
+            <Button
+                key="confirm"
+                className={`qa-DeleteDialog-Button-confirm ${classes.delete}`}
+                color="secondary"
+                onClick={this.props.onDelete}
+                variant="contained"
+            >
+                DELETE
+            </Button>,
+            <Button
+                key="cancel"
+                className="qa-DeleteDialog-Button-cancel"
+                color="secondary"
+                onClick={this.props.onCancel}
+                variant="contained"
+            >
+                CANCEL
+            </Button>,
+        ];
+
         return (
             <BaseDialog
                 show={this.props.show}
                 title="DELETE ALL?"
-                onClose={this.props.onClose}
+                actions={actions}
+                onClose={this.props.onCancel}
             >
                 You have selected to delete all notifications on this page,
                  would you like to delete ALL notifications in the system as well?
