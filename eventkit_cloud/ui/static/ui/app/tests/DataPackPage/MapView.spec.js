@@ -20,7 +20,7 @@ import Style from 'ol/style/style';
 import GeoJSON from 'ol/format/geojson';
 
 import DataPackListItem from '../../components/DataPackPage/DataPackListItem';
-import LoadButtons from '../../components/DataPackPage/LoadButtons';
+import LoadButtons from '../../components/common/LoadButtons';
 import MapPopup from '../../components/DataPackPage/MapPopup';
 import CustomScrollbar from '../../components/CustomScrollbar';
 import SearchAOIToolbar from '../../components/MapTools/SearchAOIToolbar';

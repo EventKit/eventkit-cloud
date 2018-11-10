@@ -36,7 +36,7 @@ import OverviewMap from 'ol/control/overviewmap';
 
 import css from '../../styles/ol3map.css';
 import DataPackListItem from './DataPackListItem';
-import LoadButtons from './LoadButtons';
+import LoadButtons from '../common/LoadButtons';
 import MapPopup from './MapPopup';
 import CustomScrollbar from '../CustomScrollbar';
 import SearchAOIToolbar from '../MapTools/SearchAOIToolbar';

@@ -28,8 +28,6 @@ from eventkit_cloud.tasks import TaskStates
 from eventkit_cloud.tasks.models import ExportRun, ExportTaskRecord, DataProviderTaskRecord, FileProducingTaskResult
 from eventkit_cloud.tasks.task_factory import InvalidLicense
 
-# from django.test import TestCase as APITestCase
-
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import { mount } from 'enzyme';
 import Button from '@material-ui/core/Button';
 import KeyboardArrowDown from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUp from '@material-ui/icons/KeyboardArrowUp';
-import { LoadButtons } from '../../components/DataPackPage/LoadButtons';
+import { LoadButtons } from '../../components/common/LoadButtons';
 
 describe('LoadButtons component', () => {
     const getProps = () => ({

@@ -231,6 +231,7 @@ export class Application extends React.Component<Props, State> {
             MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
             MAX_RASTER_AOI_SQ_KM: PropTypes.number,
             MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
+            USER_GROUPS_PAGE_SIZE: PropTypes.string,
             DATAPACK_PAGE_SIZE: PropTypes.string,
             NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
