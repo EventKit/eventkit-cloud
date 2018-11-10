@@ -355,6 +355,7 @@ class FormatTask(ExportTask):
     display = True
 
 
+@gdalutils.retry
 def osm_data_collection_pipeline(
         export_task_record_uid, stage_dir, job_name='no_job_name_specified', url=None, slug=None,
         bbox=None, user_details=None, config=None):
@@ -409,7 +410,7 @@ def osm_data_collection_pipeline(
     return geopackage_filepath
 
 
-@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True)
+@app.task(name="OSM (.gpkg)", bind=True, base=FormatTask, abort_on_error=True, acks_late=True)
 def osm_data_collection_task(
         self, result=None, stage_dir=None, run_uid=None, provider_slug=None, overpass_url=None, task_uid=None,
         job_name='no_job_name_specified', bbox=None, user_details=None,
