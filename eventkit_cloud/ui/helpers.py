@@ -58,6 +58,11 @@ def create_license_file(provider_task):
 
     license_file_path = os.path.join(settings.EXPORT_STAGING_ROOT.rstrip('\/'), str(provider_task.run.uid),
                                      provider_task.slug, '{0}.txt'.format(normalize_name(data_provider_license.name)))
+    try:
+        os.makedirs(os.path.dirname(license_file_path))
+    except OSError:
+        if not os.path.isdir(os.path.dirname(license_file_path)):
+            raise
 
     with open(license_file_path, 'w') as license_file:
         license_file.write(data_provider_license.text.encode('utf-8'))

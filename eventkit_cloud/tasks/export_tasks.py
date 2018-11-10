@@ -1076,12 +1076,13 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
                 # Exclude zip files created by zip_export_provider
                 if full_file_path.endswith(".zip") == False:
                     include_files += [full_file_path]
-
         # add the license for this provider if there are other files already
         license_file = create_license_file(provider_task)
         logger.error("LICENSE FILE: {0}".format(license_file))
         if license_file:
             include_files += [license_file]
+
+
 
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(run_uid), Directory.ARCGIS.value)
