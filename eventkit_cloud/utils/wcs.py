@@ -108,6 +108,11 @@ class WCSConverter(object):
 
         logger.debug('WCS command: %s' % convert_cmd)
 
+        try:
+            os.remove(self.out)
+        except OSError:
+            pass
+
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -129,12 +134,13 @@ class WCSConverter(object):
         if not service:
             raise Exception('A service key needs to be defined to include the scale of source in meters')
         coverages = service.get('coverages', params.get('COVERAGE'))
-        coverages = coverages.split(',')
+        coverages = str(coverages).split(',')
         if not coverages:
             logger.error('No coverages were specified for this provider, please specify `coverages` under service or `COVERAGE` under params.')
             raise Exception("Data source incorrectly configured.")
         logger.info("Getting Dimensions...")
-        width, height = get_dimensions(self.bbox, int(service.get('scale')))
+        width, height = get_dimensions(self.bbox, float(service.get('scale')))
+        logger.info("{}, {}".format(width, height))
         params['width'] = str(width)
         params['height'] = str(height)
         params['service'] = 'WCS'
@@ -144,6 +150,10 @@ class WCSConverter(object):
             params['COVERAGE'] = coverage
             file_path, ext = os.path.splitext(self.out)
             outfile = '{0}-{1}{2}'.format(file_path, idx, ext)
+            try:
+                os.remove(outfile)
+            except OSError:
+                pass
             try:
                 req = auth_requests.get(self.service_url, params=params, slug=self.slug, stream=True,
                                         verify=getattr(settings, 'SSL_VERIFICATION', True))
@@ -172,6 +182,8 @@ class WCSConverter(object):
             self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
         else:
             shutil.copy(geotiffs[0], self.out)
+        if not os.path.isfile(self.out):
+            raise Exception("Nothing was returned from the WCS service.")
 
     @retry
     def convert(self, ):

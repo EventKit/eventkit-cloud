@@ -424,7 +424,7 @@ def get_metadata(data_provider_task_uid):
                         # Get statistics to update ranges in template.
                         band_stats = get_band_statistics(full_file_path)
                         logger.info("Band Stats {0}: {1}".format(full_file_path, band_stats))
-                        provider_details[provider_task.slug]["band_stats"] = band_stats
+                        metadata['data_sources'][provider_task.slug]["band_stats"] = band_stats
                         # Calculate the value for each elevation step (of 16)
                         try:
                             steps = linspace(band_stats[0], band_stats[1], num=16)
