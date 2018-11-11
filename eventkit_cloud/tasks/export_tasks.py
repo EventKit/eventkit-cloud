@@ -684,7 +684,7 @@ def wfs_export_task(self, result=None, layer=None, config=None, run_uid=None, ta
         raise Exception(e)
 
 
-@app.task(name='WCS Export', bind=True, base=ExportTask, abort_on_error=True)
+@app.task(name='WCS Export', bind=True, base=ExportTask, abort_on_error=True, acks_late=True)
 def wcs_export_task(self, result=None, layer=None, config=None, run_uid=None, task_uid=None, stage_dir=None,
                     job_name=None, bbox=None, service_url=None, name=None, service_type=None, user_details=None,
                     *args, **kwargs):

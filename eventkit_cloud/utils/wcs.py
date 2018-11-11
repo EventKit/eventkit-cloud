@@ -8,7 +8,7 @@ import tempfile
 from ..tasks.task_process import TaskProcess
 import yaml
 from ..utils import auth_requests
-from .gdalutils import get_dimensions, merge_geotiffs
+from .gdalutils import get_dimensions, merge_geotiffs, retry
 from django.conf import settings
 import shutil
 
@@ -106,6 +106,11 @@ class WCSConverter(object):
 
         logger.debug('WCS command: %s' % convert_cmd)
 
+        try:
+            os.remove(self.out)
+        except OSError:
+            pass
+
         task_process = TaskProcess(task_uid=self.task_uid)
         task_process.start_process(convert_cmd, shell=True, executable='/bin/sh',
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -143,6 +148,10 @@ class WCSConverter(object):
             file_path, ext = os.path.splitext(self.out)
             outfile = '{0}-{1}{2}'.format(file_path, idx, ext)
             try:
+                os.remove(outfile)
+            except OSError:
+                pass
+            try:
                 req = auth_requests.get(self.service_url, params=params, slug=self.slug, stream=True,
                                         verify=getattr(settings, 'SSL_VERIFICATION', True))
                 logger.info("Getting the coverage: {0}".format(req.url))
@@ -170,7 +179,10 @@ class WCSConverter(object):
             self.out = merge_geotiffs(geotiffs, self.out, task_uid=self.task_uid)
         else:
             shutil.copy(geotiffs[0], self.out)
+        if not os.path.isfile(self.out):
+            raise Exception("Nothing was returned from the WCS service.")
 
+    @retry
     def convert(self, ):
         """
         Download WCS data and convert to geopackage
