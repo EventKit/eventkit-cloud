@@ -1,10 +1,12 @@
 from __future__ import absolute_import
 
 from eventkit_cloud.utils import auth_requests
+
 import mapproxy
 from mapproxy.seed.seeder import seed
 from mapproxy.seed.config import SeedingConfiguration
 from mapproxy.config.loader import ProxyConfiguration, ConfigurationError, validate_references
+from mapproxy.cache import geopackage
 
 from mapproxy.config.config import load_config, load_default_config
 from mapproxy.seed import seeder
@@ -167,7 +169,7 @@ class MapproxyGeopackage(object):
         conf_dict, seed_configuration, mapproxy_configuration = self.get_check_config()
 
         mapproxy.seed.seeder.exp_backoff = get_custom_exp_backoff(max_repeat=int(conf_dict.get('max_repeat', 5)))
-        mapproxy.cache.geopackage.GeopackageCache.load_tile_metadata = load_tile_metadata
+        geopackage.GeopackageCache.load_tile_metadata = load_tile_metadata
         logger.info("Beginning seeding to {0}".format(self.gpkgfile))
         try:
             auth_requests.patch_https(self.name)
