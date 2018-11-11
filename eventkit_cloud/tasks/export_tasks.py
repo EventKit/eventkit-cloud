@@ -1133,6 +1133,7 @@ def finalize_export_provider_task(result=None, export_provider_task_uid=None,
 
 
 @app.task(name='Zip File Task', bind=False, base=UserDetailsBase)
+@gdalutils.retry
 def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, static_files=None, *args, **kwargs):
     """
     rolls up runs into a zip file
@@ -1221,6 +1222,8 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 filepath,
                 arcname=filename
             )
+        if zipfile.testzip():
+            raise Exception("The zipped file was corrupted.")
 
     # This is stupid but the whole zip setup needs to be updated, this should be just helper code, and this stuff should
     # be handled as an ExportTaskRecord.

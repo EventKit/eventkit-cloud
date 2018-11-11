@@ -173,7 +173,8 @@ class MapproxyGeopackage(object):
             check_service(conf_dict, self.name)
             progress_store = get_progress_store(self.gpkgfile)
             progress_logger = CustomLogger(verbose=True, task_uid=self.task_uid, progress_store=progress_store)
-            logger.error("ProgressStore {}".format(progress_logger.progress_store.filename))            task_process = TaskProcess(task_uid=self.task_uid)
+            logger.error("ProgressStore {}".format(progress_logger.progress_store.filename))
+            task_process = TaskProcess(task_uid=self.task_uid)
             task_process.start_process(billiard=True, target=seeder.seed,
                                        kwargs={"tasks": seed_configuration.seeds(['seed']),
                                                "concurrency": get_concurrency(conf_dict),
