@@ -39,6 +39,7 @@ class SQliteToGeopackage(object):
         self.cmd = Template("ogr2ogr -f 'GPKG' $gpkgfile $sqlite")
         self.task_uid = task_uid
 
+
     def convert(self,):
         """
         Convert sqlite to gpkg.

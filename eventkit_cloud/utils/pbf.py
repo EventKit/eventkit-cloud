@@ -35,6 +35,10 @@ class OSMToPBF(object):
         self.debug = debug
         self.cmd = Template('osmconvert $osm --out-pbf >$pbf')
         self.task_uid = task_uid
+        try:
+            os.remove(self.pbffile)
+        except Exception:
+            pass
 
     def convert(self, ):
         """
