@@ -38,7 +38,8 @@ from eventkit_cloud.tasks.models import (
     ExportTaskRecord,
     ExportTaskException,
     FileProducingTaskResult,
-    DataProviderTaskRecord
+    DataProviderTaskRecord,
+    prefetch_export_runs
 )
 from rest_framework import serializers
 from rest_framework_gis import serializers as geo_serializers
@@ -787,28 +788,46 @@ class UserJobActivitySerializer(serializers.ModelSerializer):
             return None
 
 
+class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
+    def to_representation(self, referenced_object):
+        if isinstance(referenced_object, User):
+            serializer = UserSerializer(referenced_object)
+        elif isinstance(referenced_object, Job):
+            serializer = ListJobSerializer(referenced_object, context={'request': self.context['request']})
+        elif isinstance(referenced_object, ExportRun):
+            serializer = ExportRunSerializer(prefetch_export_runs(referenced_object),
+                                             context={'request': self.context['request']})
+        elif isinstance(referenced_object, Group):
+            serializer = GroupSerializer(referenced_object)
+        return serializer.data
+
+
 class NotificationSerializer(serializers.ModelSerializer):
+
+    actor = serializers.SerializerMethodField()
+    target = serializers.SerializerMethodField()
+    action_object = serializers.SerializerMethodField()
 
     class Meta:
         model = Notification
-        fields = ( 'unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp', 'recipient_id' )
+        fields = ('unread', 'deleted', 'level', 'verb', 'description', 'id', 'timestamp',
+                  'recipient_id', 'actor', 'target', 'action_object')
 
-    def serialize_referenced_object(self, obj, referenced_object_content_type_id, referenced_object_id, referenced_object, request):
+    def get_related_object(self, obj, related_type=None):
+        if not related_type:
+            return None
+        type_id = getattr(obj, '{}_content_type_id'.format(related_type))
+        if type_id:
+            return {'type': str(ContentType.objects.get(id=type_id).model),
+                    'id': getattr(obj, '{0}_object_id'.format(related_type)),
+                    'details': GenericNotificationRelatedSerializer(getattr(obj, related_type),
+                                                                    context={'request': self.context['request']}).data}
 
-        response = {}
-        if referenced_object_id > 0:
-            response['type']=  str(ContentType.objects.get(id=referenced_object_content_type_id ).model)
-            response['id'] = referenced_object_id
+    def get_actor(self, obj):
+        return self.get_related_object(obj, 'actor')
 
-        if isinstance(referenced_object, User):
-            response['details'] =   UserSerializer(referenced_object).data
-        if isinstance(referenced_object, Job):
-            job = Job.objects.get(pk=obj.actor_object_id)
-            response['details'] = ListJobSerializer(job,context={'request': request}).data
-        if isinstance(referenced_object, ExportRun):
-            run = ExportRun.objects.get(pk=obj.actor_object_id)
-            response['details'] = ExportRunSerializer(run,context={'request': request}).data
-        if isinstance(referenced_object, Group):
-            response['details'] = GroupSerializer(referenced_object).data
+    def get_target(self, obj):
+        return self.get_related_object(obj, 'target')
 
-        return response
+    def get_action_object(self, obj):
+        return self.get_related_object(obj, 'action_object')
