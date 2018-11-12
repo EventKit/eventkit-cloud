@@ -22,10 +22,11 @@ class TestWCSConverter(TransactionTestCase):
         self.addCleanup(self.task_process_patcher.stop)
         self.task_uid = uuid4()
 
+    @patch('eventkit_cloud.utils.wcs.retry')
     @patch('eventkit_cloud.utils.wcs.auth_requests.get_cred')
     @patch('eventkit_cloud.utils.wcs.os.write')
     @patch('eventkit_cloud.utils.wcs.os.path.exists')
-    def test_convert_geotiff(self, exists, write, get_cred):
+    def test_convert_geotiff(self, exists, write, get_cred, mock_retry):
         geotiff = '/path/to/geotiff.tif'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
@@ -68,8 +69,9 @@ class TestWCSConverter(TransactionTestCase):
         with self.assertRaises(Exception):
             wcs_conv.convert()
 
+    @patch('eventkit_cloud.utils.wcs.retry')
     @patch('eventkit_cloud.utils.wcs.os.path.exists')
-    def test_convert_geopackage(self, exists):
+    def test_convert_geopackage(self, exists, mock_retry):
         geotiff = '/path/to/geopackage.gpkg'
         bbox = [-45, -45, 45, 45]
         layer = 'awesomeLayer'
