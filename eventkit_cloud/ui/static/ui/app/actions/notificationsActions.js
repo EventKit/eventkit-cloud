@@ -177,11 +177,14 @@ export function removeNotifications(notifications) {
             notifications,
         });
 
-        const data = { ids: [] };
+        const data = {};
+        if (notifications) {
+            data.ids = [];
 
-        notifications.forEach((notification) => {
-            data.ids.push(notification.id);
-        });
+            notifications.forEach((notification) => {
+                data.ids.push(notification.id);
+            });
+        }
 
         return axios({
             url: '/api/notifications/delete',

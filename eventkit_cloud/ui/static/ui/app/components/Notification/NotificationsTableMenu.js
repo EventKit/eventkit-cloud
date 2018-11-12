@@ -8,7 +8,7 @@ import FlagIcon from '@material-ui/icons/Flag';
 import CloseIcon from '@material-ui/icons/Close';
 import values from 'lodash/values';
 import IconMenu from '../common/IconMenu';
-import DeleteDialog from './DeleteDialog';
+import DeleteDialog from '../Dialog/DeleteNotificationsDialog';
 
 import {
     markAllNotificationsAsRead,
@@ -50,7 +50,13 @@ export class NotificationsTableMenu extends React.Component {
         if (this.props.allSelected && !this.state.showRemoveDialog) {
             this.handleDialogOpen();
         } else if (this.props.onRemove(values(this.props.selectedNotifications))) {
-            this.props.removeNotifications(values(this.props.selectedNotifications));
+            if (this.state.deleteAll === 'true') {
+                // user has opted to delete ALL notifications not just current page
+                this.props.removeNotifications();
+            } else {
+                // delete only wants to delete selected notifications
+                this.props.removeNotifications(values(this.props.selectedNotifications));
+            }
         }
     }
 

@@ -211,14 +211,21 @@ export function notificationsReducer(state = initialState, action) {
                 },
             };
         case types.REMOVING_NOTIFICATIONS: {
-            const notifications = { ...state.data.notifications };
+            let notifications = { ...state.data.notifications };
             let { unreadCount } = state.unreadCount.data;
-            action.notifications.forEach((notification) => {
-                if (notifications[notification.id].unread) {
-                    unreadCount -= 1;
-                }
-                delete notifications[notification.id];
-            });
+
+            if (action.notifications) {
+                action.notifications.forEach((notification) => {
+                    if (notifications[notification.id].unread) {
+                        unreadCount -= 1;
+                    }
+                    delete notifications[notification.id];
+                });
+            } else {
+                // clear all notifications
+                notifications = {};
+            }
+
             return {
                 ...state,
                 data: {

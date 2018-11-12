@@ -5,7 +5,7 @@ import Radio from '@material-ui/core/Radio';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import BaseDialog from '../Dialog/BaseDialog';
+import BaseDialog from './BaseDialog';
 
 const jss = (theme: Theme & Eventkit.Theme) => createStyles({
     form: {
@@ -77,13 +77,13 @@ export class DeleteDialog extends React.Component<Props, {}> {
                         <FormControlLabel
                             value="false"
                             control={<Radio color="primary" />}
-                            label="No, just delete the visible notifications that I have selected."
+                            label="No, just delete the notifications that I have selected."
                             classes={{ label: classes.radioLabel }}
                         />
                         <FormControlLabel
                             value="true"
                             control={<Radio color="primary" />}
-                            label="Yes, delete all my notifications in the system."
+                            label="Yes, delete ALL my notifications."
                             classes={{ label: classes.radioLabel }}
                         />
                     </RadioGroup>
