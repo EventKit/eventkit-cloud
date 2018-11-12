@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { makeAuthRequired } from './authActions';
 
 export const types = {
     FETCHING_GEOCODE: 'FETCHING_GEOCODE',
@@ -7,12 +8,23 @@ export const types = {
 };
 
 export function getGeocode(query) {
-    return (dispatch) => {
-        dispatch({ type: types.FETCHING_GEOCODE });
-        return axios.get('/search', {
-            params: {
-                query,
-            },
+    return (dispatch, getState) => {
+        const { geocode } = getState();
+
+        if (geocode.cancelSource) {
+            geocode.cancelSource.cancel('Cancelling current request in favor of new search request');
+        }
+
+        const { CancelToken } = axios;
+        const source = CancelToken.source();
+
+        dispatch(makeAuthRequired({ type: types.FETCHING_GEOCODE, cancelSource: source }));
+
+        return axios({
+            url: '/search',
+            method: 'GET',
+            params: { query },
+            cancelToken: source.token,
         }).then(response => (response.data))
             .then((responseData) => {
                 const features = responseData.features || [];
@@ -27,14 +39,18 @@ export function getGeocode(query) {
                         data.push(featureCopy);
                     }
                 });
-                dispatch({ type: types.RECEIVED_GEOCODE, data });
+                dispatch(makeAuthRequired({ type: types.RECEIVED_GEOCODE, data }));
             })
             .catch((e) => {
-                let error = e.response.data;
-                if (!error) {
-                    error = 'An unknown error has occured';
+                if (axios.isCancel(e)) {
+                    console.log(e.message);
+                } else {
+                    let error = e.response.data;
+                    if (!error) {
+                        error = 'An unknown error has occured';
+                    }
+                    dispatch(makeAuthRequired({ type: types.FETCH_GEOCODE_ERROR, error }));
                 }
-                dispatch({ type: types.FETCH_GEOCODE_ERROR, error });
             });
     };
 }
