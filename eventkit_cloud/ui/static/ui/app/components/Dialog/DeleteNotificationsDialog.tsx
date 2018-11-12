@@ -35,7 +35,7 @@ interface Props {
     };
 }
 
-export class DeleteDialog extends React.Component<Props, {}> {
+export class DeleteNotificationsDialog extends React.Component<Props, {}> {
     render() {
         const { classes } = this.props;
 
@@ -93,4 +93,4 @@ export class DeleteDialog extends React.Component<Props, {}> {
     }
 }
 
-export default withTheme()(withStyles(jss)(DeleteDialog));
+export default withTheme()(withStyles(jss)(DeleteNotificationsDialog));

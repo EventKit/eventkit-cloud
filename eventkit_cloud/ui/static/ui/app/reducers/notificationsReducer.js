@@ -7,6 +7,8 @@ export const initialState = {
     status: {
         fetching: null,
         fetched: null,
+        deleting: null,
+        deleted: null,
         error: null,
         cancelSource: null,
     },
@@ -228,6 +230,11 @@ export function notificationsReducer(state = initialState, action) {
 
             return {
                 ...state,
+                status: {
+                    ...state.status,
+                    deleting: true,
+                    deleted: false,
+                },
                 data: {
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
@@ -240,11 +247,22 @@ export function notificationsReducer(state = initialState, action) {
                 },
             };
         }
+        case types.REMOVED_NOTIFICATIONS:
+            return {
+                ...state,
+                status: {
+                    ...state.status,
+                    deleting: false,
+                    deleted: true,
+                },
+            };
         case types.REMOVE_NOTIFICATIONS_ERROR:
             return {
                 ...state,
                 status: {
                     ...state.status,
+                    deleted: false,
+                    deleting: false,
                     error: action.error,
                 },
             };

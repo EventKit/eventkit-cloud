@@ -20,7 +20,7 @@ export class NotificationsPage extends React.Component {
         this.getGridPadding = this.getGridPadding.bind(this);
         this.getRange = this.getRange.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
-        this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE);
+        this.itemsPerPage = Number(context.config.NOTIFICATIONS_PAGE_SIZE) || 10;
         this.state = {
             loadingPage: true,
             loading: true,
@@ -40,9 +40,15 @@ export class NotificationsPage extends React.Component {
             });
         }
 
-        if (this.props.notificationsData.range !== prevProps.notificationsData.range) {
-            if (!this.props.notificationsData.range) {
-                this.refresh();
+        if (this.props.notificationsStatus.deleted && !prevProps.notificationsStatus.deleted) {
+            this.refresh();
+        }
+
+        // In some rare cases the config is not loaded when this page mounts so we need to watch for an update
+        if (Number(this.context.config.NOTIFICATIONS_PAGE_SIZE) !== this.itemsPerPage) {
+            if (this.context.config.NOTIFICATIONS_PAGE_SIZE) {
+                this.itemsPerPage = Number(this.context.config.NOTIFICATIONS_PAGE_SIZE);
+                this.setState({ pageSize: this.itemsPerPage }, this.refresh);
             }
         }
     }
@@ -65,8 +71,8 @@ export class NotificationsPage extends React.Component {
     }
 
     refresh() {
-        this.props.getNotifications({ pageSize: this.state.pageSize });
         this.setState({ loading: true });
+        this.props.getNotifications({ pageSize: this.state.pageSize });
     }
 
     handleLoadMore() {
@@ -132,7 +138,7 @@ export class NotificationsPage extends React.Component {
                     title="Notifications"
                 />
                 {this.state.loading ?
-                    <PageLoading background="transparent" />
+                    <PageLoading background="transparent" style={{ zIndex: 10 }} />
                     : null
                 }
                 <CustomScrollbar style={styles.customScrollbar}>
