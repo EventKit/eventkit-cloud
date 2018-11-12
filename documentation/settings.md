@@ -265,3 +265,7 @@ The default number of DataPacks to be displayed in the DataPack Library
 #### Notifications Page Size
 The default number of Notifications to be displayed in the Notifications page
 <pre>NOTIFICATIONS_PAGE_SIZE='15'</pre>
+#### User Groups Page Size
+The default number of users to be loaded on the Groups Page
+<pre>USER_GROUPS_PAGE_SIZE='20'</pre>
+

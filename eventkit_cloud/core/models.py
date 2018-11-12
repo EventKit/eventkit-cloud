@@ -155,7 +155,8 @@ class JobPermission(TimeStampedModelMixin):
 
         # get all the jobs this user has been explicitly assigned to
 
-        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User), object_id=user.id):
+        for jp in JobPermission.objects.filter(content_type=ContentType.objects.get_for_model(User),
+                                               object_id=user.id).select_related('job'):
             if level == JobPermissionLevel.READ.value or jp.permission == level:
                 perms.append(jp)
                 job_ids.append(jp.job.id)

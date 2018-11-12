@@ -92,7 +92,7 @@ export class DataPackPage extends React.Component {
 
     componentDidMount() {
         this.props.getGroups();
-        this.props.getUsers({ exclude_self: true });
+        this.props.getUsers({ exclude_self: true, disable_page: true });
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.autoRunRequest, 10000);
