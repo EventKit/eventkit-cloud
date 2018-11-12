@@ -4,7 +4,7 @@ import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import GridList from '@material-ui/core/GridList';
 import DataPackGridItem from './DataPackGridItem';
 import CustomScrollbar from '../CustomScrollbar';
-import LoadButtons from './LoadButtons';
+import LoadButtons from '../common/LoadButtons';
 import withRef from '../../utils/withRef';
 
 export class DataPackGrid extends Component {

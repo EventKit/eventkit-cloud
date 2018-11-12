@@ -37,10 +37,8 @@ export class LoadButtons extends React.Component {
         const inlineStyles = {
             container: {
                 textAlign: 'center',
-                paddingBottom: '10px',
                 margin: '0px 10px',
                 position: 'relative',
-                height: '46px',
                 ...this.props.style,
             },
             range: this.state.width < 768 ?

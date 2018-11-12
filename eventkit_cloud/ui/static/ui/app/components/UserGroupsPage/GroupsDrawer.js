@@ -157,7 +157,7 @@ export class GroupsDrawer extends Component {
                                 </div>
                                 <IconMenu
                                     className="qa-GroupsDrawer-groupOptions"
-                                    style={{ height: '32px', width: '32px' }}
+                                    style={{ height: '32px', width: '32px', padding: '0px' }}
                                 >
                                     <MenuItem
                                         key="rename"

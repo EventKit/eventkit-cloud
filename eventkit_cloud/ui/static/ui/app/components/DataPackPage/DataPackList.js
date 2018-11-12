@@ -11,7 +11,7 @@ import NavigationArrowDropDown from '@material-ui/icons/ArrowDropDown';
 import NavigationArrowDropUp from '@material-ui/icons/ArrowDropUp';
 import DataPackListItem from './DataPackListItem';
 import DataPackTableItem from './DataPackTableItem';
-import LoadButtons from './LoadButtons';
+import LoadButtons from '../common/LoadButtons';
 import CustomScrollbar from '../CustomScrollbar';
 import withRef from '../../utils/withRef';
 

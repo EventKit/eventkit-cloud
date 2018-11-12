@@ -298,6 +298,7 @@ UI_CONFIG = {
     'BASEMAP_URL': os.getenv('BASEMAP_URL', 'http://tile.openstreetmap.org/{z}/{x}/{y}.png'),
     'BASEMAP_COPYRIGHT': os.getenv('BASEMAP_COPYRIGHT', '© OpenStreetMap'),
     'MAX_DATAPACK_EXPIRATION_DAYS': os.getenv('MAX_DATAPACK_EXPIRATION_DAYS', '30'),
+    'USER_GROUPS_PAGE_SIZE': os.getenv('USER_GROUPS_PAGE_SIZE', '20'),
     'MAX_VECTOR_AOI_SQ_KM': JOB_MAX_EXTENT,
     'MAX_RASTER_AOI_SQ_KM': JOB_MAX_RASTER_EXTENT,
     'DATAPACK_PAGE_SIZE': os.getenv('DATAPACK_PAGE_SIZE', '10'),
