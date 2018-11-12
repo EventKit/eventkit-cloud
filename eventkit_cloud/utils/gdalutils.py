@@ -269,10 +269,13 @@ def clip_dataset(boundary=None, in_dataset=None, out_dataset=None, fmt=None, tab
     if not out_dataset:
         out_dataset = in_dataset
 
+    # don't operate on the original file.  If the renamed file already exists,
+    # then don't try to rename, since that file may not exist if this is a retry.
     if out_dataset == in_dataset:
         in_dataset = os.path.join(os.path.dirname(out_dataset), "old_{0}".format(os.path.basename(out_dataset)))
-        logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
-        os.rename(out_dataset, in_dataset)
+        if not os.path.isfile(in_dataset):
+            logger.info("Renaming '{}' to '{}'".format(out_dataset, in_dataset))
+            os.rename(out_dataset, in_dataset)
 
     meta = get_meta(in_dataset)
 
@@ -407,8 +410,9 @@ def get_dimensions(bbox, scale):
     :param scale: A scale in meters per pixel.
     :return: A list [width, height] representing pixels
     """
-    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]])
-    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]])
+    # Request at least one pixel
+    width = get_distance([bbox[0], bbox[1]], [bbox[2], bbox[1]]) or 1
+    height = get_distance([bbox[0], bbox[1]], [bbox[0], bbox[3]]) or 1
     return [int(width/scale), int(height/scale)]
 
 
