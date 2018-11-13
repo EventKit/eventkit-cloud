@@ -128,7 +128,7 @@ class ExportOSMTaskRunner(TaskRunner):
             stage_dir=stage_dir, export_provider_task_record_uid=data_provider_task_record.uid, worker=worker,
             job_name=job_name, bbox=bbox, user_details=user_details, task_uid=osm_data_collection_task_record.uid,
             config=provider_task.provider.config, locking_task_key=data_provider_task_record.uid
-        )
+        ).set(queue="{}.osm".format(worker), routing_key="{}.osm".format(worker))
 
         if format_tasks:
             tasks = chain(osm_gpkg_task, format_tasks)

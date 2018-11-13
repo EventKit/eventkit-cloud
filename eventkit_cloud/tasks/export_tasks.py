@@ -890,7 +890,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 
 
 # This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', base=UserDetailsBase)
+@app.task(name='Wait For Providers', base=UserDetailsBase, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from .models import ExportRun
 
@@ -1034,7 +1034,7 @@ def example_finalize_run_hook_task(self, new_zip_filepaths=[], run_uid=None, *ar
     return created_files
 
 
-@app.task(name='Prepare Export Zip', base=FinalizeRunHookTask)
+@app.task(name='Prepare Export Zip', base=FinalizeRunHookTask, acks_late=True)
 def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -1081,8 +1081,6 @@ def prepare_for_export_zip_task(result=None, extra_files=None, run_uid=None, *ar
         logger.error("LICENSE FILE: {0}".format(license_file))
         if license_file:
             include_files += [license_file]
-
-
 
     if include_files:
         arcgis_dir = os.path.join(get_run_staging_dir(run_uid), Directory.ARCGIS.value)
