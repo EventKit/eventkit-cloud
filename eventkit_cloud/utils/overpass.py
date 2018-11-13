@@ -64,6 +64,10 @@ class Overpass(object):
             raw_data_filename = 'query.osm'
 
         self.raw_osm = os.path.join(self.stage_dir, raw_data_filename)
+        try:
+            os.remove(self.raw_osm)
+        except Exception:
+            pass
 
     def get_query(self,):
         """Get the overpass query used for this extract."""

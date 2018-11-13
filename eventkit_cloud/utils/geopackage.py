@@ -279,6 +279,10 @@ class Geopackage(object):
         gdal.UseExceptions()
         self.srs = osr.SpatialReference()
         self.srs.ImportFromEPSG(4326)  # configurable
+        try:
+            os.remove(self.output_gpkg)
+        except Exception:
+            pass
 
     def run(self):
         """
