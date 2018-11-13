@@ -75,27 +75,29 @@ export class DataPackGeneralTable extends Component {
                     title="Data Sources"
                     dataStyle={{ flexWrap: 'wrap', padding: '5px 10px 5px', display: 'grid' }}
                     data={
-                        providerTasks.map(providerTask => (
-                            <div key={providerTask.name} style={{ margin: '5px 0px' }}>
-                                {providerTask.name}
-                                <Info
-                                    className="qa-DataPackGeneralTable-Info-source"
-                                    onClick={() => this.handleProviderOpen(providerTask)}
-                                    key={providerTask.description}
-                                    style={styles.tableRowInfoIcon}
-                                />
-                                <BaseDialog
-                                    className="qa-DataPackGeneralTable-BaseDialog-source"
-                                    show={this.state.providerDialogOpen}
-                                    title={this.state.providerName}
-                                    onClose={this.handleProviderClose}
-                                >
-                                    <div style={{ paddingTop: '20px', wordWrap: 'break-word' }}>
-                                        {this.state.providerDescription}
-                                    </div>
-                                </BaseDialog>
-                            </div>
-                        ))
+                        <div>
+                            {providerTasks.map(providerTask => (
+                                <div key={providerTask.name} style={{ margin: '5px 0px' }}>
+                                    {providerTask.name}
+                                    <Info
+                                        className="qa-DataPackGeneralTable-Info-source"
+                                        onClick={() => this.handleProviderOpen(providerTask)}
+                                        key={providerTask.description}
+                                        style={styles.tableRowInfoIcon}
+                                    />
+                                </div>
+                            ))}
+                            <BaseDialog
+                                className="qa-DataPackGeneralTable-BaseDialog-source"
+                                show={this.state.providerDialogOpen}
+                                title={this.state.providerName}
+                                onClose={this.handleProviderClose}
+                            >
+                                <div style={{ paddingTop: '20px', wordWrap: 'break-word' }}>
+                                    {this.state.providerDescription}
+                                </div>
+                            </BaseDialog>
+                        </div>
                     }
                 />
                 <CustomTableRow
