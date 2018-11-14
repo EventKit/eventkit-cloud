@@ -88,6 +88,7 @@ export class UserGroupsPage extends Component {
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
+            search: props.location.query.search || '',
             showAddUsers: false,
             showCreate: false,
             showLeave: false,
@@ -191,6 +192,11 @@ export class UserGroupsPage extends Component {
                 query.groups = null;
                 delete query.groups;
             }
+            if (query.search) {
+                query.search = null;
+                delete query.search;
+            }
+            this.setState({ search: '' });
             browserHistory.push({
                 ...this.props.location,
                 query,
@@ -311,12 +317,15 @@ export class UserGroupsPage extends Component {
 
     handleSearchChange(event) {
         const text = event.target.value || '';
+        // always update state since that is what will show in the searchbar
+        this.setState({ search: text });
+        // if text is empty we need to clear the search and page size
         if (!text && this.props.location.query.search) {
             // we need to undo any search
             const query = { ...this.props.location.query };
             query.search = null;
-            query.page_size = this.pageSize;
             delete query.search;
+            query.page_size = this.pageSize;
             browserHistory.push({ ...this.props.location, query });
         }
     }
@@ -439,7 +448,10 @@ export class UserGroupsPage extends Component {
         } else {
             query.groups = value;
         }
-        // because we are navigating to new group we need to reset the page size
+        // because we are navigating to new group we need to reset the page size and the search
+        this.setState({ search: '' });
+        query.search = null;
+        delete query.search;
         query.page_size = this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
@@ -953,6 +965,7 @@ export class UserGroupsPage extends Component {
                             style={styles.container}
                             type="text"
                             placeholder="Search Users"
+                            value={this.state.search}
                             InputProps={{ style: styles.input }}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
