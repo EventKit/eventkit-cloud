@@ -66,7 +66,7 @@ describe('DataPackGeneralTable component', () => {
         const props = getProps();
         const openStub = sinon.stub(DataPackGeneralTable.prototype, 'handleProviderOpen');
         const wrapper = getWrapper(props);
-        shallow(wrapper.find(CustomTableRow).at(2).props().data[0])
+        shallow(wrapper.find(CustomTableRow).at(2).props().data)
             .find('.qa-DataPackGeneralTable-Info-source').simulate('click');
         expect(openStub.calledOnce).toBe(true);
         openStub.restore();
