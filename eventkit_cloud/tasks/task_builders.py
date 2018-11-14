@@ -118,6 +118,11 @@ class TaskChainBuilder(object):
             display=getattr(primary_export_task, "display", False)
         )
 
+        if "osm" in primary_export_task.name.lower():
+            queue_routing_key_name = "{}.osm".format(worker)
+        else:
+            queue_routing_key_name = worker
+
         primary_export_task_signature = primary_export_task.s(name=provider_task.provider.slug,
                                                               run_uid=run.uid,
                                                               provider_slug=provider_task.provider.slug,
@@ -135,8 +140,9 @@ class TaskChainBuilder(object):
                                                               level_to=provider_task.provider.level_to,
                                                               service_type=service_type,
                                                               service_url=provider_task.provider.url,
-                                                              config=provider_task.provider.config).set(queue=worker,
-                                                                                                routing_key=worker)
+                                                              config=provider_task.provider.config).set(queue=queue_routing_key_name,
+                                                                                                        routing_key=queue_routing_key_name)
+
 
         if format_tasks:
             tasks = chain(primary_export_task_signature, format_tasks)
