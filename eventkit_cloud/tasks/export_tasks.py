@@ -1174,7 +1174,7 @@ def zip_file_task(include_files, run_uid=None, file_name=None, adhoc=False, stat
                 if basename == "__init__.py":
                     continue
                 elif os.path.basename(os.path.dirname(absolute_file_path)) == Directory.ARCGIS.value:
-                    if basename == "create_mxd.py":
+                    if basename in ["create_mxd.py", "ReadMe.txt"]:
                         filename = os.path.join(Directory.ARCGIS.value, '{0}'.format(basename))
                     else:
                         # Put the support files in the correct directory.
