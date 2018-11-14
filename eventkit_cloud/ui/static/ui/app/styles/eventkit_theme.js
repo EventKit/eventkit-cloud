@@ -123,6 +123,11 @@ export const theme = {
                 },
             },
         },
+        MuiIconButton: {
+            root: {
+                padding: '0px',
+            },
+        },
         MuiMenuItem: {
             root: {
                 backgroundColor: 'transparent',
