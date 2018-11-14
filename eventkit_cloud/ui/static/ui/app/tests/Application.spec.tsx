@@ -1,24 +1,14 @@
-import React from 'react';
+import * as React from 'react';
 import axios from 'axios';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
+import * as MockAdapter from 'axios-mock-adapter';
 import { createShallow } from '@material-ui/core/test-utils';
 import AppBar from '@material-ui/core/AppBar';
-import Drawer from '@material-ui/core/Drawer';
-import MenuItem from '@material-ui/core/MenuItem';
-import { Link, IndexLink } from 'react-router';
-import Dashboard from '@material-ui/icons/Dashboard';
-import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
-import ContentAddBox from '@material-ui/icons/AddBox';
-import ActionInfoOutline from '@material-ui/icons/InfoOutlined';
-import SocialPerson from '@material-ui/icons/Person';
-import SocialGroup from '@material-ui/icons/Group';
-import ActionExitToApp from '@material-ui/icons/ExitToApp';
-import MockAdapter from 'axios-mock-adapter';
 import createTestStore from '../store/configureTestStore';
 import BaseDialog from '../components/Dialog/BaseDialog';
 import Banner from '../components/Banner';
+import Drawer from '../components/Drawer';
 import { Application } from '../components/Application';
-import ConfirmDialog from '../components/Dialog/ConfirmDialog';
 import NotificationsDropdown from '../components/Notification/NotificationsDropdown';
 
 const store = createTestStore({});
@@ -36,7 +26,7 @@ describe('Application component', () => {
         userData: {},
         drawer: 'open',
         router: {
-            push: () => {},
+            push: () => sinon.stub(),
             location: {
                 pathname: '/exports',
             },
@@ -51,13 +41,13 @@ describe('Application component', () => {
         },
         notificationsCount: 0,
         store,
-        openDrawer: () => {},
-        closeDrawer: () => {},
-        userActive: () => {},
+        openDrawer: sinon.stub(),
+        closeDrawer: sinon.stub(),
+        userActive: sinon.stub(),
         getNotifications: sinon.spy(),
-        getNotificationsUnreadCount: () => {},
+        getNotificationsUnreadCount: sinon.stub(),
         classes: {},
-        ...global.eventkit_test_props,
+        ...(global as any).eventkit_test_props,
     });
 
     const config = {
@@ -80,30 +70,17 @@ describe('Application component', () => {
         expect(wrapper.find(NotificationsDropdown)).toHaveLength(0);
         expect(wrapper.find(Drawer)).toHaveLength(1);
         expect(wrapper.find(BaseDialog)).toHaveLength(2);
-        expect(wrapper.find(ConfirmDialog)).toHaveLength(1);
-        const drawer = wrapper.find(Drawer).dive();
-        expect(drawer.find(MenuItem)).toHaveLength(7);
-        expect(drawer.find(MenuItem).at(0).html()).toContain('Dashboard');
-        expect(drawer.find(MenuItem).at(0).find(Dashboard)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(0).find(IndexLink)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(1).html()).toContain('DataPack Library');
-        expect(drawer.find(MenuItem).at(1).find(AVLibraryBooks)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(1).find(Link)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(2).html()).toContain('Create DataPack');
-        expect(drawer.find(MenuItem).at(2).find(ContentAddBox)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(2).find(Link)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(3).html()).toContain('Members and Groups');
-        expect(drawer.find(MenuItem).at(3).find(SocialGroup)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(3).find(Link)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(4).html()).toContain('About EventKit');
-        expect(drawer.find(MenuItem).at(4).find(ActionInfoOutline)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(4).find(Link)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(5).html()).toContain('Account Settings');
-        expect(drawer.find(MenuItem).at(5).find(SocialPerson)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(5).find(Link)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(6).html()).toContain('Log Out');
-        expect(drawer.find(MenuItem).at(6).find(ActionExitToApp)).toHaveLength(1);
-        expect(drawer.find(MenuItem).at(6).find(Link)).toHaveLength(1);
+    });
+
+    it('should render children with context', () => {
+        const Child = (p, c) => {
+            return <div>Im a child</div>;
+        };
+        const props = getProps();
+        const wrapper = shallow(<Application {...props}><Child /></Application>, {
+            context: { config },
+        });
+        expect(wrapper.find(Child)).toHaveLength(1);
     });
 
     it('should call getConfig on mount', () => {
@@ -162,6 +139,51 @@ describe('Application component', () => {
         stateSpy.restore();
     });
 
+    it('handleStayLoggedIn should start sending pings and call hide warning', async () => {
+        const wrapper = getWrapper(getProps());
+        const pingStub = sinon.stub(wrapper.instance(), 'startSendingUserActivePings')
+            .callsFake(() => (new Promise((resolve, reject) => (setTimeout(() => resolve(), 10)))));
+        const hideStub = sinon.stub(wrapper.instance(), 'hideAutoLogoutWarning');
+        await wrapper.instance().handleStayLoggedIn();
+        expect(pingStub.calledOnce).toBe(true);
+        expect(hideStub.calledOnce).toBe(true);
+    });
+
+    it('handleCloseAutoLoggedOutDialog should set show to false', () => {
+        const wrapper = getWrapper(getProps());
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleCloseAutoLoggedOutDialog();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAutoLoggedOutDialog: false })).toBe(true);
+    });
+
+    it('stopListeningForNotifications should return with no side effects', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().notificationsUnreadCountIntervalId = undefined;
+        const clearStub = sinon.stub(window, 'clearInterval');
+        wrapper.instance().stopListeningForNotifications();
+        expect(clearStub.notCalled).toBe(true);
+        clearStub.restore();
+    });
+
+    it('stopListeningForNotifications should clear intervals', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().notificationsUnreadCountIntervalId = 123;
+        wrapper.instance().notificationsRefreshIntervalId = 123;
+        const clearStub = sinon.stub(window, 'clearInterval');
+        wrapper.instance().stopListeningForNotifications();
+        expect(clearStub.calledTwice).toBe(true);
+        clearStub.restore();
+    });
+
+    it('startCheckingForAutoLogout should return with no side effects', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().checkAutoLogoutIntervalId = 123;
+        const setStub = sinon.stub(window, 'setInterval');
+        wrapper.instance().startCheckingForAutoLogout();
+        expect(setStub.notCalled).toBe(true);
+    });
+
     it('Auto logout warning should show remaining minutes when above one minute', () => {
         jest.useFakeTimers();
         const props = getProps();
@@ -198,34 +220,6 @@ describe('Application component', () => {
         wrapper.instance().startCheckingForAutoLogout();
         jest.runOnlyPendingTimers();
         expect(wrapper.state().showAutoLoggedOutDialog).toBe(true);
-    });
-
-    it('handleLogoutClick should set showLogoutDialog to true', () => {
-        const wrapper = getWrapper(getProps());
-        expect(wrapper.state().showLogoutDialog).toBe(false);
-        wrapper.instance().handleLogoutClick();
-        expect(wrapper.state().showLogoutDialog).toBe(true);
-    });
-
-    it('handleLogoutDialogCancel should set showLogoutDialog to false', () => {
-        const wrapper = getWrapper(getProps());
-        wrapper.setState({
-            showLogoutDialog: true,
-        });
-        wrapper.instance().handleLogoutDialogCancel();
-        expect(wrapper.state().showLogoutDialog).toBe(false);
-    });
-
-    it('handleLogoutDialogConfirm() should set showLogoutDialog to false and call logout()', () => {
-        const logoutSpy = sinon.spy(Application.prototype, 'logout');
-        const wrapper = getWrapper(getProps());
-        wrapper.setState({
-            showLogoutDialog: true,
-        });
-        wrapper.instance().handleLogoutDialogConfirm();
-        expect(wrapper.state().showLogoutDialog).toBe(false);
-        expect(logoutSpy.calledOnce).toBe(true);
-        logoutSpy.restore();
     });
 
     it('should start listening for notifications on user login & context received', () => {
@@ -311,6 +305,103 @@ describe('Application component', () => {
         expect(indicator.props().style.transform).toBe('scale(0)');
     });
 
+    it('startSendingUserActivePings should return with no side effects', () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        wrapper.instance().isSendingUserActivePings = true;
+        wrapper.instance().startSendingUserActivePings();
+        expect(props.userActive.notCalled).toBe(true);
+    });
+
+    it('startSendingUserActivePings should add listeners and call userActive', async () => {
+        const props = getProps();
+        const wrapper = getWrapper(props);
+        const addStub = sinon.stub(window, 'addEventListener');
+        await wrapper.instance().startSendingUserActivePings();
+        expect(addStub.callCount).toEqual(wrapper.instance().userActiveInputTypes.length);
+        expect(props.userActive.calledOnce).toBe(true);
+        addStub.restore();
+        const setStub = sinon.stub(window, 'setTimeout').callsFake((callback, time) => { callback(); });
+        props.userActive.reset();
+        wrapper.instance().handleUserActiveInput();
+        expect(setStub.calledOnce).toBe(true);
+        expect(props.userActive.calledOnce).toBe(true);
+        setStub.restore();
+    });
+
+    it('stopSendingUserActivePings should return with no side effects', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().isSendingUserActivePings = undefined;
+        wrapper.instance().stopSendingUserActivePings();
+        wrapper.update();
+        expect(wrapper.instance().isSendingUserActivePings).toBe(undefined);
+    });
+
+    it('stopSendingUserActivePings should remove event listeners', () => {
+        const wrapper = getWrapper(getProps());
+        const removeStub = sinon.stub(window, 'removeEventListener');
+        wrapper.instance().isSendingUserActivePings = true;
+        wrapper.instance().stopSendingUserActivePings();
+        wrapper.update();
+        expect(wrapper.instance().isSendingUserActivePings).toBe(false);
+        expect(removeStub.callCount).toEqual(wrapper.instance().userActiveInputTypes.length);
+        removeStub.restore();
+
+    });
+
+    it('showAutoLogoutWarning should return with no side effects', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().autoLogoutWarningIntervalId = 123;
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().showAutoLogoutWarning();
+        expect(stateStub.called).toBe(false);
+    });
+
+    it('showAutoLogoutWarning should update state, stop pings, and setInterval', () => {
+        const props = getProps();
+        props.autoLogoutAt = { getTime: sinon.stub().returns(Date.now() + (10 * 60 * 1000)) };
+        const wrapper = getWrapper(props);
+        wrapper.instance().autoLogoutWarningIntervalId = undefined;
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const stopStub = sinon.stub(wrapper.instance(), 'stopSendingUserActivePings');
+        const setStub = sinon.stub(window, 'setInterval');
+        wrapper.instance().showAutoLogoutWarning();
+        expect(stateStub.calledTwice).toBe(true);
+        expect(stopStub.calledOnce).toBe(true);
+        expect(setStub.calledOnce).toBe(true);
+        setStub.restore();
+    });
+
+    it('hideAutoLogoutWarning should return with no side effects', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().autoLogoutWarningIntervalId = undefined;
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().hideAutoLogoutWarning();
+        expect(stateStub.called).toBe(false);
+    });
+
+    it('hideAutoLogoutWarning should set dialog false and clear interval', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.instance().autoLogoutWarningIntervalId = 123;
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const clearStub = sinon.stub(window, 'clearInterval');
+        wrapper.instance().hideAutoLogoutWarning();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showAutoLogoutWarningDialog: false }));
+        expect(clearStub.calledOnce).toBe(true);
+        expect(clearStub.calledWith(123)).toBe(true);
+        clearStub.restore();
+    });
+
+    it('handleClick should set showNotificationsDropdown false', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.setState({ showNotificationsDropdown: true });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        wrapper.instance().handleClick();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showNotificationsDropdown: false }));
+    });
+
     it('should open/close notifications dropdown when notifications button is clicked', () => {
         const wrapper = getWrapper(getProps());
         const e = { preventDefault: sinon.spy(), stopPropagation: sinon.spy() };
@@ -322,5 +413,14 @@ describe('Application component', () => {
         wrapper.find('.qa-Application-AppBar-NotificationsButton').simulate('click', e);
         dropdown = wrapper.find(NotificationsDropdown);
         expect(dropdown).toHaveLength(0);
+    });
+
+    it('handleNotificationsDropdownNavigate should set showNotificationsDropdown false', () => {
+        const wrapper = getWrapper(getProps());
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const ret = wrapper.instance().handleNotificationsDropdownNavigate();
+        expect(stateStub.calledOnce).toBe(true);
+        expect(stateStub.calledWith({ showNotificationsDropdown: false }));
+        expect(ret).toBe(true);
     });
 });
