@@ -360,7 +360,7 @@ export class Application extends React.Component<Props, State> {
                     this.setState({ childContext: { config: response.data } });
                 }
             }).catch((error) => {
-                console.log(error.response.data);
+                console.warn(error.response.data);
             });
     }
 

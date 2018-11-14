@@ -78,7 +78,7 @@ export function getNotifications(args = {}) {
             }));
         }).catch((error) => {
             if (axios.isCancel(error)) {
-                console.log(error.message);
+                console.warn(error.message);
             } else {
                 dispatch(makeAuthRequired({
                     type: types.FETCH_NOTIFICATIONS_ERROR,
@@ -267,7 +267,7 @@ export function getNotificationsUnreadCount(args = {}) {
             }));
         }).catch((error) => {
             if (axios.isCancel(error)) {
-                console.log(error.message);
+                console.warn(error.message);
             } else {
                 dispatch(makeAuthRequired({
                     type: types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,

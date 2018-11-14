@@ -148,7 +148,7 @@ export class NotificationsPage extends React.Component {
                                 <div className="qa-NotificationsPage-Content-Notifications">
                                     {isWidthUp('md', this.props.width) ?
                                         <NotificationsTable
-                                            notifications={this.props.notificationsData}
+                                            notificationsData={this.props.notificationsData}
                                             notificationsArray={notifications}
                                             router={this.props.router}
                                         />

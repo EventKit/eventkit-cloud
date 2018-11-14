@@ -115,7 +115,7 @@ export class NotificationMessage extends Component {
                 break;
             }
             default: {
-                console.error(`Unsupported notification verb '${verb}'`, notification);
+                console.warn(`Unsupported notification verb '${verb}'`, notification);
                 return null;
             }
         }

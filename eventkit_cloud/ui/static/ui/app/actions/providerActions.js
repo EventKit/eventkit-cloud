@@ -24,7 +24,7 @@ export function getProviders() {
                 providers: response.data,
             }));
         }).catch((error) => {
-            console.log(error);
+            console.warn(error);
         });
     };
 }

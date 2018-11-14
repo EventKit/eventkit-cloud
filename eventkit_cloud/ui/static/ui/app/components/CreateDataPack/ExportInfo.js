@@ -193,8 +193,7 @@ export class ExportInfo extends React.Component {
             newProvider.availability = JSON.parse(response.data);
             newProvider.availability.slug = provider.slug;
             return newProvider;
-        }).catch((error) => {
-            console.error(error);
+        }).catch(() => {
             newProvider.availability = {
                 status: 'WARN',
                 type: 'CHECK_FAILURE',
