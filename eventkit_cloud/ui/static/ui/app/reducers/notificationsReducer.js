@@ -127,6 +127,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -162,6 +163,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -193,6 +195,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -236,6 +239,7 @@ export function notificationsReducer(state = initialState, action) {
                     deleted: false,
                 },
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },

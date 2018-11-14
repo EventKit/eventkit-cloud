@@ -12,6 +12,9 @@ const jss = (theme: Theme & Eventkit.Theme) => createStyles({
         width: '100%',
         padding: '20px 20px 0px',
     },
+    radio: {
+        padding: '12px',
+    },
     radioLabel: {
         fontSize: '14px',
         color: 'inherit',
@@ -30,6 +33,7 @@ interface Props {
     theme: Theme & Eventkit.Theme;
     classes: {
         form: string;
+        radio: string;
         radioLabel: string;
         delete: string;
     };
@@ -76,13 +80,13 @@ export class DeleteNotificationsDialog extends React.Component<Props, {}> {
                     >
                         <FormControlLabel
                             value="false"
-                            control={<Radio color="primary" />}
+                            control={<Radio color="primary" className={classes.radio} />}
                             label="No, just delete the notifications that I have selected."
                             classes={{ label: classes.radioLabel }}
                         />
                         <FormControlLabel
                             value="true"
-                            control={<Radio color="primary" />}
+                            control={<Radio color="primary" className={classes.radio} />}
                             label="Yes, delete ALL my notifications."
                             classes={{ label: classes.radioLabel }}
                         />
