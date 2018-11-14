@@ -107,9 +107,12 @@ export class SearchAOIToolbar extends Component {
             },
             loading: {
                 position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
+                width: '50px',
+                height: '100%',
+                right: '0px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 zIndex: '1',
             },
         };
@@ -169,12 +172,13 @@ export class SearchAOIToolbar extends Component {
                         renderMenu={renderer}
                         className="qa-SearchAOIToolbar-typeahead"
                     />
-                    {(this.props.geocode.fetching) ?
-                        <CircularProgress
-                            size={25}
-                            style={styles.loading}
-                            color="primary"
-                        />
+                    {this.props.geocode.fetching ?
+                        <div style={styles.loading}>
+                            <CircularProgress
+                                size={25}
+                                color="primary"
+                            />
+                        </div>
                         : null
                     }
                 </div>
