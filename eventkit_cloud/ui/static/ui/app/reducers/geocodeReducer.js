@@ -5,6 +5,7 @@ export const initialState = {
     fetched: null,
     data: [],
     error: null,
+    cancelSource: null,
 };
 
 export function geocodeReducer(state = initialState, action) {
@@ -15,6 +16,7 @@ export function geocodeReducer(state = initialState, action) {
                 fetched: false,
                 data: [],
                 error: null,
+                cancelSource: action.cancelSource,
             };
         case types.RECEIVED_GEOCODE:
             return {
@@ -22,6 +24,7 @@ export function geocodeReducer(state = initialState, action) {
                 fetched: true,
                 data: action.data,
                 error: null,
+                cancelSource: null,
             };
         case types.FETCH_GEOCODE_ERROR:
             return {
@@ -29,6 +32,7 @@ export function geocodeReducer(state = initialState, action) {
                 fetched: false,
                 data: [],
                 error: action.error,
+                cancelSource: null,
             };
         default:
             return state;
