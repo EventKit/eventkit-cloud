@@ -198,6 +198,7 @@ interface State {
     showLogoutDialog: boolean;
     showNotificationsDropdown: boolean;
     notificationsLoading: boolean;
+    loggedIn: boolean;
 }
 
 export class Application extends React.Component<Props, State> {
@@ -210,7 +211,6 @@ export class Application extends React.Component<Props, State> {
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
     private isSendingUserActivePings: boolean;
-    private loggedIn: boolean;
     private handleUserActiveInput: () => void;
 
     static defaultProps = {
@@ -268,6 +268,7 @@ export class Application extends React.Component<Props, State> {
             showLogoutDialog: false,
             showNotificationsDropdown: false,
             notificationsLoading: true,
+            loggedIn: Boolean(props.userData),
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
@@ -275,7 +276,6 @@ export class Application extends React.Component<Props, State> {
         this.notificationsPageSize = 10;
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
-        this.loggedIn = false;
     }
 
     getChildContext() {
@@ -289,26 +289,26 @@ export class Application extends React.Component<Props, State> {
     componentDidUpdate(prevProps, prevState) {
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
-            if (this.loggedIn || this.props.userData) {
+            if (this.state.loggedIn || this.props.userData) {
                 this.startCheckingForAutoLogout();
                 this.startSendingUserActivePings();
                 this.startListeningForNotifications();
             }
         }
-        if (this.loggedIn && this.props.width !== prevProps.width) {
+        if (this.state.loggedIn && this.props.width !== prevProps.width) {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             } else if (prevProps.width === 'xl') {
                 this.props.closeDrawer();
             }
         }
-        if (!this.loggedIn && this.props.userData) {
-            this.loggedIn = true;
+        if (!this.state.loggedIn && this.props.userData) {
+            this.setState({ loggedIn: true });
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             }
-        } else if (this.loggedIn && !this.props.userData) {
-            this.loggedIn = false;
+        } else if (this.state.loggedIn && !this.props.userData) {
+            this.setState({ loggedIn: false });
             this.stopCheckingForAutoLogout();
             this.stopSendingUserActivePings();
             this.stopListeningForNotifications();
@@ -319,8 +319,13 @@ export class Application extends React.Component<Props, State> {
         }
     }
 
-    shouldComponentUpdate(p) {
-        const status = p.notificationsStatus;
+    shouldComponentUpdate(prevProps, prevState) {
+        if (prevState.loggedIn !== this.state.loggedIn) {
+            // if login state has changed we always update
+            return true;
+        }
+
+        const status = prevProps.notificationsStatus;
         const oldStatus = this.props.notificationsStatus;
 
         // if the status object has changed we need to inspect
@@ -331,7 +336,7 @@ export class Application extends React.Component<Props, State> {
             }
             // if a fetch has completed AND the data has changed we need to update OR loading state is true
             if (status.fetched && (
-                (p.notificationsData !== this.props.notificationsData) || this.state.notificationsLoading)
+                (prevProps.notificationsData !== this.props.notificationsData) || this.state.notificationsLoading)
             ) {
                 return true;
             }
@@ -637,7 +642,7 @@ export class Application extends React.Component<Props, State> {
                     <div className={classes.title}>
                         <img className={classes.img} src={images.logo} alt="EventKit" />
                     </div>
-                    <div style={{ position: 'absolute', left: '0', top: '25px' }}>
+                    {this.state.loggedIn ? <div style={{ position: 'absolute', left: '0', top: '25px' }}>
                         <IconButton
                             className={`qa-Application-AppBar-MenuButton ${classes.menuButton}`}
                             color="secondary"
@@ -675,7 +680,7 @@ export class Application extends React.Component<Props, State> {
                                     /> : null }
                             </div>
                         </div>
-                    </div>
+                    </div> : null}
                 </AppBar>
                 <Drawer
                     className="qa-Application-Drawer"

@@ -124,7 +124,7 @@ describe('Application component', () => {
         expect(props.closeDrawer.callCount).toBe(1);
         wrapper.setProps({ ...props, drawer: 'closed' });
         wrapper.instance().handleToggle();
-        expect(props.openDrawer.callCount).toBe(2);
+        expect(props.openDrawer.callCount).toBe(1);
     });
 
     it('onMenuItemClick should call handleToggle if screen size is smaller than 1200', () => {
