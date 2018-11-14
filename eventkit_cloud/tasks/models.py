@@ -235,3 +235,14 @@ class ExportTaskException(TimeStampedModelMixin):
         managed = True
         db_table = 'export_task_exceptions'
 
+
+def prefetch_export_runs(queryset_list_or_model):
+    prefetch_args = ['job__provider_tasks__provider', 'job__provider_tasks__formats',
+                     'provider_tasks__tasks__result', 'provider_tasks__tasks__exceptions']
+    if isinstance(queryset_list_or_model, models.query.QuerySet):
+        return queryset_list_or_model.select_related('user').prefetch_related(*prefetch_args)
+    elif isinstance(queryset_list_or_model, list):
+        models.prefetch_related_objects(queryset_list_or_model, *prefetch_args)
+    elif isinstance(queryset_list_or_model, ExportRun):
+        models.prefetch_related_objects([queryset_list_or_model], *prefetch_args)
+    return queryset_list_or_model

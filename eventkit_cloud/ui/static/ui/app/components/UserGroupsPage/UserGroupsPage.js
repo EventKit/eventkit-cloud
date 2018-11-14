@@ -27,13 +27,14 @@ import MemberInfoDialog from './Dialogs/MemberInfoDialog';
 import OtherInfoDialog from './Dialogs/OtherInfoDialog';
 import AddMembersDialog from './Dialogs/AddMembersDialog';
 import BaseDialog from '../Dialog/BaseDialog';
+import LoadButtons from '../common/LoadButtons';
 import { getGroups, deleteGroup, createGroup, updateGroup } from '../../actions/groupActions';
 import { getUsers } from '../../actions/usersActions';
 import { DrawerTimeout } from '../../actions/uiActions';
 import { joyride } from '../../joyride.config';
 
 export class UserGroupsPage extends Component {
-    constructor(props) {
+    constructor(props, context) {
         super(props);
         this.getQueryGroup = this.getQueryGroup.bind(this);
         this.getGroupTitle = this.getGroupTitle.bind(this);
@@ -43,6 +44,8 @@ export class UserGroupsPage extends Component {
         this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleOrderingChange = this.handleOrderingChange.bind(this);
+        this.handleLoadLess = this.handleLoadLess.bind(this);
+        this.handleLoadMore = this.handleLoadMore.bind(this);
         this.handleCreateOpen = this.handleCreateOpen.bind(this);
         this.handleCreateClose = this.handleCreateClose.bind(this);
         this.handleCreateInput = this.handleCreateInput.bind(this);
@@ -81,9 +84,11 @@ export class UserGroupsPage extends Component {
         this.showOtherInfoDialog = this.showOtherInfoDialog.bind(this);
         this.hideOtherInfoDialog = this.hideOtherInfoDialog.bind(this);
         this.handleJoyride = this.handleJoyride.bind(this);
+        this.pageSize = Number(context.config.USER_GROUPS_PAGE_SIZE);
         this.state = {
             drawerOpen: !(isWidthDown('sm', this.props.width)),
             selectedUsers: [],
+            search: props.location.query.search || '',
             showAddUsers: false,
             showCreate: false,
             showLeave: false,
@@ -105,17 +110,29 @@ export class UserGroupsPage extends Component {
     }
 
     componentWillMount() {
+        /* eslint-disable camelcase */
         // If there is no ordering specified default to username
-        if (!this.props.location.query.ordering) {
+        let { ordering, page_size } = this.props.location.query;
+        if (!ordering) {
+            ordering = 'username';
             // Set the current ordering to username so a change wont be detected
             // by componentDidUpdate
-            this.props.location.query.ordering = 'username';
+            this.props.location.query.ordering = ordering;
             // Replace the url with the ordering query included
-            browserHistory.replace({
-                ...this.props.location,
-                query: { ...this.props.location.query, ordering: 'username' },
-            });
         }
+        if (!page_size) {
+            page_size = this.pageSize;
+            this.props.location.query.page_size = page_size;
+        }
+        browserHistory.replace({
+            ...this.props.location,
+            query: {
+                ...this.props.location.query,
+                ordering,
+                page_size,
+            },
+        });
+        /* eslint-enable camelcase */
     }
 
     componentDidMount() {
@@ -175,6 +192,11 @@ export class UserGroupsPage extends Component {
                 query.groups = null;
                 delete query.groups;
             }
+            if (query.search) {
+                query.search = null;
+                delete query.search;
+            }
+            this.setState({ search: '' });
             browserHistory.push({
                 ...this.props.location,
                 query,
@@ -235,6 +257,9 @@ export class UserGroupsPage extends Component {
             // if group in options is not null or undefined we use that
             params.groups = options.groups;
         }
+
+        params.prepend_self = true;
+
         this.props.getUsers(params);
     }
 
@@ -284,6 +309,7 @@ export class UserGroupsPage extends Component {
             if (text) {
                 const query = { ...this.props.location.query };
                 query.search = text;
+                query.page_size = this.pageSize;
                 browserHistory.push({ ...this.props.location, query });
             }
         }
@@ -291,11 +317,15 @@ export class UserGroupsPage extends Component {
 
     handleSearchChange(event) {
         const text = event.target.value || '';
+        // always update state since that is what will show in the searchbar
+        this.setState({ search: text });
+        // if text is empty we need to clear the search and page size
         if (!text && this.props.location.query.search) {
             // we need to undo any search
             const query = { ...this.props.location.query };
             query.search = null;
             delete query.search;
+            query.page_size = this.pageSize;
             browserHistory.push({ ...this.props.location, query });
         }
     }
@@ -303,6 +333,18 @@ export class UserGroupsPage extends Component {
     handleOrderingChange(value) {
         const query = { ...this.props.location.query };
         query.ordering = value;
+        browserHistory.push({ ...this.props.location, query });
+    }
+
+    handleLoadMore() {
+        const query = { ...this.props.location.query };
+        query.page_size = Number(query.page_size) + this.pageSize;
+        browserHistory.push({ ...this.props.location, query });
+    }
+
+    handleLoadLess() {
+        const query = { ...this.props.location.query };
+        query.page_size = Number(query.page_size) - this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
 
@@ -406,6 +448,11 @@ export class UserGroupsPage extends Component {
         } else {
             query.groups = value;
         }
+        // because we are navigating to new group we need to reset the page size and the search
+        this.setState({ search: '' });
+        query.search = null;
+        delete query.search;
+        query.page_size = this.pageSize;
         browserHistory.push({ ...this.props.location, query });
     }
 
@@ -668,6 +715,12 @@ export class UserGroupsPage extends Component {
                 height: bodyHeight,
                 width: bodyWidth,
             },
+            groups: {
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                justifyContent: 'space-between',
+            },
             fixedHeader: {
                 paddingTop: 15,
                 backgroundColor: colors.white,
@@ -838,6 +891,12 @@ export class UserGroupsPage extends Component {
             });
         }
 
+        const pageSize = Number(this.props.location.query.page_size);
+        const len = queryGroup ? queryGroup.members.length : this.props.users.total;
+
+        const loadMoreDisabled = !this.props.users.nextPage;
+        const loadLessDisabled = pageSize <= this.pageSize || this.pageSize >= len;
+
         return (
             <div style={{ backgroundColor: colors.white, position: 'relative' }}>
                 <Joyride
@@ -906,6 +965,7 @@ export class UserGroupsPage extends Component {
                             style={styles.container}
                             type="text"
                             placeholder="Search Users"
+                            value={this.state.search}
                             InputProps={{ style: styles.input }}
                             onChange={this.handleSearchChange}
                             onKeyDown={this.handleSearchKeyDown}
@@ -934,32 +994,44 @@ export class UserGroupsPage extends Component {
                             className="qa-UserGroupsPage-CustomScrollbar"
                             ref={(instance) => { this.scrollbar = instance; }}
                         >
-                            <div style={styles.ownUser}>
-                                {ownUser}
-                            </div>
-                            {users.map(user => (
-                                <UserRow
-                                    key={user.user.username}
-                                    selected={selectedUsernames.indexOf(user.user.username) > -1}
-                                    onSelect={this.handleUserSelect}
-                                    user={user}
-                                    groups={ownedGroups}
-                                    handleNewGroup={this.handleNewGroup}
-                                    handleAddUser={this.handleAddUsers}
-                                    handleMakeAdmin={this.handleMakeAdmin}
-                                    handleDemoteAdmin={this.handleDemoteAdmin}
-                                    handleRemoveUser={this.handleRemoveUser}
-                                    isAdmin={
-                                        !!queryGroup
-                                        && queryGroup.administrators.includes(user.user.username)
-                                    }
-                                    showAdminButton={showAdminButton}
-                                    showAdminLabel={showAdminLabel}
-                                    showRemoveButton={!!ownedQueryGroup}
-                                    className="qa-UserGroupsPage-UserRow"
+                            <div style={styles.groups}>
+                                <div>
+                                    <div style={styles.ownUser}>
+                                        {ownUser}
+                                    </div>
+                                    {users.map(user => (
+                                        <UserRow
+                                            key={user.user.username}
+                                            selected={selectedUsernames.indexOf(user.user.username) > -1}
+                                            onSelect={this.handleUserSelect}
+                                            user={user}
+                                            groups={ownedGroups}
+                                            handleNewGroup={this.handleNewGroup}
+                                            handleAddUser={this.handleAddUsers}
+                                            handleMakeAdmin={this.handleMakeAdmin}
+                                            handleDemoteAdmin={this.handleDemoteAdmin}
+                                            handleRemoveUser={this.handleRemoveUser}
+                                            isAdmin={
+                                                !!queryGroup
+                                                && queryGroup.administrators.includes(user.user.username)
+                                            }
+                                            showAdminButton={showAdminButton}
+                                            showAdminLabel={showAdminLabel}
+                                            showRemoveButton={!!ownedQueryGroup}
+                                            className="qa-UserGroupsPage-UserRow"
+                                        />
+                                    ))}
+                                    <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
+                                </div>
+                                <LoadButtons
+                                    style={{ paddingTop: '10px' }}
+                                    range={this.props.users.range}
+                                    handleLoadMore={this.handleLoadMore}
+                                    handleLoadLess={this.handleLoadLess}
+                                    loadMoreDisabled={loadMoreDisabled}
+                                    loadLessDisabled={loadLessDisabled}
                                 />
-                            ))}
-                            <div style={{ width: '100%', borderTop: '1px solid #e0e0e0' }} />
+                            </div>
                         </CustomScrollbar>
                     </div>
                 </div>
@@ -1067,6 +1139,12 @@ export class UserGroupsPage extends Component {
     }
 }
 
+UserGroupsPage.contextTypes = {
+    config: PropTypes.shape({
+        USER_GROUPS_PAGE_SIZE: PropTypes.string,
+    }),
+};
+
 UserGroupsPage.propTypes = {
     user: PropTypes.shape({
         username: PropTypes.string,
@@ -1117,8 +1195,8 @@ UserGroupsPage.propTypes = {
         fetched: PropTypes.bool,
         error: PropTypes.string,
         total: PropTypes.number,
-        new: PropTypes.number,
-        ungrouped: PropTypes.number,
+        nextPage: PropTypes.bool,
+        range: PropTypes.string,
     }).isRequired,
     getGroups: PropTypes.func.isRequired,
     deleteGroup: PropTypes.func.isRequired,

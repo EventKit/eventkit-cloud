@@ -18,6 +18,7 @@ import SocialPerson from '@material-ui/icons/Person';
 import SocialGroup from '@material-ui/icons/Group';
 import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
+import Mail from '@material-ui/icons/MailOutlined';
 import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import Banner from './Banner';
 import BaseDialog from './Dialog/BaseDialog';
@@ -106,9 +107,11 @@ const jss = (theme: any) => createStyles({
     },
     drawer: {
         width: '200px',
+        height: 'calc(100% - 95px)',
         marginTop: '95px',
         backgroundColor: theme.eventkit.colors.black,
         padding: '0px',
+        justifyContent: 'space-between',
     },
     menuItem: {
         fontSize: '16px',
@@ -121,6 +124,20 @@ const jss = (theme: any) => createStyles({
         marginRight: '11px',
         verticalAlign: 'middle',
         fill: 'inherit',
+    },
+    contact: {
+        display: 'flex',
+        alignItems: 'center',
+        paddingLeft: '11px',
+        marginBottom: '20px',
+        color: theme.eventkit.colors.primary,
+        fill: theme.eventkit.colors.primary,
+        '&:hover': {
+            color: theme.eventkit.colors.primary,
+        },
+        '&:focus': {
+            color: theme.eventkit.colors.primary,
+        },
     },
 });
 
@@ -165,11 +182,16 @@ interface Props {
         notificationsIndicator: string;
         drawer: string;
         icon: string;
+        contact: string;
     };
 }
 
 interface State {
-    childContext: { config: object };
+    childContext: { config: {
+        DATAPACK_PAGE_SIZE?: string;
+        NOTIFICATIONS_PAGE_SIZE?: string;
+        CONTACT_URL?: string;
+    }};
     autoLogoutWarningText: string;
     showAutoLogoutWarningDialog: boolean;
     showAutoLoggedOutDialog: boolean;
@@ -179,7 +201,7 @@ interface State {
 }
 
 export class Application extends React.Component<Props, State> {
-    private userActiveInputTypes: String[];
+    private userActiveInputTypes: string[];
     private notificationsUnreadCountRefreshInterval: number;
     private notificationsRefreshInterval: number;
     private notificationsPageSize: number;
@@ -209,6 +231,9 @@ export class Application extends React.Component<Props, State> {
             MAX_VECTOR_AOI_SQ_KM: PropTypes.number,
             MAX_RASTER_AOI_SQ_KM: PropTypes.number,
             MAX_DATAPACK_EXPIRATION_DAYS: PropTypes.string,
+            USER_GROUPS_PAGE_SIZE: PropTypes.string,
+            DATAPACK_PAGE_SIZE: PropTypes.string,
+            NOTIFICATIONS_PAGE_SIZE: PropTypes.string,
             VERSION: PropTypes.string,
         }),
     };
@@ -259,10 +284,17 @@ export class Application extends React.Component<Props, State> {
 
     componentDidMount() {
         this.getConfig();
-        this.props.getNotifications();
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.childContext !== this.state.childContext) {
+            this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
+            if (this.loggedIn || this.props.userData) {
+                this.startCheckingForAutoLogout();
+                this.startSendingUserActivePings();
+                this.startListeningForNotifications();
+            }
+        }
         if (this.loggedIn && this.props.width !== prevProps.width) {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
@@ -275,9 +307,6 @@ export class Application extends React.Component<Props, State> {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             }
-            this.startCheckingForAutoLogout();
-            this.startSendingUserActivePings();
-            this.startListeningForNotifications();
         } else if (this.loggedIn && !this.props.userData) {
             this.loggedIn = false;
             this.stopCheckingForAutoLogout();
@@ -372,7 +401,7 @@ export class Application extends React.Component<Props, State> {
 
         // Notifications.
         this.props.getNotifications({
-            notificationsPageSize: this.notificationsPageSize,
+            pageSize: this.notificationsPageSize,
             isAuto: true,
         });
         this.notificationsRefreshIntervalId = window.setInterval(this.autoGetNotifications, this.notificationsRefreshInterval);
@@ -399,7 +428,7 @@ export class Application extends React.Component<Props, State> {
 
     autoGetNotifications() {
         this.props.getNotifications({
-            notificationsPageSize: this.notificationsPageSize,
+            pageSize: this.notificationsPageSize,
             isAuto: true,
         });
     }
@@ -655,102 +684,110 @@ export class Application extends React.Component<Props, State> {
                     variant="persistent"
                     open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
                 >
-                    <MenuItem
-                        className={`qa-Application-MenuItem-dashboard ${classes.menuItem}`}
-                        onClick={this.onMenuItemClick}
-                    >
-                        <IndexLink
-                            className={`qa-Application-Link-dashboard ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            to="/dashboard"
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-dashboard ${classes.menuItem}`}
+                            onClick={this.onMenuItemClick}
                         >
-                            <Dashboard className={classes.icon} />
-                            Dashboard
-                        </IndexLink>
-                    </MenuItem>
-                    <MenuItem
-                        className={`qa-Application-MenuItem-exports ${classes.menuItem}`}
-                        onClick={this.onMenuItemClick}
-                    >
-                        <Link
-                            className={`qa-Application-Link-exports ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            to="/exports"
-                            href="/exports"
+                            <IndexLink
+                                className={`qa-Application-Link-dashboard ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                to="/dashboard"
+                            >
+                                <Dashboard className={classes.icon} />
+                                Dashboard
+                            </IndexLink>
+                        </MenuItem>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-exports ${classes.menuItem}`}
+                            onClick={this.onMenuItemClick}
                         >
-                            <AVLibraryBooks className={classes.icon} />
-                            DataPack Library
-                        </Link>
-                    </MenuItem>
-                    <MenuItem
-                        className={`qa-Application-MenuItem-create ${classes.menuItem}`}
-                        onClick={this.onMenuItemClick}
-                    >
-                        <Link
-                            className={`qa-Application-Link-create ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            to="/create"
-                            href="/create"
+                            <Link
+                                className={`qa-Application-Link-exports ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                to="/exports"
+                                href="/exports"
+                            >
+                                <AVLibraryBooks className={classes.icon} />
+                                DataPack Library
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-create ${classes.menuItem}`}
+                            onClick={this.onMenuItemClick}
                         >
-                            <ContentAddBox className={classes.icon} />
-                            Create DataPack
-                        </Link>
-                    </MenuItem>
-                    <MenuItem
-                        className={`qa-Application-MenuItem-groups ${classes.menuItem}`}
-                        onClick={this.onMenuItemClick}
-                    >
-                        <Link
-                            className={`qa-Application-Link-groups ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            to="/groups"
-                            href="/groups"
+                            <Link
+                                className={`qa-Application-Link-create ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                to="/create"
+                                href="/create"
+                            >
+                                <ContentAddBox className={classes.icon} />
+                                Create DataPack
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-groups ${classes.menuItem}`}
+                            onClick={this.onMenuItemClick}
                         >
-                            <SocialGroup className={classes.icon} />
-                            Members and Groups
-                        </Link>
-                    </MenuItem>
-                    <MenuItem
-                        className={`qa-Application-MenuItem-about ${classes.menuItem}`}
-                        onClick={this.onMenuItemClick}
-                    >
-                        <Link
-                            className={`qa-Application-Link-about ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            to="/about"
-                            href="/about"
+                            <Link
+                                className={`qa-Application-Link-groups ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                to="/groups"
+                                href="/groups"
+                            >
+                                <SocialGroup className={classes.icon} />
+                                Members and Groups
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-about ${classes.menuItem}`}
+                            onClick={this.onMenuItemClick}
                         >
-                            <ActionInfoOutline className={classes.icon} />
-                            About EventKit
-                        </Link>
-                    </MenuItem>
-                    <MenuItem
-                        className={`qa-Application-MenuItem-account ${classes.menuItem}`}
-                        onClick={this.onMenuItemClick}
-                    >
-                        <Link
-                            className={`qa-Application-Link-account ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            to="/account"
-                            href="/account"
+                            <Link
+                                className={`qa-Application-Link-about ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                to="/about"
+                                href="/about"
+                            >
+                                <ActionInfoOutline className={classes.icon} />
+                                About EventKit
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-account ${classes.menuItem}`}
+                            onClick={this.onMenuItemClick}
                         >
-                            <SocialPerson className={classes.icon} />
-                            Account Settings
-                        </Link>
-                    </MenuItem>
-                    <MenuItem
-                        className={`qa-Application-MenuItem-logout ${classes.menuItem}`}
-                    >
-                        <Link // eslint-disable-line jsx-a11y/anchor-is-valid
-                            className={`qa-Application-Link-logout ${classes.link}`}
-                            activeClassName={classes.activeLink}
-                            onClick={this.handleLogoutClick}
-                            to={undefined}
+                            <Link
+                                className={`qa-Application-Link-account ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                to="/account"
+                                href="/account"
+                            >
+                                <SocialPerson className={classes.icon} />
+                                Account Settings
+                            </Link>
+                        </MenuItem>
+                        <MenuItem
+                            className={`qa-Application-MenuItem-logout ${classes.menuItem}`}
                         >
-                            <ActionExitToApp className={classes.icon} />
-                            Log Out
-                        </Link>
-                    </MenuItem>
+                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
+                                className={`qa-Application-Link-logout ${classes.link}`}
+                                activeClassName={classes.activeLink}
+                                onClick={this.handleLogoutClick}
+                                to={undefined}
+                            >
+                                <ActionExitToApp className={classes.icon} />
+                                Log Out
+                            </Link>
+                        </MenuItem>
+                    </div>
+                    {this.state.childContext.config.CONTACT_URL ? <a
+                        className={`qa-Application-contact ${classes.contact}`}
+                        href={this.state.childContext.config.CONTACT_URL}
+                    >
+                        <Mail className={classes.icon} />Contact Us
+                    </a> : null}
                 </Drawer>
                 <div className="qa-Application-content" style={styles.content}>
                     <div>{childrenWithContext}</div>

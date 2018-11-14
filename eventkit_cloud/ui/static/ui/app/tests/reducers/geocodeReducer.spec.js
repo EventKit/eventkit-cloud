@@ -7,6 +7,7 @@ describe('getGeocode reducer', () => {
             fetched: null,
             data: [],
             error: null,
+            cancelSource: null,
         });
     });
 
@@ -17,13 +18,15 @@ describe('getGeocode reducer', () => {
                 fetched: false,
                 data: [],
                 error: null,
+                cancelSource: null,
             },
-            { type: 'FETCHING_GEOCODE' },
+            { type: 'FETCHING_GEOCODE', cancelSource: 'test' },
         )).toEqual({
             fetching: true,
             fetched: false,
             data: [],
             error: null,
+            cancelSource: 'test',
         });
     });
 
@@ -34,6 +37,7 @@ describe('getGeocode reducer', () => {
                 fetched: false,
                 data: [],
                 error: null,
+                cancelSource: 'test',
             },
             { type: 'RECEIVED_GEOCODE', data: ['name1', 'name2'] },
         )).toEqual({
@@ -41,6 +45,7 @@ describe('getGeocode reducer', () => {
             fetched: true,
             data: ['name1', 'name2'],
             error: null,
+            cancelSource: null,
         });
     });
 
@@ -51,6 +56,7 @@ describe('getGeocode reducer', () => {
                 fetched: false,
                 data: [],
                 error: null,
+                cancelSource: 'test',
             },
             { type: 'FETCH_GEOCODE_ERROR', error: 'Oh no I had an error' },
         )).toEqual({
@@ -58,6 +64,7 @@ describe('getGeocode reducer', () => {
             fetched: false,
             data: [],
             error: 'Oh no I had an error',
+            cancelSource: null,
         });
     });
 });
