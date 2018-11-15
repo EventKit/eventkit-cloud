@@ -28,7 +28,7 @@ const mockNotificationsArray = [
 describe('notificationsActions', () => {
     it('getNotifications() should send the received array of notifications to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/all').reply(200, mockNotificationsArray, {
+        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {
             link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24',
         });
 
@@ -58,7 +58,7 @@ describe('notificationsActions', () => {
 
     it('getNotifications() should handle empty header', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/all').reply(200, mockNotificationsArray, {});
+        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {});
 
         const testSource = axios.CancelToken.source();
         const original = axios.CancelToken.source;
@@ -86,7 +86,7 @@ describe('notificationsActions', () => {
 
     it('getNotifications() should cancel an active request when manually called', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/all').reply(200, mockNotificationsArray, {});
+        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {});
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
@@ -110,7 +110,7 @@ describe('notificationsActions', () => {
 
     it('getNotifications() should NOT cancel an active request when automatically called', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/all').reply(200, mockNotificationsArray, {});
+        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {});
 
         const cancel = sinon.spy();
         const cancelSource = { cancel };
@@ -132,7 +132,7 @@ describe('notificationsActions', () => {
 
     it('getNotifications() should handle the axios request being cancelled', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/all').reply(400, 'oh no an error');
+        mock.onGet('/api/notifications').reply(400, 'oh no an error');
 
         const testSource = axios.CancelToken.source();
         const original = axios.CancelToken.source;
@@ -155,7 +155,7 @@ describe('notificationsActions', () => {
 
     it('getNotifications() should handle a generic request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/all').reply(400, 'oh no an error');
+        mock.onGet('/api/notifications').reply(400, 'oh no an error');
 
         const testSource = axios.CancelToken.source();
         const original = axios.CancelToken.source;
@@ -296,7 +296,7 @@ describe('notificationsActions', () => {
 
     it('markNotificationsAsRead() should send the marked notifications to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark').reply(200);
+        mock.onPost('/api/notifications/read').reply(200);
 
         const expectedActions = [
             { type: actions.types.MARKING_NOTIFICATIONS_AS_READ, notifications: [mockNotificationsArray[0]] },
@@ -313,7 +313,7 @@ describe('notificationsActions', () => {
 
     it('markNotificationsAsRead() should handle a generic request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark').reply(400, 'oh no an error');
+        mock.onPost('/api/notifications/read').reply(400, 'oh no an error');
 
         const expectedActions = [
             { type: actions.types.MARKING_NOTIFICATIONS_AS_READ, notifications: [mockNotificationsArray[0]] },
@@ -330,7 +330,7 @@ describe('notificationsActions', () => {
 
     it('markNotificationsAsUnread() should send the marked notifications to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark').reply(200);
+        mock.onPost('/api/notifications/unread').reply(200);
 
         const expectedActions = [
             { type: actions.types.MARKING_NOTIFICATIONS_AS_UNREAD, notifications: [mockNotificationsArray[1]] },
@@ -347,7 +347,7 @@ describe('notificationsActions', () => {
 
     it('markNotificationsAsUnread() should handle a generic request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark').reply(400, 'oh no an error');
+        mock.onPost('/api/notifications/unread').reply(400, 'oh no an error');
 
         const expectedActions = [
             { type: actions.types.MARKING_NOTIFICATIONS_AS_UNREAD, notifications: [mockNotificationsArray[1]] },
@@ -364,7 +364,7 @@ describe('notificationsActions', () => {
 
     it('removeNotifications() should send the removed notifications to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark').reply(200);
+        mock.onDelete('/api/notifications/delete').reply(200);
 
         const expectedActions = [
             { type: actions.types.REMOVING_NOTIFICATIONS, notifications: [mockNotificationsArray[0]] },
@@ -381,7 +381,7 @@ describe('notificationsActions', () => {
 
     it('removeNotifications() should handle a generic request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark').reply(400, 'oh no an error');
+        mock.onDelete('/api/notifications/delete').reply(400, 'oh no an error');
 
         const expectedActions = [
             { type: actions.types.REMOVING_NOTIFICATIONS, notifications: [mockNotificationsArray[0]] },
@@ -398,7 +398,7 @@ describe('notificationsActions', () => {
 
     it('markAllNotificationsAsRead() should send the actions to the reducer', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark_all_as_read').reply(200);
+        mock.onPost('/api/notifications/read').reply(200);
 
         const expectedActions = [
             { type: actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ },
@@ -415,7 +415,7 @@ describe('notificationsActions', () => {
 
     it('markAllNotificationsAsRead() should handle a generic request error', () => {
         const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/mark_all_as_read').reply(400, 'oh no an error');
+        mock.onPost('/api/notifications/read').reply(400, 'oh no an error');
 
         const expectedActions = [
             { type: actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ },

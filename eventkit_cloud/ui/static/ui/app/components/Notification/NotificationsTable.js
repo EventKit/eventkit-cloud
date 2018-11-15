@@ -135,6 +135,8 @@ export class NotificationsTable extends React.Component {
             },
         };
 
+        const selectedCount = this.getSelectedCount();
+
         return (
             <div style={styles.root}>
                 <Table style={{ tableLayout: 'fixed' }}>
@@ -149,7 +151,7 @@ export class NotificationsTable extends React.Component {
                                 <Checkbox
                                     color="primary"
                                     className="qa-NotificationsTable-SelectAllCheckbox"
-                                    checked={this.getSelectedCount() > 0}
+                                    checked={selectedCount > 0}
                                     checkedIcon={this.getSelectAllCheckedIcon()}
                                     onChange={this.handleSelectAllCheck}
                                 />
@@ -159,8 +161,9 @@ export class NotificationsTable extends React.Component {
                                 style={styles.contentHeaderColumn}
                             >
                                 <div style={styles.contentHeaderColumnWrapper}>
-                                    <span>{this.getSelectedCount()} Selected</span>
+                                    <span>{selectedCount} Selected</span>
                                     <NotificationsTableMenu
+                                        allSelected={selectedCount === this.props.notificationsArray.length}
                                         selectedNotifications={this.state.selected}
                                         onMarkAsRead={this.props.onMarkAsRead}
                                         onMarkAsUnread={this.props.onMarkAsUnread}

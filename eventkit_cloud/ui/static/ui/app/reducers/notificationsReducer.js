@@ -7,6 +7,8 @@ export const initialState = {
     status: {
         fetching: null,
         fetched: null,
+        deleting: null,
+        deleted: null,
         error: null,
         cancelSource: null,
     },
@@ -125,6 +127,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -160,6 +163,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -191,6 +195,7 @@ export function notificationsReducer(state = initialState, action) {
             return {
                 ...state,
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -211,17 +216,30 @@ export function notificationsReducer(state = initialState, action) {
                 },
             };
         case types.REMOVING_NOTIFICATIONS: {
-            const notifications = { ...state.data.notifications };
+            let notifications = { ...state.data.notifications };
             let { unreadCount } = state.unreadCount.data;
-            action.notifications.forEach((notification) => {
-                if (notifications[notification.id].unread) {
-                    unreadCount -= 1;
-                }
-                delete notifications[notification.id];
-            });
+
+            if (action.notifications) {
+                action.notifications.forEach((notification) => {
+                    if (notifications[notification.id].unread) {
+                        unreadCount -= 1;
+                    }
+                    delete notifications[notification.id];
+                });
+            } else {
+                // clear all notifications
+                notifications = {};
+            }
+
             return {
                 ...state,
+                status: {
+                    ...state.status,
+                    deleting: true,
+                    deleted: false,
+                },
                 data: {
+                    ...state.data,
                     notifications,
                     notificationsSorted: getSortedNotifications(notifications),
                 },
@@ -233,11 +251,22 @@ export function notificationsReducer(state = initialState, action) {
                 },
             };
         }
+        case types.REMOVED_NOTIFICATIONS:
+            return {
+                ...state,
+                status: {
+                    ...state.status,
+                    deleting: false,
+                    deleted: true,
+                },
+            };
         case types.REMOVE_NOTIFICATIONS_ERROR:
             return {
                 ...state,
                 status: {
                     ...state.status,
+                    deleted: false,
+                    deleting: false,
                     error: action.error,
                 },
             };
