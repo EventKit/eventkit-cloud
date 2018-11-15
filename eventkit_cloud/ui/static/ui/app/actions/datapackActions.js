@@ -288,39 +288,31 @@ export function getFeaturedRuns(args) {
 }
 
 export function deleteRun(uid) {
-    return (dispatch) => {
-        dispatch({ type: types.DELETING_RUN, payload: { id: uid } });
-
-        const csrftoken = cookie.load('csrftoken');
-        const formData = new FormData();
-        formData.append('csrfmiddlewaretoken', csrftoken);
-
-        return axios({
-            url: `/api/runs/${uid}`,
-            method: 'DELETE',
-            data: formData,
-            headers: { 'X-CSRFToken': csrftoken },
-        }).then(() => {
-            dispatch({ type: types.DELETED_RUN, payload: { id: uid } });
-        }).catch((error) => {
-            dispatch({ type: types.DELETE_RUN_ERROR, error: error.response.data });
-        });
+    return {
+        types: [
+            types.DELETING_RUN,
+            types.DELETED_RUN,
+            types.DELETE_RUN_ERROR,
+        ],
+        shouldCallApi: state => Boolean(state.user.data),
+        url: `/api/runs/${uid}`,
+        method: 'DELETE',
+        onSuccess: () => ({ payload: { id: uid } }),
+        onError: error => ({ error: error.response.data }),
     };
 }
 
 export function updateExpiration(uid, expiration) {
-    return (dispatch) => {
-        dispatch({ type: types.UPDATING_EXPIRATION });
-        const csrftoken = cookie.load('csrftoken');
-        return axios({
-            url: `/api/runs/${uid}`,
-            method: 'PATCH',
-            data: { expiration },
-            headers: { 'X-CSRFToken': csrftoken },
-        }).then(() => {
-            dispatch({ type: types.UPDATE_EXPIRATION_SUCCESS });
-        }).catch((error) => {
-            dispatch({ type: types.UPDATE_EXPIRATION_ERROR, error: error.response.data });
-        });
+    return {
+        types: [
+            types.UPDATING_EXPIRATION,
+            types.UPDATE_EXPIRATION_SUCCESS,
+            types.UPDATE_EXPIRATION_ERROR,
+        ],
+        shouldCallApi: state => Boolean(state.user.data),
+        url: `/api/runs/${uid}`,
+        method: 'PATCH',
+        data: { expiration },
+        onError: error => ({ error: error.response.data }),
     };
 }

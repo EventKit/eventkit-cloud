@@ -1,5 +1,4 @@
 import axios from 'axios/index';
-import cookie from 'react-cookie';
 import Normalizer from '../utils/normalizers';
 import { makeAuthRequired } from './authActions';
 
@@ -13,29 +12,17 @@ export const types = {
 };
 
 export function viewedJob(jobuid) {
-    return (dispatch) => {
-        dispatch(makeAuthRequired({
-            type: types.VIEWED_JOB,
-            jobuid,
-        }));
-
-        return axios({
-            url: '/api/user/activity/jobs?activity=viewed',
-            method: 'POST',
-            data: { job_uid: jobuid },
-            headers: { 'X-CSRFToken': cookie.load('csrftoken') },
-        }).then(() => {
-            dispatch(makeAuthRequired({
-                type: types.VIEWED_JOB_SUCCESS,
-                jobuid,
-            }));
-        }).catch((error) => {
-            console.error(error.message);
-            dispatch(makeAuthRequired({
-                type: types.VIEWED_JOB_ERROR,
-                jobuid,
-            }));
-        });
+    return {
+        types: [
+            types.VIEWED_JOB,
+            types.VIEWED_JOB_SUCCESS,
+            types.VIEWED_JOB_ERROR,
+        ],
+        shouldCallApi: state => Boolean(state.user.data),
+        url: '/api/user/activity/jobs?activity=viewed',
+        method: 'POST',
+        data: { job_uid: jobuid },
+        payload: { jobuid },
     };
 }
 

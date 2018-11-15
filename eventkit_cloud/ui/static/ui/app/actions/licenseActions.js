@@ -1,5 +1,3 @@
-import axios from 'axios';
-import { makeAuthRequired } from './authActions';
 
 export const types = {
     FETCHING_LICENSES: 'FETCHING_LICENSES',
@@ -8,25 +6,17 @@ export const types = {
 };
 
 export function getLicenses() {
-    return (dispatch) => {
-        dispatch(makeAuthRequired({
-            type: types.FETCHING_LICENSES,
-        }));
-
-        return axios({
-            url: '/api/licenses',
-            method: 'GET',
-        }).then((response) => {
-            dispatch(makeAuthRequired({
-                type: types.RECEIVED_LICENSES,
-                licenses: response.data,
-            }));
-        }).catch((error) => {
-            dispatch(makeAuthRequired({
-                type: types.FETCH_LICENSES_ERROR,
-                error: error.response.data,
-            }));
-        });
+    return {
+        types: [
+            types.FETCHING_LICENSES,
+            types.RECEIVED_LICENSES,
+            types.FETCH_LICENSES_ERROR,
+        ],
+        shouldCallApi: state => Boolean(state.user.data),
+        url: '/api/licenses',
+        method: 'GET',
+        onSuccess: response => ({ licenses: response.data }),
+        onError: error => ({ error: error.response.data }),
     };
 }
 
