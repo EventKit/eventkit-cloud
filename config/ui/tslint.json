@@ -17,6 +17,7 @@
         "ordered-imports": false,
         "jsx-boolean-value": false,
         "jsx-no-multiline-js": false,
+        "jsx-wrap-multiline": false,
         "jsx-no-lambda": false,
         "jsx-curly-spacing": false,
         "trailing-comma": false,

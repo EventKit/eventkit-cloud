@@ -70,7 +70,7 @@ export class NotificationGridItem extends Component {
         };
 
         return (
-            <div style={this.props.style}>
+            <div className="qa-NotificationGridItem" style={this.props.style}>
                 <Paper style={styles.root}>
                     <NotificationIcon notification={this.props.notification} />
                     <NotificationMessage
@@ -115,9 +115,9 @@ NotificationGridItem.propTypes = {
 NotificationGridItem.defaultProps = {
     style: {},
     paperStyle: {},
-    onMarkAsRead: undefined,
-    onMarkAsUnread: undefined,
-    onRemove: undefined,
+    onMarkAsRead: () => true,
+    onMarkAsUnread: () => true,
+    onRemove: () => true,
     onView: () => true,
 };
 

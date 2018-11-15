@@ -8,6 +8,8 @@ import FlagIcon from '@material-ui/icons/Flag';
 import CloseIcon from '@material-ui/icons/Close';
 import values from 'lodash/values';
 import IconMenu from '../common/IconMenu';
+import DeleteDialog from '../Dialog/DeleteNotificationsDialog';
+
 import {
     markAllNotificationsAsRead,
     markNotificationsAsRead,
@@ -22,6 +24,14 @@ export class NotificationsTableMenu extends React.Component {
         this.handleMarkAsUnread = this.handleMarkAsUnread.bind(this);
         this.handleRemove = this.handleRemove.bind(this);
         this.handleMarkAllAsRead = this.handleMarkAllAsRead.bind(this);
+        this.handleDialogOpen = this.handleDialogOpen.bind(this);
+        this.handleDialogClose = this.handleDialogClose.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+        this.handleSelection = this.handleSelection.bind(this);
+        this.state = {
+            showRemoveDialog: false,
+            deleteAll: 'false',
+        };
     }
 
     handleMarkAsRead() {
@@ -37,8 +47,16 @@ export class NotificationsTableMenu extends React.Component {
     }
 
     handleRemove() {
-        if (this.props.onRemove(values(this.props.selectedNotifications))) {
-            this.props.removeNotifications(values(this.props.selectedNotifications));
+        if (this.props.allSelected && !this.state.showRemoveDialog) {
+            this.handleDialogOpen();
+        } else if (this.props.onRemove(values(this.props.selectedNotifications))) {
+            if (this.state.deleteAll === 'true') {
+                // user has opted to delete ALL notifications not just current page
+                this.props.removeNotifications();
+            } else {
+                // delete only wants to delete selected notifications
+                this.props.removeNotifications(values(this.props.selectedNotifications));
+            }
         }
     }
 
@@ -46,6 +64,23 @@ export class NotificationsTableMenu extends React.Component {
         if (this.props.onMarkAllAsRead()) {
             this.props.markAllNotificationsAsRead();
         }
+    }
+
+    handleDialogOpen() {
+        this.setState({ showRemoveDialog: true });
+    }
+
+    handleDialogClose() {
+        this.setState({ showRemoveDialog: false });
+    }
+
+    handleDelete() {
+        this.handleRemove();
+        this.handleDialogClose();
+    }
+
+    handleSelection(e) {
+        this.setState({ deleteAll: e.target.value });
     }
 
     render() {
@@ -91,69 +126,79 @@ export class NotificationsTableMenu extends React.Component {
         });
 
         return (
-            <IconMenu
-                style={{ transform: 'rotate(90deg)' }}
-                anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
-                transformOrigin={{ horizontal: 'left', vertical: 'top' }}
-            >
-                {showMarkAsRead ?
-                    <MenuItem
-                        key="markRead"
-                        className="qa-NotificationsTableMenu-MarkAsRead"
-                        style={styles.item}
-                        onClick={this.handleMarkAsRead}
-                    >
-                        <FlagIcon style={styles.icon} />
-                        Mark As Read
-                    </MenuItem>
-                    :
-                    null
-                }
-                {showMarkAsUnread ?
-                    <MenuItem
-                        key="markUnread"
-                        className="qa-NotificationsTableMenu-MarkAsUnread"
-                        style={styles.item}
-                        onClick={this.handleMarkAsUnread}
-                    >
-                        <FlagIcon style={styles.icon} />
-                        Mark As Unread
-                    </MenuItem>
-                    :
-                    null
-                }
-                {(selectedNotificationsKeys.length > 0) ?
-                    <MenuItem
-                        key="remove"
-                        className="qa-NotificationsTableMenu-Remove"
-                        style={styles.item}
-                        onClick={this.handleRemove}
-                    >
-                        <CloseIcon style={styles.icon} />
-                        Remove
-                    </MenuItem>
-                    :
-                    null
-                }
-                {(selectedNotificationsKeys.length > 0) ?
-                    <Divider key="divider" />
-                    :
-                    null
-                }
-                <MenuItem
-                    key="markAll"
-                    className="qa-NotificationsTableMenu-MarkAllAsRead"
-                    onClick={this.handleMarkAllAsRead}
-                    style={styles.markAllAsRead}
+            <React.Fragment>
+                <IconMenu
+                    style={{ transform: 'rotate(90deg)' }}
+                    anchorOrigin={{ horizontal: 'left', vertical: 'top' }}
+                    transformOrigin={{ horizontal: 'left', vertical: 'top' }}
                 >
-                    Mark All As Read
-                </MenuItem>
-            </IconMenu>
+                    {showMarkAsRead ?
+                        <MenuItem
+                            key="markRead"
+                            className="qa-NotificationsTableMenu-MarkAsRead"
+                            style={styles.item}
+                            onClick={this.handleMarkAsRead}
+                        >
+                            <FlagIcon style={styles.icon} />
+                            Mark As Read
+                        </MenuItem>
+                        :
+                        null
+                    }
+                    {showMarkAsUnread ?
+                        <MenuItem
+                            key="markUnread"
+                            className="qa-NotificationsTableMenu-MarkAsUnread"
+                            style={styles.item}
+                            onClick={this.handleMarkAsUnread}
+                        >
+                            <FlagIcon style={styles.icon} />
+                            Mark As Unread
+                        </MenuItem>
+                        :
+                        null
+                    }
+                    {(selectedNotificationsKeys.length > 0) ?
+                        <MenuItem
+                            key="remove"
+                            className="qa-NotificationsTableMenu-Remove"
+                            style={styles.item}
+                            onClick={this.handleRemove}
+                        >
+                            <CloseIcon style={styles.icon} />
+                            Remove
+                        </MenuItem>
+                        :
+                        null
+                    }
+                    {(selectedNotificationsKeys.length > 0) ?
+                        <Divider key="divider" />
+                        :
+                        null
+                    }
+                    <MenuItem
+                        key="markAll"
+                        className="qa-NotificationsTableMenu-MarkAllAsRead"
+                        onClick={this.handleMarkAllAsRead}
+                        style={styles.markAllAsRead}
+                    >
+                        Mark All As Read
+                    </MenuItem>
+                </IconMenu>
+                <DeleteDialog
+                    show={this.state.showRemoveDialog}
+                    onDelete={this.handleDelete}
+                    onCancel={this.handleDialogClose}
+                    deleteAll={this.state.deleteAll}
+                    onSelectionChange={this.handleSelection}
+                />
+            </React.Fragment>
         );
     }
 }
 
 NotificationsTableMenu.propTypes = {
+    allSelected: PropTypes.bool.isRequired,
     selectedNotifications: PropTypes.object.isRequired,
     onMarkAsRead: PropTypes.func,
     onMarkAsUnread: PropTypes.func,
