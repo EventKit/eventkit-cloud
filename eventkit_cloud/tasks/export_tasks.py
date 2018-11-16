@@ -848,7 +848,7 @@ def pick_up_run_task(self, result=None, run_uid=None, user_details=None, *args, 
 
 
 # This could be improved by using Redis or Memcached to help manage state.
-@app.task(name='Wait For Providers', base=UserDetailsBase)
+@app.task(name='Wait For Providers', base=UserDetailsBase, acks_late=True)
 def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback_task=None, *args, **kwargs):
     from eventkit_cloud.tasks.models import ExportRun
 
@@ -867,7 +867,7 @@ def wait_for_providers_task(result=None, apply_args=None, run_uid=None, callback
         raise Exception("A run could not be found for uid {0}".format(run_uid))
 
 
-@app.task(name='Project File (.zip)', base=FormatTask)
+@app.task(name='Project File (.zip)', base=FormatTask, acks_late=True)
 def create_zip_task(result=None, data_provider_task_uid=None, *args, **kwargs):
     """
     :param result: The celery task result value, it should be a dict with the current state.
