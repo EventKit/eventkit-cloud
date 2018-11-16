@@ -29,7 +29,7 @@ export function viewedJob(jobuid) {
                 type: types.VIEWED_JOB_SUCCESS,
                 jobuid,
             }));
-        }).catch((error) => {
+        }).catch(() => {
             dispatch(makeAuthRequired({
                 type: types.VIEWED_JOB_ERROR,
                 jobuid,
