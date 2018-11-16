@@ -571,7 +571,12 @@ export class Application extends React.Component<Props, State> {
         this.autoLogoutWarningIntervalId = null;
     }
 
-    handleClick() {
+    handleClick(e) {
+        if (e.srcElement.className && e.srcElement.className.includes('qa-NotificationMenu-MenuItem')) {
+            // user clicked on a menu item which is a child of the dropdown but MUI does not know that.
+            // we need to handle it ourselves
+            return;
+        }
         // Close the notifications dropdown if it's open and we click outside of it.
         if (this.state.showNotificationsDropdown) {
             this.setState({ showNotificationsDropdown: false });
