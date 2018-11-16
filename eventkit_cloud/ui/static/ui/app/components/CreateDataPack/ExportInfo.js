@@ -94,7 +94,7 @@ export class ExportInfo extends React.Component {
             }
         }
         if (this.props.walkthroughClicked && !prevProps.walkthroughClicked && !this.state.isRunning) {
-            this.joyride.reset(true);
+            this.joyride.current.reset(true);
             this.setState({ isRunning: true });
         }
 
@@ -278,7 +278,7 @@ export class ExportInfo extends React.Component {
         if (action === 'close' || action === 'skip' || type === 'finished') {
             this.setState({ isRunning: false });
             this.props.onWalkthroughReset();
-            this.joyride.reset(true);
+            this.joyride.current.reset(true);
             window.location.hash = '';
         }
 
