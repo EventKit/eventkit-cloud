@@ -161,13 +161,13 @@ describe('ExportInfo component', () => {
     it('componentDidUpdate should reset joyride and set running state', () => {
         const props = getProps();
         const wrapper = getWrapper(props);
-        const joyride = { reset: sinon.spy() };
+        const joyride = { current: { reset: sinon.spy() } };
         wrapper.instance().joyride = joyride;
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
         const nextProps = getProps();
         nextProps.walkthroughClicked = true;
         wrapper.setProps(nextProps);
-        expect(joyride.reset.calledOnce).toBe(true);
+        expect(joyride.current.reset.calledOnce).toBe(true);
         expect(stateStub.calledWith({ isRunning: true })).toBe(true);
     });
 
@@ -474,7 +474,7 @@ describe('ExportInfo component', () => {
         };
         const props = getProps();
         const wrapper = getWrapper(props);
-        wrapper.instance().joyride = { reset: sinon.spy() };
+        wrapper.instance().joyride = { current: { reset: sinon.spy() } };
         const stateSpy = sinon.stub(wrapper.instance(), 'setState');
         wrapper.instance().callback(callbackData);
         expect(stateSpy.calledWith({ isRunning: false }));
