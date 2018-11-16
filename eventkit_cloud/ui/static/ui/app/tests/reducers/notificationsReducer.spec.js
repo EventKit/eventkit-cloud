@@ -55,6 +55,7 @@ describe('notificationsReducer', () => {
         expect(notificationsReducer(initialState.notifications, action)).toEqual({
             ...initialState.notifications,
             status: {
+                ...initialState.notifications.status,
                 fetching: true,
                 fetched: false,
                 error: null,
@@ -79,6 +80,7 @@ describe('notificationsReducer', () => {
         expect(notificationsReducer(state, action)).toEqual({
             ...state,
             status: {
+                ...state.status,
                 fetching: false,
                 fetched: true,
                 error: null,
@@ -304,6 +306,11 @@ describe('notificationsReducer', () => {
 
         expect(notificationsReducer(mockState, action)).toEqual({
             ...mockState,
+            status: {
+                ...mockState.status,
+                deleted: false,
+                deleting: true,
+            },
             data: {
                 notifications: {},
                 notificationsSorted: [],
@@ -324,7 +331,14 @@ describe('notificationsReducer', () => {
         };
 
         // This action is handled preemptively, so we should see the state unchanged here.
-        expect(notificationsReducer(mockState, action)).toEqual(mockState);
+        expect(notificationsReducer(mockState, action)).toEqual({
+            ...mockState,
+            status: {
+                ...mockState.status,
+                deleted: true,
+                deleting: false,
+            },
+        });
     });
 
     it('should handle REMOVE_NOTIFICATIONS_ERROR', () => {
@@ -337,6 +351,8 @@ describe('notificationsReducer', () => {
             ...mockState,
             status: {
                 ...mockState.status,
+                deleting: false,
+                deleted: false,
                 error: action.error,
             },
         });
