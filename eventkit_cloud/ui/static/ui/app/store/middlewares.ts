@@ -53,6 +53,7 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         shouldCallApi = () => true,
         requiresAuth = true,
         onSuccess = () => ({}),
+        batchSuccess = () => undefined,
         onError = error => ({ error: error.response.data }),
         payload = {},
         url,
@@ -105,9 +106,17 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         data,
         headers: { 'X-CSRFToken': csrftoken, ...headers },
         cancelToken: token,
-    }).then(response => (
-        dispatch({ ...payload, type: successType, ...onSuccess(response) })
-    )).catch(error => {
+    }).then((response) => {
+        const batched = batchSuccess(response, state);
+        if (batched) {
+            dispatch([
+                { ...payload, type: successType, ...onSuccess(response) },
+                ...batched,
+            ]);
+        } else {
+            dispatch({ ...payload, type: successType, ...onSuccess(response) });
+        }
+    }).catch(error => {
         if (axios.isCancel(error)) {
             console.warn(error.message);
         } else {
