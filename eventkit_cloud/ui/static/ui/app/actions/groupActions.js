@@ -21,13 +21,11 @@ export function getGroups() {
             types.FETCHED_GROUPS,
             types.FETCH_GROUPS_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/groups',
         method: 'GET',
         getCancelSource: state => state.groups.cancelSource,
         cancellable: true,
         onSuccess: response => ({ groups: response.data }),
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -38,10 +36,8 @@ export function deleteGroup(groupId) {
             types.DELETED_GROUP,
             types.DELETE_GROUP_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/groups/${groupId}`,
         method: 'DELETE',
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -52,11 +48,9 @@ export function createGroup(groupName, members) {
             types.CREATED_GROUP,
             types.CREATE_GROUP_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/groups',
         method: 'POST',
         data: { name: groupName, members },
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -73,10 +67,8 @@ export function updateGroup(groupId, options = {}) {
             types.UPDATED_GROUP,
             types.UPDATING_GROUP_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/groups/${groupId}`,
         method: 'PATCH',
         data,
-        onError: error => ({ error: error.response.data }),
     };
 }

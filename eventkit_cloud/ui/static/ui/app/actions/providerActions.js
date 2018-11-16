@@ -14,7 +14,6 @@ export function getProviders() {
             types.PROVIDERS_RECEIVED,
             types.GETTING_PROVIDERS_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/providers',
         method: 'GET',
         onSuccess: response => ({ providers: response.data }),
@@ -28,9 +27,7 @@ export function cancelProviderTask(uid) {
             types.CANCELED_PROVIDER_TASK,
             types.CANCEL_PROVIDER_TASK_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/provider_tasks/${uid}`,
         method: 'PATCH',
-        onError: error => ({ error: error.response.data }),
     };
 }

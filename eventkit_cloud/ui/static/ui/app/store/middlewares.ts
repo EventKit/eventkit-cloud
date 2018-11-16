@@ -51,8 +51,9 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         auto = false,
         getCancelSource = () => undefined,
         shouldCallApi = () => true,
+        requiresAuth = true,
         onSuccess = () => ({}),
-        onError = () => ({}),
+        onError = error => ({ error: error.response.data }),
         payload = {},
         url,
         method,
@@ -71,11 +72,19 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
         throw new Error('Expected an array of three string types.');
     }
 
-    if (!shouldCallApi(getState())) {
+    const state = getState();
+
+    if (requiresAuth) {
+        if (!state.user.data) {
+            throw new Error('Authentication is required for this action');
+        }
+    }
+
+    if (!shouldCallApi(state)) {
         return;
     }
 
-    const source = getCancelSource(getState());
+    const source = getCancelSource(state);
     if (!auto && source) {
         source.cancel('Request is no longer valid, cancelling.');
     }

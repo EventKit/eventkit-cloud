@@ -1,6 +1,7 @@
 import axios from 'axios';
 import cookie from 'react-cookie';
 import Normalizer from '../utils/normalizers';
+import { getHeaderPageInfo } from '../utils/generic';
 import { makeAuthRequired } from './authActions';
 
 export const types = {
@@ -144,23 +145,7 @@ export function getRuns(args = {}) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
-            let nextPage = false;
-            let links = [];
-
-            if (response.headers.link) {
-                links = response.headers.link.split(',');
-            }
-
-            links.forEach((link) => {
-                if (link.includes('rel="next"')) {
-                    nextPage = true;
-                }
-            });
-
-            let range = '';
-            if (response.headers['content-range']) {
-                [, range] = response.headers['content-range'].split('-');
-            }
+            const { nextPage, range } = getHeaderPageInfo(response);
 
             const runs = response.data;
             const orderedIds = runs.map(run => run.uid);
@@ -234,23 +219,7 @@ export function getFeaturedRuns(args) {
             headers: { 'X-CSRFToken': csrfmiddlewaretoken },
             cancelToken: source.token,
         }).then((response) => {
-            let nextPage = false;
-            let links = [];
-
-            if (response.headers.link) {
-                links = response.headers.link.split(',');
-            }
-
-            links.forEach((link) => {
-                if (link.includes('rel="next"')) {
-                    nextPage = true;
-                }
-            });
-
-            let range = '';
-            if (response.headers['content-range']) {
-                [, range] = response.headers['content-range'].split('-');
-            }
+            const { nextPage, range } = getHeaderPageInfo(response);
 
             const runs = response.data;
 
@@ -294,11 +263,9 @@ export function deleteRun(uid) {
             types.DELETED_RUN,
             types.DELETE_RUN_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/runs/${uid}`,
         method: 'DELETE',
         onSuccess: () => ({ payload: { id: uid } }),
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -309,10 +276,8 @@ export function updateExpiration(uid, expiration) {
             types.UPDATE_EXPIRATION_SUCCESS,
             types.UPDATE_EXPIRATION_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/runs/${uid}`,
         method: 'PATCH',
         data: { expiration },
-        onError: error => ({ error: error.response.data }),
     };
 }

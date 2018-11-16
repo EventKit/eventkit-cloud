@@ -50,12 +50,10 @@ export function submitJob(data) {
             types.JOB_SUBMITTED_SUCCESS,
             types.JOB_SUBMITTED_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/jobs',
         method: 'POST',
         data,
         onSuccess: response => ({ jobuid: response.data.uid }),
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -83,11 +81,9 @@ export function updateDataCartPermissions(uid, permissions) {
             types.UPDATE_PERMISSION_SUCCESS,
             types.UPDATE_PERMISSION_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/jobs/${uid}`,
         method: 'PATCH',
         data,
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -98,11 +94,9 @@ export function rerunExport(jobuid) {
             types.RERUN_EXPORT_SUCCESS,
             types.RERUN_EXPORT_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/jobs/${jobuid}/run`,
         method: 'POST',
         onSuccess: response => ({ exportReRun: { data: response.data } }),
-        onError: error => ({ error: error.response.data }),
     };
 }
 

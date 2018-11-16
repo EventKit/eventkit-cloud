@@ -78,12 +78,10 @@ export function patchUser(acceptedLicenses, username) {
             types.PATCHED_USER,
             types.PATCHING_USER_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: `/api/users/${username}`,
         method: 'PATCH',
         data: { accepted_licenses: acceptedLicenses },
         onSuccess: response => ({ payload: response.data || { ERROR: 'No user response data' } }),
-        onError: error => ({ error: error.response.data }),
     };
 }
 

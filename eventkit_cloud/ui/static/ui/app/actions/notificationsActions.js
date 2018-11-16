@@ -1,4 +1,6 @@
 
+import { getHeaderPageInfo } from '../utils/generic';
+
 export const types = {
     FETCHING_NOTIFICATIONS: 'FETCHING_NOTIFICATIONS',
     RECEIVED_NOTIFICATIONS: 'RECEIVED_NOTIFICATIONS',
@@ -31,7 +33,6 @@ export function getNotifications(args = {}) {
             types.RECEIVED_NOTIFICATIONS,
             types.FETCH_NOTIFICATIONS_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.notifications.status.cancelSource,
         auto: args.isAuto,
         cancellable: args.isAuto,
@@ -39,30 +40,13 @@ export function getNotifications(args = {}) {
         method: 'GET',
         params,
         onSuccess: (response) => {
-            let nextPage = false;
-            let links = [];
-
-            if (response.headers.link) {
-                links = response.headers.link.split(',');
-            }
-
-            links.forEach((link) => {
-                if (link.includes('rel="next"')) {
-                    nextPage = true;
-                }
-            });
-            let range = '';
-            if (response.headers['content-range']) {
-                [, range] = response.headers['content-range'].split('-');
-            }
-
+            const { nextPage, range } = getHeaderPageInfo(response);
             return {
                 notifications: response.data,
                 nextPage,
                 range,
             };
         },
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -79,13 +63,11 @@ export function markNotificationsAsRead(notifications) {
             types.MARKED_NOTIFICATIONS_AS_READ,
             types.MARK_NOTIFICATIONS_AS_READ_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.notifications.status.cancelSource,
         url: '/api/notifications/read',
         method: 'POST',
         payload: { notifications },
         data,
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -102,13 +84,11 @@ export function markNotificationsAsUnread(notifications) {
             types.MARKED_NOTIFICATIONS_AS_UNREAD,
             types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.notifications.status.cancelSource,
         payload: { notifications },
         url: '/api/notifications/unread',
         method: 'POST',
         data,
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -128,13 +108,11 @@ export function removeNotifications(notifications) {
             types.REMOVED_NOTIFICATIONS,
             types.REMOVE_NOTIFICATIONS_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.notifications.status.cancelSource,
         payload: { notifications },
         url: '/api/notifications/delete',
         method: 'DELETE',
         data,
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -145,11 +123,9 @@ export function markAllNotificationsAsRead() {
             types.MARKED_ALL_NOTIFICATIONS_AS_READ,
             types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.notifications.status.cancelSource,
         url: '/api/notifications/read',
         method: 'POST',
-        onError: error => ({ error: error.response.data }),
     };
 }
 
@@ -160,13 +136,11 @@ export function getNotificationsUnreadCount(args = {}) {
             types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
             types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.notifications.unreadCount.status.cancelSource,
         auto: args.isAuto,
         cancellable: args.isAuto,
         url: '/api/notifications/counts',
         method: 'GET',
         onSuccess: response => ({ unreadCount: response.data.unread }),
-        onError: error => ({ error: error.response.data }),
     };
 }

@@ -12,7 +12,6 @@ export function getGeocode(query) {
             types.RECEIVED_GEOCODE,
             types.FETCH_GEOCODE_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         getCancelSource: state => state.geocode.cancelSource,
         cancellable: true,
         url: '/search',

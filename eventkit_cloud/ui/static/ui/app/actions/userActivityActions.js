@@ -1,5 +1,6 @@
 import axios from 'axios/index';
 import Normalizer from '../utils/normalizers';
+import { getHeaderPageInfo } from '../utils/generic';
 import { makeAuthRequired } from './authActions';
 
 export const types = {
@@ -18,7 +19,6 @@ export function viewedJob(jobuid) {
             types.VIEWED_JOB_SUCCESS,
             types.VIEWED_JOB_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/user/activity/jobs?activity=viewed',
         method: 'POST',
         data: { job_uid: jobuid },
@@ -57,24 +57,7 @@ export function getViewedJobs(args = {}) {
             params,
             cancelToken: cancelSource.token,
         }).then((response) => {
-            let nextPage = false;
-            let links = [];
-
-            if (response.headers.link) {
-                links = response.headers.link.split(',');
-            }
-
-            links.forEach((link) => {
-                if (link.includes('rel="next"')) {
-                    nextPage = true;
-                }
-            });
-
-            let range = '';
-            if (response.headers['content-range']) {
-                [, range] = response.headers['content-range'].split('-');
-            }
-
+            const { nextPage, range } = getHeaderPageInfo(response);
             const runs = response.data.map((entry) => {
                 const run = entry.last_export_run;
                 return run;

@@ -12,7 +12,6 @@ export function getFormats() {
             types.FORMATS_RECEIVED,
             types.GETTING_FORMATS_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/formats',
         method: 'GET',
         onSuccess: response => ({ formats: response.data }),

@@ -12,11 +12,9 @@ export function getLicenses() {
             types.RECEIVED_LICENSES,
             types.FETCH_LICENSES_ERROR,
         ],
-        shouldCallApi: state => Boolean(state.user.data),
         url: '/api/licenses',
         method: 'GET',
         onSuccess: response => ({ licenses: response.data }),
-        onError: error => ({ error: error.response.data }),
     };
 }
 

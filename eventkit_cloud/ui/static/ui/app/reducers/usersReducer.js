@@ -8,6 +8,7 @@ export const initialState = {
     total: 0,
     range: '',
     nextPage: false,
+    cancelToken: null,
 };
 
 export function usersReducer(state = initialState, action) {
@@ -18,6 +19,7 @@ export function usersReducer(state = initialState, action) {
                 error: null,
                 fetching: true,
                 fetched: false,
+                cancelSource: action.cancelSource,
             };
         case types.FETCHED_USERS:
             return {
@@ -28,6 +30,7 @@ export function usersReducer(state = initialState, action) {
                 total: action.total,
                 range: action.range,
                 nextPage: action.nextPage,
+                cancelSource: null,
             };
         case types.FETCH_USERS_ERROR:
             return {
@@ -38,6 +41,7 @@ export function usersReducer(state = initialState, action) {
                 total: 0,
                 range: '',
                 nextPage: false,
+                cancelSource: null,
             };
         default:
             return state;
