@@ -108,14 +108,14 @@ export const joyride = {
         {
             title: 'Navigate Application',
             text: 'Once you have saved the license agreements, you can navigate away from the page to browse DataPacks.',
-            selector: '.qa-Application-MenuItem-exports',
+            selector: '.qa-Drawer-MenuItem-exports',
             position: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
         {
             title: 'Navigate Application',
             text: 'Or to create your own DataPack.',
-            selector: '.qa-Application-MenuItem-create',
+            selector: '.qa-Drawer-MenuItem-create',
             position: 'top',
             style: JoyRideStyles.tooltipStyle,
         },
