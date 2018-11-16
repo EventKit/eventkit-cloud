@@ -397,9 +397,19 @@ describe('Application component', () => {
         const wrapper = getWrapper(getProps());
         wrapper.setState({ showNotificationsDropdown: true });
         const stateStub = sinon.stub(wrapper.instance(), 'setState');
-        wrapper.instance().handleClick();
+        const e = { srcElement: { className: ''} };
+        wrapper.instance().handleClick(e);
         expect(stateStub.calledOnce).toBe(true);
         expect(stateStub.calledWith({ showNotificationsDropdown: false }));
+    });
+
+    it('handleClick should NOT set showNotificationsDropdown false', () => {
+        const wrapper = getWrapper(getProps());
+        wrapper.setState({ showNotificationsDropdown: true });
+        const stateStub = sinon.stub(wrapper.instance(), 'setState');
+        const e = { srcElement: { className: 'qa-NotificationMenu-MenuItem'} };
+        wrapper.instance().handleClick(e);
+        expect(stateStub.called).toBe(false);
     });
 
     it('should open/close notifications dropdown when notifications button is clicked', () => {
