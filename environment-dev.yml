@@ -4,17 +4,5 @@ channels:
 dependencies:
  - eventkit-cloud
  - pip:
-   - coverage==4.3.4
-   - coveralls==1.1
-   - mock==2.0.0
-   - flake8==3.3.0
-   - autopep8==1.3
-   - flower==0.9.1
-   - pydevd==1.0.0
-   - pytest==3.8.0
-   - pytest-forked==0.2
-   - pytest-xdist==1.23.0
-   - pytest-django==3.4.3
-   - django-rest-swagger==2.2.0
-   - requests-mock==1.3.0
+   - -r requirements.dev.txt
  
