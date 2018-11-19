@@ -1,4 +1,3 @@
-import axios from 'axios/index';
 import Normalizer from '../utils/normalizers';
 import { getHeaderPageInfo } from '../utils/generic';
 
