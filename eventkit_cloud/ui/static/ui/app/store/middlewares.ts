@@ -69,7 +69,7 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
 
     const csrftoken = cookie.load('csrftoken');
 
-    axios({
+    return axios({
         url,
         method,
         params,
@@ -93,5 +93,4 @@ export const simpleApiCall = ({ dispatch, getState }) => next => (action) => {
             dispatch({ ...payload, type: failureType, ...onError(error) });
         }
     });
-
 };

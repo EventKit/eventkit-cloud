@@ -23,7 +23,7 @@ export function getProviders() {
 export function cancelProviderTask(uid) {
     return {
         types: [
-            types.CANCELED_PROVIDER_TASK,
+            types.CANCELING_PROVIDER_TASK,
             types.CANCELED_PROVIDER_TASK,
             types.CANCEL_PROVIDER_TASK_ERROR,
         ],

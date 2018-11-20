@@ -8,7 +8,7 @@ export const initialState = {
     total: 0,
     range: '',
     nextPage: false,
-    cancelToken: null,
+    cancelSource: null,
 };
 
 export function usersReducer(state = initialState, action) {
