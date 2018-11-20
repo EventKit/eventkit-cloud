@@ -2,30 +2,19 @@ import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import axios from 'axios';
+import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import { Breakpoint } from '@material-ui/core/styles/createBreakpoints';
 import AppBar from '@material-ui/core/AppBar';
-import Drawer from '@material-ui/core/Drawer';
-import MenuItem from '@material-ui/core/MenuItem';
-import { IndexLink, Link } from 'react-router';
 import IconButton from '@material-ui/core/IconButton';
 import Menu from '@material-ui/icons/Menu';
-import AVLibraryBooks from '@material-ui/icons/LibraryBooks';
-import ContentAddBox from '@material-ui/icons/AddBox';
-import Dashboard from '@material-ui/icons/Dashboard';
-import ActionInfoOutline from '@material-ui/icons/InfoOutlined';
-import SocialPerson from '@material-ui/icons/Person';
-import SocialGroup from '@material-ui/icons/Group';
-import ActionExitToApp from '@material-ui/icons/ExitToApp';
 import Notifications from '@material-ui/icons/Notifications';
-import Mail from '@material-ui/icons/MailOutlined';
-import { withTheme, withStyles, createStyles } from '@material-ui/core/styles';
 import Banner from './Banner';
+import Drawer from './Drawer';
 import BaseDialog from './Dialog/BaseDialog';
 import { DrawerTimeout } from '../actions/uiActions';
 import { userActive } from '../actions/userActions';
 import { getNotifications, getNotificationsUnreadCount } from '../actions/notificationsActions';
-import ConfirmDialog from './Dialog/ConfirmDialog';
 import NotificationsDropdown from './Notification/NotificationsDropdown';
 import '../styles/bootstrap/css/bootstrap.css';
 import '../styles/openlayers/ol.css';
@@ -60,30 +49,6 @@ const jss = (theme: any) => createStyles({
             justifyContent: 'flex-end',
         },
     },
-    link: {
-        padding: '0px 0px 0px 5px',
-        width: '100%',
-        height: '58px',
-        lineHeight: '58px',
-        textDecoration: 'none',
-        color: theme.eventkit.colors.primary,
-        fill: theme.eventkit.colors.primary,
-        '&:hover': {
-            textDecoration: 'none',
-            color: theme.eventkit.colors.primary,
-            backgroundColor: theme.eventkit.colors.background,
-        },
-        '&:focus': {
-            textDecoration: 'none',
-            color: theme.eventkit.colors.primary,
-            backgroundColor: theme.eventkit.colors.background,
-        },
-    },
-    activeLink: {
-        textDecoration: 'none',
-        color: theme.eventkit.colors.primary,
-        backgroundColor: theme.eventkit.colors.background,
-    },
     menuButton: {
         width: '70px',
         height: '70px',
@@ -104,40 +69,6 @@ const jss = (theme: any) => createStyles({
         backgroundColor: theme.eventkit.colors.warning,
         zIndex: '1' as any,
         pointerEvents: 'none',
-    },
-    drawer: {
-        width: '200px',
-        height: 'calc(100% - 95px)',
-        marginTop: '95px',
-        backgroundColor: theme.eventkit.colors.black,
-        padding: '0px',
-        justifyContent: 'space-between',
-    },
-    menuItem: {
-        fontSize: '16px',
-        height: '58px',
-        padding: '0px 0px',
-    },
-    icon: {
-        height: '22px',
-        width: '22px',
-        marginRight: '11px',
-        verticalAlign: 'middle',
-        fill: 'inherit',
-    },
-    contact: {
-        display: 'flex',
-        alignItems: 'center',
-        paddingLeft: '11px',
-        marginBottom: '20px',
-        color: theme.eventkit.colors.primary,
-        fill: theme.eventkit.colors.primary,
-        '&:hover': {
-            color: theme.eventkit.colors.primary,
-        },
-        '&:focus': {
-            color: theme.eventkit.colors.primary,
-        },
     },
 });
 
@@ -174,15 +105,9 @@ interface Props {
         appBar: string;
         title: string;
         img: string;
-        link: string;
-        activeLink: string;
         menuButton: string;
-        menuItem: string;
         notificationsButton: string;
         notificationsIndicator: string;
-        drawer: string;
-        icon: string;
-        contact: string;
     };
 }
 
@@ -195,9 +120,9 @@ interface State {
     autoLogoutWarningText: string;
     showAutoLogoutWarningDialog: boolean;
     showAutoLoggedOutDialog: boolean;
-    showLogoutDialog: boolean;
     showNotificationsDropdown: boolean;
     notificationsLoading: boolean;
+    loggedIn: boolean;
 }
 
 export class Application extends React.Component<Props, State> {
@@ -210,7 +135,6 @@ export class Application extends React.Component<Props, State> {
     private checkAutoLogoutIntervalId: number | null;
     private autoLogoutWarningIntervalId: number | null;
     private isSendingUserActivePings: boolean;
-    private loggedIn: boolean;
     private handleUserActiveInput: () => void;
 
     static defaultProps = {
@@ -255,9 +179,6 @@ export class Application extends React.Component<Props, State> {
         this.stopSendingUserActivePings = this.stopSendingUserActivePings.bind(this);
         this.handleStayLoggedIn = this.handleStayLoggedIn.bind(this);
         this.handleCloseAutoLoggedOutDialog = this.handleCloseAutoLoggedOutDialog.bind(this);
-        this.handleLogoutDialogCancel = this.handleLogoutDialogCancel.bind(this);
-        this.handleLogoutDialogConfirm = this.handleLogoutDialogConfirm.bind(this);
-        this.handleLogoutClick = this.handleLogoutClick.bind(this);
         this.handleNotificationsButtonClick = this.handleNotificationsButtonClick.bind(this);
         this.handleNotificationsDropdownNavigate = this.handleNotificationsDropdownNavigate.bind(this);
         this.state = {
@@ -265,9 +186,9 @@ export class Application extends React.Component<Props, State> {
             autoLogoutWarningText: '',
             showAutoLogoutWarningDialog: false,
             showAutoLoggedOutDialog: false,
-            showLogoutDialog: false,
             showNotificationsDropdown: false,
             notificationsLoading: true,
+            loggedIn: Boolean(props.userData),
         };
         this.userActiveInputTypes = ['mousemove', 'click', 'keypress', 'wheel', 'touchstart', 'touchmove', 'touchend'];
         this.notificationsUnreadCountRefreshInterval = 10000;
@@ -275,7 +196,6 @@ export class Application extends React.Component<Props, State> {
         this.notificationsPageSize = 10;
         this.notificationsUnreadCountIntervalId = null;
         this.notificationsRefreshIntervalId = null;
-        this.loggedIn = false;
     }
 
     getChildContext() {
@@ -289,26 +209,26 @@ export class Application extends React.Component<Props, State> {
     componentDidUpdate(prevProps, prevState) {
         if (prevState.childContext !== this.state.childContext) {
             this.notificationsPageSize = Number(this.state.childContext.config.NOTIFICATIONS_PAGE_SIZE);
-            if (this.loggedIn || this.props.userData) {
+            if (this.state.loggedIn || this.props.userData) {
                 this.startCheckingForAutoLogout();
                 this.startSendingUserActivePings();
                 this.startListeningForNotifications();
             }
         }
-        if (this.loggedIn && this.props.width !== prevProps.width) {
+        if (this.state.loggedIn && this.props.width !== prevProps.width) {
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             } else if (prevProps.width === 'xl') {
                 this.props.closeDrawer();
             }
         }
-        if (!this.loggedIn && this.props.userData) {
-            this.loggedIn = true;
+        if (!this.state.loggedIn && this.props.userData) {
+            this.setState({ loggedIn: true });
             if (this.props.width === 'xl') {
                 this.props.openDrawer();
             }
-        } else if (this.loggedIn && !this.props.userData) {
-            this.loggedIn = false;
+        } else if (this.state.loggedIn && !this.props.userData) {
+            this.setState({ loggedIn: false });
             this.stopCheckingForAutoLogout();
             this.stopSendingUserActivePings();
             this.stopListeningForNotifications();
@@ -319,8 +239,13 @@ export class Application extends React.Component<Props, State> {
         }
     }
 
-    shouldComponentUpdate(p) {
-        const status = p.notificationsStatus;
+    shouldComponentUpdate(prevProps, prevState) {
+        if (prevState.loggedIn !== this.state.loggedIn) {
+            // if login state has changed we always update
+            return true;
+        }
+
+        const status = prevProps.notificationsStatus;
         const oldStatus = this.props.notificationsStatus;
 
         // if the status object has changed we need to inspect
@@ -331,7 +256,7 @@ export class Application extends React.Component<Props, State> {
             }
             // if a fetch has completed AND the data has changed we need to update OR loading state is true
             if (status.fetched && (
-                (p.notificationsData !== this.props.notificationsData) || this.state.notificationsLoading)
+                (prevProps.notificationsData !== this.props.notificationsData) || this.state.notificationsLoading)
             ) {
                 return true;
             }
@@ -414,11 +339,11 @@ export class Application extends React.Component<Props, State> {
         }
 
         // Unread notifications count.
-        clearInterval(this.notificationsUnreadCountIntervalId);
+        window.clearInterval(this.notificationsUnreadCountIntervalId);
         this.notificationsUnreadCountIntervalId = null;
 
         // Notifications.
-        clearInterval(this.notificationsRefreshIntervalId);
+        window.clearInterval(this.notificationsRefreshIntervalId);
         this.notificationsRefreshIntervalId = null;
     }
 
@@ -485,7 +410,7 @@ export class Application extends React.Component<Props, State> {
             if (sendPing) {
                 // Allow the next ping to be sent after one minute.
                 sendPing = false;
-                setTimeout(() => {
+                window.setTimeout(() => {
                     sendPing = true;
                 }, 60 * 1000);
                 // Notify server.
@@ -578,26 +503,6 @@ export class Application extends React.Component<Props, State> {
         }
     }
 
-    handleLogoutClick() {
-        this.setState({
-            showLogoutDialog: true,
-        });
-    }
-
-    handleLogoutDialogCancel() {
-        this.setState({
-            showLogoutDialog: false,
-        });
-    }
-
-    handleLogoutDialogConfirm() {
-        this.setState({
-            showLogoutDialog: false,
-        });
-
-        this.logout();
-    }
-
     handleNotificationsButtonClick(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -642,7 +547,7 @@ export class Application extends React.Component<Props, State> {
                     <div className={classes.title}>
                         <img className={classes.img} src={images.logo} alt="EventKit" />
                     </div>
-                    <div style={{ position: 'absolute', left: '0', top: '25px' }}>
+                    {this.state.loggedIn ? <div style={{ position: 'absolute', left: '0', top: '25px' }}>
                         <IconButton
                             className={`qa-Application-AppBar-MenuButton ${classes.menuButton}`}
                             color="secondary"
@@ -680,120 +585,14 @@ export class Application extends React.Component<Props, State> {
                                     /> : null }
                             </div>
                         </div>
-                    </div>
+                    </div> : null}
                 </AppBar>
                 <Drawer
-                    className="qa-Application-Drawer"
-                    classes={{ paper: classes.drawer }}
-                    SlideProps={{ unmountOnExit: true }}
-                    variant="persistent"
                     open={this.props.drawer === 'open' || this.props.drawer === 'opening'}
-                >
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-dashboard ${classes.menuItem}`}
-                            onClick={this.onMenuItemClick}
-                        >
-                            <IndexLink
-                                className={`qa-Application-Link-dashboard ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                to="/dashboard"
-                            >
-                                <Dashboard className={classes.icon} />
-                                Dashboard
-                            </IndexLink>
-                        </MenuItem>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-exports ${classes.menuItem}`}
-                            onClick={this.onMenuItemClick}
-                        >
-                            <Link
-                                className={`qa-Application-Link-exports ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                to="/exports"
-                                href="/exports"
-                            >
-                                <AVLibraryBooks className={classes.icon} />
-                                DataPack Library
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-create ${classes.menuItem}`}
-                            onClick={this.onMenuItemClick}
-                        >
-                            <Link
-                                className={`qa-Application-Link-create ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                to="/create"
-                                href="/create"
-                            >
-                                <ContentAddBox className={classes.icon} />
-                                Create DataPack
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-groups ${classes.menuItem}`}
-                            onClick={this.onMenuItemClick}
-                        >
-                            <Link
-                                className={`qa-Application-Link-groups ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                to="/groups"
-                                href="/groups"
-                            >
-                                <SocialGroup className={classes.icon} />
-                                Members and Groups
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-about ${classes.menuItem}`}
-                            onClick={this.onMenuItemClick}
-                        >
-                            <Link
-                                className={`qa-Application-Link-about ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                to="/about"
-                                href="/about"
-                            >
-                                <ActionInfoOutline className={classes.icon} />
-                                About EventKit
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-account ${classes.menuItem}`}
-                            onClick={this.onMenuItemClick}
-                        >
-                            <Link
-                                className={`qa-Application-Link-account ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                to="/account"
-                                href="/account"
-                            >
-                                <SocialPerson className={classes.icon} />
-                                Account Settings
-                            </Link>
-                        </MenuItem>
-                        <MenuItem
-                            className={`qa-Application-MenuItem-logout ${classes.menuItem}`}
-                        >
-                            <Link // eslint-disable-line jsx-a11y/anchor-is-valid
-                                className={`qa-Application-Link-logout ${classes.link}`}
-                                activeClassName={classes.activeLink}
-                                onClick={this.handleLogoutClick}
-                                to={undefined}
-                            >
-                                <ActionExitToApp className={classes.icon} />
-                                Log Out
-                            </Link>
-                        </MenuItem>
-                    </div>
-                    {this.state.childContext.config.CONTACT_URL ? <a
-                        className={`qa-Application-contact ${classes.contact}`}
-                        href={this.state.childContext.config.CONTACT_URL}
-                    >
-                        <Mail className={classes.icon} />Contact Us
-                    </a> : null}
-                </Drawer>
+                    handleLogout={this.logout}
+                    handleMenuItemClick={this.onMenuItemClick}
+                    contactUrl={this.state.childContext.config.CONTACT_URL}
+                />
                 <div className="qa-Application-content" style={styles.content}>
                     <div>{childrenWithContext}</div>
                 </div>
@@ -812,16 +611,6 @@ export class Application extends React.Component<Props, State> {
                 >
                     <strong>You have been automatically logged out due to inactivity.</strong>
                 </BaseDialog>
-                <ConfirmDialog
-                    show={this.state.showLogoutDialog}
-                    title="LOG OUT"
-                    confirmLabel="Log Out"
-                    isDestructive
-                    onCancel={this.handleLogoutDialogCancel}
-                    onConfirm={this.handleLogoutDialogConfirm}
-                >
-                    <strong>Are you sure?</strong>
-                </ConfirmDialog>
             </div>
         );
     }

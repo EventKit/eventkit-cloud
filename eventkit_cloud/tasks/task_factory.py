@@ -89,8 +89,13 @@ class TaskFactory:
             run_dir = get_run_staging_dir(run.uid)
             os.makedirs(run_dir, 0o750)
 
+            wait_for_providers_settings = {
+                'queue': "{}.finalize".format(worker), 'routing_key': "{}.finalize".format(worker),
+                'priority': TaskPriority.FINALIZE_PROVIDER.value}
+
             finalize_task_settings = {
-                'interval': 4, 'max_retries': 10, 'queue': worker, 'routing_key': worker,
+                'interval': 4, 'max_retries': 10, 'queue': "{}.finalize".format(worker),
+                'routing_key': "{}.finalize".format(worker),
                 'priority': TaskPriority.FINALIZE_RUN.value}
 
             finalized_provider_task_chain_list = []
@@ -133,7 +138,7 @@ class TaskFactory:
                         run_uid=run_uid,
                         locking_task_key=run_uid,
                         callback_task=create_finalize_run_task_collection(run_uid, run_dir, run_zip_task_chain, apply_args=finalize_task_settings),
-                        apply_args=finalize_task_settings).set(**finalize_task_settings)
+                        apply_args=finalize_task_settings).set(**wait_for_providers_settings)
 
                     if provider_subtask_chain:
                         # The finalize_export_provider_task will check all of the export tasks
