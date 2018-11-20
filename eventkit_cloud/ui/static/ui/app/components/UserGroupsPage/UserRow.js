@@ -209,9 +209,9 @@ export class UserRow extends Component {
 }
 
 UserRow.defaultProps = {
-    handleMakeAdmin: () => { console.error('Make admin function not provided'); },
-    handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
-    handleRemoveUser: () => { console.error('Remove user function not provided'); },
+    handleMakeAdmin: () => { console.warn('Make admin function not provided'); },
+    handleDemoteAdmin: () => { console.warn('Demote admin function not provided'); },
+    handleRemoveUser: () => { console.warn('Remove user function not provided'); },
     isAdmin: false,
     showAdminButton: false,
     showAdminLabel: false,
