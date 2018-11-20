@@ -116,7 +116,7 @@ describe('UserRow component', () => {
     });
 
     it('make and demote admin and remove user should log a warning if functions are not supplied', () => {
-        const consoleStub = sinon.stub(console, 'error');
+        const consoleStub = sinon.stub(console, 'warn');
         const props = getProps();
         const wrapper = getWrapper(props);
         const e = { stopPropagation: sinon.spy() };

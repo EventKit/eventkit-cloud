@@ -43,7 +43,7 @@ export function getGeocode(query) {
             })
             .catch((e) => {
                 if (axios.isCancel(e)) {
-                    console.log(e.message);
+                    console.warn(e.message);
                 } else {
                     let error = e.response.data;
                     if (!error) {
