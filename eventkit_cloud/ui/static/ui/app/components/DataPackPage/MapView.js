@@ -622,10 +622,9 @@ export class MapView extends Component {
                 },
             }).then(response => (
                 this.handleSearch(response.data)
-            )).catch((error) => {
-                console.log(error.message);
-                return this.handleSearch(result);
-            });
+            )).catch(() => (
+                this.handleSearch(result)
+            ));
         }
         return this.handleSearch(result);
     }

@@ -193,7 +193,7 @@ export function getRuns(args = {}) {
             // dispatch();
         }).catch((error) => {
             if (axios.isCancel(error)) {
-                console.log(error.message);
+                console.warn(error.message);
             } else {
                 dispatch(makeAuthRequired({ type: types.FETCH_RUNS_ERROR, error: error.response.data }));
             }
@@ -279,7 +279,7 @@ export function getFeaturedRuns(args) {
             ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
-                console.log(error.message);
+                console.warn(error.message);
             } else {
                 dispatch(makeAuthRequired({ type: types.FETCH_FEATURED_RUNS_ERROR, error: error.response.data }));
             }

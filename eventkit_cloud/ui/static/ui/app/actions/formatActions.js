@@ -20,7 +20,7 @@ export function getFormats() {
                 formats: response.data,
             }));
         }).catch((error) => {
-            console.log(error);
+            console.warn(error);
         });
     };
 }
