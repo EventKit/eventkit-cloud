@@ -108,7 +108,7 @@ export class RevertDialog extends Component {
             <Button
                 key="RevertDialog-close"
                 className="qa-RevertDialog-FlatButton-close"
-                variant="flat"
+                variant="text"
                 style={{ float: 'left', color: colors.primary, fontWeight: 'bold' }}
                 onClick={this.props.onRevertClose}
             >
