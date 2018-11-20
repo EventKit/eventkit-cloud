@@ -256,8 +256,8 @@ export class UserHeader extends Component {
 }
 
 UserHeader.defaultProps = {
-    handleRemoveUsers: () => { console.error('No remove users handler supplied'); },
-    handleAdminRights: () => { console.error('No admin rights handler supplied'); },
+    handleRemoveUsers: () => { console.warn('No remove users handler supplied'); },
+    handleAdminRights: () => { console.warn('No admin rights handler supplied'); },
     selectedGroup: null,
     showRemoveButton: false,
     showAdminButton: false,

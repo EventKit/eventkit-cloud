@@ -26,7 +26,7 @@ export function logout() {
                 dispatch(resetState());
             }
         }).catch((error) => {
-            console.log(error);
+            console.warn(error);
         })
     );
 }
@@ -113,7 +113,7 @@ export function userActive() {
                 },
             });
         }).catch((error) => {
-            console.error(error.message);
+            console.warn(error.message);
         })
     );
 }

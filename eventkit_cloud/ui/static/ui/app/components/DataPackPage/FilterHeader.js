@@ -30,7 +30,7 @@ export class FilterHeader extends Component {
                     className="qa-FilterHeader-Button-clear"
                     style={{ minWidth: 'none', textTransform: 'none' }}
                     color="primary"
-                    variant="flat"
+                    variant="text"
                     onClick={this.props.onClear}
                 >
                     Clear All
