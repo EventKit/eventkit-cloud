@@ -6282,7 +6282,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}natural_polygons_water_{{ provider.slug}}{{ job_date_time }}</id>
-      <datasource>./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
+      <datasource>./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water" OR "waterway" = "riverbank"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
@@ -18773,7 +18773,7 @@ def my_form_open(dialog, layer, feature):
       <ymax>{{ bbox.3 }}</ymax>
       </extent>
       <id>{{ job_name.split|join:"_" }}_natural_polygons_water_{{ provider.slug}}{{ job_date_time }}</id>
-      <datasource>./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water"</datasource>
+      <datasource>./data/{{ provider.slug}}/{{ job_name.split|join:"_" }}-{{ provider.slug}}-{{ job_date_time|slice:":8" }}.gpkg|layername=natural_polygons|subset="natural" = "water" OR "waterway" = "riverbank"</datasource>
       <keywordList>
         <value></value>
       </keywordList>
