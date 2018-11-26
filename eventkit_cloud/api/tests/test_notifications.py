@@ -38,7 +38,7 @@ class TestNotifications(APITestCase):
         verb = NotificationVerb.REMOVED_FROM_GROUP.value
 
         sendnotification(self.user1, self.user1, verb, None, None, level, memo)
-        url = '/api/notifications/all'
+        url = '/api/notifications'
         response = self.client.get(url, content_type='application/json; version=1.0')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(len(response.data),1)
