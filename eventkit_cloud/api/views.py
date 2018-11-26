@@ -1297,17 +1297,19 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
         if activity_type == 'viewed':
-            return UserJobActivity.objects.filter(
+            ids = UserJobActivity.objects.filter(
                 user=self.request.user,
                 type=UserJobActivity.VIEWED,
                 job__last_export_run__isnull=False,
                 job__last_export_run__deleted=False,
-            ).order_by('job', '-created_at').distinct('job').select_related('job',
-                                                                            'user').prefetch_related(
+            ).distinct('job').values_list('id', flat=True)
+
+            result = UserJobActivity.objects.select_related('job', 'user').prefetch_related(
                 'job__provider_tasks__provider',
                 'job__provider_tasks__formats',
                 'job__last_export_run__provider_tasks__tasks__result',
-                'job__last_export_run__provider_tasks__tasks__exceptions')
+                'job__last_export_run__provider_tasks__tasks__exceptions').filter(id__in=ids).order_by('-created_at')
+            return result
         else:
             return UserJobActivity.objects.select_related('job', 'user').prefetch_related(
                 'job__provider_tasks__provider',
@@ -1336,12 +1338,18 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
         """
         activity_type = request.query_params.get('activity', '').lower()
         job_uid = request.data.get('job_uid')
-        # Save the
+        # Save a record of the view activity
         if activity_type == 'viewed':
-            # Don't save consecutive views of the same job.
-            queryset = self.get_queryset()
+            queryset =  UserJobActivity.objects.filter(
+                user=self.request.user,
+                type=UserJobActivity.VIEWED,
+                job__last_export_run__isnull=False,
+                job__last_export_run__deleted=False,
+            ).order_by('-created_at')
+
             if queryset.count() > 0:
-                last_job_viewed = queryset.latest('created_at')
+                last_job_viewed = queryset.first()
+                # Don't save consecutive views of the same job.
                 if str(last_job_viewed.job.uid) == job_uid:
                     return Response({'ignored': True}, content_type='application/json', status=status.HTTP_200_OK)
             job = Job.objects.get(uid=job_uid)
