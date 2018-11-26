@@ -18,15 +18,16 @@ class TestClient(TestCase):
         self.addCleanup(self.mock_requests.stop)
 
 
-        self.url = 'http://example.dev'
+        self.url = 'http://example.test'
         self.username = "user"
         self.pcode = "pcode"
         cookies = {'csrftoken': 'token'}
 
-        self.mock_requests.get("{0}/api/login".format(self.url), status_code=200)
-        self.mock_requests.post("{0}/api/login".format(self.url), status_code=200, cookies=cookies)
+        self.mock_requests.get("{0}/api/login/".format(self.url), status_code=200)
+        self.mock_requests.post("{0}/api/login/".format(self.url), status_code=200, cookies=cookies)
         self.mock_requests.get(self.url, status_code=200, cookies=cookies)
         self.mock_requests.get("{0}/create".format(self.url), status_code=200, cookies=cookies)
+        self.mock_requests.get("{0}/api/runs".format(self.url), status_code=200, cookies=cookies)
         with self.settings(SESSION_COOKIE_DOMAIN=self.url):
             self.client = EventKitClient(self.url, self.username, self.pcode)
 
@@ -41,8 +42,11 @@ class TestClient(TestCase):
             self.client.get_providers()
 
     def test_get_runs(self):
-        expected_response = {"runs": "runs"}
-        self.mock_requests.get("{0}/filter".format(self.client.runs_url), text=json.dumps(expected_response), status_code=200)
+        request_response = {"runs": "runs"}
+        expected_response = ["runs"]
+        self.mock_requests.register_uri('GET', "{0}/filter".format(self.client.runs_url),
+                                        [{'text': json.dumps(request_response), 'status_code': 200},
+                                         {'text': '', 'status_code': 404}])
         runs = self.client.get_runs()
         self.assertEqual(expected_response, runs)
 
