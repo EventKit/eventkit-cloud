@@ -42,7 +42,7 @@ export function getGroups() {
             dispatch(makeAuthRequired({ type: types.FETCHED_GROUPS, groups: response.data }));
         }).catch((error) => {
             if (axios.isCancel(error)) {
-                console.log(error.message);
+                console.warn(error.message);
             } else {
                 dispatch(makeAuthRequired({ type: types.FETCH_GROUPS_ERROR, error: error.response.data }));
             }

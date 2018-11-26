@@ -45,7 +45,10 @@ export class NotificationMessage extends Component {
             textOverflow: 'ellipsis',
         };
 
-        if (!notification.actor.details && !notification.action_object.details) {
+        if (
+            (!notification.actor || !notification.actor.details)
+            && (!notification.action_object || !notification.action_object.details)
+        ) {
             return (
                 <React.Fragment>
                     <span
@@ -115,7 +118,7 @@ export class NotificationMessage extends Component {
                 break;
             }
             default: {
-                console.error(`Unsupported notification verb '${verb}'`, notification);
+                console.warn(`Unsupported notification verb '${verb}'`, notification);
                 return null;
             }
         }

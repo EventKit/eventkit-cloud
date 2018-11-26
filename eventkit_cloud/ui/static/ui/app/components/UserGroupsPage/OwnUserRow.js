@@ -169,8 +169,8 @@ export class OwnUserRow extends Component {
 
 OwnUserRow.defaultProps = {
     isAdmin: false,
-    handleDemoteAdmin: () => { console.error('Demote admin function not provided'); },
-    handleRemoveUser: () => { console.error('Remove user function not provided'); },
+    handleDemoteAdmin: () => { console.warn('Demote admin function not provided'); },
+    handleRemoveUser: () => { console.warn('Remove user function not provided'); },
     showAdminButton: false,
     showAdminLabel: false,
     showRemoveButton: false,

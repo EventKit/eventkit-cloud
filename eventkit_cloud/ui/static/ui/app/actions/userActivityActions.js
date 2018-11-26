@@ -29,8 +29,7 @@ export function viewedJob(jobuid) {
                 type: types.VIEWED_JOB_SUCCESS,
                 jobuid,
             }));
-        }).catch((error) => {
-            console.error(error.message);
+        }).catch(() => {
             dispatch(makeAuthRequired({
                 type: types.VIEWED_JOB_ERROR,
                 jobuid,
@@ -120,7 +119,7 @@ export function getViewedJobs(args = {}) {
             ]);
         }).catch((error) => {
             if (axios.isCancel(error)) {
-                console.log(error.message);
+                console.warn(error.message);
             } else {
                 dispatch(makeAuthRequired({
                     type: types.FETCH_VIEWED_JOBS_ERROR,
