@@ -487,11 +487,14 @@ export class ExportAOI extends Component {
         this.map.addLayer(this.bufferLayer);
 
         this.updateZoomLevel();
-        this.map.getView().on('propertychange', this.updateZoomLevel);
+        this.map.getView().on('change:resolution', this.updateZoomLevel);
     }
 
     updateZoomLevel() {
-        this.setState({ zoomLevel: this.map.getView().getZoom() });
+        const lvl = Math.floor(this.map.getView().getZoom());
+        if (lvl !== this.state.zoomLevel) {
+            this.setState({ zoomLevel: lvl });
+        }
     }
 
     upEvent() {
