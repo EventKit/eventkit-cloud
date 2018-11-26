@@ -4,5 +4,5 @@ channels:
 dependencies:
  - eventkit-cloud
  - pip:
-   - -r requirements.dev.txt
+   - -r requirements-dev.txt
  
