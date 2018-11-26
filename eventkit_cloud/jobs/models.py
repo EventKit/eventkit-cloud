@@ -383,6 +383,9 @@ class UserJobActivity(models.Model):
     type = models.CharField(max_length=100, blank=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
+    def __str__(self):
+        return '%s %s %s %s' % (self.user, self.job, self.type, self.created_at)
+
 
 def convert_polygon(geom=None):
     if geom and isinstance(geom, Polygon):
