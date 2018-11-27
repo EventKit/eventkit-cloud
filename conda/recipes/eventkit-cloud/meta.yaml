@@ -34,7 +34,7 @@ requirements:
     - boto3=1.7.48
     - celery=4.2.1
     - certifi=2018.8.24
-    - django=2.0.8
+    - django=2.0.9
     - dj-database-url=0.4.2
     - django-auth-ldap=1.7.0
     - django-celery-beat=1.1.1
