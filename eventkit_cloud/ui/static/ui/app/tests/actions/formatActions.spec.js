@@ -1,35 +1,18 @@
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/formatActions';
 
 describe('format actions', () => {
-    it('getFormats should return formats from the api', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/formats').reply(200, ['my formats']);
-
-        const expectedActions = [
-            { type: actions.types.GETTING_FORMATS, _auth_required: true },
-            { type: actions.types.FORMATS_RECEIVED, formats: ['my formats'], _auth_required: true },
-        ];
-        const store = createTestStore({});
-        return store.dispatch(actions.getFormats())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+    it('should return the correct types', () => {
+        expect(actions.getFormats().types).toEqual([
+            actions.types.GETTING_FORMATS,
+            actions.types.FORMATS_RECEIVED,
+            actions.types.GETTING_FORMATS_ERROR,
+        ]);
     });
 
-    it('getFormats should handle errors', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/formats').reply(400);
-
-        const expectedActions = [
-            { type: actions.types.GETTING_FORMATS, _auth_required: true },
-        ];
-        const store = createTestStore({});
-        return store.dispatch(actions.getFormats())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+    it('onSuccess should return formats', () => {
+        const rep = { data: ['formatOne', 'formatTwo'] };
+        expect(actions.getFormats().onSuccess(rep)).toEqual({
+            formats: rep.data,
+        });
     });
 });

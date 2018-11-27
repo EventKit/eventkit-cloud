@@ -171,7 +171,7 @@ export class MapView extends Component {
         this.clickListener = this.map.on('singleclick', this.onMapClick);
 
         this.updateZoomLevel();
-        this.map.getView().on('propertychange', this.updateZoomLevel);
+        this.map.getView().on('change:resolution', this.updateZoomLevel);
     }
 
     componentDidUpdate(prevProps) {
@@ -280,12 +280,16 @@ export class MapView extends Component {
 
     // helper function that changes feature style to unselected
     setFeatureNotSelected(unselectedFeature) {
-        unselectedFeature.setStyle(this.defaultStyleFunction);
+        if (unselectedFeature) {
+            unselectedFeature.setStyle(this.defaultStyleFunction);
+        }
     }
 
     // helper function that changes feature style to selected
     setFeatureSelected(selectedFeature) {
-        selectedFeature.setStyle(this.selectedStyleFunction);
+        if (selectedFeature) {
+            selectedFeature.setStyle(this.selectedStyleFunction);
+        }
     }
 
     setButtonSelected(iconName) {
@@ -328,7 +332,10 @@ export class MapView extends Component {
     }
 
     updateZoomLevel() {
-        this.setState({ zoomLevel: this.map.getView().getZoom() });
+        const lvl = Math.floor(this.map.getView().getZoom());
+        if (lvl !== this.state.zoomLevel) {
+            this.setState({ zoomLevel: lvl });
+        }
     }
 
     hasNewRuns(prevRuns, nextRuns) {

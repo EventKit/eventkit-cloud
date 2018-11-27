@@ -4,6 +4,19 @@ import Feature from 'ol/feature';
 import * as utils from '../../utils/generic';
 
 describe('test generic utils', () => {
+    it('getHeaderPageInfo should return nextPage and range info', () => {
+        const ret = {
+            headers: {
+                link: 'some value, another value, value with rel="next"',
+                'content-range': 'something-0/100',
+            },
+        };
+        expect(utils.getHeaderPageInfo(ret)).toEqual({
+            nextPage: true,
+            range: '0/100',
+        });
+    });
+
     it('userIsDataPackAdmin should return true if user has admin member permissions', () => {
         const user = { username: 'user_one' };
         const permissions = {
