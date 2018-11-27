@@ -265,7 +265,7 @@ export class DataPackShareDialog extends Component {
                             </Button>,
                             <Button
                                 style={{ margin: '0px', float: 'left' }}
-                                variant="flat"
+                                variant="text"
                                 color="primary"
                                 label="CONTINUE EDITING"
                                 onClick={this.hidePublicWarning}

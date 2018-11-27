@@ -21,7 +21,7 @@ export class LeaveGroupDialog extends Component {
             <Button
                 key="cancel"
                 className="qa-LeaveGroupDialog-cancel"
-                variant="flat"
+                variant="text"
                 color="primary"
                 onClick={this.props.onClose}
             >

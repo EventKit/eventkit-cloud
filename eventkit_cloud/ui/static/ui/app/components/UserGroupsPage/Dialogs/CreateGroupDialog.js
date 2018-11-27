@@ -20,7 +20,7 @@ export class CreateGroupDialog extends Component {
             <Button
                 key="cancel"
                 className="qa-CreateGroupDialog-cancel"
-                variant="flat"
+                variant="text"
                 color="primary"
                 onClick={this.props.onClose}
             >

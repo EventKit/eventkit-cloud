@@ -1,5 +1,3 @@
-import axios from 'axios';
-import cookie from 'react-cookie';
 
 export const types = {
     UPDATE_AOI_INFO: 'UPDATE_AOI_INFO',
@@ -46,29 +44,16 @@ export function clearExportInfo() {
 }
 
 export function submitJob(data) {
-    return (dispatch) => {
-        dispatch({
-            type: types.SUBMITTING_JOB,
-        });
-
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
-        return axios({
-            url: '/api/jobs',
-            method: 'POST',
-            contentType: 'application/json; version=1.0',
-            data,
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        }).then((response) => {
-            dispatch({
-                type: types.JOB_SUBMITTED_SUCCESS,
-                jobuid: response.data.uid,
-
-            });
-        }).catch((error) => {
-            dispatch({
-                type: types.JOB_SUBMITTED_ERROR, error: error.response.data,
-            });
-        });
+    return {
+        types: [
+            types.SUBMITTING_JOB,
+            types.JOB_SUBMITTED_SUCCESS,
+            types.JOB_SUBMITTED_ERROR,
+        ],
+        url: '/api/jobs',
+        method: 'POST',
+        data,
+        onSuccess: response => ({ jobuid: response.data.uid }),
     };
 }
 
@@ -85,51 +70,35 @@ export function clearJobInfo() {
 }
 
 export function updateDataCartPermissions(uid, permissions) {
-    return (dispatch) => {
-        dispatch({ type: types.UPDATING_PERMISSION });
-        const csrftoken = cookie.load('csrftoken');
-        const data = {
-            permissions,
-            visibility: permissions.value,
-        };
+    const data = {
+        permissions,
+        visibility: permissions.value,
+    };
 
-        return axios({
-            url: `/api/jobs/${uid}`,
-            method: 'PATCH',
-            data,
-            headers: { 'X-CSRFToken': csrftoken },
-        }).then(() => (
-            dispatch({ type: types.UPDATE_PERMISSION_SUCCESS })
-        )).catch(error => (
-            dispatch({ type: types.UPDATE_PERMISSION_ERROR, error: error.response.data })
-        ));
+    return {
+        types: [
+            types.UPDATING_PERMISSION,
+            types.UPDATE_PERMISSION_SUCCESS,
+            types.UPDATE_PERMISSION_ERROR,
+        ],
+        url: `/api/jobs/${uid}`,
+        method: 'PATCH',
+        data,
     };
 }
 
-export const rerunExport = jobuid => (dispatch) => {
-    dispatch({
-        type: types.RERUNNING_EXPORT,
-    });
-
-    const csrfmiddlewaretoken = cookie.load('csrftoken');
-    return axios({
+export function rerunExport(jobuid) {
+    return {
+        types: [
+            types.RERUNNING_EXPORT,
+            types.RERUN_EXPORT_SUCCESS,
+            types.RERUN_EXPORT_ERROR,
+        ],
         url: `/api/jobs/${jobuid}/run`,
         method: 'POST',
-        contentType: 'application/json; version=1.0',
-        headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-    }).then((response) => {
-        dispatch({
-            type: types.RERUN_EXPORT_SUCCESS,
-            exportReRun: {
-                data: response.data,
-            },
-        });
-    }).catch((error) => {
-        dispatch({
-            type: types.RERUN_EXPORT_ERROR, error: error.response.data,
-        });
-    });
-};
+        onSuccess: response => ({ exportReRun: { data: response.data } }),
+    };
+}
 
 export function clearReRunInfo() {
     return {

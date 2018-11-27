@@ -1,6 +1,4 @@
-import axios from 'axios';
-import cookie from 'react-cookie';
-import { makeAuthRequired } from './authActions';
+import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
     FETCHING_USERS: 'FETCHING_USERS',
@@ -9,48 +7,28 @@ export const types = {
 };
 
 export function getUsers(params) {
-    return (dispatch) => {
-        dispatch(makeAuthRequired({ type: types.FETCHING_USERS }));
-
-        const csrfmiddlewaretoken = cookie.load('csrftoken');
-
-        return axios({
-            url: '/api/users',
-            params,
-            method: 'GET',
-            headers: { 'X-CSRFToken': csrfmiddlewaretoken },
-        }).then((response) => {
+    return {
+        types: [
+            types.FETCHING_USERS,
+            types.FETCHED_USERS,
+            types.FETCH_USERS_ERROR,
+        ],
+        getCancelSource: state => state.users.cancelSource,
+        cancellable: true,
+        url: '/api/users',
+        method: 'GET',
+        params,
+        onSuccess: (response) => {
             // get the total count from the header
             const totalUsers = Number(response.headers['total-users']);
+            const { nextPage, range } = getHeaderPageInfo(response);
 
-            let nextPage = false;
-            let links = [];
-
-            if (response.headers.link) {
-                links = response.headers.link.split(',');
-            }
-
-            links.forEach((link) => {
-                if (link.includes('rel="next"')) {
-                    nextPage = true;
-                }
-            });
-
-            let range = '';
-            if (response.headers['content-range']) {
-                [, range] = response.headers['content-range'].split('-');
-            }
-
-            const users = response.data;
-            dispatch(makeAuthRequired({
-                type: types.FETCHED_USERS,
-                users,
+            return {
+                users: response.data,
                 total: totalUsers,
                 range,
                 nextPage,
-            }));
-        }).catch((error) => {
-            dispatch(makeAuthRequired({ type: types.FETCH_USERS_ERROR, error: error.response.data }));
-        });
+            };
+        },
     };
 }

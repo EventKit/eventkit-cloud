@@ -1,6 +1,28 @@
 import numeral from 'numeral';
 import GeoJSON from 'ol/format/geojson';
 
+export function getHeaderPageInfo(response) {
+    let nextPage = false;
+    let links = [];
+
+    if (response.headers.link) {
+        links = response.headers.link.split(',');
+    }
+
+    links.forEach((link) => {
+        if (link.includes('rel="next"')) {
+            nextPage = true;
+        }
+    });
+
+    let range = '';
+    if (response.headers['content-range']) {
+        [, range] = response.headers['content-range'].split('-');
+    }
+
+    return { nextPage, range };
+}
+
 export function userIsDataPackAdmin(user, permissions, groups) {
     const { username } = user;
     if (permissions.members[username] === 'ADMIN') {
