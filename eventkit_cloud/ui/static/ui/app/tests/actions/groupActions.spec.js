@@ -1,230 +1,67 @@
-import axios from 'axios';
-import sinon from 'sinon';
-import MockAdapter from 'axios-mock-adapter';
-import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/groupActions';
 
 describe('userGroups actions', () => {
-    it('getGroups handle received groups', () => {
-        const cancelSource = axios.CancelToken.source();
-        const sourceStub = sinon.stub(axios.CancelToken, 'source')
-            .returns(cancelSource);
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const groups = [
-            { name: 'group1' },
-        ];
-
-        mock.onGet('/api/groups').reply(200, groups);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_GROUPS, cancelSource, _auth_required: true },
-            { type: actions.types.FETCHED_GROUPS, groups, _auth_required: true },
-        ];
-        const store = createTestStore({
-            groups: {
-                fetching: false,
-                cancelSource: null,
-            },
+    describe('getGroups action', () => {
+        it('should return the correct types', () => {
+            expect(actions.getGroups().types).toEqual([
+                actions.types.FETCHING_GROUPS,
+                actions.types.FETCHED_GROUPS,
+                actions.types.FETCH_GROUPS_ERROR,
+            ]);
         });
 
-        return store.dispatch(actions.getGroups())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                sourceStub.restore();
-            });
-    });
-
-    it('getGroups should handle request error', () => {
-        const cancelSource = axios.CancelToken.source();
-        const sourceStub = sinon.stub(axios.CancelToken, 'source')
-            .returns(cancelSource);
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const error = 'oh no and error';
-
-        mock.onGet('/api/groups').reply(400, error);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_GROUPS, cancelSource, _auth_required: true },
-            { type: actions.types.FETCH_GROUPS_ERROR, error, _auth_required: true },
-        ];
-        const store = createTestStore({
-            groups: {
-                fetching: false,
-                cancelSource: null,
-            },
+        it('getCancelSource should return the source', () => {
+            const state = { groups: { cancelSource: 'test' } };
+            expect(actions.getGroups().getCancelSource(state)).toEqual('test');
         });
 
-        return store.dispatch(actions.getGroups())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                sourceStub.restore();
+        it('onSuccess should return groups', () => {
+            const ret = { data: ['groupOne', 'groupTwo'] };
+            expect(actions.getGroups().onSuccess(ret)).toEqual({
+                groups: ret.data,
             });
+        });
     });
 
-    it('getGroups should cancel a in progress request before making a new one', () => {
-        const cancelSource = axios.CancelToken.source();
-        cancelSource.cancel = sinon.spy();
-        const sourceStub = sinon.stub(axios.CancelToken, 'source')
-            .returns(cancelSource);
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
+    describe('deleteGroup action', () => {
+        it('should return the correct types', () => {
+            expect(actions.deleteGroup().types).toEqual([
+                actions.types.DELETING_GROUP,
+                actions.types.DELETED_GROUP,
+                actions.types.DELETE_GROUP_ERROR,
+            ]);
+        });
+    });
 
-        mock.onGet('/api/groups').reply(200, []);
-
-        const store = createTestStore({
-            groups: {
-                fetching: true,
-                cancelSource,
-            },
+    describe('createGroup action', () => {
+        it('should return the correct types', () => {
+            expect(actions.createGroup().types).toEqual([
+                actions.types.CREATING_GROUP,
+                actions.types.CREATED_GROUP,
+                actions.types.CREATE_GROUP_ERROR,
+            ]);
         });
 
-        return store.dispatch(actions.getGroups())
-            .then(() => {
-                expect(cancelSource.cancel.calledOnce).toBe(true);
-                expect(cancelSource.cancel.calledWith('Request is no longer valid, cancelling')).toBe(true);
-                sourceStub.restore();
-            });
+        it('should return the correct data', () => {
+            const name = 'test name';
+            const members = ['one', 'two'];
+            const expected = { name, members };
+            expect(actions.createGroup(name, members).data).toEqual(expected);
+        });
     });
 
-    it('getGroups should handle an axios cancel request', () => {
-        const cancelSource = axios.CancelToken.source();
-        const sourceStub = sinon.stub(axios.CancelToken, 'source')
-            .returns(cancelSource);
-        const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
-        const error = { message: 'cancelled request' };
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-
-        mock.onGet('/api/groups').reply(400, error);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_GROUPS, cancelSource, _auth_required: true },
-        ];
-        const store = createTestStore({
-            groups: {
-                fetching: false,
-                cancelSource: null,
-            },
+    describe('updateGroup action', () => {
+        it('should return the correct types', () => {
+            expect(actions.updateGroup().types).toEqual([
+                actions.types.UPDATING_GROUP,
+                actions.types.UPDATED_GROUP,
+                actions.types.UPDATING_GROUP_ERROR,
+            ]);
         });
 
-        return store.dispatch(actions.getGroups())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                sourceStub.restore();
-                cancelStub.restore();
-            });
-    });
-
-    it('deleteGroup should handle delete request', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const groupId = '1234';
-
-        mock.onDelete(`/api/groups/${groupId}`).reply(200);
-
-        const expectedActions = [
-            { type: actions.types.DELETING_GROUP },
-            { type: actions.types.DELETED_GROUP },
-        ];
-        const store = createTestStore({});
-
-        return store.dispatch(actions.deleteGroup(groupId))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('deleteGroup should handle request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const groupId = '12345';
-        const error = 'oh no an error';
-
-        mock.onDelete(`/api/groups/${groupId}`).reply(400, error);
-
-        const expectedActions = [
-            { type: actions.types.DELETING_GROUP },
-            { type: actions.types.DELETE_GROUP_ERROR, error },
-        ];
-        const store = createTestStore({});
-
-        return store.dispatch(actions.deleteGroup(groupId))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('createGroup should handle create success', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-
-        mock.onPost('/api/groups').reply(200);
-
-        const expectedActions = [
-            { type: actions.types.CREATING_GROUP },
-            { type: actions.types.CREATED_GROUP },
-        ];
-        const store = createTestStore({});
-
-        return store.dispatch(actions.createGroup('Group name', []))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('createGroup should handle request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const error = 'oh no an error';
-
-        mock.onPost('/api/groups').reply(400, error);
-
-        const expectedActions = [
-            { type: actions.types.CREATING_GROUP },
-            { type: actions.types.CREATE_GROUP_ERROR, error },
-        ];
-        const store = createTestStore({});
-
-        return store.dispatch(actions.createGroup())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('updateGroup should handle success', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const group = { id: 1 };
-
-        mock.onPatch(`/api/groups/${group.id}`).reply(200);
-
-        const expectedActions = [
-            { type: actions.types.UPDATING_GROUP },
-            { type: actions.types.UPDATED_GROUP },
-        ];
-        const store = createTestStore({});
-
-        const options = {
-            name: 'new name',
-            members: ['member_one'],
-            administrators: ['member_one'],
-        };
-
-        return store.dispatch(actions.updateGroup(group.id, options))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('updateGroup should handle request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const group = { id: 1, members: [] };
-        const error = 'oh no an error';
-
-        mock.onPatch(`/api/groups/${group.id}`).reply(400, error);
-
-        const expectedActions = [
-            { type: actions.types.UPDATING_GROUP },
-            { type: actions.types.UPDATING_GROUP_ERROR, error },
-        ];
-        const store = createTestStore({});
-
-        return store.dispatch(actions.updateGroup(group.id))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        it('should return the correct data', () => {
+            const opt = { name: 'test name', members: ['one'], administrators: ['two'] };
+            expect(actions.updateGroup('', opt).data).toEqual(opt);
+        });
     });
 });

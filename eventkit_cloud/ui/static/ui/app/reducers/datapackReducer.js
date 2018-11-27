@@ -41,6 +41,16 @@ const addRun = (state, run) => {
     return { ...state, [run.uid]: run };
 };
 
+const removeRun = (state, id) => {
+    if (state[id]) {
+        const newState = { ...state };
+        newState[id] = null;
+        delete newState[id];
+        return newState;
+    }
+    return state;
+};
+
 const addJob = (state, job) => {
     if (isEqual(state[job.uid], job)) {
         return state;
@@ -120,6 +130,9 @@ const runsById = (state = exports.data.runs, action) => {
                 state,
                 Object.values(action.payload.runs || {})[0],
             );
+        }
+        case types.DELETED_RUN: {
+            return removeRun(state, action.payload.id);
         }
         default: return state;
     }

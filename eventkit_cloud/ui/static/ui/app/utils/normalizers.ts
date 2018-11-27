@@ -28,4 +28,4 @@ export default class Normalizer {
     public normalizeRun(run) {
         return normalize(run, this.run);
     }
-};
+}
