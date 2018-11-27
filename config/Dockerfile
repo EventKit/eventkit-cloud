@@ -8,7 +8,7 @@ USER eventkit
 
 WORKDIR /var/lib/eventkit
 
-COPY --chown=eventkit ./requirements-dev.yml /var/lib/eventkit/requirements-dev.yml
+COPY --chown=eventkit ./requirements-dev.txt /var/lib/eventkit/requirements-dev.txt
 COPY --chown=eventkit ./environment-dev.yml /var/lib/eventkit/environment-dev.yml
 COPY --chown=eventkit ./conda /var/lib/eventkit/conda
 
@@ -23,7 +23,8 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.s
     conda env create --file environment-dev.yml python=3.5 && \
     conda clean --yes --all && \
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/python \
-    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic
+    /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
+    rm -rf /var/lib/eventkit/conda
 
 ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.5/site-packages/scripts/wait-for-postgis.sh"]
 
