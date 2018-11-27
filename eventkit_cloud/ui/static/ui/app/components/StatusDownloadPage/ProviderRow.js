@@ -97,7 +97,7 @@ export class ProviderRow extends Component {
                 return (
                     <span className="qa-ProviderRow-span-taskStatus">
                         <LinearProgress variant="determinate" value={task.progress} />
-                        {task.progress === 100 ? '' : `${task.progress} %`}
+                        {task.progress === 100 ? '' : `${task.progress.toFixed(1)} %`}
                     </span>
                 );
             case 'CANCELED':
