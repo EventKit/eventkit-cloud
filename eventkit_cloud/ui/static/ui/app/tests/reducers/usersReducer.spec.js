@@ -14,11 +14,13 @@ describe('usersReducer', () => {
             },
             {
                 type: types.FETCHING_USERS,
+                cancelSource: 'fake source',
             },
         )).toEqual({
             ...usersState,
             fetched: false,
             fetching: true,
+            cancelSource: 'fake source',
         });
     });
 

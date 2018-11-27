@@ -1,7 +1,5 @@
-import axios from 'axios/index';
-import cookie from 'react-cookie';
 import Normalizer from '../utils/normalizers';
-import { makeAuthRequired } from './authActions';
+import { getHeaderPageInfo } from '../utils/generic';
 
 export const types = {
     VIEWED_JOB: 'VIEWED_JOB',
@@ -13,119 +11,69 @@ export const types = {
 };
 
 export function viewedJob(jobuid) {
-    return (dispatch) => {
-        dispatch(makeAuthRequired({
-            type: types.VIEWED_JOB,
-            jobuid,
-        }));
-
-        return axios({
-            url: '/api/user/activity/jobs?activity=viewed',
-            method: 'POST',
-            data: { job_uid: jobuid },
-            headers: { 'X-CSRFToken': cookie.load('csrftoken') },
-        }).then(() => {
-            dispatch(makeAuthRequired({
-                type: types.VIEWED_JOB_SUCCESS,
-                jobuid,
-            }));
-        }).catch(() => {
-            dispatch(makeAuthRequired({
-                type: types.VIEWED_JOB_ERROR,
-                jobuid,
-            }));
-        });
+    return {
+        types: [
+            types.VIEWED_JOB,
+            types.VIEWED_JOB_SUCCESS,
+            types.VIEWED_JOB_ERROR,
+        ],
+        url: '/api/user/activity/jobs?activity=viewed',
+        method: 'POST',
+        data: { job_uid: jobuid },
+        payload: { jobuid },
     };
 }
 
 export function getViewedJobs(args = {}) {
-    return (dispatch, getState) => {
-        // Check if we should cancel the previous request due to a user action.
-        const state = getState();
-        if (state.exports.viewedInfo.status.fetching && state.exports.viewedInfo.status.cancelSource) {
-            if (args.isAuto) {
-                // Just ignore this request.
-                return null;
-            }
-            // Cancel the last request.
-            state.exports.viewedInfo.status.cancelSource.cancel('Request is no longer valid, cancelling.');
-        }
-
-        const cancelSource = axios.CancelToken.source();
-
-        dispatch(makeAuthRequired({
-            type: types.FETCHING_VIEWED_JOBS,
-            cancelSource,
-        }));
-
-        const params = {
-            activity: 'viewed',
-            page_size: args.pageSize || 12,
-        };
-
-        return axios({
-            url: '/api/user/activity/jobs',
-            method: 'GET',
-            params,
-            cancelToken: cancelSource.token,
-        }).then((response) => {
-            let nextPage = false;
-            let links = [];
-
-            if (response.headers.link) {
-                links = response.headers.link.split(',');
-            }
-
-            links.forEach((link) => {
-                if (link.includes('rel="next"')) {
-                    nextPage = true;
-                }
+    const params = {
+        activity: 'viewed',
+        page_size: args.pageSize || 12,
+    };
+    return {
+        types: [
+            types.FETCHING_VIEWED_JOBS,
+            types.RECEIVED_VIEWED_JOBS,
+            types.FETCH_VIEWED_JOBS_ERROR,
+        ],
+        auto: args.isAuto,
+        cancellable: true,
+        url: '/api/user/activity/jobs',
+        method: 'GET',
+        params,
+        getCancelSource: state => state.exports.viewedInfo.status.cancelSource,
+        onSuccess: (response) => {
+            const { nextPage, range } = getHeaderPageInfo(response);
+            const runs = response.data.map((entry) => {
+                const run = entry.last_export_run;
+                return run;
             });
-
-            let range = '';
-            if (response.headers['content-range']) {
-                [, range] = response.headers['content-range'].split('-');
-            }
-
+            return {
+                payload: {
+                    nextPage,
+                    range,
+                    ids: runs.map(run => run.uid),
+                },
+            };
+        },
+        batchSuccess: (response, state) => {
             const runs = response.data.map((entry) => {
                 const run = entry.last_export_run;
                 return run;
             });
 
             const normalizer = new Normalizer();
-
             const actions = runs.map((run) => {
                 const { result, entities } = normalizer.normalizeRun(run);
-                return makeAuthRequired({
+                return {
                     type: 'ADD_VIEWED_RUN',
                     payload: {
                         id: result,
                         username: state.user.data.user.username,
                         ...entities,
                     },
-                });
+                };
             });
-
-            dispatch([
-                makeAuthRequired({
-                    type: types.RECEIVED_VIEWED_JOBS,
-                    payload: {
-                        nextPage,
-                        range,
-                        ids: runs.map(run => run.uid),
-                    },
-                }),
-                ...actions,
-            ]);
-        }).catch((error) => {
-            if (axios.isCancel(error)) {
-                console.warn(error.message);
-            } else {
-                dispatch(makeAuthRequired({
-                    type: types.FETCH_VIEWED_JOBS_ERROR,
-                    error: error.response.data,
-                }));
-            }
-        });
+            return actions;
+        },
     };
 }
