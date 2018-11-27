@@ -4,4 +4,3 @@ channels:
 dependencies:
  - eventkit-cloud
 # The eventkit-cloud recipe is in conda/recipes/eventkit-cloud/meta.yaml
-.
