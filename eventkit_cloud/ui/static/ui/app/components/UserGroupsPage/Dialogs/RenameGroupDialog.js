@@ -24,7 +24,7 @@ export class RenameGroupDialog extends Component {
                 key="cancel"
                 className="qa-RenameGroupDialog-cancel"
                 onClick={this.props.onClose}
-                variant="flat"
+                variant="text"
                 color="primary"
             >
                 CANCEL
