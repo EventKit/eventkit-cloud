@@ -280,12 +280,16 @@ export class MapView extends Component {
 
     // helper function that changes feature style to unselected
     setFeatureNotSelected(unselectedFeature) {
-        unselectedFeature.setStyle(this.defaultStyleFunction);
+        if (unselectedFeature) {
+            unselectedFeature.setStyle(this.defaultStyleFunction);
+        }
     }
 
     // helper function that changes feature style to selected
     setFeatureSelected(selectedFeature) {
-        selectedFeature.setStyle(this.selectedStyleFunction);
+        if (selectedFeature) {
+            selectedFeature.setStyle(this.selectedStyleFunction);
+        }
     }
 
     setButtonSelected(iconName) {

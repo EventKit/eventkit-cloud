@@ -1345,7 +1345,7 @@ class TestUserJobActivityViewSet(APITestCase):
                 job_a_count += 1
 
         self.assertEqual(job_a_count, 1)
-        self.assertEqual(viewed_jobs[0]['job']['uid'], str(job_a.uid))
+        self.assertEqual(viewed_jobs[-1]['job']['uid'], str(job_a.uid))
 
     def create_job(self, name):
         extents = (-3.9, 16.1, 7.0, 27.6)
