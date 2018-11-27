@@ -119,7 +119,7 @@ export class BufferDialog extends Component {
                 className="qa-BufferDialog-Button-close"
                 style={{ float: 'left', fontWeight: 'bold' }}
                 onClick={this.props.closeBufferDialog}
-                variant="flat"
+                variant="text"
                 color="primary"
             >
                 close

@@ -76,6 +76,7 @@ export class UserHeader extends Component {
         if (this.props.showRemoveButton) {
             removeButton = (
                 <MenuItem
+                    key="remove"
                     style={{ ...styles.item, color: colors.warning }}
                     onClick={this.handleRemoveUsersClick}
                     className="qa-UserHeader-MenuItem-remove"
