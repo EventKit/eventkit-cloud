@@ -37,7 +37,7 @@ interface Props {
 export function PageLoading(props: Props) {
     const { classes, background, partial, theme } = props;
 
-    let style: any = { ...props.style };
+    const style: any = { ...props.style };
 
     if (background === 'solid') {
         style.backgroundColor = theme.eventkit.colors.background;

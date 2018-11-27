@@ -61,7 +61,7 @@ interface Props {
 
 interface State {
     loadingPage: boolean;
-    steps: Array<object>;
+    steps: object[];
     isRunning: boolean;
     width: string;
 }

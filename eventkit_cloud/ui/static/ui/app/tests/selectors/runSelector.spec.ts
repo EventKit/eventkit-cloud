@@ -21,16 +21,16 @@ describe('Run Selector', () => {
     });
 
     const getFullMockRun = (id) => {
-        const state = getState();
-        const run = state.exports.data.runs[id];
+        const s = getState();
+        const run = s.exports.data.runs[id];
         const providerTasks = run.provider_tasks.map(providerId => {
-            const provider = { ...state.exports.data.provider_tasks[providerId] };
-            provider.tasks = provider.tasks.map(taskId => ({ ...state.exports.data.tasks[taskId] }));
+            const provider = { ...s.exports.data.provider_tasks[providerId] };
+            provider.tasks = provider.tasks.map(taskId => ({ ...s.exports.data.tasks[taskId] }));
             return provider;
         });
         return {
             ...run,
-            job: { ...state.exports.data.jobs[run.job] },
+            job: { ...s.exports.data.jobs[run.job] },
             provider_tasks: providerTasks,
         };
     };
