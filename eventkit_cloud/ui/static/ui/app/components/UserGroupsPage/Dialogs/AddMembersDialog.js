@@ -365,7 +365,7 @@ export class AddMembersDialog extends Component {
                 key="cancel"
                 className="qa-AddMembersDialog-cancel"
                 onClick={this.handleClose}
-                variant="flat"
+                variant="text"
                 color="primary"
             >
                 CANCEL

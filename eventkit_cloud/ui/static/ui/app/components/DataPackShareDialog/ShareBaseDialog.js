@@ -55,7 +55,7 @@ export class ShareBaseDialog extends Component {
                 key="cancel"
                 className="qa-ShareBaseDialog-cancel"
                 style={{ fontWeight: 'bold' }}
-                variant="flat"
+                variant="text"
                 color="primary"
                 onClick={this.props.onClose}
             >
