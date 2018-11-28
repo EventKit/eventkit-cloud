@@ -293,7 +293,7 @@ class TestExportTasks(ExportTaskBase):
         self.assertEqual(error_type, ValueError)
         self.assertEqual('some unexpected error', str(msg))
 
-    @patch('eventkit_cloud.tasks.export_tasks.retry')
+    @patch('eventkit_cloud.tasks.export_tasks.gdalutils.retry')
     @patch('shutil.copy')
     @patch('os.remove')
     @patch('eventkit_cloud.tasks.export_tasks.ZipFile')
