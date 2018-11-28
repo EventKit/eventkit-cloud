@@ -122,7 +122,8 @@
       "!**/styles/**",
       "!**/node_modules/**",
       "!**/e2e/**",
-      "!**/store/**"
+      "!**/store/configureStore.js",
+      "!**/store/configureTestStore.js"
     ],
     "moduleFileExtensions": [
       "js",
@@ -142,8 +143,7 @@
     "modulePathIgnorePatterns": [
       "staticfiles",
       "rootReducer.js",
-      "index.tsx",
-      "store/"
+      "index.tsx"
     ],
     "setupFiles": [
       "./setupFile.js"

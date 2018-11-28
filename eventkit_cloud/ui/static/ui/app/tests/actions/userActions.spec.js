@@ -125,35 +125,35 @@ describe('userActions actions', () => {
             });
     });
 
-    it('patchUser should handle patch request success', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const user = { username: 'user1', name: 'user1' };
-        mock.onPatch(`/api/users/${user.username}`).reply(200, user);
-        const expectedActions = [
-            { type: actions.types.PATCHING_USER },
-            { type: actions.types.PATCHED_USER, payload: user },
-        ];
-        const store = createTestStore({});
-        return store.dispatch(actions.patchUser([], user.username))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
+    describe('patchUser action', () => {
+        it('should return the correct types', () => {
+            expect(actions.patchUser().types).toEqual([
+                actions.types.PATCHING_USER,
+                actions.types.PATCHED_USER,
+                actions.types.PATCHING_USER_ERROR,
+            ]);
+        });
 
-    it('patchUser should handle a request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        const user = { username: 'user1' };
-        const error = 'oh no an error';
-        mock.onPatch(`/api/users/${user.username}`).reply(400, error);
-        const expectedActions = [
-            { type: actions.types.PATCHING_USER },
-            { type: actions.types.PATCHING_USER_ERROR, error },
-        ];
-        const store = createTestStore({});
-        return store.dispatch(actions.patchUser([], user.username))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('should pass accepted licenses in the data', () => {
+            const licenses = { one: true, two: false };
+            expect(actions.patchUser(licenses, 'test').data).toEqual({
+                accepted_licenses: licenses,
             });
+        });
+
+        it('onSuccess should return payload', () => {
+            const ret = { data: [{ one: true }, { two: false }] };
+            expect(actions.patchUser().onSuccess(ret)).toEqual({
+                payload: ret.data,
+            });
+        });
+
+        it('onSuccess should return error string', () => {
+            const ret = { data: undefined };
+            expect(actions.patchUser().onSuccess(ret)).toEqual({
+                payload: { ERROR: 'No user response data' },
+            });
+        });
     });
 
     it('userActive should set auto logout and auto logout warning times', () => {

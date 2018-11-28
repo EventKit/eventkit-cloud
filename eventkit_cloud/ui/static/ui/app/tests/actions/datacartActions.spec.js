@@ -1,39 +1,7 @@
 
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/datacartActions';
 
 describe('export actions', () => {
-    const expectedRuns = [
-        {
-            uid: '123',
-            url: 'http://cloud.eventkit.test/api/runs/123',
-            started_at: '2017-03-10T15:52:35.637331Z',
-            finished_at: '2017-03-10T15:52:39.837Z',
-            duration: '0:00:04.199825',
-            user: 'admin',
-            status: 'COMPLETED',
-            visibility: 'PRIVATE',
-            job: {
-                uid: '123',
-                name: 'Test1',
-                event: 'Test1 event',
-                description: 'Test1 description',
-                url: 'http://cloud.eventkit.test/api/jobs/123',
-                extent: {},
-                selection: '',
-                permissions: {
-                    groups: {},
-                    members: {},
-                },
-            },
-            provider_tasks: [],
-            zipfile_url: 'http://cloud.eventkit.test/downloads/123/test.zip',
-            expiration: '2017-03-24T15:52:35.637258Z',
-        },
-    ];
-
     const geojson = {
         type: 'FeatureCollection',
         features: [
@@ -48,27 +16,6 @@ describe('export actions', () => {
                 },
             },
         ],
-    };
-
-    const jobData = {
-        name: 'testJobName',
-        description: 'testJobDesc',
-        event: 'testJobEvent',
-        include_zipfile: false,
-        provider_tasks: { provider: ['provider1'], formats: ['gpkg'] },
-        selection: {
-            type: 'FeatureCollection',
-            features: [{
-                type: 'Feature',
-                bbox: [1, 1, 1, 1],
-                geometry: {
-                    type: 'Polygon',
-                    coordinates: [[[1, 1], [1, 1], [1, 1], [1, 1]]],
-                },
-            }],
-        },
-        tags: [],
-
     };
 
     it('updateAoiInfo should return passed in json', () => {
@@ -113,38 +60,24 @@ describe('export actions', () => {
         });
     });
 
-    it('submitJob should post job data', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
+    describe('submitJob action', () => {
+        it('should return the proper types', () => {
+            expect(actions.submitJob().types).toEqual([
+                actions.types.SUBMITTING_JOB,
+                actions.types.JOB_SUBMITTED_SUCCESS,
+                actions.types.JOB_SUBMITTED_ERROR,
+            ]);
+        });
 
-        mock.onPost('/api/jobs').reply(200, { uid: '123456789' });
+        it('onSuccess should return uid', () => {
+            const rep = { data: { uid: '123' } };
+            expect(actions.submitJob().onSuccess(rep)).toEqual({ jobuid: '123' });
+        });
 
-        const expectedActions = [
-            { type: actions.types.SUBMITTING_JOB },
-            { jobuid: '123456789', type: actions.types.JOB_SUBMITTED_SUCCESS },
-        ];
-
-        const store = createTestStore({ jobSubmit: { jobuid: {} } });
-        return store.dispatch(actions.submitJob(jobData))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('submitJob should handle errors', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-
-        mock.onPost('/api/jobs').reply(400, 'uh oh');
-
-        const expectedActions = [
-            { type: actions.types.SUBMITTING_JOB },
-            { type: actions.types.JOB_SUBMITTED_ERROR, error: 'uh oh' },
-        ];
-
-        const store = createTestStore({});
-        return store.dispatch(actions.submitJob(jobData))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        it('should return the passed in data', () => {
+            const data = { stuff: 'other stuff' };
+            expect(actions.submitJob(data).data).toEqual(data);
+        });
     });
 
     it('clearAoiInfo should return type CLEAR_AOI_INFO and no action', () => {
@@ -159,85 +92,44 @@ describe('export actions', () => {
         });
     });
 
-    it('reRunExport should return a specific run from "api/runs"', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
-        mock.onPost('/api/jobs/123456789/run').reply(200, expectedRuns);
-        const expectedActions = [
-            { type: actions.types.RERUNNING_EXPORT },
-            { type: actions.types.RERUN_EXPORT_SUCCESS, exportReRun: { data: expectedRuns } },
-        ];
+    describe('updateDataCartPermissions', () => {
+        it('should return the correct types', () => {
+            expect(actions.updateDataCartPermissions('', {}).types).toEqual([
+                actions.types.UPDATING_PERMISSION,
+                actions.types.UPDATE_PERMISSION_SUCCESS,
+                actions.types.UPDATE_PERMISSION_ERROR,
+            ]);
+        });
 
-        const store = createTestStore({ exportReRun: {} });
-
-        return store.dispatch(actions.rerunExport('123456789'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('should return the correct data', () => {
+            const permissions = { value: 'test' };
+            expect(actions.updateDataCartPermissions('', permissions).data).toEqual({
+                permissions,
+                visibility: permissions.value,
             });
+        });
     });
 
-    it('reRunExport should dispatch an error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
-        mock.onPost('/api/jobs/123/run').reply(400, 'oh no an error');
-        const expectedActions = [
-            { type: actions.types.RERUNNING_EXPORT },
-            { type: actions.types.RERUN_EXPORT_ERROR, error: 'oh no an error' },
-        ];
+    describe('rerunExport', () => {
+        it('should return the correct types', () => {
+            expect(actions.rerunExport('').types).toEqual([
+                actions.types.RERUNNING_EXPORT,
+                actions.types.RERUN_EXPORT_SUCCESS,
+                actions.types.RERUN_EXPORT_ERROR,
+            ]);
+        });
 
-        const store = createTestStore({ exportReRun: {} });
-
-        return store.dispatch(actions.rerunExport('123'))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('onSuccess should return the data as exportReRun', () => {
+            const rep = { data: { test: 'data' } };
+            expect(actions.rerunExport('').onSuccess(rep)).toEqual({
+                exportReRun: { data: rep.data },
             });
+        });
     });
 
     it('clearReRunInfo should return type CLEAR_RERUN_INFO and no action', () => {
         expect(actions.clearReRunInfo()).toEqual({
             type: 'CLEAR_RERUN_INFO',
-        });
-    });
-
-    it('updateDataCartPermissions should dispatch a patch and update the published state on the job', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
-
-        mock.onPatch('/api/jobs/123456789').reply(204);
-        const expectedActions = [
-            { type: actions.types.UPDATING_PERMISSION },
-            { type: actions.types.UPDATE_PERMISSION_SUCCESS },
-        ];
-
-        const store = createTestStore({ updatePermission: {} });
-
-        return store.dispatch(actions.updateDataCartPermissions('123456789', {
-            permissions: {
-                value: 'SHARED',
-                groups: { group_one: 'READ' },
-                members: { admin: 'ADMIN' },
-            },
-        })).then(() => {
-            expect(store.getActions()).toEqual(expectedActions);
-        });
-    });
-
-    it('updateDataCartPermissions should dispatch an error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 10 });
-
-        mock.onPatch('/api/jobs/123').reply(400, 'oh no an error');
-        const expectedActions = [
-            { type: actions.types.UPDATING_PERMISSION },
-            { type: actions.types.UPDATE_PERMISSION_ERROR, error: 'oh no an error' },
-        ];
-
-        const store = createTestStore({ updatePermission: {} });
-
-        return store.dispatch(actions.updateDataCartPermissions('123', {
-            permissions: {
-                value: 'SHARED',
-                groups: { group_one: 'READ' },
-                members: { admin: 'ADMIN' },
-            },
-        })).then(() => {
-            expect(store.getActions()).toEqual(expectedActions);
         });
     });
 });
