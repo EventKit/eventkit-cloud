@@ -1,432 +1,153 @@
 import sinon from 'sinon';
-import axios from 'axios';
-import MockAdapter from 'axios-mock-adapter';
-import createTestStore from '../../store/configureTestStore';
 import * as actions from '../../actions/notificationsActions';
-import { initialState as state } from '../../reducers/notificationsReducer';
-
-const initialState = { notifications: state };
-
-const mockNotifications = {
-    1: {
-        id: 1,
-        unread: true,
-        timestamp: '2018-05-04T17:32:04.716806Z',
-    },
-    2: {
-        id: 2,
-        unread: false,
-        timestamp: '2018-05-04T17:33:04.716806Z',
-    },
-};
-
-const mockNotificationsArray = [
-    mockNotifications['1'],
-    mockNotifications['2'],
-];
+import * as utils from '../../utils/generic';
 
 describe('notificationsActions', () => {
-    it('getNotifications() should send the received array of notifications to the reducer', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {
-            link: '<www.link.com>; rel="next",something else', 'content-range': 'range 1-12/24',
+    describe('getNotifications action', () => {
+        it('should return the correct types', () => {
+            expect(actions.getNotifications().types).toEqual([
+                actions.types.FETCHING_NOTIFICATIONS,
+                actions.types.RECEIVED_NOTIFICATIONS,
+                actions.types.FETCH_NOTIFICATIONS_ERROR,
+            ]);
         });
 
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
+        it('getCancelSource should return the source', () => {
+            const s = { notifications: { status: { cancelSource: 'test' } } };
+            expect(actions.getNotifications().getCancelSource(s)).toEqual('test');
+        });
 
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
-            {
-                type: actions.types.RECEIVED_NOTIFICATIONS,
-                notifications: mockNotificationsArray,
+        it('should return the correct params', () => {
+            const args = { pageSize: 13 };
+            expect(actions.getNotifications(args).params).toEqual({
+                page_size: args.pageSize,
+            });
+        });
+
+        it('onSuccess should return header info and notifications', () => {
+            const headerStub = sinon.stub(utils, 'getHeaderPageInfo').returns({
+                range: '1-1',
                 nextPage: true,
-                range: '12/24',
-                _auth_required: true,
-            },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotifications())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
             });
+            const ret = { data: ['one', 'two'] };
+            expect(actions.getNotifications().onSuccess(ret)).toEqual({
+                notifications: ret.data,
+                nextPage: true,
+                range: '1-1',
+            });
+            headerStub.restore();
+        });
     });
 
-    it('getNotifications() should handle empty header', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {});
-
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
-            {
-                type: actions.types.RECEIVED_NOTIFICATIONS,
-                notifications: mockNotificationsArray,
-                nextPage: false,
-                range: '',
-                _auth_required: true,
-            },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotifications())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-            });
-    });
-
-    it('getNotifications() should cancel an active request when manually called', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {});
-
-        const cancel = sinon.spy();
-        const cancelSource = { cancel };
-        const store = createTestStore({
-            ...initialState,
-            notifications: {
-                ...initialState.notifications,
-                status: {
-                    fetching: true,
-                    cancelSource,
-                },
-            },
+    describe('markNotificationsAsRead action', () => {
+        it('should return the correct types', () => {
+            expect(actions.markNotificationsAsRead([]).types).toEqual([
+                actions.types.MARKING_NOTIFICATIONS_AS_READ,
+                actions.types.MARKED_NOTIFICATIONS_AS_READ,
+                actions.types.MARK_NOTIFICATIONS_AS_READ_ERROR,
+            ]);
         });
 
-        return store.dispatch(actions.getNotifications())
-            .then(() => {
-                expect(cancel.callCount).toBe(1);
-                expect(cancel.calledWith('Request is no longer valid, cancelling.')).toBe(true);
-            });
-    });
-
-    it('getNotifications() should NOT cancel an active request when automatically called', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications').reply(200, mockNotificationsArray, {});
-
-        const cancel = sinon.spy();
-        const cancelSource = { cancel };
-        const store = createTestStore({
-            ...initialState,
-            notifications: {
-                ...initialState.notifications,
-                status: {
-                    fetching: true,
-                    cancelSource,
-                },
-            },
+        it('getCancelSource should return source', () => {
+            const s = { notifications: { status: { cancelSource: 'test' } } };
+            expect(actions.markNotificationsAsRead([]).getCancelSource(s)).toEqual('test');
         });
 
-        const ret = store.dispatch(actions.getNotifications({ isAuto: true }));
-        expect(cancel.called).toBe(false);
-        expect(ret).toBe(null);
-    });
-
-    it('getNotifications() should handle the axios request being cancelled', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications').reply(400, 'oh no an error');
-
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-        const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotifications())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-                cancelStub.restore();
+        it('should return notification ids in the data and notifications in the payload', () => {
+            const notifications = [{ id: '1' }, { id: '2' }];
+            const config = actions.markNotificationsAsRead(notifications);
+            expect(config.payload).toEqual({ notifications });
+            expect(config.data).toEqual({
+                ids: ['1', '2'],
             });
+        });
     });
 
-    it('getNotifications() should handle a generic request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications').reply(400, 'oh no an error');
-
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS, cancelSource: testSource, _auth_required: true },
-            { type: actions.types.FETCH_NOTIFICATIONS_ERROR, error: 'oh no an error', _auth_required: true },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotifications())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-            });
-    });
-
-    it('getNotificationsUnreadCount() should send the unread count to the reducer', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/counts').reply(200, { read: 1, unread: 1 });
-
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource, _auth_required: true },
-            { type: actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT, unreadCount: 1, _auth_required: true },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotificationsUnreadCount())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-            });
-    });
-
-    it('getNotificationsUnreadCount() should cancel an active request when manually called', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/counts').reply(200, { read: 1, unread: 1 });
-
-        const cancel = sinon.spy();
-        const cancelSource = { cancel };
-        const store = createTestStore({
-            ...initialState,
-            notifications: {
-                ...initialState.notifications,
-                unreadCount: {
-                    ...initialState.notifications.unreadCount,
-                    status: {
-                        fetching: true,
-                        cancelSource,
-                    },
-                },
-            },
+    describe('markNotificationsAsUnread action', () => {
+        it('should return the correct types', () => {
+            expect(actions.markNotificationsAsUnread([]).types).toEqual([
+                actions.types.MARKING_NOTIFICATIONS_AS_UNREAD,
+                actions.types.MARKED_NOTIFICATIONS_AS_UNREAD,
+                actions.types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR,
+            ]);
         });
 
-        return store.dispatch(actions.getNotificationsUnreadCount())
-            .then(() => {
-                expect(cancel.callCount).toBe(1);
-                expect(cancel.calledWith('Request is no longer valid, cancelling.')).toBe(true);
-            });
-    });
-
-    it('getNotificationsUnreadCount() should NOT cancel an active request when automatically called', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/counts').reply(200, { read: 1, unread: 1 });
-
-        const cancel = sinon.spy();
-        const cancelSource = { cancel };
-        const store = createTestStore({
-            ...initialState,
-            notifications: {
-                ...initialState.notifications,
-                unreadCount: {
-                    ...initialState.notifications.unreadCount,
-                    status: {
-                        fetching: true,
-                        cancelSource,
-                    },
-                },
-            },
+        it('getCancelSource should return source', () => {
+            const s = { notifications: { status: { cancelSource: 'test' } } };
+            expect(actions.markNotificationsAsUnread([]).getCancelSource(s)).toEqual('test');
         });
 
-        const ret = store.dispatch(actions.getNotificationsUnreadCount({ isAuto: true }));
-        expect(cancel.called).toBe(false);
-        expect(ret).toBe(null);
+        it('should return notification ids in the data and notifications in the payload', () => {
+            const notifications = [{ id: '1' }, { id: '2' }];
+            const config = actions.markNotificationsAsUnread(notifications);
+            expect(config.payload).toEqual({ notifications });
+            expect(config.data).toEqual({
+                ids: ['1', '2'],
+            });
+        });
     });
 
-    it('getNotificationsUnreadCount() should handle the axios request being cancelled', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/counts').reply(400, 'oh no an error');
+    describe('removeNotifications action', () => {
+        it('should return the correct types', () => {
+            expect(actions.removeNotifications([]).types).toEqual([
+                actions.types.REMOVING_NOTIFICATIONS,
+                actions.types.REMOVED_NOTIFICATIONS,
+                actions.types.REMOVE_NOTIFICATIONS_ERROR,
+            ]);
+        });
 
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-        const cancelStub = sinon.stub(axios, 'isCancel').returns(true);
+        it('getCancelSource should return source', () => {
+            const s = { notifications: { status: { cancelSource: 'test' } } };
+            expect(actions.removeNotifications([]).getCancelSource(s)).toEqual('test');
+        });
 
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource, _auth_required: true },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotificationsUnreadCount())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-                cancelStub.restore();
+        it('should return notification ids in the data', () => {
+            const notifications = [{ id: '1' }, { id: '2' }];
+            const config = actions.removeNotifications(notifications);
+            expect(config.data).toEqual({
+                ids: ['1', '2'],
             });
+        });
+
+        it('should return empty data', () => {
+            expect(actions.removeNotifications().data).toEqual({});
+        });
     });
 
-    it('getNotificationsUnreadCount() should handle a generic request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onGet('/api/notifications/counts').reply(400, 'oh no an error');
+    describe('markAllNotificationsAsRead action', () => {
+        it('should return the correct types', () => {
+            expect(actions.markAllNotificationsAsRead().types).toEqual([
+                actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ,
+                actions.types.MARKED_ALL_NOTIFICATIONS_AS_READ,
+                actions.types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR,
+            ]);
+        });
 
-        const testSource = axios.CancelToken.source();
-        const original = axios.CancelToken.source;
-        axios.CancelToken.source = () => (testSource);
-
-        const expectedActions = [
-            { type: actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT, cancelSource: testSource, _auth_required: true },
-            { type: actions.types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR, error: 'oh no an error', _auth_required: true },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.getNotificationsUnreadCount())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-                axios.CancelToken.source = original;
-            });
+        it('getCancelSource should return source', () => {
+            const s = { notifications: { status: { cancelSource: 'test' } } };
+            expect(actions.markAllNotificationsAsRead().getCancelSource(s)).toEqual('test');
+        });
     });
 
-    it('markNotificationsAsRead() should send the marked notifications to the reducer', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/read').reply(200);
+    describe('getNotificationsUnreadCound action', () => {
+        it('should return the correct types', () => {
+            expect(actions.getNotificationsUnreadCount().types).toEqual([
+                actions.types.FETCHING_NOTIFICATIONS_UNREAD_COUNT,
+                actions.types.RECEIVED_NOTIFICATIONS_UNREAD_COUNT,
+                actions.types.FETCH_NOTIFICATIONS_UNREAD_COUNT_ERROR,
+            ]);
+        });
 
-        const expectedActions = [
-            { type: actions.types.MARKING_NOTIFICATIONS_AS_READ, notifications: [mockNotificationsArray[0]] },
-            { type: actions.types.MARKED_NOTIFICATIONS_AS_READ, notifications: [mockNotificationsArray[0]] },
-        ];
+        it('getCancelSource should return source', () => {
+            const s = { notifications: { unreadCount: { status: { cancelSource: 'test' } } } };
+            expect(actions.getNotificationsUnreadCount().getCancelSource(s)).toEqual('test');
+        });
 
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.markNotificationsAsRead([mockNotificationsArray[0]]))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
+        it('onSuccess should return unread count', () => {
+            const ret = { data: { unread: 12 } };
+            expect(actions.getNotificationsUnreadCount().onSuccess(ret)).toEqual({
+                unreadCount: ret.data.unread,
             });
-    });
-
-    it('markNotificationsAsRead() should handle a generic request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/read').reply(400, 'oh no an error');
-
-        const expectedActions = [
-            { type: actions.types.MARKING_NOTIFICATIONS_AS_READ, notifications: [mockNotificationsArray[0]] },
-            { type: actions.types.MARK_NOTIFICATIONS_AS_READ_ERROR, error: 'oh no an error' },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.markNotificationsAsRead([mockNotificationsArray[0]]))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('markNotificationsAsUnread() should send the marked notifications to the reducer', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/unread').reply(200);
-
-        const expectedActions = [
-            { type: actions.types.MARKING_NOTIFICATIONS_AS_UNREAD, notifications: [mockNotificationsArray[1]] },
-            { type: actions.types.MARKED_NOTIFICATIONS_AS_UNREAD, notifications: [mockNotificationsArray[1]] },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.markNotificationsAsUnread([mockNotificationsArray[1]]))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('markNotificationsAsUnread() should handle a generic request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/unread').reply(400, 'oh no an error');
-
-        const expectedActions = [
-            { type: actions.types.MARKING_NOTIFICATIONS_AS_UNREAD, notifications: [mockNotificationsArray[1]] },
-            { type: actions.types.MARK_NOTIFICATIONS_AS_UNREAD_ERROR, error: 'oh no an error' },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.markNotificationsAsUnread([mockNotificationsArray[1]]))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('removeNotifications() should send the removed notifications to the reducer', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onDelete('/api/notifications/delete').reply(200);
-
-        const expectedActions = [
-            { type: actions.types.REMOVING_NOTIFICATIONS, notifications: [mockNotificationsArray[0]] },
-            { type: actions.types.REMOVED_NOTIFICATIONS, notifications: [mockNotificationsArray[0]] },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.removeNotifications([mockNotificationsArray[0]]))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('removeNotifications() should handle a generic request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onDelete('/api/notifications/delete').reply(400, 'oh no an error');
-
-        const expectedActions = [
-            { type: actions.types.REMOVING_NOTIFICATIONS, notifications: [mockNotificationsArray[0]] },
-            { type: actions.types.REMOVE_NOTIFICATIONS_ERROR, error: 'oh no an error' },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.removeNotifications([mockNotificationsArray[0]]))
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('markAllNotificationsAsRead() should send the actions to the reducer', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/read').reply(200);
-
-        const expectedActions = [
-            { type: actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ },
-            { type: actions.types.MARKED_ALL_NOTIFICATIONS_AS_READ },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.markAllNotificationsAsRead())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
-    });
-
-    it('markAllNotificationsAsRead() should handle a generic request error', () => {
-        const mock = new MockAdapter(axios, { delayResponse: 1 });
-        mock.onPost('/api/notifications/read').reply(400, 'oh no an error');
-
-        const expectedActions = [
-            { type: actions.types.MARKING_ALL_NOTIFICATIONS_AS_READ },
-            { type: actions.types.MARK_ALL_NOTIFICATIONS_AS_READ_ERROR, error: 'oh no an error' },
-        ];
-
-        const store = createTestStore(initialState);
-
-        return store.dispatch(actions.markAllNotificationsAsRead())
-            .then(() => {
-                expect(store.getActions()).toEqual(expectedActions);
-            });
+        });
     });
 });
