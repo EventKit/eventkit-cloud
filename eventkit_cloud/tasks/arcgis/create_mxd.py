@@ -11,6 +11,11 @@ import shutil
 from multiprocessing import Pool
 import json
 
+try:
+    input = raw_input
+except NameError:
+    pass
+
 # import argparse
 
 logger = logging.getLogger('create_mxd')
@@ -223,11 +228,6 @@ if __name__ == "__main__":
 
         mxd_output = os.path.join(os.path.dirname(__file__), '{0}.mxd'.format(metadata['name']))
         create_mxd(mxd=mxd_output, metadata=metadata, verify=True)
-
-        input("Press enter to exit.")
     except Exception as e:
         print(e)
-        try:
-            input("Press enter to exit.")
-        except Exception:
-            eval(input("Press enter to exit."))
+    input("Press enter to exit.")
