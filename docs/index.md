@@ -1,5 +1,5 @@
 
-<img src="images/eventkit-logo.black-bg.png" alt="EventKit Logo" width="80%" style="margin-top:0; margin-bottom:0;" />
+<img src="images/eventkit-logo-black.svg" alt="EventKit Logo" width="80%" style="margin-top:0; margin-bottom:0;" />
 
 Eventkit-Cloud
 ==============

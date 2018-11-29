@@ -112,3 +112,5 @@ screenshots/*
 conda/repo
 *_jb_*
 
+#mkdocs staticfiles
+site
