@@ -4,10 +4,7 @@ nav:
   - Settings: settings.md
   - Sources: sources.md
 
-site_author: 'Luke Rees'
-
-extra_css:
-  - 'stylesheets/extra.css'
+site_author: 'Joe Svrcek,Luke Rees'
 
 theme: 
   name: 'material'
