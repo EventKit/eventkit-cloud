@@ -1,6 +1,5 @@
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import { withTheme } from '@material-ui/core/styles';
+import * as React from 'react';
+import { withTheme, withStyles, createStyles, Theme } from '@material-ui/core/styles';
 import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -21,7 +20,107 @@ import ProviderError from './ProviderError';
 import BaseDialog from '../Dialog/BaseDialog';
 import LicenseRow from './LicenseRow';
 
-export class ProviderRow extends Component {
+interface Props {
+    provider: Eventkit.ProviderTask;
+    selectedProviders: { [uid: string]: Eventkit.ProviderTask };
+    onProviderCancel: (uid: string) => void;
+    providers: Eventkit.ProviderTask[];
+    backgroundColor: string;
+    theme: any;
+    width: any;
+    classes: { [className: string]: string };
+}
+
+interface State {
+    openTable: boolean;
+    selectedRows: {[uid: string]: Eventkit.ProviderTask };
+    fileSize: string;
+    providerDesc: string;
+    providerDialogOpen: boolean;
+}
+
+const jss = (theme: any) => createStyles({
+    sizeColumnn: {
+        width: '80px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'center',
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+            width: '120px',
+        },
+    },
+    taskStatusColumn: {
+        width: '80px',
+        paddingRight: '10px',
+        paddingLeft: '10px',
+        textAlign: 'center',
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+            width: '120px',
+        },
+        fontWeight: 'bold',
+    },
+    taskLinkColumn: {
+        paddingRight: '12px',
+        paddingLeft: '0px',
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+        },
+    },
+    providerColumn: {
+        paddingRight: '12px',
+        paddingLeft: '12px',
+        whiteSpace: 'normal' as 'normal',
+        color: theme.eventkit.colors.black,
+        fontWeight: 'bold',
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+        },
+    },
+    fileSizeColumn: {
+        width: '80px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'center',
+        color: theme.eventkit.colors.black,
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+            width: '120px',
+        },
+    },
+    providerStatusColumn: {
+        width: '80px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'center',
+        color: theme.eventkit.colors.black,
+        fontSize: '12px',
+        [theme.breakpoints.up('md')]: {
+            fontSize: '14px',
+            width: '120px',
+        },
+    },
+    menuColumn: {
+        width: '36px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'right',
+    },
+    arrowColumn: {
+        width: '50px',
+        paddingRight: '0px',
+        paddingLeft: '0px',
+        textAlign: 'left',
+    },
+});
+
+export class ProviderRow extends React.Component<Props, State> {
     constructor(props) {
         super(props);
         this.handleSingleDownload = this.handleSingleDownload.bind(this);
@@ -30,12 +129,14 @@ export class ProviderRow extends Component {
         this.handleProviderClose = this.handleProviderClose.bind(this);
         this.state = {
             openTable: false,
-            selectedRows: { },
+            selectedRows: {},
             fileSize: this.getFileSize(props.provider.tasks),
             providerDesc: '',
             providerDialogOpen: false,
         };
     }
+
+    static defaultProps = { selectedProviders: {} };
 
     componentWillMount() {
         // set state on the provider
@@ -45,7 +146,7 @@ export class ProviderRow extends Component {
         this.setState({ selectedRows: rows });
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate(prevProps: Props) {
         if (this.props.provider.status !== prevProps.provider.status) {
             this.setState({ fileSize: this.getFileSize(this.props.provider.tasks) });
         }
@@ -54,32 +155,26 @@ export class ProviderRow extends Component {
         }
     }
 
-    getFileSize(tasks) {
+    getFileSize(tasks: Eventkit.Task[]): string {
         let fileSize = 0.000;
         tasks.forEach((task) => {
             if (task.result != null) {
                 if (task.display !== false && task.result.size) {
                     const textReplace = task.result.size.replace(' MB', '');
-                    const number = textReplace;
-                    fileSize = Number(fileSize) + Number(number);
+                    const num = textReplace;
+                    fileSize = Number(fileSize) + Number(num);
                 }
             }
         });
 
-        if (fileSize === 0.000) return null;
+        if (fileSize === 0.000) {
+            return null;
+        }
 
         return fileSize.toFixed(3);
     }
 
-    getTextFontSize() {
-        const { width } = this.props;
-        if (!isWidthUp('md', width)) {
-            return '12px';
-        }
-        return '14px';
-    }
-
-    getTaskStatus(task) {
+    getTaskStatus(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
         switch (task.status) {
             case 'SUCCESS':
@@ -97,7 +192,7 @@ export class ProviderRow extends Component {
                 return (
                     <span className="qa-ProviderRow-span-taskStatus">
                         <LinearProgress variant="determinate" value={task.progress} />
-                        {task.progress === 100 ? '' : `${task.progress} %`}
+                        {task.progress === 100 ? '' : `${task.progress.toFixed(1)} %`}
                     </span>
                 );
             case 'CANCELED':
@@ -116,7 +211,7 @@ export class ProviderRow extends Component {
         }
     }
 
-    getProviderStatus(provider) {
+    getProviderStatus(provider: Eventkit.ProviderTask) {
         const { colors } = this.props.theme.eventkit;
 
         switch (provider.status) {
@@ -161,7 +256,7 @@ export class ProviderRow extends Component {
         }
     }
 
-    getTaskLink(task) {
+    getTaskLink(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
@@ -188,7 +283,7 @@ export class ProviderRow extends Component {
         );
     }
 
-    getTaskDownloadIcon(task) {
+    getTaskDownloadIcon(task: Eventkit.Task) {
         const { colors } = this.props.theme.eventkit;
 
         if (!Object.prototype.hasOwnProperty.call(task.result, 'url')) {
@@ -219,18 +314,11 @@ export class ProviderRow extends Component {
         );
     }
 
-    getTableCellWidth() {
-        if (!isWidthUp('md', this.props.width)) {
-            return '80px';
-        }
-        return '120px';
-    }
-
     handleToggle() {
         this.setState({ openTable: !this.state.openTable });
     }
 
-    handleSingleDownload(url) {
+    handleSingleDownload(url: string) {
         window.open(url, '_blank');
     }
 
@@ -246,73 +334,7 @@ export class ProviderRow extends Component {
     }
 
     render() {
-        const { colors } = this.props.theme.eventkit;
-
-        const textFontSize = this.getTextFontSize();
-        const tableCellWidth = this.getTableCellWidth();
-        const toggleCellWidth = '50px';
-
-        const styles = {
-            sizeColumnn: {
-                width: tableCellWidth,
-                paddingRight: '0px',
-                paddingLeft: '0px',
-                textAlign: 'center',
-                fontSize: textFontSize,
-            },
-            taskStatusColumn: {
-                width: tableCellWidth,
-                paddingRight: '10px',
-                paddingLeft: '10px',
-                textAlign: 'center',
-                fontSize: textFontSize,
-                fontWeight: 'bold',
-            },
-            emptyTaskColumn: {
-                width: '20px',
-                paddingRight: '0px',
-                paddingLeft: '0px',
-                textAlign: 'center',
-                fontSize: textFontSize,
-            },
-            providerColumn: {
-                paddingRight: '12px',
-                paddingLeft: '12px',
-                whiteSpace: 'normal',
-                color: colors.black,
-                fontWeight: 'bold',
-                fontSize: textFontSize,
-            },
-            fileSizeColumn: {
-                width: tableCellWidth,
-                paddingRight: '0px',
-                paddingLeft: '0px',
-                textAlign: 'center',
-                color: colors.black,
-                fontSize: textFontSize,
-            },
-            providerStatusColumn: {
-                width: tableCellWidth,
-                paddingRight: '0px',
-                paddingLeft: '0px',
-                textAlign: 'center',
-                color: colors.black,
-                fontSize: textFontSize,
-            },
-            menuColumn: {
-                width: '36px',
-                paddingRight: '0px',
-                paddingLeft: '0px',
-                textAlign: 'right',
-            },
-            arrowColumn: {
-                width: toggleCellWidth,
-                paddingRight: '0px',
-                paddingLeft: '0px',
-                textAlign: 'left',
-            },
-        };
-
+        const { classes } = this.props;
         const { provider } = this.props;
 
         const propsProvider = this.props.providers.find(x => x.slug === provider.slug);
@@ -320,13 +342,16 @@ export class ProviderRow extends Component {
             <LicenseRow name={propsProvider.license.name} text={propsProvider.license.text} />
             :
             null;
+
         const menuItems = [];
+
         let cancelMenuDisabled;
         if (provider.status === 'PENDING' || provider.status === 'RUNNING') {
             cancelMenuDisabled = false;
         } else {
             cancelMenuDisabled = true;
         }
+
         menuItems.push(
             <MenuItem
                 className="qa-ProviderRow-MenuItem-cancel"
@@ -362,28 +387,28 @@ export class ProviderRow extends Component {
                                 className="qa-ProviderRow-TableRow-task"
                                 key={task.uid}
                             >
-                                <TableCell style={{ paddingRight: '12px', paddingLeft: '12px', width: '12px' }} />
+                                <TableCell />
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-taskLinks"
-                                    style={{ paddingRight: '12px', paddingLeft: '0px', fontSize: textFontSize }}
+                                    classes={{ root: classes.taskLinkColumn}}
                                 >
                                     {this.getTaskLink(task)}
                                     {this.getTaskDownloadIcon(task)}
                                 </TableCell>
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-size"
-                                    style={styles.sizeColumnn}
+                                    classes={{ root: classes.sizeColumnn}}
                                 >
                                     {task.result == null ? '' : task.result.size}
                                 </TableCell>
                                 <TableCell
                                     className="qa-ProviderRow-TableCell-status"
-                                    style={styles.taskStatusColumn}
+                                    classes={{ root: classes.taskStatusColumn }}
                                 >
                                     {this.getTaskStatus(task)}
                                 </TableCell>
-                                <TableCell style={styles.emptyTaskColumn} />
-                                <TableCell style={{ ...styles.emptyTaskColumn, width: toggleCellWidth }} />
+                                <TableCell />
+                                <TableCell />
                             </TableRow>
                         ))}
                     </TableBody>
@@ -406,25 +431,25 @@ export class ProviderRow extends Component {
                         <TableRow className="qa-ProviderRow-TableRow-provider">
                             <TableCell
                                 className="qa-ProviderRow-TableCell-providerName"
-                                style={styles.providerColumn}
+                                classes={{ root: classes.providerColumn }}
                             >
                                 {provider.name}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-fileSize"
-                                style={styles.fileSizeColumn}
+                                classes={{ root: classes.fileSizeColumn }}
                             >
                                 {this.state.fileSize == null ? '' : `${this.state.fileSize} MB`}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-providerStatus"
-                                style={styles.providerStatusColumn}
+                                classes={{ root: classes.providerStatusColumn }}
                             >
                                 {this.getProviderStatus(this.props.provider)}
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-menu"
-                                style={styles.menuColumn}
+                                classes={{ root: classes.menuColumn }}
                             >
                                 {menuItems.length > 0 ?
                                     <IconMenu
@@ -446,7 +471,7 @@ export class ProviderRow extends Component {
                             </TableCell>
                             <TableCell
                                 className="qa-ProviderRow-TableCell-arrows"
-                                style={styles.arrowColumn}
+                                classes={{ root: classes.arrowColumn }}
                             >
                                 <IconButton
                                     disableTouchRipple
@@ -468,21 +493,4 @@ export class ProviderRow extends Component {
     }
 }
 
-ProviderRow.defaultProps = {
-    selectedProviders: {},
-};
-
-ProviderRow.propTypes = {
-    provider: PropTypes.object.isRequired,
-    selectedProviders: PropTypes.object,
-    onProviderCancel: PropTypes.func.isRequired,
-    providers: PropTypes.arrayOf(PropTypes.object).isRequired,
-    backgroundColor: PropTypes.string.isRequired,
-    theme: PropTypes.object.isRequired,
-    width: PropTypes.string.isRequired,
-};
-
-export default
-@withWidth()
-@withTheme()
-class Default extends ProviderRow {}
+export default withWidth()(withTheme()(withStyles(jss)(ProviderRow)));

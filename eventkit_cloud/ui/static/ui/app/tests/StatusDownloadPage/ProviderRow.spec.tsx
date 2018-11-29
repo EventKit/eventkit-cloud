@@ -1,5 +1,5 @@
-import React from 'react';
-import sinon from 'sinon';
+import * as React from 'react';
+import * as sinon from 'sinon';
 import { createShallow } from '@material-ui/core/test-utils';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconButton from '@material-ui/core/IconButton';
@@ -93,9 +93,10 @@ describe('ProviderRow component', () => {
             selectedProviders,
             providers,
             backgroundColor: 'white',
-            onSelectionToggle: () => {},
-            onProviderCancel: () => {},
-            ...global.eventkit_test_props,
+            onSelectionToggle: sinon.spy(),
+            onProviderCancel: sinon.spy(),
+            classes: {},
+            ...(global as any).eventkit_test_props,
         }
     );
 
@@ -187,26 +188,10 @@ describe('ProviderRow component', () => {
         stateSpy.restore();
     });
 
-    it('getTextFontSize should return the font string for table text based on window width', () => {
-        const props = getProps();
-        props.width = 'sm';
-        const wrapper = getWrapper(props);
-
-        expect(wrapper.instance().getTextFontSize()).toEqual('12px');
-
-        wrapper.setProps({ width: 'xl' });
-        expect(wrapper.instance().getTextFontSize()).toEqual('14px');
-    });
-
-    it('getTableCellWidth should return the pixel string for table width based on window width', () => {
-        const props = getProps();
-        props.width = 'sm';
-        const wrapper = getWrapper(props);
-
-        expect(wrapper.instance().getTableCellWidth()).toEqual('80px');
-
-        wrapper.setProps({ width: 'xl' });
-        expect(wrapper.instance().getTableCellWidth()).toEqual('120px');
+    it('getFileSize should return null if no file size', () => {
+        const wrapper = getWrapper(getProps());
+        const ts = [{ result: null }, { result: null }];
+        expect(wrapper.instance().getFileSize(ts)).toBe(null);
     });
 
     it('getTaskStatus should be called with the correct status from a given task', () => {

@@ -18,7 +18,7 @@ interface Props {
 }
 
 interface State {
-    pageInfo: Array<object>;
+    pageInfo: object[];
 }
 
 export class About extends React.Component<Props, State> {
