@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y groff groff-base libcairo2-dev libpango
     rm miniconda.sh && \
     echo 'root=$(pwd -P)' >> /root/.bashrc && \
     export root=$root && \
-    echo "y" | conda install python=3.5 && \
+    echo "y" | conda install python=3.6 && \
     conda config --add channels local && \
     conda config --add channels conda-forge && \
     conda config --add channels bioconda && \

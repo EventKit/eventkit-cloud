@@ -64,7 +64,6 @@ requirements:
     - simplejson=3.10.0
     - whitenoise=3.3.0
 
-
 about:
   home: https://github.com/venicegeo/eventkit-cloud
   license: BSD 3-Clause
