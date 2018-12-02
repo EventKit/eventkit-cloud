@@ -20,7 +20,7 @@ requirements:
     - ruby
     - git
   run:
-    - python=3.5
+    - python=3.6
     - django-audit-logging=0.2.0
     - gdal=2.2.4
     - geos=3.6.2
