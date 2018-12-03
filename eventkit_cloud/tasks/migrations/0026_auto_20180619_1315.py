@@ -11,13 +11,26 @@ from django.db import migrations, models
 
 download_url_root = settings.EXPORT_MEDIA_ROOT
 
+
+def wait_for_transactions():
+    from django.db import connection
+    query = "select * from pg_stat_activity;"
+    cur = connection.cursor()
+    cur.execute("select * from pg_stat_activity;")
+    while len(cur.fetchall()) > 1:
+        cur.execute(query)
+
+
 def create_uuid(apps, schema_editor):
+    wait_for_transactions()
     FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
     for downloadable in FileProducingTaskResult.objects.all():
         downloadable.uid = uuid.uuid4()
         downloadable.save()
 
+
 def update_run_downloads(apps, schema_editor):
+    wait_for_transactions()
     ExportRun = apps.get_model('tasks', 'ExportRun')
     FileProducingTaskResult = apps.get_model('tasks', 'FileProducingTaskResult')
     for run in ExportRun.objects.all():
@@ -29,11 +42,14 @@ def update_run_downloads(apps, schema_editor):
             run.downloadable = downloadable
             run.save()
 
+
 def reverse_run_downloads(apps, schema_editor):
+    wait_for_transactions()
     # if jobs were made public then they should be set to published.
     ExportRun = apps.get_model('tasks', 'ExportRun')
     for run in ExportRun.objects.all():
         run.zipfile_url = run.downloadable.download_url.lstrip(download_url_root)
+
 
 class Migration(migrations.Migration):
 
@@ -64,7 +80,7 @@ class Migration(migrations.Migration):
             name='uid',
             field=models.UUIDField(blank=True, null=True),
         ),
-        migrations.RunPython(create_uuid),
+        migrations.RunPython(create_uuid, atomic=False),
         migrations.AlterField(
             model_name='fileproducingtaskresult',
             name='uid',
@@ -91,7 +107,7 @@ class Migration(migrations.Migration):
             field=models.OneToOneField(related_name='run', null=True, on_delete=django.db.models.deletion.CASCADE,
                                     to='tasks.FileProducingTaskResult'),
         ),
-        migrations.RunPython(update_run_downloads, reverse_code=reverse_run_downloads),
+        migrations.RunPython(update_run_downloads, reverse_code=reverse_run_downloads, atomic=False),
         migrations.RemoveField(
             model_name='exportrun',
             name='zipfile_url',
