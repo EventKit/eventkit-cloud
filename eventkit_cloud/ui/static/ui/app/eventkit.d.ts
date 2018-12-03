@@ -38,6 +38,8 @@ declare namespace Eventkit {
         status: string;
         display: boolean;
         slug: string;
+        license: License;
+        service_description: string;
     }
 
     interface Job {

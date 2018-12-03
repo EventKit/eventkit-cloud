@@ -145,7 +145,7 @@ EventKit can send users email notifying them about certain changes.
 
 ### User Authentication
 
-EventKit has some limited support for creating and authenticating users.  The solutions were tailored to use specific servers, but can be updated fairly easily using the [settings file](../eventkit_cloud/settings/prod.py).
+EventKit has some limited support for creating and authenticating users.  The solutions were tailored to use specific servers, but can be updated fairly easily using the settings files located in `eventkit_cloud/settings/prod.py`).
 
 ##### Django Model Login
 Django allows built in users to be created via the admin console (such as superusers), you can enable these users to log in with :
