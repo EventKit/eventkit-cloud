@@ -133,17 +133,25 @@ services:
     image: rabbitmq:3.6.6-management
     expose:
     - "5672"
-  httpd:
-    build:
-      context: .
-      dockerfile: config/Dockerfile_httpd
+  mkdocs:
+    image: cfinfrastructure/mkdocs
+    working_dir: /build
     volumes:
+      - ./mkdocs.yml:/build/mkdocs.yml
+      - ./docs:/build/docs
+      - ./site:/build/site
+    command: mkdocs build
+  httpd:
+    image: httpd:2.4.23
+    volumes:
+    - ./config/eventkit-docker.conf:/usr/local/apache2/conf/httpd.conf
     - ./eventkit_cloud:/var/lib/eventkit/eventkit_cloud
     - ./exports_download:/var/lib/eventkit/exports_download
-    image: httpd:2.4.23
+    - ./site:/var/lib/eventkit/site
     links:
     - eventkit
     - webpack
+    - mkdocs
     ports:
     - "80:80"
     - "9229:9229"
