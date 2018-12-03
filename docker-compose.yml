@@ -141,6 +141,7 @@ services:
       - ./docs:/build/docs
       - ./site:/build/site
     command: mkdocs build
+    # run the development server: docker-compose run --rm -p 8000:8000 mkdocs mkdocs serve -a 0.0.0.0:8000
   httpd:
     image: httpd:2.4.23
     volumes:
