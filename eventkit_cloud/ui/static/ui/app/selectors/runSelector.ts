@@ -34,6 +34,7 @@ export const toFullRun = (run, jobs, providerTasks, exportTasks) => {
     if (!run.provider_tasks) {
         return run;
     }
+
     const runJob = jobs[run.job];
     const runTasks = run.provider_tasks.map(id => toFullProviderTask(providerTasks[id], exportTasks));
     return {
@@ -61,7 +62,7 @@ export const makeAllRunsSelector = () => createSelector(
 
 export const getDatacarts = createSelector(
     [getDatacartIds, getAllRuns],
-    (ids, runs) => ids.map(id => runs[id]),
+    (ids, runs) => ids.map(id => runs[id]).filter(run => run !== undefined),
 );
 
 export const makeDatacartSelector = () => createSelector(
