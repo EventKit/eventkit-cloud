@@ -5,9 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import eventkitui.test.page.Dashboard;
-import eventkitui.test.page.GxLoginPage;
-import eventkitui.test.page.MainPage;
+import eventkitui.test.page.*;
 import eventkitui.test.util.Info;
 import eventkitui.test.util.Info.Importance;
 import eventkitui.test.util.Utils;
@@ -17,8 +15,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.openqa.selenium.Cookie;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -27,7 +25,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
  * Tests Login and Logout functionality
  */
 public class AuthenticationTest {
-    //https://eventkit.geointservices.io
     private final String BASE_URL = System.getenv("ek_url");
     private final String USERNAME = System.getenv("ek_username");
     private final String PASSWORD = System.getenv("ek_password");
@@ -42,6 +39,8 @@ public class AuthenticationTest {
     private Dashboard dashboard;
     @Before
     public void setUp() throws Exception {
+        //TODO - A step will need to be created to accept the license for the test user, in the event this is a new instance
+        //TODO - or the license was wiped. For now I've gone in and manually accepted the license for this user.
         driver = Utils.getChromeRemoteDriver();
         mainPage = new MainPage(driver);
         driver.get(BASE_URL);
@@ -54,15 +53,34 @@ public class AuthenticationTest {
 
     @Test
     @Info(importance = Importance.HIGH)
+    /**
+     * This test will login to eventkit via geoxportal,
+     * wait for the default dashboard to appear, open the navigation panel, and logout of the system.
+     */
     public void standardLoginLogout() throws InterruptedException {
         // Check that the consent banner is present and contains "Consent".
         assertTrue("Consent banner should contain 'consent' text", mainPage.getConsentBannerText().toUpperCase().contains("CONSENT"));
         // Login via Disadvantaged
         GxLoginPage gxLoginPage = mainPage.beginLogin();
         mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
-        WebDriverWait waiter = new WebDriverWait(driver, 10);
-        waiter.until(ExpectedConditions.elementToBeClickable(mainPage.getContentArea()));
+        Dashboard defaultDashboard = new Dashboard(driver);
+        WebDriverWait wait = new WebDriverWait(driver, 30);
         Utils.takeScreenshot(driver);
+        // Dashboard is default upon login
+        wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
+        Utils.takeScreenshot(driver);
+
+        final NavigationPanel navigationPanel = mainPage.getTopPanel().openNavigationPanel();
+        Utils.takeScreenshot(driver);
+
+        final LogoutConfirmationPage logoutConfirmationPage = navigationPanel.openLogout();
+        logoutConfirmationPage.waitUntilLoaded();
+        Utils.takeScreenshot(driver);
+
+        logoutConfirmationPage.finalizeLogout();
+        Utils.takeScreenshot(driver);
+
+
         // Ensure the Cookie has been populated and login was successful
 //        Cookie apiKeyCookie = mainPage.getApiKeyCookie();
 //        assertNotNull("Login cookie is present", apiKeyCookie);

@@ -14,8 +14,15 @@ public class MainPage extends PageObject {
     @FindBy(xpath = "//div[contains(@class, 'qa-LoginForm-oauth')]/button")	private WebElement geoAxisLoginButton;
     @FindBy(className = "qa-LoginPage-disclaimer") private WebElement consentBanner;
     @FindBy(className = "qa-Application-content") private WebElement contentWindow;
+
+    // Top panel, navigation panel, and general content area seem to make up the eventkit UI
+    private TopPanel        topPanel;
+    private NavigationPanel navigationPanel;
+
     public MainPage(WebDriver driver) {
         super(driver);
+        topPanel        = new TopPanel(driver);
+        navigationPanel = new NavigationPanel(driver);
     }
 
     /**
@@ -29,21 +36,28 @@ public class MainPage extends PageObject {
     }
 
     /**
+     * Gets navigation panel.
+     * @return {@link NavigationPanel}
+     */
+    public NavigationPanel getNavigationPanel() {
+        return this.navigationPanel;
+    }
+
+    /**
+     * Gets top panel.
+     * @return {@link TopPanel}
+     */
+    public TopPanel getTopPanel() {
+        return this.topPanel;
+    }
+
+    /**
      * Gets the Text of the Consent Banner
      *
      * @return Consent banner text
      */
     public String getConsentBannerText() {
         return consentBanner.getText();
-    }
-
-    /**
-     * Determines if content is loaded.
-     *
-     * @return {@link WebElement} Main content area.
-     */
-    public WebElement getContentArea() {
-        return contentWindow;
     }
 
 }

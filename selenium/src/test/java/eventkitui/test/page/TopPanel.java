@@ -10,12 +10,20 @@ import org.openqa.selenium.support.FindBy;
  */
 public class TopPanel extends PageObject {
 
-    @FindBy(xpath = "//button[contains(@class, 'jss49 jss43 jss46 qa-Application-AppBar-MenuButton jss4')]")	private WebElement menuButton;
-    @FindBy(xpath = "//button[contains(@class, 'jss49 jss43 jss46 qa-Application-AppBar-Notifications jss5')]")	private WebElement notificationsButton;
+    @FindBy(xpath = "//button[contains(@class, 'qa-Application-AppBar-MenuButton')]")	    private WebElement menuButton;
+    @FindBy(xpath = "//button[contains(@class, 'qa-Application-AppBar-Notifications')]")	private WebElement notificationsButton;
 
     public TopPanel(WebDriver driver) {
         super(driver);
     }
 
+    /**
+     * Opens the navigation panel.
+     * @return {@link NavigationPanel} new navigation panel.
+     */
+    public NavigationPanel openNavigationPanel() {
+        menuButton.click();
+        return new NavigationPanel(driver);
+    }
 
 }
