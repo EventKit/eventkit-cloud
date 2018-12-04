@@ -26,6 +26,6 @@ RUN curl -L https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.s
     /home/eventkit/miniconda3/envs/eventkit-cloud/bin/manage.py collectstatic && \
     rm -rf /var/lib/eventkit/conda
 
-ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.6/site-packages/scripts/wait-for-postgis.sh"]
+ENTRYPOINT ["bash", "/home/eventkit/miniconda3/envs/eventkit-cloud/lib/python3.5/site-packages/scripts/wait-for-postgis.sh"]
 
 CMD ["echo", "This image has no default run command."]

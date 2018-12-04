@@ -10,7 +10,7 @@ source:
 
 build:
   number: 1000
-  script: "{{ PYTHON }} -m pip install . --no-deps --ignore-installed -vvv"
+  script: "python -m pip install . --no-deps --ignore-installed -vvv"
 
 requirements:
   host:

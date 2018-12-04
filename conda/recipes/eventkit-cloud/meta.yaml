@@ -12,7 +12,7 @@ build:
 
 requirements:
   build:
-    - python=3.6
+    - python=3.5
     - pip
     - setuptools
     - wheel
@@ -20,7 +20,7 @@ requirements:
     - ruby
     - git
   run:
-    - python=3.6
+    - python=3.5
     - django-audit-logging=0.2.0
     - gdal=2.2.4
     - geos=3.6.2
@@ -44,7 +44,7 @@ requirements:
     - django-notifications-hq=1.5.0
     - djangorestframework=3.8.0
     - djangorestframework-gis=0.13
-    - eventlet=0.20.1
+    - eventlet=0.23.0
     - gunicorn=19.7.1
     - kombu=4.2.1
     - lxml=3.7.3
