@@ -23,7 +23,7 @@ public class TopPanel extends PageObject {
      */
     public NavigationPanel openNavigationPanel() {
         menuButton.click();
-        return new NavigationPanel(driver);
+        return new NavigationPanel(driver, 10);
     }
 
 }

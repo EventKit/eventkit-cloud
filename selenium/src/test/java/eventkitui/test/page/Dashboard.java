@@ -13,7 +13,7 @@ public class Dashboard extends LoadablePage {
     @FindBy(className = "qa-DashboardSection-Notifications") private WebElement finalElement;
 
     public Dashboard(WebDriver driver) {
-        super(driver);
+        super(driver, 10);
     }
 
     @Override

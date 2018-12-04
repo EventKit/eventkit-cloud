@@ -18,7 +18,7 @@ public class NavigationPanel extends LoadablePage {
     @FindBy(xpath = "//div[contains(@class, 'qa-Drawer-Drawer')]/div/div/li[4]/a")	private WebElement membersAndGroupsButton;
     @FindBy(xpath = "//div[contains(@class, 'qa-Drawer-Drawer')]/div/div/li[5]/a")	private WebElement aboutButton;
     @FindBy(xpath = "//div[contains(@class, 'qa-Drawer-Drawer')]/div/div/li[6]/a")	private WebElement accountSettingsButton;
-    @FindBy(xpath = "//div[contains(@class, 'qa-Drawer-Drawer')]/div/div/li[7]/a")	private WebElement logoutButton;
+    @FindBy(xpath = "//a[contains(@class, 'qa-Drawer-Link-logout')]")	private WebElement logoutButton;
     public NavigationPanel(WebDriver driver, long timeout) {
         super(driver, timeout);
     }

@@ -74,6 +74,8 @@ public class AuthenticationTest {
         Utils.takeScreenshot(driver);
 
         final LogoutConfirmationPage logoutConfirmationPage = navigationPanel.openLogout();
+        Utils.takeScreenshot(driver);
+
         logoutConfirmationPage.waitUntilLoaded();
         Utils.takeScreenshot(driver);
 
