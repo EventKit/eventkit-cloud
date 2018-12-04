@@ -81,7 +81,7 @@ export function getRuns(args = {}) {
         });
     }
     const providers = (args.providers) ? Object.keys(args.providers) : [];
-    const params = {};
+    const params = { slim: 'true' };
     params.page_size = args.page_size;
     if (args.ordering) {
         params.ordering = args.ordering.includes('featured') ?
@@ -158,7 +158,7 @@ export function getRuns(args = {}) {
 }
 
 export function getFeaturedRuns(args) {
-    const params = {};
+    const params = { slim: 'true' };
     params.page_size = args.pageSize;
     params.featured = true;
     return {

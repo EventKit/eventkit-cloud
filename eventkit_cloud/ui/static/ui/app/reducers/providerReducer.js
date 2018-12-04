@@ -31,3 +31,33 @@ export function cancelProviderTask(state = initialStateCancel, action) {
             return state;
     }
 }
+
+export const initialStateProviderTasks = {
+    fetching: false,
+    fetched: false,
+    error: null,
+    data: {},
+};
+
+export function providerTasksReducer(state = initialStateProviderTasks, action) {
+    switch (action.type) {
+        case types.GETTING_PROVIDER_TASK:
+            return { ...state, fetching: true, fetched: false };
+        case types.RECEIVED_PROVIDER_TASK:
+            return {
+                ...state,
+                fetching: false,
+                fetched: true,
+                data: { ...state.data, [action.uid]: action.data },
+            };
+        case types.GETTING_PROVIDER_TASK_ERROR:
+            return {
+                ...state,
+                fetching: false,
+                fetched: false,
+                error: action.error,
+            };
+        default:
+            return state;
+    }
+}

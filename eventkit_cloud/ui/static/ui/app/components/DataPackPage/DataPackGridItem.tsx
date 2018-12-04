@@ -10,7 +10,6 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
 import MenuItem from '@material-ui/core/MenuItem';
-import List from '@material-ui/core/List';
 import SocialGroup from '@material-ui/icons/Group';
 import Lock from '@material-ui/icons/LockOutlined';
 import NotificationSync from '@material-ui/icons/Sync';
@@ -32,14 +31,14 @@ import Zoom from 'ol/control/zoom';
 import ScaleLine from 'ol/control/scaleline';
 
 import IconMenu from '../common/IconMenu';
-import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
 import FeaturedFlag from './FeaturedFlag';
 import ol3mapCss from '../../styles/ol3map.css';
-import DropDownListItem from '../common/DropDownListItem';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { makeFullRunSelector } from '../../selectors/runSelector';
+import { getProviderTask } from '../../actions/providerActions';
+import ProviderDialog from '../Dialog/ProviderDialog';
 
 const jss = (theme: any) => createStyles({
     cardTitle: {
@@ -141,9 +140,14 @@ interface State {
 
 interface StateProps {
     run: Eventkit.Run;
+    providerTasks: Eventkit.ProviderTask[];
 }
 
-type Props = StyledComponentProps & StateProps & OwnProps;
+interface DispatchProps {
+    getProviderTask: (uid: string) => void;
+}
+
+type Props = StyledComponentProps & StateProps & DispatchProps & OwnProps;
 
 export class DataPackGridItem extends React.Component<Props, State> {
     static defaultProps = {
@@ -263,15 +267,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
     }
 
     private handleProviderOpen() {
-        const runProviders = this.props.run.provider_tasks
-            .filter(provider => (provider.display !== false));
-        const providerDescs = {};
-        runProviders.forEach(runProvider => {
-            const a = this.props.providers.find(x => x.slug === runProvider.slug);
-            providerDescs[a.name] = a.service_description;
-        });
         this.setState({
-            providerDescs,
             providerDialogOpen: true,
         });
     }
@@ -455,24 +451,12 @@ export class DataPackGridItem extends React.Component<Props, State> {
                                         : null
                                     }
                                 </IconMenu>
-                                <BaseDialog
-                                    className="qa-DataPackGridItem-BaseDialog"
-                                    show={this.state.providerDialogOpen}
-                                    title="DATA SOURCES"
+                                <ProviderDialog
+                                    uids={this.props.run.provider_tasks}
+                                    open={this.state.providerDialogOpen}
                                     onClose={this.handleProviderClose}
-                                >
-                                    <List>
-                                        {Object.entries(this.state.providerDescs).map(([key, value], ix) => (
-                                            <DropDownListItem
-                                                title={key}
-                                                key={key}
-                                                alt={ix % 2 !== 0}
-                                            >
-                                                {value}
-                                            </DropDownListItem>
-                                        ))}
-                                    </List>
-                                </BaseDialog>
+                                    providers={this.props.providers}
+                                />
                                 <DeleteDataPackDialog
                                     className="qa-DataPackGridItem-DeleteDialog"
                                     show={this.state.deleteDialogOpen}
@@ -551,13 +535,22 @@ const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
     const mapStateToProps = (state, props) => (
         {
+            providerTasks: state.providerTasks.data,
             run: getFullRun(state, props),
         }
     );
     return mapStateToProps;
 };
 
+function mapDispatchToProps(dispatch) {
+    return {
+        getProviderTask: (uid) => (
+            dispatch(getProviderTask(uid))
+        ),
+    };
+}
+
 export default
     withTheme()(
         withStyles(jss)(
-            connect(makeMapStateToProps)(DataPackGridItem)));
+            connect(makeMapStateToProps, mapDispatchToProps)(DataPackGridItem)));

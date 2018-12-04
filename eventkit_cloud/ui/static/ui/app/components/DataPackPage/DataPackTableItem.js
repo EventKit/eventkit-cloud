@@ -12,13 +12,11 @@ import SocialGroup from '@material-ui/icons/Group';
 import NavigationCheck from '@material-ui/icons/Check';
 import Star from '@material-ui/icons/Star';
 import NotificationSync from '@material-ui/icons/Sync';
-import List from '@material-ui/core/List';
 import moment from 'moment';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import IconMenu from '../common/IconMenu';
-import DropDownListItem from '../common/DropDownListItem';
-import BaseDialog from '../Dialog/BaseDialog';
 import DeleteDataPackDialog from '../Dialog/DeleteDataPackDialog';
+import ProviderDialog from '../Dialog/ProviderDialog';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { makeFullRunSelector } from '../../selectors/runSelector';
 
@@ -34,7 +32,6 @@ export class DataPackTableItem extends Component {
         this.handleShareClose = this.handleShareClose.bind(this);
         this.handleShareSave = this.handleShareSave.bind(this);
         this.state = {
-            providerDescs: {},
             providerDialogOpen: false,
             deleteDialogOpen: false,
             shareDialogOpen: false,
@@ -80,14 +77,8 @@ export class DataPackTableItem extends Component {
         this.setState({ providerDialogOpen: false });
     }
 
-    handleProviderOpen(runProviders) {
-        const providerDesc = {};
-        runProviders.forEach((runProvider) => {
-            const a = this.props.providers.find(x => x.slug === runProvider.slug);
-            providerDesc[a.name] = a.service_description;
-        });
+    handleProviderOpen() {
         this.setState({
-            providerDescs: providerDesc,
             providerDialogOpen: true,
         });
     }
@@ -121,7 +112,6 @@ export class DataPackTableItem extends Component {
 
     render() {
         const { colors } = this.props.theme.eventkit;
-        const runProviders = this.props.run.provider_tasks.filter(provider => provider.display);
         const styles = {
             nameColumn: {
                 padding: '0px 0px 0px 10px',
@@ -240,7 +230,7 @@ export class DataPackTableItem extends Component {
                             key="sources"
                             className="qa-DataPackTableItem-MenuItem-viewDataSources"
                             style={{ fontSize: '12px' }}
-                            onClick={() => this.handleProviderOpen(runProviders)}
+                            onClick={this.handleProviderOpen}
                         >
                             View Data Sources
                         </MenuItem>
@@ -267,24 +257,12 @@ export class DataPackTableItem extends Component {
                             : null
                         }
                     </IconMenu>
-                    <BaseDialog
-                        className="qa-DataPackTableItem-BaseDialog"
-                        show={this.state.providerDialogOpen}
-                        title="DATA SOURCES"
+                    <ProviderDialog
+                        open={this.state.providerDialogOpen}
+                        uids={this.props.run.provider_tasks}
+                        providers={this.props.providers}
                         onClose={this.handleProviderClose}
-                    >
-                        <List className="qa-DataPackTableItem-List-dataSources">
-                            {Object.entries(this.state.providerDescs).map(([key, value], ix) => (
-                                <DropDownListItem
-                                    title={key}
-                                    key={key}
-                                    alt={ix % 2 !== 0}
-                                >
-                                    {value}
-                                </DropDownListItem>
-                            ))}
-                        </List>
-                    </BaseDialog>
+                    />
                     <DeleteDataPackDialog
                         className="qa-DataPackTableItem-DeleteDialog"
                         show={this.state.deleteDialogOpen}

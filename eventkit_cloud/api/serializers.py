@@ -172,6 +172,10 @@ class ExportTaskRecordSerializer(serializers.ModelSerializer):
         except ExportTaskException.DoesNotExist:
             return None
 
+class ExportTaskListSerializer(serializers.BaseSerializer):
+    def to_representation(self, obj):
+        return obj.uid
+
 
 class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     tasks = serializers.SerializerMethodField()
@@ -181,11 +185,20 @@ class DataProviderTaskRecordSerializer(serializers.ModelSerializer):
     )
 
     def get_tasks(self, obj):
-        return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
+        request = self.context['request']
+        if request.query_params.get('slim'):
+            return ExportTaskListSerializer(obj.tasks, many=True, required=False, context=self.context).data
+        else:
+            return ExportTaskRecordSerializer(obj.tasks, many=True, required=False, context=self.context).data
 
     class Meta:
         model = DataProviderTaskRecord
         fields = ('uid', 'url', 'name', 'started_at', 'finished_at', 'duration', 'tasks', 'status', 'display', 'slug')
+
+
+class DataProviderListSerializer(serializers.BaseSerializer):
+    def to_representation(self, obj):
+        return obj.uid
 
 
 class SimpleJobSerializer(serializers.Serializer):
@@ -306,7 +319,11 @@ class ExportRunSerializer(serializers.ModelSerializer):
 
     def get_provider_tasks(self, obj):
         if not obj.deleted:
-            return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
+            request = self.context['request']
+            if request.query_params.get('slim'):
+                return DataProviderListSerializer(obj.provider_tasks, many=True, context=self.context).data
+            else:
+                return DataProviderTaskRecordSerializer(obj.provider_tasks, many=True, context=self.context).data
 
     def get_zipfile_url(self, obj):
         request = self.context['request']

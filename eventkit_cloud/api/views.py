@@ -836,8 +836,11 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         _, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        return prefetch_export_runs((ExportRun.objects.filter(
-            (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))))
+        # return prefetch_export_runs((ExportRun.objects.filter(
+        #     (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))))
+        return ExportRun.objects.filter(
+            (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+        )
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
