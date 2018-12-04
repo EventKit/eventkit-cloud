@@ -2,7 +2,7 @@ name: eventkit-cloud
 channels:
   - local
 dependencies:
-  - python=3.6
+  - python=3.5
   - eventkit-cloud
    # The eventkit-cloud recipe is in conda/recipes/eventkit-cloud/meta.yaml.
   - pip:
