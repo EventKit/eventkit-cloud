@@ -44,7 +44,7 @@ requirements:
     - django-notifications-hq=1.5.0
     - djangorestframework=3.8.0
     - djangorestframework-gis=0.13
-    - eventlet=0.23.0
+    - eventlet=0.20.1
     - gunicorn=19.7.1
     - kombu=4.2.1
     - lxml=3.7.3
