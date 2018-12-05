@@ -50,7 +50,7 @@ END
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
-            sh "cd conda && docker-compose build conda && docker-compose run --rm conda ./build.sh eventkit-cloud && cd .."
+            sh "cd conda && docker-compose build conda && docker-compose run --rm conda bash ./build.sh eventkit-cloud && cd .."
             sh "docker-compose build --no-cache"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
