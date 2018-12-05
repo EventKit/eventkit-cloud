@@ -124,7 +124,7 @@ def getGitSHA(){
 }
 
 def getURLPath(){
-return sh(script:"echo ${env.BUILD_URL} | sed 's/https:\\/\\/[^\\/]*//'", returnStdout: true).trim()
+    return sh(script:"echo ${env.BUILD_URL} | sed 's/https:\\/\\/[^\\/]*//'", returnStdout: true).trim()
 }
 
 def getPendingStatus(message){
