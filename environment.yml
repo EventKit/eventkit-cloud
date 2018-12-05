@@ -1,6 +1,7 @@
 name: eventkit-cloud
 channels:
- - local
+  - local
+  - https://eventkit_readonly:eventkit-readonly@nexus.devops.geointservices.io/content/repositories/eventkit-Releases/
 dependencies:
- - eventkit-cloud
-# The eventkit-cloud recipe is in conda/recipes/eventkit-cloud/meta.yaml
+  - python=3.5
+  - eventkit-cloud
