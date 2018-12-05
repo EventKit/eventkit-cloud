@@ -12,7 +12,7 @@ To run the tests locally, perform the following steps:
 * Set up the following variables in your environment:
   * `ek_password` The Disadvantaged user account password to use
   * `ek_username` The Disadvantaged user account name to use
-  * `ek_url` The URL of beachfront to test.
+  * `ek_url` The URL of eventkit to test.
 * From this `selenium` directory, run `mvn clean test` to run the tests. These tests will take a few minutes.
 
 # JenkinsFile
