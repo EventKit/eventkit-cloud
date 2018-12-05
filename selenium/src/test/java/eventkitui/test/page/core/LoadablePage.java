@@ -2,10 +2,7 @@ package eventkitui.test.page.core;
 
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 /**
@@ -33,6 +30,10 @@ public abstract class LoadablePage extends PageObject {
      */
     public void waitUntilLoaded() {
         wait.until(ExpectedConditions.elementToBeClickable(loadedElement()));
+    }
+
+    public boolean isLoaded() {
+        return loadedElement().isDisplayed();
     }
 
 }

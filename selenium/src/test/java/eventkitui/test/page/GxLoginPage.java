@@ -1,6 +1,7 @@
 package eventkitui.test.page;
 
 import eventkitui.test.page.core.PageObject;
+import eventkitui.test.page.navpanel.Dashboard;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;

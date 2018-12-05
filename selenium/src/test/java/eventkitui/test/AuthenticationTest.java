@@ -1,11 +1,11 @@
 package eventkitui.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import eventkitui.test.page.*;
+import eventkitui.test.page.navpanel.Dashboard;
+import eventkitui.test.page.navpanel.NavigationPanel;
 import eventkitui.test.util.Info;
 import eventkitui.test.util.Info.Importance;
 import eventkitui.test.util.Utils;
@@ -15,7 +15,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.openqa.selenium.Cookie;
-import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -35,8 +35,7 @@ public class AuthenticationTest {
     private WebDriver driver;
     // Main page, event kit is a one page application.
     private MainPage mainPage;
-    // Dashboard is the default redirect post login.
-    private Dashboard dashboard;
+
     @Before
     public void setUp() throws Exception {
         //TODO - A step will need to be created to accept the license for the test user, in the event this is a new instance
@@ -64,39 +63,36 @@ public class AuthenticationTest {
         GxLoginPage gxLoginPage = mainPage.beginLogin();
         mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
         Dashboard defaultDashboard = new Dashboard(driver);
-        WebDriverWait wait = new WebDriverWait(driver, 30);
-        Utils.takeScreenshot(driver);
+        // Logging in can take a long time depending on the load on the server it seems.
+        WebDriverWait wait = new WebDriverWait(driver, 120);
         // Dashboard is default upon login
         wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
-        Utils.takeScreenshot(driver);
-
-        final NavigationPanel navigationPanel = mainPage.getTopPanel().openNavigationPanel();
-        Utils.takeScreenshot(driver);
-
-        final LogoutConfirmationPage logoutConfirmationPage = navigationPanel.openLogout();
-        Utils.takeScreenshot(driver);
-
-        logoutConfirmationPage.waitUntilLoaded();
-        Utils.takeScreenshot(driver);
-
-        logoutConfirmationPage.finalizeLogout();
-        Utils.takeScreenshot(driver);
-
 
         // Ensure the Cookie has been populated and login was successful
-//        Cookie apiKeyCookie = mainPage.getApiKeyCookie();
-//        assertNotNull("Login cookie is present", apiKeyCookie);
-//        assertTrue("Login cookie is valid GUID",
-//                apiKeyCookie.getValue().matches("[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"));
-        // TODO - Finish this test via navigation panel
-        // Logout. The OAuth is crazy here. Sometimes the provider fulfills the redirect, sometimes it doesn't. So we'll
-        // have to check if it has redirected and if so, check the title. If not, we'll at least ensure the cookie was
-        // deleted from the session.
-//        LogoutPage logoutPage = mainPage.logout();
-//        if (mainPage.getCurrentURL().contains("logout")) {
-//            assertEquals("Logout text is displayed", logoutPage.getLogoutMessage(), LogoutPage.LOGOUT_MESSAGE);
-//        } else {
-//            assertTrue("Session closed after logout", mainPage.isLoggedOut());
-//        }
+        Cookie apiKeyCookie = mainPage.getApiKeyCookie();
+        assertNotNull("Login cookie is present", apiKeyCookie);
+
+        final NavigationPanel navigationPanel = new NavigationPanel(driver, 10);
+        // Nav panel is sometimes open by default, may depend on your previous state.
+        try {
+            if(!navigationPanel.isLoaded()) {
+                mainPage.getTopPanel().openNavigationPanel();
+                navigationPanel.waitUntilLoaded();
+            }
+        }
+        catch (final NoSuchElementException noSuchElement) {
+            // panel was not open, element did not exist. move on. Open panel and move on.
+            mainPage.getTopPanel().openNavigationPanel();
+            navigationPanel.waitUntilLoaded();
+        }
+
+        final LogoutConfirmationPage logoutConfirmationPage = navigationPanel.openLogout();
+        logoutConfirmationPage.waitUntilLoaded();
+        logoutConfirmationPage.finalizeLogout();
+
+
+        // Should be back at login page.
+        wait.until(ExpectedConditions.urlContains("login"));
+        assertTrue(driver.getCurrentUrl().contains("login"));
     }
 }

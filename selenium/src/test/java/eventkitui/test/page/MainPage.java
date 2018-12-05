@@ -1,6 +1,7 @@
 package eventkitui.test.page;
 
 import eventkitui.test.page.core.PageObject;
+import eventkitui.test.page.navpanel.NavigationPanel;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -14,6 +15,8 @@ public class MainPage extends PageObject {
     @FindBy(xpath = "//div[contains(@class, 'qa-LoginForm-oauth')]/button")	private WebElement geoAxisLoginButton;
     @FindBy(className = "qa-LoginPage-disclaimer") private WebElement consentBanner;
     @FindBy(className = "qa-Application-content") private WebElement contentWindow;
+
+    public static final String cookieName = "csrftoken";
 
     // Top panel, navigation panel, and general content area seem to make up the eventkit UI
     private TopPanel        topPanel;
@@ -58,6 +61,15 @@ public class MainPage extends PageObject {
      */
     public String getConsentBannerText() {
         return consentBanner.getText();
+    }
+
+    /**
+     * Gets the API Key cookie, used for local authentication token storage.
+     *
+     * @return The API Key cookie
+     */
+    public Cookie getApiKeyCookie() {
+        return driver.manage().getCookieNamed(cookieName);
     }
 
 }
