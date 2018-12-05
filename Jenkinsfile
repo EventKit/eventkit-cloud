@@ -38,9 +38,6 @@ with open('docker-compose.yml', 'r') as yaml_file:
 for service in data.get('services'):
     if data['services'][service].get('volumes'):
         data['services'][service].pop('volumes')
-        data['services'][service]['volumes'] = ['./eventkit_cloud:/var/lib/eventkit/eventkit_cloud',
-                                                './manage.py:/var/lib/eventkit/manage.py',
-                                                './scripts:/var/lib/eventkit/scripts']
 with open('docker-compose.yml', 'w') as outfile:
     yaml.dump(data, outfile, default_flow_style=False)
 
@@ -53,6 +50,7 @@ END
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
+            sh "cd conda && docker-compose build conda && docker-compose run --rm conda ./build.sh eventkit-cloud && cd .."
             sh "docker-compose build --no-cache"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
