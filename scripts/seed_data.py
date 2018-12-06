@@ -4,6 +4,10 @@ import getpass
 import json
 import logging
 import os
+try:
+    input = raw_input
+except NameError:
+    pass
 
 from eventkit_cloud.utils.client import EventKitClient
 
@@ -23,16 +27,22 @@ def main():
                         help='The project name, will be the same for all datapacks (not based on file).')
     parser.add_argument('--limit', type=int, default=0,
                         help='The project name, will be the same for all datapacks (not based on file).')
+    parser.add_argument('--verify', default='true',
+                        help='True to enable ssl verification, false to disable ssl verification')
 
     args = parser.parse_args()
     user = os.getenv('EVENTKIT_USER')
     if not user:
-        getpass.getpass("EventKit Username:")
+        user = input("EventKit Username: ")
     password = os.getenv('EVENTKIT_PASS')
     if not password:
-        password = getpass.getpass("EventKit Password:")
+        password = getpass.getpass("EventKit Password: ")
 
-    client = EventKitClient(args.url.rstrip('/'), user, password)
+    verify = True
+    if args.verify.lower() in ['false', 'f']:
+        verify = False
+
+    client = EventKitClient(args.url.rstrip('/'), user, password, verify=verify)
     if args.sources:
         provider_tasks = []
         for provider in client.get_providers():
