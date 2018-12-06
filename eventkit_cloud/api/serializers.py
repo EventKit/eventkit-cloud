@@ -441,7 +441,6 @@ class UserSerializer(serializers.ModelSerializer):
 class UserDataSerializer(serializers.Serializer):
     """
         Return a GeoJSON representation of the user data.
-
     """
     user = serializers.SerializerMethodField()
     accepted_licenses = serializers.SerializerMethodField()
@@ -456,12 +455,26 @@ class UserDataSerializer(serializers.Serializer):
             'user',
         )
 
+    def get_accepted_licenses(self, instance):
+        licenses = dict()
+        request = self.context['request']
+        if request.user is not instance:
+            return licenses
+        user_licenses = UserLicense.objects.filter(user=instance)
+        for license in License.objects.all():
+            if user_licenses.filter(license=license):
+                licenses[license.slug] = True
+            else:
+                licenses[license.slug] = False
+        return licenses
+
+
     @staticmethod
     def get_user(instance):
         return UserSerializer(instance).data
 
     @staticmethod
-    def get_accepted_licenses(instance):
+    def get_user_accepted_licenses(instance):
         licenses = dict()
         user_licenses = UserLicense.objects.filter(user=instance)
         for license in License.objects.all():
@@ -793,12 +806,11 @@ class JobSerializer(serializers.Serializer):
 
 
 class UserJobActivitySerializer(serializers.ModelSerializer):
-    job = ListJobSerializer()
     last_export_run = serializers.SerializerMethodField()
 
     class Meta:
         model = UserJobActivity
-        fields = ('job', 'last_export_run', 'type', 'created_at')
+        fields = ('last_export_run', 'type', 'created_at')
 
     def get_last_export_run(self, obj):
         if obj.job.last_export_run:
@@ -814,9 +826,9 @@ class GenericNotificationRelatedSerializer(serializers.BaseSerializer):
         if isinstance(referenced_object, User):
             serializer = UserSerializer(referenced_object)
         elif isinstance(referenced_object, Job):
-            serializer = ListJobSerializer(referenced_object, context={'request': self.context['request']})
+            serializer = NotificationJobSerializer(referenced_object, context={'request': self.context['request']})
         elif isinstance(referenced_object, ExportRun):
-            serializer = ExportRunSerializer(prefetch_export_runs(referenced_object), context={'request': self.context['request']})
+            serializer = NotificationRunSerializer(referenced_object, context={'request': self.context['request']})
         elif isinstance(referenced_object, Group):
             serializer = GroupSerializer(referenced_object)
         return serializer.data
@@ -851,4 +863,79 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_action_object(self, obj):
         return self.get_related_object(obj, 'action_object')
+
+class NotificationJobSerializer(serializers.Serializer):
+    """Return a slimmed down representation of a Job model."""
+
+    def update(self, instance, validated_data):
+        super(NotificationJobSerializer, self).update(instance, validated_data)
+
+    uid = serializers.SerializerMethodField()
+    name = serializers.CharField()
+    event = serializers.CharField()
+    description = serializers.CharField()
+    published = serializers.BooleanField()
+    visibility = serializers.CharField()
+    featured = serializers.BooleanField()
+
+    @staticmethod
+    def get_uid(obj):
+        return obj.uid
+
+class NotificationRunSerializer(serializers.ModelSerializer):
+    """Return a slimmed down representation of a ExportRun model."""
+    job = serializers.SerializerMethodField()  # nest the job details
+    user = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField()
+    created_at = serializers.SerializerMethodField()
+    started_at = serializers.SerializerMethodField()
+    finished_at = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    expiration = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExportRun
+
+        fields = (
+            'uid', 'created_at', 'updated_at', 'started_at', 'finished_at', 'duration', 'user',
+            'status', 'job', 'expiration', 'deleted'
+        )
+        read_only_fields = ('created_at', 'updated_at')
+
+    @staticmethod
+    def get_user(obj):
+        if not obj.deleted:
+            return obj.user.username
+
+    def get_created_at(self, obj):
+        if not obj.deleted:
+            return obj.created_at
+
+    def get_started_at(self, obj):
+        if not obj.deleted:
+            return obj.started_at
+
+    def get_finished_at(self, obj):
+        if not obj.deleted:
+            return obj.finished_at
+
+    def get_duration(self, obj):
+        if not obj.deleted:
+            return obj.duration
+
+    def get_status(self, obj):
+        if not obj.deleted:
+            return obj.status
+
+    def get_job(self, obj):
+        data = NotificationJobSerializer(obj.job, context=self.context).data
+        if not obj.deleted:
+            return data
+        else:
+            return {'uid': data['uid'], 'name': data['name']}
+
+    def get_expiration(self, obj):
+        if not obj.deleted:
+            return obj.expiration
 

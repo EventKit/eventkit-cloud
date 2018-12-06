@@ -276,7 +276,7 @@ def get_invalid_licenses(job, user=None):
     """
     from eventkit_cloud.api.serializers import UserDataSerializer
     user = user or job.user
-    licenses = UserDataSerializer.get_accepted_licenses(user)
+    licenses = UserDataSerializer.get_user_accepted_licenses(user)
     invalid_licenses = []
     for provider_tasks in job.provider_tasks.all():
         license = provider_tasks.provider.license

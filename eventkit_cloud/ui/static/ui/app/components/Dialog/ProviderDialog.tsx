@@ -57,13 +57,10 @@ export class DataPackGridItem extends React.Component<Props, State> {
         const promises = [];
         uids.forEach(uid => {
             const ret = this.props.getProviderTask(uid);
-            console.log(ret);
             promises.push(ret);
         });
 
-        console.log('waiting');
         await Promise.all(promises);
-        console.log('done');
         this.setState({ loading: false });
     }
 
@@ -87,7 +84,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
                     <List>
                         {this.props.uids.map((uid, ix) => {
                             const providerTask = this.props.providerTasks[uid];
-                            console.log(providerTask);
                             if (!providerTask) {
                                 return;
                             }

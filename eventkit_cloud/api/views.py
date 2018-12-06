@@ -1272,7 +1272,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
 
         users = User.objects.filter(username__in=targetnames).all()
         for u in users:
-            serializer = UserDataSerializer(u)
+            serializer = UserDataSerializer(u, context={'request': request})
             payload.append(serializer.data)
 
         return Response(payload, status=status.HTTP_200_OK)
@@ -1282,7 +1282,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         GET a user by username
         """
         queryset = self.get_queryset().get(username=username)
-        serializer = UserDataSerializer(queryset)
+        serializer = UserDataSerializer(queryset, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

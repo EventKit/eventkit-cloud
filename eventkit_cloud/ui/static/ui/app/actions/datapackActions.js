@@ -27,8 +27,9 @@ export function getDatacartDetails(jobuid) {
             types.DATACART_DETAILS_RECEIVED,
             types.DATACART_DETAILS_ERROR,
         ],
-        url: `/api/runs?job_uid=${jobuid}`,
+        url: '/api/runs',
         method: 'GET',
+        params: { job_uid: jobuid },
         onSuccess: (response) => {
             // get the list of runs (DataPacks) that are associated with the job UID.
             // We take only the first one for now since multiples are currently disabled.

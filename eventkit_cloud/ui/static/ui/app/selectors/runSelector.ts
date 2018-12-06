@@ -68,6 +68,7 @@ export const getDatacarts = createSelector(
 
 export const makeDatacartSelector = () => createSelector(
     [getDatacarts, getAllJobs, getAllProviderTasks, getAllExportTasks],
+    // [getDatacarts, getAllJobs],
     (runs, jobs, providerTasks, exportTasks) => {
         return runs.map(run => toFullRun(run, jobs, providerTasks, exportTasks));
     }
