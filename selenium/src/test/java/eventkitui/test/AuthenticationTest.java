@@ -49,50 +49,50 @@ public class AuthenticationTest {
     public void tearDown() throws Exception {
         driver.quit();
     }
-
-    @Test
-    @Info(importance = Importance.HIGH)
+//
+//    @Test
+//    @Info(importance = Importance.HIGH)
     /**
      * This test will login to eventkit via geoxportal,
      * wait for the default dashboard to appear, open the navigation panel, and logout of the system.
      */
-    public void standardLoginLogout() throws InterruptedException {
-        // Check that the consent banner is present and contains "Consent".
-        assertTrue("Consent banner should contain 'consent' text", mainPage.getConsentBannerText().toUpperCase().contains("CONSENT"));
-        // Login via Disadvantaged
-        GxLoginPage gxLoginPage = mainPage.beginLogin();
-        mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
-        Dashboard defaultDashboard = new Dashboard(driver);
-        // Logging in can take a long time depending on the load on the server it seems.
-        WebDriverWait wait = new WebDriverWait(driver, 120);
-        // Dashboard is default upon login
-        wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
-
-        // Ensure the Cookie has been populated and login was successful
-        Cookie apiKeyCookie = mainPage.getApiKeyCookie();
-        assertNotNull("Login cookie is present", apiKeyCookie);
-
-        final NavigationPanel navigationPanel = new NavigationPanel(driver, 10);
-        // Nav panel is sometimes open by default, may depend on your previous state.
-        try {
-            if(!navigationPanel.isLoaded()) {
-                mainPage.getTopPanel().openNavigationPanel();
-                navigationPanel.waitUntilLoaded();
-            }
-        }
-        catch (final NoSuchElementException noSuchElement) {
-            // panel was not open, element did not exist. move on. Open panel and move on.
-            mainPage.getTopPanel().openNavigationPanel();
-            navigationPanel.waitUntilLoaded();
-        }
-
-        final LogoutConfirmationPage logoutConfirmationPage = navigationPanel.openLogout();
-        logoutConfirmationPage.waitUntilLoaded();
-        logoutConfirmationPage.finalizeLogout();
-
-
-        // Should be back at login page.
-        wait.until(ExpectedConditions.urlContains("login"));
-        assertTrue(driver.getCurrentUrl().contains("login"));
-    }
+//    public void standardLoginLogout() throws InterruptedException {
+//        // Check that the consent banner is present and contains "Consent".
+//        assertTrue("Consent banner should contain 'consent' text", mainPage.getConsentBannerText().toUpperCase().contains("CONSENT"));
+//        // Login via Disadvantaged
+//        GxLoginPage gxLoginPage = mainPage.beginLogin();
+//        mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+//        Dashboard defaultDashboard = new Dashboard(driver);
+//        // Logging in can take a long time depending on the load on the server it seems.
+//        WebDriverWait wait = new WebDriverWait(driver, 120);
+//        // Dashboard is default upon login
+//        wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
+//
+//        // Ensure the Cookie has been populated and login was successful
+//        Cookie apiKeyCookie = mainPage.getApiKeyCookie();
+//        assertNotNull("Login cookie is present", apiKeyCookie);
+//
+//        final NavigationPanel navigationPanel = new NavigationPanel(driver, 10);
+//        // Nav panel is sometimes open by default, may depend on your previous state.
+//        try {
+//            if(!navigationPanel.isLoaded()) {
+//                mainPage.getTopPanel().openNavigationPanel();
+//                navigationPanel.waitUntilLoaded();
+//            }
+//        }
+//        catch (final NoSuchElementException noSuchElement) {
+//            // panel was not open, element did not exist. move on. Open panel and move on.
+//            mainPage.getTopPanel().openNavigationPanel();
+//            navigationPanel.waitUntilLoaded();
+//        }
+//
+//        final LogoutConfirmationPage logoutConfirmationPage = navigationPanel.openLogout();
+//        logoutConfirmationPage.waitUntilLoaded();
+//        logoutConfirmationPage.finalizeLogout();
+//
+//
+//        // Should be back at login page.
+//        wait.until(ExpectedConditions.urlContains("login"));
+//        assertTrue(driver.getCurrentUrl().contains("login"));
+//    }
 }

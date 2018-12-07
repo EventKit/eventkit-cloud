@@ -1,5 +1,6 @@
 package eventkitui.test;
 
+import eventkitui.test.page.navpanel.AdminLoginPage;
 import eventkitui.test.page.navpanel.Dashboard;
 import eventkitui.test.page.GxLoginPage;
 import eventkitui.test.page.MainPage;
@@ -17,6 +18,10 @@ public class SeleniumBaseTest {
     protected final String USERNAME = System.getenv("ek_username");
     protected final String PASSWORD = System.getenv("ek_password");
 
+    // Login through gxportal or admin backend
+    // TODO change to env variable if we're going to keep this.
+    private final boolean adminLogin = true;
+
     @Rule
     public TestName name = new TestName();
 
@@ -30,12 +35,18 @@ public class SeleniumBaseTest {
         driver = Utils.getChromeRemoteDriver();
         mainPage = new MainPage(driver);
         driver.get(BASE_URL);
-        // Login via Disadvantaged
-        GxLoginPage gxLoginPage = mainPage.beginLogin();
-        mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+        WebDriverWait wait = new WebDriverWait(driver, 120);
+        // Login via admin portal or gxlogin. Likely will remove admin portal after test account is unlocked?
+        if(adminLogin) {
+            AdminLoginPage adminLoginPage = new AdminLoginPage(driver, 10);
+            adminLoginPage.waitUntilLoaded();
+            adminLoginPage.login(USERNAME, PASSWORD);
+        }else {
+            GxLoginPage gxLoginPage = mainPage.beginLogin();
+            mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+        }
         Dashboard defaultDashboard = new Dashboard(driver);
         // Logging in can take a long time depending on the load on the server it seems.
-        WebDriverWait wait = new WebDriverWait(driver, 120);
         // Dashboard is default upon login
         wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
     }

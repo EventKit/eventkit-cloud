@@ -3,6 +3,7 @@ package eventkitui.test.page.navpanel;
 import eventkitui.test.page.LogoutConfirmationPage;
 import eventkitui.test.page.core.LoadablePage;
 
+import eventkitui.test.page.navpanel.datapack.CreationPage;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;

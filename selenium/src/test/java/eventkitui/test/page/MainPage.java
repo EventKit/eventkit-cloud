@@ -9,6 +9,7 @@ import org.openqa.selenium.support.FindBy;
 
 /**
  * Main page. Eventkit is a single page app.
+ *
  */
 public class MainPage extends PageObject {
 

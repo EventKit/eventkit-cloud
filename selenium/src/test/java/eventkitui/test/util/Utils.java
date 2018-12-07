@@ -1,6 +1,9 @@
 package eventkitui.test.util;
 
+import eventkitui.test.page.MainPage;
+import eventkitui.test.page.navpanel.NavigationPanel;
 import org.apache.commons.io.FileUtils;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -50,4 +53,26 @@ public class Utils {
             exception.printStackTrace();
         }
     }
+
+    /**
+     * Ensures nav panel is opened.
+     */
+    public static NavigationPanel openNavigationPanel(final WebDriver driver, final MainPage mainPage) {
+        final NavigationPanel navigationPanel = new NavigationPanel(driver, 10);
+        // Nav panel is sometimes open by default, may depend on your previous state.
+        try {
+            if(!navigationPanel.isLoaded()) {
+                mainPage.getTopPanel().openNavigationPanel();
+                navigationPanel.waitUntilLoaded();
+            }
+        }
+        catch (final NoSuchElementException noSuchElement) {
+            // panel was not open, element did not exist. Open panel and move on.
+            mainPage.getTopPanel().openNavigationPanel();
+            navigationPanel.waitUntilLoaded();
+        }
+        return navigationPanel;
+    }
+
+
 }

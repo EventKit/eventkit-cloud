@@ -10,6 +10,10 @@ import org.openqa.selenium.support.FindBy;
  */
 public class Dashboard extends ContentPage {
 
+    // TODO / Note - When a fresh user logs in, they will be greeted with a "You don't have any recently viewed DataPacks" and
+    // TODO - "You don't have an DataPacks. We will need to handle both cases ( fresh user and previous user) depending on which state test user is in.
+    // TODO - qa-DashboardSection-RecentlyViewed-NoData (will need contains xpath) and qa-DashboardSection-MyDataPacks-NoData respectively.
+
     @FindBy(className = "qa-DashboardSection-Notifications") private WebElement finalElement;
     public Dashboard(WebDriver driver) {
         super(driver, 10);
