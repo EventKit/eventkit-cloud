@@ -44,17 +44,14 @@ export const toFullRun = (run, jobs, providerTasks?, exportTasks?) => {
 };
 
 export const makeFullRunSelector = () => createSelector(
-    // [getPropsRun, getPropsJob, getPropsProviderTasks()],
     [getPropsRun, getPropsJob],
     (run, job) => run ? ({
         ...run,
         job,
-        // provider_tasks: providerTasks,
     }) : null,
 );
 
 export const makeAllRunsSelector = () => createSelector(
-    // [getAllRuns, getAllJobs, getAllProviderTasks, getAllExportTasks],
     [getAllRuns, getAllJobs],
     (runs, jobs) => {
         return Object.values(runs).map(run => toFullRun(run, jobs));
@@ -68,7 +65,6 @@ export const getDatacarts = createSelector(
 
 export const makeDatacartSelector = () => createSelector(
     [getDatacarts, getAllJobs, getAllProviderTasks, getAllExportTasks],
-    // [getDatacarts, getAllJobs],
     (runs, jobs, providerTasks, exportTasks) => {
         return runs.map(run => toFullRun(run, jobs, providerTasks, exportTasks));
     }

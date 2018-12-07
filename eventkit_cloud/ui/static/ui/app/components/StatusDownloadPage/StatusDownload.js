@@ -22,7 +22,7 @@ import {
     clearReRunInfo,
 } from '../../actions/datacartActions';
 import { updateExpiration, getDatacartDetails, clearDataCartDetails, deleteRun } from '../../actions/datapackActions';
-import { getProviders, cancelProviderTask, getProviderTask } from '../../actions/providerActions';
+import { getProviders, cancelProviderTask } from '../../actions/providerActions';
 import { viewedJob } from '../../actions/userActivityActions';
 import { getUsers } from '../../actions/usersActions';
 import { getGroups } from '../../actions/groupActions';
@@ -152,30 +152,7 @@ export class StatusDownload extends React.Component {
 
         const steps = joyride.StatusAndDownload;
         this.joyrideAddSteps(steps);
-        // const ret = await details;
-        // console.log(ret);
-        // console.log(this.props.runs);
-        // if (this.props.runs.length > 0) {
-        //     const uids = this.props.runs[0].provider_tasks;
-        //     await this.getProviderTasks(uids);
-        //     console.log(this.props.providerTasks);
-        // }
     }
-
-    // async getProviderTasks(uids) {
-    //     // this.setState({
-    //     //     loading: true,
-    //     // });
-
-    //     const promises = [];
-    //     uids.forEach((uid) => {
-    //         const ret = this.props.getProviderTask(uid);
-    //         promises.push(ret);
-    //     });
-
-    //     return Promise.all(promises);
-    //     // this.setState({ loading: false });
-    // }
 
     getMarginPadding() {
         if (!isWidthUp('md', this.props.width)) {
@@ -472,10 +449,8 @@ StatusDownload.propTypes = {
         error: PropTypes.array,
     }).isRequired,
     cloneExport: PropTypes.func.isRequired,
-    // getProviderTask: PropTypes.func.isRequired,
     cancelProviderTask: PropTypes.func.isRequired,
     getProviders: PropTypes.func.isRequired,
-    // providerTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
     providers: PropTypes.arrayOf(PropTypes.object).isRequired,
     user: PropTypes.object.isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -510,7 +485,6 @@ const makeMapStateToProps = () => {
             users: state.users.users,
             groups: state.groups.groups,
             runs: getDatacart(state, props),
-            // providerTasks: state.providerTasks.data,
         }
     );
     return mapStateToProps;
@@ -568,9 +542,6 @@ function mapDispatchToProps(dispatch) {
         getProviders: () => (
             dispatch(getProviders())
         ),
-        // getProviderTask: uid => (
-        //     dispatch(getProviderTask(uid))
-        // ),
         viewedJob: jobuid => (
             dispatch(viewedJob(jobuid))
         ),

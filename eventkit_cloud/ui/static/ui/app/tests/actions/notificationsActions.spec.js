@@ -21,6 +21,7 @@ describe('notificationsActions', () => {
             const args = { pageSize: 13 };
             expect(actions.getNotifications(args).params).toEqual({
                 page_size: args.pageSize,
+                slim: 'true',
             });
         });
 

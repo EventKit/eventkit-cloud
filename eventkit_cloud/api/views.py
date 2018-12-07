@@ -836,11 +836,14 @@ class ExportRunViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         _, job_ids = JobPermission.userjobs(self.request.user, "READ")
-        # return prefetch_export_runs((ExportRun.objects.filter(
-        #     (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value)))))
-        return ExportRun.objects.filter(
-            (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
-        )
+        if self.request.query_params.get('slim'):
+            return ExportRun.objects.filter(
+                (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+            )
+        else:
+            return prefetch_export_runs((ExportRun.objects.filter(
+                (Q(job_id__in=job_ids) | Q(job__visibility=VisibilityState.PUBLIC.value))
+            )))
 
     def retrieve(self, request, uid=None, *args, **kwargs):
         """
@@ -1299,6 +1302,16 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
 
     def get_queryset(self):
         activity_type = self.request.query_params.get('activity', '').lower()
+
+        if self.request.query_params.get('slim'):
+            activities = UserJobActivity.objects.select_related('job', 'user')
+        else:
+            activities = UserJobActivity.objects.select_related('job', 'user').prefetch_related(
+                'job__provider_tasks__provider',
+                'job__provider_tasks__formats',
+                'job__last_export_run__provider_tasks__tasks__result',
+                'job__last_export_run__provider_tasks__tasks__exceptions')
+
         if activity_type == 'viewed':
             ids = UserJobActivity.objects.filter(
                 user=self.request.user,
@@ -1307,18 +1320,9 @@ class UserJobActivityViewSet(mixins.CreateModelMixin,
                 job__last_export_run__deleted=False,
             ).distinct('job').values_list('id', flat=True)
 
-            result = UserJobActivity.objects.select_related('job', 'user').prefetch_related(
-                'job__provider_tasks__provider',
-                'job__provider_tasks__formats',
-                'job__last_export_run__provider_tasks__tasks__result',
-                'job__last_export_run__provider_tasks__tasks__exceptions').filter(id__in=ids).order_by('-created_at')
-            return result
+            return activities.filter(id__in=ids).order_by('-created_at')
         else:
-            return UserJobActivity.objects.select_related('job', 'user').prefetch_related(
-                'job__provider_tasks__provider',
-                'job__provider_tasks__formats',
-                'job__last_export_run__provider_tasks__tasks__result',
-                'job__last_export_run__provider_tasks__tasks__exceptions').filter(
+            return activities.filter(
                 user=self.request.user).order_by('-created_at')
 
 

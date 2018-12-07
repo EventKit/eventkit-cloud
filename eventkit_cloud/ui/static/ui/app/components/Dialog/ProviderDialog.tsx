@@ -29,7 +29,7 @@ interface DispatchProps {
 
 type Props = StyledComponentProps & StateProps & DispatchProps & OwnProps;
 
-export class DataPackGridItem extends React.Component<Props, State> {
+export class ProviderDialog extends React.Component<Props, State> {
     constructor(props) {
         super(props);
         this.state = {
@@ -69,6 +69,14 @@ export class DataPackGridItem extends React.Component<Props, State> {
             return null;
         }
 
+        const loadingStyle = {
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            height: '75px' ,
+        };
+
         return (
             <BaseDialog
                 className="qa-DataPackGridItem-BaseDialog"
@@ -77,7 +85,7 @@ export class DataPackGridItem extends React.Component<Props, State> {
                 onClose={this.props.onClose}
             >
                 {this.state.loading ?
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '75px' }}>
+                    <div style={loadingStyle}>
                         <Progress size={50} />
                     </div>
                 :
@@ -124,4 +132,4 @@ const mapDispatchToProps = (dispatch) => (
 
 export default
     withTheme()(
-        connect(mapStateToProps, mapDispatchToProps)(DataPackGridItem));
+        connect(mapStateToProps, mapDispatchToProps)(ProviderDialog));

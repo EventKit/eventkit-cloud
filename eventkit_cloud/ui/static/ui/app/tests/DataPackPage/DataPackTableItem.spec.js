@@ -200,9 +200,6 @@ describe('DataPackTableItem component', () => {
         wrapper.instance().handleProviderOpen(props.run.provider_tasks);
         expect(stateSpy.calledOnce).toBe(true);
         expect(stateSpy.calledWithExactly({
-            providerDescs: {
-                'OpenStreetMap Data (Themes)': 'OpenStreetMap vector data.',
-            },
             providerDialogOpen: true,
         })).toBe(true);
         stateSpy.restore();

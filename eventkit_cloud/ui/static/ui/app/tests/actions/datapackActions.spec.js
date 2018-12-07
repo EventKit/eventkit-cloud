@@ -112,6 +112,7 @@ describe('DataPackList actions', () => {
                 min_date: args.minDate,
                 max_date: args.maxDate,
                 search_term: args.search,
+                slim: 'true',
             };
             expect(actions.getRuns(args).params).toEqual(params);
         });

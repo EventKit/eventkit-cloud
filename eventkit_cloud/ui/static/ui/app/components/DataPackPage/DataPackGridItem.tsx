@@ -37,7 +37,6 @@ import ol3mapCss from '../../styles/ol3map.css';
 import DataPackShareDialog from '../DataPackShareDialog/DataPackShareDialog';
 import { userIsDataPackAdmin } from '../../utils/generic';
 import { makeFullRunSelector } from '../../selectors/runSelector';
-import { getProviderTask } from '../../actions/providerActions';
 import ProviderDialog from '../Dialog/ProviderDialog';
 
 const jss = (theme: any) => createStyles({
@@ -140,14 +139,9 @@ interface State {
 
 interface StateProps {
     run: Eventkit.Run;
-    providerTasks: Eventkit.ProviderTask[];
 }
 
-interface DispatchProps {
-    getProviderTask: (uid: string) => void;
-}
-
-type Props = StyledComponentProps & StateProps & DispatchProps & OwnProps;
+type Props = StyledComponentProps & StateProps & OwnProps;
 
 export class DataPackGridItem extends React.Component<Props, State> {
     static defaultProps = {
@@ -535,22 +529,13 @@ const makeMapStateToProps = () => {
     const getFullRun = makeFullRunSelector();
     const mapStateToProps = (state, props) => (
         {
-            providerTasks: state.providerTasks.data,
             run: getFullRun(state, props),
         }
     );
     return mapStateToProps;
 };
 
-function mapDispatchToProps(dispatch) {
-    return {
-        getProviderTask: (uid) => (
-            dispatch(getProviderTask(uid))
-        ),
-    };
-}
-
 export default
     withTheme()(
         withStyles(jss)(
-            connect(makeMapStateToProps, mapDispatchToProps)(DataPackGridItem)));
+            connect(makeMapStateToProps)(DataPackGridItem)));
