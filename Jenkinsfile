@@ -50,7 +50,8 @@ END
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
-            sh "docker-compose build"
+            sh "cd conda && docker-compose up --build && cd .."
+            sh "docker-compose build --no-cache"
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             sh "docker-compose run --rm -T eventkit manage.py runinitial setup || exit 0"
@@ -123,7 +124,7 @@ def getGitSHA(){
 }
 
 def getURLPath(){
-return sh(script:"echo ${env.BUILD_URL} | sed 's/https:\\/\\/[^\\/]*//'", returnStdout: true).trim()
+    return sh(script:"echo ${env.BUILD_URL} | sed 's/https:\\/\\/[^\\/]*//'", returnStdout: true).trim()
 }
 
 def getPendingStatus(message){

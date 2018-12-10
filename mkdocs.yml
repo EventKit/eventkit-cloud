@@ -4,6 +4,8 @@ nav:
   - Settings: settings.md
   - Sources: sources.md
 
+site_dir: 'site/docs'
+
 site_author: 'Joe Svrcek,Luke Rees'
 
 theme: 
