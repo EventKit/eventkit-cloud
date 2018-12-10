@@ -458,7 +458,7 @@ class UserDataSerializer(serializers.Serializer):
     def get_accepted_licenses(self, instance):
         licenses = dict()
         request = self.context['request']
-        if request.user is not instance:
+        if request.user != instance:
             return licenses
         user_licenses = UserLicense.objects.filter(user=instance)
         for license in License.objects.all():
