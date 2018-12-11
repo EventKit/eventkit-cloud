@@ -109,8 +109,10 @@ e2e_reports/
 screenshots/*
 !screenshots/baseline
 
-conda/repo
+conda/repo/*
 *_jb_*
 
 #mkdocs staticfiles
 site
+
+
