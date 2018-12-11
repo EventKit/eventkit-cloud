@@ -2,9 +2,7 @@ package eventkitui.test.page.map;
 
 import eventkitui.test.page.core.LoadablePage;
 import eventkitui.test.util.PointUtils;
-import org.openqa.selenium.Point;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -20,14 +18,15 @@ public class OpenLayersMap extends LoadablePage {
     @FindBy(className = "ol-viewport")						private WebElement viewport;
     @FindBy(className = "ol-unselectable")					private WebElement canvas;
     @FindBy(className = "ol-mouse-position")				private WebElement mouseoverCoordinates;
-    @FindBy(className = "ol-zoom-in")						private WebElement zoomInButton;
+    @FindBy(xpath = "//button [contains (@title, 'Zoom in')]")						private WebElement zoomInButton;
     @FindBy(className = "ol-zoom-out")						private WebElement zoomOutButton;
-    @FindBy(className = "qa-DrawBoxButton-button")                private WebElement drawBoxButton;
+    @FindBy(className = "qa-DrawBoxButton-button")          private WebElement drawBoxButton;
     @FindBy(xpath = "//div[contains(@class, 'qa-DrawBoxButton-div-selected')]") private WebElement cancelDrawIcon;
     // For zooming automatically
     @FindBy(className = "rbt-input-main") private WebElement searchField;
     @FindBy(className = "qa-SearchAOIButton-button") private WebElement searchButton;
     @FindBy(className = "qa-TypeaheadMenuItem-name") private WebElement searchResult;
+    @FindBy(xpath = "//div[contains(@class, 'qa-loading-body')]") private WebElement loadingSpinner;
 
     public WebElement getCanvas() {
         return canvas;
@@ -70,7 +69,26 @@ public class OpenLayersMap extends LoadablePage {
 
     @Override
     public WebElement loadedElement() {
-        return zoomInButton;
+        return canvas;
+    }
+
+    @Override
+    /**
+     * Map behavior is a bit different as there doesn't seem to be a component that is the last to be loaded.
+     * Instead we will grab a reference to the loading spinner icon and wait for it to no longer be drawn.
+     */
+    public void waitUntilLoaded() {
+        while(true) {
+            try {
+                loadingSpinner.click();
+            }
+            catch (StaleElementReferenceException seleniumException) {
+                continue;
+            }
+            catch (NoSuchElementException noSuchElement) {
+                break;
+            }
+        }
     }
 
     /**

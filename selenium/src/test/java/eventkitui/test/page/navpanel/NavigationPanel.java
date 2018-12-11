@@ -4,6 +4,8 @@ import eventkitui.test.page.LogoutConfirmationPage;
 import eventkitui.test.page.core.LoadablePage;
 
 import eventkitui.test.page.navpanel.datapack.CreationPage;
+import eventkitui.test.page.navpanel.groups.GroupsPage;
+import eventkitui.test.page.navpanel.library.LibraryPage;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -45,7 +47,7 @@ public class NavigationPanel extends LoadablePage {
      */
     public LibraryPage openDataPackLibrary() {
         dataPackLibraryButton.click();
-        return new LibraryPage(driver, 10);
+        return new LibraryPage(driver, 20);
     }
 
     /**
@@ -53,7 +55,7 @@ public class NavigationPanel extends LoadablePage {
      */
     public CreationPage openCreateDataPack() {
         createDataPackButton.click();
-        return  new CreationPage(driver, 10);
+        return  new CreationPage(driver, 20);
     }
 
     /**

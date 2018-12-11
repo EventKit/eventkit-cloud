@@ -30,6 +30,7 @@ public class DatapackTest extends SeleniumBaseTest {
     // TODO - Cleanup, more assertions
     @Test
     public void createDataPackTest() {
+        Utils.takeScreenshot(driver);
         final NavigationPanel navigationPanel = Utils.openNavigationPanel(driver, mainPage);
         navigationPanel.waitUntilLoaded();
         final CreationPage creationPage = navigationPanel.openCreateDataPack();
@@ -87,10 +88,8 @@ public class DatapackTest extends SeleniumBaseTest {
         final WebDriverWait longWait = new WebDriverWait(driver, 1000);
         longWait.until(ExpectedConditions.elementToBeClickable(statusAndDownload.getDownloadZipButton()));
         assertTrue(statusAndDownload.getDownloadZipButton().isDisplayed());
-        Utils.takeScreenshot(driver);
         // Cleanup
         statusAndDownload.getDeleteExport().click();
-        Utils.takeScreenshot(driver);
         final ConfirmDeleteButton confirmDeleteButton = new ConfirmDeleteButton(driver, 10);
         confirmDeleteButton.waitUntilLoaded();
         confirmDeleteButton.getConfirmDeleteButton().click();

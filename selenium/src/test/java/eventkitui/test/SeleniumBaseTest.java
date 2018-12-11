@@ -9,6 +9,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -20,7 +21,7 @@ public class SeleniumBaseTest {
 
     // Login through gxportal or admin backend
     // TODO change to env variable if we're going to keep this.
-    private final boolean adminLogin = true;
+    private final boolean adminLogin = false;
 
     @Rule
     public TestName name = new TestName();
@@ -41,14 +42,25 @@ public class SeleniumBaseTest {
             AdminLoginPage adminLoginPage = new AdminLoginPage(driver, 10);
             adminLoginPage.waitUntilLoaded();
             adminLoginPage.login(USERNAME, PASSWORD);
-        }else {
-            GxLoginPage gxLoginPage = mainPage.beginLogin();
-            mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+        } else {
+            try {
+                GxLoginPage gxLoginPage = mainPage.beginLogin();
+                mainPage = gxLoginPage.loginDisadvantaged(USERNAME, PASSWORD, mainPage);
+            }
+            catch(final Exception exception) {
+                Utils.takeScreenshot(driver);
+                throw new RuntimeException("Something went wrong, see screenshot.");
+            }
         }
         Dashboard defaultDashboard = new Dashboard(driver);
         // Logging in can take a long time depending on the load on the server it seems.
         // Dashboard is default upon login
-        wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(defaultDashboard.loadedElement()));
+        }
+        catch (TimeoutException timeoutException) {
+            Utils.takeScreenshot(driver);
+        }
     }
 
     @After

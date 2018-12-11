@@ -2,6 +2,8 @@ package eventkitui.test;
 
 import eventkitui.test.page.navpanel.*;
 import eventkitui.test.page.navpanel.datapack.CreationPage;
+import eventkitui.test.page.navpanel.groups.GroupsPage;
+import eventkitui.test.page.navpanel.library.LibraryPage;
 import eventkitui.test.util.Info;
 import eventkitui.test.util.Utils;
 import org.junit.Test;
