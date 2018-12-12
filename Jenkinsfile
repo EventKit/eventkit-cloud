@@ -57,7 +57,8 @@ END
             // Exit 0 provided for when setup has already ran on a previous build.
             // This could hide errors at this step but they will show up again during the tests.
             sh "docker-compose run --rm -T eventkit manage.py runinitial setup || exit 0"
-            sh "docker-compose up --force-recreate -d"
+            // No use bringing up containers if integration tests aren't configured.
+            // sh "docker-compose up --force-recreate -d"
         }catch(Exception e) {
            handleErrors("Failed to build the docker containers.")
         }
