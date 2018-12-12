@@ -50,8 +50,6 @@ END
         try{
             postStatus(getPendingStatus("Building the docker containers..."))
             sh "docker-compose down || exit 0"
-            sh "docker volume ls"
-            sh "docker volume rm eventkit-cloud_postgis_database || exit 0"
             sh "docker system prune -f"
             sh "cd conda && docker-compose up --build && cd .."
             sh "docker-compose build --no-cache"
