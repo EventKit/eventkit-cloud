@@ -138,7 +138,7 @@ export class UserGroupsPage extends Component {
     componentDidMount() {
         // make api request for users/groups
         this.makeUserRequest();
-        this.props.getGroups();
+        this.props.getGroups({ disable_page: true });
         const steps = joyride.UserGroupsPage;
         this.joyrideAddSteps(steps);
     }
@@ -176,17 +176,17 @@ export class UserGroupsPage extends Component {
         }
         if (this.props.groups.updated && !prevProps.groups.updated) {
             this.makeUserRequest();
-            this.props.getGroups();
+            this.props.getGroups({ disable_page: true });
         }
         if (this.props.groups.created && !prevProps.groups.created) {
-            this.props.getGroups();
+            this.props.getGroups({ disable_page: true });
             if (this.state.createUsers.length) {
                 this.makeUserRequest();
                 this.setState({ createUsers: [] });
             }
         }
         if (this.props.groups.deleted && !prevProps.groups.deleted) {
-            this.props.getGroups();
+            this.props.getGroups({ disable_page: true });
             const query = { ...this.props.location.query };
             if (query.groups) {
                 query.groups = null;
@@ -1219,8 +1219,8 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     const timeout = new DrawerTimeout();
     return {
-        getGroups: () => (
-            dispatch(getGroups())
+        getGroups: params => (
+            dispatch(getGroups(params))
         ),
         deleteGroup: id => (
             dispatch(deleteGroup(id))

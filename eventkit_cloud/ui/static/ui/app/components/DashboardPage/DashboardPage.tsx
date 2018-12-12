@@ -52,7 +52,7 @@ interface Props {
     users: Eventkit.Store.Users;
     groups: Eventkit.Store.Groups;
     updateDataCartPermissions: () => void;
-    getGroups: () => void;
+    getGroups: (params: {}) => void;
     getUsers: (params: {}) => void;
     theme: Eventkit.Theme;
 
@@ -103,7 +103,7 @@ export class DashboardPage extends React.Component<Props, State> {
 
     componentDidMount() {
         this.props.getUsers({ disable_page: true });
-        this.props.getGroups();
+        this.props.getGroups({ disable_page: true });
         this.props.getProviders();
         this.props.getNotifications({
             pageSize: this.getNotificationsColumns({ getMax: true }) * this.getNotificationsRows() * 3,
@@ -637,7 +637,7 @@ function mapDispatchToProps(dispatch) {
         getNotifications: args => dispatch(getNotifications(args)),
         updateDataCartPermissions: (uid, permissions) => dispatch(updateDataCartPermissions(uid, permissions)),
         getUsers: (params) => dispatch(getUsers(params)),
-        getGroups: () => dispatch(getGroups()),
+        getGroups: (params) => dispatch(getGroups(params)),
     };
 }
 

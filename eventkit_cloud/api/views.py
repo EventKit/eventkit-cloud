@@ -1231,7 +1231,7 @@ class UserDataViewSet(viewsets.GenericViewSet):
         * return: A list of all users.
         """
         queryset = self.get_queryset()
-        total = len(queryset)
+        total = queryset.count()
         filtered_queryset = self.filter_queryset(queryset)
         if request.query_params.get('exclude_self'):
             filtered_queryset = filtered_queryset.exclude(username=request.user.username)
@@ -1374,6 +1374,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     serializer_class = GroupSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    pagination_class = LinkHeaderPagination
     parser_classes = (JSONParser,)
     filter_class = GroupFilter
     filter_backends = (filters.SearchFilter, filters.OrderingFilter)
@@ -1419,9 +1420,23 @@ class GroupViewSet(viewsets.ModelViewSet):
             ]
 
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = GroupSerializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        queryset = self.get_queryset()
+        total = queryset.count()
+        filtered_queryset = self.filter_queryset(queryset)
+
+        page = None
+        if not request.query_params.get('disable_page'):
+            page = self.paginate_queryset(filtered_queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={'request': request})
+            response = self.get_paginated_response(serializer.data)
+        else:
+            serializer = self.get_serializer(filtered_queryset, many=True, context={'request': request})
+            response = Response(serializer.data, status=status.HTTP_200_OK)
+
+        response['Total-Groups'] = total
+        return response
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):

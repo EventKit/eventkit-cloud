@@ -386,17 +386,16 @@ class GroupSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'members', 'administrators')
 
     @staticmethod
-    def get_members(instance):
-        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.MEMBER.value)]
-        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
+    def get_group_permissions(instance):
+        return GroupPermission.objects.filter(group=instance).prefetch_related('user', 'group')
 
-    @staticmethod
-    def get_administrators(instance):
-        user_ids = [permission.user.id for permission in GroupPermission.objects.filter(group=instance).filter(
-            permission=GroupPermissionLevel.ADMIN.value)]
-        return [user.username for user in User.objects.filter(id__in=user_ids).all()]
-        return []
+    def get_members(self, instance):
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.MEMBER.value)
+        return [permission.user.username for permission in qs]
+
+    def get_administrators(self, instance):
+        qs = self.get_group_permissions(instance).filter(permission=GroupPermissionLevel.ADMIN.value)
+        return [permission.user.username for permission in qs]
 
     @staticmethod
     def get_identification(instance):

@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { withTheme, withStyles, createStyles, StyledComponentProps } from '@material-ui/core/styles';
+import { withTheme, StyledComponentProps } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import Progress from '@material-ui/core/CircularProgress';
 import BaseDialog from '../Dialog/BaseDialog';

@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import { withTheme } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -7,97 +8,103 @@ import GroupsBody from './GroupsBody';
 import MembersBody from './MembersBody';
 import ShareInfoBody from './ShareInfoBody';
 import BaseDialog from '../Dialog/BaseDialog';
+import { Permissions, Levels } from '../../utils/permissions';
 
 export class DataPackShareDialog extends Component {
     constructor(props) {
         super(props);
         this.handleSave = this.handleSave.bind(this);
         this.handleGroupUpdate = this.handleGroupUpdate.bind(this);
-        this.handleMemberUpdate = this.handleMemberUpdate.bind(this);
+        this.handleUserCheck = this.handleUserCheck.bind(this);
+        this.handleAdminCheck = this.handleAdminCheck.bind(this);
+        this.handleCurrentCheck = this.handleCurrentCheck.bind(this);
+        this.handlePublicCheck = this.handlePublicCheck.bind(this);
+        this.handleUncheckAll = this.handleUncheckAll.bind(this);
         this.showShareInfo = this.showShareInfo.bind(this);
         this.hideShareInfo = this.hideShareInfo.bind(this);
         this.showPublicWarning = this.showPublicWarning.bind(this);
         this.hidePublicWarning = this.hidePublicWarning.bind(this);
         this.toggleView = this.toggleView.bind(this);
+        this.permissions = new Permissions(this.props.permissions);
         this.state = {
             view: 'groups',
             // Make a copy of the permissions so we can modify it locally
-            permissions: this.getAdjustedPermissions(this.props.permissions),
+            permissions: this.permissions.getPermissions(),
             showShareInfo: false,
             showPublicWarning: false,
         };
     }
 
-    getAdjustedPermissions(perms) {
-        const permissions = {
-            value: perms.value,
-            groups: { ...perms.groups },
-            members: { ...perms.members },
-        };
-        // Check if the logged in user has member rights
-        // If they do, move them out of members for now, so it wont be displayed.
-        // We will add them back in before saving any updates
-        if (this.props.user) {
-            const { members } = permissions;
-            const { username } = this.props.user.user;
-            if (members[username] !== undefined) {
-                permissions.user = members[username];
-                members[username] = null;
-                delete members[username];
-            }
+    componentDidUpdate(prevProps) {
+        if (!prevProps.show && this.props.show) {
+            this.permissions.setPermissions(this.props.permissions);
+            this.permissions.setUsername(this.props.user ? this.props.user.user.username : undefined);
+            this.permissions.extractCurrentUser();
+            this.setState({ permissions: this.permissions.getPermissions() });
         }
-
-        // Check if the permissions are PUBLIC
-        // If yes, we need to add members in if not already there
-        if (permissions.value === 'PUBLIC') {
-            this.props.members.forEach((member) => {
-                if (permissions.members[member.user.username] === undefined) {
-                    permissions.members[member.user.username] = 'READ';
-                }
-            });
-        }
-        return permissions;
     }
 
     handleSave() {
-        const permissions = { ...this.state.permissions };
-        if (Object.keys(permissions.members).length || Object.keys(permissions.groups).length) {
-            permissions.value = 'SHARED';
-            if (Object.keys(permissions.members).length === this.props.members.length) {
-                permissions.value = 'PUBLIC';
+        if (this.permissions.isShared()) {
+            if (!this.permissions.getMemberCount() && !this.permissions.getGroupCount()) {
+                this.permissions.makePrivate();
             }
-        } else {
-            permissions.value = 'PRIVATE';
-            permissions.members = {};
-            permissions.groups = {};
         }
-        // Check if logged in user had been moved out of members
-        // If so, add them back in before saving
-        if (permissions.user !== undefined) {
-            permissions.members[this.props.user.user.username] = permissions.user;
-            permissions.user = null;
-            delete permissions.user;
+
+        if (this.permissions.getUserPermissions()) {
+            this.permissions.insertCurrentUser();
         }
-        this.props.onSave(permissions);
+
+        this.props.onSave(this.permissions.getPermissions());
     }
 
     handleGroupUpdate(groups) {
-        const permissions = { ...this.state.permissions };
-        permissions.groups = groups;
-        this.setState({ permissions });
+        this.permissions.setGroups(groups);
+        this.setState({ permissions: this.permissions.getPermissions() });
     }
 
-    handleMemberUpdate(members) {
-        const permissions = { ...this.state.permissions };
-        const stateLength = Object.keys(permissions.members).length;
-        if (this.props.warnPublic) {
-            const { length } = Object.keys(members);
-            if (length === this.props.members.length && length !== stateLength) {
-                this.showPublicWarning();
-            }
+    handleUserCheck(username) {
+        if (this.permissions.isPublic()) {
+            this.permissions.makeShared();
         }
-        permissions.members = members;
-        this.setState({ permissions });
+        if (this.permissions.userHasPermission(username)) {
+            this.permissions.removeMemberPermission(username);
+        } else {
+            this.permissions.setMemberPermission(username, Levels.READ);
+        }
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
+    handleAdminCheck(username) {
+        if (this.permissions.userHasPermission(username, Levels.ADMIN)) {
+            this.permissions.setMemberPermission(username, Levels.READ);
+        } else {
+            this.permissions.setMemberPermission(username, Levels.ADMIN);
+        }
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
+    handleCurrentCheck() {
+        this.props.users.forEach((user) => {
+            const { username } = user.user;
+            if (!this.permissions.userHasPermission(username)) {
+                this.permissions.setMemberPermission(username, Levels.READ);
+            }
+        });
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
+    handlePublicCheck() {
+        this.permissions.makePublic();
+        this.setState({ permissions: this.permissions.getPermissions() });
+    }
+
+    handleUncheckAll() {
+        this.permissions.setMembers({});
+        if (this.permissions.isPublic()) {
+            this.permissions.makeShared();
+        }
+        this.setState({ permissions: this.permissions.getPermissions() });
     }
 
     showShareInfo() {
@@ -125,6 +132,10 @@ export class DataPackShareDialog extends Component {
     }
 
     render() {
+        if (!this.props.show) {
+            return null;
+        }
+
         const { colors } = this.props.theme.eventkit;
 
         const styles = {
@@ -175,7 +186,7 @@ export class DataPackShareDialog extends Component {
             body = (
                 <GroupsBody
                     groups={this.props.groups}
-                    members={this.props.members}
+                    members={this.props.users}
                     selectedGroups={this.state.permissions.groups}
                     groupsText={this.props.groupsText}
                     onGroupsUpdate={this.handleGroupUpdate}
@@ -186,23 +197,27 @@ export class DataPackShareDialog extends Component {
         } else {
             body = (
                 <MembersBody
-                    members={this.props.members}
+                    public={this.state.permissions.value === 'PUBLIC'}
                     selectedMembers={this.state.permissions.members}
                     membersText={this.props.membersText}
-                    onMembersUpdate={this.handleMemberUpdate}
+                    onMemberCheck={this.handleUserCheck}
+                    onAdminCheck={this.handleAdminCheck}
+                    onCheckCurrent={this.handleCurrentCheck}
+                    onCheckAll={this.handlePublicCheck}
+                    onUncheckAll={this.handleUncheckAll}
                     canUpdateAdmin={this.props.canUpdateAdmin}
                     handleShowShareInfo={this.showShareInfo}
                 />
             );
         }
 
-        let groupCount = Object.keys(this.state.permissions.groups).length;
-        if (groupCount === this.props.groups.length) {
+        let groupCount = Object.keys(this.permissions.getGroups()).length;
+        if (groupCount === this.props.groups.length && this.props.groups.length !== 0) {
             groupCount = 'ALL';
         }
 
-        let memberCount = Object.keys(this.state.permissions.members).length;
-        if (memberCount === this.props.members.length) {
+        let memberCount = Object.keys(this.permissions.getMembers()).length;
+        if (this.permissions.isPublic()) {
             memberCount = 'ALL';
         }
 
@@ -309,7 +324,7 @@ DataPackShareDialog.propTypes = {
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
-    members: PropTypes.arrayOf(PropTypes.shape({
+    users: PropTypes.arrayOf(PropTypes.shape({
         user: PropTypes.shape({
             username: PropTypes.string,
             first_name: PropTypes.string,
@@ -345,4 +360,12 @@ DataPackShareDialog.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(DataPackShareDialog);
+const mapStateToProps = state => (
+    {
+        groups: state.groups.groups,
+        users: state.users.users,
+        userCount: state.users.total - 1,
+    }
+);
+
+export default withTheme()(connect(mapStateToProps, undefined)(DataPackShareDialog));

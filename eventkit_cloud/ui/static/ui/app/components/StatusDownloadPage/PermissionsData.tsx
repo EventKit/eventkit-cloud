@@ -219,8 +219,6 @@ export class PermissionsData extends React.Component<Props, State> {
                         user={this.props.user}
                         onClose={this.handleShareDialogClose}
                         onSave={this.handleShareDialogSave}
-                        groups={this.props.groups}
-                        members={this.props.members}
                         permissions={this.props.permissions}
                         groupsText="You may share view and edit rights with groups exclusively.
                         Group sharing is managed separately from member sharing"

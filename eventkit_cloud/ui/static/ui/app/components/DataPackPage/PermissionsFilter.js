@@ -193,8 +193,6 @@ export class PermissionsFilter extends Component {
                     show={this.state.open}
                     onClose={this.handleClose}
                     onSave={this.handleSave}
-                    groups={this.props.groups}
-                    members={this.props.members}
                     permissions={this.props.permissions}
                     groupsText="You may filter DataPacks by shared groups exclusively.
                      Group filtering is managed seperately from member filtering."

@@ -24,8 +24,6 @@ import { getRuns, deleteRun } from '../../actions/datapackActions';
 import { getProviders } from '../../actions/providerActions';
 import { getGeocode } from '../../actions/geocodeActions';
 import { processGeoJSONFile, resetGeoJSONFile } from '../../actions/fileActions';
-import { getGroups } from '../../actions/groupActions';
-import { getUsers } from '../../actions/usersActions';
 import { updateDataCartPermissions } from '../../actions/datacartActions';
 import { setPageOrder, setPageView } from '../../actions/uiActions';
 import { flattenFeatureCollection } from '../../utils/mapUtils';
@@ -91,8 +89,6 @@ export class DataPackPage extends React.Component {
     }
 
     componentDidMount() {
-        this.props.getGroups();
-        this.props.getUsers({ exclude_self: true, disable_page: true });
         this.props.getProviders();
         this.makeRunRequest();
         this.fetch = setInterval(this.autoRunRequest, 10000);
@@ -698,8 +694,6 @@ DataPackPage.propTypes = {
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
     users: PropTypes.arrayOf(PropTypes.object).isRequired,
-    getGroups: PropTypes.func.isRequired,
-    getUsers: PropTypes.func.isRequired,
     updateDataCartPermissions: PropTypes.func.isRequired,
     updatePermissions: PropTypes.shape({
         updating: PropTypes.bool,
@@ -763,12 +757,6 @@ function mapDispatchToProps(dispatch) {
         },
         setView: (view) => {
             dispatch(setPageView(view));
-        },
-        getGroups: () => {
-            dispatch(getGroups());
-        },
-        getUsers: (params) => {
-            dispatch(getUsers(params));
         },
         updateDataCartPermissions: (uid, permissions) => {
             dispatch(updateDataCartPermissions(uid, permissions));

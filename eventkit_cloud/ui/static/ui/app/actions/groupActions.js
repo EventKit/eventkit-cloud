@@ -1,4 +1,6 @@
 
+import { getHeaderPageInfo } from '../utils/generic';
+
 export const types = {
     FETCHING_GROUPS: 'FETCHING_GROUPS',
     FETCHED_GROUPS: 'FETCHED_GROUPS',
@@ -14,7 +16,7 @@ export const types = {
     UPDATING_GROUP_ERROR: 'UPDATING_GROUP_ERROR',
 };
 
-export function getGroups() {
+export function getGroups(params, append = false) {
     return {
         types: [
             types.FETCHING_GROUPS,
@@ -23,9 +25,21 @@ export function getGroups() {
         ],
         url: '/api/groups',
         method: 'GET',
+        params,
+        payload: { append },
         getCancelSource: state => state.groups.cancelSource,
         cancellable: true,
-        onSuccess: response => ({ groups: response.data }),
+        onSuccess: (response) => {
+            // get the total count from the header
+            const totalGroups = Number(response.headers['total-groups']);
+            const { nextPage, range } = getHeaderPageInfo(response);
+            return {
+                groups: response.data,
+                total: totalGroups,
+                range,
+                nextPage,
+            };
+        },
     };
 }
 

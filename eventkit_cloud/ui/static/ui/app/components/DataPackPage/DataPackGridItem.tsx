@@ -509,8 +509,6 @@ export class DataPackGridItem extends React.Component<Props, State> {
                         onClose={this.handleShareClose}
                         onSave={this.handleShareSave}
                         user={this.props.userData}
-                        groups={this.props.groups}
-                        members={this.props.users}
                         permissions={this.props.run.job.permissions}
                         groupsText="You may share view and edit rights with groups exclusively.
                             Group sharing is managed separately from member sharing."

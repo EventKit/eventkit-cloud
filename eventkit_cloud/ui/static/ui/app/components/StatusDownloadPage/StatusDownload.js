@@ -147,7 +147,7 @@ export class StatusDownload extends React.Component {
         this.props.viewedJob(this.props.router.params.jobuid);
         this.props.getProviders();
         this.props.getUsers({ exclude_self: true, disable_page: true });
-        this.props.getGroups();
+        this.props.getGroups({ disable_page: true });
         this.startTimer();
 
         const steps = joyride.StatusAndDownload;
@@ -548,8 +548,8 @@ function mapDispatchToProps(dispatch) {
         getUsers: params => (
             dispatch(getUsers(params))
         ),
-        getGroups: () => (
-            dispatch(getGroups())
+        getGroups: params => (
+            dispatch(getGroups(params))
         ),
     };
 }

@@ -275,8 +275,6 @@ export class DataPackTableItem extends Component {
                     onClose={this.handleShareClose}
                     onSave={this.handleShareSave}
                     user={this.props.user.data}
-                    groups={this.props.groups}
-                    members={this.props.users}
                     permissions={this.props.run.job.permissions}
                     groupsText="You may share view and edit rights with groups exclusively.
                         Group sharing is managed separately from member sharing."

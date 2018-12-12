@@ -26,7 +26,7 @@ export function usersReducer(state = initialState, action) {
                 ...state,
                 fetching: false,
                 fetched: true,
-                users: action.users,
+                users: action.append ? [...state.users, ...action.users] : action.users,
                 total: action.total,
                 range: action.range,
                 nextPage: action.nextPage,
@@ -42,6 +42,10 @@ export function usersReducer(state = initialState, action) {
                 range: '',
                 nextPage: false,
                 cancelSource: null,
+            };
+        case types.CLEAR_USERS:
+            return {
+                ...initialState,
             };
         default:
             return state;

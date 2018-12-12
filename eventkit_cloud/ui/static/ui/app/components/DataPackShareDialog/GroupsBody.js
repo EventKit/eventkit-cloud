@@ -1,12 +1,15 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { withTheme } from '@material-ui/core/styles';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import ButtonBase from '@material-ui/core/ButtonBase';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import CustomTextField from '../CustomTextField';
 import GroupRow from './GroupRow';
 import GroupsHeaderRow from './GroupsHeaderRow';
 import GroupBodyTooltip from './ShareBodyTooltip';
+import { getGroups } from '../../actions/groupActions';
 
 
 export class GroupsBody extends Component {
@@ -22,24 +25,43 @@ export class GroupsBody extends Component {
         this.handleSearchInput = this.handleSearchInput.bind(this);
         this.reverseGroupOrder = this.reverseGroupOrder.bind(this);
         this.reverseSharedOrder = this.reverseSharedOrder.bind(this);
+        this.loadMore = this.loadMore.bind(this);
         this.state = {
             search: '',
-            groupOrder: 'group',
+            groupOrder: 'name',
             sharedOrder: 'shared',
-            activeOrder: 'group',
+            activeOrder: 'name',
             tooltip: {
                 target: null,
                 admin: false,
             },
+            page: 1,
+            loading: false,
         };
     }
 
     componentDidMount() {
         window.addEventListener('wheel', this.handleScroll);
+        this.getGroups({ page: this.state.page }, false);
     }
 
     componentWillUnmount() {
         window.removeEventListener('wheel', this.handleScroll);
+    }
+
+    async getGroups(params = {}, append = true) {
+        this.setState({ loading: true });
+        await this.props.getGroups({
+            page: this.state.page,
+            ordering: this.state.groupOrder,
+            ...params,
+        }, append);
+        this.setState({ loading: false });
+    }
+
+    loadMore() {
+        this.getGroups({ page: this.state.page + 1 });
+        this.setState({ page: this.state.page + 1 });
     }
 
     handleUncheckAll() {
@@ -246,9 +268,7 @@ export class GroupsBody extends Component {
             groups = this.searchGroups(groups, this.state.search);
         }
 
-        if (this.state.activeOrder.includes('group')) {
-            groups = this.sortByGroup([...groups], !this.state.groupOrder.includes('-'));
-        } else if (this.state.activeOrder.includes('shared')) {
+        if (this.state.activeOrder.includes('shared')) {
             if (this.state.activeOrder.includes('admin')) {
                 groups = this.sortByAdmin([...groups], this.props.selectedGroups, !this.state.sharedOrder.includes('-admin'));
             } else {
@@ -276,22 +296,6 @@ export class GroupsBody extends Component {
                         Shared: {selectedCount - adminCount} Groups plus {adminCount} Admin Groups
                     </span>
                 </div>
-            );
-        }
-
-        let tooltip = null;
-        if (this.state.tooltip.target !== null) {
-            tooltip = (
-                <GroupBodyTooltip
-                    className="qa-GroupsBody-GroupBodyTooltip"
-                    target={this.state.tooltip.target}
-                    body={this.body}
-                    text={this.state.tooltip.admin ?
-                        'Remove administrative rights from group administrators'
-                        :
-                        'Share administrative rights with group administrators'
-                    }
-                />
             );
         }
 
@@ -327,26 +331,42 @@ export class GroupsBody extends Component {
                         canUpdateAdmin={this.props.canUpdateAdmin}
                     />
                 </div>
-                {groups.map((group) => {
-                    const selected = this.props.selectedGroups[group.name];
-                    const admin = selected === 'ADMIN';
-                    return (
-                        <GroupRow
-                            key={group.name}
-                            group={group}
-                            members={this.props.members}
-                            selected={!!selected}
-                            admin={admin}
-                            showAdmin={this.props.canUpdateAdmin}
-                            handleCheck={this.handleCheck}
-                            handleAdminCheck={this.handleAdminCheck}
-                            handleAdminMouseOut={this.handleAdminMouseOut}
-                            handleAdminMouseOver={this.handleAdminMouseOver}
-                            className="qa-GroupsBody-GroupRow"
-                        />
-                    );
-                })}
-                {tooltip}
+                {!this.state.loading ?
+                    groups.map((group) => {
+                        const selected = this.props.selectedGroups[group.name];
+                        const admin = selected === 'ADMIN';
+                        return (
+                            <GroupRow
+                                key={group.name}
+                                group={group}
+                                members={this.props.users}
+                                selected={!!selected}
+                                admin={admin}
+                                showAdmin={this.props.canUpdateAdmin}
+                                handleCheck={this.handleCheck}
+                                handleAdminCheck={this.handleAdminCheck}
+                                handleAdminMouseOut={this.handleAdminMouseOut}
+                                handleAdminMouseOver={this.handleAdminMouseOver}
+                                className="qa-GroupsBody-GroupRow"
+                            />
+                        );
+                    })
+                    :
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '50px auto' }}>
+                        <CircularProgress />
+                    </div>
+                }
+                <GroupBodyTooltip
+                    className="qa-GroupsBody-GroupBodyTooltip"
+                    open={Boolean(this.state.tooltip.target)}
+                    target={this.state.tooltip.target}
+                    body={this.body}
+                    text={this.state.tooltip.admin ?
+                        'Remove administrative rights from group administrators'
+                        :
+                        'Share administrative rights with group administrators'
+                    }
+                />
             </div>
         );
     }
@@ -359,13 +379,14 @@ GroupsBody.defaultProps = {
 };
 
 GroupsBody.propTypes = {
+    getGroups: PropTypes.func.isRequired,
     groups: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.number,
         name: PropTypes.string,
         members: PropTypes.arrayOf(PropTypes.string),
         administrators: PropTypes.arrayOf(PropTypes.string),
     })).isRequired,
-    members: PropTypes.arrayOf(PropTypes.shape({
+    users: PropTypes.arrayOf(PropTypes.shape({
         user: PropTypes.shape({
             username: PropTypes.string,
             first_name: PropTypes.string,
@@ -389,4 +410,19 @@ GroupsBody.propTypes = {
     theme: PropTypes.object.isRequired,
 };
 
-export default withTheme()(GroupsBody);
+const mapStateToProps = state => (
+    {
+        groups: state.groups.groups,
+        users: state.users.users,
+    }
+);
+
+const mapDispatchToProps = dispatch => (
+    {
+        getGroups: (params, append) => (
+            dispatch(getGroups(params, append))
+        ),
+    }
+);
+
+export default withTheme()(connect(mapStateToProps, mapDispatchToProps)(GroupsBody));
